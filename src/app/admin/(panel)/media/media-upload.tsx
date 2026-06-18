@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 
-export default function MediaUpload() {
+export default function MediaUpload({ folder }: { folder?: string }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -15,6 +15,7 @@ export default function MediaUpload() {
     try {
       const fd = new FormData();
       fd.append("file", f);
+      if (folder) fd.append("folder", folder);
       const res = await fetch("/api/admin/upload", { method: "POST", body: fd });
       const j = await res.json().catch(() => ({}));
       if (res.ok && j.ok) router.refresh();

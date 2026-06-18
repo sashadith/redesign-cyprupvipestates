@@ -388,10 +388,12 @@ model Media {
   height           Int?
   altText          String?
   blurDataUrl      String?
+  folder           String? // optional grouping for the media library
   uploadedById     String?
   uploadedBy       User?    @relation(fields: [uploadedById], references: [id])
   createdAt        DateTime @default(now())
 
+  @@index([folder])
   @@map("media")
 }
 

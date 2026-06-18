@@ -25,6 +25,7 @@ export async function POST(req: Request) {
   if (!(file instanceof File)) return NextResponse.json({ error: "No file" }, { status: 400 });
   const ext = ALLOWED[file.type];
   if (!ext) return NextResponse.json({ error: "Unsupported type" }, { status: 400 });
+  const folder = String(form.get("folder") ?? "").trim().slice(0, 80) || null;
   if (file.size > 15 * 1024 * 1024) return NextResponse.json({ error: "File too large (max 15MB)" }, { status: 400 });
 
   const buf = Buffer.from(await file.arrayBuffer());
@@ -42,10 +43,10 @@ export async function POST(req: Request) {
 
   const media = await prisma.media.upsert({
     where: { sanityAssetId: ref },
-    update: { url, path: url, originalFilename: file.name },
+    update: { url, path: url, originalFilename: file.name, ...(folder ? { folder } : {}) },
     create: {
       sanityAssetId: ref, filename: base, originalFilename: file.name, path: url, url,
-      mimeType: file.type, fileSize: buf.length, width: w, height: h,
+      mimeType: file.type, fileSize: buf.length, width: w, height: h, folder,
       uploadedById: (session.user as any)?.id ?? null,
     },
   });

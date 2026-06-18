@@ -501,6 +501,14 @@ export async function saveSinglepageContentBlocks(id: string, items: BlockItem[]
   return { ok: true };
 }
 
+// ── Media: organise assets into folders ──
+export async function setMediaFolder(id: string, folder: string) {
+  await requireSession();
+  const f = String(folder ?? "").trim().slice(0, 80);
+  await prisma.media.update({ where: { id }, data: { folder: f || null } });
+  revalidatePath("/admin/media");
+}
+
 // ── Categories (reference entity; appears on blog posts) ──
 export async function updateCategory(id: string, formData: FormData) {
   await requireSession();
