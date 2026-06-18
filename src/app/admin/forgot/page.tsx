@@ -4,7 +4,7 @@ import ForgotForm from "./forgot-form";
 
 export const dynamic = "force-dynamic";
 
-const LOGO = "/uploads/images/862e62ebddfc232ff9838efb63eb28685b515eb4-400x208.png";
+const LOGO = "/uploads/images/05ff9b6142e3a98fa0ef44ae36b302a20bba2e60-2048x2048.png"; // CVE Logo NEU Gold.png
 
 export default async function ForgotPage() {
   const session = await auth();

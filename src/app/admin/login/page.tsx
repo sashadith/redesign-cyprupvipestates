@@ -6,7 +6,7 @@ import PasswordInput from "./password-input";
 
 export const dynamic = "force-dynamic";
 
-const LOGO = "/uploads/images/862e62ebddfc232ff9838efb63eb28685b515eb4-400x208.png";
+const LOGO = "/uploads/images/05ff9b6142e3a98fa0ef44ae36b302a20bba2e60-2048x2048.png"; // CVE Logo NEU Gold.png
 const inputClass =
   "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
 

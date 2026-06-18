@@ -36,8 +36,9 @@ export default async function PanelLayout({ children }: { children: React.ReactN
       <aside className="w-60 shrink-0 bg-white border-r border-[#E5E7EB] flex flex-col">
         <div className="px-5 py-4 border-b border-[#E5E7EB]">
           <Link href="/admin" className="flex items-center gap-2">
+            {/* CVE Logo NEU Gold.png */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/uploads/images/862e62ebddfc232ff9838efb63eb28685b515eb4-400x208.png" alt="Cyprus VIP Estates" className="h-8 w-auto" />
+            <img src="/uploads/images/05ff9b6142e3a98fa0ef44ae36b302a20bba2e60-2048x2048.png" alt="Cyprus VIP Estates" className="h-9 w-auto" />
           </Link>
           <div className="text-xs text-[#6B7280] mt-1">Admin</div>
         </div>
