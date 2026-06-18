@@ -573,6 +573,50 @@ export async function updateFormDoc(id: string, formData: FormData) {
   revalidatePath("/", "layout");
 }
 
+// ── Landing / section pages (site documents: blogPage, caseStudiesPage,
+//    projectsPage, propertiesPage, notFoundPage) ──
+const SITE_PAGE_TYPES = ["blogPage", "caseStudiesPage", "projectsPage", "propertiesPage", "notFoundPage"];
+const SITE_PAGE_EXCLUDE = new Set(["title", "metaTitle", "metaDescription", "slug", "_type", "content", "seo"]);
+
+export async function updateSitePage(id: string, formData: FormData) {
+  await requireSession();
+  const row = await prisma.siteDocument.findUnique({ where: { id } });
+  if (!row || !SITE_PAGE_TYPES.includes(row.type)) throw new Error("Page not found");
+  const prev = row.data as Record<string, any>;
+  const data: Record<string, any> = { ...prev };
+
+  data.title = String(formData.get("title") ?? "").trim();
+  const seoTitle = String(formData.get("seoTitle") ?? "").trim();
+  const seoDescription = String(formData.get("seoDescription") ?? "").trim();
+  if (prev.seo && typeof prev.seo === "object") {
+    data.seo = { ...prev.seo, metaTitle: seoTitle, metaDescription: seoDescription };
+  } else {
+    data.metaTitle = seoTitle;
+    data.metaDescription = seoDescription;
+  }
+  // Other top-level string fields (e.g. 404 page's textStart/textEnd/buttonText/description).
+  for (const [k, v] of Object.entries(prev)) {
+    if (typeof v === "string" && !SITE_PAGE_EXCLUDE.has(k)) {
+      const next = formData.get(`x_${k}`);
+      if (next !== null) data[k] = String(next);
+    }
+  }
+  await prisma.siteDocument.update({ where: { id }, data: { data } });
+  revalidatePath("/admin/content/landing");
+  revalidatePath("/", "layout"); // listing/404 pages render the layout
+}
+
+export async function saveSitePageContent(id: string, html: string) {
+  await requireSession();
+  const row = await prisma.siteDocument.findUnique({ where: { id } });
+  if (!row || !SITE_PAGE_TYPES.includes(row.type)) throw new Error("Page not found");
+  const data = { ...(row.data as any), content: htmlToPortableText(html) };
+  await prisma.siteDocument.update({ where: { id }, data: { data } });
+  revalidatePath("/admin/content/landing");
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
 // ── Developers (reference entity — no status) ──
 function revalidateDeveloperPublic(language: string, slug: string) {
   revalidatePath(`/${language}/developers/${slug}`);

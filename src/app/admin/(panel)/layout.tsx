@@ -17,6 +17,7 @@ const nav = [
   { href: "/admin/content/categories", label: "Categories" },
   { href: "/admin/content/header", label: "Header" },
   { href: "/admin/content/forms", label: "Forms" },
+  { href: "/admin/content/landing", label: "Landing pages" },
   { href: "/admin/media", label: "Media" },
   { href: "/admin/analytics", label: "Analytics" },
   { href: "/admin/account", label: "My account" },
