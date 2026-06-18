@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import MediaUpload from "./media-upload";
 import MediaCard from "./media-card";
+import { CreateFolderForm, DeleteFolderButton } from "./media-folder-controls";
 
 export const dynamic = "force-dynamic";
 const PER_PAGE = 60;
@@ -18,13 +19,18 @@ export default async function MediaLibrary({ searchParams }: { searchParams: { q
   const folderWhere = folder === UNFILED ? { folder: null } : folder ? { folder } : {};
   const where = { AND: [search, folderWhere] };
 
-  const [total, media, grouped] = await Promise.all([
+  const [total, media, grouped, folderRows] = await Promise.all([
     prisma.media.count({ where }),
     prisma.media.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * PER_PAGE, take: PER_PAGE }),
     prisma.media.groupBy({ by: ["folder"], _count: { _all: true } }),
+    prisma.mediaFolder.findMany({ orderBy: { name: "asc" } }),
   ]);
   const pages = Math.ceil(total / PER_PAGE);
-  const folders = grouped.filter((g) => g.folder).map((g) => ({ name: g.folder as string, count: g._count._all })).sort((a, b) => a.name.localeCompare(b.name));
+  // Union of registered folders (may be empty) and folders inferred from media.
+  const countByName = new Map<string, number>();
+  for (const g of grouped) if (g.folder) countByName.set(g.folder, g._count._all);
+  const names = new Set<string>([...folderRows.map((f) => f.name), ...Array.from(countByName.keys())]);
+  const folders = Array.from(names).sort((a, b) => a.localeCompare(b)).map((name) => ({ name, count: countByName.get(name) ?? 0 }));
   const unfiledCount = grouped.find((g) => !g.folder)?._count._all ?? 0;
   const allCount = grouped.reduce((s, g) => s + g._count._all, 0);
   const qs = (f: string) => `/admin/media?folder=${encodeURIComponent(f)}${q ? `&q=${encodeURIComponent(q)}` : ""}`;
@@ -42,16 +48,22 @@ export default async function MediaLibrary({ searchParams }: { searchParams: { q
       </div>
 
       <div className="flex gap-6">
-        <aside className="w-48 shrink-0">
-          <div className="bg-white rounded-lg border border-[#E5E7EB] p-2 space-y-0.5">
-            <Link href={`/admin/media${q ? `?q=${encodeURIComponent(q)}` : ""}`} className={tab(!folder)}>All <span className="text-[#9CA3AF]">({allCount})</span></Link>
-            <Link href={qs(UNFILED)} className={tab(folder === UNFILED)}>Unfiled <span className="text-[#9CA3AF]">({unfiledCount})</span></Link>
-            <div className="border-t border-[#E5E7EB] my-1" />
-            {folders.length === 0 ? (
-              <p className="px-3 py-1.5 text-xs text-[#9CA3AF]">No folders yet. Type a folder name on any item to create one.</p>
-            ) : folders.map((f) => (
-              <Link key={f.name} href={qs(f.name)} className={tab(folder === f.name)}>{f.name} <span className="text-[#9CA3AF]">({f.count})</span></Link>
-            ))}
+        <aside className="w-56 shrink-0">
+          <div className="bg-white rounded-lg border border-[#E5E7EB] p-2">
+            <CreateFolderForm />
+            <div className="space-y-0.5">
+              <Link href={`/admin/media${q ? `?q=${encodeURIComponent(q)}` : ""}`} className={tab(!folder)}>All <span className="text-[#9CA3AF]">({allCount})</span></Link>
+              <Link href={qs(UNFILED)} className={tab(folder === UNFILED)}>Unfiled <span className="text-[#9CA3AF]">({unfiledCount})</span></Link>
+              <div className="border-t border-[#E5E7EB] my-1" />
+              {folders.length === 0 ? (
+                <p className="px-3 py-1.5 text-xs text-[#9CA3AF]">No folders yet — add one above.</p>
+              ) : folders.map((f) => (
+                <div key={f.name} className="flex items-center">
+                  <Link href={qs(f.name)} className={`flex-1 ${tab(folder === f.name)}`}>{f.name} <span className="text-[#9CA3AF]">({f.count})</span></Link>
+                  <DeleteFolderButton name={f.name} />
+                </div>
+              ))}
+            </div>
           </div>
         </aside>
 

@@ -505,7 +505,26 @@ export async function saveSinglepageContentBlocks(id: string, items: BlockItem[]
 export async function setMediaFolder(id: string, folder: string) {
   await requireSession();
   const f = String(folder ?? "").trim().slice(0, 80);
+  // Auto-register the folder so it persists even before any file lands in it.
+  if (f) await prisma.mediaFolder.upsert({ where: { name: f }, update: {}, create: { name: f } });
   await prisma.media.update({ where: { id }, data: { folder: f || null } });
+  revalidatePath("/admin/media");
+}
+
+export async function createMediaFolder(_prev: any, formData: FormData): Promise<{ ok?: string; error?: string }> {
+  await requireSession();
+  const name = String(formData.get("name") ?? "").trim().slice(0, 80);
+  if (!name) return { error: "Folder name is required." };
+  await prisma.mediaFolder.upsert({ where: { name }, update: {}, create: { name } });
+  revalidatePath("/admin/media");
+  return { ok: `Folder “${name}” created.` };
+}
+
+// Remove a folder record and unfile any media currently in it.
+export async function deleteMediaFolder(name: string) {
+  await requireSession();
+  await prisma.media.updateMany({ where: { folder: name }, data: { folder: null } });
+  await prisma.mediaFolder.deleteMany({ where: { name } });
   revalidatePath("/admin/media");
 }
 

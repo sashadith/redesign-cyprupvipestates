@@ -397,6 +397,16 @@ model Media {
   @@map("media")
 }
 
+// First-class media folders so they can be created up front and persist while empty.
+// A media item belongs to a folder by matching Media.folder == MediaFolder.name.
+model MediaFolder {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("media_folders")
+}
+
 // ─── ADMIN USERS / SESSIONS ──────────────────────────────────────────────────
 model User {
   id            String    @id @default(uuid())
