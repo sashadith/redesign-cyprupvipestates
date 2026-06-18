@@ -48,6 +48,10 @@ function revalidateBlogPublic(language: string, slug: string) {
 function revalidateSinglepagePublic(language: string, slug: string) {
   revalidatePath(`/${language}/${slug}`);
 }
+function revalidateCaseStudyPublic(language: string, slug: string) {
+  revalidatePath(`/${language}/case-studies/${slug}`);
+  revalidatePath(`/${language}/case-studies`);
+}
 
 const STATUSES = ["NEW", "QUALIFIED", "CONTACTED", "VIEWING_SCHEDULED", "OFFER", "CLOSED", "LOST"];
 const CONTENT_STATUSES = ["DRAFT", "PUBLISHED", "SCHEDULED", "ARCHIVED"];
@@ -461,6 +465,58 @@ export async function saveSinglepageContentBlocks(id: string, items: BlockItem[]
   const row = await prisma.singlepage.update({ where: { id }, data: { contentBlocks: blocks as any } });
   revalidatePath(`/admin/content/pages/${id}`);
   revalidateSinglepagePublic(row.language, row.slug);
+  return { ok: true };
+}
+
+// ── Case studies ──
+// Edits the safe fields (rich `caseDetails` Portable Text is preserved untouched —
+// a dedicated rich editor for those is a follow-up; main body is edited as blocks).
+export async function updateCaseStudyMeta(id: string, formData: FormData) {
+  await requireSession();
+  const status = String(formData.get("status") ?? "PUBLISHED");
+  if (!CONTENT_STATUSES.includes(status)) throw new Error("Invalid status");
+  const row = await prisma.caseStudy.update({
+    where: { id },
+    data: {
+      title: String(formData.get("title") ?? "").trim(),
+      fullTitle: String(formData.get("fullTitle") ?? "").trim() || null,
+      excerpt: String(formData.get("excerpt") ?? "").trim() || null,
+      category: String(formData.get("category") ?? "").trim() || null,
+      status: status as any,
+      scheduledAt: scheduledAtFromForm(formData, status),
+      previewImage: jsonOrDbNull(parseJsonField(formData.get("previewImage"))),
+      seo: {
+        metaTitle: String(formData.get("seoTitle") ?? "").trim(),
+        metaDescription: String(formData.get("seoDescription") ?? "").trim(),
+      },
+      clientOverview: {
+        budget: String(formData.get("co_budget") ?? "").trim(),
+        location: String(formData.get("co_location") ?? "").trim(),
+        propertyType: String(formData.get("co_propertyType") ?? "").trim(),
+        purchaseTimeline: String(formData.get("co_purchaseTimeline") ?? "").trim(),
+      },
+    },
+  });
+  revalidatePath(`/admin/content/case-studies/${id}`);
+  revalidatePath("/admin/content/case-studies");
+  revalidateCaseStudyPublic(row.language, row.slug);
+}
+
+export async function saveCaseStudyContentBlocks(id: string, items: BlockItem[]) {
+  await requireSession();
+  if (!Array.isArray(items)) throw new Error("Invalid blocks");
+  const blocks = items
+    .map((it) => {
+      if (it.type === "textContent") {
+        const orig = (it.block && typeof it.block === "object") ? it.block : {};
+        return { ...orig, _type: "textContent", _key: it.key, content: htmlToPortableText(it.html ?? "") };
+      }
+      return it.block ?? null;
+    })
+    .filter(Boolean);
+  const row = await prisma.caseStudy.update({ where: { id }, data: { mainContent: blocks as any } });
+  revalidatePath(`/admin/content/case-studies/${id}`);
+  revalidateCaseStudyPublic(row.language, row.slug);
   return { ok: true };
 }
 

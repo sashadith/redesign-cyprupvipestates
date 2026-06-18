@@ -1,8 +1,9 @@
 "use client";
 import { useState, useCallback } from "react";
 import RichTextField from "./RichTextField";
+import BlockFieldEditor from "./block-editors/BlockFieldEditor";
 import { portableTextToHtml } from "@/lib/portableText/ptToHtml.mjs";
-import { saveBlogContentBlocks, saveSinglepageContentBlocks } from "./actions";
+import { saveBlogContentBlocks, saveSinglepageContentBlocks, saveCaseStudyContentBlocks } from "./actions";
 
 type Item = { key: string; type: string; block?: any; html?: string };
 
@@ -14,7 +15,7 @@ function summarize(b: any): string {
   return b.title || b.doubleTextBlockTitle || b.faqTitle || b.buttonLabel || "";
 }
 
-export default function BlockEditor({ targetId, kind, initialBlocks }: { targetId: string; kind: "blog" | "singlepage"; initialBlocks: any[] }) {
+export default function BlockEditor({ targetId, kind, initialBlocks }: { targetId: string; kind: "blog" | "singlepage" | "caseStudy"; initialBlocks: any[] }) {
   const [items, setItems] = useState<Item[]>(() =>
     (Array.isArray(initialBlocks) ? initialBlocks : []).map((b, i) => ({
       key: b?._key || `b${i}`,
@@ -24,9 +25,13 @@ export default function BlockEditor({ targetId, kind, initialBlocks }: { targetI
     })),
   );
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "err">("idle");
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   const setHtml = useCallback((key: string, html: string) => {
     setItems((prev) => prev.map((it) => (it.key === key ? { ...it, html } : it)));
+  }, []);
+  const setBlock = useCallback((key: string, block: any) => {
+    setItems((prev) => prev.map((it) => (it.key === key ? { ...it, block } : it)));
   }, []);
   const move = (i: number, dir: -1 | 1) =>
     setItems((prev) => {
@@ -35,13 +40,21 @@ export default function BlockEditor({ targetId, kind, initialBlocks }: { targetI
       [a[i], a[j]] = [a[j], a[i]];
       return a;
     });
+  const reorder = (from: number, to: number) =>
+    setItems((prev) => {
+      if (from === to || from < 0 || to < 0 || from >= prev.length || to >= prev.length) return prev;
+      const a = [...prev]; const [moved] = a.splice(from, 1); a.splice(to, 0, moved); return a;
+    });
   const del = (i: number) => setItems((prev) => prev.filter((_, idx) => idx !== i));
   const addText = () => setItems((prev) => [...prev, { key: newKey(), type: "textContent", html: "<p></p>" }]);
 
   async function save() {
     setStatus("saving");
     try {
-      const action = kind === "singlepage" ? saveSinglepageContentBlocks : saveBlogContentBlocks;
+      const action =
+        kind === "singlepage" ? saveSinglepageContentBlocks
+        : kind === "caseStudy" ? saveCaseStudyContentBlocks
+        : saveBlogContentBlocks;
       await action(
         targetId,
         items.map((it) =>
@@ -58,7 +71,7 @@ export default function BlockEditor({ targetId, kind, initialBlocks }: { targetI
 
   return (
     <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2">
         <h2 className="text-sm font-semibold">Content blocks <span className="text-[#9CA3AF] font-normal">({items.length})</span></h2>
         <div className="flex items-center gap-2">
           {status === "saved" && <span className="text-xs text-[#2D6E62]">Saved ✓</span>}
@@ -69,12 +82,25 @@ export default function BlockEditor({ targetId, kind, initialBlocks }: { targetI
           </button>
         </div>
       </div>
+      <p className="text-xs text-[#9CA3AF] mb-4">Drag the ⠿ handle to reorder, or use ↑↓.</p>
 
       <div className="space-y-3">
         {items.map((it, i) => (
-          <div key={it.key} className="border border-[#E5E7EB] rounded-md">
+          <div
+            key={it.key}
+            onDragOver={(e) => { if (dragIndex !== null) e.preventDefault(); }}
+            onDrop={(e) => { e.preventDefault(); if (dragIndex !== null) { reorder(dragIndex, i); setDragIndex(null); } }}
+            className={`border rounded-md ${dragIndex === i ? "border-[#1B4B43] opacity-60" : "border-[#E5E7EB]"}`}
+          >
             <div className="flex items-center justify-between bg-[#F8F9FA] px-3 py-1.5 border-b border-[#E5E7EB]">
-              <span className="text-xs font-medium text-[#6B7280]">
+              <span className="flex items-center gap-2 text-xs font-medium text-[#6B7280]">
+                <span
+                  draggable
+                  onDragStart={() => setDragIndex(i)}
+                  onDragEnd={() => setDragIndex(null)}
+                  title="Drag to reorder"
+                  className="cursor-grab active:cursor-grabbing select-none text-[#9CA3AF] hover:text-[#1B4B43]"
+                >⠿</span>
                 {it.type}{summarize(it.block) ? ` — ${summarize(it.block)}` : ""}
               </span>
               <span className="flex items-center gap-1">
@@ -86,7 +112,7 @@ export default function BlockEditor({ targetId, kind, initialBlocks }: { targetI
             <div className="p-3">
               {it.type === "textContent"
                 ? <RichTextField initialHtml={it.html ?? ""} onChange={(html) => setHtml(it.key, html)} />
-                : <p className="text-xs text-[#9CA3AF]">Preserved block (edit its fields in a future update). Reorder or remove it here.</p>}
+                : <BlockFieldEditor block={it.block} onChange={(b) => setBlock(it.key, b)} />}
             </div>
           </div>
         ))}

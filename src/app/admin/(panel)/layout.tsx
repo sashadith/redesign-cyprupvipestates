@@ -11,6 +11,7 @@ const nav = [
   { href: "/admin/content/projects", label: "Projects" },
   { href: "/admin/content/blog", label: "Blog" },
   { href: "/admin/content/pages", label: "Pages" },
+  { href: "/admin/content/case-studies", label: "Case studies" },
   { href: "/admin/media", label: "Media" },
   { href: "/admin/analytics", label: "Analytics" },
   { href: "/admin/account", label: "My account" },
