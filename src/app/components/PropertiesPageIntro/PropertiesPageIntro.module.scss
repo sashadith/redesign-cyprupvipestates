@@ -1,0 +1,12 @@
+.propertiesPageIntro {
+  margin-top: 100px;
+}
+
+.title {
+  font-size: clamp(2.25rem, 2.063rem + 0.75vw, 2.625rem);
+  line-height: 120%;
+  margin-bottom: clamp(1.25rem, 0.938rem + 1.25vw, 1.875rem);
+  text-shadow: 1px 1px 25px #020102;
+  max-width: 550px;
+  color: #fff;
+}

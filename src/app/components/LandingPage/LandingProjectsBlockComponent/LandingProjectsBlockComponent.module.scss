@@ -1,0 +1,26 @@
+.projectsSectionBlock {
+  padding-bottom: clamp(3.75rem, 2.5rem + 5vw, 6.25rem);
+  background-color: #f5f5f5;
+}
+
+.projects {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+
+  @media screen and (min-width: 768px) {
+    gap: 30px;
+    justify-content: flex-start;
+  }
+}
+
+.title {
+  font-size: clamp(2.5rem, 2.313rem + 0.75vw, 3.125rem);
+  font-weight: 300;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: rgb(26, 26, 26);
+  text-align: center;
+  margin-bottom: clamp(2.5rem, 0.625rem + 7.5vw, 6.25rem);
+}

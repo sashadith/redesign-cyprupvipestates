@@ -1,0 +1,68 @@
+.aboutBlock {
+  background-color: #f5f5f5;
+  color: #000307;
+  padding-top: clamp(2.813rem, 1.563rem + 6.25vw, 6.25rem);
+  padding-bottom: clamp(2.813rem, 1.563rem + 6.25vw, 6.25rem);
+}
+
+.descriptionBlock {
+  padding-left: clamp(1.25rem, 0.568rem + 3.41vw, 3.125rem);
+  padding-top: clamp(0.625rem, 0.398rem + 1.14vw, 1.25rem);
+  padding-bottom: clamp(0.625rem, 0.398rem + 1.14vw, 1.25rem);
+  border-left: 3px solid #bd8948;
+  margin-bottom: clamp(1.25rem, 0.938rem + 1.25vw, 1.875rem);
+}
+
+.description {
+  font-size: clamp(0.875rem, 0.83rem + 0.23vw, 1rem);
+  font-weight: 300;
+  line-height: 150%;
+  letter-spacing: .4px;
+}
+
+.bullets {
+  margin-top: 50px;
+  gap: clamp(0.938rem, 0.597rem + 1.7vw, 1.875rem);
+  // flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+
+  @media screen and (min-width: 768px) {
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: baseline;
+  }
+
+  @media screen and (min-width: 1024px) {
+   grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+.bullet {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+
+  @media screen and (min-width: 1024px) {
+    flex: 0 1 auto;
+  }
+}
+
+.imageBlock {
+  max-width: 80px;
+  margin: 0 auto;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.text {
+  text-align: center;
+  font-size: clamp(0.875rem, 0.83rem + 0.23vw, 1rem);
+  letter-spacing: .4px;
+  text-transform: uppercase;
+}

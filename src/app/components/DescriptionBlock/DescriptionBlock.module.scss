@@ -1,0 +1,47 @@
+.descriptionBlock {
+  background-color: #f5f5f5;
+  color: #000307;
+  padding-top: clamp(2.813rem, 1.563rem + 6.25vw, 6.25rem);
+  padding-bottom: clamp(2.813rem, 1.563rem + 6.25vw, 6.25rem);
+}
+
+.descriptionFields {
+  gap: clamp(0.938rem, 0.597rem + 1.7vw, 1.875rem);
+  display: grid;
+  grid-template-columns: 1fr;
+
+  @media screen and (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+
+    // Третий элемент растягивается на оба столбца
+    .descriptionField:nth-child(3) {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+.descriptionField {
+  padding-left: clamp(1.25rem, 0.568rem + 3.41vw, 3.125rem);
+  padding-top: clamp(0.625rem, 0.398rem + 1.14vw, 1.25rem);
+  padding-bottom: clamp(0.625rem, 0.398rem + 1.14vw, 1.25rem);
+  border-left: 3px solid #bd8948;
+  margin-bottom: clamp(1.25rem, 0.938rem + 1.25vw, 1.875rem);
+
+  p, h2, h3 {
+    color: inherit;
+  }
+
+  li {
+    span {
+      color: #000;
+    }
+  }
+
+  h2, h3, h4 {
+    font-weight: 400;
+  }
+
+  p, li {
+    font-weight: 300;
+  }
+}

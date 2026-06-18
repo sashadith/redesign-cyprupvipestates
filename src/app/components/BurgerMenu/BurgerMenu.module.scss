@@ -1,0 +1,40 @@
+.burgerMenu {
+  display: none;
+  cursor: pointer;
+  width: 35px;
+  height: 35px;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  border-radius: 50%;
+
+  @media (max-width: 768px) {
+    display: flex;
+    cursor: pointer;
+    position: relative;
+    z-index: 101;
+  }
+}
+
+.bar {
+  width: 15px;
+  height: 2px;
+  background-color: #c09d75; /* Цвет полос бургер-меню */
+  transition: 0.4s; /* Анимация для перехода состояния полос */
+
+  &:not(:last-child) {
+    margin-bottom: 4px;
+  }
+}
+
+.rotateBar1 {
+  transform: rotate(-45deg) translate(-1px, 1px);
+  width: 20px;
+  // background-color: #fff;
+}
+
+.rotateBar2 {
+  transform: rotate(45deg) translate(-3px, -3px);
+  width: 20px;
+  // background-color: #fff;
+}

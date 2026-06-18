@@ -1,0 +1,139 @@
+.brochureBlock {
+  overflow-y: hidden;
+  margin-top: clamp(2.813rem, 1.563rem + 6.25vw, 6.25rem);
+  margin-bottom: clamp(2.813rem, 1.563rem + 6.25vw, 6.25rem);
+}
+
+.brochure {
+  background: #0e1c2b;
+  padding: clamp(1.25rem, 0.568rem + 3.41vw, 3.125rem);
+  height: 80lvh;
+  position: relative;
+
+  @media screen and (max-width: 768px) {
+    overflow: hidden;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+  }
+
+  @media screen and (min-width: 768px) {
+    max-height: 750px;
+  }
+}
+
+.content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.25rem, 0.795rem + 2.27vw, 2.5rem);
+}
+
+.contentStart {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  position: relative;
+  z-index: 2;
+  gap: clamp(1.25rem, 1.023rem + 1.14vw, 1.875rem);
+
+  @media screen and (min-width: 768px) {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+}
+
+.title {
+  font-size: clamp(2rem, 2.5vw, 3.75rem);
+  font-weight: 400;
+  line-height: 120%;
+  color: #fff;
+  // margin-bottom: 10px;
+  position: relative;
+  z-index: 2;
+
+  // @media screen and (min-width: 768px) {
+  //   max-width: 800px;
+  // }
+}
+
+.subtitle {
+  color: #bd8948;
+  font-size: clamp(1.125rem, 1.08rem + 0.23vw, 1.25rem);
+  line-height: 1.2;
+  font-weight: 300;
+  letter-spacing: 0.4;
+}
+
+.description {
+  font-size: 16px;
+  line-height: 1.5;
+  letter-spacing: 0.4px;
+  color: #fff;
+
+  @media screen and (min-width: 768px) {
+    max-width: 1150px;
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.listItem {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 300;
+  letter-spacing: .4px;
+}
+
+.customButtonClass {
+  // color: #fff !important;
+  // border: 2px solid #fff !important;
+
+  // &:hover {
+  //   background: #fff !important;
+  //   color: #333 !important;
+  // }
+
+  @media screen and (min-width: 768px) {
+    width: fit-content;
+  }
+}
+
+.imageBlock {
+  
+  bottom: clamp(1.25rem, 0.568rem + 3.41vw, 3.125rem);
+  left: 0;
+  transform: rotate(-5deg);
+  // visibility: hidden;
+
+  @media screen and (min-width: 768px) {
+    position: absolute;
+    left: unset;
+    right: -50px;
+    bottom: -30px;
+    z-index: 1;
+    // visibility: visible;
+  }
+
+  // &::before {
+  //   content: '';
+  //   position: absolute;
+  //   top: 0;
+  //   left: 0;
+  //   width: 100%;
+  //   height: 100%;
+  //   background: linear-gradient(0deg, rgba(14, 28, 43, 0) 0%, #0e1c2b 100%);
+  // }
+}

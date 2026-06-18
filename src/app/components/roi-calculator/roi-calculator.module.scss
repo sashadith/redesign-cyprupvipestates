@@ -1,0 +1,423 @@
+.roiCalculator {
+  padding: 60px 0;
+  background: #f7f7f5;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 40px;
+  font-weight: 400;
+  margin-bottom: 12px;
+  color: #2a3b3b;
+}
+
+.subtitle {
+  font-size: 18px;
+  color: #5c6b6d;
+  max-width: 760px;
+}
+
+.topControls {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.tabs,
+.scenarios {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tab,
+.scenario {
+  border: 1px solid #d6dcdd;
+  background: #fff;
+  // border-radius: 999px;
+  padding: 12px 18px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: 0.2s ease;
+  color: #2a3b3b;
+}
+
+.scenario {
+
+  @media screen and (max-width: 768px) {
+    padding: 3px 5px;
+    border: none;
+  }
+}
+
+.active {
+  background: #2a3b3b;
+  color: #fff;
+  border-color: #2a3b3b;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 24px;
+  align-items: start;
+}
+
+.inputs,
+.results,
+.chart {
+  background: #fff;
+  // border-radius: 24px;
+  padding: 24px;
+
+    @media (max-width: 991px) {
+      padding: 0;
+    }
+}
+
+.chart {
+  display: none;
+
+  @media (min-width: 992px) {
+    display: block;
+  }
+}
+
+.inputs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2a3b3b;
+  }
+
+  input,
+  select {
+    height: 48px;
+    border: 1px solid #d7ddde;
+    border-radius: 14px;
+    padding: 0 14px;
+    font-size: 15px;
+    background: #fff;
+    color: #2a3b3b;
+  }
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+}
+
+.highlight {
+  background: #2a3b3b;
+  color: #fff;
+  // border-radius: 24px;
+  padding: 24px;
+}
+
+.highlightLabel {
+  font-size: 14px;
+  opacity: 0.8;
+  margin-bottom: 10px;
+}
+
+.highlightValue {
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.highlightMeta {
+  font-size: 16px;
+}
+
+.rows {
+  border: 1px solid #ecefee;
+  // border-radius: 20px;
+  overflow: hidden;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+  border-bottom: 1px solid #ecefee;
+  font-size: 15px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  span {
+    color: #526264;
+  }
+
+  strong {
+    color: #2a3b3b;
+  }
+}
+
+.ctaBox {
+  margin-top: auto;
+}
+
+.ctaButton {
+  width: 100%;
+  height: 52px;
+  border: none;
+  // border-radius: 999px;
+  background: #2a3b3b;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 5px;
+}
+
+// .chartWrap {
+//   margin-top: 24px;
+// }
+
+.leftColumn {
+  min-width: 0;
+}
+
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
+  height: 100%;
+}
+
+.disclaimer {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #697779;
+  line-height: 1.6;
+}
+
+@media (max-width: 991px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inputs {
+    grid-template-columns: 1fr;
+  }
+
+  .title {
+    font-size: 32px;
+  }
+
+  .highlightValue {
+    font-size: 38px;
+  }
+}
+
+.rangeField {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rangeFieldTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #2a3b3b;
+  }
+}
+
+.rangeFieldInputWrap {
+  position: relative;
+  min-width: 120px;
+}
+
+.rangeFieldInput {
+  width: 100%;
+  height: 42px;
+  border: 1px solid #d7ddde;
+  border-radius: 4px;
+  padding: 0 40px 0 14px;
+  font-size: 15px;
+  background: #fff;
+  color: #2a3b3b;
+  text-align: right;
+}
+
+.rangeFieldUnit {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: #7d8a8c;
+  pointer-events: none;
+}
+
+.rangeSlider {
+  width: 100%;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: #cfd7d8;
+  outline: none;
+  cursor: pointer;
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #2a3b3b;
+    border: 3px solid #ffffff;
+    box-shadow: 0 0 0 1px #2a3b3b;
+    cursor: pointer;
+  }
+
+  &::-moz-range-thumb {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #2a3b3b;
+    border: 3px solid #ffffff;
+    box-shadow: 0 0 0 1px #2a3b3b;
+    cursor: pointer;
+  }
+}
+
+.rangeFieldBottom {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: #8a9799;
+}
+
+.inputsSection {
+  grid-column: 1 / -1;
+  padding-top: 8px;
+  border-top: 1px solid #ecefee;
+  margin-top: 4px;
+}
+
+.inputsSectionTitle {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #bd8948;
+}
+
+.chartHeader {
+  margin-bottom: 16px;
+}
+
+.chartTitle {
+  font-size: 22px;
+  font-weight: 500;
+  color: #2a3b3b;
+  margin-bottom: 8px;
+}
+
+.chartSubtitle {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #6d7b7d;
+}
+
+.chartLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+
+.chartLegendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #2a3b3b;
+}
+
+.chartLegendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.chartLegendDotValue {
+  background: #2a3b3b;
+}
+
+.chartLegendDotRent {
+  background: #d89a35;
+}
+
+.chartLegendDotProfit {
+  background: #2d7fb8;
+}
+
+.chartTooltip {
+  background: #fff;
+  border: 1px solid #dfe5e6;
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  min-width: 220px;
+}
+
+.chartTooltipTitle {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2a3b3b;
+  margin-bottom: 10px;
+}
+
+.chartTooltipRows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chartTooltipRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+
+  span {
+    color: #6c7a7c;
+  }
+
+  strong {
+    color: #2a3b3b;
+    font-weight: 700;
+  }
+}

@@ -1,0 +1,175 @@
+.imageFullBlock {
+  position: relative;
+}
+
+.imageWrapper {
+  position: relative;
+  width: 100%;      // контейнер по ширине страницы
+  /* height не задаём — будем задавать через padding‑top */
+}
+
+.ratio_16_9 {
+  aspect-ratio: 16 / 9;
+}
+
+.ratio_10_5 {
+  height: 100vh;
+
+  @media screen and (min-width: 768px) {
+    aspect-ratio: 10 / 5;
+    height: unset;
+  }
+}
+
+.ratio_10_4 {
+  height: 100vh;
+
+  @media screen and (min-width: 768px) {
+    aspect-ratio: 10 / 4;
+    height: unset;
+  }
+}
+
+.ratio_5_4 {
+  height: 100vh;
+
+  @media screen and (min-width: 768px) {
+    aspect-ratio: 5 / 4;
+    height: unset;
+  }
+}
+
+.ratio_4_3 {
+  height: 100vh;
+
+  @media screen and (min-width: 768px) {
+    aspect-ratio: 4 / 3;
+    height: unset;
+  }
+}
+
+.ratio_3_2 {
+  height: 100vh;
+
+  @media screen and (min-width: 768px) {
+    aspect-ratio: 3 / 2;
+    height: unset;
+  }
+}
+
+.ratio_2_1 {
+  height: 100vh;
+
+  @media screen and (min-width: 768px) {
+    aspect-ratio: 2 / 1;
+    height: unset;
+  }
+}
+
+.ratio_1_1 {
+  aspect-ratio: 1 / 1;
+}
+
+.image {
+  object-fit: cover;
+}
+
+.contentParent {
+
+  @media screen and (min-width: 768px) {
+    background-color: #fff;
+    padding-top: 50px;
+    padding-bottom: 50px;
+  }
+}
+
+.contentInner {
+  position: absolute;
+  bottom: 120px;
+  z-index: 2;
+
+  @media screen and (min-width: 768px) {
+    position: unset;
+  }
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  color: white;
+  padding-inline: clamp(1.25rem, 0.568rem + 3.41vw, 3.125rem);
+  padding-top: 25px;
+  padding-bottom: 20px;
+  max-width: 90%;
+
+  @media screen and (min-width: 768px) {
+    color: #bd8948;
+    text-align: center;
+    margin: 0 auto;
+  }
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  // left: clamp(0.313rem, -0.256rem + 2.84vw, 1.875rem);
+  left: 20px;
+  right: -10px;
+  bottom: 0;
+  z-index: -1;
+  max-width: 90%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  // background: rgba(26, 26, 26, 0.5);
+
+  @media screen and (min-width: 768px) {
+    max-width: 650px;
+  }
+}
+
+.description {
+
+  span {
+    font-weight: 500;
+  }
+}
+
+.h1 {
+  font-size: clamp(1.875rem, 1.563rem + 1.25vw, 2.5rem);
+  line-height: 1.2;
+  font-weight: 300;
+
+  @media screen and (min-width: 768px) {
+    line-height: 1.5;
+  }
+}
+
+.h2 {
+  font-size: clamp(1.25rem, 0.938rem + 1.25vw, 1.875rem);
+  line-height: 1.2;
+  font-weight: 400;
+
+  @media screen and (min-width: 768px) {
+    line-height: 1.5;
+  }
+}
+
+.h3 {
+  font-size: clamp(1.125rem, 0.75rem + 1.25vw, 1.5rem);
+  line-height: 1.2;
+  font-weight: 400;
+
+  @media screen and (min-width: 768px) {
+    line-height: 1.5;
+  }
+}
+
+.paragraph {
+  font-size: clamp(1rem, 0.625rem + 1.25vw, 1.25rem);
+  line-height: 1.2;
+  font-weight: 400;
+
+  @media screen and (min-width: 768px) {
+    line-height: 1.5;
+  }
+}

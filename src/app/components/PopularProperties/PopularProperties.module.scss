@@ -1,0 +1,41 @@
+.popularProperties {
+  border: 1px solid #bd8948;
+  padding: 10px 20px;
+
+  @media screen and (min-width: 980px) {
+    position: sticky;
+    top: 100px;
+  }
+}
+
+.title {
+  font-size: 30px;
+  line-height: 120%;
+  margin-bottom: 30px;
+}
+
+.popularPropertiesList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.popularProperty {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.link {
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 300;
+  transition: all 0.3s ease-in-out;
+
+  @media screen and (min-width: 768px) {
+    
+    &:hover {
+      color: #bd8948;
+    }
+  }
+}

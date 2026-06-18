@@ -1,0 +1,16 @@
+.buttonPrimary {
+  display: inline-block;
+  padding: 0.625rem 1.25rem;
+  background: #c09d75;
+  border: 2px solid #c09d75;
+  color: #333;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: background 0.3s, color 0.3s;
+
+  &:hover {
+    background: transparent;
+    color: #fff;
+  }
+}

@@ -1,0 +1,75 @@
+.pagination {
+  position: relative;
+  z-index: 1;
+  bottom: 50px;
+}
+
+.sliderBlog {
+  overflow: hidden;
+}
+
+.projectsSectionSlider {
+  /* Full‐width секция без скролла */
+  width: 100%;
+  overflow-x: hidden;
+  /* Если у вас ещё есть margin/padding от родителя — обнуляем */
+  margin: 0;
+  padding: 0;
+
+  :global(.swiper-wrapper) {
+    /* пусть слайды никогда не «усыхают» из-за flex */
+    display: flex;
+    will-change: transform;
+  }
+
+  :global(.swiper-slide) {
+    flex-shrink: 0;          /* запрещаем «сжиматься» */
+    width: 100% !important;  /* каждый слайд ровно 100% от контейнера */
+    box-sizing: border-box;
+  }
+
+  @media screen and (max-width: 768px) {
+    :global(.swiper-pagination) {
+      display: none !important;
+    }
+  }
+}
+
+.sliderBlog {
+  /* Убираем любые «случайные» отступы */
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.sliderBlog :global(.swiper) {
+  /* Говорим Swiper занимать 100% родителя */
+  width: 100% !important;
+}
+
+.sliderBlog :global(.swiper-wrapper) {
+  /* Flex-контейнер для слайдов */
+  display: flex;
+}
+
+.sliderBlog :global(.swiper-slide) {
+  /* Каждый слайд — не шире viewport и по-умолчанию 100% */
+  width: 100% !important;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.slide {
+  /* Ваш HeroSlide wrapper */
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.title {
+  color: #fff;
+  font-size: clamp(1.5rem, 1.125rem + 1.5vw, 2.25rem);
+  font-style: normal;
+  // font-weight: 600;
+  margin-bottom: 30px;
+}

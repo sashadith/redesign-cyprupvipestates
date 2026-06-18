@@ -1,0 +1,15 @@
+.button {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #bd8948;
+  border: 2px solid #bd8948;
+  color: #fff;
+  text-decoration: none;
+  transition: all 0.3s ease-in;
+
+  @media screen and (min-width: 786px) {
+    &:hover {
+      background-color: transparent;
+    }
+  }
+}

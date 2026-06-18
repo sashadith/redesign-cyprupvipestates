@@ -1,0 +1,91 @@
+.localeSwitcher {
+  position: relative;
+  display: inline-block;
+}
+
+.localeSwitcherButton {
+  color: #fff;
+  text-transform: uppercase;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  // width: 40px;
+  // height: 40px;
+  // background-color: #bd8948;
+  // border-radius: 50%;
+  cursor: pointer;
+
+  @media screen and (max-width: 1120px) {
+    // width: 35px;
+    // height: 35px;
+    font-size: 12px;
+  }
+
+  @media screen and (max-width: 768px) {
+    position: relative;
+    z-index: 101;
+  }
+}
+
+.arrow {
+  margin-left: 1px;
+  transition: transform 0.3s ease;
+}
+
+.open {
+  transform: rotate(180deg);
+}
+
+.localeSwitcherList {
+  position: absolute;
+  top: 30px;
+  left: -5px;
+  background-color: #fff;
+  overflow: hidden;
+  border-radius: 5px;
+  padding: 0;
+  list-style: none;
+  margin: 0;
+  z-index: 100;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  @media screen and (max-width: 1120px) {
+    top: 45px;
+  }
+
+  @media screen and (max-width: 768px) {
+    top: 45px;
+  }
+}
+
+.localeSwitcherListItem {
+  padding: 0;
+}
+
+.localeSwitcherLink {
+  display: block;
+  padding: 8px 10px;
+  color: #000;
+  text-transform: uppercase;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 300;
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+
+  &:hover {
+    background-color: #bd8948;
+    color: #fff;
+  }
+
+  @media screen and (max-width: 1120px) {
+    padding: 8px 15px;
+  }
+
+  @media screen and (max-width: 768px) {
+    padding: 8px 10px;
+  }
+}

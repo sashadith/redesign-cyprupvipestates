@@ -1,0 +1,64 @@
+.doubleTextBlock {
+  margin-bottom: 70px;
+
+  p {
+    line-height: 1.5;
+    font-weight: 300;
+
+    strong {
+      font-weight: 500;
+    }
+  }
+
+  a {
+    word-break: break-word;
+  }
+
+  @media screen and (min-width: 980px) {
+    &:not(last-child) {
+      .dividerHorizontal {
+        display: block;
+      }
+    }
+  }
+}
+
+.wrapper {
+  display: flex;
+  gap: 20px;
+
+  @media screen and (max-width: 980px) {
+    flex-direction: column;
+  }
+}
+
+.textBlock,
+.imageBlock,
+.leftContent,
+.rightContent
+{
+  flex: 1; // Обеспечивает равное распределение
+}
+
+.imageBlock {
+  overflow: hidden;
+}
+
+.divider {
+  width: 1px;
+  background-color: #bd8948;
+  margin: 0 30px;
+  display: none; // Скрываем по умолчанию
+
+  @media screen and (min-width: 980px) {
+    display: block; // Показываем только на больших экранах
+  }
+}
+
+.dividerHorizontal {
+  display: none;
+  width: 100%;
+  height: 1px;
+  background-color: #bd8948;
+  margin: 30px 0;
+}

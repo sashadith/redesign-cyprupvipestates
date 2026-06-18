@@ -1,0 +1,79 @@
+.contactFull {
+  margin-top: clamp(2.813rem, 1.563rem + 6.25vw, 6.25rem);
+  margin-bottom: clamp(2.813rem, 1.563rem + 6.25vw, 6.25rem);
+}
+
+.wrapper {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+
+  @media screen and (min-width: 980px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.description {
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.5;
+  color: #fff;
+  margin-bottom: 1rem;
+}
+
+.contactsBlock {
+
+  @media screen and (min-width: 980px) {
+    padding-right: clamp(1.25rem, -7.102rem + 13.64vw, 3.125rem);
+    border-right: 1px solid #bd8948;
+  }
+}
+
+.contacts {
+  margin-top: clamp(1.25rem, -0.313rem + 6.25vw, 4.375rem);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.938rem, 0.469rem + 1.88vw, 1.875rem);
+}
+
+.contact {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  width: fit-content;
+
+  @media screen and (min-width: 980px) {
+    
+    &:hover {
+      cursor: pointer;
+      transform: scale(1.05);
+      transition: all 0.3s ease-in-out;
+
+      p {
+        color: #bd8948;
+        transition: all 0.3s ease-in-out;
+      }
+    }
+  }
+}
+
+.contactLabel {
+  font-size: 16px;
+  font-weight: 300;
+  letter-spacing: .4px;
+  color: #fff;
+}
+
+// .formBlock {
+
+//   @media screen and (min-width: 980px) {
+//     padding-left: clamp(1.25rem, -7.102rem + 13.64vw, 3.125rem);
+
+//     button {
+//       width: fit-content;
+//       justify-content: flex-start;
+//       margin-inline: unset;
+//       font-weight: 400;
+//     }
+//   }
+// }

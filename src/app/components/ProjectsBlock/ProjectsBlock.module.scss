@@ -1,0 +1,9 @@
+.projectsBlock {
+  padding-top: clamp(2.813rem, 1.563rem + 6.25vw, 6.25rem);
+  padding-bottom: clamp(2.813rem, 1.563rem + 6.25vw, 6.25rem);
+}
+
+.title {
+  font-size: clamp(1.875rem, 1.563rem + 1.56vw, 2.5rem);
+  margin-bottom: clamp(1.25rem, 0.795rem + 2.27vw, 2.5rem);
+}

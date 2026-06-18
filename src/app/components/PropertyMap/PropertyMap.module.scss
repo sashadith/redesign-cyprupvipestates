@@ -1,0 +1,8 @@
+.propertyMap {
+  height: clamp(18.75rem, 17.188rem + 6.25vw, 21.875rem);
+}
+
+.grayscaleTile {
+  filter: grayscale(100%);
+  opacity: 0.9; /* Регулируйте прозрачность по необходимости */
+}

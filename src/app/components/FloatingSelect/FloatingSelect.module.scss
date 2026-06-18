@@ -1,0 +1,22 @@
+.selectContainer {
+  position: relative;
+}
+
+.floatingLabel {
+  position: absolute;
+  left: 0.75rem;
+  top: 0.75rem;
+  transition: all 0.2s ease;
+  color: #aaa;
+  pointer-events: none;
+  background: #fff;
+  // padding: 0 0.25rem;
+}
+
+.active {
+  top: -0.5rem;
+  left: 0.75rem;
+  font-size: 0.8rem;
+  color: #bd8948;
+  padding: 0 2px;
+}

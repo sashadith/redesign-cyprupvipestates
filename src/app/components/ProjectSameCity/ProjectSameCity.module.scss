@@ -1,0 +1,108 @@
+.projectSameCity {
+  padding: 60px 0;
+}
+
+.title {
+  color: #fff;
+  font-size: clamp(1.5rem, 1.125rem + 1.5vw, 2.25rem);
+  font-style: normal;
+  // font-weight: 600;
+  margin-bottom: 30px;
+}
+
+.projects {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+
+  @media screen and (min-width: 768px) {
+    gap: 30px;
+  }
+}
+
+.project {
+  width: 100%;
+  // position: relative;
+  overflow: hidden;
+  // aspect-ratio: 16/9;
+  flex-basis: 100%;
+
+  @media screen and (min-width: 768px) {
+    flex-basis: calc(33.333% - 20px);
+
+    &:hover {
+      img {
+        transform: scale(1.1);
+      }
+    }
+  }
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.8) 100%);
+}
+
+.projectImage {
+  position: relative;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+  }
+}
+
+.projectInfo {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  padding: 10px;
+}
+
+.projectTitle {
+  color: #fff;
+  font-size: clamp(1rem, 1.125rem + 0.5vw, 1.5rem);
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+.projectPrice {
+  color: #fff;
+  font-size: clamp(0.875rem, 0.625rem + 0.5vw, 1rem);
+  font-weight: 500;
+  margin-top: 5px;
+}
+
+.projectData {
+  padding: 10px;
+  border-bottom: 1px solid rgba(170, 127, 46, 0.5);
+  border-left: 1px solid rgba(170, 127, 46, 0.5);
+  border-right: 1px solid rgba(170, 127, 46, 0.5);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.projectDataItem {
+  color: #fff;
+  text-align: center;
+  font-size: 14px;
+}
+
+.projectDataItemDivider {
+  width: 1px;
+  height: 30px;
+  background: rgba(170, 127, 46, 0.5);
+}

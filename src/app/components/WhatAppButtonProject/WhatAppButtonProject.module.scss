@@ -1,0 +1,25 @@
+.whatsappButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 2px solid #22c55e;
+  font-size: 1rem;
+  font-weight: 400;
+  color: white;
+  padding: 0.5rem 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #16a34a;
+  }
+}
+
+// .label {
+//   display: none;
+
+//   @media (min-width: 640px) {
+//     display: inline;
+//   }
+// }

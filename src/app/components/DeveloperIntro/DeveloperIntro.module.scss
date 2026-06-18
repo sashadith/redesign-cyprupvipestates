@@ -1,0 +1,50 @@
+.developerIntro {
+  margin-top: clamp(6.25rem, 4.688rem + 6.25vw, 9.375rem);
+  margin-bottom: 80px;
+}
+
+.wrapper {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+
+  @media screen and (min-width: 768px) {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 60px;
+    align-items: end;
+    justify-content: space-between;
+  }
+}
+
+.title {
+  font-size: clamp(2rem, 2.5vw, 3.75rem);
+  line-height: 120%;
+  // margin-bottom: clamp(1.875rem, 1.25rem + 2.5vw, 3.125rem);
+  margin-bottom: 24px;
+  text-shadow: 1px 1px 25px #020102;
+  color: #fff;
+}
+
+.description {
+  font-size: clamp(0.875rem, 0.83rem + 0.23vw, 1rem);
+  letter-spacing: .4px;
+  text-shadow: 1px 1px 25px #020102;
+  color: #fff;
+  // max-width: 500px;
+}
+
+.logo {
+  max-width: 120px;
+
+  img {
+    width: 100%;
+    height: auto;
+  }
+
+  @media screen and (min-width: 768px) {
+    max-width: 200px;
+    margin-left: auto;
+    
+  }
+}

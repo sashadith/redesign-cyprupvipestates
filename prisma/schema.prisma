@@ -1,0 +1,538 @@
+// PROPOSED Prisma schema — Cyprus VIP Estates (DRAFT for review, not yet applied)
+// Design principles (from DECISIONS.md):
+//  • Decision 1 — mirror Sanity: ONE ROW PER LANGUAGE, variants linked by translationGroupId
+//  • Decision 2 — keep rich/nested content as native JSON (Portable Text + page-builder blocks)
+//  • Decision 3 — ALL content types are core (every type has live URLs)
+//
+// HYBRID strategy: lift the fields we FILTER/SORT/JOIN on into typed scalar columns;
+// keep rich/variable/nested structures (Portable Text, contentBlocks, keyFeatures,
+// distances, investmentData, images, seo, faq) as JSONB. Faithful + queryable, without a
+// 30-table sprawl. Field names mirror the Sanity schemaTypes exactly.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ─────────────────────────────────────────────────────────────────
+enum Locale {
+  en
+  de
+  pl
+  ru
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  SCHEDULED
+  ARCHIVED
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+}
+
+enum LeadStatus {
+  NEW
+  QUALIFIED
+  CONTACTED
+  VIEWING_SCHEDULED
+  OFFER
+  CLOSED
+  LOST
+}
+
+enum LeadSource {
+  CONTACT_FORM
+  PROJECT_ENQUIRY
+  BLOG_ENQUIRY
+  WHATSAPP
+  PHONE
+  REFERRAL
+  OTHER
+}
+
+enum LeadTimeline {
+  IMMEDIATE
+  THREE_MONTHS
+  SIX_MONTHS
+  ONE_YEAR
+  JUST_LOOKING
+}
+
+enum LeadFinancing {
+  CASH
+  MORTGAGE
+  UNDECIDED
+}
+
+// NOTE: property types / purposes / cities are kept as String (Sanity uses free-form
+// string lists incl. values like "Semi-detached villa" that don't map cleanly to enums).
+
+// ─── CONTENT: PROJECT (per-language row) ─────────────────────────────────────
+model Project {
+  id                 String        @id @default(uuid())
+  sanityId           String        @unique // original per-language _id
+  translationGroupId String? // from translation.metadata
+  language           Locale
+  slug               String // slug[language].current
+  title              String
+  excerpt            String?
+  status             ContentStatus @default(PUBLISHED)
+
+  // queryable scalars (lifted from keyFeatures / flags)
+  city            String?
+  propertyType    String?
+  price           Int?
+  bedrooms        String?
+  completionDate  String?
+  isFeatured      Boolean @default(false)
+  isSold          Boolean @default(false)
+  listingPriority Int     @default(0)
+  latitude        Float?
+  longitude       Float?
+
+  // developer (per-language reference)
+  developerId String?
+  developer   Developer? @relation(fields: [developerId], references: [id])
+
+  // media (JSON; urls rewritten to local /uploads at migration)
+  previewImage Json?
+  images       Json?
+  videoId      String?
+  videoPreview Json?
+
+  // rich content (Portable Text / objects, kept native)
+  description     Json?
+  fullDescription Json?
+  faq             Json?
+  keyFeatures     Json?
+  distances       Json?
+  investmentData  Json?
+  seo             Json? // { metaTitle, metaDescription }
+
+  publishedAt DateTime?
+  scheduledAt DateTime? // SCHEDULED → auto-publish at this UTC instant
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  caseStudyLinks CaseStudyProject[]
+  leads          Lead[]
+
+  @@unique([language, slug])
+  @@index([translationGroupId])
+  @@index([language, status])
+  @@index([city])
+  @@index([isFeatured])
+  @@index([listingPriority])
+  @@index([status, scheduledAt])
+  @@map("projects")
+}
+
+// ─── CONTENT: BLOG ───────────────────────────────────────────────────────────
+model Blog {
+  id                 String        @id @default(uuid())
+  sanityId           String        @unique
+  translationGroupId String?
+  language           Locale
+  slug               String
+  title              String
+  excerpt            String?
+  status             ContentStatus @default(PUBLISHED)
+
+  authorId   String?
+  author     Author?   @relation(fields: [authorId], references: [id])
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id])
+
+  previewImage      Json?
+  seo               Json?
+  contentBlocks     Json? // page-builder array
+  videoBlock        Json?
+  popularProperties Json?
+  relatedArticles   Json? // refs to blog/singlepage (resolved at render)
+
+  readingTime Int? // computed at migration/save
+  publishedAt DateTime?
+  scheduledAt DateTime? // SCHEDULED → auto-publish at this UTC instant
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([language, slug])
+  @@index([translationGroupId])
+  @@index([language, status])
+  @@index([publishedAt])
+  @@index([status, scheduledAt])
+  @@map("blogs")
+}
+
+// ─── CONTENT: SINGLE PAGE (catch-all routes + landing pages) ─────────────────
+model Singlepage {
+  id                 String        @id @default(uuid())
+  sanityId           String        @unique
+  translationGroupId String?
+  language           Locale
+  slug               String // may be multi-segment (parent/child)
+  title              String
+  excerpt            String?
+  status             ContentStatus @default(PUBLISHED)
+
+  allowIntroBlock Boolean @default(false)
+  parentSanityId  String? // parentPage reference (resolved to build nested slug)
+
+  previewImage  Json?
+  seo           Json?
+  contentBlocks Json?
+
+  publishedAt DateTime?
+  scheduledAt DateTime? // SCHEDULED → auto-publish at this UTC instant
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([language, slug])
+  @@index([translationGroupId])
+  @@index([status, scheduledAt])
+  @@map("singlepages")
+}
+
+// ─── CONTENT: CASE STUDY ─────────────────────────────────────────────────────
+model CaseStudy {
+  id                 String        @id @default(uuid())
+  sanityId           String        @unique
+  translationGroupId String?
+  language           Locale
+  slug               String
+  title              String
+  fullTitle          String?
+  excerpt            String?
+  category           String?
+  status             ContentStatus @default(PUBLISHED)
+
+  previewImage   Json?
+  seo            Json?
+  clientOverview Json?
+  caseDetails    Json?
+  mainContent    Json?
+
+  publishedAt DateTime?
+  scheduledAt DateTime? // SCHEDULED → auto-publish at this UTC instant
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  relatedProjects CaseStudyProject[]
+
+  @@unique([language, slug])
+  @@index([translationGroupId])
+  @@index([status, scheduledAt])
+  @@map("case_studies")
+}
+
+model CaseStudyProject {
+  caseStudyId String
+  projectId   String
+  caseStudy   CaseStudy @relation(fields: [caseStudyId], references: [id], onDelete: Cascade)
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([caseStudyId, projectId])
+  @@map("case_study_projects")
+}
+
+// ─── CONTENT: PROPERTY (resale listings) ─────────────────────────────────────
+model Property {
+  id                 String        @id @default(uuid())
+  sanityId           String        @unique
+  translationGroupId String?
+  language           Locale
+  slug               String
+  title              String
+  excerpt            String?
+  status             ContentStatus @default(PUBLISHED)
+
+  price        Int?
+  address      String?
+  city         String?
+  district     String?
+  type         String? // Apartment/Villa/...
+  purpose      String? // Sale/Rent
+  propertyType String? // Residential/Commercial/...
+  marketType   String? // Primary/Secondary
+  floorSize    Int?
+  rooms        Int?
+  hasParking   Boolean?
+  hasPool      Boolean?
+  isActual     Boolean  @default(true)
+  latitude     Float?
+  longitude    Float?
+
+  previewImage Json?
+  images       Json?
+  videoId      String?
+  videoPreview Json?
+  description  Json?
+  distances    Json?
+  seo          Json?
+
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([language, slug])
+  @@index([translationGroupId])
+  @@map("properties")
+}
+
+// ─── CONTENT: DEVELOPER (per-language; names NOT shown on frontend per copy rules) ──
+model Developer {
+  id                 String   @id @default(uuid())
+  sanityId           String   @unique
+  translationGroupId String?
+  language           Locale
+  slug               String
+  title              String
+  titleFull          String?
+  excerpt            String?
+  logo               Json?
+  description        Json?
+  seo                Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  projects Project[]
+
+  @@unique([language, slug])
+  @@index([translationGroupId])
+  @@map("developers")
+}
+
+// ─── CONTENT: AUTHOR / CATEGORY (per-language, simple) ───────────────────────
+model Author {
+  id                 String   @id @default(uuid())
+  sanityId           String   @unique
+  translationGroupId String?
+  language           Locale
+  name               String
+  position           String?
+  specialization     String[] @default([])
+  bio                String?
+  image              Json?
+  linkedin           String?
+  blogs              Blog[]
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([translationGroupId])
+  @@map("authors")
+}
+
+model Category {
+  id                 String   @id @default(uuid())
+  sanityId           String   @unique
+  translationGroupId String?
+  language           Locale
+  title              String
+  slug               String
+  blogs              Blog[]
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([language, slug])
+  @@index([translationGroupId])
+  @@map("categories")
+}
+
+// ─── CONTENT: DOC FILE (downloadable; NOT localized — plain slug) ────────────
+model DocFile {
+  id        String   @id @default(uuid())
+  sanityId  String   @unique
+  title     String
+  slug      String   @unique
+  file      Json? // { url (local path), originalFilename, mimeType, size }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("doc_files")
+}
+
+// ─── SINGLETONS / SITE CONFIG (homepage, header, footer, *Page, forms) ───────
+// Per-language config & page-builder docs stored generically as JSON.
+model SiteDocument {
+  id        String   @id @default(uuid())
+  sanityId  String   @unique
+  type      String // homepage|header|footer|blogPage|projectsPage|caseStudiesPage|propertiesPage|notFoundPage|formStandardDocument
+  language  Locale
+  data      Json
+  updatedAt DateTime @updatedAt
+
+  @@unique([type, language])
+  @@index([type])
+  @@map("site_documents")
+}
+
+// ─── MEDIA (catalog of migrated Sanity assets + future admin uploads) ────────
+model Media {
+  id               String   @id @default(uuid())
+  sanityAssetId    String?  @unique // image-...-jpg / file-... ref, for migration mapping
+  filename         String
+  originalFilename String?
+  path             String // /uploads/...
+  url              String // /uploads/...
+  mimeType         String?
+  fileSize         Int?
+  width            Int?
+  height           Int?
+  altText          String?
+  blurDataUrl      String?
+  uploadedById     String?
+  uploadedBy       User?    @relation(fields: [uploadedById], references: [id])
+  createdAt        DateTime @default(now())
+
+  @@map("media")
+}
+
+// ─── ADMIN USERS / SESSIONS ──────────────────────────────────────────────────
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  name          String
+  role          UserRole  @default(EDITOR)
+  avatar        String?
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  assignedLeads Lead[]    @relation("AssignedLeads")
+  uploadedMedia Media[]
+  sessions      Session[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// ─── CRM / LEADS ─────────────────────────────────────────────────────────────
+model Lead {
+  id                   String         @id @default(uuid())
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  status               LeadStatus     @default(NEW)
+  source               LeadSource     @default(CONTACT_FORM)
+  firstName            String
+  lastName             String
+  email                String
+  phone                String?
+  nationality          String?
+  languagePreference   Locale?
+  budgetMin            Int?
+  budgetMax            Int?
+  timeline             LeadTimeline?
+  financing            LeadFinancing?
+  propertyTypeInterest String[]       @default([])
+  message              String?
+  notes                String?
+  assignedToId         String?
+  assignedTo           User?          @relation("AssignedLeads", fields: [assignedToId], references: [id])
+  projectInterestId    String?
+  projectInterest      Project?       @relation(fields: [projectInterestId], references: [id])
+  pageSource           String?
+  utmSource            String?
+  utmMedium            String?
+  utmCampaign          String?
+  telegramNotified     Boolean        @default(false)
+  emailNotified        Boolean        @default(false)
+  activities           LeadActivity[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("leads")
+}
+
+model LeadActivity {
+  id        String   @id @default(uuid())
+  leadId    String
+  type      String
+  content   String?
+  createdAt DateTime @default(now())
+  createdBy String?
+  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@map("lead_activities")
+}
+
+// ─── ANALYTICS (self-hosted) ─────────────────────────────────────────────────
+model PageView {
+  id          Int      @id @default(autoincrement())
+  path        String
+  locale      String?
+  referrer    String?
+  userAgent   String?
+  visitorHash String? // cookieless daily-rotating hash (no IP/PII); for unique-visitor counts
+  createdAt   DateTime @default(now())
+
+  @@index([path])
+  @@index([createdAt])
+  @@index([visitorHash])
+  @@map("page_views")
+}
+
+// ─── AUTOMATION LAYER (future-ready, created empty) ──────────────────────────
+model FeedSource {
+  id          String    @id @default(uuid())
+  name        String
+  url         String
+  type        String
+  isActive    Boolean   @default(true)
+  lastFetched DateTime?
+  lastStatus  String?
+  errorLog    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  syncLogs    SyncLog[]
+
+  @@map("feed_sources")
+}
+
+model SyncLog {
+  id              String     @id @default(uuid())
+  feedSourceId    String
+  startedAt       DateTime   @default(now())
+  completedAt     DateTime?
+  status          String
+  recordsFound    Int?
+  recordsCreated  Int?
+  recordsUpdated  Int?
+  recordsArchived Int?
+  errorMessage    String?
+  feedSource      FeedSource @relation(fields: [feedSourceId], references: [id])
+
+  @@map("sync_logs")
+}
+
+model AiGenerationQueue {
+  id          String    @id @default(uuid())
+  entityType  String
+  entityId    String
+  locale      Locale
+  prompt      String?
+  status      String    @default("PENDING")
+  result      Json?
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+
+  @@map("ai_generation_queue")
+}

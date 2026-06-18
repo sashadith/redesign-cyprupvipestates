@@ -1,0 +1,29 @@
+.newsLetterForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.newsLetterInput {
+  padding: 10px;
+  border: 1px solid #bd8948;
+  background-color: transparent;
+  color: #fff;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.newsLetterButton {
+  padding: 10px;
+  background-color: #bd8948;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #a97b4d;
+  }
+}

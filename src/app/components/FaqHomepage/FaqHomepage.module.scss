@@ -1,0 +1,9 @@
+.faqHomepage {
+  padding-top: clamp(2.813rem, 1.563rem + 6.25vw, 6.25rem);
+  padding-bottom: clamp(2.813rem, 1.563rem + 6.25vw, 6.25rem);
+
+  h2 {
+    max-width: 850px;
+    word-break: break-word;
+  }
+}

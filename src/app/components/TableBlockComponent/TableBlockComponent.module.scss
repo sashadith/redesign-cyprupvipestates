@@ -1,0 +1,23 @@
+.tableBlockComponent {
+  /* даём контейнеру таблицы собственную прокрутку, а не всей странице */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch; /* плавный скролл на iOS */
+  }
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.th {
+  padding: 0.7rem;           /* эквивалент px-4 py-2 */
+  border: 1px solid #e5e7eb; /* Tailwind border-gray-200 */
+  background-color: #f3f4f6; /* Tailwind bg-gray-100 */
+  text-align: left;
+  color: #000;             /* текст чёрный */
+}
+
+.td {
+  padding: 0.7rem;           /* эквивалент px-4 py-2 */
+  border: 1px solid #e5e7eb; /* Tailwind border-gray-200 */
+}

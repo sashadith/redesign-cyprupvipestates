@@ -1,0 +1,76 @@
+.author {
+  margin-top: 20px;
+  border-radius: 5px;
+  // background-color: #e5e7eb;
+  border: 1px solid #ddd;
+  padding: 10px 20px 10px 10px;
+  max-width: 700px;
+  margin: 0 auto;
+
+}
+
+.authorWrapper {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  overflow: hidden;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 90px 1fr;
+  }
+}
+
+.authorImage {
+  overflow: hidden;
+  border-radius: 2px;
+  display: none;
+
+
+  @media (min-width: 768px) {
+    display: block;
+  }
+
+  img {
+    object-fit: cover;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.authorInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  color:#e5e7eb;
+  font-weight: 300;
+}
+
+.authorDataWrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+}
+
+.authorName {
+  font-size: 1.2rem;
+  font-weight: 400;
+}
+
+.authorPosition {
+  font-size: 0.9rem;
+  color: #bdbbbb;
+  font-style: italic;
+}
+
+.authorBio {
+  font-size: 0.8rem;
+}
+
+.authorLinkedin {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  text-decoration: none;
+  width: fit-content;
+  color: var(--corp-color);
+}
