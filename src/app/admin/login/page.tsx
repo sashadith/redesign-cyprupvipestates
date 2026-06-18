@@ -36,7 +36,7 @@ export default async function LoginPage({
     <div className="min-h-screen flex items-center justify-center bg-[#F8F9FA] font-sans">
       <form action={login} className="w-full max-w-sm bg-white rounded-lg border border-[#E5E7EB] p-8 shadow-sm">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={LOGO} alt="Cyprus VIP Estates" className="h-12 w-auto mx-auto mb-5" />
+        <img src={LOGO} alt="Cyprus VIP Estates" className="h-48 w-auto mx-auto mb-5" />
         <p className="text-sm text-[#6B7280] mb-6 text-center">Admin sign in</p>
         {searchParams?.reset && (
           <p className="mb-4 text-sm text-[#1B4B43] bg-[#1B4B43]/10 rounded px-3 py-2">Password updated — you can sign in now.</p>
