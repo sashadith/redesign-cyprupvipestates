@@ -483,6 +483,57 @@ export async function saveSinglepageContentBlocks(id: string, items: BlockItem[]
   return { ok: true };
 }
 
+// ── Developers (reference entity — no status) ──
+function revalidateDeveloperPublic(language: string, slug: string) {
+  revalidatePath(`/${language}/developers/${slug}`);
+}
+export async function updateDeveloperMeta(id: string, formData: FormData) {
+  await requireSession();
+  const row = await prisma.developer.update({
+    where: { id },
+    data: {
+      title: String(formData.get("title") ?? "").trim(),
+      titleFull: String(formData.get("titleFull") ?? "").trim() || null,
+      excerpt: String(formData.get("excerpt") ?? "").trim() || null,
+      logo: jsonOrDbNull(parseJsonField(formData.get("logo"))),
+      seo: {
+        metaTitle: String(formData.get("seoTitle") ?? "").trim(),
+        metaDescription: String(formData.get("seoDescription") ?? "").trim(),
+      },
+    },
+  });
+  revalidatePath(`/admin/content/developers/${id}`);
+  revalidatePath("/admin/content/developers");
+  revalidateDeveloperPublic(row.language, row.slug);
+}
+export async function saveDeveloperDescription(id: string, html: string) {
+  await requireSession();
+  const row = await prisma.developer.update({ where: { id }, data: { description: htmlToPortableText(html) as any } });
+  revalidatePath(`/admin/content/developers/${id}`);
+  revalidateDeveloperPublic(row.language, row.slug);
+  return { ok: true };
+}
+
+// ── Authors (reference entity — appears on blog posts; bio is plain text) ──
+export async function updateAuthorMeta(id: string, formData: FormData) {
+  await requireSession();
+  const specialization = String(formData.get("specialization") ?? "")
+    .split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
+  await prisma.author.update({
+    where: { id },
+    data: {
+      name: String(formData.get("name") ?? "").trim(),
+      position: String(formData.get("position") ?? "").trim() || null,
+      bio: String(formData.get("bio") ?? "").trim() || null,
+      linkedin: String(formData.get("linkedin") ?? "").trim() || null,
+      specialization,
+      image: jsonOrDbNull(parseJsonField(formData.get("image"))),
+    },
+  });
+  revalidatePath(`/admin/content/authors/${id}`);
+  revalidatePath("/admin/content/authors");
+}
+
 // ── Case studies ──
 // Edits the safe fields (rich `caseDetails` Portable Text is preserved untouched —
 // a dedicated rich editor for those is a follow-up; main body is edited as blocks).
