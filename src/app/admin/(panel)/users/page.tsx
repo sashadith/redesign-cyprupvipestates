@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { toggleUserActive } from "../../actions";
 import CreateUserForm from "./create-user-form";
+import UserRowActions from "./user-row-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -27,25 +27,23 @@ export default async function UsersPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E5E7EB]">
-            {users.map((u) => {
-              const toggle = toggleUserActive.bind(null, u.id);
-              return (
-                <tr key={u.id}>
-                  <td className="px-4 py-2.5">{u.name}</td>
-                  <td className="px-4 py-2.5 text-[#6B7280]">{u.email}</td>
-                  <td className="px-4 py-2.5">{u.role}</td>
-                  <td className="px-4 py-2.5">{u.isActive ? "✓" : "—"}</td>
-                  <td className="px-4 py-2.5 text-[#6B7280]">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString("en-GB") : "—"}</td>
-                  <td className="px-4 py-2.5 text-right">
-                    {(session?.user as any)?.id !== u.id && (
-                      <form action={toggle}>
-                        <button className="text-xs text-[#1B4B43] hover:underline">{u.isActive ? "Deactivate" : "Activate"}</button>
-                      </form>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
+            {users.map((u) => (
+              <tr key={u.id}>
+                <td className="px-4 py-2.5">{u.name}</td>
+                <td className="px-4 py-2.5 text-[#6B7280]">{u.email}</td>
+                <td className="px-4 py-2.5">{u.role}</td>
+                <td className="px-4 py-2.5">{u.isActive ? "✓" : "—"}</td>
+                <td className="px-4 py-2.5 text-[#6B7280]">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString("en-GB") : "—"}</td>
+                <td className="px-4 py-2.5 text-right">
+                  <UserRowActions
+                    userId={u.id}
+                    email={u.email}
+                    isActive={u.isActive}
+                    isSelf={(session?.user as any)?.id === u.id}
+                  />
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

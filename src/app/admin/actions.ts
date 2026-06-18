@@ -4,8 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { auth, signOut } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
+import nodemailer from "nodemailer";
 import { htmlToPortableText } from "@/lib/portableText/htmlToPt.mjs";
 import { zonedInputToUtc } from "@/lib/tz";
 
@@ -97,6 +99,111 @@ export async function toggleUserActive(id: string) {
   if (!u) throw new Error("Not found");
   await prisma.user.update({ where: { id }, data: { isActive: !u.isActive } });
   revalidatePath("/admin/users");
+}
+
+// Hard-delete a user. Guards against self-removal and removing the last admin.
+// Unassigns their leads and nulls their uploaded media first; sessions cascade.
+export async function deleteUser(id: string) {
+  const session = await requireAdmin();
+  if ((session.user as any).id === id) throw new Error("You cannot remove your own account.");
+  const u = await prisma.user.findUnique({ where: { id } });
+  if (!u) throw new Error("Not found");
+  if (u.role === "ADMIN") {
+    const admins = await prisma.user.count({ where: { role: "ADMIN" } });
+    if (admins <= 1) throw new Error("Cannot remove the last admin.");
+  }
+  await prisma.$transaction([
+    prisma.lead.updateMany({ where: { assignedToId: id }, data: { assignedToId: null } }),
+    prisma.media.updateMany({ where: { uploadedById: id }, data: { uploadedById: null } }),
+    prisma.user.delete({ where: { id } }),
+  ]);
+  revalidatePath("/admin/users");
+}
+
+// Admin sets/resets another user's password directly (no email round-trip).
+export async function adminSetPassword(id: string, _prev: any, formData: FormData): Promise<{ ok?: string; error?: string }> {
+  await requireAdmin();
+  const next = String(formData.get("password") ?? "");
+  if (next.length < 12) return { error: "Password must be at least 12 characters." };
+  const u = await prisma.user.findUnique({ where: { id } });
+  if (!u) return { error: "User not found." };
+  await prisma.user.update({ where: { id }, data: { password: await bcrypt.hash(next, 10) } });
+  revalidatePath("/admin/users");
+  return { ok: `Password updated for ${u.email}.` };
+}
+
+// ── Self-service password reset (forgot-password flow) ──
+const resetMailer = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST || "smtp.hostinger.com",
+  port: Number(process.env.EMAIL_PORT || 465),
+  secure: String(process.env.EMAIL_SECURE || "true") === "true",
+  auth: { user: process.env.EMAIL_USER!, pass: process.env.EMAIL_PASSWORD! },
+});
+const RESET_TTL_MS = 60 * 60 * 1000; // 1 hour
+const sha256 = (s: string) => crypto.createHash("sha256").update(s).digest("hex");
+
+// Base URL for the reset link. The Host header is attacker-controllable, so a
+// reset link must NEVER be built from it unvalidated (reset poisoning → token
+// theft). We allow only known hosts (covers staging IP + production domain) and
+// fall back to the canonical domain for anything else; protocol is derived from
+// the validated host, not from a spoofable X-Forwarded-Proto.
+const RESET_HOSTS = new Set([
+  "cyprusvipestates.com",
+  "www.cyprusvipestates.com",
+  "72.60.89.239",
+]);
+function requestBaseUrl(): string {
+  const raw = (headers().get("host") ?? "").toLowerCase();
+  const host = RESET_HOSTS.has(raw) ? raw : "cyprusvipestates.com";
+  const proto = host === "72.60.89.239" ? "http" : "https";
+  return `${proto}://${host}`;
+}
+
+// Step 1: request a reset link. Enumeration-safe — always returns the same message.
+export async function requestPasswordReset(_prev: any, formData: FormData): Promise<{ ok?: string; error?: string }> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const generic = { ok: "If that email is registered, a reset link has been sent." };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Enter a valid email." };
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (user && user.isActive) {
+    const token = crypto.randomBytes(32).toString("hex");
+    await prisma.passwordResetToken.create({
+      data: { userId: user.id, tokenHash: sha256(token), expiresAt: new Date(Date.now() + RESET_TTL_MS) },
+    });
+    const link = `${requestBaseUrl()}/admin/reset?token=${token}`;
+    try {
+      await resetMailer.sendMail({
+        from: `Cyprus VIP Estates <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        subject: "Reset your admin password",
+        text: `Reset your Cyprus VIP Estates admin password:\n\n${link}\n\nThis link expires in 1 hour and can be used once. If you did not request this, ignore this email.`,
+      });
+    } catch {
+      // Don't leak delivery failures to the client; the generic message stands.
+    }
+  }
+  return generic;
+}
+
+// Step 2: complete the reset with a valid, unexpired, unused token.
+export async function resetPasswordWithToken(_prev: any, formData: FormData): Promise<{ ok?: string; error?: string }> {
+  const token = String(formData.get("token") ?? "");
+  const next = String(formData.get("password") ?? "");
+  if (next.length < 12) return { error: "Password must be at least 12 characters." };
+  if (!token) return { error: "Invalid or missing reset token." };
+
+  const row = await prisma.passwordResetToken.findUnique({ where: { tokenHash: sha256(token) } });
+  if (!row || row.usedAt || row.expiresAt < new Date()) {
+    return { error: "This reset link is invalid or has expired. Request a new one." };
+  }
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: row.userId }, data: { password: await bcrypt.hash(next, 10) } }),
+    prisma.passwordResetToken.update({ where: { id: row.id }, data: { usedAt: new Date() } }),
+    // invalidate any other outstanding tokens for this user
+    prisma.passwordResetToken.deleteMany({ where: { userId: row.userId, usedAt: null } }),
+  ]);
+  return { ok: "Password updated. You can now sign in." };
 }
 
 // ── Content meta editing (slug intentionally NOT editable — URL preservation) ──

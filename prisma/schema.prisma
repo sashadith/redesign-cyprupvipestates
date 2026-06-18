@@ -410,8 +410,23 @@ model User {
   assignedLeads Lead[]    @relation("AssignedLeads")
   uploadedMedia Media[]
   sessions      Session[]
+  resetTokens   PasswordResetToken[]
 
   @@map("users")
+}
+
+// Self-service password reset — one-time, hashed, short-lived tokens.
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("password_reset_tokens")
 }
 
 model Session {
