@@ -30,7 +30,6 @@ import FormStatic from "../components/FormStatic/FormStatic";
 import LogosCarousel from "../components/LogosCarousel/LogosCarousel";
 import DevelopersLogos from "../components/DevelopersLogos/DevelopersLogos";
 import BenefitsBlock from "../components/BenefitsBlock/BenefitsBlock";
-import homepage from "@/sanity/schemaTypes/homepage";
 import HowWeWorkBlock from "../components/HowWeWorkBlock/HowWeWorkBlock";
 import ReviewsFullBlockComponent from "../components/ReviewsFullBlockComponent/ReviewsFullBlockComponent";
 import WhatsAppButton from "../components/WhatsAppButton/WhatsAppButton";

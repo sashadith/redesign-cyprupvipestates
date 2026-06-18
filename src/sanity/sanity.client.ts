@@ -4,11 +4,8 @@
 // Next.js <Image> handles on-the-fly resizing of the originals (WebP/sizes deferred).
 import { refToLocalUrl } from "@/lib/sanityRefs";
 
-export const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID as string;
-export const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET as string;
-export const apiVersion = "2023-10-16";
-export const useCdn = false;
-export const token = process.env.SANITY_API_TOKEN;
+// (Sanity project/dataset/token exports removed post-migration — nothing reads
+// them; all data now comes from Prisma. urlFor() below is the only live API.)
 
 function extractRef(src: any): string | null {
   if (!src) return null;
@@ -58,5 +55,3 @@ export const client = {
     );
   },
 };
-
-export const sanityConfig = { projectId, dataset, apiVersion, useCdn, token };
