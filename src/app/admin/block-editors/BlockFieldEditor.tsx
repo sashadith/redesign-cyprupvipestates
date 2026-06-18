@@ -148,6 +148,34 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
     );
   }
 
+  // Landing intro: image + plain-text fields (its `content` siblings render via
+  // the rich-text branch below; this block's text is plain strings).
+  if (type === "landingIntroBlock") {
+    const img = block.image ?? {};
+    const setImg = (v: { ref?: string; alt?: string }) =>
+      set({ image: { ...img, _type: "image", alt: v.alt, asset: v.ref ? { _type: "reference", _ref: v.ref } : img.asset } });
+    return (
+      <div className="space-y-2">
+        <label className="text-xs text-[#6B7280] block">Title<input className={input} value={block.title ?? ""} onChange={(e) => set({ title: e.target.value })} /></label>
+        <label className="text-xs text-[#6B7280] block">Subtitle<input className={input} value={block.subtitle ?? ""} onChange={(e) => set({ subtitle: e.target.value })} /></label>
+        <label className="text-xs text-[#6B7280] block">Button label<input className={input} value={block.buttonLabel ?? ""} onChange={(e) => set({ buttonLabel: e.target.value })} /></label>
+        <label className="text-xs text-[#6B7280] block">Description<textarea rows={3} className={input} value={block.description ?? ""} onChange={(e) => set({ description: e.target.value })} /></label>
+        <div><div className="text-xs text-[#6B7280] mb-1">Image</div><ImageField refValue={img.asset?._ref} alt={img.alt} onChange={setImg} /></div>
+      </div>
+    );
+  }
+
+  // Landing projects: editable title; the selected projects list is preserved
+  // (managed by the relational project references, not edited here).
+  if (type === "landingProjectsBlock") {
+    return (
+      <div className="space-y-2">
+        <label className="text-xs text-[#6B7280] block">Title<input className={input} value={block.title ?? ""} onChange={(e) => set({ title: e.target.value })} /></label>
+        <p className="text-[11px] text-[#9CA3AF]">{Array.isArray(block.projects) ? `${block.projects.length} linked projects (preserved)` : "No linked projects"}</p>
+      </div>
+    );
+  }
+
   // Generic: a unified RichTextField for every Portable Text field found in the
   // block, plus a JSON fallback for the remaining (non-rich) structure.
   const rich = findRichFields(block);
