@@ -9,7 +9,22 @@ import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
 import { htmlToPortableText } from "@/lib/portableText/htmlToPt.mjs";
+import { isHtmlMarker } from "@/lib/portableText/richText";
 import { zonedInputToUtc } from "@/lib/tz";
+
+// Convert every `{__html}` rich-text marker (produced by the block editor) into
+// Portable Text via the shared converter — so all blocks store consistent PT and
+// nothing hand-builds it. Recursive, position-independent.
+function convertHtmlMarkers(node: any): any {
+  if (isHtmlMarker(node)) return htmlToPortableText(node.__html);
+  if (Array.isArray(node)) return node.map(convertHtmlMarkers);
+  if (node && typeof node === "object") {
+    const o: any = {};
+    for (const [key, v] of Object.entries(node)) o[key] = convertHtmlMarkers(v);
+    return o;
+  }
+  return node;
+}
 
 const LOCALES = ["en", "de", "pl", "ru"];
 
@@ -441,7 +456,7 @@ export async function saveBlogContentBlocks(id: string, items: BlockItem[]) {
         const orig = (it.block && typeof it.block === "object") ? it.block : {};
         return { ...orig, _type: "textContent", _key: it.key, content: htmlToPortableText(it.html ?? "") };
       }
-      return it.block ?? null;
+      return it.block ? convertHtmlMarkers(it.block) : null;
     })
     .filter(Boolean);
   const row = await prisma.blog.update({ where: { id }, data: { contentBlocks: blocks as any } });
@@ -459,7 +474,7 @@ export async function saveSinglepageContentBlocks(id: string, items: BlockItem[]
         const orig = (it.block && typeof it.block === "object") ? it.block : {};
         return { ...orig, _type: "textContent", _key: it.key, content: htmlToPortableText(it.html ?? "") };
       }
-      return it.block ?? null;
+      return it.block ? convertHtmlMarkers(it.block) : null;
     })
     .filter(Boolean);
   const row = await prisma.singlepage.update({ where: { id }, data: { contentBlocks: blocks as any } });
@@ -511,7 +526,7 @@ export async function saveCaseStudyContentBlocks(id: string, items: BlockItem[])
         const orig = (it.block && typeof it.block === "object") ? it.block : {};
         return { ...orig, _type: "textContent", _key: it.key, content: htmlToPortableText(it.html ?? "") };
       }
-      return it.block ?? null;
+      return it.block ? convertHtmlMarkers(it.block) : null;
     })
     .filter(Boolean);
   const row = await prisma.caseStudy.update({ where: { id }, data: { mainContent: blocks as any } });

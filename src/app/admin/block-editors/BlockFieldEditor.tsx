@@ -1,33 +1,21 @@
 "use client";
 import { useState } from "react";
 import { refToLocalUrl } from "@/lib/sanityRefs";
+import { portableTextToHtml } from "@/lib/portableText/ptToHtml.mjs";
+import RichTextField from "../RichTextField";
+import { findRichFields, getAtPath, setAtPath, isHtmlMarker } from "@/lib/portableText/richText";
 
-// Structured field editors for the common content-block types. Each mutates the
-// raw block object via onChange (the save action stores block.* as-is). Types
-// without a bespoke editor fall back to a guarded JSON editor so every block is
-// still editable. Rich-text-inside-block types (double-text, landing, sections)
-// use the JSON fallback for now — their nested Portable Text needs server-side
-// conversion that can't run here.
+// Structured editors for non-rich fields (alignment, table cells, images, FAQ
+// questions). ALL rich-text fields — anywhere in any block — go through the same
+// RichTextField (TipTap) as page descriptions; editing replaces the field with an
+// `{__html}` marker that the save action converts via the shared htmlToPortableText.
 
 let kc = 0;
 const k = () => `k-${Date.now().toString(36)}-${kc++}`;
 const input = "w-full rounded-md border border-[#E5E7EB] px-2 py-1.5 text-sm outline-none focus:border-[#1B4B43]";
 
-// Portable Text <-> plain text (paragraphs). Lossy for inline marks, fine for FAQ answers.
-const ptToPlain = (pt: any): string =>
-  Array.isArray(pt) ? pt.map((b) => (b?.children || []).map((c: any) => c?.text || "").join("")).join("\n") : "";
-const plainToPt = (text: string): any[] => {
-  const lines = String(text || "").split("\n");
-  return (lines.length ? lines : [""]).map((line) => ({
-    _type: "block",
-    _key: k(),
-    style: "normal",
-    markDefs: [],
-    children: [{ _type: "span", _key: k(), text: line, marks: [] }],
-  }));
-};
-
-export const STRUCTURED_TYPES = new Set(["buttonBlock", "tableBlock", "imageFullBlock", "faqBlock"]);
+const richInitialHtml = (v: any): string => (isHtmlMarker(v) ? v.__html : portableTextToHtml(Array.isArray(v) ? v : []));
+const clone = (o: any) => (typeof structuredClone === "function" ? structuredClone(o) : JSON.parse(JSON.stringify(o)));
 
 function ImageField({ refValue, alt, onChange }: { refValue?: string; alt?: string; onChange: (v: { ref?: string; alt?: string }) => void }) {
   const [busy, setBusy] = useState(false);
@@ -57,9 +45,20 @@ function ImageField({ refValue, alt, onChange }: { refValue?: string; alt?: stri
   );
 }
 
+function RichField({ label, value, onChange }: { label: string; value: any; onChange: (html: string) => void }) {
+  return (
+    <div>
+      <div className="text-xs font-medium text-[#6B7280] mb-1">{label}</div>
+      <RichTextField initialHtml={richInitialHtml(value)} onChange={onChange} />
+    </div>
+  );
+}
+
 export default function BlockFieldEditor({ block, onChange }: { block: any; onChange: (b: any) => void }) {
   const type = block?._type;
   const set = (patch: any) => onChange({ ...block, ...patch });
+  // Replace a rich field (by path) with an {__html} marker, immutably.
+  const setRich = (path: string, html: string) => { const next = clone(block); setAtPath(next, path, { __html: html }); onChange(next); };
 
   if (type === "buttonBlock") {
     return (
@@ -96,28 +95,6 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
     );
   }
 
-  if (type === "faqBlock") {
-    const items: any[] = block.faq?.items ?? [];
-    const setItems = (next: any[]) => set({ faq: { ...(block.faq ?? { _type: "accordionBlock" }), items: next } });
-    return (
-      <div className="space-y-3">
-        {items.map((it, i) => (
-          <div key={it._key ?? i} className="border border-[#E5E7EB] rounded p-2 space-y-1.5">
-            <div className="flex gap-2">
-              <input className={input} value={it.question ?? ""} placeholder="Question"
-                onChange={(e) => setItems(items.map((x, j) => (j === i ? { ...x, question: e.target.value } : x)))} />
-              <button type="button" onClick={() => setItems(items.filter((_, j) => j !== i))} className="text-xs text-[#C0392B] px-2">✕</button>
-            </div>
-            <textarea className={input} rows={2} value={ptToPlain(it.answer)} placeholder="Answer"
-              onChange={(e) => setItems(items.map((x, j) => (j === i ? { ...x, answer: plainToPt(e.target.value) } : x)))} />
-          </div>
-        ))}
-        <button type="button" onClick={() => setItems([...items, { _key: k(), question: "", answer: plainToPt("") }])}
-          className="text-xs text-[#1B4B43] hover:underline">+ Add question</button>
-      </div>
-    );
-  }
-
   if (type === "tableBlock") {
     const columns: string[] = block.columns ?? [];
     const rows: any[] = block.rows ?? [];
@@ -148,26 +125,62 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
     );
   }
 
-  // Fallback: raw JSON (advanced) — keeps every block type editable.
-  return <JsonFallback block={block} onChange={onChange} />;
+  // FAQ / accordion: question (text) + answer (unified RichTextField).
+  if (type === "faqBlock" || type === "landingFaqBlock" || type === "accordionBlock") {
+    const itemsPath = block.faq ? "faq.items" : "items";
+    const items: any[] = getAtPath(block, itemsPath) ?? [];
+    const writeItems = (next: any[]) => { const b = clone(block); setAtPath(b, itemsPath, next); onChange(b); };
+    return (
+      <div className="space-y-3">
+        {items.map((it, i) => (
+          <div key={it._key ?? i} className="border border-[#E5E7EB] rounded p-2 space-y-2">
+            <div className="flex gap-2">
+              <input className={input} value={it.question ?? ""} placeholder="Question"
+                onChange={(e) => writeItems(items.map((x, j) => (j === i ? { ...x, question: e.target.value } : x)))} />
+              <button type="button" onClick={() => writeItems(items.filter((_, j) => j !== i))} className="text-xs text-[#C0392B] px-2">✕</button>
+            </div>
+            <RichField label="Answer" value={it.answer} onChange={(html) => setRich(`${itemsPath}.${i}.answer`, html)} />
+          </div>
+        ))}
+        <button type="button" onClick={() => writeItems([...items, { _key: k(), question: "", answer: [] }])}
+          className="text-xs text-[#1B4B43] hover:underline">+ Add question</button>
+      </div>
+    );
+  }
+
+  // Generic: a unified RichTextField for every Portable Text field found in the
+  // block, plus a JSON fallback for the remaining (non-rich) structure.
+  const rich = findRichFields(block);
+  return (
+    <div className="space-y-3">
+      {rich.map((f) => (
+        <RichField key={f.path} label={f.label} value={getAtPath(block, f.path)} onChange={(html) => setRich(f.path, html)} />
+      ))}
+      <JsonFallback block={block} onChange={onChange} hasRich={rich.length > 0} />
+    </div>
+  );
 }
 
-function JsonFallback({ block, onChange }: { block: any; onChange: (b: any) => void }) {
+function JsonFallback({ block, onChange, hasRich }: { block: any; onChange: (b: any) => void; hasRich: boolean }) {
+  const [open, setOpen] = useState(false);
   const [text, setText] = useState(() => JSON.stringify(block, null, 2));
   const [err, setErr] = useState<string | null>(null);
   return (
     <div>
-      <p className="text-[11px] text-[#9CA3AF] mb-1">Advanced (raw JSON) — no visual editor for this block type yet. Edit carefully.</p>
-      <textarea
-        className="w-full font-mono text-[11px] rounded-md border border-[#E5E7EB] px-2 py-1.5 outline-none focus:border-[#1B4B43]"
-        rows={8}
-        value={text}
-        onChange={(e) => {
-          setText(e.target.value);
-          try { onChange(JSON.parse(e.target.value)); setErr(null); } catch { setErr("Invalid JSON — not saved until fixed"); }
-        }}
-      />
-      {err && <p className="text-[11px] text-[#C0392B]">{err}</p>}
+      <button type="button" onClick={() => setOpen((o) => !o)} className="text-[11px] text-[#9CA3AF] hover:text-[#6B7280]">
+        {open ? "▾" : "▸"} {hasRich ? "Other fields" : "Block fields"} (advanced JSON)
+      </button>
+      {open && (
+        <>
+          <textarea
+            className="mt-1 w-full font-mono text-[11px] rounded-md border border-[#E5E7EB] px-2 py-1.5 outline-none focus:border-[#1B4B43]"
+            rows={8}
+            value={text}
+            onChange={(e) => { setText(e.target.value); try { onChange(JSON.parse(e.target.value)); setErr(null); } catch { setErr("Invalid JSON — not saved until fixed"); } }}
+          />
+          {err && <p className="text-[11px] text-[#C0392B]">{err}</p>}
+        </>
+      )}
     </div>
   );
 }
