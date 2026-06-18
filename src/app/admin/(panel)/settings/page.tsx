@@ -16,6 +16,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { l
   const d = (row?.data as any) ?? {};
   const contacts: any[] = Array.isArray(d.contacts) ? d.contacts : [];
   const socialLinks: any[] = Array.isArray(d.socialLinks) ? d.socialLinks : [];
+  const policyLinks: any[] = Array.isArray(d.policyLinks) ? d.policyLinks : [];
   const CONTACT_TYPES = ["Email", "Phone", "Link"];
   const save = updateFooterSettings.bind(null, lang);
 
@@ -45,6 +46,27 @@ export default async function SettingsPage({ searchParams }: { searchParams: { l
           <label className="block text-sm mb-1">Disclaimer</label>
           <textarea name="disclaimer" rows={5} defaultValue={d.discklaimer ?? ""} className={input} />
         </div>
+
+        <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#E5E7EB]">
+          <div><label className="block text-sm mb-1">Company column title</label><input name="companyTitle" defaultValue={d.companyTitle ?? ""} className={input} /></div>
+          <div><label className="block text-sm mb-1">Contact column title</label><input name="contactTitle" defaultValue={d.contactTitle ?? ""} className={input} /></div>
+          <div><label className="block text-sm mb-1">Newsletter title</label><input name="newsletterTitle" defaultValue={d.newsletterTitle ?? ""} className={input} /></div>
+          <div><label className="block text-sm mb-1">Newsletter button</label><input name="newsletterButtonLabel" defaultValue={d.newsletterButtonLabel ?? ""} className={input} /></div>
+        </div>
+
+        {policyLinks.length > 0 && (
+          <div className="pt-2 border-t border-[#E5E7EB]">
+            <h2 className="text-sm font-semibold mb-2">Policy links</h2>
+            <div className="space-y-3">
+              {policyLinks.map((l, i) => (
+                <div key={l._key ?? i} className="flex gap-2">
+                  <input name={`policy_${i}_label`} defaultValue={l.label ?? ""} className={`${input} w-40 shrink-0`} placeholder="Label" />
+                  <input name={`policy_${i}_link`} defaultValue={l.link ?? ""} className={input} placeholder="https://…" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {contacts.length > 0 && (
           <div className="pt-2 border-t border-[#E5E7EB]">

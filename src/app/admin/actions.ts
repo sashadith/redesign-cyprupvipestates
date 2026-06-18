@@ -362,13 +362,31 @@ export async function updateFooterSettings(lang: string, formData: FormData) {
       }))
     : prev.socialLinks;
 
+  const policyLinks = Array.isArray(prev.policyLinks)
+    ? prev.policyLinks.map((l: any, i: number) => ({
+        ...l,
+        label: String(formData.get(`policy_${i}_label`) ?? l.label ?? "").trim(),
+        link: String(formData.get(`policy_${i}_link`) ?? l.link ?? "").trim(),
+      }))
+    : prev.policyLinks;
+
+  const scalar = (key: string) => {
+    const v = formData.get(key);
+    return v === null ? prev[key] : String(v).trim();
+  };
+
   const data = {
     ...prev,
     copyright: String(formData.get("copyright") ?? "").trim(),
     vatNumber: String(formData.get("vatNumber") ?? "").trim(),
     discklaimer: String(formData.get("disclaimer") ?? "").trim(),
+    companyTitle: scalar("companyTitle"),
+    contactTitle: scalar("contactTitle"),
+    newsletterTitle: scalar("newsletterTitle"),
+    newsletterButtonLabel: scalar("newsletterButtonLabel"),
     contacts,
     socialLinks,
+    policyLinks,
   };
   await prisma.siteDocument.update({ where: { id: row.id }, data: { data } });
   revalidatePath("/admin/settings");
@@ -481,6 +499,60 @@ export async function saveSinglepageContentBlocks(id: string, items: BlockItem[]
   revalidatePath(`/admin/content/pages/${id}`);
   revalidateSinglepagePublic(row.language, row.slug);
   return { ok: true };
+}
+
+// ── Categories (reference entity; appears on blog posts) ──
+export async function updateCategory(id: string, formData: FormData) {
+  await requireSession();
+  await prisma.category.update({
+    where: { id },
+    data: { title: String(formData.get("title") ?? "").trim() },
+  });
+  revalidatePath(`/admin/content/categories/${id}`);
+  revalidatePath("/admin/content/categories");
+  revalidatePath("/", "layout"); // category labels appear across blog pages
+}
+
+// ── Header (site document, per language; renders on every page) ──
+export async function updateHeaderDoc(id: string, formData: FormData) {
+  await requireSession();
+  const row = await prisma.siteDocument.findUnique({ where: { id } });
+  if (!row || row.type !== "header") throw new Error("Header not found");
+  const data = row.data as any;
+  const navLinks = Array.isArray(data.navLinks)
+    ? data.navLinks.map((n: any, i: number) => ({
+        ...n, // preserve _key + subLinks
+        label: String(formData.get(`nav_${i}_label`) ?? n.label ?? ""),
+        link: String(formData.get(`nav_${i}_link`) ?? n.link ?? ""),
+      }))
+    : data.navLinks;
+  const next = {
+    ...data,
+    logo: parseJsonField(formData.get("logo")),
+    logoMobile: parseJsonField(formData.get("logoMobile")),
+    navLinks,
+  };
+  await prisma.siteDocument.update({ where: { id }, data: { data: next } });
+  revalidatePath("/admin/content/header");
+  revalidatePath("/", "layout");
+}
+
+// ── Forms (formStandardDocument; flat string labels) ──
+export async function updateFormDoc(id: string, formData: FormData) {
+  await requireSession();
+  const row = await prisma.siteDocument.findUnique({ where: { id } });
+  if (!row || row.type !== "formStandardDocument") throw new Error("Form not found");
+  const data = row.data as any;
+  const form = { ...(data.form ?? {}) };
+  for (const [k, v] of Object.entries(form)) {
+    if (!k.startsWith("_") && typeof v === "string") {
+      const next = formData.get(`f_${k}`);
+      if (next !== null) form[k] = String(next);
+    }
+  }
+  await prisma.siteDocument.update({ where: { id }, data: { data: { ...data, form } } });
+  revalidatePath("/admin/content/forms");
+  revalidatePath("/", "layout");
 }
 
 // ── Developers (reference entity — no status) ──
