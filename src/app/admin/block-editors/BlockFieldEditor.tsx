@@ -45,6 +45,31 @@ function ImageField({ refValue, alt, onChange }: { refValue?: string; alt?: stri
   );
 }
 
+const MARGINS = ["none", "small", "medium", "large"];
+
+// Generic add/remove/reorder list for arrays of objects. `render(item, patch, i)`
+// draws one item; `patch(partial)` merges into it. New items get a fresh _key.
+function ListEditor({ items, onChange, render, makeNew, addLabel }: {
+  items: any[];
+  onChange: (next: any[]) => void;
+  render: (item: any, patch: (p: any) => void, i: number) => React.ReactNode;
+  makeNew: () => any;
+  addLabel: string;
+}) {
+  const list = Array.isArray(items) ? items : [];
+  return (
+    <div className="space-y-2">
+      {list.map((it, i) => (
+        <div key={it._key ?? i} className="border border-[#E5E7EB] rounded p-2 space-y-1.5">
+          {render(it, (p) => onChange(list.map((x, j) => (j === i ? { ...x, ...p } : x))), i)}
+          <button type="button" onClick={() => onChange(list.filter((_, j) => j !== i))} className="text-[11px] text-[#C0392B] hover:underline">Remove</button>
+        </div>
+      ))}
+      <button type="button" onClick={() => onChange([...list, { _key: k(), ...makeNew() }])} className="text-xs text-[#1B4B43] hover:underline">{addLabel}</button>
+    </div>
+  );
+}
+
 function RichField({ label, value, onChange }: { label: string; value: any; onChange: (html: string) => void }) {
   return (
     <div>
@@ -172,6 +197,138 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
       <div className="space-y-2">
         <label className="text-xs text-[#6B7280] block">Title<input className={input} value={block.title ?? ""} onChange={(e) => set({ title: e.target.value })} /></label>
         <p className="text-[11px] text-[#9CA3AF]">{Array.isArray(block.projects) ? `${block.projects.length} linked projects (preserved)` : "No linked projects"}</p>
+      </div>
+    );
+  }
+
+  const titleRow = (
+    <label className="text-xs text-[#6B7280] block">Title<input className={input} value={block.title ?? ""} onChange={(e) => set({ title: e.target.value })} /></label>
+  );
+  const marginRow = (
+    <label className="text-xs text-[#6B7280] block">Spacing below
+      <select className={input} value={block.marginBottom ?? "large"} onChange={(e) => set({ marginBottom: e.target.value })}>
+        {MARGINS.map((m) => <option key={m} value={m}>{m}</option>)}
+      </select>
+    </label>
+  );
+
+  if (type === "bulletsBlock" || type === "howWeWorkBlock") {
+    return <div className="space-y-2">{titleRow}{marginRow}</div>;
+  }
+
+  if (type === "formMinimalBlock") {
+    return (
+      <div className="space-y-2">
+        {titleRow}
+        <label className="text-xs text-[#6B7280] block">Button text<input className={input} value={block.buttonText ?? ""} onChange={(e) => set({ buttonText: e.target.value })} /></label>
+        {marginRow}
+      </div>
+    );
+  }
+
+  if (type === "projectsSectionBlock") {
+    return (
+      <div className="space-y-2">
+        {titleRow}
+        <p className="text-[11px] text-[#9CA3AF]">{Array.isArray(block.projects) ? `${block.projects.length} linked projects (preserved)` : "No linked projects"}</p>
+        {marginRow}
+      </div>
+    );
+  }
+
+  if (type === "locationBlock") {
+    const loc = block.location ?? {};
+    const setLoc = (p: any) => set({ location: { ...loc, ...p } });
+    const num = (v: string) => (v === "" ? null : Number(v));
+    return (
+      <div className="space-y-2">
+        {titleRow}
+        <div className="grid grid-cols-2 gap-2">
+          <label className="text-xs text-[#6B7280] block">Latitude<input type="number" step="any" className={input} value={loc.lat ?? ""} onChange={(e) => setLoc({ lat: num(e.target.value) })} /></label>
+          <label className="text-xs text-[#6B7280] block">Longitude<input type="number" step="any" className={input} value={loc.lng ?? ""} onChange={(e) => setLoc({ lng: num(e.target.value) })} /></label>
+        </div>
+      </div>
+    );
+  }
+
+  if (type === "benefitsBlock") {
+    return (
+      <div className="space-y-2">
+        {titleRow}
+        <ListEditor items={block.benefits} onChange={(b) => set({ benefits: b })} makeNew={() => ({ title: "", counting: "", description: "" })} addLabel="+ Add benefit"
+          render={(it, patch) => (<>
+            <input className={input} placeholder="Title" value={it.title ?? ""} onChange={(e) => patch({ title: e.target.value })} />
+            <input className={input} placeholder="Number / counting" value={it.counting ?? ""} onChange={(e) => patch({ counting: e.target.value })} />
+            <textarea className={input} rows={2} placeholder="Description" value={it.description ?? ""} onChange={(e) => patch({ description: e.target.value })} />
+          </>)} />
+      </div>
+    );
+  }
+
+  if (type === "imageBulletsBlock") {
+    const img = block.image ?? {};
+    const setImg = (v: { ref?: string; alt?: string }) => set({ image: { ...img, _type: "image", alt: v.alt, asset: v.ref ? { _type: "reference", _ref: v.ref } : img.asset } });
+    return (
+      <div className="space-y-2">
+        {titleRow}
+        <div><div className="text-xs text-[#6B7280] mb-1">Image</div><ImageField refValue={img.asset?._ref} alt={img.alt} onChange={setImg} /></div>
+        <div className="text-xs text-[#6B7280]">Bullets</div>
+        <ListEditor items={block.bullets} onChange={(b) => set({ bullets: b })} makeNew={() => ({ title: "", description: "" })} addLabel="+ Add bullet"
+          render={(it, patch) => (<>
+            <input className={input} placeholder="Title" value={it.title ?? ""} onChange={(e) => patch({ title: e.target.value })} />
+            <textarea className={input} rows={2} placeholder="Description" value={it.description ?? ""} onChange={(e) => patch({ description: e.target.value })} />
+          </>)} />
+      </div>
+    );
+  }
+
+  if (type === "teamBlock") {
+    return (
+      <div className="space-y-2">
+        {titleRow}
+        <ListEditor items={block.members} onChange={(m) => set({ members: m })} makeNew={() => ({ name: "", position: "", description: "" })} addLabel="+ Add member"
+          render={(it, patch) => {
+            const mi = it.image ?? {};
+            return (<>
+              <input className={input} placeholder="Name" value={it.name ?? ""} onChange={(e) => patch({ name: e.target.value })} />
+              <input className={input} placeholder="Position" value={it.position ?? ""} onChange={(e) => patch({ position: e.target.value })} />
+              <textarea className={input} rows={2} placeholder="Description" value={it.description ?? ""} onChange={(e) => patch({ description: e.target.value })} />
+              <ImageField refValue={mi.asset?._ref} alt={mi.alt} onChange={(v) => patch({ image: { ...mi, _type: "image", alt: v.alt, asset: v.ref ? { _type: "reference", _ref: v.ref } : mi.asset } })} />
+            </>);
+          }} />
+      </div>
+    );
+  }
+
+  if (type === "contactFullBlock") {
+    return (
+      <div className="space-y-2">
+        {titleRow}
+        <label className="text-xs text-[#6B7280] block">Description<textarea className={input} rows={2} value={block.description ?? ""} onChange={(e) => set({ description: e.target.value })} /></label>
+        <div className="text-xs text-[#6B7280]">Contacts</div>
+        <ListEditor items={block.contacts} onChange={(c) => set({ contacts: c })} makeNew={() => ({ type: "Email", label: "", title: "" })} addLabel="+ Add contact"
+          render={(it, patch) => (<>
+            <select className={input} value={it.type ?? "Email"} onChange={(e) => patch({ type: e.target.value })}>{["Email", "Phone", "Link"].map((t) => <option key={t} value={t}>{t}</option>)}</select>
+            <input className={input} placeholder="Value (email / phone / url)" value={it.label ?? ""} onChange={(e) => patch({ label: e.target.value })} />
+            <input className={input} placeholder="Label" value={it.title ?? ""} onChange={(e) => patch({ title: e.target.value })} />
+          </>)} />
+      </div>
+    );
+  }
+
+  if (type === "reviewsFullBlock") {
+    return (
+      <div className="space-y-2">
+        {titleRow}
+        <ListEditor items={block.reviews} onChange={(r) => set({ reviews: r })} makeNew={() => ({ name: "", text: [] })} addLabel="+ Add review"
+          render={(it, patch) => {
+            const ri = it.image ?? {};
+            return (<>
+              <input className={input} placeholder="Name" value={it.name ?? ""} onChange={(e) => patch({ name: e.target.value })} />
+              <ImageField refValue={ri.asset?._ref} alt={ri.alt} onChange={(v) => patch({ image: { ...ri, _type: "image", alt: v.alt, asset: v.ref ? { _type: "reference", _ref: v.ref } : ri.asset } })} />
+              <RichField label="Review text" value={it.text} onChange={(html) => patch({ text: { __html: html } })} />
+            </>);
+          }} />
       </div>
     );
   }
