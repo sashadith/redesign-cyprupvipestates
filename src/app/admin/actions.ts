@@ -519,12 +519,22 @@ export async function updateHeaderDoc(id: string, formData: FormData) {
   const row = await prisma.siteDocument.findUnique({ where: { id } });
   if (!row || row.type !== "header") throw new Error("Header not found");
   const data = row.data as any;
-  const navLinks = Array.isArray(data.navLinks)
-    ? data.navLinks.map((n: any, i: number) => ({
-        ...n, // preserve _key + subLinks
-        label: String(formData.get(`nav_${i}_label`) ?? n.label ?? ""),
-        link: String(formData.get(`nav_${i}_link`) ?? n.link ?? ""),
-      }))
+  const key = () => crypto.randomBytes(6).toString("hex");
+  const parsed = parseJsonField(formData.get("navLinks"));
+  const navLinks = Array.isArray(parsed)
+    ? parsed
+        .map((n: any) => ({
+          ...n,
+          _key: typeof n._key === "string" && n._key ? n._key : key(),
+          label: String(n.label ?? "").trim(),
+          link: String(n.link ?? "").trim(),
+          subLinks: Array.isArray(n.subLinks)
+            ? n.subLinks
+                .map((s: any) => ({ ...s, _key: typeof s._key === "string" && s._key ? s._key : key(), label: String(s.label ?? "").trim(), link: String(s.link ?? "").trim() }))
+                .filter((s: any) => s.label || s.link)
+            : [],
+        }))
+        .filter((n: any) => n.label || n.link)
     : data.navLinks;
   const next = {
     ...data,
