@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { updateAuthorMeta } from "../../../../actions";
 import ImagePicker from "@/app/admin/ImagePicker";
+import TranslationsPanel from "@/app/admin/TranslationsPanel";
 
 export const dynamic = "force-dynamic";
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
@@ -17,6 +18,7 @@ export default async function EditAuthor({ params }: { params: { id: string } })
       <Link href="/admin/content/authors" className="text-sm text-[#1B4B43] hover:underline">← Back to authors</Link>
       <h1 className="text-2xl font-semibold mt-2 mb-1">{a.name}</h1>
       <p className="text-sm text-[#6B7280] mb-6">{a.language.toUpperCase()}</p>
+      <TranslationsPanel type="author" groupId={a.translationGroupId} currentId={a.id} />
 
       <form action={save} className="space-y-5">
         <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-4">

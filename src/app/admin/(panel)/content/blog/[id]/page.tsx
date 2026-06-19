@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { updateBlogMeta } from "../../../../actions";
 import BlockEditor from "@/app/admin/BlockEditor";
 import ImagePicker from "@/app/admin/ImagePicker";
+import TranslationsPanel from "@/app/admin/TranslationsPanel";
 import { utcToZonedInput } from "@/lib/tz";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,7 @@ export default async function EditBlog({ params }: { params: { id: string } }) {
       <Link href="/admin/content/blog" className="text-sm text-[#1B4B43] hover:underline">← Back to blog</Link>
       <h1 className="text-2xl font-semibold mt-2 mb-1">{b.title}</h1>
       <p className="text-sm text-[#6B7280] mb-6">{b.language.toUpperCase()} · /blog/{b.slug} <span className="text-[#C29A5E]">(slug locked — protects SEO URLs)</span></p>
+      <TranslationsPanel type="blog" groupId={b.translationGroupId} currentId={b.id} />
 
       <form action={save} className="space-y-5">
         <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-4">
