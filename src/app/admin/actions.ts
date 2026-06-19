@@ -336,6 +336,57 @@ export async function assignLead(id: string, userId: string) {
   revalidatePath("/admin");
 }
 
+// Manually create a lead from the admin (same data shape + validation as the
+// public lead API). Marked with source = MANUAL.
+const LEAD_TIMELINES = ["IMMEDIATE", "THREE_MONTHS", "SIX_MONTHS", "ONE_YEAR", "JUST_LOOKING"];
+const LEAD_FINANCING = ["CASH", "MORTGAGE", "UNDECIDED"];
+const LEAD_PROP_TYPES = ["Apartment", "Villa", "Townhouse", "Penthouse"];
+
+export async function createLead(_prev: any, formData: FormData): Promise<{ error?: string }> {
+  const session = await requireSession();
+  const firstName = String(formData.get("firstName") ?? "").trim();
+  const lastName = String(formData.get("lastName") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const phone = String(formData.get("phone") ?? "").trim();
+  if (!firstName) return { error: "First name is required." };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "A valid email is required." };
+
+  const num = (k: string) => { const v = String(formData.get(k) ?? "").trim(); return v === "" ? null : Math.round(Number(v)); };
+  const oneOf = (k: string, allowed: string[]) => { const v = String(formData.get(k) ?? "").trim(); return allowed.includes(v) ? v : null; };
+  const assignedToId = String(formData.get("assignedToId") ?? "").trim() || null;
+  if (assignedToId) {
+    const valid = await prisma.user.findFirst({ where: { id: assignedToId, isActive: true }, select: { id: true } });
+    if (!valid) return { error: "Invalid assignee." };
+  }
+
+  const lead = await prisma.lead.create({
+    data: {
+      firstName,
+      lastName: lastName || "",
+      email,
+      phone: phone || null,
+      nationality: String(formData.get("nationality") ?? "").trim() || null,
+      languagePreference: oneOf("languagePreference", LOCALES) as any,
+      budgetMin: num("budgetMin"),
+      budgetMax: num("budgetMax"),
+      timeline: oneOf("timeline", LEAD_TIMELINES) as any,
+      financing: oneOf("financing", LEAD_FINANCING) as any,
+      propertyTypeInterest: formData.getAll("propertyTypeInterest").map(String).filter((t) => LEAD_PROP_TYPES.includes(t)),
+      message: String(formData.get("message") ?? "").trim() || null,
+      notes: String(formData.get("notes") ?? "").trim() || null,
+      source: "MANUAL",
+      status: (oneOf("status", STATUSES) ?? "NEW") as any,
+      assignedToId,
+    },
+  });
+  await prisma.leadActivity.create({
+    data: { leadId: lead.id, type: "CREATED", content: "Lead created manually", createdBy: session.user?.name ?? "admin" },
+  });
+  revalidatePath("/admin/crm");
+  revalidatePath("/admin");
+  redirect(`/admin/crm/${lead.id}`);
+}
+
 // Site settings — edits only safe scalar fields on the footer doc; preserves the rest of the JSON.
 export async function updateFooterSettings(lang: string, formData: FormData) {
   await requireAdmin();

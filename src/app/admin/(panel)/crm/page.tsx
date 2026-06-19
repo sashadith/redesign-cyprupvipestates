@@ -15,7 +15,10 @@ export default async function CrmList() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">CRM / Leads <span className="text-base font-normal text-[#6B7280]">({leads.length})</span></h1>
-        <Link href="/admin/crm/board" className="text-sm text-[#1B4B43] hover:underline">Pipeline view →</Link>
+        <div className="flex items-center gap-4">
+          <Link href="/admin/crm/board" className="text-sm text-[#1B4B43] hover:underline">Pipeline view →</Link>
+          <Link href="/admin/crm/new" className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-4 py-2 hover:bg-[#142E2D]">+ New lead</Link>
+        </div>
       </div>
       <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-hidden">
         <table className="w-full text-sm">

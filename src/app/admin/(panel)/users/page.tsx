@@ -12,10 +12,10 @@ export default async function UsersPage() {
   const users = await prisma.user.findMany({ orderBy: { createdAt: "asc" } });
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Users</h1>
-      <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-x-auto">
+        <table className="w-full text-sm min-w-[640px]">
           <thead className="bg-[#F8F9FA] text-[#6B7280]">
             <tr>
               <th className="text-left font-medium px-4 py-2.5">Name</th>

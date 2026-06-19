@@ -55,6 +55,7 @@ enum LeadSource {
   WHATSAPP
   PHONE
   REFERRAL
+  MANUAL
   OTHER
 }
 
