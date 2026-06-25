@@ -2,6 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import styles from "./BreadcrumbsBlog.module.scss";
+import { localePrefix } from "@/lib/locale";
 
 type BreadcrumbsProps = {
   lang: string;
@@ -31,7 +32,7 @@ const BreadcrumbsBlog: React.FC<BreadcrumbsProps> = ({
   segments,
   currentTitle,
 }) => {
-  const base = lang === "de" ? "" : `/${lang}`;
+  const base = localePrefix(lang);
   const homeTitle = homeLabelByLang[lang] ?? homeLabelByLang.en;
   const blogTitle = blogLabelByLang[lang] ?? blogLabelByLang.en;
 

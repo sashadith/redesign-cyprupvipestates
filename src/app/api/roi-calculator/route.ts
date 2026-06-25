@@ -1,34 +1,14 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import { prisma } from "@/lib/prisma";
+import { parseAttribution } from "@/lib/attribution";
+import { recordInboundLead } from "@/lib/leadNotify";
+import { safeUrl, allowedHost, escapeHtml, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
 
-const ALLOWED_HOSTS = new Set([
-  "cyprusvipestates.com",
-  "www.cyprusvipestates.com",
-  "localhost",
-]);
+const LEAD_LOCALES = new Set(["en", "de", "pl", "ru"]);
 
-function safeUrl(raw: string) {
-  try {
-    return new URL(raw);
-  } catch {
-    return null;
-  }
-}
-
-function isAllowedHostFromUrl(raw: string) {
-  const u = safeUrl(raw);
-  if (!u) return false;
-  return ALLOWED_HOSTS.has(u.hostname);
-}
-
-function escapeHtml(input: unknown) {
-  return String(input ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+const ipLimiter = makeRateLimiter();
+const emailLimiter = makeRateLimiter();
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST || "smtp.hostinger.com",
@@ -353,6 +333,12 @@ function getClientEmail(payload: any) {
 
 export async function POST(request: Request) {
   try {
+    // Anti-spam guards (mirror /api/leads): the ROI form sends fax (honeypot),
+    // formStartTime, currentPage and lang, so we can vet requests cheaply here.
+    const guard = guardRequest(request, ipLimiter);
+    if (guard) return guard;
+    const referer = request.headers.get("referer") || "";
+
     const body = await request.json();
 
     const {
@@ -395,15 +381,53 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!currentPageNorm || !isAllowedHostFromUrl(currentPageNorm)) {
+    if (!currentPageNorm || !allowedHost(currentPageNorm)) {
       return NextResponse.json(
         { ok: false, error: "Invalid page URL" },
         { status: 400 },
       );
     }
 
-    await transporter.verify();
+    // referer host must match the submitted page host
+    const refUrl = safeUrl(referer);
+    const pageUrl = safeUrl(currentPageNorm);
+    if (!refUrl || !pageUrl || refUrl.hostname !== pageUrl.hostname) return blocked("page_mismatch");
 
+    // Honeypot + timing + per-email rate limit
+    const spam = spamSignal(body);
+    if (spam) return blocked(spam);
+    if (emailLimiter(emailNorm, 3, 60_000)) return blocked("rate_limit_email");
+
+    // Persist to the CRM first (system of record); emails are notifications.
+    let leadId: string | null = null;
+    try {
+      const roiPct =
+        result && typeof result.annualizedRoiPercent === "number"
+          ? `${result.annualizedRoiPercent}% avg annual ROI`
+          : "";
+      const lead = await prisma.lead.create({
+        data: {
+          firstName: nameNorm,
+          lastName: String(body.surname ?? "").trim() || "",
+          email: emailNorm,
+          phone: phoneNorm || null,
+          source: "ROI_CALCULATOR",
+          status: "NEW",
+          notes: `ROI calculator: ${String(strategy)} / ${String(scenario)}${roiPct ? ` · ~${roiPct}` : ""}`,
+          languagePreference: LEAD_LOCALES.has(String(lang ?? "").toLowerCase())
+            ? (String(lang).toLowerCase() as any)
+            : null,
+          pageSource: currentPageNorm,
+          ...parseAttribution(body),
+        },
+      });
+      leadId = lead.id;
+      await recordInboundLead({ leadId, source: "ROI_CALCULATOR", email: emailNorm, name: nameNorm, phone: phoneNorm, page: currentPageNorm });
+    } catch (e) {
+      console.error("ROI lead persist error:", e);
+    }
+
+    // Email notifications (best-effort — the lead is already persisted above).
     try {
       await transporter.sendMail({
         from: `"Cyprus VIP Estates" <${process.env.EMAIL_USER!}>`,
@@ -423,23 +447,9 @@ export async function POST(request: Request) {
         }),
         replyTo: emailNorm,
       });
+      if (leadId) { try { await prisma.lead.update({ where: { id: leadId }, data: { emailNotified: true } }); } catch {} }
     } catch (err: any) {
       console.error("ROI internal email error:", err);
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "Internal email failed",
-          details:
-            process.env.NODE_ENV !== "production"
-              ? {
-                  message: err?.message,
-                  code: err?.code,
-                  command: err?.command,
-                }
-              : undefined,
-        },
-        { status: 500 },
-      );
     }
 
     try {
@@ -460,21 +470,6 @@ export async function POST(request: Request) {
       });
     } catch (err: any) {
       console.error("ROI client email error:", err);
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "Client email failed",
-          details:
-            process.env.NODE_ENV !== "production"
-              ? {
-                  message: err?.message,
-                  code: err?.code,
-                  command: err?.command,
-                }
-              : undefined,
-        },
-        { status: 500 },
-      );
     }
 
     return NextResponse.json(

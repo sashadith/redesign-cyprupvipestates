@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { FC, useState } from "react";
 import Link from "next/link";
+import { localePrefix } from "@/lib/locale";
 import popupStyles from "../ProjectsMapAll/ProjectsMapAll.module.scss";
 import styles from "./PropertyMap.module.scss";
 
@@ -186,11 +187,7 @@ const PropertyMap: FC<Props> = ({
   const bg = thumb(previewUrl);
   const hasRichPopup = Boolean(previewUrl || title || city || price || slug);
 
-  const href = slug
-    ? safeLang === "de"
-      ? `/projects/${slug}`
-      : `/${safeLang}/projects/${slug}`
-    : "#";
+  const href = slug ? `${localePrefix(safeLang)}/projects/${slug}` : "#";
 
   const handleCopy = async () => {
     try {

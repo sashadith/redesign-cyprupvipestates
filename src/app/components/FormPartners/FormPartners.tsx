@@ -1,4 +1,5 @@
 "use client";
+import { getAttribution } from "@/lib/attribution";
 
 import { FC, useEffect, useId, useRef, useState } from "react";
 import {
@@ -265,6 +266,7 @@ const FormPartners: FC<ContactFormProps> = ({
         formStartTime,
         currentPage,
         lang,
+        ...getAttribution(),
       });
 
       if (response.status === 200 && response.data?.ok === true) {
@@ -288,13 +290,14 @@ const FormPartners: FC<ContactFormProps> = ({
         onFormSubmitSuccess && onFormSubmitSuccess();
 
         setMessagePopup(
-          lang === "ru"
-            ? "Мы получили вашу заявку и свяжемся с вами в ближайшее время."
-            : lang === "de"
-              ? "Wir haben Ihre Anfrage erhalten und werden uns in Kürze bei Ihnen melden."
-              : lang === "pl"
-                ? "Otrzymaliśmy Twoje zapytanie i skontaktujemy się z Tobą wkrótce."
-                : "We have received your request and will contact you shortly.",
+          dataForm.successMessage ||
+            (lang === "ru"
+              ? "Мы получили вашу заявку и свяжемся с вами в ближайшее время."
+              : lang === "de"
+                ? "Wir haben Ihre Anfrage erhalten und werden uns in Kürze bei Ihnen melden."
+                : lang === "pl"
+                  ? "Otrzymaliśmy Twoje zapytanie i skontaktujemy się z Tobą wkrótce."
+                  : "We have received your request and will contact you shortly."),
         );
 
         setTimeout(() => setMessagePopup(null), 5000);
@@ -329,7 +332,7 @@ const FormPartners: FC<ContactFormProps> = ({
 
   return (
     <>
-      {messagePopup && <div className={styles.popup}>{messagePopup}</div>}
+      {messagePopup && <div className={styles.popup} role="alert" aria-live="assertive">{messagePopup}</div>}
 
       <Formik
         innerRef={(inst) => {

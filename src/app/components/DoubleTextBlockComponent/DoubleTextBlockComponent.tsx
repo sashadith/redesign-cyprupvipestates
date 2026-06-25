@@ -9,6 +9,7 @@ import { RichText } from "../RichText/RichText";
 import Image from "next/image";
 import styles from "./DoubleTextBlockComponent.module.scss";
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 import FadeUpAnimate from "../FadeUpAnimate/FadeUpAnimate";
 
 type Props = {
@@ -73,6 +74,7 @@ const DoubleTextBlockComponent: FC<Props> = ({ block }) => {
             layout="responsive"
             width={500}
             height={300}
+            {...blurProps(content.image)}
           />
         </div>
       );

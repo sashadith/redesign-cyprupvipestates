@@ -14,6 +14,7 @@ export type PageInput = {
   metaTitle: string;
   metaDescription: string;
   url: string;
+  image?: string;
   blocks: Array<
     ContactFullBlock | TeamBlock | LocationBlock | ReviewsFullBlock
   >;
@@ -59,6 +60,7 @@ export function generateStructuredData({
   metaTitle,
   metaDescription,
   url,
+  image,
   blocks,
 }: PageInput) {
   const aboutKeywords = ["ueber-uns", "about", "o-kompanii", "o-nas"];
@@ -79,6 +81,7 @@ export function generateStructuredData({
     name: metaTitle,
     description: metaDescription,
     url,
+    ...(image ? { image } : {}),
   };
 
   if (pageType === "ContactPage") {

@@ -162,7 +162,7 @@ const DeveloperPage = async ({ params }: Props) => {
                 projects.map((project) => (
                   <div key={project._id}>
                     <ProjectLink
-                      url={`/${lang}/projects/${project.slug[lang].current}`}
+                      url={localizedPath(lang, ["projects", project.slug[lang].current])}
                       previewImage={project.previewImage}
                       title={project.title}
                       price={project.keyFeatures.price}

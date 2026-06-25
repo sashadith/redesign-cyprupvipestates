@@ -1,0 +1,33 @@
+{
+  "en": {
+    "beachfront-houses-in-cyprus": "houses-in-cyprus/beachfront-houses-in-cyprus",
+    "family-villas": "villas-in-cyprus/family-villas",
+    "houses-in-cyprus-for-investors": "houses-in-cyprus/houses-in-cyprus-for-investors",
+    "houses-with-private-pool": "houses-in-cyprus/houses-with-private-pool",
+    "apartments-in-paphos": "apartments-in-cyprus/apartments-in-paphos",
+    "luxury-houses-for-sale-in-paphos": "houses-in-cyprus/luxury-houses-for-sale-in-paphos",
+    "villas-in-paphos": "villas-in-cyprus/villas-in-paphos",
+    "houses-in-limassol": "houses-in-cyprus/houses-in-limassol"
+  },
+  "de": {
+    "wohnungen-in-paphos": "apartment-zypern/wohnungen-in-paphos",
+    "luxus-haeuser-zum-verkauf-in-paphos": "haeuser-auf-zypern/luxus-haeuser-zum-verkauf-in-paphos",
+    "villen-in-paphos": "luxusvillen-in-zypern/villen-in-paphos",
+    "strandhaus-auf-zypern": "haeuser-auf-zypern/strandhaus-auf-zypern",
+    "haus-mit-pool-auf-zypern": "haeuser-auf-zypern/haus-mit-pool-auf-zypern",
+    "haeuser-in-zypern-fuer-investoren": "haeuser-auf-zypern/haeuser-in-zypern-fuer-investoren",
+    "haeuser-in-limassol-kaufen": "haeuser-auf-zypern/haeuser-in-limassol-kaufen"
+  },
+  "pl": {
+    "mieszkania-w-pafos-na-sprzedaz": "apartamenty-na-cyprze/mieszkania-w-pafos-na-sprzedaz",
+    "wille-w-pafos": "wille-na-cyprze/wille-w-pafos",
+    "domy-z-basenem-na-cyprze": "sprzedaz-domow-na-cyprze/domy-z-basenem-na-cyprze",
+    "domy-w-limassol": "sprzedaz-domow-na-cyprze/domy-w-limassol"
+  },
+  "ru": {
+    "apartamenty-v-pafose": "apartamenty-na-kipre/apartamenty-v-pafose",
+    "villy-v-pafose": "villy-na-kipre/villy-v-pafose",
+    "doma-na-kipre-s-basseinom": "doma-na-kipre/doma-na-kipre-s-basseinom",
+    "doma-v-limassole": "doma-na-kipre/doma-v-limassole"
+  }
+}

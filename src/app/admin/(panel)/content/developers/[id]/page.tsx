@@ -20,14 +20,18 @@ export default async function EditDeveloper({ params }: { params: { id: string }
     <div className="max-w-2xl">
       <Link href="/admin/content/developers" className="text-sm text-[#1B4B43] hover:underline">← Back to developers</Link>
       <h1 className="text-2xl font-semibold mt-2 mb-1">{d.title}</h1>
-      <p className="text-sm text-[#6B7280] mb-6">{d.language.toUpperCase()} · /developers/{d.slug} <span className="text-[#C29A5E]">(slug locked — protects SEO URLs)</span></p>
-      <TranslationsPanel type="developer" groupId={d.translationGroupId} currentId={d.id} />
+      <p className="text-sm text-[#6B7280] mb-6">{d.language.toUpperCase()} · /developers/{d.slug} <span className="text-[#C29A5E]">(slug editable below)</span></p>
+      <TranslationsPanel type="developer" groupId={d.translationGroupId} currentId={d.id} currentLang={d.language} />
 
       <form action={save} className="space-y-5">
         <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-4">
           <div>
             <label className="block text-sm mb-1">Title</label>
             <input name="title" defaultValue={d.title} className={input} />
+          </div>
+          <div>
+            <label className="block text-sm mb-1">Slug <span className="text-[#9CA3AF]">(URL path — changing it changes the live URL)</span></label>
+            <input name="slug" defaultValue={d.slug} className={input} />
           </div>
           <div>
             <label className="block text-sm mb-1">Full title</label>

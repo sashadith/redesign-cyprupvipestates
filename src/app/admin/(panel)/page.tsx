@@ -3,28 +3,41 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-export default async function Dashboard() {
-  const since = new Date();
-  since.setDate(since.getDate() - 7);
+const PIPELINE = ["NEW", "QUALIFIED", "CONTACTED", "VIEWING_SCHEDULED", "OFFER", "CLOSED", "LOST"];
 
-  const [leadsTotal, leadsNew, leads7d, projects, blogs, pages, recent] = await Promise.all([
+export default async function Dashboard() {
+  const since7 = new Date(); since7.setDate(since7.getDate() - 7);
+  const since30 = new Date(); since30.setDate(since30.getDate() - 30);
+
+  const [leadsTotal, leads7d, leads30d, projects, blogs, pages, recent, byStatus, bySource] = await Promise.all([
     prisma.lead.count(),
-    prisma.lead.count({ where: { status: "NEW" } }),
-    prisma.lead.count({ where: { createdAt: { gte: since } } }),
+    prisma.lead.count({ where: { createdAt: { gte: since7 } } }),
+    prisma.lead.count({ where: { createdAt: { gte: since30 } } }),
     prisma.project.count(),
     prisma.blog.count(),
     prisma.singlepage.count(),
     prisma.lead.findMany({ orderBy: { createdAt: "desc" }, take: 8 }),
+    prisma.lead.groupBy({ by: ["status"], _count: true }),
+    prisma.lead.groupBy({ by: ["source"], _count: true }),
   ]);
+
+  const statusCount = (s: string) => byStatus.find((r) => r.status === s)?._count ?? 0;
+  const won = statusCount("CLOSED");
+  const lost = statusCount("LOST");
+  const decided = won + lost;
+  const conversion = decided > 0 ? Math.round((won / decided) * 100) : null;
 
   const stats = [
     { label: "Leads (total)", value: leadsTotal },
-    { label: "New leads", value: leadsNew },
-    { label: "Leads (7 days)", value: leads7d },
+    { label: "New (7 days)", value: leads7d },
+    { label: "New (30 days)", value: leads30d },
+    { label: "Won (closed)", value: won },
+    { label: "Conversion (won/decided)", value: conversion === null ? "—" : `${conversion}%` },
     { label: "Projects", value: projects },
-    { label: "Blog posts", value: blogs },
-    { label: "Pages", value: pages },
   ];
+
+  const sources = bySource.map((r) => ({ key: r.source, count: r._count })).sort((a, b) => b.count - a.count);
+  const maxSource = Math.max(1, ...sources.map((s) => s.count));
 
   return (
     <div>
@@ -36,6 +49,36 @@ export default async function Dashboard() {
             <div className="text-sm text-[#6B7280] mt-1">{s.label}</div>
           </div>
         ))}
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
+          <h2 className="text-sm font-semibold mb-3">Pipeline</h2>
+          <ul className="space-y-1.5">
+            {PIPELINE.map((s) => (
+              <li key={s} className="flex items-center justify-between text-sm">
+                <Link href={`/admin/crm?status=${s}`} className="text-[#6B7280] hover:text-[#1B4B43] hover:underline">{s.replace(/_/g, " ")}</Link>
+                <span className="font-medium">{statusCount(s)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
+          <h2 className="text-sm font-semibold mb-3">Leads by source</h2>
+          {sources.length === 0 ? <p className="text-sm text-[#6B7280]">No leads yet.</p> : (
+            <ul className="space-y-2">
+              {sources.map((s) => (
+                <li key={s.key}>
+                  <Link href={`/admin/crm?source=${s.key}`} className="flex items-center justify-between text-sm text-[#6B7280] hover:text-[#1B4B43]">
+                    <span>{s.key.replace(/_/g, " ")}</span><span className="font-medium">{s.count}</span>
+                  </Link>
+                  <div className="h-1.5 bg-[#F1F1F1] rounded mt-1"><div className="h-1.5 bg-[#1B4B43] rounded" style={{ width: `${(s.count / maxSource) * 100}%` }} /></div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       <div className="bg-white rounded-lg border border-[#E5E7EB]">

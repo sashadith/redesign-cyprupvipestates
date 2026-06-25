@@ -11,6 +11,8 @@ import nodemailer from "nodemailer";
 import { htmlToPortableText } from "@/lib/portableText/htmlToPt.mjs";
 import { isHtmlMarker } from "@/lib/portableText/richText";
 import { zonedInputToUtc } from "@/lib/tz";
+import { localizedHref } from "@/lib/locale";
+import { deepSetString } from "@/lib/homepageFields";
 
 // Convert every `{__html}` rich-text marker (produced by the block editor) into
 // Portable Text via the shared converter — so all blocks store consistent PT and
@@ -40,6 +42,42 @@ function scheduledAtFromForm(formData: FormData, status: string): Date | null {
 function slugify(s: string) {
   return s.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/[\s_-]+/g, "-").replace(/^-+|-+$/g, "");
 }
+
+// Resolve the slug from the editor form. The slug is editable for every document
+// (the admin manages localized slugs for translations); the submitted value is
+// slugified and made unique per language (excluding self). An empty submission
+// leaves the slug unchanged, so a missing field can never wipe a stored slug.
+async function slugFromForm(
+  model: any,
+  id: string,
+  formData: FormData,
+): Promise<{ slug?: string }> {
+  const raw = formData.get("slug");
+  if (raw == null) return {}; // field absent → don't touch the slug
+  const desired = slugify(String(raw));
+  if (!desired) return {}; // empty/whitespace → keep existing slug
+  const cur = await model.findUnique({ where: { id }, select: { language: true } });
+  if (!cur) return {};
+  let slug = desired;
+  let n = 2;
+  while (await model.findFirst({ where: { language: cur.language, slug, NOT: { id } }, select: { id: true } })) {
+    slug = `${desired}-${n++}`;
+  }
+  return { slug };
+}
+
+// Stamp publishedAt the first time a document transitions into PUBLISHED, so
+// drafts/translations published manually from the editor get a real publish date
+// (mirrors the scheduled-publish cron). No-op for already-published docs.
+async function publishedAtOnPublish(
+  model: any,
+  id: string,
+  newStatus: string,
+): Promise<{ publishedAt?: Date }> {
+  if (newStatus !== "PUBLISHED") return {};
+  const cur = await model.findUnique({ where: { id }, select: { publishedAt: true } });
+  return cur && !cur.publishedAt ? { publishedAt: new Date() } : {};
+}
 // Parse a hidden-input JSON field; "" → null. Prisma Json? requires DbNull (not JS null) for SQL NULL.
 function parseJsonField(v: FormDataEntryValue | null): any {
   const s = String(v ?? "").trim();
@@ -50,22 +88,30 @@ const jsonOrDbNull = (v: any) => (v == null ? Prisma.DbNull : v);
 const floatOrNull = (v: FormDataEntryValue | null) => { const s = String(v ?? "").trim(); return s === "" ? null : Number(s); };
 
 // Invalidate the PUBLIC (frontend) ISR cache after a content change, so edits/publishes appear
-// immediately instead of waiting for the revalidate window. (All locales are prefixed: /en, /de, …)
+// immediately instead of waiting for the revalidate window. English is served prefix-less
+// (`/blog/x`) but Next's internal route still carries the `[lang]` segment (`/en/blog/x`), so we
+// revalidate BOTH the prefixed internal route and the clean public path (no-op when identical).
+function revalPublic(language: string, segments: string[] = []) {
+  const internal = `/${language}${segments.length ? "/" + segments.join("/") : ""}`;
+  revalidatePath(internal);
+  const clean = localizedHref(language, segments);
+  if (clean !== internal) revalidatePath(clean);
+}
 function revalidateProjectPublic(language: string, slug: string) {
-  revalidatePath(`/${language}/projects/${slug}`);
-  revalidatePath(`/${language}/projects`);
-  revalidatePath(`/${language}`);
+  revalPublic(language, ["projects", slug]);
+  revalPublic(language, ["projects"]);
+  revalPublic(language, []);
 }
 function revalidateBlogPublic(language: string, slug: string) {
-  revalidatePath(`/${language}/blog/${slug}`);
-  revalidatePath(`/${language}/blog`);
+  revalPublic(language, ["blog", slug]);
+  revalPublic(language, ["blog"]);
 }
 function revalidateSinglepagePublic(language: string, slug: string) {
-  revalidatePath(`/${language}/${slug}`);
+  revalPublic(language, [slug]);
 }
 function revalidateCaseStudyPublic(language: string, slug: string) {
-  revalidatePath(`/${language}/case-studies/${slug}`);
-  revalidatePath(`/${language}/case-studies`);
+  revalPublic(language, ["case-studies", slug]);
+  revalPublic(language, ["case-studies"]);
 }
 
 const STATUSES = ["NEW", "QUALIFIED", "CONTACTED", "VIEWING_SCHEDULED", "OFFER", "CLOSED", "LOST"];
@@ -73,7 +119,12 @@ const CONTENT_STATUSES = ["DRAFT", "PUBLISHED", "SCHEDULED", "ARCHIVED"];
 
 async function requireSession() {
   const session = await auth();
-  if (!session) throw new Error("Unauthorized");
+  const uid = (session?.user as any)?.id;
+  if (!session || !uid) throw new Error("Unauthorized");
+  // Re-validate against the DB so a deactivated/deleted user can't keep acting
+  // for the remainder of their JWT lifetime (audit M3).
+  const user = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true } });
+  if (!user || !user.isActive) throw new Error("Unauthorized");
   return session;
 }
 async function requireAdmin() {
@@ -231,9 +282,11 @@ export async function updateProjectMeta(id: string, formData: FormData) {
   const status = String(formData.get("status") ?? "PUBLISHED");
   if (!CONTENT_STATUSES.includes(status)) throw new Error("Invalid status");
   const num = (k: string) => { const v = String(formData.get(k) ?? "").trim(); return v === "" ? null : Math.round(Number(v)); };
+  const patch = { ...(await slugFromForm(prisma.project, id, formData)), ...(await publishedAtOnPublish(prisma.project, id, status)) };
   const row = await prisma.project.update({
     where: { id },
     data: {
+      ...patch,
       title: String(formData.get("title") ?? "").trim(),
       excerpt: String(formData.get("excerpt") ?? "").trim() || null,
       status: status as any,
@@ -263,9 +316,11 @@ export async function updateBlogMeta(id: string, formData: FormData) {
   await requireSession();
   const status = String(formData.get("status") ?? "PUBLISHED");
   if (!CONTENT_STATUSES.includes(status)) throw new Error("Invalid status");
+  const patch = { ...(await slugFromForm(prisma.blog, id, formData)), ...(await publishedAtOnPublish(prisma.blog, id, status)) };
   const row = await prisma.blog.update({
     where: { id },
     data: {
+      ...patch,
       title: String(formData.get("title") ?? "").trim(),
       excerpt: String(formData.get("excerpt") ?? "").trim() || null,
       status: status as any,
@@ -284,13 +339,19 @@ export async function updateBlogMeta(id: string, formData: FormData) {
   revalidateBlogPublic(row.language, row.slug);
 }
 
-export async function updateLeadStatus(id: string, status: string) {
-  const session = await auth();
-  if (!session) throw new Error("Unauthorized");
+export async function updateLeadStatus(id: string, status: string, reason?: string) {
+  const session = await requireSession();
   if (!STATUSES.includes(status)) throw new Error("Invalid status");
+  const r = String(reason ?? "").trim().slice(0, 500);
   await prisma.lead.update({ where: { id }, data: { status: status as any } });
   await prisma.leadActivity.create({
-    data: { leadId: id, type: "STATUS_CHANGE", content: `Status changed to ${status}`, createdBy: session.user?.name ?? "admin" },
+    data: {
+      leadId: id,
+      type: "STATUS_CHANGE",
+      content: `Status changed to ${status.replace(/_/g, " ")}${r ? ` — ${r}` : ""}`,
+      createdBy: session.user?.name ?? "admin",
+      createdById: (session.user as any)?.id ?? null,
+    },
   });
   revalidatePath(`/admin/crm/${id}`);
   revalidatePath("/admin/crm");
@@ -298,20 +359,18 @@ export async function updateLeadStatus(id: string, status: string) {
 }
 
 export async function addLeadNote(id: string, note: string) {
-  const session = await auth();
-  if (!session) throw new Error("Unauthorized");
+  const session = await requireSession();
   const content = note.trim();
   if (!content) return;
   await prisma.leadActivity.create({
-    data: { leadId: id, type: "NOTE", content, createdBy: session.user?.name ?? "admin" },
+    data: { leadId: id, type: "NOTE", content, createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
   });
   revalidatePath(`/admin/crm/${id}`);
 }
 
 // Assign a lead to a team member (or unassign with an empty value).
 export async function assignLead(id: string, userId: string) {
-  const session = await auth();
-  if (!session) throw new Error("Unauthorized");
+  const session = await requireSession();
   const assignedToId = userId || null;
   let label = "Unassigned";
   if (assignedToId) {
@@ -329,6 +388,7 @@ export async function assignLead(id: string, userId: string) {
       type: "ASSIGNMENT",
       content: assignedToId ? `Assigned to ${label}` : "Unassigned",
       createdBy: session.user?.name ?? "admin",
+      createdById: (session.user as any)?.id ?? null,
     },
   });
   revalidatePath(`/admin/crm/${id}`);
@@ -380,11 +440,181 @@ export async function createLead(_prev: any, formData: FormData): Promise<{ erro
     },
   });
   await prisma.leadActivity.create({
-    data: { leadId: lead.id, type: "CREATED", content: "Lead created manually", createdBy: session.user?.name ?? "admin" },
+    data: { leadId: lead.id, type: "CREATED", content: "Lead created manually", createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
   });
   revalidatePath("/admin/crm");
   revalidatePath("/admin");
   redirect(`/admin/crm/${lead.id}`);
+}
+
+// Edit an existing lead's contact + qualification fields (audit H4). Status, source
+// and assignment are managed by their own controls and are intentionally untouched here.
+export async function updateLead(id: string, _prev: any, formData: FormData): Promise<{ error?: string }> {
+  const session = await requireSession();
+  const existing = await prisma.lead.findUnique({ where: { id }, select: { id: true } });
+  if (!existing) return { error: "Lead not found." };
+
+  const firstName = String(formData.get("firstName") ?? "").trim();
+  const lastName = String(formData.get("lastName") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const phone = String(formData.get("phone") ?? "").trim();
+  if (!firstName) return { error: "First name is required." };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "A valid email is required." };
+
+  const num = (k: string) => { const v = String(formData.get(k) ?? "").trim(); return v === "" ? null : Math.round(Number(v)); };
+  const oneOf = (k: string, allowed: string[]) => { const v = String(formData.get(k) ?? "").trim(); return allowed.includes(v) ? v : null; };
+
+  await prisma.lead.update({
+    where: { id },
+    data: {
+      firstName,
+      lastName: lastName || "",
+      email,
+      phone: phone || null,
+      nationality: String(formData.get("nationality") ?? "").trim() || null,
+      languagePreference: oneOf("languagePreference", LOCALES) as any,
+      budgetMin: num("budgetMin"),
+      budgetMax: num("budgetMax"),
+      timeline: oneOf("timeline", LEAD_TIMELINES) as any,
+      financing: oneOf("financing", LEAD_FINANCING) as any,
+      propertyTypeInterest: formData.getAll("propertyTypeInterest").map(String).filter((t) => LEAD_PROP_TYPES.includes(t)),
+      message: String(formData.get("message") ?? "").trim() || null,
+      notes: String(formData.get("notes") ?? "").trim() || null,
+    },
+  });
+  await prisma.leadActivity.create({
+    data: { leadId: id, type: "EDIT", content: "Lead details edited", createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
+  });
+  revalidatePath(`/admin/crm/${id}`);
+  revalidatePath("/admin/crm");
+  redirect(`/admin/crm/${id}`);
+}
+
+// Merge a duplicate lead into a target (audit H2): move the source's activities to the
+// target, record a MERGE note, then delete the source.
+export async function mergeLeads(targetId: string, sourceId: string) {
+  const session = await requireSession();
+  if (!targetId || !sourceId || targetId === sourceId) throw new Error("Invalid merge");
+  const [target, source] = await Promise.all([
+    prisma.lead.findUnique({ where: { id: targetId }, select: { id: true } }),
+    prisma.lead.findUnique({ where: { id: sourceId } }),
+  ]);
+  if (!target || !source) throw new Error("Lead not found");
+  const summary = `Merged duplicate: ${source.firstName} ${source.lastName} <${source.email}> · ${source.source.replace(/_/g, " ")} · ${source.createdAt.toISOString().slice(0, 10)}`;
+  await prisma.$transaction([
+    prisma.leadActivity.updateMany({ where: { leadId: sourceId }, data: { leadId: targetId } }),
+    prisma.leadActivity.create({
+      data: { leadId: targetId, type: "MERGE", content: summary, createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
+    }),
+    prisma.lead.delete({ where: { id: sourceId } }),
+  ]);
+  revalidatePath(`/admin/crm/${targetId}`);
+  revalidatePath("/admin/crm");
+}
+
+// Homepage "Featured Projects" slider — per-language curated list stored on the homepage
+// siteDocument as featuredProjectsBlock.projects[] ({_key,_ref,_type:"projectRef"}). The
+// front end reads this exact shape via resolveProjectRefs (matches _ref → project.sanityId,
+// order-preserving). This action rewrites the ordered list from the admin editor.
+export async function updateHomepageFeatured(lang: string, formData: FormData) {
+  const session = await requireSession();
+  if (!LOCALES.includes(lang)) throw new Error("Invalid language");
+  const ids = String(formData.get("projectIds") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+
+  const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "homepage", language: lang as any } } });
+  if (!row) throw new Error("Homepage document not found for this language");
+
+  // Keep only ids that are real projects in THIS language, preserving the submitted order + dropping dups.
+  const valid = await prisma.project.findMany({ where: { language: lang as any, sanityId: { in: ids } }, select: { sanityId: true } });
+  const validSet = new Set(valid.map((v) => v.sanityId));
+  const seen = new Set<string>();
+  const ordered = ids.filter((id) => validSet.has(id) && !seen.has(id) && (seen.add(id), true));
+
+  const data = (row.data as any) ?? {};
+  const fpb = { ...(data.featuredProjectsBlock ?? {}) };
+  fpb.projects = ordered.map((id) => ({ _key: crypto.randomUUID().replace(/-/g, "").slice(0, 12), _ref: id, _type: "projectRef" }));
+
+  await prisma.siteDocument.update({ where: { id: row.id }, data: { data: { ...data, featuredProjectsBlock: fpb } } });
+  void session;
+  revalidatePath("/", "layout"); // homepage (all locales)
+  revalidatePath("/admin/content/featured");
+}
+
+// Homepage "Featured Case Studies" — same ref pattern as featured projects, but caseStudyRef.
+export async function updateHomepageFeaturedCaseStudies(lang: string, formData: FormData) {
+  await requireSession();
+  if (!LOCALES.includes(lang)) throw new Error("Invalid language");
+  const ids = String(formData.get("caseStudyIds") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "homepage", language: lang as any } } });
+  if (!row) throw new Error("Homepage document not found for this language");
+  const valid = await prisma.caseStudy.findMany({ where: { language: lang as any, sanityId: { in: ids } }, select: { sanityId: true } });
+  const validSet = new Set(valid.map((v) => v.sanityId));
+  const seen = new Set<string>();
+  const ordered = ids.filter((id) => validSet.has(id) && !seen.has(id) && (seen.add(id), true));
+  const data = (row.data as any) ?? {};
+  const fcb = { ...(data.featuredCaseStudiesBlock ?? {}) };
+  fcb.caseStudies = ordered.map((id) => ({ _key: crypto.randomUUID().replace(/-/g, "").slice(0, 12), _ref: id, _type: "caseStudyRef" }));
+  await prisma.siteDocument.update({ where: { id: row.id }, data: { data: { ...data, featuredCaseStudiesBlock: fcb } } });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/content/featured");
+}
+
+// Phase 2 — curated "Related Landing Pages" on a singlepage. Stores refs to OTHER
+// same-language PUBLISHED singlepages (enforced here, not just in the picker): cross-language,
+// unpublished, empty-slug, and self refs are dropped. Order is preserved; duplicates removed.
+export async function saveRelatedLandingPages(id: string, formData: FormData) {
+  await requireSession();
+  const page = await prisma.singlepage.findUnique({ where: { id }, select: { language: true, slug: true, sanityId: true } });
+  if (!page) throw new Error("Page not found");
+  const ids = String(formData.get("ids") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  // Keep only real, PUBLISHED singlepages in THIS language (never cross-language), excluding self.
+  const valid = await prisma.singlepage.findMany({
+    where: { language: page.language, status: "PUBLISHED", slug: { not: "" }, sanityId: { in: ids } },
+    select: { sanityId: true },
+  });
+  const validSet = new Set(valid.map((v) => v.sanityId));
+  const seen = new Set<string>();
+  const ordered = ids.filter((x) => x !== page.sanityId && validSet.has(x) && !seen.has(x) && (seen.add(x), true));
+  const refs = ordered.map((x) => ({ _key: crypto.randomUUID().replace(/-/g, "").slice(0, 12), _ref: x, _type: "singlepageRef" }));
+  await prisma.singlepage.update({ where: { id }, data: { relatedLandingPages: refs as any } });
+  revalidateSinglepagePublic(page.language, page.slug);
+  revalidatePath(`/admin/content/pages/${id}`);
+}
+
+// Homepage text fields — generic string-leaf editor (SEO, hero, all block titles/descriptions/
+// labels/slide texts). Only overwrites existing string leaves; structure/media/rich-text preserved.
+export async function updateHomepageFields(lang: string, formData: FormData) {
+  await requireSession();
+  if (!LOCALES.includes(lang)) throw new Error("Invalid language");
+  const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "homepage", language: lang as any } } });
+  if (!row) throw new Error("Homepage document not found for this language");
+  const data = JSON.parse(JSON.stringify(row.data ?? {}));
+  formData.forEach((v, k) => {
+    if (k.startsWith("f::")) deepSetString(data, k.slice(3), String(v));
+  });
+  await prisma.siteDocument.update({ where: { id: row.id }, data: { data } });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/content/featured");
+}
+
+// Faithful homepage editor save. Receives the full homepage document (edited) as JSON, overlays
+// its top-level keys onto a fresh copy of the stored document (so fields the editor doesn't expose
+// — e.g. slug/language — are preserved, never stripped), converts any {__html} rich-text markers
+// to Portable Text, and writes it back. Sanity/production is never touched.
+export async function saveHomepage(lang: string, formData: FormData) {
+  await requireSession();
+  if (!LOCALES.includes(lang)) throw new Error("Invalid language");
+  const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "homepage", language: lang as any } } });
+  if (!row) throw new Error("Homepage document not found for this language");
+  let incoming: any;
+  try { incoming = JSON.parse(String(formData.get("doc") ?? "{}")); } catch { throw new Error("Invalid homepage payload"); }
+  if (!incoming || typeof incoming !== "object" || Array.isArray(incoming)) throw new Error("Invalid homepage payload");
+  const fresh = JSON.parse(JSON.stringify(row.data ?? {}));
+  for (const k of Object.keys(incoming)) fresh[k] = incoming[k];
+  const converted = convertHtmlMarkers(fresh);
+  await prisma.siteDocument.update({ where: { id: row.id }, data: { data: converted } });
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/content/featured");
 }
 
 // Site settings — edits only safe scalar fields on the footer doc; preserves the rest of the JSON.
@@ -449,9 +679,11 @@ export async function updateSinglepageMeta(id: string, formData: FormData) {
   await requireSession();
   const status = String(formData.get("status") ?? "PUBLISHED");
   if (!CONTENT_STATUSES.includes(status)) throw new Error("Invalid status");
+  const patch = { ...(await slugFromForm(prisma.singlepage, id, formData)), ...(await publishedAtOnPublish(prisma.singlepage, id, status)) };
   const row = await prisma.singlepage.update({
     where: { id },
     data: {
+      ...patch,
       title: String(formData.get("title") ?? "").trim(),
       excerpt: String(formData.get("excerpt") ?? "").trim() || null,
       status: status as any,
@@ -479,6 +711,21 @@ export async function saveProjectField(id: string, field: string, html: string) 
   return { ok: true };
 }
 
+// Case study rich sections — stored as Portable Text inside the caseDetails JSON.
+const CASE_STUDY_DETAIL_FIELDS = ["clientSituation", "requirements", "solution", "result", "selectedProperty"];
+export async function saveCaseStudyDetail(id: string, field: string, html: string) {
+  await requireSession();
+  if (!CASE_STUDY_DETAIL_FIELDS.includes(field)) throw new Error("Invalid field");
+  const row = await prisma.caseStudy.findUnique({ where: { id }, select: { caseDetails: true, language: true, slug: true } });
+  if (!row) throw new Error("Case study not found");
+  const cd = { ...((row.caseDetails as any) ?? {}) };
+  cd[field] = htmlToPortableText(html);
+  await prisma.caseStudy.update({ where: { id }, data: { caseDetails: cd as any } });
+  revalidatePath(`/admin/content/case-studies/${id}`);
+  revalidatePath(localizedHref(row.language, ["case-studies", row.slug]));
+  return { ok: true };
+}
+
 // ── New content creation (starts as DRAFT) ──
 export async function createBlogPost(_prev: any, formData: FormData) {
   await requireSession();
@@ -494,6 +741,42 @@ export async function createBlogPost(_prev: any, formData: FormData) {
   });
   revalidatePath("/admin/content/blog");
   redirect(`/admin/content/blog/${created.id}`);
+}
+
+// Generic "create new" for the remaining content types (mirrors createProject/createBlogPost).
+// titleField maps the form's single text input to the model's title/name column; hasSlug/hasStatus/
+// hasExcerpt match each model. New items are DRAFT (where applicable) and open in their editor.
+const CREATE_TYPES: Record<string, { model: any; path: string; hasStatus: boolean; hasSlug: boolean; hasExcerpt: boolean; titleField: "title" | "name"; label: string }> = {
+  singlepage: { model: prisma.singlepage, path: "pages", hasStatus: true, hasSlug: true, hasExcerpt: true, titleField: "title", label: "page" },
+  caseStudy: { model: prisma.caseStudy, path: "case-studies", hasStatus: true, hasSlug: true, hasExcerpt: true, titleField: "title", label: "case study" },
+  developer: { model: prisma.developer, path: "developers", hasStatus: false, hasSlug: true, hasExcerpt: true, titleField: "title", label: "developer" },
+  author: { model: prisma.author, path: "authors", hasStatus: false, hasSlug: false, hasExcerpt: false, titleField: "name", label: "author" },
+  category: { model: prisma.category, path: "categories", hasStatus: false, hasSlug: true, hasExcerpt: false, titleField: "title", label: "category" },
+};
+
+export async function createContent(type: string, _prev: any, formData: FormData) {
+  await requireSession();
+  const cfg = CREATE_TYPES[type];
+  if (!cfg) return { error: "Unknown content type" };
+  const language = String(formData.get("language") ?? "en");
+  if (!LOCALES.includes(language)) return { error: "Invalid language" };
+  const titleVal = String(formData.get("title") ?? "").trim();
+  if (!titleVal) return { error: `A ${cfg.label} title is required.` };
+
+  const data: any = { sanityId: `local-${crypto.randomUUID()}`, language: language as any, [cfg.titleField]: titleVal };
+  if (cfg.hasStatus) data.status = "DRAFT";
+  if (cfg.hasExcerpt) { const ex = String(formData.get("excerpt") ?? "").trim(); if (ex) data.excerpt = ex; }
+  if (cfg.hasSlug) {
+    const slug = slugify(String(formData.get("slug") ?? "").trim() || titleVal);
+    if (!slug) return { error: "A valid slug is required." };
+    if (await cfg.model.findFirst({ where: { language: language as any, slug }, select: { id: true } }))
+      return { error: `A ${cfg.label} with this slug already exists in this language.` };
+    data.slug = slug;
+  }
+
+  const created = await cfg.model.create({ data });
+  revalidatePath(`/admin/content/${cfg.path}`);
+  redirect(`/admin/content/${cfg.path}/${created.id}`);
 }
 
 export async function createProject(_prev: any, formData: FormData) {
@@ -582,9 +865,10 @@ export async function deleteMediaFolder(name: string) {
 // ── Categories (reference entity; appears on blog posts) ──
 export async function updateCategory(id: string, formData: FormData) {
   await requireSession();
+  const patch = await slugFromForm(prisma.category, id, formData);
   await prisma.category.update({
     where: { id },
-    data: { title: String(formData.get("title") ?? "").trim() },
+    data: { ...patch, title: String(formData.get("title") ?? "").trim() },
   });
   revalidatePath(`/admin/content/categories/${id}`);
   revalidatePath("/admin/content/categories");
@@ -645,7 +929,7 @@ export async function updateFormDoc(id: string, formData: FormData) {
 
 // ── Landing / section pages (site documents: blogPage, caseStudiesPage,
 //    projectsPage, propertiesPage, notFoundPage) ──
-const SITE_PAGE_TYPES = ["blogPage", "caseStudiesPage", "projectsPage", "propertiesPage", "notFoundPage"];
+const SITE_PAGE_TYPES = ["blogPage", "caseStudiesPage", "projectsPage", "notFoundPage"];
 const SITE_PAGE_EXCLUDE = new Set(["title", "metaTitle", "metaDescription", "slug", "_type", "content", "seo"]);
 
 export async function updateSitePage(id: string, formData: FormData) {
@@ -687,15 +971,92 @@ export async function saveSitePageContent(id: string, html: string) {
   return { ok: true };
 }
 
+// ── Translations: create a linked translation of an existing document ──
+// Keeps the document-per-language model (linked by translationGroupId). Copies
+// the source content as a starting point, assigns the same group, sets the
+// target language + a unique slug, marks it DRAFT, and opens it in the editor.
+const TR_TYPES: Record<string, { model: any; path: string; hasStatus: boolean; hasSlug: boolean }> = {
+  project: { model: prisma.project, path: "projects", hasStatus: true, hasSlug: true },
+  blog: { model: prisma.blog, path: "blog", hasStatus: true, hasSlug: true },
+  singlepage: { model: prisma.singlepage, path: "pages", hasStatus: true, hasSlug: true },
+  caseStudy: { model: prisma.caseStudy, path: "case-studies", hasStatus: true, hasSlug: true },
+  developer: { model: prisma.developer, path: "developers", hasStatus: false, hasSlug: true },
+  author: { model: prisma.author, path: "authors", hasStatus: false, hasSlug: false },
+  category: { model: prisma.category, path: "categories", hasStatus: false, hasSlug: true },
+};
+
+// Resolve the same reference doc (author/category) in another language via its translation
+// group, so a created translation links the correct-language reference. Null if none.
+async function siblingIdInLang(model: any, sourceId: string | null | undefined, lang: string): Promise<string | null> {
+  if (!sourceId) return null;
+  const src = await model.findUnique({ where: { id: sourceId }, select: { translationGroupId: true } });
+  if (!src?.translationGroupId) return null;
+  const sib = await model.findFirst({ where: { translationGroupId: src.translationGroupId, language: lang as any }, select: { id: true } });
+  return sib?.id ?? null;
+}
+
+export async function createTranslation(type: string, sourceId: string, targetLang: string) {
+  await requireSession();
+  const cfg = TR_TYPES[type];
+  if (!cfg) throw new Error("Unknown content type");
+  if (!LOCALES.includes(targetLang)) throw new Error("Invalid language");
+
+  const source: any = await cfg.model.findUnique({ where: { id: sourceId } });
+  if (!source) throw new Error("Source document not found");
+
+  // Ensure the source has a translation group (generate + persist if missing).
+  let groupId: string = source.translationGroupId;
+  if (!groupId) {
+    groupId = crypto.randomUUID();
+    await cfg.model.update({ where: { id: sourceId }, data: { translationGroupId: groupId } });
+  }
+
+  // If a translation already exists for this language, just open it.
+  const existing = await cfg.model.findFirst({ where: { translationGroupId: groupId, language: targetLang as any }, select: { id: true } });
+  if (existing) redirect(`/admin/content/${cfg.path}/${existing.id}`);
+
+  // Copy source content as the starting point.
+  const data: any = { ...source };
+  delete data.id; delete data.createdAt; delete data.updatedAt; delete data.publishedAt; delete data.scheduledAt;
+  data.sanityId = `local-${crypto.randomUUID()}`;
+  data.language = targetLang;
+  data.translationGroupId = groupId;
+  if (cfg.hasStatus) data.status = "DRAFT";
+  if (cfg.hasSlug) {
+    const taken = async (s: string) => !!(await cfg.model.findFirst({ where: { language: targetLang as any, slug: s }, select: { id: true } }));
+    const base = String(source.slug || "untitled");
+    let slug = base;
+    if (await taken(slug)) { slug = `${base}-${targetLang}`; let n = 2; while (await taken(slug)) slug = `${base}-${targetLang}-${n++}`; }
+    data.slug = slug;
+  }
+  // Blog references author/category by id — remap them to the target language's sibling
+  // (author/category are fully translated 4-language groups), so the translation links the
+  // correct-language reference instead of inheriting the source language's. null → editor picks.
+  if (type === "blog") {
+    data.authorId = await siblingIdInLang(prisma.author, source.authorId, targetLang);
+    data.categoryId = await siblingIdInLang(prisma.category, source.categoryId, targetLang);
+  }
+  // Drop null-valued keys so Prisma create uses column defaults (avoids Json-null errors).
+  for (const k of Object.keys(data)) if (data[k] === null) delete data[k];
+
+  const created = await cfg.model.create({ data });
+  revalidatePath(`/admin/content/${cfg.path}`);
+  revalidatePath(`/admin/content/${cfg.path}/${sourceId}`);
+  redirect(`/admin/content/${cfg.path}/${created.id}`);
+}
+
 // ── Developers (reference entity — no status) ──
 function revalidateDeveloperPublic(language: string, slug: string) {
-  revalidatePath(`/${language}/developers/${slug}`);
+  revalPublic(language, ["developers", slug]);
+  revalPublic(language, ["developers"]);
 }
 export async function updateDeveloperMeta(id: string, formData: FormData) {
   await requireSession();
+  const patch = await slugFromForm(prisma.developer, id, formData);
   const row = await prisma.developer.update({
     where: { id },
     data: {
+      ...patch,
       title: String(formData.get("title") ?? "").trim(),
       titleFull: String(formData.get("titleFull") ?? "").trim() || null,
       excerpt: String(formData.get("excerpt") ?? "").trim() || null,
@@ -745,9 +1106,11 @@ export async function updateCaseStudyMeta(id: string, formData: FormData) {
   await requireSession();
   const status = String(formData.get("status") ?? "PUBLISHED");
   if (!CONTENT_STATUSES.includes(status)) throw new Error("Invalid status");
+  const patch = { ...(await slugFromForm(prisma.caseStudy, id, formData)), ...(await publishedAtOnPublish(prisma.caseStudy, id, status)) };
   const row = await prisma.caseStudy.update({
     where: { id },
     data: {
+      ...patch,
       title: String(formData.get("title") ?? "").trim(),
       fullTitle: String(formData.get("fullTitle") ?? "").trim() || null,
       excerpt: String(formData.get("excerpt") ?? "").trim() || null,

@@ -1,10 +1,17 @@
-// Centralised SEO/URL helpers. All locales use explicit URL prefixes
-// (`localePrefix: "always"` in middleware.ts), so every canonical/hreflang/og
-// URL is `/{lang}/...` for ALL four languages — including German, whose old
-// prefix-less paths now 301-redirect to `/de/...`. The production domain is
+// Centralised SEO/URL helpers. English is the default locale and is served
+// WITHOUT a URL prefix (`localePrefix: "as-needed"` in middleware.ts); de/pl/ru
+// carry their prefix. So canonical/hreflang/og URLs are prefix-less for English
+// (`/blog/x`) and `/{lang}/...` for the others. The production domain is
 // hard-coded (NEXT_PUBLIC_SITE_URL is build-time inlined to :3000 on the VPS).
 
+import { localizedHref, LOCALES } from "./locale";
+
 export const SITE_URL = "https://cyprusvipestates.com";
+
+// Site-wide fallback Open Graph image (brand mark). Used for pages that don't have
+// their own preview image (homepage, listings, static pages). TODO(owner): replace
+// with a dedicated 1200×630 branded OG banner for richer social previews.
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/uploads/images/862e62ebddfc232ff9838efb63eb28685b515eb4-400x208.png`;
 
 /** Turn a site-relative path (or asset path) into an absolute URL. */
 export function abs(path?: string | null): string {
@@ -13,12 +20,12 @@ export function abs(path?: string | null): string {
   return `${SITE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
 }
 
-/** Build a localized path: `/{lang}` or `/{lang}/seg/seg…`. */
+/**
+ * Build a localized path. English (default) is prefix-less; de/pl/ru are
+ * prefixed. `/` (en home) · `/de` (de home) · `/blog/x` (en) · `/de/blog/x`.
+ */
 export function localizedPath(lang: string, segments: string | string[] = ""): string {
-  const tail = Array.isArray(segments)
-    ? segments.filter(Boolean).join("/")
-    : segments;
-  return tail ? `/${lang}/${tail}` : `/${lang}`;
+  return localizedHref(lang, segments);
 }
 
 type TranslationSlug = {
@@ -54,6 +61,20 @@ export function languageAlternates(opts: {
     canonical,
     languages: { ...languages, "x-default": languages["en"] ?? canonical },
   };
+}
+
+/**
+ * Canonical + hreflang for a FIXED path that exists in every locale at the same
+ * sub-path (listing roots, static pages) — i.e. no per-language slug translation.
+ * x-default points at English.
+ */
+export function staticAlternates(
+  lang: string,
+  segments: string | string[] = "",
+): { canonical: string; languages: Record<string, string> } {
+  const languages: Record<string, string> = {};
+  for (const l of LOCALES) languages[l] = abs(localizedHref(l, segments));
+  return { canonical: abs(localizedHref(lang, segments)), languages: { ...languages, "x-default": languages["en"] } };
 }
 
 /** Path builders for the localized content types. */

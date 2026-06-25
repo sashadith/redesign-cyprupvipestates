@@ -7,6 +7,7 @@ import SliderMain from "../SliderMain/SliderMain";
 import HeroSlide from "../HeroSlide/HeroSlide";
 import { File, Image as ImageType } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client";
+import { localePrefix } from "@/lib/locale";
 import BlogSlide from "../BlogSlide/BlogSlide";
 
 type Props = {
@@ -16,7 +17,7 @@ type Props = {
 
 const ProjectsSectionSlider: FC<Props> = ({ block, lang }) => {
   const { title, projects, marginTop, marginBottom } = block;
-  const basePath = `/${lang}`;
+  const basePath = localePrefix(lang);
 
   return (
     <section

@@ -7,8 +7,9 @@ import { Blog } from "@/types/blog";
 import Link from "next/link";
 import { urlFor } from "@/sanity/sanity.client";
 import Image from "next/image";
-import axios from "axios";
 import ButtonPrimary from "../ButtonPrimary/ButtonPrimary";
+import { localePrefix } from "@/lib/locale";
+import { blurProps } from "@/lib/imageBlur";
 
 type Props = {
   blogPosts: Blog[];
@@ -16,20 +17,26 @@ type Props = {
   lang: string;
 };
 
+const INITIAL = 12;
 const LIMIT = 9;
 
-const BlogPostsRenderer: FC<Props> = ({ blogPosts, totalPosts, lang }) => {
-  const [posts, setPosts] = useState<Blog[]>(blogPosts);
-  const [loading, setLoading] = useState(false);
+// All posts are rendered server-side (every link is crawlable); the client only reveals more of
+// the already-rendered cards. Cards beyond `visibleCount` carry the `hidden` attribute, so they
+// stay in the DOM (discoverable) but out of view until "load more".
+const BlogPostsRenderer: FC<Props> = ({ blogPosts, lang }) => {
+  const posts = blogPosts;
+  const [visibleCount, setVisibleCount] = useState(INITIAL);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string | null) => {
+    if (!dateString) return "";
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "";
     return date.toLocaleDateString("en-GB").replace(/\//g, ".");
   };
 
   const generateSlug = (slug: any, language: string) =>
     slug?.[language]?.current
-      ? `/${language}/blog/${slug[language].current}`
+      ? `${localePrefix(language)}/blog/${slug[language].current}`
       : "#";
 
   const getLoadMoreText = () => {
@@ -46,30 +53,23 @@ const BlogPostsRenderer: FC<Props> = ({ blogPosts, totalPosts, lang }) => {
     }
   };
 
-  const loadMorePosts = async () => {
-    setLoading(true);
-    const offset = posts.length;
+  const loadMorePosts = () => setVisibleCount((c) => c + LIMIT);
 
-    try {
-      const { data } = await axios.get(
-        `/api/getMorePosts?lang=${lang}&limit=${LIMIT}&offset=${offset}`
-      );
-      const newPosts: Blog[] = data.posts;
-      setPosts((prev) => [...prev, ...newPosts]);
-    } catch (err) {
-      console.error("Error loading more posts:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // категории для табов
+  // категории для табов (посты без категории не ломают рендер)
   const categories = Array.from(
-    new Set(posts.map((post) => post.category.title))
+    new Set(
+      posts
+        .map((post) => post.category?.title)
+        .filter((title): title is string => Boolean(title))
+    )
   );
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const selectCategory = (cat: string | null) => {
+    setSelectedCategory(cat);
+    setVisibleCount(INITIAL);
+  };
   const filteredPosts = selectedCategory
-    ? posts.filter((p) => p.category.title === selectedCategory)
+    ? posts.filter((p) => p.category?.title === selectedCategory)
     : posts;
 
   return (
@@ -80,7 +80,7 @@ const BlogPostsRenderer: FC<Props> = ({ blogPosts, totalPosts, lang }) => {
           <div className={styles.tabs}>
             <button
               className={`${!selectedCategory ? styles.active : ""} ${styles.tab}`}
-              onClick={() => setSelectedCategory(null)}
+              onClick={() => selectCategory(null)}
             >
               {lang === "de"
                 ? "Alle"
@@ -94,7 +94,7 @@ const BlogPostsRenderer: FC<Props> = ({ blogPosts, totalPosts, lang }) => {
               <button
                 key={cat}
                 className={`${selectedCategory === cat ? styles.active : ""} ${styles.tab}`}
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => selectCategory(cat)}
               >
                 {cat}
               </button>
@@ -107,7 +107,7 @@ const BlogPostsRenderer: FC<Props> = ({ blogPosts, totalPosts, lang }) => {
       <div className={styles.articlesBlock}>
         <div className="container">
           <div className={styles.articles}>
-            {filteredPosts.map((post) => {
+            {filteredPosts.map((post, index) => {
               // Ссылка-заглушка
               const PLACEHOLDER =
                 "/uploads/files/1580d3312e8cb973526a4d8f1019c78868ab3a45.jpg";
@@ -125,22 +125,27 @@ const BlogPostsRenderer: FC<Props> = ({ blogPosts, totalPosts, lang }) => {
                   href={generateSlug(post.slug, lang)}
                   key={post._id}
                   className={styles.article}
+                  hidden={index >= visibleCount}
                 >
                   <div className={styles.imageBlock}>
                     <Image
                       alt={post.title}
                       src={imageUrl}
                       fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       className={styles.image}
+                      {...blurProps(post.previewImage)}
                     />
                   </div>
                   <div className={styles.overlay}></div>
                   <div className={styles.content}>
                     <div className={styles.contentWrapper}>
                       <div className={styles.contentTop}>
-                        <p className={styles.articleCategory}>
-                          {post.category.title}
-                        </p>
+                        {post.category?.title && (
+                          <p className={styles.articleCategory}>
+                            {post.category.title}
+                          </p>
+                        )}
                       </div>
                       <div className={styles.contentBottom}>
                         <p className={styles.articleDate}>
@@ -158,15 +163,9 @@ const BlogPostsRenderer: FC<Props> = ({ blogPosts, totalPosts, lang }) => {
 
           {/* Кнопка «загрузить ещё» */}
           <div className={styles.loadingBlock}>
-            <div className={styles.loaderWrapper}>
-              {loading && (
-                <div className={styles.loader}>{/* ваш лоадер */}</div>
-              )}
-            </div>
-            {!loading && posts.length < totalPosts && (
+            {visibleCount < filteredPosts.length && (
               <ButtonPrimary
                 onClick={loadMorePosts}
-                disabled={loading}
                 className={styles.loadMoreButton}
               >
                 {getLoadMoreText()}

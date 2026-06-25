@@ -1,4 +1,5 @@
 "use client";
+import { getAttribution } from "@/lib/attribution";
 
 import { FC, useEffect, useId, useRef, useState } from "react";
 import {
@@ -16,6 +17,7 @@ import "react-phone-number-input/style.css";
 
 import styles from "../FormStandard/FormStandard.module.scss";
 import Link from "next/link";
+import { localizedHref } from "@/lib/locale";
 import {
   RoiCalculationResult,
   RoiCalculatorInput,
@@ -255,7 +257,16 @@ const FormRoi: FC<Props> = ({
           : lang === "pl"
             ? "Akceptuję"
             : "I accept",
-    agreementLinkDestination: "/privacy-policy",
+    agreementLinkDestination: localizedHref(
+      lang,
+      lang === "ru"
+        ? "politika-privatnosti"
+        : lang === "de"
+          ? "datenschutzrichtlinie"
+          : lang === "pl"
+            ? "polityka-prywatnosci"
+            : "privacy-policy",
+    ),
     agreementLinkLabel:
       lang === "ru"
         ? "политику конфиденциальности"
@@ -440,6 +451,7 @@ const FormRoi: FC<Props> = ({
         fax: values.fax,
         lang,
         currentPage,
+        ...getAttribution(),
         strategy,
         scenario,
         inputs: {
@@ -512,7 +524,7 @@ const FormRoi: FC<Props> = ({
 
   return (
     <>
-      {message && <div className={styles.popup}>{message}</div>}
+      {message && <div className={styles.popup} role="alert" aria-live="assertive">{message}</div>}
 
       <Formik
         innerRef={(inst) => {
@@ -668,8 +680,8 @@ const FormRoi: FC<Props> = ({
               />
             </div>
 
-            <div className={styles.inputWrapper}>
-              <p className={styles.radioGroupLabel}>
+            <fieldset className={`${styles.inputWrapper} min-w-0`}>
+              <legend className={styles.radioGroupLabel}>
                 {lang === "ru"
                   ? "Как с вами лучше связаться?"
                   : lang === "de"
@@ -677,7 +689,7 @@ const FormRoi: FC<Props> = ({
                     : lang === "pl"
                       ? "W jaki sposób najlepiej się z Tobą skontaktować?"
                       : "What’s the best way to contact you?"}
-              </p>
+              </legend>
               <div className={styles.radioGroupWrapper}>
                 <label className={styles.radioOption}>
                   <Field type="radio" name="preferredContact" value="phone" />
@@ -720,7 +732,7 @@ const FormRoi: FC<Props> = ({
                 component="div"
                 className={styles.error}
               />
-            </div>
+            </fieldset>
 
             <div>
               <button

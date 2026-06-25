@@ -1,6 +1,7 @@
 "use client";
 
 import React, { FC, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import styles from "./HeroVideoSection.module.scss";
 import { Image as SanityImage } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client"; // <-- подставь свой импорт urlFor
@@ -88,13 +89,14 @@ const HeroVideoSection: FC<Props> = ({ video, posterImage, heroTitle }) => {
     >
       {/* POSTER OVERLAY */}
       {posterUrl && (
-        <img
+        <Image
           className={`${styles.poster} ${showPosterOverlay ? styles.posterVisible : styles.posterHidden}`}
           src={posterUrl}
           alt={heroTitle ?? "Cyprus VIP Estates"}
-          fetchPriority="high"
-          loading="eager"
-          decoding="async"
+          fill
+          sizes="100vw"
+          quality={80}
+          priority
         />
       )}
 

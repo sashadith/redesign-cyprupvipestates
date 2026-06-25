@@ -94,7 +94,7 @@ const PartnersPage = async ({ params }: Props) => {
     .filter((l) => l.id !== lang)
     .map((l) => ({
       language: l.id,
-      path: `/${l.id}/partners`,
+      path: localizedPath(l.id, "partners"),
     }));
 
   return (

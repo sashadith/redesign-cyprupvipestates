@@ -20,6 +20,26 @@ const AnimatedPreview: FC<AnimatedPreviewProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Respect the OS "reduce motion" preference: jump straight to the final state
+    // (no fragment fly-apart/assembly) and fire the completion callback so the flow continues.
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReducedMotion) {
+      if (containerRef.current) {
+        gsap.set(`.${styles.piece}`, {
+          opacity: direction === "out" ? 0 : 1,
+          scale: direction === "out" ? 0 : 1,
+          rotation: direction === "out" ? 15 : 0,
+          x: 0,
+          y: 0,
+        });
+      }
+      onAnimationComplete();
+      return;
+    }
+
     // В зависимости от направления задаём начальные и конечные состояния
     if (containerRef.current) {
       if (direction === "out") {

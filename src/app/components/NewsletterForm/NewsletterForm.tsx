@@ -16,6 +16,8 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
 }) => {
   const [email, setEmail] = useState<string>("");
   const [message, setMessage] = useState<string | null>(null);
+  const [company, setCompany] = useState<string>(""); // honeypot — must stay empty
+  const [formStartTime] = useState<number>(() => Date.now());
 
   const supportedLanguages = ["en", "de", "pl", "ru"] as const;
   type SupportedLang = (typeof supportedLanguages)[number];
@@ -60,7 +62,8 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
   };
 
   const handleNewsletterSubmit = async () => {
-    if (!email) {
+    const emailTrimmed = email.trim();
+    if (!emailTrimmed || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
       setMessage(getLocalizedMessage("invalid", lang));
       return;
     }
@@ -76,9 +79,12 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email,
+          email: emailTrimmed,
           currentDate,
           currentPage,
+          lang,
+          company, // honeypot
+          formStartTime,
         }),
       });
 
@@ -123,13 +129,24 @@ const NewsletterForm: React.FC<NewsletterFormProps> = ({
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
+      {/* Honeypot — hidden from real users; bots that fill it are rejected server-side. */}
+      <input
+        type="text"
+        name="company"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        value={company}
+        onChange={(e) => setCompany(e.target.value)}
+        style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
+      />
       <button
         className={styles.newsLetterButton}
         onClick={handleNewsletterSubmit}
       >
         {buttonLabel}
       </button>
-      {message && <p className={styles.message}>{message}</p>}
+      {message && <p className={styles.message} role="alert" aria-live="assertive">{message}</p>}
     </div>
   );
 };

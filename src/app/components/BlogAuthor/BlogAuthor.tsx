@@ -3,6 +3,7 @@ import styles from "./BlogAuthor.module.scss";
 import { Author } from "@/types/author";
 import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 
 type Props = {
   author: Author;
@@ -26,6 +27,7 @@ const BlogAuthor: FC<Props> = ({ author }) => {
               width={150}
               height={150}
               className={styles.image}
+              {...blurProps(image)}
             />
           )}
         </div>

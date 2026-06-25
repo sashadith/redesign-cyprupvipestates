@@ -11,6 +11,8 @@ import {
   getAllPathsForLang,
   getNotFoundPageByLang,
   getSinglePagePathItems,
+  getChildLandingPages,
+  getRelatedLandingPages,
 } from "@/sanity/sanity.utils";
 import {
   AccordionBlock,
@@ -69,7 +71,9 @@ import LandingTextSecondComponent from "@/app/components/LandingPage/LandingText
 import LandingProjectsBlockComponent from "@/app/components/LandingPage/LandingProjectsBlockComponent/LandingProjectsBlockComponent";
 import NotFoundPageComponent from "@/app/components/NotFoundPageComponent/NotFoundPageComponent";
 import LandingTextStartComponent from "@/app/components/LandingPage/LandingTextStartComponent/LandingTextStartComponent";
-import { abs, localizedPath } from "@/lib/seo";
+import SectionLinks from "@/app/components/SectionLinks/SectionLinks";
+import { urlFor } from "@/sanity/sanity.client";
+import { abs, localizedPath, DEFAULT_OG_IMAGE } from "@/lib/seo";
 
 type Props = {
   params: {
@@ -160,12 +164,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
   languages["x-default"] = languages["en"] ?? canonical;
 
+  // Page-specific OG/Twitter image (was inheriting the generic site-logo default). Use the
+  // landing page's own previewImage; fall back to the logo only when the page has none.
+  const ogTitle = page?.seo?.metaTitle || page?.title;
+  const ogDesc = page?.seo?.metaDescription || page?.excerpt;
+  const ogImage = (page as any)?.previewImage ? urlFor((page as any).previewImage).url() : DEFAULT_OG_IMAGE;
+
   return {
-    title: page?.seo?.metaTitle || page?.title,
-    description: page?.seo?.metaDescription || page?.excerpt,
+    title: ogTitle,
+    description: ogDesc,
     alternates: {
       canonical,
       languages,
+    },
+    openGraph: {
+      title: ogTitle,
+      description: ogDesc,
+      url: canonical,
+      siteName: "Cyprus VIP Estates",
+      locale: lang,
+      type: "website",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: page?.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: ogTitle,
+      description: ogDesc,
+      images: [ogImage],
     },
   };
 }
@@ -251,6 +276,11 @@ const SinglePage = async ({ params }: Props) => {
   const formDocument: FormStandardDocument =
     await getFormStandardDocumentByLang(lang);
 
+  // Contextual parent -> child links (only present on pages that actually have children).
+  const childPages = await getChildLandingPages(lang, (page as any)._id);
+  // Editor-curated related landing pages (only present when manually set in the CMS).
+  const relatedPages = await getRelatedLandingPages(lang, (page as any).relatedLandingPages);
+
   const allBlocks = page.contentBlocks || [];
   const faqItems = getFaqItemsFromBlocks(allBlocks);
   const sdBlocks = allBlocks.filter(
@@ -279,6 +309,7 @@ const SinglePage = async ({ params }: Props) => {
     metaTitle: page.seo.metaTitle,
     metaDescription: page.seo.metaDescription,
     url,
+    image: (page as any).previewImage ? abs(urlFor((page as any).previewImage).url()) : undefined,
     blocks: sdBlocks,
   };
 
@@ -555,6 +586,8 @@ const SinglePage = async ({ params }: Props) => {
           </div>
         )}
         {allBlocks.map(renderContentBlock)}
+        <SectionLinks lang={lang} links={childPages} variant="section" />
+        <SectionLinks lang={lang} links={relatedPages} variant="related" />
       </main>
       <Footer params={params} />
       <ModalBrochure lang={lang} formDocument={formDocument} />

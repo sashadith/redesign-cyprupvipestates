@@ -6,7 +6,7 @@ import {
   ALL_LOCALES,
 } from "../../sanity/sanity.utils";
 import { i18n } from "@/i18n.config";
-import { abs, localizedPath } from "@/lib/seo";
+import { abs, localizedPath, DEFAULT_OG_IMAGE } from "@/lib/seo";
 
 export const revalidate = 1800;
 export function generateStaticParams() {
@@ -68,6 +68,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "Cyprus VIP Estates",
       locale: lang,
       type: "website",
+      images: [DEFAULT_OG_IMAGE],
     },
   };
 }
@@ -132,7 +133,7 @@ export default async function Home({ params }: Props) {
           ...acc,
           {
             language: lang.id,
-            path: `/${lang.id}`,
+            path: localizedPath(lang.id),
           },
         ]
       : acc;

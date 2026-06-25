@@ -3,12 +3,11 @@ import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-const TYPES = ["blogPage", "caseStudiesPage", "projectsPage", "propertiesPage", "notFoundPage"];
+const TYPES = ["blogPage", "caseStudiesPage", "projectsPage", "notFoundPage"];
 const LABELS: Record<string, string> = {
   blogPage: "Blog page",
   caseStudiesPage: "Case studies page",
   projectsPage: "Projects page",
-  propertiesPage: "Properties page",
   notFoundPage: "404 page",
 };
 

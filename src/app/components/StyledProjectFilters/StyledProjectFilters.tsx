@@ -27,6 +27,7 @@ type ProjectFiltersProps = {
   priceFrom?: number | string | null;
   priceTo?: number | string | null;
   propertyType?: string;
+  bedrooms?: string;
   sort?: string;
   q?: string;
 };
@@ -64,37 +65,40 @@ const propertyTypeOptionsByLang: Record<string, OptionType[]> = {
     { label: "Apartment", value: "Apartment" },
     { label: "Villa", value: "Villa" },
     { label: "Townhouse", value: "Townhouse" },
-    { label: "Semi-detached villa", value: "Semi-detached villa" },
-    { label: "Office", value: "Office" },
-    { label: "Shop", value: "Shop" },
   ],
   de: [
     { label: "Alle Typen", value: "" },
     { label: "Apartment", value: "Apartment" },
     { label: "Villa", value: "Villa" },
     { label: "Reihenhaus", value: "Townhouse" },
-    { label: "Halb freistehende Villa", value: "Semi-detached villa" },
-    { label: "Büro", value: "Office" },
-    { label: "Geschäft", value: "Shop" },
   ],
   ru: [
     { label: "Все типы", value: "" },
     { label: "Квартира", value: "Apartment" },
     { label: "Вилла", value: "Villa" },
     { label: "Таунхаус", value: "Townhouse" },
-    { label: "Двойной дом", value: "Semi-detached villa" },
-    { label: "Офис", value: "Office" },
-    { label: "Магазин", value: "Shop" },
   ],
   pl: [
     { label: "Wszystkie typy", value: "" },
     { label: "Mieszkanie", value: "Apartment" },
     { label: "Willa", value: "Villa" },
     { label: "Dom szeregowy", value: "Townhouse" },
-    { label: "Willa bliźniacza", value: "Semi-detached villa" },
-    { label: "Biuro", value: "Office" },
-    { label: "Sklep", value: "Shop" },
   ],
+};
+
+const numericBeds = (anyLabel: string): OptionType[] => [
+  { label: anyLabel, value: "" },
+  { label: "1", value: "1" },
+  { label: "2", value: "2" },
+  { label: "3", value: "3" },
+  { label: "4", value: "4" },
+  { label: "5+", value: "5" },
+];
+const bedroomsOptionsByLang: Record<string, OptionType[]> = {
+  en: numericBeds("Any bedrooms"),
+  de: numericBeds("Schlafzimmer (beliebig)"),
+  ru: numericBeds("Спальни (любое)"),
+  pl: numericBeds("Sypialnie (dowolnie)"),
 };
 
 export default function StyledProjectFilters({
@@ -103,6 +107,7 @@ export default function StyledProjectFilters({
   priceFrom,
   priceTo,
   propertyType,
+  bedrooms,
   sort,
   q,
 }: ProjectFiltersProps) {
@@ -112,9 +117,11 @@ export default function StyledProjectFilters({
 
   const cityOptions = cityOptionsByLang[lang];
   const typeOptions = propertyTypeOptionsByLang[lang];
+  const bedroomsOptions = bedroomsOptionsByLang[lang] ?? bedroomsOptionsByLang.en;
 
   const [cityValue, setCityValue] = useState("");
   const [typeValue, setTypeValue] = useState("");
+  const [bedroomsValue, setBedroomsValue] = useState("");
   const [sortValue, setSortValue] = useState("");
   const [priceFromValue, setPriceFromValue] = useState("");
   const [priceToValue, setPriceToValue] = useState("");
@@ -147,6 +154,7 @@ export default function StyledProjectFilters({
     setPriceFromValue("");
     setPriceToValue("");
     setTypeValue("");
+    setBedroomsValue("");
     setSortValue("");
 
     updateQuery({
@@ -154,6 +162,7 @@ export default function StyledProjectFilters({
       priceFrom: "",
       priceTo: "",
       propertyType: "",
+      bedrooms: "",
       sort: "",
       q: "",
       north: "",
@@ -207,6 +216,14 @@ export default function StyledProjectFilters({
         : lang === "pl"
           ? "Typ nieruchomości"
           : "Property Type";
+  const labelBedrooms =
+    lang === "de"
+      ? "Schlafzimmer"
+      : lang === "ru"
+        ? "Спальни"
+        : lang === "pl"
+          ? "Sypialnie"
+          : "Bedrooms";
   const labelSearch =
     lang === "de"
       ? "Nach Stichwort suchen"
@@ -275,6 +292,7 @@ export default function StyledProjectFilters({
 
     setCityValue(sp.get("city") ?? "");
     setTypeValue(sp.get("propertyType") ?? "");
+    setBedroomsValue(sp.get("bedrooms") ?? "");
     setSortValue(sp.get("sort") ?? ""); // пусто = нет параметра => покажем placeholder
     setPriceFromValue(sp.get("priceFrom") ?? "");
     setPriceToValue(sp.get("priceTo") ?? "");
@@ -289,6 +307,7 @@ export default function StyledProjectFilters({
           src="/uploads/files/bef9ef8c1faaf4bb80be49714d5c345bc434b1e0.webp"
           alt="Search"
           fill
+          sizes="100vw"
           className={styles.backgroundImage}
         />
       </div>
@@ -332,6 +351,22 @@ export default function StyledProjectFilters({
               const val = opt?.value ?? "";
               setTypeValue(val);
               updateQuery({ propertyType: val });
+            }}
+          />
+
+          <FloatingSelect
+            label={labelBedrooms}
+            name="bedrooms"
+            options={bedroomsOptions}
+            value={
+              bedroomsValue
+                ? (bedroomsOptions.find((o) => o.value === bedroomsValue) ?? null)
+                : null
+            }
+            onChange={(opt) => {
+              const val = opt?.value ?? "";
+              setBedroomsValue(val);
+              updateQuery({ bedrooms: val });
             }}
           />
 

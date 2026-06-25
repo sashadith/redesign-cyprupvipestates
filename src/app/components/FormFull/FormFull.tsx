@@ -1,4 +1,5 @@
 "use client";
+import { getAttribution } from "@/lib/attribution";
 
 import { FC, useState, useEffect, useId, useRef } from "react";
 import {
@@ -159,6 +160,7 @@ const FormFull: FC<ContactFormProps> = ({
         formStartTime,
         currentPage,
         lang,
+        ...getAttribution(),
       });
 
       if (
@@ -202,13 +204,14 @@ const FormFull: FC<ContactFormProps> = ({
         onFormSubmitSuccess && onFormSubmitSuccess();
 
         setMessagePopup(
-          lang === "ru"
-            ? "Мы получили вашу заявку и свяжемся с вами в ближайшее время."
-            : lang === "de"
-              ? "Wir haben Ihre Anfrage erhalten und werden uns in Kürze bei Ihnen melden."
-              : lang === "pl"
-                ? "Otrzymaliśmy Twoje zapytanie i skontaktujemy się z Tobą wkrótce."
-                : "We have received your request and will contact you shortly.",
+          dataForm.successMessage ||
+            (lang === "ru"
+              ? "Мы получили вашу заявку и свяжемся с вами в ближайшее время."
+              : lang === "de"
+                ? "Wir haben Ihre Anfrage erhalten und werden uns in Kürze bei Ihnen melden."
+                : lang === "pl"
+                  ? "Otrzymaliśmy Twoje zapytanie i skontaktujemy się z Tobą wkrótce."
+                  : "We have received your request and will contact you shortly."),
         );
 
         setTimeout(() => setMessagePopup(null), 5000);
@@ -244,7 +247,7 @@ const FormFull: FC<ContactFormProps> = ({
 
   return (
     <>
-      {messagePopup && <div className={styles.popup}>{messagePopup}</div>}
+      {messagePopup && <div className={styles.popup} role="alert" aria-live="assertive">{messagePopup}</div>}
 
       <Formik
         innerRef={(inst) => {
@@ -416,8 +419,8 @@ const FormFull: FC<ContactFormProps> = ({
                 />
               </div>
 
-              <div className={styles.inputWrapper}>
-                <p className={styles.radioGroupLabel}>
+              <fieldset className={`${styles.inputWrapper} min-w-0`}>
+                <legend className={styles.radioGroupLabel}>
                   {lang === "ru"
                     ? "Как с вами лучше связаться?"
                     : lang === "de"
@@ -425,7 +428,7 @@ const FormFull: FC<ContactFormProps> = ({
                       : lang === "pl"
                         ? "W jaki sposób najlepiej się z Tobą skontaktować?"
                         : "What’s the best way to contact you?"}
-                </p>
+                </legend>
 
                 <div className={styles.radioGroupWrapper}>
                   <label className={styles.radioOption}>
@@ -467,7 +470,7 @@ const FormFull: FC<ContactFormProps> = ({
                   component="div"
                   className={styles.error}
                 />
-              </div>
+              </fieldset>
 
               <div className={styles.inputWrapper}>
                 <label
@@ -537,10 +540,10 @@ const FormFull: FC<ContactFormProps> = ({
                       lang === "ru"
                         ? "/ru/politika-privatnosti"
                         : lang === "de"
-                          ? "/datenschutzrichtlinie"
+                          ? "/de/datenschutzrichtlinie"
                           : lang === "pl"
                             ? "/pl/polityka-prywatnosci"
-                            : "/en/privacy-policy"
+                            : "/privacy-policy"
                     }
                     target="_blank"
                   >

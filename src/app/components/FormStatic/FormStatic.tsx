@@ -1,4 +1,5 @@
 "use client";
+import { getAttribution } from "@/lib/attribution";
 
 import { FC, useId, useRef, useState } from "react";
 import {
@@ -165,6 +166,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
         formStartTime,
         currentPage,
         lang,
+        ...getAttribution(),
       });
 
       if (response.status === 200) {
@@ -239,7 +241,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
 
   return (
     <>
-      {message && <div className={styles.popup}>{message}</div>}
+      {message && <div className={styles.popup} role="alert" aria-live="assertive">{message}</div>}
 
       <Formik
         innerRef={(inst) => {
@@ -444,8 +446,8 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                         </div>
                       </div>
 
-                      <div className={styles.radioGroupWrapper}>
-                        <span className={styles.radioGroupLabel}>
+                      <fieldset className={`${styles.radioGroupWrapper} min-w-0`}>
+                        <legend className={styles.radioGroupLabel}>
                           {lang === "ru"
                             ? "Как с вами лучше связаться?"
                             : lang === "de"
@@ -453,7 +455,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                               : lang === "pl"
                                 ? "W jaki sposób najlepiej się z Tobą skontaktować?"
                                 : "What’s the best way to contact you?"}
-                        </span>
+                        </legend>
 
                         <div className={styles.radioOptions}>
                           <label className={styles.radioOption}>
@@ -497,7 +499,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                             </span>
                           </label>
                         </div>
-                      </div>
+                      </fieldset>
 
                       <ErrorMessage
                         name="preferredContact"
@@ -560,10 +562,10 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                               lang === "ru"
                                 ? "/ru/politika-privatnosti"
                                 : lang === "de"
-                                  ? "/datenschutzrichtlinie"
+                                  ? "/de/datenschutzrichtlinie"
                                   : lang === "pl"
                                     ? "/pl/polityka-prywatnosci"
-                                    : "/en/privacy-policy"
+                                    : "/privacy-policy"
                             }
                             target="_blank"
                           >

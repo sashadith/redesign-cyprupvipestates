@@ -8,6 +8,7 @@ import "swiper/css/navigation";
 
 import styles from "./PropertyPhotoGallery.module.scss";
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 import { ImageAlt } from "@/types/property";
 import VideoSlide from "../VideoSlide/VideoSlide";
 
@@ -76,6 +77,7 @@ const PropertyPhotoGallery: FC<Props> = ({
             width={1000}
             height={1000}
             onClick={() => openModal(0)}
+            {...blurProps(photos[0])}
           />
         </div>
         <div className={styles.secondRow}>
@@ -91,6 +93,7 @@ const PropertyPhotoGallery: FC<Props> = ({
                 className={styles.photoImage}
                 width={1000}
                 height={1000}
+                {...blurProps(photo)}
               />
             </div>
           ))}
@@ -138,6 +141,7 @@ const PropertyPhotoGallery: FC<Props> = ({
                       className="img"
                       width={1000}
                       height={1000}
+                      {...blurProps(photo)}
                     />
                   </SwiperSlide>
                 ))}

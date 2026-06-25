@@ -56,6 +56,9 @@ enum LeadSource {
   PHONE
   REFERRAL
   MANUAL
+  PARTNER
+  ROI_CALCULATOR
+  NEWSLETTER
   OTHER
 }
 
@@ -190,6 +193,9 @@ model Singlepage {
   previewImage  Json?
   seo           Json?
   contentBlocks Json?
+  // Editor-curated contextual links to other SAME-LANGUAGE landing pages.
+  // Shape: [{ _key, _ref (target sanityId), _type: "singlepageRef" }]
+  relatedLandingPages Json?
 
   publishedAt DateTime?
   scheduledAt DateTime? // SCHEDULED → auto-publish at this UTC instant
@@ -481,24 +487,34 @@ model Lead {
   utmSource            String?
   utmMedium            String?
   utmCampaign          String?
+  utmTerm              String?
+  utmContent           String?
+  gclid                String?
+  fbclid               String?
+  referrer             String?
   telegramNotified     Boolean        @default(false)
   emailNotified        Boolean        @default(false)
   activities           LeadActivity[]
 
   @@index([status])
   @@index([createdAt])
+  @@index([email])
+  @@index([source])
+  @@index([assignedToId])
   @@map("leads")
 }
 
 model LeadActivity {
-  id        String   @id @default(uuid())
-  leadId    String
-  type      String
-  content   String?
-  createdAt DateTime @default(now())
-  createdBy String?
-  lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  id          String   @id @default(uuid())
+  leadId      String
+  type        String
+  content     String?
+  createdAt   DateTime @default(now())
+  createdBy   String?
+  createdById String?
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
+  @@index([leadId])
   @@map("lead_activities")
 }
 

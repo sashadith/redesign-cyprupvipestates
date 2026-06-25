@@ -8,6 +8,7 @@ import "swiper/css/navigation";
 
 import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 import { ImageAlt } from "@/types/project";
 import styles from "./ProjectCardSlider.module.scss";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
@@ -101,6 +102,7 @@ const ProjectCardSlider: FC<Props> = ({ images, title, lang }) => {
                   className={styles.image}
                   fill
                   sizes="(max-width: 768px) 80vw, 360px"
+                  {...blurProps(img)}
                 />
                 {isLast && (
                   <div className={styles.viewMoreOverlay}>

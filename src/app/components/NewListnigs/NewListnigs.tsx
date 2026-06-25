@@ -4,7 +4,9 @@ import { getLastFiveProjectsByLang } from "@/sanity/sanity.utils";
 import { Project } from "@/types/project";
 import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 import { BsChevronDoubleRight } from "react-icons/bs";
+import { localePrefix } from "@/lib/locale";
 
 type Props = {
   lang: string;
@@ -34,7 +36,7 @@ export default async function NewListnigs({ lang }: Props) {
           {projects.map((project) => (
             <Link
               key={project._id}
-              href={`/${lang}/projects/${project.slug[lang].current}`}
+              href={`${localePrefix(lang)}/projects/${project.slug[lang].current}`}
               className={styles.projectLink}
             >
               <div className={styles.projectImage}>
@@ -45,6 +47,7 @@ export default async function NewListnigs({ lang }: Props) {
                   className={styles.image}
                   fill={true}
                   sizes="(max-width: 768px) 100vw, 360px"
+                  {...blurProps(project.previewImage)}
                 />
                 <div className={styles.projectInfo}>
                   <div className={styles.content}>
@@ -83,7 +86,7 @@ export default async function NewListnigs({ lang }: Props) {
         </div>
         <div className={styles.showAllBlock}>
           <Link
-            href={`/${lang}/projects`}
+            href={`${localePrefix(lang)}/projects`}
             className={styles.showAll}
           >
             {lang === "en"

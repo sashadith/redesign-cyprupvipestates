@@ -16,12 +16,16 @@ export default async function EditCategory({ params }: { params: { id: string } 
     <div className="max-w-xl">
       <Link href="/admin/content/categories" className="text-sm text-[#1B4B43] hover:underline">← Back to categories</Link>
       <h1 className="text-2xl font-semibold mt-2 mb-1">{c.title}</h1>
-      <p className="text-sm text-[#6B7280] mb-6">{c.language.toUpperCase()} · /{c.slug} <span className="text-[#C29A5E]">(slug locked)</span></p>
-      <TranslationsPanel type="category" groupId={c.translationGroupId} currentId={c.id} />
+      <p className="text-sm text-[#6B7280] mb-6">{c.language.toUpperCase()} · /{c.slug} <span className="text-[#C29A5E]">(slug editable below)</span></p>
+      <TranslationsPanel type="category" groupId={c.translationGroupId} currentId={c.id} currentLang={c.language} />
       <form action={save} className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-4">
         <div>
           <label className="block text-sm mb-1">Title</label>
           <input name="title" defaultValue={c.title} className={input} />
+        </div>
+        <div>
+          <label className="block text-sm mb-1">Slug <span className="text-[#9CA3AF]">(URL path — changing it changes the live URL)</span></label>
+          <input name="slug" defaultValue={c.slug} className={input} />
         </div>
         <button className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-5 py-2.5 hover:bg-[#142E2D]">Save category</button>
       </form>

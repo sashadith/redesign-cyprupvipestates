@@ -5,7 +5,7 @@ import { updateSitePage, saveSitePageContent } from "../../../../actions";
 import RichFieldEditor from "@/app/admin/RichFieldEditor";
 
 export const dynamic = "force-dynamic";
-const TYPES = ["blogPage", "caseStudiesPage", "projectsPage", "propertiesPage", "notFoundPage"];
+const TYPES = ["blogPage", "caseStudiesPage", "projectsPage", "notFoundPage"];
 const EXCLUDE = new Set(["title", "metaTitle", "metaDescription", "slug", "_type", "content", "seo"]);
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
 const labelOf = (k: string) => k.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (c) => c.toUpperCase());

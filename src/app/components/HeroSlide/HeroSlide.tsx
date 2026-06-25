@@ -5,6 +5,7 @@ import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
 import Link from "next/link";
 import { ButtonModal } from "../ButtonModal/ButtonModal";
+import { blurProps } from "@/lib/imageBlur";
 
 type Props = {
   image: ImageType;
@@ -30,7 +31,9 @@ const HeroSlide: FC<Props> = ({
         alt={title}
         src={urlFor(image).url()}
         fill={true}
+        sizes="100vw"
         className={styles.imagePoster}
+        {...blurProps(image)}
       />
       <div className={styles.overlayWide}></div>
       <div className={styles.content}>

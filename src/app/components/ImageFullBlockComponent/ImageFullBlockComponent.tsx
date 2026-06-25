@@ -4,6 +4,7 @@ import { urlFor } from "@/sanity/sanity.client";
 import styles from "./ImageFullBlockComponent.module.scss";
 import { ImageFullBlock } from "@/types/blog";
 import FadeUpAnimate from "../FadeUpAnimate/FadeUpAnimate";
+import { blurProps } from "@/lib/imageBlur";
 
 type Props = {
   block: ImageFullBlock;
@@ -38,7 +39,9 @@ const ImageFullBlockComponent: FC<Props> = ({ block }) => {
           src={urlFor(picture).url()}
           alt={picture.alt ?? title}
           fill
+          sizes="100vw"
           className={styles.image}
+          {...blurProps(picture)}
         />
       </div>
 

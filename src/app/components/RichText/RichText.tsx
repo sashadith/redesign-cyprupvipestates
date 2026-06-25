@@ -3,6 +3,7 @@ import Link from "next/link";
 import React from "react";
 import styles from "./RichText.module.scss";
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 
 // Компонент для SVG
 const BulletIcon = () => (
@@ -41,6 +42,7 @@ export const RichText = {
             height={height}
             style={{ width: "100%", height: "auto" }}
             loading="lazy"
+            {...blurProps(value)}
           />
         </div>
       );

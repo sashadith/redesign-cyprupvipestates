@@ -5,14 +5,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { getAutoReplyEmail } from "@/lib/emailTemplates";
+import { parseAttribution } from "@/lib/attribution";
+import { recordInboundLead } from "@/lib/leadNotify";
+import { ALLOWED_HOSTS, safeUrl, escapeHtml, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
 import nodemailer from "nodemailer";
-
-const ALLOWED_HOSTS = new Set([
-  "cyprusvipestates.com",
-  "www.cyprusvipestates.com",
-  "72.60.89.239", // staging VPS (remove or keep after cutover)
-  "localhost",
-]);
 
 const LOCALES = new Set(["en", "de", "pl", "ru"]);
 
@@ -23,28 +19,9 @@ const transporter = nodemailer.createTransport({
   auth: { user: process.env.EMAIL_USER!, pass: process.env.EMAIL_PASSWORD! },
 });
 
-const ipMap = new Map<string, number[]>();
-const emailMap = new Map<string, number[]>();
+const ipLimiter = makeRateLimiter();
+const emailLimiter = makeRateLimiter();
 
-function safeUrl(raw: string) { try { return new URL(raw); } catch { return null; } }
-function allowedHost(raw: string) { const u = safeUrl(raw); return !!u && ALLOWED_HOSTS.has(u.hostname); }
-function clientIp(req: Request) {
-  const xff = req.headers.get("x-forwarded-for");
-  return xff ? xff.split(",")[0].trim() : req.headers.get("x-real-ip")?.trim() || "unknown";
-}
-function rateLimited(map: Map<string, number[]>, key: string, limit = 5, windowMs = 60_000) {
-  const now = Date.now();
-  const ts = (map.get(key) || []).filter((t) => now - t < windowMs);
-  ts.push(now); map.set(key, ts);
-  return ts.length > limit;
-}
-function escapeHtml(v: unknown) {
-  return String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-}
-function blocked(reason: string, extra?: Record<string, any>) {
-  const debug = process.env.NODE_ENV !== "production";
-  return NextResponse.json(debug ? { ok: false, blocked: reason, ...extra } : { ok: false }, { status: 200 });
-}
 function leadSource(page: string) {
   if (/\/projects\//.test(page)) return "PROJECT_ENQUIRY" as const;
   if (/\/blog\//.test(page)) return "BLOG_ENQUIRY" as const;
@@ -52,20 +29,13 @@ function leadSource(page: string) {
 }
 
 export async function POST(request: Request) {
-  const ua = request.headers.get("user-agent") || "";
-  const ipKey = (clientIp(request) === "unknown" ? `unknown:${ua || "ua"}` : clientIp(request));
-  if (!ua) return blocked("ua");
-  if (!(request.headers.get("content-type") || "").includes("application/json")) return blocked("content_type");
-
+  const guard = guardRequest(request, ipLimiter);
+  if (guard) return guard;
   const referer = request.headers.get("referer") || "";
-  const origin = request.headers.get("origin") || "";
-  if (!referer || !allowedHost(referer)) return blocked("bad_referer");
-  if (origin && !allowedHost(origin)) return blocked("bad_origin");
-  if (rateLimited(ipMap, ipKey)) return blocked("rate_limit");
 
   try {
     const body = await request.json();
-    const { name, surname, phone, email, message, preferredContact, currentPage, fax, company, formStartTime, lang } = body;
+    const { name, surname, phone, email, message, preferredContact, currentPage, lang } = body;
 
     const page = String(currentPage ?? "").trim();
     const pageUrl = safeUrl(page);
@@ -74,10 +44,8 @@ export async function POST(request: Request) {
     if (!refUrl || refUrl.hostname !== pageUrl.hostname) return blocked("page_mismatch");
 
     // Honeypot + timing anti-spam
-    if (String(fax ?? company ?? "").trim().length > 0) return blocked("honeypot");
-    const started = Number(formStartTime);
-    const elapsed = Date.now() - started;
-    if (!Number.isFinite(started) || started <= 0 || elapsed < 1500 || elapsed > 2 * 60 * 60 * 1000) return blocked("timing");
+    const spam = spamSignal(body);
+    if (spam) return blocked(spam);
 
     // Validation
     const firstName = String(name ?? "").trim();
@@ -91,7 +59,7 @@ export async function POST(request: Request) {
     if (!firstName || !phoneNorm || !emailNorm) return blocked("missing_fields");
     if (preferred && !["phone", "whatsapp", "email"].includes(preferred)) return blocked("preferredContact");
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) return blocked("email");
-    if (rateLimited(emailMap, emailNorm, 3, 60_000)) return blocked("rate_limit_email");
+    if (emailLimiter(emailNorm, 3, 60_000)) return blocked("rate_limit_email");
     if (firstName.length < 2 || firstName.length > 60) return blocked("name");
     if (lastName && (lastName.length < 2 || lastName.length > 60)) return blocked("surname");
     if (phoneNorm.length < 7 || phoneNorm.length > 25) return blocked("phone");
@@ -145,12 +113,16 @@ export async function POST(request: Request) {
         projectInterestId,
         languagePreference: LOCALES.has(langNorm) ? (langNorm as any) : null,
         pageSource: page,
+        ...parseAttribution(body),
       },
     });
 
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
     const crmLink = `${siteUrl}/admin/crm/${lead.id}`;
     const fullName = [firstName, lastName].filter(Boolean).join(" ");
+
+    // Timeline entry (audit L1). This route does its own Telegram below, so skip it here.
+    await recordInboundLead({ leadId: lead.id, source, email: emailNorm, name: fullName, phone: phoneNorm, page, notifyTelegram: false });
 
     // Telegram notification (non-fatal)
     const tg =
@@ -160,10 +132,12 @@ export async function POST(request: Request) {
       `Preferred: ${escapeHtml(preferred)}\n` +
       (messageNorm ? `💬 ${escapeHtml(messageNorm)}\n` : "") +
       `🔗 ${escapeHtml(page)}\n\n<a href="${crmLink}">Open in CRM</a>`;
-    try { await sendTelegramMessage(tg); await prisma.lead.update({ where: { id: lead.id }, data: { telegramNotified: true } }); }
+    let tgOk = false;
+    try { await sendTelegramMessage(tg); tgOk = true; await prisma.lead.update({ where: { id: lead.id }, data: { telegramNotified: true } }); }
     catch (e) { console.error("Telegram error:", e); }
 
     // Email notification to team (non-fatal)
+    let emailOk = false;
     try {
       await transporter.sendMail({
         from: process.env.EMAIL_USER!,
@@ -180,8 +154,15 @@ export async function POST(request: Request) {
           <p><a href="${crmLink}">Open in CRM</a></p>`,
         replyTo: emailNorm,
       });
+      emailOk = true;
       await prisma.lead.update({ where: { id: lead.id }, data: { emailNotified: true } });
     } catch (e) { console.error("Email error:", e); }
+
+    if (!tgOk && !emailOk) {
+      // Both channels failed: the lead is safely stored but no one was pinged. Emit a
+      // greppable marker so a log-based monitor can alert on it (audit item L4).
+      console.error(`LEAD_NOTIFY_FAILED lead=${lead.id} email=${emailNorm} — Telegram AND email both failed; lead saved, no notification delivered`);
+    }
 
     // Auto-reply to client (non-fatal)
     try {

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import styles from "./CustomCookieConsent.module.scss";
+import { localePrefix } from "@/lib/locale";
 
 const COOKIE_NAME = "cookieConsent";
 
@@ -58,7 +59,7 @@ export default function CustomCookieConsent({ lang }: Props) {
 
   const getNormalizedHref = (lang: string, link: string) => {
     const normalizedLink = link.startsWith("/") ? link.slice(1) : link;
-    const languagePrefix = lang === "de" ? "" : `/${lang}`;
+    const languagePrefix = localePrefix(lang);
     return `${languagePrefix}/${normalizedLink}`;
   };
 

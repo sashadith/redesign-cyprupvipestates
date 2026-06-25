@@ -5,6 +5,7 @@ import YouTube, { YouTubePlayer } from "react-youtube";
 import { ImageAlt } from "@/types/project";
 import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 
 type Props = {
   videoId: string;
@@ -58,6 +59,7 @@ const VideoPreview: FC<Props> = ({ videoId, videoPreview }) => {
             fill
             sizes="100vw"
             className={styles.imagePoster}
+            {...blurProps(videoPreview)}
           />
         </div>
       )}

@@ -79,7 +79,7 @@ export function getAutoReplyEmail({ name, lang = "en" }: AutoReplyOptions) {
           followUs: "Folgen Sie uns:",
           reason:
             "Sie erhalten diese E-Mail, weil Sie eine Anfrage auf der Website von Cyprus VIP Estates gesendet haben.",
-          link: "https://cyprusvipestates.com/projects",
+          link: "https://cyprusvipestates.com/de/projects",
         };
       default:
         return {
@@ -99,7 +99,7 @@ export function getAutoReplyEmail({ name, lang = "en" }: AutoReplyOptions) {
           followUs: "Follow us:",
           reason:
             "You received this email because you submitted an enquiry on the Cyprus VIP Estates website.",
-          link: "https://cyprusvipestates.com/en/projects",
+          link: "https://cyprusvipestates.com/projects",
         };
     }
   })();

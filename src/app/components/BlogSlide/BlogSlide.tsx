@@ -6,6 +6,7 @@ import { urlFor } from "@/sanity/sanity.client";
 import Link from "next/link";
 import { ButtonModal } from "../ButtonModal/ButtonModal";
 import { ImageAlt } from "@/types/project";
+import { blurProps } from "@/lib/imageBlur";
 
 type Props = {
   image: ImageAlt;
@@ -35,7 +36,9 @@ const BlogSlide: FC<Props> = ({
           alt={title}
           src={urlFor(image).url()}
           fill={true}
+          sizes="100vw"
           className={styles.imagePoster}
+          {...blurProps(image)}
         />
       )}
       {/* else poster image */}
@@ -44,6 +47,7 @@ const BlogSlide: FC<Props> = ({
           alt={title}
           src="/uploads/files/bef9ef8c1faaf4bb80be49714d5c345bc434b1e0.webp"
           fill={true}
+          sizes="100vw"
           className={styles.imagePoster}
         />
       </div>

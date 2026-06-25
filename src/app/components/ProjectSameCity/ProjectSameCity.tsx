@@ -4,9 +4,9 @@ import { getThreeProjectsBySameCity } from "@/sanity/sanity.utils";
 import Link from "next/link";
 import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
-import { defaultLocale } from "@/i18n.config";
 import styles from "./ProjectSameCity.module.scss";
 import ProjectLink from "../ProjectLink/ProjectLink";
+import { localePrefix } from "@/lib/locale";
 
 type Props = {
   lang: string;
@@ -44,10 +44,7 @@ const ProjectSameCity = async ({ lang, city, currentProjectId }: Props) => {
         </h2>
         <div className={styles.projects}>
           {projects.map((project: any) => {
-            const projectUrl =
-              lang === defaultLocale
-                ? `/projects/${project.slug.current}`
-                : `/${lang}/projects/${project.slug.current}`;
+            const projectUrl = `${localePrefix(lang)}/projects/${project.slug.current}`;
             return (
               <ProjectLink
                 key={project._id}

@@ -9,6 +9,8 @@ import {
   getFilteredProjectLocationsByLang,
 } from "@/sanity/sanity.utils";
 import { i18n } from "@/i18n.config";
+import { localizedHref } from "@/lib/locale";
+import { staticAlternates, DEFAULT_OG_IMAGE } from "@/lib/seo";
 import { Translation } from "@/types/homepage";
 import ProjectLink from "@/app/components/ProjectLink/ProjectLink";
 import NoProjects from "@/app/components/NoProjects/NoProjects";
@@ -29,6 +31,7 @@ type SearchParams = {
   priceFrom?: string;
   priceTo?: string;
   propertyType?: string;
+  bedrooms?: string;
   sort?: string;
   q?: string;
   north?: number;
@@ -51,10 +54,21 @@ export async function generateMetadata({
   params,
 }: MetaDataProps): Promise<Metadata> {
   const data = await getProjectsPageByLang(params.lang);
+  const { canonical, languages } = staticAlternates(params.lang, "projects");
 
   return {
     title: data?.seo.metaTitle,
     description: data?.seo.metaDescription,
+    alternates: { canonical, languages },
+    openGraph: {
+      title: data?.seo.metaTitle,
+      description: data?.seo.metaDescription,
+      url: canonical,
+      siteName: "Cyprus VIP Estates",
+      locale: params.lang,
+      type: "website",
+      images: [DEFAULT_OG_IMAGE],
+    },
   };
 }
 
@@ -138,7 +152,7 @@ export default async function ProjectsPage({
           ...acc,
           {
             language: lang.id,
-            path: `/${lang.id}/projects`,
+            path: localizedHref(lang.id, "projects"),
           },
         ]
       : acc;
@@ -154,6 +168,7 @@ export default async function ProjectsPage({
   const skip = (currentPage - 1) * PAGE_SIZE;
   const sort = searchParams.sort || "recommended";
   const q = searchParams.q || "";
+  const bedrooms = searchParams.bedrooms || "";
   const north = searchParams.north ? Number(searchParams.north) : null;
   const south = searchParams.south ? Number(searchParams.south) : null;
   const east = searchParams.east ? Number(searchParams.east) : null;
@@ -164,6 +179,7 @@ export default async function ProjectsPage({
     priceFrom,
     priceTo,
     propertyType,
+    bedrooms,
     sort,
     q,
     north,
@@ -176,6 +192,7 @@ export default async function ProjectsPage({
     priceFrom,
     priceTo,
     propertyType,
+    bedrooms,
     q,
     north,
     south,
@@ -193,6 +210,7 @@ export default async function ProjectsPage({
     priceFrom,
     priceTo,
     propertyType,
+    bedrooms,
     q,
     north,
     south,
@@ -216,6 +234,7 @@ export default async function ProjectsPage({
           priceFrom={priceFrom}
           priceTo={priceTo}
           propertyType={propertyType}
+          bedrooms={bedrooms}
           sort={sort}
           q={q}
         />
@@ -229,7 +248,7 @@ export default async function ProjectsPage({
                   {projects.map((project: any) => {
                     const projectUrl =
                       project.slug && project.slug.current
-                        ? `/${lang}/projects/${project.slug.current}`
+                        ? localizedHref(lang, ["projects", project.slug.current])
                         : "#";
                     return (
                       <ProjectLinkAll

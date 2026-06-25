@@ -2,6 +2,8 @@
 import React from "react";
 import { Metadata } from "next";
 import { i18n } from "@/i18n.config";
+import { localizedHref } from "@/lib/locale";
+import { staticAlternates, DEFAULT_OG_IMAGE } from "@/lib/seo";
 import {
   getBlogPageByLang,
   getBlogPostsByLangWithPagination,
@@ -26,17 +28,30 @@ type Props = {
 // Dynamic metadata for SEO
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = await getBlogPageByLang(params.lang);
+  const { canonical, languages } = staticAlternates(params.lang, "blog");
 
   return {
     title: data?.metaTitle,
     description: data?.metaDescription,
+    alternates: { canonical, languages },
+    openGraph: {
+      title: data?.metaTitle,
+      description: data?.metaDescription,
+      url: canonical,
+      siteName: "Cyprus VIP Estates",
+      locale: params.lang,
+      type: "website",
+      images: [DEFAULT_OG_IMAGE],
+    },
   };
 }
 
 const PageBlog = async ({ params }: Props) => {
   const { lang } = params;
-  const initialPosts = await getBlogPostsByLangWithPagination(lang, 12, 0);
+  // Render ALL posts server-side so every post link is crawlable (the client reveals them
+  // progressively). Previously only the first 12 were emitted, orphaning older posts.
   const totalPosts = await getTotalBlogPostsByLang(lang);
+  const initialPosts = await getBlogPostsByLangWithPagination(lang, Math.max(totalPosts, 24), 0);
   const blogPage = await getBlogPageByLang(lang);
 
   const formDocument: FormStandardDocument =
@@ -73,7 +88,7 @@ const PageBlog = async ({ params }: Props) => {
           ...acc,
           {
             language: lang.id,
-            path: `/${lang.id}/${translationSlug}`,
+            path: localizedHref(lang.id, translationSlug),
           },
         ]
       : acc;

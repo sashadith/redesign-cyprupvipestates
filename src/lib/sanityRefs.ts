@@ -4,6 +4,8 @@
 // and GROQ output expect. Image dimensions are encoded in the ref itself, so no DB lookup
 // is needed. (Phase 3 — replaces Sanity CDN dereferencing after the migration.)
 
+import { blurForRef } from "./blurStore";
+
 const IMAGE_RE = /^image-([a-f0-9]+)-(\d+)x(\d+)-(\w+)$/;
 const FILE_RE = /^file-([a-f0-9]+)-(\w+)$/;
 
@@ -60,8 +62,9 @@ export function dereferenceAssets<T = any>(node: T): T {
         _type: "sanity.imageAsset",
         url,
         ...(a.url && a.url.startsWith("/uploads/") ? { url: a.url } : {}),
-        // preserve a blur placeholder if a previous pass (withBlur) attached one
-        ...(a.blurDataURL ? { blurDataURL: a.blurDataURL } : {}),
+        // Blur placeholder: an explicit one (withBlur) wins, else the process-cached LQIP
+        // from blurStore (populated server-side by loadBlurMap) — so every image gets blur.
+        ...((a.blurDataURL ?? blurForRef(ref)) ? { blurDataURL: a.blurDataURL ?? blurForRef(ref) } : {}),
         metadata: { ...(a.metadata ?? {}), ...(dims ? { dimensions: dims } : {}) },
       };
       const out: any = {};

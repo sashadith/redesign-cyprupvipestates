@@ -9,10 +9,11 @@ function normalize(initial: any): ImageObj {
   return ref ? { _type: "image", alt: initial.alt ?? "", asset: { _ref: ref, _type: "reference" } } : null;
 }
 
-export default function ImagePicker({ name, initial, label }: { name: string; initial: any; label: string }) {
-  const [img, setImg] = useState<ImageObj>(() => normalize(initial));
+export default function ImagePicker({ name, initial, label, onChange }: { name?: string; initial: any; label: string; onChange?: (img: ImageObj) => void }) {
+  const [img, setImgState] = useState<ImageObj>(() => normalize(initial));
   const [busy, setBusy] = useState(false);
   const url = img?.asset?._ref ? refToLocalUrl(img.asset._ref) : null;
+  const setImg = (next: ImageObj) => { setImgState(next); onChange?.(next); };
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -45,7 +46,7 @@ export default function ImagePicker({ name, initial, label }: { name: string; in
           {img && <button type="button" onClick={() => setImg(null)} className="text-xs text-[#C0392B] text-left">Remove image</button>}
         </div>
       </div>
-      <input type="hidden" name={name} value={img ? JSON.stringify(img) : ""} />
+      {name ? <input type="hidden" name={name} value={img ? JSON.stringify(img) : ""} /> : null}
     </div>
   );
 }

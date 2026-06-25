@@ -3,6 +3,7 @@ import React, { FC } from "react";
 import styles from "./AboutBlock.module.scss";
 import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 
 type Props = {
   aboutBlock: AboutBlockType;
@@ -30,6 +31,7 @@ const AboutBlock: FC<Props> = ({ aboutBlock }) => {
                   width={250}
                   height={250}
                   className={styles.image}
+                  {...blurProps(bullet.image)}
                 />
               </div>
               <p className={styles.text}>{bullet.description}</p>

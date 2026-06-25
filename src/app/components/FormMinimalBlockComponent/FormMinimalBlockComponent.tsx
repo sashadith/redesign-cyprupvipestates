@@ -1,4 +1,5 @@
 "use client";
+import { getAttribution } from "@/lib/attribution";
 
 import { FC, useState, useEffect, useId, useRef } from "react";
 import {
@@ -145,6 +146,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
         formStartTime,
         currentPage,
         lang,
+        ...getAttribution(),
       });
 
       if (
@@ -181,13 +183,14 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
         onFormSubmitSuccess && onFormSubmitSuccess();
 
         setMessage(
-          lang === "ru"
-            ? "Мы получили вашу заявку и свяжемся с вами в ближайшее время."
-            : lang === "de"
-              ? "Wir haben Ihre Anfrage erhalten und werden uns in Kürze bei Ihnen melden."
-              : lang === "pl"
-                ? "Otrzymaliśmy Twoje zapytanie i skontaktujemy się z Tobą wkrótce."
-                : "We have received your request and will contact you shortly.",
+          dataForm.successMessage ||
+            (lang === "ru"
+              ? "Мы получили вашу заявку и свяжемся с вами в ближайшее время."
+              : lang === "de"
+                ? "Wir haben Ihre Anfrage erhalten und werden uns in Kürze bei Ihnen melden."
+                : lang === "pl"
+                  ? "Otrzymaliśmy Twoje zapytanie i skontaktujemy się z Tobą wkrótce."
+                  : "We have received your request and will contact you shortly."),
         );
 
         setTimeout(() => setMessage(null), 5000);
@@ -221,7 +224,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
     <>
       <div className={styles.formMinimal}>
         <div className="container">
-          {message && <div className={styles.popup}>{message}</div>}
+          {message && <div className={styles.popup} role="alert" aria-live="assertive">{message}</div>}
 
           <Formik
             innerRef={(inst) => {
@@ -393,8 +396,8 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                     />
                   </div>
 
-                  <div className={styles.inputWrapper}>
-                    <span className={styles.radioGroupLabel}>
+                  <fieldset className={`${styles.inputWrapper} min-w-0`}>
+                    <legend className={styles.radioGroupLabel}>
                       {lang === "ru"
                         ? "Как с вами лучше связаться?"
                         : lang === "de"
@@ -402,7 +405,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                           : lang === "pl"
                             ? "W jaki sposób najlepiej się z Tobą skontaktować?"
                             : "What’s the best way to contact you?"}
-                    </span>
+                    </legend>
 
                     <div className={styles.radioGroupWrapper}>
                       <label className={styles.radioOption}>
@@ -452,7 +455,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                       component="div"
                       className={styles.error}
                     />
-                  </div>
+                  </fieldset>
 
                   <div className={styles.inputWrapper}>
                     <label
@@ -522,10 +525,10 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                           lang === "ru"
                             ? "/ru/politika-privatnosti"
                             : lang === "de"
-                              ? "/datenschutzrichtlinie"
+                              ? "/de/datenschutzrichtlinie"
                               : lang === "pl"
                                 ? "/pl/polityka-prywatnosci"
-                                : "/en/privacy-policy"
+                                : "/privacy-policy"
                         }
                         target="_blank"
                       >

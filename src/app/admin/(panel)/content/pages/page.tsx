@@ -10,7 +10,10 @@ export default async function PagesAdmin({ searchParams }: { searchParams: { lan
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-4">Pages</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-semibold">Pages</h1>
+        <Link href="/admin/content/pages/new" className="rounded-md bg-[#1B4B43] text-white text-sm px-4 py-2 hover:bg-[#142E2D]">+ New page</Link>
+      </div>
       <div className="flex items-center gap-4 mb-4">
         <div className="flex gap-1">
           {LOCALES.map((l) => (

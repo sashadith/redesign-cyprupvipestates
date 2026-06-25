@@ -4,6 +4,7 @@ import styles from "./CitiesHomepage.module.scss";
 import Link from "next/link";
 import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 
 type Props = {
   citiesBlock: CitiesBlock;
@@ -26,6 +27,7 @@ const CitiesHomepage: FC<Props> = ({ citiesBlock }) => {
                   className={styles.image}
                   fill={true}
                   sizes="(max-width: 768px) 50vw, 320px"
+                  {...blurProps(city.image)}
                 />
               </div>
               <h3 className={styles.cityName}>{city.city}</h3>

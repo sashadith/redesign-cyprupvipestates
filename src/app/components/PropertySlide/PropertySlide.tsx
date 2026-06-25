@@ -3,6 +3,7 @@ import React, { FC } from "react";
 import styles from "./PropertySlide.module.scss";
 import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 
 type Props = {
   image: ImageAlt;
@@ -16,6 +17,8 @@ const PropertySlide: FC<Props> = ({ image }) => {
         alt={image.alt || "default alt text"}
         className={styles.image}
         fill={true}
+        sizes="100vw"
+        {...blurProps(image)}
       />
     </div>
   );

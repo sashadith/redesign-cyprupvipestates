@@ -1,4 +1,5 @@
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 import { ImageAlt } from "@/types/project";
 import Image from "next/image";
 import Link from "next/link";
@@ -42,6 +43,7 @@ const ProjectLink: FC<Props> = ({
           className={styles.image}
           fill={true}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
+          {...blurProps(previewImage)}
         />
         <div className={styles.projectInfo}>
           {isSold && (

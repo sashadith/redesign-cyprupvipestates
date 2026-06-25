@@ -8,6 +8,7 @@ import Link from "next/link";
 import NavWrapper from "../NavWrapper/NavWrapper";
 import { Translation } from "@/types/homepage";
 import { ButtonModal } from "../ButtonModal/ButtonModal";
+import { localizedHref } from "@/lib/locale";
 
 type Props = {
   translations?: Translation[];
@@ -24,7 +25,7 @@ const Header = async ({ translations, params }: Props) => {
           <div className={styles.companyData}>
             <Link
               className={styles.logoLink}
-              href={`/${params.lang}`}
+              href={localizedHref(params.lang)}
             >
               <Image
                 alt="Cyprus VIP Estates Logo"

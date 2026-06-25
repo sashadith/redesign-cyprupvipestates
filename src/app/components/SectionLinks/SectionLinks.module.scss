@@ -1,0 +1,29 @@
+.sectionLinks {
+  padding: 40px 0;
+}
+
+.heading {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #1b4b43;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.link {
+  color: #1b4b43;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:hover {
+    opacity: 0.75;
+  }
+}

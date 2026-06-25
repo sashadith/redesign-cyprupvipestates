@@ -1,11 +1,11 @@
 import React, { FC } from "react";
 import styles from "./ProjectsSectionBlockComponent.module.scss";
 import { ProjectsSectionBlock } from "@/types/blog";
-import { defaultLocale } from "@/i18n.config";
 import Link from "next/link";
 import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
 import ProjectLink from "../ProjectLink/ProjectLink";
+import { localePrefix } from "@/lib/locale";
 
 type Props = {
   block: ProjectsSectionBlock;
@@ -41,10 +41,7 @@ const ProjectsSectionBlockComponent: FC<Props> = ({ block, lang }) => {
         <h2 className={styles.title}>{title}</h2>
         <div className={styles.projects}>
           {projects.map((project: any) => {
-            const projectUrl =
-              lang === defaultLocale
-                ? `/projects/${project.slug}`
-                : `/${lang}/projects/${project.slug}`;
+            const projectUrl = `${localePrefix(lang)}/projects/${project.slug}`;
             return (
               <ProjectLink
                 key={project._id}

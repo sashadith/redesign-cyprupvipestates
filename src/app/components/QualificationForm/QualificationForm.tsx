@@ -1,4 +1,5 @@
 "use client";
+import { getAttribution } from "@/lib/attribution";
 
 import { FC, useId, useState } from "react";
 import axios from "axios";
@@ -6,6 +7,7 @@ import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import Link from "next/link";
+import { localizedHref } from "@/lib/locale";
 
 type Lang = "en" | "de" | "pl" | "ru";
 
@@ -88,6 +90,7 @@ const QualificationForm: FC<Props> = ({ lang, projectSlug, projectTitle }) => {
         currentPage: typeof window !== "undefined" ? window.location.href : "",
         projectSlug: projectSlug ?? "",
         lang,
+        ...getAttribution(),
       });
       if (res.status === 200 && res.data?.ok) {
         setStatus("ok");
@@ -98,7 +101,7 @@ const QualificationForm: FC<Props> = ({ lang, projectSlug, projectTitle }) => {
 
   if (status === "ok") {
     return (
-      <div className="bg-[#F5F1E8] border border-[#E0DAD0] p-8 text-center">
+      <div className="bg-[#F5F1E8] border border-[#E0DAD0] p-8 text-center" role="alert" aria-live="assertive">
         <p className="text-[#1B4B43] text-lg" style={{ fontFamily: "var(--font-display, Georgia), serif" }}>{t.success}</p>
       </div>
     );
@@ -150,8 +153,8 @@ const QualificationForm: FC<Props> = ({ lang, projectSlug, projectTitle }) => {
             {TIMELINES.map((x) => <option key={x.v} value={x.v}>{x.l}</option>)}
           </select>
         </div>
-        <div>
-          <label className={label}>{t.financing}</label>
+        <fieldset className="min-w-0 p-0 m-0 border-0">
+          <legend className={label}>{t.financing}</legend>
           <div className="flex gap-4 pt-2">
             {FINANCING.map((f) => (
               <label key={f.v} className="flex items-center gap-1.5 text-[14px] text-[#2C2C2C]">
@@ -159,7 +162,7 @@ const QualificationForm: FC<Props> = ({ lang, projectSlug, projectTitle }) => {
               </label>
             ))}
           </div>
-        </div>
+        </fieldset>
       </div>
 
       <div>
@@ -183,10 +186,10 @@ const QualificationForm: FC<Props> = ({ lang, projectSlug, projectTitle }) => {
 
       <label className="flex items-start gap-2 text-[13px] text-[#6B6B6B]">
         <input type="checkbox" name="agreedToPolicy" required className="mt-0.5" />
-        <span>{t.consent} <Link href={`/${lang}/datenschutzrichtlinie`} className="text-[#1B4B43] underline">{t.privacy}</Link> *</span>
+        <span>{t.consent} <Link href={localizedHref(lang, lang === "ru" ? "politika-privatnosti" : lang === "de" ? "datenschutzrichtlinie" : lang === "pl" ? "polityka-prywatnosci" : "privacy-policy")} className="text-[#1B4B43] underline">{t.privacy}</Link> *</span>
       </label>
 
-      {status === "err" && errMsg && <p className="text-[14px] text-[#C0392B]">{errMsg}</p>}
+      {status === "err" && errMsg && <p className="text-[14px] text-[#C0392B]" role="alert" aria-live="assertive">{errMsg}</p>}
 
       <button type="submit" disabled={status === "sending"}
         className="bg-[#142E2D] text-white text-[13px] tracking-[0.12em] uppercase px-8 py-3.5 hover:bg-[#1B4B43] transition-colors disabled:opacity-60">

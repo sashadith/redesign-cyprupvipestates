@@ -3,6 +3,7 @@ import styles from "./ImageBulletsBlockComponent.module.scss";
 import { ImageBulletsBlock } from "@/types/blog";
 import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 import FadeUpAnimate from "../FadeUpAnimate/FadeUpAnimate";
 
 type Props = {
@@ -24,6 +25,7 @@ const ImageBulletsBlockComponent: FC<Props> = ({ block }) => {
                   width={400}
                   height={700}
                   className={styles.image}
+                  {...blurProps(image)}
                 />
               </div>
               <div className={styles.bulletsBlock}>

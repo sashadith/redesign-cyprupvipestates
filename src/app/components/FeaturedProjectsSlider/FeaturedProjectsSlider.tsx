@@ -4,6 +4,7 @@ import React from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import ProjectLink from "../ProjectLink/ProjectLink";
+import { localePrefix } from "@/lib/locale";
 
 type Props = {
   featuredProjects: FeaturedProjectsBlock["projects"];
@@ -41,10 +42,7 @@ const FeaturedProjectsSlider: React.FC<Props> = ({
       loop={true}
     >
       {featuredProjects.map((project) => {
-        const projectUrl =
-          lang === "de"
-            ? `/projects/${project.slug}`
-            : `/${lang}/projects/${project.slug}`;
+        const projectUrl = `${localePrefix(lang)}/projects/${project.slug}`;
 
         return (
           <SwiperSlide key={project._id}>

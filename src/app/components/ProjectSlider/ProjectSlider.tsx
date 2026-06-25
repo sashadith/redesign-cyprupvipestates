@@ -15,6 +15,7 @@ import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
 import PropertySlideThumb from "../PropertySlideThumb/PropertySlideThumb";
 import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 import { ImageModal } from "@/types/project";
 
 const setModalAppElement = () => {
@@ -145,6 +146,7 @@ const ProjectSlider: FC<Props> = ({ images }) => {
                     height={height}
                     sizes="(max-width: 768px) 92vw, 98vw"
                     // priority={index === activeIndex}
+                    {...blurProps(image)}
                   />
                 </div>
               </SwiperSlide>

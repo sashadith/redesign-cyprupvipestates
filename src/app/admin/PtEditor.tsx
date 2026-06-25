@@ -15,11 +15,14 @@ export default function PtEditor({
   field = "description",
   label = "Description (rich text)",
   initial,
+  saveAction,
 }: {
-  projectId: string;
+  projectId?: string;
   field?: string;
   label?: string;
   initial: unknown;
+  // When provided, used instead of the default project-field save (e.g. case-study sections).
+  saveAction?: (html: string) => Promise<any>;
 }) {
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "err">("idle");
   const fileRef = useRef<HTMLInputElement>(null);
@@ -67,7 +70,8 @@ export default function PtEditor({
     if (!editor) return;
     setStatus("saving");
     try {
-      await saveProjectField(projectId, field, editor.getHTML());
+      if (saveAction) await saveAction(editor.getHTML());
+      else await saveProjectField(projectId as string, field, editor.getHTML());
       setStatus("saved");
     } catch {
       setStatus("err");
@@ -83,7 +87,7 @@ export default function PtEditor({
           {status === "err" && <span className="text-xs text-[#C0392B]">Save failed</span>}
           <button type="button" onClick={save} disabled={status === "saving"}
             className="rounded-md bg-[#1B4B43] text-white text-sm px-4 py-1.5 hover:bg-[#142E2D] disabled:opacity-60">
-            {status === "saving" ? "Saving…" : "Save description"}
+            {status === "saving" ? "Saving…" : "Save"}
           </button>
         </div>
       </div>

@@ -1,16 +1,12 @@
 // app/api/email/route.ts
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import { prisma } from "@/lib/prisma";
+import { parseAttribution } from "@/lib/attribution";
+import { recordInboundLead } from "@/lib/leadNotify";
+import { ALLOWED_HOSTS, safeUrl, allowedHost, clientIp, escapeHtml, makeRateLimiter } from "@/lib/antispam";
 
-/**
- * Разрешённые хосты, с которых может приходить форма
- * (и которые допустимы в currentPage)
- */
-const ALLOWED_HOSTS = new Set([
-  "cyprusvipestates.com",
-  "www.cyprusvipestates.com",
-  "localhost",
-]);
+const LEAD_LOCALES = new Set(["en", "de", "pl", "ru"]);
 
 /**
  * Разрешаем только страницу партнёров во всех языках:
@@ -24,57 +20,14 @@ const ALLOWED_HOSTS = new Set([
 const PARTNERS_PATH_RE = /^\/([a-z]{2}\/)?partners\/?$/i;
 
 // in-memory rate limits (на уровне инстанса)
-const rateLimitIpMap = new Map<string, number[]>();
-const rateLimitEmailMap = new Map<string, number[]>();
-
-function safeUrl(raw: string) {
-  try {
-    return new URL(raw);
-  } catch {
-    return null;
-  }
-}
+const ipLimiter = makeRateLimiter();
+const emailLimiter = makeRateLimiter();
 
 function normalizeHost(host: string) {
   return String(host || "")
     .trim()
     .toLowerCase()
     .replace(/^www\./i, "");
-}
-
-function isAllowedHostFromUrl(raw: string) {
-  const u = safeUrl(raw);
-  if (!u) return false;
-  return ALLOWED_HOSTS.has(u.hostname);
-}
-
-function getClientIp(request: Request) {
-  const xff = request.headers.get("x-forwarded-for");
-  if (xff) return xff.split(",")[0].trim();
-  return request.headers.get("x-real-ip")?.trim() || "unknown";
-}
-
-function isRateLimitedKey(
-  map: Map<string, number[]>,
-  key: string,
-  limit = 3,
-  windowMs = 60_000,
-) {
-  const now = Date.now();
-  const timestamps = map.get(key) || [];
-  const filtered = timestamps.filter((t) => now - t < windowMs);
-  filtered.push(now);
-  map.set(key, filtered);
-  return filtered.length > limit;
-}
-
-function escapeHtml(input: unknown) {
-  return String(input ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 }
 
 // анти-токен: длинная строка без пробелов, только буквы/цифры (как у твоего спама)
@@ -119,7 +72,7 @@ export async function POST(request: Request) {
     Boolean(process.env.ANTISPAM_DEBUG_TOKEN) &&
     request.headers.get("x-debug-token") === process.env.ANTISPAM_DEBUG_TOKEN;
 
-  const ip = getClientIp(request);
+  const ip = clientIp(request);
   const ua = request.headers.get("user-agent") || "";
   const ipKey = ip === "unknown" ? `unknown:${ua || "ua"}` : ip;
 
@@ -133,13 +86,13 @@ export async function POST(request: Request) {
   const referer = request.headers.get("referer") || "";
 
   // базовый фильтр по источнику запроса
-  if (!referer || !isAllowedHostFromUrl(referer))
+  if (!referer || !allowedHost(referer))
     return blocked(allowDebug, "bad_referer");
-  if (origin && !isAllowedHostFromUrl(origin))
+  if (origin && !allowedHost(origin))
     return blocked(allowDebug, "bad_origin");
 
   // rate limit по IP/UA
-  if (isRateLimitedKey(rateLimitIpMap, ipKey, 5, 60_000)) {
+  if (ipLimiter(ipKey, 5, 60_000)) {
     return blocked(allowDebug, "rate_limit_ip");
   }
 
@@ -218,7 +171,7 @@ export async function POST(request: Request) {
       return blocked(allowDebug, "email");
 
     // rate limit по email (после валидации)
-    if (isRateLimitedKey(rateLimitEmailMap, emailNorm, 3, 60_000)) {
+    if (emailLimiter(emailNorm, 3, 60_000)) {
       return blocked(allowDebug, "rate_limit_email");
     }
 
@@ -270,6 +223,31 @@ export async function POST(request: Request) {
       <p><b>Page:</b> ${escapeHtml(page)}</p>
     `;
 
+    // Persist to the CRM first (system of record); email is the notification.
+    let leadId: string | null = null;
+    try {
+      const lead = await prisma.lead.create({
+        data: {
+          firstName: nameNorm,
+          lastName: surnameNorm,
+          email: emailNorm,
+          phone: phoneNorm,
+          source: "PARTNER",
+          status: "NEW",
+          notes: `Partner / cooperation enquiry${countryNorm ? ` · Country: ${countryNorm}` : ""}`,
+          languagePreference: LEAD_LOCALES.has(String(lang ?? "").toLowerCase())
+            ? (String(lang).toLowerCase() as any)
+            : null,
+          pageSource: page,
+          ...parseAttribution(body),
+        },
+      });
+      leadId = lead.id;
+      await recordInboundLead({ leadId, source: "PARTNER", email: emailNorm, name: `${nameNorm} ${surnameNorm}`.trim(), phone: phoneNorm, page });
+    } catch (e) {
+      console.error("Partner lead persist error:", e);
+    }
+
     await transporter.sendMail({
       from: process.env.EMAIL_USER!,
       to: process.env.EMAIL_TO || process.env.EMAIL_USER!,
@@ -279,6 +257,7 @@ export async function POST(request: Request) {
       html: mailBodyHtml,
       replyTo: emailNorm || undefined,
     });
+    if (leadId) { try { await prisma.lead.update({ where: { id: leadId }, data: { emailNotified: true } }); } catch {} }
 
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {

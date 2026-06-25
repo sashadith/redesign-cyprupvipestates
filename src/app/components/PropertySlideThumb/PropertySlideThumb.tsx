@@ -3,6 +3,7 @@ import React, { FC } from "react";
 import styles from "./PropertySlideThumb.module.scss";
 import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 import { ImageModal } from "@/types/project";
 
 type Props = {
@@ -18,6 +19,7 @@ const PropertySlideThumb: FC<Props> = ({ image }) => {
         className={styles.image}
         fill={true}
         sizes="140px"
+        {...blurProps(image)}
       />
     </div>
   );

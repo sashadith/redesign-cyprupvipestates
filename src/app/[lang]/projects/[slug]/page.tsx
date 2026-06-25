@@ -1,6 +1,8 @@
 import React from "react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
+import { localizedHref } from "@/lib/locale";
 import {
   getFormStandardDocumentByLang,
   getNotFoundPageByLang,
@@ -32,7 +34,7 @@ import PropertyFeatures from "@/app/components/PropertyFeatures/PropertyFeatures
 import HeaderWrapper from "@/app/components/HeaderWrapper/HeaderWrapper";
 import { ButtonModal } from "@/app/components/ButtonModal/ButtonModal";
 import ProjectSlider from "@/app/components/ProjectSlider/ProjectSlider";
-import ProjectSameCity from "@/app/components/ProjectSameCity/ProjectSameCity";
+const ProjectSameCity = dynamic(() => import("@/app/components/ProjectSameCity/ProjectSameCity"));
 import { urlFor } from "@/sanity/sanity.client";
 import QualificationForm from "@/app/components/QualificationForm/QualificationForm";
 import FullDescriptionBlock from "@/app/components/FullDescriptionBlock/FullDescriptionBlock";
@@ -41,8 +43,10 @@ import SchemaMarkup from "@/app/components/SchemaMarkup/SchemaMarkup";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 import WhatAppButtonProject from "@/app/components/WhatAppButtonProject/WhatAppButtonProject";
 import NotFoundPageComponent from "@/app/components/NotFoundPageComponent/NotFoundPageComponent";
-import RoiCalculator from "@/app/components/roi-calculator/RoiCalculator";
-import ModalRoiCalculator from "@/app/components/ModalRoiCalculator/ModalRoiCalculator";
+// Heavy, below-the-fold/modal components — code-split out of the initial bundle.
+// ROI modal (recharts) is client-only (opens on click); related-projects slider (Swiper)
+// keeps SSR so its internal links stay in the HTML for SEO, but its JS chunk is split.
+const ModalRoiCalculator = dynamic(() => import("@/app/components/ModalRoiCalculator/ModalRoiCalculator"), { ssr: false });
 import MetaViewContentTracker from "@/app/components/MetaViewContentTracker/MetaViewContentTracker";
 import LinkedInConversionTracker from "@/app/components/LinkedInConversionTracker/LinkedInConversionTracker";
 import ProjectPdfButton from "@/app/components/ProjectPdfButton/ProjectPdfButton";
@@ -237,6 +241,18 @@ const ProjectPage = async ({ params }: Props) => {
                 </ButtonModal>
                 <WhatAppButtonProject lang={params.lang} />
               </div>
+              {(() => {
+                const dev = project.developer as any;
+                if (!dev?.slug || !dev?.name) return null;
+                return (
+                  <p className="project-developer" style={{ marginTop: 12, fontSize: 14 }}>
+                    {lang === "de" ? "Bauträger" : lang === "ru" ? "Застройщик" : lang === "pl" ? "Deweloper" : "Developer"}:{" "}
+                    <Link href={localizedHref(lang, ["developers", dev.slug])} style={{ color: "#bd8948", fontWeight: 500 }}>
+                      {dev.name}
+                    </Link>
+                  </p>
+                );
+              })()}
             </div>
             <div className="property-features">
               <PropertyFeatures keyFeatures={project.keyFeatures} lang={lang} />

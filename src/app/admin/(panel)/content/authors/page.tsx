@@ -7,7 +7,10 @@ export default async function AuthorsList() {
   const items = await prisma.author.findMany({ orderBy: [{ language: "asc" }, { name: "asc" }] });
   return (
     <div>
-      <h1 className="text-2xl font-semibold mb-4">Authors <span className="text-base font-normal text-[#6B7280]">({items.length})</span></h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-semibold">Authors <span className="text-base font-normal text-[#6B7280]">({items.length})</span></h1>
+        <Link href="/admin/content/authors/new" className="rounded-md bg-[#1B4B43] text-white text-sm px-4 py-2 hover:bg-[#142E2D]">+ New author</Link>
+      </div>
       <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-[#F8F9FA] text-[#6B7280]">

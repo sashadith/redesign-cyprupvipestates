@@ -15,9 +15,15 @@ function Submit({ kind }: { kind: string }) {
 export default function NewContentForm({
   action,
   kind,
+  titleLabel = "Title",
+  hasSlug = true,
+  hasExcerpt = true,
 }: {
   action: (prev: any, formData: FormData) => Promise<any>;
   kind: string;
+  titleLabel?: string;
+  hasSlug?: boolean;
+  hasExcerpt?: boolean;
 }) {
   const [state, formAction] = useFormState<{ error?: string } | null>(action as any, null);
   return (
@@ -30,17 +36,21 @@ export default function NewContentForm({
         </select>
       </div>
       <div>
-        <label className="block text-sm mb-1">Title *</label>
+        <label className="block text-sm mb-1">{titleLabel} *</label>
         <input name="title" required className={input} />
       </div>
-      <div>
-        <label className="block text-sm mb-1">Slug (leave blank to derive from title)</label>
-        <input name="slug" placeholder="my-page-slug" className={input} />
-      </div>
-      <div>
-        <label className="block text-sm mb-1">Excerpt</label>
-        <textarea name="excerpt" rows={2} className={input} />
-      </div>
+      {hasSlug && (
+        <div>
+          <label className="block text-sm mb-1">Slug (leave blank to derive from title)</label>
+          <input name="slug" placeholder="my-page-slug" className={input} />
+        </div>
+      )}
+      {hasExcerpt && (
+        <div>
+          <label className="block text-sm mb-1">Excerpt</label>
+          <textarea name="excerpt" rows={2} className={input} />
+        </div>
+      )}
       <p className="text-xs text-[#9CA3AF]">Created as a draft — you can edit details and body after creation.</p>
       <Submit kind={kind} />
     </form>

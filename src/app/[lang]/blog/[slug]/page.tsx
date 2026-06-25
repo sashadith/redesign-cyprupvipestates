@@ -7,6 +7,7 @@ import Footer from "@/app/components/Footer/Footer";
 import Header from "@/app/components/Header/Header";
 import TextContentComponent from "@/app/components/TextContentComponent/TextContentComponent";
 import { i18n } from "@/i18n.config";
+import { localizedHref } from "@/lib/locale";
 import {
   getBlogPostByLang,
   getFormStandardDocumentByLang,
@@ -156,7 +157,7 @@ const PagePost = async ({ params }: Props) => {
           ...acc,
           {
             language: lang.id,
-            path: `/${lang.id}/blog/${translationSlug}`,
+            path: localizedHref(lang.id, ["blog", translationSlug]),
           },
         ]
       : acc;
@@ -265,7 +266,7 @@ const PagePost = async ({ params }: Props) => {
               {(blog.contentBlocks ?? []).map((block: any) => renderContentBlock(block))}
             </article>
             {/* <BlogButtonWrapper>
-                <LinkPrimary href={`/${lang}/blog`}>
+                <LinkPrimary href={localizedHref(lang, "blog")}>
                   {lang === "en"
                     ? "Back to all articles"
                     : "Вернуться ко всем статьям"}
@@ -305,9 +306,8 @@ const PagePost = async ({ params }: Props) => {
                     key={article._id}
                     title={article.title}
                     category={article.category}
-                    slug={article.slug}
+                    href={article.href}
                     previewImage={article.previewImage}
-                    lang={lang}
                   />
                 ))}
               </div>

@@ -5,6 +5,7 @@ import { ButtonModal } from "../../ButtonModal/ButtonModal";
 import { Oswald } from "next/font/google";
 import { LandingIntroBlock } from "@/types/blog";
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 
 type Props = {
   lang: string;
@@ -81,6 +82,7 @@ const LandingIntroBlockComponent: FC<Props> = ({ lang, block }) => {
               width={800}
               height={800}
               className={styles.image}
+              {...blurProps(image)}
             />
           </div>
           <div className={styles.content}>

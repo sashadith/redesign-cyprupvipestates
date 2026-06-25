@@ -4,39 +4,30 @@ import { Category, Image as ImageType } from "@/types/blog";
 import Link from "next/link";
 import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 
 export type Props = {
   title: string;
-  category: Category;
-  slug: {
-    [lang: string]: {
-      current: string;
-    };
-  };
+  category?: Category;
+  // Canonical URL resolved server-side (blog -> /[lang]/blog/slug, singlepage -> its full path).
+  href?: string;
   previewImage?: ImageType;
-  lang: string;
 };
 
 const RelatedArticle: FC<Props> = ({
   title,
-  slug,
+  href,
   category,
   previewImage,
-  lang,
 }) => {
-  const langKey = lang as keyof typeof slug;
-  const current =
-    slug?.[langKey]?.current ??
-    slug?.[category.language as keyof typeof slug]?.current ??
-    Object.values(slug ?? {})[0]?.current ??
-    "";
+  if (!href) return null;
 
   const PLACEHOLDER =
     "/uploads/files/1580d3312e8cb973526a4d8f1019c78868ab3a45.jpg";
 
   return (
     <Link
-      href={`/${lang}/blog/${current}`}
+      href={href}
       className={styles.relatedArticle}
     >
       <div className={styles.relatedArticleImage}>
@@ -45,13 +36,16 @@ const RelatedArticle: FC<Props> = ({
             src={urlFor(previewImage).url()}
             alt={title}
             fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className={styles.previewImage}
+            {...blurProps(previewImage)}
           />
         ) : (
           <Image
             src={PLACEHOLDER}
             alt="Placeholder"
             fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className={styles.previewImage}
           />
         )}

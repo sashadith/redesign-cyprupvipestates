@@ -3,15 +3,17 @@
 // and types need no changes. Rich JSON fields were migrated faithfully (Sanity shape);
 // asset refs are dereferenced on read via dereferenceAssets(), and relations are resolved
 // with targeted Prisma joins. See DECISIONS.md (Decisions 1, 2, 6, 7).
+import { cache } from "react";
+import { draftMode } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
+import { localizedHref } from "@/lib/locale";
+import { loadBlurMap } from "@/lib/blur";
 import { Homepage } from "@/types/homepage";
 import { Header } from "@/types/header";
 import { FormStandardDocument } from "@/types/formStandardDocument";
 import { Singlepage } from "@/types/singlepage";
-import { Property } from "@/types/property";
 import { SanityFile } from "@/types/sanityFile";
-import { PropertiesPage } from "@/types/propertiesPage";
 import { Project } from "@/types/project";
 import { ProjectsPage } from "@/types/projectsPage";
 import { Developer } from "@/types/developer";
@@ -23,6 +25,30 @@ import { CaseStudiesPage } from "@/types/caseStudiesPage";
 
 type AnyRow = Record<string, any>;
 const D = <T>(v: T): T => dereferenceAssets(v);
+
+// Draft Preview: when an admin has enabled Next.js Draft Mode (preview cookie), detail
+// getters include unpublished content; otherwise only PUBLISHED. Safe at build time
+// (draftMode() throws outside a request → falls back to the published-only filter).
+function draftFilter(): { status?: "PUBLISHED" } {
+  try { return draftMode().isEnabled ? {} : { status: "PUBLISHED" }; }
+  catch { return { status: "PUBLISHED" }; }
+}
+
+// Prime the LQIP blur cache once at startup so dereferenceAssets() can attach a blur
+// placeholder to EVERY image (lists, galleries, content) — not just detail hero images.
+// Fire-and-forget: blur is a progressive enhancement, so a cold first hit simply renders
+// without it. Memoized, so this is a single DB read for the whole process.
+void loadBlurMap().catch(() => {});
+
+// Per-request memoization: each detail page calls its getter in BOTH generateMetadata and the
+// page body. React.cache() dedupes those to a single DB read per request (Next memoizes fetch(),
+// not Prisma). The impls are declared below as `_getX` (function declarations are hoisted).
+export const getHomePageByLang = cache(_getHomePageByLang);
+export const getSinglePageByLang = cache(_getSinglePageByLang);
+export const getBlogPostByLang = cache(_getBlogPostByLang);
+export const getCaseStudyByLang = cache(_getCaseStudyByLang);
+export const getProjectByLang = cache(_getProjectByLang);
+export const getDeveloperByLang = cache(_getDeveloperByLang);
 
 // Attach the migrated lqip (from Media) as blurDataURL on a (dereferenced) image's asset, so the
 // LCP hero can render a blur placeholder. Single lookup — used only for previewImage on detail pages.
@@ -52,10 +78,14 @@ const ref = (sanityId?: string | null) =>
 async function translationsFor(
   model: any,
   groupId: string | null | undefined,
+  hasStatus = true, // status-bearing models must exclude unpublished siblings (else the
+  // language switcher + hreflang would point at DRAFT/SCHEDULED/ARCHIVED siblings that the
+  // frontend resolvers (which filter status:PUBLISHED) render as not-found. Pass false for
+  // models without a status column (e.g. developer).
 ): Promise<{ slug: any }[]> {
   if (!groupId) return [];
   const siblings = await model.findMany({
-    where: { translationGroupId: groupId },
+    where: { translationGroupId: groupId, ...(hasStatus ? { status: "PUBLISHED" } : {}) },
     select: { language: true, slug: true },
   });
   return siblings.map((s: AnyRow) => ({ slug: { [s.language]: { current: s.slug } } }));
@@ -97,13 +127,34 @@ async function resolveFormRef(refObj: any, lang: string) {
   return { _id: sid, _type: "formStandardDocument", language: doc.language, form: (doc.data as AnyRow)?.form };
 }
 
-// Resolve project refs inside a block to the card projection.
+// Map project rows to their SAME-LANGUAGE sibling (via translationGroupId), so links built from
+// the card slug match the page language. Project refs/relations may point at a different
+// language's row (the stored slug would then 404 under the current locale, e.g.
+// /pl/projects/<en-slug>). Rows already in `lang` are kept; rows with no sibling in `lang` are
+// dropped (better than a 404). Input order is preserved and duplicates removed.
+async function mapProjectRowsToLang(rows: AnyRow[], lang: string): Promise<AnyRow[]> {
+  const tgids = Array.from(new Set(rows.filter((r) => r.language !== lang && r.translationGroupId).map((r) => r.translationGroupId as string)));
+  const langRows = tgids.length ? await prisma.project.findMany({ where: { language: lang as any, translationGroupId: { in: tgids } } }) : [];
+  const byTgid = new Map<string, AnyRow>();
+  for (const r of langRows) if (r.translationGroupId && !byTgid.has(r.translationGroupId)) byTgid.set(r.translationGroupId, r as AnyRow);
+  const out: AnyRow[] = [];
+  const seen = new Set<string>();
+  for (const r of rows) {
+    const m = r.language === lang ? r : (r.translationGroupId ? byTgid.get(r.translationGroupId) : undefined);
+    if (m && !seen.has(m.sanityId)) { seen.add(m.sanityId); out.push(m); }
+  }
+  return out;
+}
+
+// Resolve project refs inside a block to the card projection (in the page's language).
 async function resolveProjectRefs(refs: any[], lang: string) {
   const ids = (refs || []).map((r) => r?._ref).filter(Boolean);
   if (!ids.length) return [];
   const rows = await prisma.project.findMany({ where: { sanityId: { in: ids } } });
-  const byId = new Map(rows.map((r) => [r.sanityId, r]));
-  return ids.map((id) => byId.get(id)).filter(Boolean).map((p) => projectCardString(p as AnyRow));
+  const byId = new Map(rows.map((r) => [r.sanityId, r as AnyRow]));
+  const ordered = ids.map((id) => byId.get(id)).filter(Boolean) as AnyRow[];
+  const mapped = await mapProjectRowsToLang(ordered, lang);
+  return mapped.map((p) => projectCardString(p));
 }
 
 // Compute filteredProjects for projectsSection/landingProjects blocks.
@@ -154,7 +205,7 @@ export async function getHeaderByLang(lang: string): Promise<Header> {
   return D({ _id: row?.sanityId, logo: data.logo, logoMobile: data.logoMobile, navLinks: data.navLinks }) as unknown as Header;
 }
 
-export async function getHomePageByLang(lang: string): Promise<Homepage> {
+async function _getHomePageByLang(lang: string): Promise<Homepage> {
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "homepage", language: lang as any } } });
   if (!row) return null as unknown as Homepage;
   const d = row.data as AnyRow;
@@ -202,8 +253,8 @@ export async function getFormStandardDocumentByLang(lang: string): Promise<FormS
   return { _id: row?.sanityId, form: d.form, language: row?.language } as unknown as FormStandardDocument;
 }
 
-export async function getSinglePageByLang(lang: string, slug: string): Promise<Singlepage | null> {
-  const row = await prisma.singlepage.findFirst({ where: { language: lang as any, slug, status: "PUBLISHED" } });
+async function _getSinglePageByLang(lang: string, slug: string): Promise<Singlepage | null> {
+  const row = await prisma.singlepage.findFirst({ where: { language: lang as any, slug, ...draftFilter() } });
   if (!row) return null;
   let parentPage: any = null;
   if (row.parentSanityId) {
@@ -216,6 +267,7 @@ export async function getSinglePageByLang(lang: string, slug: string): Promise<S
     previewImage: D(row.previewImage), allowIntroBlock: row.allowIntroBlock,
     contentBlocks: await resolveBlocks(row.contentBlocks as any[], lang),
     parentPage, language: row.language,
+    relatedLandingPages: row.relatedLandingPages ?? null,
     _translations: await translationsFor(prisma.singlepage as any, row.translationGroupId),
   };
   return D(out) as unknown as Singlepage;
@@ -254,6 +306,40 @@ export async function getAllPathsForLang(lang: string): Promise<string[][]> {
   return Object.values(map);
 }
 
+// Child landing pages of a parent singlepage (via parentSanityId) — for the contextual
+// parent->child links block. Returns each child's title + canonical (nested) href, same language.
+export async function getChildLandingPages(lang: string, parentSanityId?: string | null): Promise<{ title: string; href: string }[]> {
+  if (!parentSanityId) return [];
+  const kids = await prisma.singlepage.findMany({
+    where: { language: lang as any, parentSanityId, status: "PUBLISHED", slug: { not: "" } },
+    select: { slug: true, title: true },
+    orderBy: { title: "asc" },
+  });
+  if (!kids.length) return [];
+  const all = await getAllPathsForLang(lang);
+  const byLeaf = new Map(all.map((s) => [s[s.length - 1], s]));
+  return kids.map((k) => ({ title: k.title, href: localizedHref(lang, byLeaf.get(k.slug) ?? [k.slug]) }));
+}
+
+// Editor-curated "Related Landing Pages" (Phase 2). Resolves the stored refs to their target
+// pages, preserving the editor's order. Enforces SAME-LANGUAGE + PUBLISHED at render time too
+// (defence-in-depth on top of the admin picker + save action), and skips missing/unpublished refs.
+export async function getRelatedLandingPages(lang: string, refs: any): Promise<{ title: string; href: string }[]> {
+  const ids = Array.isArray(refs) ? refs.map((r) => r?._ref).filter(Boolean) : [];
+  if (!ids.length) return [];
+  const rows = await prisma.singlepage.findMany({
+    where: { sanityId: { in: ids }, language: lang as any, status: "PUBLISHED", slug: { not: "" } },
+    select: { sanityId: true, slug: true, title: true },
+  });
+  const bySanity = new Map(rows.map((r) => [r.sanityId, r]));
+  const all = await getAllPathsForLang(lang);
+  const byLeaf = new Map(all.map((s) => [s[s.length - 1], s]));
+  return ids
+    .map((id) => bySanity.get(id))
+    .filter((r): r is { sanityId: string; slug: string; title: string } => Boolean(r))
+    .map((r) => ({ title: r.title, href: localizedHref(lang, byLeaf.get(r.slug) ?? [r.slug]) }));
+}
+
 // ── Slug lists for generateStaticParams (ISR static generation) ──
 export const ALL_LOCALES = ["en", "de", "pl", "ru"] as const;
 // `published` adds status=PUBLISHED (so drafts aren't pre-rendered). Developer/Author/Category
@@ -267,7 +353,6 @@ export const getProjectSlugs = (lang: string) => slugList(prisma.project, true)(
 export const getBlogSlugs = (lang: string) => slugList(prisma.blog, true)(lang);
 export const getCaseStudySlugs = (lang: string) => slugList(prisma.caseStudy, true)(lang);
 export const getDeveloperSlugs = (lang: string) => slugList(prisma.developer, false)(lang);
-export const getPropertySlugs = (lang: string) => slugList(prisma.property, true)(lang);
 
 // Single-page path items (current + parent slug) for generateStaticParams.
 export async function getSinglePagePathItems(lang: string): Promise<{ current: string; parent?: string }[]> {
@@ -283,9 +368,9 @@ export async function getSinglePagePathItems(lang: string): Promise<{ current: s
 }
 
 // === Blog ===
-export async function getBlogPostByLang(lang: string, slug: string): Promise<Blog> {
+async function _getBlogPostByLang(lang: string, slug: string): Promise<Blog> {
   const row = await prisma.blog.findFirst({
-    where: { language: lang as any, slug, status: "PUBLISHED" },
+    where: { language: lang as any, slug, ...draftFilter() },
     include: { author: true, category: true },
   });
   if (!row) return null as unknown as Blog;
@@ -300,11 +385,27 @@ export async function getBlogPostByLang(lang: string, slug: string): Promise<Blo
     ]);
     const m = new Map<string, any>();
     blogs.forEach((b) => m.set(b.sanityId, {
-      _id: b.sanityId, title: b.title,
+      _id: b.sanityId, _type: "blog", title: b.title,
       category: b.category ? { _id: b.category.sanityId, _type: "category", title: b.category.title, slug: slugObj(b.category), language: b.category.language } : null,
       slug: slugObj(b), publishedAt: b.publishedAt, previewImage: D(b.previewImage),
+      // Blog posts live at /[lang]/blog/<slug> in their own language.
+      href: localizedHref(b.language, ["blog", b.slug]),
     }));
-    pages.forEach((p) => m.set(p.sanityId, { _id: p.sanityId, title: p.title, slug: slugObj(p), previewImage: D(p.previewImage) }));
+    // Singlepages live at their canonical (possibly nested) path — NOT under /blog. Resolve the
+    // full parent/child path per language so related links don't 404 (the old code always linked
+    // /blog/<slug>) or bounce through the flat->nested redirect.
+    const pathCache = new Map<string, Map<string, string[]>>();
+    for (const p of pages) {
+      if (!pathCache.has(p.language)) {
+        const all = await getAllPathsForLang(p.language);
+        pathCache.set(p.language, new Map(all.map((s) => [s[s.length - 1], s])));
+      }
+      const segs = pathCache.get(p.language)!.get(p.slug) ?? [p.slug];
+      m.set(p.sanityId, {
+        _id: p.sanityId, _type: "singlepage", title: p.title, slug: slugObj(p),
+        previewImage: D(p.previewImage), href: localizedHref(p.language, segs),
+      });
+    }
     related = relRefs.map((id) => m.get(id)).filter(Boolean);
   }
 
@@ -367,16 +468,19 @@ export async function getTotalBlogPostsByLang(lang: string): Promise<number> {
 }
 
 // === Case Study ===
-export async function getCaseStudyByLang(lang: string, slug: string): Promise<CaseStudy | null> {
-  const row = await prisma.caseStudy.findFirst({ where: { language: lang as any, slug, status: "PUBLISHED" } });
+async function _getCaseStudyByLang(lang: string, slug: string): Promise<CaseStudy | null> {
+  const row = await prisma.caseStudy.findFirst({ where: { language: lang as any, slug, ...draftFilter() } });
   if (!row) return null;
   const related = await prisma.caseStudyProject.findMany({ where: { caseStudyId: row.id }, include: { project: true } });
+  // Related projects may be linked to a different language's row — map to the same-language
+  // sibling so the slug matches `lang` (otherwise /<lang>/projects/<wrong-slug> 404s).
+  const relatedMapped = await mapProjectRowsToLang(related.map((r) => r.project as AnyRow), lang);
   const out: AnyRow = {
     ...base(row, "caseStudy"),
     title: row.title, slug: slugObj(row), seo: row.seo, category: row.category, fullTitle: row.fullTitle,
     excerpt: row.excerpt, clientOverview: row.clientOverview, previewImage: D(row.previewImage),
     caseDetails: D(row.caseDetails), mainContent: await resolveBlocks(row.mainContent as any[], lang),
-    relatedProjects: related.map(({ project: p }) => ({
+    relatedProjects: relatedMapped.map((p) => ({
       _id: p.sanityId, title: p.title, excerpt: p.excerpt, slug: p.slug,
       previewImage: D(p.previewImage), keyFeatures: p.keyFeatures, isSold: p.isSold,
     })),
@@ -420,23 +524,6 @@ export async function getTotalCaseStudiesByLang(lang: string): Promise<number> {
   return prisma.caseStudy.count({ where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED" } });
 }
 
-export async function getPropertyByLang(lang: string, slug: string): Promise<Property | null> {
-  const row = await prisma.property.findFirst({ where: { language: lang as any, slug, status: "PUBLISHED" } });
-  if (!row) return null;
-  const out: AnyRow = {
-    ...base(row, "property"),
-    seo: row.seo, slug: slugObj(row), title: row.title, excerpt: row.excerpt, previewImage: D(row.previewImage),
-    price: row.price, videoId: row.videoId, videoPreview: D(row.videoPreview), images: D(row.images),
-    address: row.address, city: row.city, district: row.district, description: D(row.description),
-    type: row.type, purpose: row.purpose, propertyType: row.propertyType,
-    location: row.latitude != null ? { _type: "geopoint", lat: row.latitude, lng: row.longitude } : null,
-    floorSize: row.floorSize, rooms: row.rooms, hasParking: row.hasParking, hasPool: row.hasPool,
-    distances: row.distances, marketType: row.marketType, isActual: row.isActual, language: row.language,
-    _translations: await translationsFor(prisma.property as any, row.translationGroupId),
-  };
-  return D(out) as unknown as Property;
-}
-
 export async function getProjectsPageByLang(lang: string): Promise<ProjectsPage> {
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "projectsPage", language: lang as any } } });
   const d = (row?.data as AnyRow) ?? {};
@@ -446,10 +533,10 @@ export async function getProjectsPageByLang(lang: string): Promise<ProjectsPage>
   } as unknown as ProjectsPage;
 }
 
-export async function getProjectByLang(lang: string, slug: string): Promise<Project | null> {
+async function _getProjectByLang(lang: string, slug: string): Promise<Project | null> {
   const row = await prisma.project.findFirst({
-    where: { language: lang as any, slug, status: "PUBLISHED" },
-    include: { developer: { select: { sanityId: true } } },
+    where: { language: lang as any, slug, ...draftFilter() },
+    include: { developer: { select: { sanityId: true, title: true, slug: true, logo: true } } },
   });
   if (!row) return null;
   const out: AnyRow = {
@@ -458,7 +545,10 @@ export async function getProjectByLang(lang: string, slug: string): Promise<Proj
     previewImage: await withBlur(D(row.previewImage)), videoId: row.videoId, videoPreview: D(row.videoPreview),
     images: D(row.images), description: D(row.description),
     location: row.latitude != null ? { _type: "geopoint", lat: row.latitude, lng: row.longitude } : null,
-    developer: ref(row.developer?.sanityId), keyFeatures: row.keyFeatures, investmentData: row.investmentData,
+    developer: row.developer
+      ? { _id: row.developer.sanityId, name: row.developer.title, slug: row.developer.slug, logo: D(row.developer.logo) }
+      : null,
+    keyFeatures: row.keyFeatures, investmentData: row.investmentData,
     distances: row.distances, fullDescription: D(row.fullDescription), faq: D(row.faq),
     isSold: row.isSold, language: row.language,
     _translations: await translationsFor(prisma.project as any, row.translationGroupId),
@@ -467,17 +557,17 @@ export async function getProjectByLang(lang: string, slug: string): Promise<Proj
 }
 
 export async function getAllDevelopersByLang(lang: string): Promise<Developer[]> {
-  const rows = await prisma.developer.findMany({ where: { language: lang as any, slug: { not: "" } }, orderBy: { createdAt: "desc" } });
-  return rows.map((d) => ({ _id: d.sanityId, _updatedAt: d.updatedAt, title: d.title, slug: slugObj(d) })) as unknown as Developer[];
+  const rows = await prisma.developer.findMany({ where: { language: lang as any, slug: { not: "" } }, orderBy: { title: "asc" } });
+  return rows.map((d) => ({ _id: d.sanityId, _updatedAt: d.updatedAt, title: d.title, slug: slugObj(d), slugStr: d.slug, logo: D(d.logo), excerpt: d.excerpt })) as unknown as Developer[];
 }
 
-export async function getDeveloperByLang(lang: string, slug: string): Promise<Developer | null> {
+async function _getDeveloperByLang(lang: string, slug: string): Promise<Developer | null> {
   const row = await prisma.developer.findFirst({ where: { language: lang as any, slug } });
   if (!row) return null;
   const out: AnyRow = {
     _id: row.sanityId, seo: row.seo, slug: slugObj(row), title: row.title, titleFull: row.titleFull,
     excerpt: row.excerpt, logo: D(row.logo), description: D(row.description), language: row.language,
-    _translations: await translationsFor(prisma.developer as any, row.translationGroupId),
+    _translations: await translationsFor(prisma.developer as any, row.translationGroupId, false),
   };
   return D(out) as unknown as Developer;
 }
@@ -561,10 +651,21 @@ function sortProjectsStandard(ps: ProjectListItem[], sort: string) {
   }
 }
 
-type ProjectFilters = { city?: string; priceFrom?: number | null; priceTo?: number | null; propertyType?: string; q?: string; sort?: string; north?: number | null; south?: number | null; east?: number | null; west?: number | null };
+type ProjectFilters = { city?: string; priceFrom?: number | null; priceTo?: number | null; propertyType?: string; bedrooms?: string; q?: string; sort?: string; north?: number | null; south?: number | null; east?: number | null; west?: number | null };
+
+// Bedrooms are stored as ranges ("1-2", "2-3", "3" ...). A wanted value matches when it
+// falls within the project's range; "5" means 5+.
+function bedroomsMatch(range: string | null | undefined, want: string): boolean {
+  const nums = String(range ?? "").match(/\d+/g)?.map(Number) ?? [];
+  if (!nums.length) return false;
+  const lo = Math.min(...nums), hi = Math.max(...nums);
+  if (want === "5") return hi >= 5;
+  const n = Number(want);
+  return Number.isFinite(n) && lo <= n && n <= hi;
+}
 
 async function queryFilteredRows(lang: string, f: ProjectFilters) {
-  const { city = "", priceFrom = null, priceTo = null, propertyType = "", q = "", north = null, south = null, east = null, west = null } = f;
+  const { city = "", priceFrom = null, priceTo = null, propertyType = "", bedrooms = "", q = "", north = null, south = null, east = null, west = null } = f;
   const qActive = q && q.length >= 3 ? q : "";
   const rows = await prisma.project.findMany({
     where: {
@@ -577,7 +678,7 @@ async function queryFilteredRows(lang: string, f: ProjectFilters) {
         ? { latitude: { lte: north, gte: south }, longitude: { lte: east, gte: west } } : {}),
     },
   });
-  return rows.filter((p) => p.previewImage);
+  return rows.filter((p) => p.previewImage && (!bedrooms || bedroomsMatch(p.bedrooms, bedrooms)));
 }
 
 export async function getFilteredProjects(lang: string, skip: number, limit: number, filters: ProjectFilters) {
@@ -627,26 +728,12 @@ export async function getAllProjectsLocationsByLang(lang: string) {
   })) as any;
 }
 
-export async function getAllProperties(lang: string): Promise<any[]> {
-  const rows = await prisma.property.findMany({ where: { language: lang as any, status: "PUBLISHED" }, orderBy: { publishedAt: "desc" } });
-  return rows.map((p) => D({ _id: p.sanityId, title: p.title, price: p.price, city: p.city, images: D(p.images), slug: slugObj(p) }));
-}
-
 export async function getFileBySlug(slug: string): Promise<SanityFile | null> {
   const row = await prisma.docFile.findUnique({ where: { slug } });
   if (!row) return null;
   const file = row.file as AnyRow;
   const url = file?.asset?._ref ? refToLocalUrl(file.asset._ref) : file?.asset?.url;
   return { _id: row.sanityId, title: row.title, slug: { current: row.slug }, file: { asset: { url } } } as unknown as SanityFile;
-}
-
-export async function getPropertiesPageByLang(lang: string): Promise<PropertiesPage> {
-  const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "propertiesPage", language: lang as any } } });
-  const d = (row?.data as AnyRow) ?? {};
-  return {
-    _id: row?.sanityId, metaTitle: d.metaTitle, metaDescription: d.metaDescription, title: d.title, language: row?.language,
-    _translations: await siteTranslations("propertiesPage"),
-  } as unknown as PropertiesPage;
 }
 
 export async function getNotFoundPageByLang(lang: string): Promise<NotFoundPage> {

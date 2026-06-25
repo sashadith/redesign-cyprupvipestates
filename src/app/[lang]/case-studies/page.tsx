@@ -3,6 +3,8 @@
 import React from "react";
 import { Metadata } from "next";
 import { i18n } from "@/i18n.config";
+import { localizedHref } from "@/lib/locale";
+import { staticAlternates, DEFAULT_OG_IMAGE } from "@/lib/seo";
 
 import {
   getCaseStudiesPageByLang,
@@ -35,10 +37,21 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = await getCaseStudiesPageByLang(params.lang);
+  const { canonical, languages } = staticAlternates(params.lang, "case-studies");
 
   return {
     title: data?.metaTitle,
     description: data?.metaDescription,
+    alternates: { canonical, languages },
+    openGraph: {
+      title: data?.metaTitle,
+      description: data?.metaDescription,
+      url: canonical,
+      siteName: "Cyprus VIP Estates",
+      locale: params.lang,
+      type: "website",
+      images: [DEFAULT_OG_IMAGE],
+    },
   };
 }
 
@@ -91,7 +104,7 @@ const CaseStudiesPage = async ({ params }: Props) => {
             ...acc,
             {
               language: currentLang.id,
-              path: `/${currentLang.id}/case-studies/${translationSlug}`,
+              path: localizedHref(currentLang.id, ["case-studies", translationSlug]),
             },
           ]
         : acc;

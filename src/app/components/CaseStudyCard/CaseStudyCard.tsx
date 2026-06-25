@@ -4,6 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
 import { ImageAlt } from "@/types/project";
+import { localePrefix } from "@/lib/locale";
+import { blurProps } from "@/lib/imageBlur";
 
 type Props = {
   title: string;
@@ -36,11 +38,7 @@ const CaseStudyCard: FC<Props> = ({
 
   return (
     <Link
-      href={
-        lang === "de"
-          ? `/case-studies/${current}`
-          : `/${lang}/case-studies/${current}`
-      }
+      href={`${localePrefix(lang)}/case-studies/${current}`}
       className={styles.caseStudyCard}
     >
       <div className={styles.imageWrapper}>
@@ -49,13 +47,16 @@ const CaseStudyCard: FC<Props> = ({
             src={urlFor(previewImage).url()}
             alt={title}
             fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className={styles.previewImage}
+            {...blurProps(previewImage)}
           />
         ) : (
           <Image
             src={PLACEHOLDER}
             alt="Placeholder"
             fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className={styles.previewImage}
           />
         )}

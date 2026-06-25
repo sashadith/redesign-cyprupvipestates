@@ -3,6 +3,7 @@ import styles from "./TeamBlockComponent.module.scss";
 import { TeamBlock } from "@/types/blog";
 import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
+import { blurProps } from "@/lib/imageBlur";
 import { ButtonModal } from "../ButtonModal/ButtonModal";
 import FadeUpAnimate from "../FadeUpAnimate/FadeUpAnimate";
 
@@ -28,6 +29,7 @@ const TeamBlockComponent: FC<Props> = ({ block, lang }) => {
                     src={urlFor(member.image).url()}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    {...blurProps(member.image)}
                   />
                 </div>
                 <div className={styles.memberInfo}>

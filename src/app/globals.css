@@ -647,3 +647,56 @@ strong {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* ===== Accessibility: honor the OS "reduce motion" preference ===== */
+/* Single global implementation: neutralizes CSS transitions/animations + smooth scroll, and
+   reveals AOS-animated content immediately. JS-driven motion (Lenis, GSAP, framer-motion) is
+   gated separately at each library's source. Durations are reduced (not removed) so end-states,
+   transitionend events, and functionality are preserved — only the motion is gone. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* AOS reveals: show content in its final state, no fade/transform. */
+  [data-aos] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* ===== Accessibility: skip-to-main link (visible only on keyboard focus) ===== */
+.skip-to-main {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  padding: 12px 20px;
+  background: #000;
+  color: #fff;
+  font-size: 16px;
+  line-height: 1.2;
+  text-decoration: none;
+  border-radius: 0 0 4px 0;
+  transform: translateY(-150%);
+  transition: transform 0.15s ease;
+}
+
+.skip-to-main:focus,
+.skip-to-main:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid #bd8948;
+  outline-offset: 2px;
+}

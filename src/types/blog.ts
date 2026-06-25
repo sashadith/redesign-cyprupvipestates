@@ -347,15 +347,19 @@ export type Category = {
 
 export type RelatedArticle = {
   _id: string;
+  // Related items can be blog posts or singlepages; href is resolved server-side to the item's
+  // canonical URL (blog -> /[lang]/blog/slug, singlepage -> its full parent/child path).
+  _type?: "blog" | "singlepage";
+  href?: string;
   title: string;
-  category: Category;
-  slug: {
+  category?: Category;
+  slug?: {
     [lang: string]: {
       current: string;
     };
   };
-  publishedAt: string;
-  previewImage: Image;
+  publishedAt?: string;
+  previewImage?: Image;
 };
 
 export type Blog = {

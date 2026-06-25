@@ -10,8 +10,11 @@ const COL_ACCENT: Record<string, string> = {
   VIEWING_SCHEDULED: "border-t-orange-400", OFFER: "border-t-indigo-400", CLOSED: "border-t-green-500", LOST: "border-t-red-400",
 };
 
+const BOARD_CAP = 2000;
+
 export default async function CrmBoard() {
-  const leads = await prisma.lead.findMany({ orderBy: { updatedAt: "desc" } });
+  const leads = await prisma.lead.findMany({ orderBy: { updatedAt: "desc" }, take: BOARD_CAP });
+  const capped = leads.length === BOARD_CAP;
   const byStatus: Record<string, typeof leads> = Object.fromEntries(PIPELINE.map((s) => [s, []]));
   for (const l of leads) (byStatus[l.status] ??= []).push(l);
 
@@ -26,6 +29,7 @@ export default async function CrmBoard() {
         <h1 className="text-2xl font-semibold">Pipeline</h1>
         <Link href="/admin/crm" className="text-sm text-[#1B4B43] hover:underline">List view →</Link>
       </div>
+      {capped && <p className="text-xs text-[#9CA3AF] mb-4">Showing the {BOARD_CAP} most recently-updated leads. Use the <Link href="/admin/crm" className="underline">list view</Link> to search/filter the rest.</p>}
       <div className="flex gap-4 overflow-x-auto pb-4">
         {PIPELINE.map((status) => (
           <div key={status} className="w-64 shrink-0">

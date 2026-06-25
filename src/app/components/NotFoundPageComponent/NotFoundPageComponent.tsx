@@ -5,6 +5,7 @@ import { urlFor } from "@/sanity/sanity.client";
 import Link from "next/link";
 import { NotFoundPage } from "@/types/notFoundPage";
 import { LinkPrimary } from "../ui/LinkPrimary/LinkPrimary";
+import { localePrefix } from "@/lib/locale";
 
 type Props = {
   notFoundPage: NotFoundPage;
@@ -31,7 +32,7 @@ const NotFoundPageComponent: FC<Props> = ({ notFoundPage, lang }) => {
               <p className={styles.description}>{description}</p>
               <div className={styles.linkBlock}>
                 <LinkPrimary
-                  url={`/${lang}/projects`}
+                  url={`${localePrefix(lang)}/projects`}
                 >
                   {buttonText}
                 </LinkPrimary>

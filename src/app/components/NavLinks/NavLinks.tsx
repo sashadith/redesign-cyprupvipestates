@@ -6,6 +6,7 @@ import styles from "../Header/Header.module.scss";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiChevronDown } from "react-icons/fi";
+import { localePrefix, localizedHref } from "@/lib/locale";
 
 type Props = {
   navLinks: HeaderType["navLinks"];
@@ -19,19 +20,11 @@ const NavLinks: React.FC<Props> = ({ navLinks, params, closeMenu }) => {
   const [openSubMenuIndex, setOpenSubMenuIndex] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
-  const getNormalizedHref = (lang: string, link: string) => {
-    const normalizedLink = link.startsWith("/") ? link.slice(1) : link;
-    const languagePrefix = lang === "de" ? "" : `/${lang}`;
-
-    return `${languagePrefix}/${normalizedLink}`;
-  };
+  const getNormalizedHref = (lang: string, link: string) =>
+    localizedHref(lang, link);
 
   useEffect(() => {
-    setIsHomePage(
-      params.lang === "de"
-        ? window.location.pathname === "/"
-        : window.location.pathname === `/${params.lang}`,
-    );
+    setIsHomePage(window.location.pathname === localizedHref(params.lang));
 
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -87,10 +80,7 @@ const NavLinks: React.FC<Props> = ({ navLinks, params, closeMenu }) => {
         behavior: "smooth",
       });
     } else if (!isHomePage) {
-      window.location.href =
-        params.lang === "de"
-          ? `/#${sectionId}`
-          : `/${params.lang}/#${sectionId}`;
+      window.location.href = `${localePrefix(params.lang)}/#${sectionId}`;
     }
   };
 
