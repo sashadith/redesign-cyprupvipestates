@@ -657,7 +657,7 @@ img { max-width: 100%; display: block; }
   color: var(--text); margin: 0; text-wrap: balance;
 }
 .casestudies__stripe { margin-top: var(--s-5); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
-.casestudies__desc { margin: var(--s-6) 0 0; max-width: 70ch; font-family: var(--font-body), sans-serif; font-size: var(--text-lead); line-height: 1.6; color: var(--text-soft); }
+.casestudies__desc { margin: var(--s-6) 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-lead); line-height: 1.6; color: var(--text-soft); }
 .casestudies__grid { margin-top: var(--s-8); display: grid; gap: clamp(20px, 2.4vw, 36px); grid-template-columns: 1fr; }
 @media (min-width: 760px) { .casestudies__grid { grid-template-columns: repeat(2, 1fr); } }
 .cscard {
