@@ -555,6 +555,21 @@ img { max-width: 100%; display: block; }
 .ccard:hover .ccard__arrow { background: var(--champagne); color: var(--sea-deep); border-color: var(--champagne); transform: translate(3px, -3px); }
 
 /* ===================== DESCRIPTION (dark editorial, long-form SEO copy) ===================== */
+/* soft golden "clouds" drifting behind the content */
+.descblock { position: relative; isolation: isolate; overflow: hidden; }
+.descblock::before, .descblock::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; width: min(70vw, 880px); aspect-ratio: 1;
+  background: radial-gradient(circle, rgba(194, 154, 94, 0.16), rgba(194, 154, 94, 0) 66%); will-change: transform;
+}
+.descblock::before { top: -14%; left: -12%; animation: cloudDriftA 22s ease-in-out infinite alternate; }
+.descblock::after {
+  width: min(62vw, 760px); right: -10%; bottom: -16%;
+  background: radial-gradient(circle, rgba(194, 154, 94, 0.12), rgba(194, 154, 94, 0) 66%);
+  animation: cloudDriftB 27s ease-in-out infinite alternate;
+}
+@keyframes cloudDriftA { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(48px, 32px, 0); } }
+@keyframes cloudDriftB { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-54px, -28px, 0); } }
+
 .descblock__title {
   font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
   font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em;

@@ -8,8 +8,8 @@ import { RichText } from "@/app/components/RichText/RichText";
    only the layout/typography is restyled (no vertical side-stripes). */
 
 const renderTitle = (title: string) =>
-  title.split(/(Cyprus)/i).map((part, i) =>
-    part.toLowerCase() === "cyprus" ? (
+  title.split(/(\bWe\b)/i).map((part, i) =>
+    /^we$/i.test(part) ? (
       <span key={i} className="it">{part}</span>
     ) : (
       <React.Fragment key={i}>{part}</React.Fragment>
