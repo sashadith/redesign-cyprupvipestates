@@ -1,8 +1,8 @@
-import { Globe, ChevronDown, LANGS, flag } from "./navShared";
+import { Globe, ChevronDown, LANGS } from "./navShared";
 
 /* Glass language switcher for the desktop nav. Hover/focus reveals the panel;
-   a transparent bridge keeps it open while moving to the items. Visual for now
-   (wiring to real locale routes later). Hidden on mobile (lang lives in the burger). */
+   a transparent bridge keeps it open while moving to the items. Text-only
+   options. Hidden on mobile (language lives in the burger menu). */
 
 const LangSwitch = () => (
   <div className="lang">
@@ -12,9 +12,8 @@ const LangSwitch = () => (
       <ChevronDown />
     </button>
     <div className="lang__menu" role="menu">
-      {LANGS.map(([code, name, cc]) => (
+      {LANGS.map(([code, name]) => (
         <a key={code} href="#" role="menuitem" className={code === "EN" ? "is-active" : ""}>
-          <img className="lang__flag" src={flag(cc)} alt="" width={24} height={16} />
           <span className="lang__name">{name}</span>
         </a>
       ))}

@@ -2,11 +2,12 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import type { navLink } from "@/types/header";
-import { LANGS, flag, ChevronDown } from "./navShared";
+import { LANGS, Globe, ChevronDown } from "./navShared";
 
 export default function MobileMenu({ navLinks }: { navLinks: navLink[] }) {
   const [open, setOpen] = useState(false);
-  const [openSubs, setOpenSubs] = useState<Set<string>>(new Set());
+  const [openSub, setOpenSub] = useState<string | null>(null); // one submenu at a time
+  const [langOpen, setLangOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
 
@@ -15,17 +16,15 @@ export default function MobileMenu({ navLinks }: { navLinks: navLink[] }) {
     btnRef.current?.focus();
   };
 
-  const toggleSub = (key: string) =>
-    setOpenSubs((s) => {
-      const n = new Set(s);
-      if (n.has(key)) n.delete(key);
-      else n.add(key);
-      return n;
-    });
+  // accordion: open the tapped submenu, close any other (tap again to close)
+  const toggleSub = (key: string) => setOpenSub((cur) => (cur === key ? null : key));
 
-  // body scroll-lock + Escape + simple focus trap while open
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      setOpenSub(null);
+      setLangOpen(false);
+      return;
+    }
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -55,8 +54,6 @@ export default function MobileMenu({ navLinks }: { navLinks: navLink[] }) {
       }
     };
     document.addEventListener("keydown", onKey);
-
-    // move focus into the panel
     panelRef.current?.querySelector<HTMLElement>("a[href], button")?.focus();
 
     return () => {
@@ -93,7 +90,7 @@ export default function MobileMenu({ navLinks }: { navLinks: navLink[] }) {
           <ul>
             {navLinks?.map((l) => {
               const hasSub = (l.subLinks?.length ?? 0) > 0;
-              const isOpen = openSubs.has(l._key);
+              const isOpen = openSub === l._key;
               const subId = `msub-${l._key}`;
               return (
                 <li className="mitem" key={l._key}>
@@ -115,7 +112,7 @@ export default function MobileMenu({ navLinks }: { navLinks: navLink[] }) {
                     )}
                   </div>
                   {hasSub && (
-                    <ul id={subId} className={`msub ${isOpen ? "is-open" : ""}`} hidden={!isOpen}>
+                    <ul id={subId} className={`msub ${isOpen ? "is-open" : ""}`}>
                       {l.subLinks.map((s) => (
                         <li key={s._key}>
                           <a href={s.link || "#"} onClick={close}>
@@ -131,13 +128,31 @@ export default function MobileMenu({ navLinks }: { navLinks: navLink[] }) {
           </ul>
         </nav>
 
-        <div className="mmenu__lang" aria-label="Language">
-          {LANGS.map(([code, name, cc]) => (
-            <a key={code} href="#" className={code === "EN" ? "is-active" : ""} onClick={close}>
-              <img src={flag(cc)} alt="" width={26} height={18} />
-              <span>{name}</span>
-            </a>
-          ))}
+        <div className="mmenu__foot">
+          <div className={`mlang ${langOpen ? "is-open" : ""}`}>
+            <button
+              type="button"
+              className="mlang__btn"
+              aria-haspopup="true"
+              aria-expanded={langOpen}
+              aria-controls="mlang-list"
+              aria-label="Select language"
+              onClick={() => setLangOpen((o) => !o)}
+            >
+              <Globe />
+              <span className="mlang__cur">EN</span>
+              <ChevronDown className="mlang__caret" />
+            </button>
+            <ul id="mlang-list" className="mlang__list" role="menu">
+              {LANGS.map(([code, name]) => (
+                <li key={code} role="none">
+                  <a href="#" role="menuitem" className={code === "EN" ? "is-active" : ""} onClick={close}>
+                    {name}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </div>
