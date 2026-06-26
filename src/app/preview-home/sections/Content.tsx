@@ -10,7 +10,7 @@ import type { TextContent, DoubleTextBlock } from "@/types/blog";
    expertise/trust; this is not a feature, so the doubleTextBlock images are
    intentionally not shown here. Reuses the shared RichText renderer + data. */
 
-type Field = { key: string; content: unknown };
+type Field = { key: string; content: any };
 
 function collectFields(blocks: Array<TextContent | DoubleTextBlock>): Field[] {
   const fields: Field[] = [];
