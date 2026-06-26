@@ -564,7 +564,8 @@ img { max-width: 100%; display: block; }
 .descblock__grid { margin-top: var(--s-8); display: grid; grid-template-columns: 1fr; gap: var(--s-7); }
 @media (min-width: 900px) {
   .descblock__grid { grid-template-columns: 1fr 1fr; column-gap: clamp(48px, 5vw, 96px); row-gap: var(--s-8); }
-  .descblock__field:nth-child(3) { grid-column: 1 / -1; max-width: 70ch; } /* spans, but measure stays readable */
+  /* a field left alone on its row (odd last item) spans full width, measure stays readable */
+  .descblock__field:last-child:nth-child(odd) { grid-column: 1 / -1; max-width: 70ch; }
 }
 /* typography for the rendered PortableText (RichText) — comfortable measure, soft ivory body */
 .descblock__field { color: var(--text-soft); }
