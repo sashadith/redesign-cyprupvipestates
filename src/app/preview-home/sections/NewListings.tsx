@@ -4,8 +4,8 @@ import { urlFor } from "@/sanity/sanity.client";
 import type { Project } from "@/types/project";
 
 /* New Listings — light "gallery" section: a deep-green title tile sits in the
-   grid alongside the latest 5 project cards (clean 3×2 on desktop). Reuses the
-   original data source (getLastFiveProjectsByLang) + routing. */
+   grid alongside the latest 5 project cards (reusing the Featured .pcard look).
+   Reuses the original data source (getLastFiveProjectsByLang) + routing. */
 
 const safeUrl = (img: unknown) => {
   try {
@@ -14,6 +14,11 @@ const safeUrl = (img: unknown) => {
     return undefined;
   }
 };
+
+const fmtPrice = (p?: number) =>
+  p && p > 0
+    ? new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(p)
+    : "On request";
 
 const renderTitle = (title: string) =>
   title.split(/(Listings)/i).map((part, i) =>
@@ -24,11 +29,6 @@ const renderTitle = (title: string) =>
     )
   );
 
-const ArrowDiag = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-    <path d="M3 13L13 3M13 3H6M13 3V10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
 const ArrowRight = () => (
   <svg width="17" height="17" viewBox="0 0 17 17" fill="none" aria-hidden>
     <path d="M3 8.5h10M9 4.5l4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -41,8 +41,8 @@ export default async function NewListings({ lang = "en" }: { lang?: string }) {
   return (
     <section className="section is-light newlist">
       <div className="wrap">
-        <div className="newlist__grid">
-          <div className="newlist__intro" data-theme="dark">
+        <div className="newlist__grid" data-theme="dark">
+          <div className="newlist__intro">
             <h2 className="newlist__title">{renderTitle("New Listings")}</h2>
             <a className="btn btn--ghost newlist__cta" href="/projects">
               Show all projects
@@ -55,16 +55,22 @@ export default async function NewListings({ lang = "en" }: { lang?: string }) {
             const slug = (p.slug as Record<string, { current: string }> | undefined)?.[lang]?.current;
             const price = p.keyFeatures?.price;
             return (
-              <a key={p._id} className="plcard" href={slug ? `/projects/${slug}` : "#"}>
-                <div className="plcard__media">
+              <a key={p._id} className="pcard" href={slug ? `/projects/${slug}` : "#"}>
+                <div className="pcard__media">
                   {img && <img src={img} alt={p.previewImage?.alt || p.title} />}
+                  <div className="pcard__shade" />
                 </div>
-                <div className="plcard__shade" />
-                <span className="plcard__arrow"><ArrowDiag /></span>
-                <div className="plcard__body">
-                  <p className="plcard__name">{p.title}</p>
-                  <p className="plcard__price">
-                    {price != null ? `Price from ${price.toLocaleString()} €` : "Price on request"}
+                <div className="pcard__body">
+                  <h3 className="pcard__title">{p.title}</h3>
+                  <p className="pcard__price">
+                    {price && price > 0 ? (
+                      <>
+                        <span className="pcard__from">from</span>
+                        {fmtPrice(price)}
+                      </>
+                    ) : (
+                      "On request"
+                    )}
                   </p>
                 </div>
               </a>
