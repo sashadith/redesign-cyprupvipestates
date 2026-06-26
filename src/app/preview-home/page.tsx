@@ -10,6 +10,7 @@ import NewListings from "./sections/NewListings";
 import Benefits from "./sections/Benefits";
 import HowWeWork from "./sections/HowWeWork";
 import CaseStudies from "./sections/CaseStudies";
+import Content from "./sections/Content";
 
 /* Homepage redesign preview — built section by section.
    Pulls the REAL homepage content (local content DB) and restyles it.
@@ -33,6 +34,7 @@ export default async function PreviewHome() {
         <NewListings lang="en" />
         {homePage.benefitsBlock && <Benefits block={homePage.benefitsBlock} />}
         {homePage.howWeWorkBlock && <HowWeWork block={homePage.howWeWorkBlock} />}
+        {homePage.contentBlocks?.length ? <Content blocks={homePage.contentBlocks} /> : null}
         {homePage.featuredCaseStudiesBlock && (
           <CaseStudies block={homePage.featuredCaseStudiesBlock} lang="en" />
         )}

@@ -682,6 +682,42 @@ img { max-width: 100%; display: block; }
 .cscard:hover .cscard__more svg { transform: translateX(4px); }
 .casestudies__cta { margin-top: clamp(40px, 5vw, 64px); display: flex; justify-content: center; }
 
+/* ===================== CONTENT (cohesive light editorial — main SEO body) ===================== */
+.content__inner { display: flex; flex-direction: column; gap: clamp(34px, 4.5vw, 64px); }
+/* default: a centered reading column; two-column blocks break out wider */
+.content__block { width: 100%; max-width: 68ch; margin-inline: auto; }
+.content__block--wide { max-width: 1040px; }
+.content__block--callout {
+  max-width: 760px; background: var(--surface-raised); border: 1px solid var(--hairline);
+  border-radius: var(--r-ui); padding: clamp(22px, 3vw, 38px);
+}
+.content__two { display: grid; gap: clamp(28px, 4vw, 56px); grid-template-columns: 1fr; align-items: center; }
+@media (min-width: 760px) {
+  .content__two { grid-template-columns: 1fr 1fr; }
+  /* alternate the image/text side every other block for editorial rhythm
+     (column order flips visually; DOM/reading order stays the same) */
+  .content__inner > .content__block:nth-child(even) .content__two { direction: rtl; }
+  .content__inner > .content__block:nth-child(even) .content__two > * { direction: ltr; }
+}
+.content__side--img img { width: 100%; height: auto; display: block; border-radius: var(--r-ui); }
+.content__side--callout { background: var(--surface-raised); border: 1px solid var(--hairline); border-radius: var(--r-ui); padding: clamp(20px, 3vw, 32px); }
+
+/* typography for the rendered PortableText (RichText) on the light section */
+.content :is(h2, h3, h4) {
+  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; color: var(--text);
+  line-height: 1.18; letter-spacing: -0.01em; text-wrap: balance; margin: 0 0 var(--s-4);
+}
+.content :is(h2, h3, h4):not(:first-child) { margin-top: var(--s-6); }
+.content h2 { font-size: clamp(1.6rem, 1.3rem + 1.4vw, 2.25rem); }
+.content p { margin: 0 0 var(--s-4); font-size: clamp(1rem, 0.97rem + 0.18vw, 1.0625rem); line-height: 1.75; color: var(--text-soft); }
+.content p:last-child { margin-bottom: 0; }
+.content ul, .content ol { margin: 0 0 var(--s-4); }
+.content li, .content li span { color: var(--text-soft); }   /* override RichText's dark-bg white */
+.content blockquote { color: var(--text); }
+.content strong { color: var(--text); font-weight: 600; }
+.content a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; transition: color var(--dur-sm) var(--ease); }
+.content a:hover { color: var(--text); }
+
 /* ---------- preview chrome ---------- */
 .preview-badge {
   position: fixed; left: var(--s-5); bottom: var(--s-5); z-index: 60;
