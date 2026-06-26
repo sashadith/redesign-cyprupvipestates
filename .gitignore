@@ -42,3 +42,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local redesign preview
+.env.local
+.local-db/
+
+# local media (served from the VPS / proxied in dev) — never versioned
+/public/uploads

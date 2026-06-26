@@ -1,38 +1,118 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Cyprus VIP Estates — Website
 
-## Getting Started
+Next.js 14 (App Router) + Prisma/PostgreSQL. Multilingual (EN canonical, DE/PL/RU).
+Production runs on a Hostinger VPS; this repo is also the home of the **homepage
+redesign** (branch `redesign/home`).
 
-First, run the development server:
+---
+
+## Prerequisites
+
+| Tool | Version |
+|------|---------|
+| **Node.js** | **20.20.2** (match prod; use `nvm`/`fnm`/Volta) |
+| npm | 10.x |
+| PostgreSQL | 16.x (local, for content) |
+
+> Tip: `nvm install 20.20.2 && nvm use`.
+
+---
+
+## 1. Install
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/sashadith/cve.git
+cd cve
+git checkout redesign/home          # design work lives here
+npm install --legacy-peer-deps      # legacy flag is required (peer-dep conflicts)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 2. Environment (`.env.local`)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+`.env.local` is **git-ignored** — create your own. Minimum needed to run the
+redesign preview locally:
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+```bash
+DATABASE_URL="postgresql://USER@localhost:5433/cyprusvipestates?schema=public"
+NEXT_PUBLIC_SITE_URL="http://localhost:3000"
+AUTH_SECRET="any-32+char-string-for-local"
+AUTH_URL="http://localhost:3000"
+LOCAL_PREVIEW=1   # serves /uploads from production + unoptimized images (DEV ONLY)
+```
 
-## Learn More
+See **`.env.example`** for the full production variable list (DB, NextAuth,
+SMTP, Telegram, Monday, cron, analytics). Never commit a filled env file.
 
-To learn more about Next.js, take a look at the following resources:
+## 3. Local content database
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The homepage renders from Postgres. Get a **content-only** dump (no PII —
+excludes `leads`, `users`, `sessions`, `page_views`) — shared out-of-band, **not
+in git**. Then, with a local Postgres on port **5433**:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+```bash
+createdb -p 5433 cyprusvipestates
+psql -p 5433 -d cyprusvipestates -f cve_content.sql
+```
 
-## Deploy on Vercel
+(To regenerate the dump from the VPS — read-only, never modifies the server:
+`pg_dump "$DATABASE_URL_NO_QUERYSTRING" --no-owner --no-privileges \
+  --exclude-table-data=public.leads --exclude-table-data=public.users \
+  --exclude-table-data=public.sessions --exclude-table-data=public.page_views \
+  -f cve_content.sql`)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Media (`/uploads`) is **not** stored in git — in dev it's proxied from
+production automatically via `LOCAL_PREVIEW=1`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
-# cyprusvipestates
-# cyprusvipestates
+## 4. Run
+
+```bash
+npm run dev      # http://localhost:3000  · redesign preview: /preview-home
+npm run build    # production build (no LOCAL_PREVIEW)
+npm run start    # serve the production build
+npm run lint
+```
+
+---
+
+## Where the redesign lives
+
+| Route | What |
+|-------|------|
+| `/preview-home` | The restyled homepage (in progress) |
+| `/sandbox`, `/sandbox-v2…v5` | Design-system explorations (V5 = chosen direction) |
+
+All preview routes are `noindex` and bypass the i18n middleware. The live
+homepage (`src/app/[lang]/page.tsx`) and its components are **untouched** — the
+redesign uses preview-scoped copies under `src/app/preview-home/`.
+
+---
+
+## Collaboration workflow
+
+- **`main`** — stable / what production runs. Never commit WIP directly here.
+- **`redesign/home`** — the homepage redesign (current working branch).
+- **Feature branches** — branch off `redesign/home` (e.g. `redesign/home-faq`),
+  open a PR back into it.
+
+Every session:
+
+```bash
+git checkout redesign/home
+git pull --ff-only        # get your colleague's latest work BEFORE you start
+# …work…
+git add -p && git commit -m "feat(redesign): …"
+git push                  # push to GitHub
+```
+
+Then preview online on **staging** (see `STAGING.md`). Open a PR for review
+before anything merges toward `main`.
+
+**Do not** deploy the redesign branch to production — production is the live
+site. Staging is the safe preview.
+
+---
+
+## Sensitive files (never committed — already in `.gitignore`)
+
+`.env`, `.env.*` (except `.env.example`), `.env.local`, `/node_modules`,
+`/.next`, `.local-db/`, `*.sql` content dumps, `/public/uploads`.
