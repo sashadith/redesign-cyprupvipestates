@@ -13,6 +13,7 @@ import CaseStudies from "./sections/CaseStudies";
 import Content from "./sections/Content";
 import Faq from "./sections/Faq";
 import ParallaxBand from "./sections/ParallaxBand";
+import Form from "./sections/Form";
 
 /* Homepage redesign preview — built section by section.
    Pulls the REAL homepage content (local content DB) and restyles it.
@@ -42,8 +43,9 @@ export default async function PreviewHome() {
         {homePage.contentBlocks?.length ? <Content blocks={homePage.contentBlocks} /> : null}
         {homePage.faqSection && <Faq section={homePage.faqSection} />}
         {homePage.parallaxImage && <ParallaxBand image={homePage.parallaxImage} />}
+        <Form lang="en" />
 
-        <span className="preview-badge">Preview · Hero → Parallax</span>
+        <span className="preview-badge">Preview · Hero → Form</span>
       </main>
     </>
   );
