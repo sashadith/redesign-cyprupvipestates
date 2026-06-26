@@ -1,61 +1,44 @@
 # Staging — redesign preview online
 
-Goal: preview the `redesign/home` branch on a protected subdomain, isolated from
-the live site, **never indexed**.
+**URL:** https://design.cyprusvipestates.com  (HTTP Basic Auth — credentials shared
+privately, **not** in this repo). Redesign preview: `/preview-home`.
 
-## Topology (recommended)
+## What's deployed
 
-A **separate PM2 app** on the VPS, on its own port, behind an **nginx subdomain**
-— it does not touch the production `cyprusvipestates` app.
+- Separate PM2 app **`cve-staging`** on `127.0.0.1:3200` — the live
+  `cyprusvipestates` app is never touched.
+- App dir on the VPS: `/var/www/cve-staging` (its `node_modules` and
+  `public/uploads` are symlinked from production; it has its own `.env`).
+- nginx vhost `design.cyprusvipestates.com` → Let's Encrypt SSL (auto-renew).
 
-```
-design.cyprusvipestates.com  ──nginx──▶  127.0.0.1:3200  (pm2: cve-staging)
-cyprusvipestates.com         ──nginx──▶  127.0.0.1:3000  (pm2: cyprusvipestates, LIVE)
-```
+## Protected from indexing / public access (all three)
 
-- **Subdomain:** `design.cyprusvipestates.com` (needs a DNS A-record → VPS IP `72.60.89.239`).
-- **App dir:** `/var/www/cve-staging` (separate from production).
-- **DB:** points at the existing production Postgres **read-mostly** (staging
-  renders real content). Use a dedicated read-only role if you want extra safety.
-- **No `LOCAL_PREVIEW`** — staging serves `/uploads` from disk and uses real image optimization.
+1. **HTTP Basic Auth** — nginx `auth_basic` + `/etc/nginx/.htpasswd-staging`.
+2. **`X-Robots-Tag: noindex, nofollow`** on every response.
+3. **`robots.txt`** → `Disallow: /` (served openly so crawlers read it).
 
-## Protect from indexing (all three)
+## Deploy / update staging
 
-1. **nginx** server-level header on the staging block:
-   `add_header X-Robots-Tag "noindex, nofollow" always;`
-2. **robots.txt** for staging: `User-agent: *` / `Disallow: /`.
-3. **Basic Auth** (optional but recommended) via nginx `auth_basic` + an htpasswd file.
-
-(The redesign preview routes already send `noindex` meta, but the header+robots
-cover the whole staging host.)
-
-## Manual deploy (each update)
+From a local checkout of the latest code:
 
 ```bash
-# 1. from local — push first
-git push
-
-# 2. on the VPS
-ssh -i ~/.ssh/cvp_vps root@72.60.89.239
-cd /var/www/cve-staging
-git fetch origin && git checkout redesign/home && git pull --ff-only
-npm install --legacy-peer-deps
-npm run build
-pm2 reload cve-staging --update-env     # never `pm2 reload all`
+git checkout redesign/home && git pull --ff-only
+./scripts/deploy-staging.sh          # rsync → build → pm2 reload cve-staging
 ```
 
-First-time setup (one-off): `git clone` into `/var/www/cve-staging`, create its
-`.env` (DATABASE_URL, AUTH_SECRET, `AUTH_URL=https://design.cyprusvipestates.com`,
-SMTP/Telegram/etc. as needed), `pm2 start ... --name cve-staging -- start -p 3200`,
-add the nginx server block + Let's Encrypt cert + the noindex header + basic auth.
+Requires VPS SSH access (`~/.ssh/cvp_vps`). The script never runs
+`pm2 reload all` — only `cve-staging`.
 
-## Optional: auto-deploy from GitHub
+## Notes
 
-A GitHub Action on push to `redesign/home` SSHes to the VPS and runs the deploy
-block above. Needs repo secrets: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`. Provide
-those and a workflow file (`.github/workflows/staging.yml`) can be added.
+- Staging uses the **production database** (read-mostly) so it renders real
+  content. Lead delivery is **disabled** on staging (`MONDAY_API_KEY` /
+  `TELEGRAM_BOT_TOKEN` blanked) so form tests don't reach the real CRM.
+- The local-only `next.config` hacks (`/uploads` proxy, unoptimized images) are
+  **off** on staging — it serves real `/uploads` from disk with full image
+  optimization (gated behind `LOCAL_PREVIEW`, which staging does not set).
 
 ## Branch flow → staging
 
-`feature → PR → redesign/home → push → staging build → review on design.cyprusvipestates.com`.
-Only merge toward `main` (production) after design sign-off.
+`feature → PR → redesign/home → push → deploy-staging.sh → review on
+design.cyprusvipestates.com`. Merge toward `main` (production) only after sign-off.
