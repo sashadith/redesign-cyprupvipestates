@@ -8,6 +8,7 @@ import Cities from "./sections/Cities";
 import Description from "./sections/Description";
 import NewListings from "./sections/NewListings";
 import Benefits from "./sections/Benefits";
+import HowWeWork from "./sections/HowWeWork";
 
 /* Homepage redesign preview — built section by section.
    Pulls the REAL homepage content (local content DB) and restyles it.
@@ -30,8 +31,9 @@ export default async function PreviewHome() {
         {homePage.descriptionBlock && <Description block={homePage.descriptionBlock} />}
         <NewListings lang="en" />
         {homePage.benefitsBlock && <Benefits block={homePage.benefitsBlock} />}
+        {homePage.howWeWorkBlock && <HowWeWork block={homePage.howWeWorkBlock} />}
 
-        <span className="preview-badge">Preview · Hero → Benefits</span>
+        <span className="preview-badge">Preview · Hero → How We Work</span>
       </main>
     </>
   );
