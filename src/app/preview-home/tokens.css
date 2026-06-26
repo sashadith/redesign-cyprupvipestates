@@ -777,7 +777,7 @@ img { max-width: 100%; display: block; }
 .formsec__title {
   font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
   font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em;
-  color: var(--text); margin: 0; text-wrap: balance; max-width: 18ch;
+  color: var(--text); margin: 0; text-wrap: balance;
 }
 .formsec__stripe { margin-top: var(--s-5); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
 .formsec__form { margin-top: var(--s-7); }
