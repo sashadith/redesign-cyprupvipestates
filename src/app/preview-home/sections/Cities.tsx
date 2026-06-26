@@ -13,14 +13,30 @@ const safeUrl = (img: unknown) => {
   }
 };
 
-const renderTitle = (title: string) =>
-  title.split(/(Cyprus)/i).map((part, i) =>
-    part.toLowerCase() === "cyprus" ? (
-      <span key={i} className="it">{part}</span>
-    ) : (
-      <React.Fragment key={i}>{part}</React.Fragment>
-    )
+const ACCENT_PHRASE = "Properties for Sale in Cyprus";
+
+/* Highlight the "Properties for Sale in Cyprus" phrase with the gold accent.
+   Falls back to highlighting just "Cyprus" if the phrase isn't present
+   (e.g. translated headings). */
+const renderTitle = (title: string) => {
+  const idx = title.toLowerCase().indexOf(ACCENT_PHRASE.toLowerCase());
+  if (idx === -1) {
+    return title.split(/(Cyprus)/i).map((part, i) =>
+      part.toLowerCase() === "cyprus" ? (
+        <span key={i} className="it">{part}</span>
+      ) : (
+        <React.Fragment key={i}>{part}</React.Fragment>
+      )
+    );
+  }
+  return (
+    <>
+      {title.slice(0, idx)}
+      <span className="it">{title.slice(idx, idx + ACCENT_PHRASE.length)}</span>
+      {title.slice(idx + ACCENT_PHRASE.length)}
+    </>
   );
+};
 
 const Arrow = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
