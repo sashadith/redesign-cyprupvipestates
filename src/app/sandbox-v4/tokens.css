@@ -1,0 +1,234 @@
+/* =====================================================================
+   Cyprus VIP Estates — Redesign Version 4 (Sapphire · Liquid Glass + Gold)
+   Deep blue + gold. Maximum-wow but cool & luxurious: midnight sapphire
+   base, glowing azure aurora, transparent refractive sapphire-glass panels,
+   gold as an elegant glowing accent. Elegant Cormorant display (the V1
+   favourite) in a new blue-glass skin. Scoped to /sandbox-v4 only.
+   ===================================================================== */
+
+:root {
+  /* deep blue base */
+  --navy:      #0A1A38; /* midnight sapphire */
+  --navy-2:    #0F2350;
+  --navy-edge: #050D1F;
+  --azure:     #4C9BE0; /* cool glow */
+
+  /* gold (luminous, tuned to sing on blue) */
+  --gold:      #E6C063;
+  --gold-lum:  #F6DE9C;
+  --gold-deep: #B68A33; /* AA gold for light surfaces */
+
+  --ivory: #EAEEF6; /* cool off-white */
+
+  /* spacing — 8px */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px;
+  --s-6: 32px; --s-7: 48px; --s-8: 64px; --s-9: 96px; --s-10: 128px; --s-11: 160px;
+  --section-y: clamp(72px, 11vw, 176px);
+  --maxw: 1240px; --gutter: clamp(20px, 5vw, 64px);
+
+  /* type */
+  --text-caption: 0.78rem; --text-sm: 0.875rem; --text-body: 1.0625rem;
+  --text-lead: clamp(1.15rem, 1.05rem + 0.5vw, 1.45rem);
+  --text-h3: clamp(1.5rem, 1.2rem + 1.3vw, 2.05rem);
+  --text-h2: clamp(2rem, 1.35rem + 2.7vw, 3.25rem);
+  --text-h1: clamp(2.7rem, 1.8rem + 4vw, 4.6rem);
+  --text-display: clamp(3.2rem, 2rem + 6vw, 6rem);
+
+  --r-1: 12px; --r-2: 18px; --r-3: 26px; --r-4: 36px;
+  --ease: cubic-bezier(0.22, 0.61, 0.21, 1);
+  --ease-soft: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur: 0.7s; --dur-sm: 0.45s;
+}
+
+/* ---------- DARK (default — the sapphire-glass aesthetic) ---------- */
+:root, [data-theme="dark"] {
+  --bg: var(--navy); --bg-edge: var(--navy-edge); --surface: var(--navy-2);
+  --text: var(--ivory); --text-soft: rgba(234,238,246,0.68); --text-faint: rgba(234,238,246,0.42);
+  --accent: var(--gold); --accent-lum: var(--gold-lum); --accent-ink: #1E1606;
+  --accent-soft: rgba(230,192,99,0.14);
+  --hairline: rgba(234,238,246,0.12);
+  --hairline-gold: rgba(230,192,99,0.45);
+  --glass-fill: rgba(120,170,235,0.07);
+  --glass-solid: rgba(15,35,80,0.84);
+  --glass-edge-1: rgba(255,255,255,0.5);
+  --glass-edge-2: rgba(120,180,240,0.10);
+  --glass-edge-gold: rgba(230,192,99,0.42);
+  --glass-hi: rgba(180,210,255,0.22);
+  --specular: rgba(200,225,255,0.12);
+  --glow-azure: rgba(76,155,224,0.22);
+  --glow-cyan:  rgba(70,200,220,0.12);
+  --glow-violet:rgba(96,86,190,0.16);
+  --glow-gold:  rgba(230,192,99,0.18);
+  --gold-glow:  0 0 0 1px rgba(230,192,99,.32), 0 10px 44px -10px rgba(230,192,99,.40);
+  color-scheme: dark;
+}
+
+/* ---------- LIGHT (cool porcelain/ice + gold) ---------- */
+[data-theme="light"] {
+  --bg: #EEF2F8; --bg-edge: #DCE3EE; --surface: #FBFCFE;
+  --text: #0E1A30; --text-soft: rgba(14,26,48,0.72); --text-faint: rgba(14,26,48,0.46);
+  --accent: var(--gold-deep); --accent-lum: var(--gold); --accent-ink: #FFFFFF;
+  --accent-soft: rgba(182,138,51,0.12);
+  --hairline: rgba(14,26,48,0.12);
+  --hairline-gold: rgba(182,138,51,0.5);
+  --glass-fill: rgba(255,255,255,0.58);
+  --glass-solid: rgba(251,252,254,0.92);
+  --glass-edge-1: rgba(255,255,255,0.9);
+  --glass-edge-2: rgba(76,155,224,0.16);
+  --glass-edge-gold: rgba(182,138,51,0.4);
+  --glass-hi: rgba(255,255,255,0.8);
+  --specular: rgba(255,255,255,0.5);
+  --glow-azure: rgba(76,155,224,0.14);
+  --glow-cyan:  rgba(70,200,220,0.08);
+  --glow-violet:rgba(96,86,190,0.08);
+  --glow-gold:  rgba(230,192,99,0.12);
+  --gold-glow:  0 0 0 1px rgba(182,138,51,.3), 0 10px 40px -12px rgba(182,138,51,.4);
+  color-scheme: light;
+}
+
+/* ---------- reset + base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: var(--font-body), -apple-system, system-ui, sans-serif;
+  font-size: var(--text-body); font-weight: 300; line-height: 1.7;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  position: relative; min-height: 100dvh; overflow-x: hidden;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+img { max-width: 100%; display: block; }
+::selection { background: var(--accent); color: var(--accent-ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+/* ---------- aurora atmosphere (azure + cyan + violet + gold glow) ---------- */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+  background:
+    radial-gradient(55% 45% at 16% 6%, var(--glow-azure), transparent 60%),
+    radial-gradient(50% 42% at 88% 16%, var(--glow-cyan), transparent 62%),
+    radial-gradient(60% 55% at 78% 92%, var(--glow-violet), transparent 60%),
+    radial-gradient(45% 40% at 30% 96%, var(--glow-gold), transparent 62%),
+    linear-gradient(180deg, var(--bg), var(--bg-edge));
+}
+/* slow-drifting aurora layer for the wow (GPU: transform/opacity only) */
+.aurora {
+  position: fixed; inset: -20%; z-index: -1; pointer-events: none; opacity: 0.7;
+  background:
+    radial-gradient(38% 30% at 50% 40%, var(--glow-azure), transparent 70%),
+    radial-gradient(30% 26% at 70% 60%, var(--glow-gold), transparent 70%);
+  animation: drift 26s var(--ease) infinite alternate;
+}
+@keyframes drift {
+  0%   { transform: translate3d(-4%, -2%, 0) scale(1.05); }
+  100% { transform: translate3d(5%, 3%, 0) scale(1.18); }
+}
+
+/* ---------- layout ---------- */
+.wrap { max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter); position: relative; z-index: 1; }
+.section { padding-block: var(--section-y); }
+.stack-sm > * + * { margin-top: var(--s-4); } .stack > * + * { margin-top: var(--s-6); }
+.row { display: flex; flex-wrap: wrap; gap: var(--s-4); align-items: center; }
+.grid-2 { display: grid; gap: var(--s-6); grid-template-columns: 1fr; }
+.grid-3 { display: grid; gap: var(--s-5); grid-template-columns: 1fr; }
+@media (min-width: 768px) { .grid-2 { grid-template-columns: 1fr 1fr; } .grid-3 { grid-template-columns: repeat(3,1fr); } }
+
+/* ---------- typography (Cormorant display) ---------- */
+.display, .h1, .h2, .h3 {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-weight: 400; letter-spacing: -0.018em; line-height: 1.05; text-wrap: balance; margin: 0;
+}
+.display { font-size: var(--text-display); font-weight: 300; line-height: 1.0; letter-spacing: -0.022em; }
+.h1 { font-size: var(--text-h1); } .h2 { font-size: var(--text-h2); }
+.h3 { font-size: var(--text-h3); line-height: 1.12; }
+.it { font-style: italic; color: var(--accent-lum); font-weight: 400; text-shadow: 0 0 28px var(--glow-gold); }
+.lead { font-size: var(--text-lead); color: var(--text-soft); max-width: 58ch; line-height: 1.6; margin: 0; }
+.body { color: var(--text-soft); max-width: 66ch; }
+.caption { font-size: var(--text-caption); color: var(--text-faint); }
+.lang-tag { font-size: var(--text-caption); letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); }
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 0.7em;
+  font-family: var(--font-body), sans-serif; font-size: var(--text-caption); font-weight: 600;
+  letter-spacing: 0.28em; text-transform: uppercase; color: var(--accent); margin: 0;
+}
+.eyebrow::before { content: ""; width: 26px; height: 1px; background: linear-gradient(90deg, transparent, var(--accent)); }
+
+/* shimmering gold hairline (the wow accent) */
+.shimmer { position: relative; height: 1px; border: 0; margin: 0; background: var(--hairline-gold); overflow: hidden; }
+.shimmer::after {
+  content: ""; position: absolute; top: 0; left: -40%; width: 40%; height: 100%;
+  background: linear-gradient(90deg, transparent, var(--gold-lum), transparent);
+  animation: sweep 4.5s var(--ease) infinite;
+}
+@keyframes sweep { 0% { transform: translateX(0); } 60%,100% { transform: translateX(350%); } }
+
+/* ---------- LIQUID GLASS (sapphire, refractive edge, specular) ---------- */
+.lg {
+  position: relative; border-radius: var(--r-4); padding: var(--s-6); overflow: hidden;
+  background: linear-gradient(var(--glass-solid), var(--glass-solid)) padding-box;
+  border: 1px solid var(--hairline);
+  box-shadow: inset 0 1px 0 var(--glass-hi), 0 30px 80px -42px rgba(2,8,24,0.85);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lg {
+    background:
+      linear-gradient(var(--glass-fill), var(--glass-fill)) padding-box,
+      linear-gradient(135deg, var(--glass-edge-1), var(--glass-edge-2) 42%, var(--glass-edge-gold)) border-box;
+    border: 1px solid transparent;
+    -webkit-backdrop-filter: blur(28px) saturate(170%); backdrop-filter: blur(28px) saturate(170%);
+  }
+}
+.lg::after {
+  content: ""; position: absolute; top: -20%; left: -30%; width: 55%; height: 140%;
+  background: linear-gradient(105deg, transparent, var(--specular), transparent);
+  transform: skewX(-12deg); pointer-events: none;
+}
+.lg--gold { box-shadow: var(--gold-glow), inset 0 1px 0 var(--glass-hi), 0 30px 80px -42px rgba(2,8,24,0.85); }
+.tilt { transition: transform var(--dur-sm) var(--ease-soft); transform-style: preserve-3d; }
+.tilt:hover { transform: perspective(900px) rotateX(2deg) rotateY(-3deg) translateY(-5px); }
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: var(--s-3);
+  font-family: var(--font-body), sans-serif; font-size: var(--text-sm); font-weight: 500; letter-spacing: 0.01em;
+  border-radius: 999px; padding: 13px 13px 13px 26px; border: 1px solid transparent;
+  cursor: pointer; text-decoration: none; color: inherit;
+  transition: transform var(--dur-sm) var(--ease-soft), box-shadow var(--dur-sm) var(--ease),
+              background var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease);
+}
+.btn:active { transform: scale(0.98); }
+.btn__ico { width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center; flex: none;
+  background: var(--accent); color: var(--accent-ink); transition: transform var(--dur-sm) var(--ease-soft), box-shadow var(--dur-sm) var(--ease); }
+.btn:hover .btn__ico { transform: translate(2px, -1px) scale(1.06); box-shadow: 0 0 18px var(--glow-gold); }
+.btn--primary {
+  background: var(--glass-fill); border-color: var(--hairline-gold); color: var(--text); padding-right: 13px;
+  box-shadow: var(--gold-glow), inset 0 1px 0 var(--glass-hi);
+}
+.btn--primary:hover { border-color: var(--accent); }
+.btn--glass { background: var(--glass-fill); border-color: var(--hairline); color: var(--text); padding: 13px 26px; }
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .btn--primary, .btn--glass { -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+}
+.btn--glass:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+/* ---------- swatches / dividers / ruler ---------- */
+.swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s-4); }
+.swatch { border: 1px solid var(--hairline); border-radius: var(--r-2); overflow: hidden; background: var(--glass-fill); }
+.swatch__chip { aspect-ratio: 16/10; }
+.swatch__meta { padding: var(--s-3) var(--s-4); display: flex; justify-content: space-between; gap: var(--s-2); font-size: var(--text-caption); }
+.swatch__meta b { font-weight: 600; } .swatch__meta span { color: var(--text-faint); text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.divider-gold { height: 1px; border: 0; margin: 0; background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+.ruler { display: flex; flex-direction: column; gap: var(--s-3); }
+.ruler__row { display: flex; align-items: center; gap: var(--s-4); font-size: var(--text-caption); color: var(--text-faint); }
+.ruler__bar { height: 12px; border-radius: 3px; background: linear-gradient(90deg, var(--accent), var(--azure)); box-shadow: 0 0 14px var(--glow-gold); }
+
+/* ---------- motion (reduced-motion safe) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal { opacity: 0; transform: translateY(22px); filter: blur(5px); animation: rise var(--dur) var(--ease) forwards; }
+  @keyframes rise { to { opacity: 1; transform: none; filter: blur(0); } }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  .aurora, body::before { display: none; }
+  .shimmer::after { display: none; }
+  .tilt:hover { transform: none; }
+}

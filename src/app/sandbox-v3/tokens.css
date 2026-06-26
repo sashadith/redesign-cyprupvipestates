@@ -1,0 +1,223 @@
+/* =====================================================================
+   Cyprus VIP Estates — Redesign Version 3 (Modern Luxury · Liquid Glass)
+   Apple-style transparent Gaussian glass with refractive light-catching
+   edges + a 3D metallic gold treatment (polished seal, embossed CTA, gold
+   edges). Cool slate base so glass reads crisp and warm gold pops.
+   Independent of V1/V2. Scoped to /sandbox-v3 only.
+   ===================================================================== */
+
+:root {
+  /* 3D metallic gold ramp (drives gradients/highlights) */
+  --gold-hi:   #F7E6AE; /* specular highlight */
+  --gold:      #E3B84E; /* bright metallic */
+  --gold-mid:  #C79A3A;
+  --gold-deep: #8E6A24; /* AA gold for light surfaces */
+
+  /* cool slate base */
+  --slate:   #0E1116;
+  --slate-2: #161A21;
+  --ivory:   #ECEBE7;
+
+  /* spacing — 8px */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px;
+  --s-6: 32px; --s-7: 48px; --s-8: 64px; --s-9: 96px; --s-10: 128px; --s-11: 160px;
+  --section-y: clamp(72px, 11vw, 176px);
+  --maxw: 1240px; --gutter: clamp(20px, 5vw, 64px);
+
+  /* type — modern Didone display, grand */
+  --text-caption: 0.78rem; --text-sm: 0.875rem; --text-body: 1.0625rem;
+  --text-lead: clamp(1.15rem, 1.05rem + 0.5vw, 1.45rem);
+  --text-h3: clamp(1.5rem, 1.2rem + 1.3vw, 2.05rem);
+  --text-h2: clamp(2rem, 1.35rem + 2.7vw, 3.25rem);
+  --text-h1: clamp(2.7rem, 1.8rem + 4vw, 4.6rem);
+  --text-display: clamp(3.2rem, 2rem + 6vw, 6rem);
+
+  --r-1: 12px; --r-2: 18px; --r-3: 26px; --r-4: 36px;
+  --ease: cubic-bezier(0.22, 0.61, 0.21, 1);
+  --ease-soft: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur: 0.7s; --dur-sm: 0.45s;
+}
+
+/* ---------- DARK (default) ---------- */
+:root, [data-theme="dark"] {
+  --bg: var(--slate); --bg-2: #0A0C10; --surface: var(--slate-2);
+  --text: var(--ivory); --text-soft: rgba(236,235,231,0.66); --text-faint: rgba(236,235,231,0.40);
+  --accent: var(--gold); --accent-ink: #2A1D04;
+  --accent-soft: rgba(227,184,78,0.14);
+  --hairline: rgba(236,235,231,0.12);
+  --glass-fill: rgba(255,255,255,0.06);
+  --glass-solid: rgba(22,26,33,0.86);
+  --glass-edge-1: rgba(255,255,255,0.45);
+  --glass-edge-2: rgba(255,255,255,0.04);
+  --glass-edge-gold: rgba(227,184,78,0.40);
+  --glass-hi: rgba(255,255,255,0.25);
+  --specular: rgba(255,255,255,0.10);
+  --glow-cool: rgba(120,150,190,0.14);
+  --glow-gold: rgba(227,184,78,0.16);
+  color-scheme: dark;
+}
+
+/* ---------- LIGHT (airy, cool near-white) ---------- */
+[data-theme="light"] {
+  --bg: #EEF0F3; --bg-2: #E2E5EA; --surface: #FBFCFD;
+  --text: #15171C; --text-soft: rgba(21,23,28,0.70); --text-faint: rgba(21,23,28,0.46);
+  --accent: var(--gold-deep); --accent-ink: #FFFFFF;
+  --accent-soft: rgba(142,106,36,0.12);
+  --hairline: rgba(21,23,28,0.12);
+  --glass-fill: rgba(255,255,255,0.55);
+  --glass-solid: rgba(251,252,253,0.92);
+  --glass-edge-1: rgba(255,255,255,0.9);
+  --glass-edge-2: rgba(21,23,28,0.04);
+  --glass-edge-gold: rgba(142,106,36,0.38);
+  --glass-hi: rgba(255,255,255,0.8);
+  --specular: rgba(255,255,255,0.5);
+  --glow-cool: rgba(120,150,190,0.10);
+  --glow-gold: rgba(227,184,78,0.12);
+  color-scheme: light;
+}
+
+/* ---------- reset + base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: var(--font-body), -apple-system, system-ui, sans-serif;
+  font-size: var(--text-body); font-weight: 300; line-height: 1.7;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  position: relative; min-height: 100dvh; overflow-x: hidden;
+  transition: background var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+img { max-width: 100%; display: block; }
+::selection { background: var(--accent); color: var(--accent-ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+
+/* clean cool atmosphere (crisper than V2 — modern) */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+  background:
+    radial-gradient(60% 50% at 20% 0%, var(--glow-cool), transparent 60%),
+    radial-gradient(50% 45% at 92% 88%, var(--glow-gold), transparent 62%),
+    linear-gradient(180deg, var(--bg), var(--bg-2));
+}
+
+/* ---------- layout ---------- */
+.wrap { max-width: var(--maxw); margin-inline: auto; padding-inline: var(--gutter); position: relative; z-index: 1; }
+.section { padding-block: var(--section-y); }
+.stack-sm > * + * { margin-top: var(--s-4); } .stack > * + * { margin-top: var(--s-6); }
+.row { display: flex; flex-wrap: wrap; gap: var(--s-4); align-items: center; }
+.grid-2 { display: grid; gap: var(--s-6); grid-template-columns: 1fr; }
+.grid-3 { display: grid; gap: var(--s-5); grid-template-columns: 1fr; }
+@media (min-width: 768px) { .grid-2 { grid-template-columns: 1fr 1fr; } .grid-3 { grid-template-columns: repeat(3,1fr); } }
+
+/* ---------- typography (Bodoni Moda display) ---------- */
+.display, .h1, .h2, .h3 {
+  font-family: var(--font-display), var(--font-display-cyr), "Didot", Georgia, serif;
+  font-weight: 500; letter-spacing: -0.015em; line-height: 1.05; text-wrap: balance; margin: 0;
+}
+.display { font-size: var(--text-display); font-weight: 400; line-height: 1.0; }
+.h1 { font-size: var(--text-h1); } .h2 { font-size: var(--text-h2); }
+.h3 { font-size: var(--text-h3); line-height: 1.12; }
+.it { font-style: italic; color: var(--accent); font-weight: 500; }
+.lead { font-size: var(--text-lead); color: var(--text-soft); max-width: 58ch; line-height: 1.6; margin: 0; }
+.body { color: var(--text-soft); max-width: 66ch; }
+.caption { font-size: var(--text-caption); color: var(--text-faint); }
+.lang-tag { font-size: var(--text-caption); letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); }
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 0.7em;
+  font-family: var(--font-body), sans-serif; font-size: var(--text-caption); font-weight: 600;
+  letter-spacing: 0.28em; text-transform: uppercase; color: var(--accent); margin: 0;
+}
+.eyebrow::before { content: ""; width: 26px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent)); }
+
+/* ---------- LIQUID GLASS (transparent, refractive edge, specular sweep) ---------- */
+.lg {
+  position: relative; border-radius: var(--r-4); padding: var(--s-6); overflow: hidden;
+  background: linear-gradient(var(--glass-solid), var(--glass-solid)) padding-box; /* fallback */
+  border: 1px solid var(--hairline);
+  box-shadow: inset 0 1px 0 var(--glass-hi), 0 30px 80px -42px rgba(0,0,0,0.75);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .lg {
+    background:
+      linear-gradient(var(--glass-fill), var(--glass-fill)) padding-box,
+      linear-gradient(135deg, var(--glass-edge-1), var(--glass-edge-2) 40%, var(--glass-edge-gold)) border-box;
+    border: 1px solid transparent;
+    -webkit-backdrop-filter: blur(26px) saturate(180%);
+    backdrop-filter: blur(26px) saturate(180%);
+  }
+}
+.lg::after { /* specular light streak */
+  content: ""; position: absolute; top: -20%; left: -30%; width: 55%; height: 140%;
+  background: linear-gradient(105deg, transparent, var(--specular), transparent);
+  transform: skewX(-12deg); pointer-events: none;
+}
+.lg--gold { box-shadow: inset 0 1px 0 var(--glass-hi), 0 0 0 1px var(--glass-edge-gold), 0 30px 80px -42px rgba(0,0,0,0.75); }
+
+/* 3D tilt + lift on hover */
+.tilt { transition: transform var(--dur-sm) var(--ease-soft), box-shadow var(--dur-sm) var(--ease); transform-style: preserve-3d; }
+.tilt:hover { transform: perspective(900px) rotateX(2deg) rotateY(-3deg) translateY(-5px); }
+
+/* ---------- 3D metallic gold ---------- */
+.seal {
+  width: 86px; height: 86px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  color: #3a2a08; font-family: var(--font-display), serif; font-size: 30px;
+  background: radial-gradient(circle at 32% 26%, var(--gold-hi), var(--gold) 44%, var(--gold-deep) 100%);
+  box-shadow: inset 0 2px 3px rgba(255,255,255,0.7), inset 0 -8px 14px rgba(0,0,0,0.32),
+              0 14px 34px -10px rgba(227,184,78,0.55);
+}
+.seal--ring { position: relative; }
+.seal--ring::before {
+  content: ""; position: absolute; inset: -7px; border-radius: 50%;
+  border: 1px solid var(--glass-edge-gold);
+  box-shadow: 0 0 18px var(--glow-gold);
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: var(--s-3);
+  font-family: var(--font-body), sans-serif; font-size: var(--text-sm); font-weight: 600; letter-spacing: 0.01em;
+  border-radius: 999px; padding: 13px 13px 13px 26px; border: 1px solid transparent;
+  cursor: pointer; text-decoration: none; color: inherit;
+  transition: transform var(--dur-sm) var(--ease-soft), box-shadow var(--dur-sm) var(--ease),
+              background var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease);
+}
+.btn:active { transform: scale(0.98); }
+.btn__ico { width: 34px; height: 34px; border-radius: 999px; display: grid; place-items: center; flex: none;
+  transition: transform var(--dur-sm) var(--ease-soft); }
+.btn:hover .btn__ico { transform: translate(2px, -1px) scale(1.06); }
+/* embossed 3D gold CTA (the requested golden touch) */
+.btn--gold {
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold) 32%, var(--gold-mid));
+  color: #2a1d04; padding-right: 13px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.78), inset 0 -2px 5px rgba(0,0,0,0.22),
+              0 10px 28px -10px rgba(227,184,78,0.55);
+}
+.btn--gold .btn__ico { background: rgba(42,29,4,0.16); color: #2a1d04; }
+.btn--glass { background: var(--glass-fill); border-color: var(--hairline); color: var(--text); padding: 13px 26px; }
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .btn--glass { -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+}
+.btn--glass:hover { border-color: var(--accent); background: var(--accent-soft); }
+
+/* ---------- swatches, dividers, ruler ---------- */
+.swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s-4); }
+.swatch { border: 1px solid var(--hairline); border-radius: var(--r-2); overflow: hidden; background: var(--glass-fill); }
+.swatch__chip { aspect-ratio: 16/10; }
+.swatch__meta { padding: var(--s-3) var(--s-4); display: flex; justify-content: space-between; gap: var(--s-2); font-size: var(--text-caption); }
+.swatch__meta b { font-weight: 600; } .swatch__meta span { color: var(--text-faint); text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.swatch--gold3d .swatch__chip { background: linear-gradient(135deg, var(--gold-hi), var(--gold) 40%, var(--gold-deep)); }
+.divider-gold { height: 1px; border: 0; margin: 0; background: linear-gradient(90deg, transparent, var(--accent), transparent); }
+.ruler { display: flex; flex-direction: column; gap: var(--s-3); }
+.ruler__row { display: flex; align-items: center; gap: var(--s-4); font-size: var(--text-caption); color: var(--text-faint); }
+.ruler__bar { height: 12px; border-radius: 3px; background: linear-gradient(90deg, var(--gold), var(--gold-deep)); }
+
+/* ---------- motion (reduced-motion safe) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal { opacity: 0; transform: translateY(22px); filter: blur(5px); animation: rise var(--dur) var(--ease) forwards; }
+  @keyframes rise { to { opacity: 1; transform: none; filter: blur(0); } }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  body::before { display: none; }
+  .tilt:hover { transform: none; }
+}
