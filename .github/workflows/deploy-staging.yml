@@ -5,7 +5,7 @@ name: Deploy staging
 #
 # Required repo secret:
 #   VPS_SSH_KEY — the private SSH key that can log into the VPS as root
-#                 (the contents of your ~/.ssh/cvp_vps).
+#                 (the FULL contents of your ~/.ssh/cvp_vps, incl. BEGIN/END lines).
 
 on:
   push:
@@ -27,26 +27,60 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure SSH
+      - name: Configure SSH (with safe diagnostics — never prints the key)
         env:
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
         run: |
-          mkdir -p ~/.ssh
-          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_vps
+          set -u
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+
+          # 1) secret present?
+          if [ -z "${VPS_SSH_KEY:-}" ]; then
+            echo "::error::Secret VPS_SSH_KEY is empty or not set (check the exact name)."
+            exit 1
+          fi
+          echo "VPS_SSH_KEY length: ${#VPS_SSH_KEY} chars"
+
+          # 2) write key (normalise CRLF), lock perms
+          printf '%s\n' "$VPS_SSH_KEY" | tr -d '\r' > ~/.ssh/id_vps
           chmod 600 ~/.ssh/id_vps
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          echo "first line: $(head -n1 ~/.ssh/id_vps)"
+          echo "last line:  $(tail -n1 ~/.ssh/id_vps)"
+          echo "lines:      $(wc -l < ~/.ssh/id_vps)"
+
+          # 3) is it a valid private key? (no key material printed)
+          if ssh-keygen -y -f ~/.ssh/id_vps >/dev/null 2>&1; then
+            echo "key check:  OK — $(ssh-keygen -lf ~/.ssh/id_vps | awk '{print $1, $2, $4}')"
+          else
+            echo "::error::id_vps is NOT a valid OpenSSH private key. Re-paste the FULL private key (with the BEGIN/END lines) into the VPS_SSH_KEY secret."
+            exit 1
+          fi
+
+          # 4) known_hosts — never let a keyscan hiccup fail the step
+          ssh-keyscan -t rsa,ecdsa,ed25519 "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "known_hosts entries: $(wc -l < ~/.ssh/known_hosts 2>/dev/null || echo 0)"
+          echo "runner egress IP: $(curl -s --max-time 8 ifconfig.me || echo unknown)"
+
+          # 5) real connection test (prints only the remote echo)
+          if ssh -i ~/.ssh/id_vps -o BatchMode=yes -o StrictHostKeyChecking=accept-new \
+               -o ConnectTimeout=15 "$VPS_USER@$VPS_HOST" 'echo connected to $(hostname)'; then
+            echo "ssh check:  OK"
+          else
+            echo "::error::SSH connection refused. The key is valid but the VPS did not accept it (is its public key in the VPS root authorized_keys, and is port 22 reachable from GitHub runners?)."
+            exit 1
+          fi
 
       - name: Rsync source to the VPS (preserves node_modules, .env, uploads)
         run: |
           rsync -az --delete \
             --exclude node_modules --exclude .next --exclude .git --exclude .local-db \
             --exclude '.env' --exclude '.env.local' --exclude 'scripts/images' --exclude 'public/uploads' \
-            -e "ssh -i ~/.ssh/id_vps -o StrictHostKeyChecking=accept-new" \
+            -e "ssh -i ~/.ssh/id_vps -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
             ./ "$VPS_USER@$VPS_HOST:$STAGING_DIR/"
 
       - name: Build and reload cve-staging
         run: |
-          ssh -i ~/.ssh/id_vps -o StrictHostKeyChecking=accept-new "$VPS_USER@$VPS_HOST" \
+          ssh -i ~/.ssh/id_vps -o BatchMode=yes -o StrictHostKeyChecking=accept-new "$VPS_USER@$VPS_HOST" \
             "cd $STAGING_DIR && NODE_OPTIONS=--max_old_space_size=2048 npm run build && pm2 reload cve-staging --update-env"
 
       - name: Smoke test (staging up + auth-gated → expect 401)
