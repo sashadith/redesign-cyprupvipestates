@@ -552,7 +552,7 @@ img { max-width: 100%; display: block; }
   -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
   transition: transform var(--dur-sm) var(--ease-soft), background var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease);
 }
-.ccard:hover .ccard__arrow { background: var(--champagne); color: var(--sea-deep); border-color: var(--champagne); transform: translate(3px, -3px); }
+.ccard:hover .ccard__arrow { transform: rotate(45deg); }
 
 /* ===================== DESCRIPTION (dark editorial, long-form SEO copy) ===================== */
 /* soft golden "clouds" drifting behind the content */
