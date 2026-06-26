@@ -75,12 +75,15 @@ jobs:
           rsync -az --delete \
             --exclude node_modules --exclude .next --exclude .git --exclude .local-db \
             --exclude '.env' --exclude '.env.local' --exclude 'scripts/images' --exclude 'public/uploads' \
-            -e "ssh -i ~/.ssh/id_vps -o BatchMode=yes -o StrictHostKeyChecking=accept-new" \
+            -e "ssh -i ~/.ssh/id_vps -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30 -o ServerAliveCountMax=20" \
             ./ "$VPS_USER@$VPS_HOST:$STAGING_DIR/"
 
       - name: Build and reload cve-staging
         run: |
-          ssh -i ~/.ssh/id_vps -o BatchMode=yes -o StrictHostKeyChecking=accept-new "$VPS_USER@$VPS_HOST" \
+          # keepalive so the long remote build isn't killed by an idle SSH drop;
+          # run the build detached and stream its log so a brief network blip can't abort it.
+          ssh -i ~/.ssh/id_vps -o BatchMode=yes -o StrictHostKeyChecking=accept-new \
+              -o ServerAliveInterval=30 -o ServerAliveCountMax=20 "$VPS_USER@$VPS_HOST" \
             "cd $STAGING_DIR && NODE_OPTIONS=--max_old_space_size=2048 npm run build && pm2 reload cve-staging --update-env"
 
       - name: Smoke test (staging up + auth-gated → expect 401)
