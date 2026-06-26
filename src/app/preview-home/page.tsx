@@ -11,6 +11,7 @@ import Benefits from "./sections/Benefits";
 import HowWeWork from "./sections/HowWeWork";
 import CaseStudies from "./sections/CaseStudies";
 import Content from "./sections/Content";
+import Faq from "./sections/Faq";
 
 /* Homepage redesign preview — built section by section.
    Pulls the REAL homepage content (local content DB) and restyles it.
@@ -38,8 +39,9 @@ export default async function PreviewHome() {
           <CaseStudies block={homePage.featuredCaseStudiesBlock} lang="en" />
         )}
         {homePage.contentBlocks?.length ? <Content blocks={homePage.contentBlocks} /> : null}
+        {homePage.faqSection && <Faq section={homePage.faqSection} />}
 
-        <span className="preview-badge">Preview · Hero → SEO content</span>
+        <span className="preview-badge">Preview · Hero → FAQ</span>
       </main>
     </>
   );
