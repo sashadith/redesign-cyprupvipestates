@@ -554,6 +554,35 @@ img { max-width: 100%; display: block; }
 }
 .ccard:hover .ccard__arrow { background: var(--champagne); color: var(--sea-deep); border-color: var(--champagne); transform: translate(3px, -3px); }
 
+/* ===================== DESCRIPTION (dark editorial, long-form SEO copy) ===================== */
+.descblock__title {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em;
+  color: var(--text); margin: 0; text-wrap: balance;
+}
+.descblock__stripe { margin-top: var(--s-5); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
+.descblock__grid { margin-top: var(--s-8); display: grid; grid-template-columns: 1fr; gap: var(--s-7); }
+@media (min-width: 900px) {
+  .descblock__grid { grid-template-columns: 1fr 1fr; column-gap: clamp(48px, 5vw, 96px); row-gap: var(--s-8); }
+  .descblock__field:nth-child(3) { grid-column: 1 / -1; } /* preserve authoring intent: 3rd field spans */
+}
+/* typography for the rendered PortableText (RichText) — comfortable measure, soft ivory body */
+.descblock__field { color: var(--text-soft); }
+.descblock__field h2, .descblock__field h3, .descblock__field h4 {
+  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; color: var(--text);
+  line-height: 1.15; letter-spacing: -0.01em; text-wrap: balance; margin: 0 0 var(--s-4);
+}
+.descblock__field :is(h2, h3, h4):not(:first-child) { margin-top: var(--s-6); }
+.descblock__field p {
+  font-size: clamp(1rem, 0.97rem + 0.18vw, 1.0625rem); line-height: 1.75; color: rgba(239, 233, 219, 0.82);
+  max-width: 66ch; margin: 0 0 var(--s-4);
+}
+.descblock__field p:last-child { margin-bottom: 0; }
+.descblock__field ul, .descblock__field ol { margin: 0 0 var(--s-4); max-width: 66ch; }
+.descblock__field li, .descblock__field li span { color: rgba(239, 233, 219, 0.82); }
+.descblock__field a { color: var(--champagne); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; transition: color var(--dur-sm) var(--ease); }
+.descblock__field a:hover { color: var(--ivory); }
+
 /* ---------- preview chrome ---------- */
 .preview-badge {
   position: fixed; left: var(--s-5); bottom: var(--s-5); z-index: 60;
