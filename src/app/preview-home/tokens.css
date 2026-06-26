@@ -756,6 +756,18 @@ img { max-width: 100%; display: block; }
 .faq__a-body a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 .faq__a-body a:hover { color: var(--ivory); }
 
+/* ===================== PARALLAX (full-bleed image breather) ===================== */
+.parallax {
+  position: relative; min-height: clamp(300px, 44vh, 560px);
+  background-color: var(--sea-deep); background-position: center; background-repeat: no-repeat; background-size: cover;
+}
+@media (hover: hover) and (pointer: fine) { .parallax { background-attachment: fixed; } }
+@media (prefers-reduced-motion: reduce) { .parallax { background-attachment: scroll; } }
+.parallax__scrim {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(180deg, rgba(8, 21, 18, 0.55) 0%, rgba(8, 21, 18, 0.12) 22%, rgba(8, 21, 18, 0.12) 78%, rgba(8, 21, 18, 0.62) 100%);
+}
+
 /* ---------- preview chrome ---------- */
 .preview-badge {
   position: fixed; left: var(--s-5); bottom: var(--s-5); z-index: 60;
