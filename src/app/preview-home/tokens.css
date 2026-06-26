@@ -532,7 +532,7 @@ img { max-width: 100%; display: block; }
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
 }
 .ccard {
-  position: relative; display: block; aspect-ratio: 4 / 5; max-height: 470px; overflow: hidden;
+  position: relative; display: block; aspect-ratio: 4 / 3; overflow: hidden;
   border-radius: var(--r-ui); border: 1px solid var(--hairline); text-decoration: none; color: inherit;
   transition: box-shadow var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease), transform var(--dur-sm) var(--ease);
 }
