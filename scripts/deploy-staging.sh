@@ -16,7 +16,7 @@ DIR="/var/www/cve-staging"
 echo "→ rsync source to $HOST:$DIR"
 rsync -az --delete \
   --exclude node_modules --exclude .next --exclude .git --exclude .local-db \
-  --exclude '.env.local' --exclude 'scripts/images' --exclude 'public/uploads' \
+  --exclude '.env' --exclude '.env.local' --exclude 'scripts/images' --exclude 'public/uploads' \
   -e "ssh -i $KEY" ./ "$HOST:$DIR/"
 
 echo "→ build + reload on the VPS"

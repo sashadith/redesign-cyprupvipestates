@@ -1,0 +1,56 @@
+name: Deploy staging
+
+# Auto-deploy the redesign to https://design.cyprusvipestates.com on every push
+# to redesign/home (or run manually). Touches only the `cve-staging` PM2 app.
+#
+# Required repo secret:
+#   VPS_SSH_KEY — the private SSH key that can log into the VPS as root
+#                 (the contents of your ~/.ssh/cvp_vps).
+
+on:
+  push:
+    branches: [redesign/home]
+  workflow_dispatch:
+
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: true
+
+env:
+  VPS_HOST: 72.60.89.239
+  VPS_USER: root
+  STAGING_DIR: /var/www/cve-staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_vps
+          chmod 600 ~/.ssh/id_vps
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Rsync source to the VPS (preserves node_modules, .env, uploads)
+        run: |
+          rsync -az --delete \
+            --exclude node_modules --exclude .next --exclude .git --exclude .local-db \
+            --exclude '.env' --exclude '.env.local' --exclude 'scripts/images' --exclude 'public/uploads' \
+            -e "ssh -i ~/.ssh/id_vps -o StrictHostKeyChecking=accept-new" \
+            ./ "$VPS_USER@$VPS_HOST:$STAGING_DIR/"
+
+      - name: Build and reload cve-staging
+        run: |
+          ssh -i ~/.ssh/id_vps -o StrictHostKeyChecking=accept-new "$VPS_USER@$VPS_HOST" \
+            "cd $STAGING_DIR && NODE_OPTIONS=--max_old_space_size=2048 npm run build && pm2 reload cve-staging --update-env"
+
+      - name: Smoke test (staging up + auth-gated → expect 401)
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' https://design.cyprusvipestates.com/)
+          echo "staging / (no creds) -> HTTP $code"
+          test "$code" = "401"
