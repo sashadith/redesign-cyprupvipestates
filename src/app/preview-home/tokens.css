@@ -564,14 +564,9 @@ img { max-width: 100%; display: block; }
 .descblock__grid { margin-top: var(--s-8); display: grid; grid-template-columns: 1fr; gap: var(--s-7); }
 @media (min-width: 900px) {
   .descblock__grid { grid-template-columns: 1fr 1fr; column-gap: clamp(48px, 5vw, 96px); row-gap: var(--s-8); }
-  /* a field left alone on its row (odd last item) spans full width; its text
-     flows into two readable columns so it fills the space evenly, while any
-     headings span the full width */
-  .descblock__field:last-child:nth-child(odd) {
-    grid-column: 1 / -1; columns: 2; column-gap: clamp(48px, 5vw, 96px);
-  }
-  .descblock__field:last-child:nth-child(odd) :is(h2, h3, h4) { column-span: all; }
-  .descblock__field:last-child:nth-child(odd) :is(li, blockquote, img) { break-inside: avoid; }
+  /* a field left alone on its row (odd last item) spans both columns as a
+     single full-width block — text flows normally left-to-right */
+  .descblock__field:last-child:nth-child(odd) { grid-column: 1 / -1; }
 }
 /* typography for the rendered PortableText (RichText) — comfortable measure, soft ivory body */
 .descblock__field { color: var(--text-soft); }
