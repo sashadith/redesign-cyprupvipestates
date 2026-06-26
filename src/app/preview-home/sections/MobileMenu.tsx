@@ -31,7 +31,7 @@ export default function MobileMenu({ navLinks }: { navLinks: navLink[] }) {
     const focusables = () =>
       Array.from(
         panelRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? []
-      ).filter((el) => el.offsetParent !== null);
+      ).filter((el) => el.offsetParent !== null && getComputedStyle(el).visibility !== "hidden");
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -112,15 +112,17 @@ export default function MobileMenu({ navLinks }: { navLinks: navLink[] }) {
                     )}
                   </div>
                   {hasSub && (
-                    <ul id={subId} className={`msub ${isOpen ? "is-open" : ""}`}>
-                      {l.subLinks.map((s) => (
-                        <li key={s._key}>
-                          <a href={s.link || "#"} onClick={close}>
-                            {s.label}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
+                    <div id={subId} className={`msub ${isOpen ? "is-open" : ""}`}>
+                      <ul className="msub__list">
+                        {l.subLinks.map((s) => (
+                          <li key={s._key}>
+                            <a href={s.link || "#"} onClick={close}>
+                              {s.label}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </li>
               );

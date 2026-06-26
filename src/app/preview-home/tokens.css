@@ -282,18 +282,28 @@ img { max-width: 100%; display: block; }
 .mmenu.is-open { opacity: 1; visibility: visible; transform: none; }
 .mmenu__nav ul { list-style: none; margin: 0; padding: 0; }
 .mitem { border-bottom: 1px solid var(--hairline); }
-.mitem__row { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); }
+/* row: the link (its own text) navigates; the toggle fills the rest of the row */
+.mitem__row { display: flex; align-items: stretch; }
 .mitem__link {
-  flex: 1; padding: 16px 0; text-decoration: none; color: var(--ivory);
+  flex: 0 1 auto; align-self: center; padding: 16px 0; text-decoration: none; color: var(--ivory);
   font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: 1.55rem; line-height: 1.1;
 }
-.mitem__toggle { flex: none; width: 44px; height: 44px; display: grid; place-items: center; background: transparent; border: 0; color: var(--accent); cursor: pointer; }
+.mitem__link:only-child { flex: 1; } /* no submenu → whole row navigates */
+.mitem__toggle {
+  flex: 1; display: flex; align-items: center; justify-content: flex-end; padding: 0 2px 0 16px;
+  background: transparent; border: 0; color: var(--accent); cursor: pointer;
+}
 .mitem__toggle svg { width: 14px; height: 14px; transition: transform var(--dur-sm) var(--ease); }
+.mitem__toggle.is-open { color: var(--champagne); }
 .mitem__toggle.is-open svg { transform: rotate(180deg); }
 .mitem__toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; border-radius: 8px; }
-/* submenu: collapsed by default, opens via the accordion class */
-.msub { list-style: none; margin: 0; padding: 0 0 12px 6px; display: none; flex-direction: column; }
-.msub.is-open { display: flex; }
+/* submenu: smooth grid-rows accordion (0fr → 1fr), no magic max-height, no layout jump */
+.msub {
+  display: grid; grid-template-rows: 0fr; opacity: 0; visibility: hidden;
+  transition: grid-template-rows var(--dur) var(--ease), opacity var(--dur-sm) var(--ease), visibility var(--dur) var(--ease);
+}
+.msub.is-open { grid-template-rows: 1fr; opacity: 1; visibility: visible; }
+.msub__list { overflow: hidden; min-height: 0; list-style: none; margin: 0; padding: 0 0 12px 6px; display: flex; flex-direction: column; }
 .msub a { display: block; padding: 9px 0; text-decoration: none; font-family: var(--font-body), sans-serif; font-size: 1rem; color: rgba(239,233,219,0.70); }
 .msub a:hover, .msub a:focus-visible { color: var(--accent); }
 
