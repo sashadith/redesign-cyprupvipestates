@@ -643,29 +643,11 @@ img { max-width: 100%; display: block; }
 .bstat__title { margin: var(--s-2) 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-lead); font-weight: 500; color: var(--ivory); }
 .bstat__desc { margin: 0; max-width: 30ch; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.55; color: var(--text-soft); }
 
-/* ===================== HOW WE WORK (light process: numbered steps) ===================== */
-.howwork__title {
-  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
-  font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em;
-  color: var(--text); margin: 0; text-wrap: balance;
-}
-.howwork__stripe { margin-top: var(--s-5); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
-.wsteps {
-  list-style: none; margin: var(--s-8) 0 0; padding: 0;
-  display: grid; gap: clamp(30px, 3.4vw, 52px) clamp(20px, 2.5vw, 40px);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
-}
-.wstep { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--s-4); }
-.wstep__num { font-family: var(--font-body), sans-serif; font-size: var(--text-caption); font-weight: 600; letter-spacing: 0.24em; color: var(--accent); }
-.wstep__medallion {
-  width: 86px; height: 86px; flex: none; border-radius: 999px; display: grid; place-items: center;
-  background: var(--surface-raised); border: 1px solid var(--accent); box-shadow: 0 14px 30px -16px rgba(34, 28, 21, 0.4);
-}
-.wstep__medallion img { width: 42px; height: 42px; object-fit: contain; }
-.wstep__text { margin: 0; max-width: 24ch; font-family: var(--font-body), sans-serif; font-size: clamp(0.95rem, 0.9rem + 0.2vw, 1.0625rem); line-height: 1.5; color: var(--text); }
-.howwork__desc {
-  margin: clamp(40px, 5vw, 72px) auto 0; max-width: 68ch; text-align: center;
-  font-family: var(--font-body), sans-serif; font-size: var(--text-lead); line-height: 1.6; color: var(--text-soft);
+/* ===================== HOW WE WORK (reuses the About layout) ===================== */
+/* steps are full sentences, so keep them readable (not About's uppercase labels) */
+.howwork .about__bullet-text {
+  text-transform: none; letter-spacing: 0.01em; font-weight: 400;
+  font-size: clamp(0.9rem, 0.86rem + 0.18vw, 1rem); line-height: 1.45;
 }
 
 /* ---------- preview chrome ---------- */

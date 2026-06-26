@@ -2,8 +2,8 @@ import React from "react";
 import type { HowWeWorkBlock } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client";
 
-/* How We Work — light "process" section: an ordered list of numbered steps,
-   each with its own icon in a gold medallion. Reuses the original data. */
+/* How We Work — reuses the About layout (title + stripe + description + a row
+   of gold medallions with text). Reuses the original data. */
 
 const safeUrl = (img: unknown) => {
   try {
@@ -27,25 +27,24 @@ export default function HowWeWork({ block }: { block: HowWeWorkBlock }) {
   const { title, steps, description } = block;
 
   return (
-    <section className="section is-light howwork">
+    <section className="section is-light about howwork">
       <div className="wrap">
-        {title && <h2 className="howwork__title">{renderTitle(title)}</h2>}
-        <hr className="shimmer howwork__stripe" />
+        {title && <h2 className="about__title">{renderTitle(title)}</h2>}
+        <hr className="shimmer about__stripe" />
 
-        <ol className="wsteps">
-          {steps.map((s, i) => {
+        {description && <p className="about__desc">{description}</p>}
+
+        <ul className="about__bullets">
+          {steps.map((s) => {
             const icon = safeUrl(s.icon);
             return (
-              <li className="wstep" key={s._key}>
-                <span className="wstep__num">{String(i + 1).padStart(2, "0")}</span>
-                <div className="wstep__medallion">{icon && <img src={icon} alt="" />}</div>
-                {s.text && <p className="wstep__text">{s.text}</p>}
+              <li className="about__bullet" key={s._key}>
+                <span className="about__medallion">{icon && <img src={icon} alt="" />}</span>
+                {s.text && <span className="about__bullet-text">{s.text}</span>}
               </li>
             );
           })}
-        </ol>
-
-        {description && <p className="howwork__desc">{description}</p>}
+        </ul>
       </div>
     </section>
   );
