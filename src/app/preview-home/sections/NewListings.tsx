@@ -43,7 +43,10 @@ export default async function NewListings({ lang = "en" }: { lang?: string }) {
       <div className="wrap">
         <div className="newlist__grid" data-theme="dark">
           <div className="newlist__intro">
-            <h2 className="newlist__title">{renderTitle("New Listings")}</h2>
+            <div className="newlist__head">
+              <h2 className="newlist__title">{renderTitle("New Listings")}</h2>
+              <p className="newlist__lead">The newest additions to our collection.</p>
+            </div>
             <a className="btn btn--ghost newlist__cta" href="/projects">
               Show all projects
               <ArrowRight />

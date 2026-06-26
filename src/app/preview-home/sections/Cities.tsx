@@ -62,6 +62,9 @@ const Cities: FC<Props> = ({ block }) => {
       <div className="wrap">
         {title && <h2 className="cities__title">{renderTitle(title)}</h2>}
         <hr className="shimmer cities__stripe" />
+        <p className="cities__lead">
+          From lively marinas to quiet old towns, each Cypriot city offers a different way to live by the sea.
+        </p>
 
         {cities?.length > 0 && (
           <div className="cities__grid">

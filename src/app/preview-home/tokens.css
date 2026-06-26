@@ -523,6 +523,7 @@ img { max-width: 100%; display: block; }
   color: var(--text); margin: 0; text-wrap: balance;
 }
 .cities__stripe { margin-top: var(--s-5); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
+.cities__lead { margin: var(--s-5) 0 0; max-width: 60ch; font-family: var(--font-body), sans-serif; font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.2rem); line-height: 1.6; color: var(--text-soft); }
 /* auto-fit: 1 col on phones, ~2 on tablets, 3-or-4 on desktop. With 3 cities
    the tracks stretch to fill (balanced); with 4 they sit naturally in one row.
    min(100%, 280px) keeps the track from ever overflowing a narrow viewport. */
@@ -615,8 +616,10 @@ img { max-width: 100%; display: block; }
   font-size: clamp(2rem, 1.4rem + 2.6vw, 3.1rem); line-height: 1.05; letter-spacing: -0.02em;
   color: var(--ivory); margin: 0; text-wrap: balance;
 }
+.newlist__head { display: flex; flex-direction: column; gap: var(--s-3); }
+.newlist__lead { margin: 0; max-width: 32ch; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.5; color: var(--text-soft); }
 .newlist__cta { align-self: flex-start; }
-/* project cards reuse the Featured .pcard styles (image-fill + frosted body) */
+/* project cards reuse the Featured .pcard styles (image-fill + legibility gradient) */
 
 /* ---------- preview chrome ---------- */
 .preview-badge {
