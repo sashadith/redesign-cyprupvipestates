@@ -585,6 +585,50 @@ img { max-width: 100%; display: block; }
 .descblock__field a { color: var(--champagne); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; transition: color var(--dur-sm) var(--ease); }
 .descblock__field a:hover { color: var(--ivory); }
 
+/* ===================== NEW LISTINGS (light gallery: title tile + latest 5) ===================== */
+.newlist__grid { display: grid; grid-template-columns: 1fr; gap: clamp(16px, 1.8vw, 26px); }
+@media (min-width: 640px) { .newlist__grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1000px) { .newlist__grid { grid-template-columns: repeat(3, 1fr); } }
+
+/* title tile — a deep-green island among the photo cards */
+.newlist__intro {
+  background: var(--sea); color: var(--ivory); border-radius: var(--r-ui); border: 1px solid var(--hairline-strong);
+  padding: clamp(1.5rem, 1rem + 2.5vw, 2.75rem); min-height: 220px;
+  display: flex; flex-direction: column; justify-content: center; gap: var(--s-6);
+}
+.newlist__title {
+  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  font-size: clamp(2rem, 1.4rem + 2.6vw, 3.1rem); line-height: 1.05; letter-spacing: -0.02em;
+  color: var(--ivory); margin: 0; text-wrap: balance;
+}
+.newlist__cta { align-self: flex-start; }
+
+/* project cards — square photo with overlaid title + price + top-right arrow */
+.plcard {
+  position: relative; display: block; aspect-ratio: 1 / 1; overflow: hidden;
+  border-radius: var(--r-ui); border: 1px solid var(--hairline); text-decoration: none; color: inherit;
+  transition: box-shadow var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease), transform var(--dur-sm) var(--ease);
+}
+.plcard:hover { border-color: var(--accent); box-shadow: 0 28px 60px -28px rgba(34, 28, 21, 0.55); transform: translateY(-4px); }
+.plcard__media { position: absolute; inset: 0; z-index: 0; }
+.plcard__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.9s var(--ease); }
+.plcard:hover .plcard__media img { transform: scale(1.06); }
+.plcard__shade { position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(to top, rgba(8, 21, 18, 0.85) 0%, rgba(8, 21, 18, 0.30) 36%, transparent 60%); }
+.plcard__body { position: absolute; left: var(--s-5); right: var(--s-5); bottom: var(--s-5); z-index: 2; }
+.plcard__name {
+  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; letter-spacing: -0.01em;
+  font-size: clamp(1.2rem, 1.05rem + 0.6vw, 1.5rem); line-height: 1.1; color: var(--ivory); margin: 0; text-wrap: balance;
+}
+.plcard__price { margin: 7px 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: rgba(239, 233, 219, 0.82); letter-spacing: 0.01em; }
+.plcard__arrow {
+  position: absolute; top: var(--s-5); right: var(--s-5); z-index: 2;
+  width: 38px; height: 38px; border-radius: 999px; display: grid; place-items: center;
+  color: var(--ivory); border: 1px solid rgba(239, 233, 219, 0.42); background: rgba(239, 233, 219, 0.06);
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+  transition: transform var(--dur-sm) var(--ease-soft), background var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease);
+}
+.plcard:hover .plcard__arrow { background: var(--champagne); color: var(--sea-deep); border-color: var(--champagne); transform: translate(3px, -3px); }
+
 /* ---------- preview chrome ---------- */
 .preview-badge {
   position: fixed; left: var(--s-5); bottom: var(--s-5); z-index: 60;
