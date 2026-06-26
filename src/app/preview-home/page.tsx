@@ -34,12 +34,12 @@ export default async function PreviewHome() {
         <NewListings lang="en" />
         {homePage.benefitsBlock && <Benefits block={homePage.benefitsBlock} />}
         {homePage.howWeWorkBlock && <HowWeWork block={homePage.howWeWorkBlock} />}
-        {homePage.contentBlocks?.length ? <Content blocks={homePage.contentBlocks} /> : null}
         {homePage.featuredCaseStudiesBlock && (
           <CaseStudies block={homePage.featuredCaseStudiesBlock} lang="en" />
         )}
+        {homePage.contentBlocks?.length ? <Content blocks={homePage.contentBlocks} /> : null}
 
-        <span className="preview-badge">Preview · Hero → Case Studies</span>
+        <span className="preview-badge">Preview · Hero → SEO content</span>
       </main>
     </>
   );
