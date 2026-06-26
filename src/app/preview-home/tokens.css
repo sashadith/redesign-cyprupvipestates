@@ -621,6 +621,28 @@ img { max-width: 100%; display: block; }
 .newlist__cta { align-self: flex-start; }
 /* project cards reuse the Featured .pcard styles (image-fill + legibility gradient) */
 
+/* ===================== BENEFITS (dark stats band, animated counters) ===================== */
+.benefits__title {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em;
+  color: var(--text); margin: 0; text-wrap: balance;
+}
+.benefits__stripe { margin-top: var(--s-5); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
+.benefits__grid {
+  margin-top: var(--s-8); display: grid; grid-template-columns: 1fr; gap: clamp(36px, 4vw, 60px);
+}
+@media (min-width: 600px) { .benefits__grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 980px) { .benefits__grid { grid-template-columns: repeat(4, 1fr); } }
+.bstat { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--s-3); }
+.bstat__num {
+  margin: 0; display: inline-flex; align-items: baseline; line-height: 1; color: var(--accent);
+  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 300;
+  font-size: clamp(3rem, 2.3rem + 2.9vw, 4.35rem); letter-spacing: -0.02em;
+}
+.bstat__sign { font-size: 0.62em; margin-left: 0.04em; }
+.bstat__title { margin: var(--s-2) 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-lead); font-weight: 500; color: var(--ivory); }
+.bstat__desc { margin: 0; max-width: 30ch; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.55; color: var(--text-soft); }
+
 /* ---------- preview chrome ---------- */
 .preview-badge {
   position: fixed; left: var(--s-5); bottom: var(--s-5); z-index: 60;
