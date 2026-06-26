@@ -564,7 +564,7 @@ img { max-width: 100%; display: block; }
 .descblock__grid { margin-top: var(--s-8); display: grid; grid-template-columns: 1fr; gap: var(--s-7); }
 @media (min-width: 900px) {
   .descblock__grid { grid-template-columns: 1fr 1fr; column-gap: clamp(48px, 5vw, 96px); row-gap: var(--s-8); }
-  .descblock__field:nth-child(3) { grid-column: 1 / -1; } /* preserve authoring intent: 3rd field spans */
+  .descblock__field:nth-child(3) { grid-column: 1 / -1; max-width: 70ch; } /* spans, but measure stays readable */
 }
 /* typography for the rendered PortableText (RichText) — comfortable measure, soft ivory body */
 .descblock__field { color: var(--text-soft); }
@@ -575,10 +575,10 @@ img { max-width: 100%; display: block; }
 .descblock__field :is(h2, h3, h4):not(:first-child) { margin-top: var(--s-6); }
 .descblock__field p {
   font-size: clamp(1rem, 0.97rem + 0.18vw, 1.0625rem); line-height: 1.75; color: rgba(239, 233, 219, 0.82);
-  max-width: 66ch; margin: 0 0 var(--s-4);
+  margin: 0 0 var(--s-4);
 }
 .descblock__field p:last-child { margin-bottom: 0; }
-.descblock__field ul, .descblock__field ol { margin: 0 0 var(--s-4); max-width: 66ch; }
+.descblock__field ul, .descblock__field ol { margin: 0 0 var(--s-4); }
 .descblock__field li, .descblock__field li span { color: rgba(239, 233, 219, 0.82); }
 .descblock__field a { color: var(--champagne); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; transition: color var(--dur-sm) var(--ease); }
 .descblock__field a:hover { color: var(--ivory); }
