@@ -107,7 +107,7 @@ const Form: FC<{ lang?: string }> = ({ lang = "en" }) => {
   };
 
   return (
-    <section className="section formsec">
+    <section className="section is-light formsec">
       {message && <div className="formsec__popup" role="alert" aria-live="assertive">{message}</div>}
 
       <div className="wrap">
@@ -223,7 +223,9 @@ const Form: FC<{ lang?: string }> = ({ lang = "en" }) => {
           </div>
 
           <aside className="formsec__aside">
-            <img className="formsec__consultant" src={CONSULTANT_IMAGE} alt="Sascha Dith, CEO Cyprus VIP Estates" />
+            <div className="formsec__consultant-wrap">
+              <img className="formsec__consultant" src={CONSULTANT_IMAGE} alt="Sascha Dith, CEO Cyprus VIP Estates" />
+            </div>
             <div className="formsec__caption">
               <strong>Sascha Dith</strong>
               <span>CEO Cyprus VIP Estates</span>
