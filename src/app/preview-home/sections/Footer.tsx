@@ -55,18 +55,6 @@ export default async function Footer({ lang = "en" }: { lang?: string }) {
         <div className="pf__top">
           <div className="pf__brand">
             {logoUrl && <img className="pf__logo" src={logoUrl} alt="Cyprus VIP Estates" />}
-            {socialLinks?.length > 0 && (
-              <div className="pf__social">
-                {socialLinks.map((s: SocialLink) => {
-                  const icon = safeUrl(s.icon);
-                  return (
-                    <a key={s._key} href={s.link} target="_blank" rel="noopener nofollow" className="pf__social-link" aria-label={s.label}>
-                      {icon && <img src={icon} alt="" width={20} height={20} />}
-                    </a>
-                  );
-                })}
-              </div>
-            )}
           </div>
 
           <div className="pf__col">
@@ -87,6 +75,18 @@ export default async function Footer({ lang = "en" }: { lang?: string }) {
                 <FooterContact key={c._key} contact={c} />
               ))}
             </div>
+            {socialLinks?.length > 0 && (
+              <div className="pf__social">
+                {socialLinks.map((s: SocialLink) => {
+                  const icon = safeUrl(s.icon);
+                  return (
+                    <a key={s._key} href={s.link} target="_blank" rel="noopener nofollow" className="pf__social-link" aria-label={s.label}>
+                      {icon && <img src={icon} alt="" width={20} height={20} />}
+                    </a>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="pf__col pf__col--news">

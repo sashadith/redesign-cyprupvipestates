@@ -83,7 +83,7 @@ export default function FooterNewsletter({
           onChange={(e) => setCompany(e.target.value)}
           style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }}
         />
-        <button type="submit" className="btn btn--primary pf__news-btn">{buttonLabel}</button>
+        <button type="submit" className="btn btn--ghost pf__news-btn">{buttonLabel}</button>
       </div>
       {message && <p className="pf__news-msg" role="alert" aria-live="assertive">{message}</p>}
     </form>

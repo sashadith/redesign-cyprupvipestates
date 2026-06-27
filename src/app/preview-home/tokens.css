@@ -843,8 +843,17 @@ img { max-width: 100%; display: block; }
 
 /* ===================== FOOTER (dark) ===================== */
 /* match the original .footer: small top padding (no big bottom), .container geometry */
-.pf { background: var(--sea-deep); border-top: 1px solid var(--hairline); color: var(--text-soft); padding-top: clamp(1.25rem, 0.795rem + 2.27vw, 2.5rem); }
-.pf__container { max-width: 1360px; margin: 0 auto; padding: 0 20px; }
+.pf {
+  position: relative; isolation: isolate; overflow: hidden;
+  background: var(--sea-deep); border-top: 1px solid var(--hairline); color: var(--text-soft); padding-top: clamp(1.25rem, 0.795rem + 2.27vw, 2.5rem);
+}
+/* soft golden "clouds" drifting behind the footer content */
+.pf::before, .pf::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; aspect-ratio: 1; will-change: transform;
+}
+.pf::before { width: min(60vw, 640px); top: -34%; left: -8%; background: radial-gradient(circle, rgba(194, 154, 94, 0.14), rgba(194, 154, 94, 0) 66%); animation: cloudDriftA 22s ease-in-out infinite alternate; }
+.pf::after { width: min(55vw, 580px); right: -8%; bottom: -34%; background: radial-gradient(circle, rgba(194, 154, 94, 0.10), rgba(194, 154, 94, 0) 66%); animation: cloudDriftB 27s ease-in-out infinite alternate; }
+.pf__container { position: relative; max-width: 1360px; margin: 0 auto; padding: 0 20px; }
 /* top row: 4 columns (logo+social | company | contact | newsletter) — same grid as the nav row */
 .pf__top { display: grid; grid-template-columns: 1fr; gap: clamp(1.25rem, 0.341rem + 4.55vw, 3.75rem); }
 @media (min-width: 768px) { .pf__top { grid-template-columns: repeat(2, 1fr); } }
@@ -853,11 +862,15 @@ img { max-width: 100%; display: block; }
 /* brand column — same layout as the old .logoLinks (logo + social, row on desktop) */
 /* first column: logo on top (centered), social row beneath — kept inside the column */
 .pf__brand { display: flex; flex-direction: column; align-items: center; gap: var(--s-5); min-width: 0; }
+@media (min-width: 768px) { .pf__brand { margin-right: auto; } }
 /* fill the column width; aspect always preserved (never stretched); cap keeps it sane on mobile */
-.pf__logo { display: block; width: 100%; max-width: 200px; height: auto; }
+.pf__logo { display: block; width: 100%; max-width: 235px; height: auto; }
 .pf__about { display: flex; flex-direction: column; gap: var(--s-3); max-width: 44ch; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.6; color: var(--text-soft); }
 .pf__about p { margin: 0; }
-.pf__social { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 100%; }
+/* columns are flex so the social can be pushed to the bottom of its column */
+.pf__col { display: flex; flex-direction: column; min-width: 0; }
+/* social sits at the bottom edge of the contact column */
+.pf__social { margin-top: auto; padding-top: var(--s-5); display: flex; flex-wrap: wrap; gap: 8px; max-width: 100%; }
 .pf__social-link {
   width: 35px; height: 35px; border-radius: 999px; display: grid; place-items: center; flex: none;
   border: 1px solid var(--hairline-strong);
