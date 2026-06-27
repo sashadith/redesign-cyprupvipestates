@@ -113,7 +113,7 @@ const Form: FC<{ lang?: string }> = ({ lang = "en" }) => {
       <div className="wrap">
         <div className="formsec__grid">
           <div className="formsec__main">
-            <h2 className="formsec__title">Leave your request and we will contact you shortly</h2>
+            <h2 className="formsec__title">Leave <span className="it">your request</span> and we will contact you shortly</h2>
             <hr className="shimmer formsec__stripe" />
 
             <Formik

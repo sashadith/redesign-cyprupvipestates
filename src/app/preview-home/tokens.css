@@ -821,7 +821,8 @@ img { max-width: 100%; display: block; }
 .formsec__radio-option input { accent-color: var(--champagne); }
 .formsec__radio-option:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
 
-.formsec__submit { margin-top: var(--s-6); min-width: 180px; justify-content: center; }
+.formsec__submit { margin-top: var(--s-6); min-width: 180px; justify-content: center; background: #fff; color: var(--sea-deep); border: 1px solid var(--hairline-strong); box-shadow: 0 10px 30px -18px rgba(8, 21, 18, 0.45); }
+.formsec__submit:hover { background: #fff; color: var(--sea-deep); border-color: var(--accent); }
 .formsec__loader { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(8, 21, 18, 0.35); border-top-color: var(--sea-deep); animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -837,11 +838,11 @@ img { max-width: 100%; display: block; }
 /* animated golden divider flush under the consultant — no margins/padding */
 .formsec__consultant-wrap::after {
   content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, rgba(194, 154, 94, 0.15), #c29a5e 30%, #c29a5e 70%, rgba(194, 154, 94, 0.15));
+  background: linear-gradient(90deg, transparent, #c29a5e 30%, #c29a5e 70%, transparent);
   background-size: 200% 100%; animation: dividerFlow 5s ease-in-out infinite alternate;
 }
 @keyframes dividerFlow { from { background-position: 0% 0; } to { background-position: 100% 0; } }
-.formsec__caption { display: flex; flex-direction: column; gap: 2px; }
+.formsec__caption { display: flex; flex-direction: column; gap: 2px; align-self: stretch; align-items: flex-start; text-align: left; }
 .formsec__caption strong { font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: 1.25rem; color: var(--text); }
 .formsec__caption span { font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--accent); letter-spacing: 0.04em; }
 
