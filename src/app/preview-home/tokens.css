@@ -842,62 +842,70 @@ img { max-width: 100%; display: block; }
 }
 
 /* ===================== FOOTER (dark) ===================== */
-.pf { background: var(--sea-deep); border-top: 1px solid var(--hairline); color: var(--text-soft); padding-block: clamp(48px, 6vw, 88px) clamp(26px, 3vw, 40px); }
-/* same 1 -> 2 -> 4 column grid as the old footer */
+/* match the original .footer: small top padding (no big bottom), .container geometry */
+.pf { background: var(--sea-deep); border-top: 1px solid var(--hairline); color: var(--text-soft); padding-top: clamp(1.25rem, 0.795rem + 2.27vw, 2.5rem); }
+.pf__container { max-width: 1360px; margin: 0 auto; padding: 0 20px; }
+/* top row: 4 columns (logo+social | company | contact | newsletter) — same grid as the nav row */
 .pf__top { display: grid; grid-template-columns: 1fr; gap: clamp(1.25rem, 0.341rem + 4.55vw, 3.75rem); }
 @media (min-width: 768px) { .pf__top { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1100px) { .pf__top { grid-template-columns: repeat(4, 1fr); } }
 
 /* brand column — same layout as the old .logoLinks (logo + social, row on desktop) */
-.pf__brand { display: flex; flex-direction: column; align-items: center; gap: clamp(1.25rem, 0.795rem + 2.27vw, 2.5rem); min-width: 0; }
-@media (min-width: 768px) { .pf__brand { flex-direction: row; align-items: stretch; } }
-.pf__logo { margin: 0 auto; max-width: 220px; height: auto; display: block; }
-.pf__about { margin-top: var(--s-2); display: flex; flex-direction: column; gap: var(--s-3); font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.6; color: var(--text-soft); }
+/* first column: logo on top (centered), social row beneath — kept inside the column */
+.pf__brand { display: flex; flex-direction: column; align-items: center; gap: var(--s-5); min-width: 0; }
+/* fill the column width; aspect always preserved (never stretched); cap keeps it sane on mobile */
+.pf__logo { display: block; width: 100%; max-width: 200px; height: auto; }
+.pf__about { display: flex; flex-direction: column; gap: var(--s-3); max-width: 44ch; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.6; color: var(--text-soft); }
 .pf__about p { margin: 0; }
-.pf__social { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 20px; flex-shrink: 0; width: auto; min-width: max-content; }
-@media (min-width: 768px) { .pf__social { flex-direction: column; justify-content: space-between; align-self: stretch; gap: 0; } }
-.pf__social-link { display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity var(--dur-sm) var(--ease), transform var(--dur-sm) var(--ease); }
-.pf__social-link:hover { opacity: 0.8; transform: translateY(-2px); }
-.pf__social-link img { display: block; width: 30px; height: 30px; object-fit: contain; }
-
-/* same rhythm as the old .title (40px gap + gold underline) */
-.pf__col-title {
-  position: relative; width: fit-content; margin: 0 0 40px;
-  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
-  font-size: clamp(1.125rem, 1.034rem + 0.45vw, 1.375rem); color: var(--ivory); letter-spacing: -0.01em;
+.pf__social { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 100%; }
+.pf__social-link {
+  width: 35px; height: 35px; border-radius: 999px; display: grid; place-items: center; flex: none;
+  border: 1px solid var(--hairline-strong);
+  transition: border-color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease), transform var(--dur-sm) var(--ease);
 }
-.pf__col-title::after { content: ""; position: absolute; left: 0; bottom: -10px; width: 100%; height: 2px; background: var(--accent); }
-.pf__contacts { display: flex; flex-direction: column; gap: var(--s-3); }
+.pf__social-link:hover { border-color: var(--accent); background: var(--accent-soft); transform: translateY(-2px); }
+/* keep the newer disc-removal so the glyph reads clean inside the button */
+.pf__social-link img { width: 18px; height: 18px; object-fit: contain; display: block; mix-blend-mode: screen; }
+
+/* smaller titles, no gold underline */
+.pf__col-title {
+  margin: 0 0 var(--s-5);
+  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem); color: var(--ivory); letter-spacing: -0.01em;
+}
+.pf__contacts { display: flex; flex-direction: column; gap: 10px; }
 .pf__contact { display: inline-flex; align-items: center; gap: 10px; color: var(--text-soft); text-decoration: none; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); transition: color var(--dur-sm) var(--ease); }
 .pf__contact:hover { color: var(--accent); }
 .pf__contact-icon { width: 18px; height: 18px; flex: none; object-fit: contain; }
 
-.pf__news-row { display: flex; gap: 10px; flex-wrap: wrap; }
+/* input + full-width button stacked as one aligned form block */
+.pf__news-row { display: flex; flex-direction: column; gap: 10px; }
 .pf__news-input {
-  flex: 1; min-width: 180px; padding: 12px 15px; border-radius: 12px; color: var(--ivory);
+  width: 100%; padding: 12px 15px; border-radius: 12px; color: var(--ivory);
   background: var(--glass-bg); border: 1px solid var(--hairline-strong);
   font-family: var(--font-body), sans-serif; font-size: 1rem;
   transition: border-color var(--dur-sm) var(--ease), box-shadow var(--dur-sm) var(--ease);
 }
 .pf__news-input::placeholder { color: var(--text-faint); }
 .pf__news-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-.pf__news-btn { flex: none; }
+.pf__news-btn { width: 100%; justify-content: center; }
 .pf__news-msg { margin: 10px 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-caption); color: var(--accent); }
 
 /* footer nav columns — same grid + margin as the old .footerMiddle/.footerColumns */
 .pf__nav {
-  margin-top: clamp(1.25rem, 0.341rem + 4.55vw, 3.75rem);
+  margin-top: clamp(1.25rem, 0.341rem + 4.55vw, 3.75rem); padding-top: clamp(28px, 4vw, 48px); border-top: 1px solid var(--hairline);
   display: grid; grid-template-columns: 1fr; gap: clamp(1.25rem, 0.341rem + 4.55vw, 3.75rem);
 }
 @media (min-width: 768px) { .pf__nav { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1100px) { .pf__nav { grid-template-columns: repeat(4, 1fr); } }
-.pf__navcol ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.pf__navcol ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
 .pf__navcol a { color: var(--text-soft); text-decoration: none; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); transition: color var(--dur-sm) var(--ease); }
 .pf__navcol a:hover { color: var(--accent); }
 
-/* bottom bar — same structure/rhythm as the old .bottom/.bottomWrapper */
-.pf__bottom { margin-top: clamp(1.25rem, 0.795rem + 2.27vw, 2.5rem); padding: 20px 0; display: flex; flex-direction: column; gap: 20px; }
-@media (min-width: 768px) { .pf__bottom { flex-direction: row; align-items: center; justify-content: space-between; } }
+/* bottom — same as old .bottom (block) + .bottomWrapper (flex) */
+.pf__bottom { margin-top: clamp(1.25rem, 0.795rem + 2.27vw, 2.5rem); padding-top: clamp(24px, 3vw, 40px); padding-bottom: 20px; border-top: 1px solid var(--hairline); }
+.pf__bottom-row { display: flex; flex-direction: column; gap: 20px; }
+@media (min-width: 768px) { .pf__bottom-row { flex-direction: row; align-items: center; justify-content: space-between; } }
 .pf__copy { margin: 0; font-family: var(--font-body), sans-serif; font-size: clamp(0.75rem, 0.688rem + 0.25vw, 0.875rem); letter-spacing: 0.4px; color: var(--text-soft); text-align: center; }
 @media (min-width: 768px) { .pf__copy { text-align: unset; } }
 .pf__policy { display: flex; flex-wrap: wrap; justify-content: center; }

@@ -51,7 +51,7 @@ export default async function Footer({ lang = "en" }: { lang?: string }) {
 
   return (
     <footer className="pf" id="footer">
-      <div className="wrap">
+      <div className="pf__container">
         <div className="pf__top">
           <div className="pf__brand">
             {logoUrl && <img className="pf__logo" src={logoUrl} alt="Cyprus VIP Estates" />}
@@ -121,16 +121,18 @@ export default async function Footer({ lang = "en" }: { lang?: string }) {
         )}
 
         <div className="pf__bottom">
-          {copyright && <p className="pf__copy">{copyright}</p>}
-          {policyLinks?.length > 0 && (
-            <div className="pf__policy">
-              {policyLinks.map((p: FooterLink) => (
-                <Link key={p._key} href={p.link}>{p.label}</Link>
-              ))}
-            </div>
-          )}
+          <div className="pf__bottom-row">
+            {copyright && <p className="pf__copy">{copyright}</p>}
+            {policyLinks?.length > 0 && (
+              <div className="pf__policy">
+                {policyLinks.map((p: FooterLink) => (
+                  <Link key={p._key} href={p.link}>{p.label}</Link>
+                ))}
+              </div>
+            )}
+          </div>
+          {discklaimer && <p className="pf__disclaimer">{discklaimer}</p>}
         </div>
-        {discklaimer && <p className="pf__disclaimer">{discklaimer}</p>}
       </div>
     </footer>
   );
