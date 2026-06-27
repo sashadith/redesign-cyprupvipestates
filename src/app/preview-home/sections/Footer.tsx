@@ -55,14 +55,6 @@ export default async function Footer({ lang = "en" }: { lang?: string }) {
         <div className="pf__top">
           <div className="pf__brand">
             {logoUrl && <img className="pf__logo" src={logoUrl} alt="Cyprus VIP Estates" />}
-            {companyTitle && <p className="pf__brand-title">{companyTitle}</p>}
-            {companyParagraphs?.length > 0 && (
-              <div className="pf__about">
-                {companyParagraphs.map((p: Paragraph) => (
-                  <p key={p._key}>{p.paragraph}</p>
-                ))}
-              </div>
-            )}
             {socialLinks?.length > 0 && (
               <div className="pf__social">
                 {socialLinks.map((s: SocialLink) => {
@@ -73,6 +65,17 @@ export default async function Footer({ lang = "en" }: { lang?: string }) {
                     </a>
                   );
                 })}
+              </div>
+            )}
+          </div>
+
+          <div className="pf__col">
+            {companyTitle && <p className="pf__col-title">{companyTitle}</p>}
+            {companyParagraphs?.length > 0 && (
+              <div className="pf__about">
+                {companyParagraphs.map((p: Paragraph) => (
+                  <p key={p._key}>{p.paragraph}</p>
+                ))}
               </div>
             )}
           </div>
