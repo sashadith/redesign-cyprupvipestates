@@ -78,7 +78,7 @@ export default function CaseStudies({ block, lang = "en" }: { block: FeaturedCas
 
         {button?.label && button?.url && (
           <div className="casestudies__cta">
-            <a className="btn btn--primary" href={button.url}>{button.label}</a>
+            <a className="btn btn--glass" href={button.url}>Explore all cases</a>
           </div>
         )}
       </div>

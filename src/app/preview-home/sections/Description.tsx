@@ -24,7 +24,7 @@ const Description: FC<Props> = ({ block }) => {
   return (
     <section className="section descblock">
       <div className="wrap">
-        {title && <h2 className="descblock__title">{renderTitle(title)}</h2>}
+        {title && <h2 className="descblock__title">{renderTitle(title.replace(/Who We Are/i, "Who we are"))}</h2>}
         <hr className="shimmer descblock__stripe" />
 
         <div className="descblock__grid">

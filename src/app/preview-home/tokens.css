@@ -482,7 +482,7 @@ img { max-width: 100%; display: block; }
 }
 /* (Gold-Shimmer is now applied globally on .it — see the .it rule above) */
 .featured__stripe { margin-top: var(--s-5); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
-.featured__desc { margin: var(--s-6) 0 0; color: var(--text-soft); max-width: none; font-weight: 300; }
+.featured__desc { margin: var(--s-6) 0 0; color: var(--text-soft); max-width: none; font-weight: 300; font-size: clamp(1rem, 0.97rem + 0.18vw, 1.0625rem); line-height: 1.75; }
 .featured__slider { margin-top: var(--s-8); position: relative; }
 /* fade the running carousel out on the right edge */
 .featured__slider::after {
@@ -601,7 +601,7 @@ img { max-width: 100%; display: block; }
 .descblock__field a:hover { color: var(--ivory); }
 
 /* ===================== NEW LISTINGS (light gallery: title tile + latest 5) ===================== */
-.newlist__grid { display: grid; grid-template-columns: 1fr; gap: clamp(16px, 1.8vw, 26px); }
+.newlist__grid { display: grid; grid-template-columns: 1fr; gap: calc(clamp(16px, 1.8vw, 26px) - 10px); }
 @media (min-width: 640px) { .newlist__grid { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1000px) { .newlist__grid { grid-template-columns: repeat(3, 1fr); } }
 
@@ -617,7 +617,7 @@ img { max-width: 100%; display: block; }
   color: var(--ivory); margin: 0; text-wrap: balance;
 }
 .newlist__head { display: flex; flex-direction: column; gap: var(--s-3); }
-.newlist__lead { margin: 0; max-width: 32ch; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.5; color: var(--text-soft); }
+.newlist__lead { margin: 0; max-width: 32ch; font-family: var(--font-body), sans-serif; font-size: clamp(1rem, 0.97rem + 0.18vw, 1.0625rem); line-height: 1.75; color: var(--text-soft); }
 .newlist__cta { align-self: flex-start; }
 /* project cards reuse the Featured .pcard styles (image-fill + legibility gradient) */
 
@@ -631,6 +631,9 @@ img { max-width: 100%; display: block; }
 .benefits__grid {
   margin-top: var(--s-8); display: grid; grid-template-columns: 1fr; gap: clamp(36px, 4vw, 60px);
 }
+/* no title in this block → grid is first child → drop the top margin so the
+   section's top and bottom padding stay symmetric */
+.benefits__grid:first-child { margin-top: 0; }
 @media (min-width: 600px) { .benefits__grid { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 980px) { .benefits__grid { grid-template-columns: repeat(4, 1fr); } }
 .bstat { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--s-3); }
@@ -651,6 +654,18 @@ img { max-width: 100%; display: block; }
 }
 
 /* ===================== FEATURED CASE STUDIES (dark editorial cards) ===================== */
+/* soft golden "clouds" drifting slowly behind the content */
+.casestudies { position: relative; isolation: isolate; overflow: clip; }
+.casestudies::before, .casestudies::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; aspect-ratio: 1; will-change: transform;
+  background: radial-gradient(circle, rgba(194, 154, 94, 0.14), rgba(194, 154, 94, 0) 66%);
+}
+.casestudies::before { width: min(60vw, 720px); top: -16%; left: -10%; animation: cloudDriftA 30s ease-in-out infinite alternate; }
+.casestudies::after {
+  width: min(54vw, 640px); right: -10%; bottom: -18%;
+  background: radial-gradient(circle, rgba(194, 154, 94, 0.10), rgba(194, 154, 94, 0) 66%);
+  animation: cloudDriftB 36s ease-in-out infinite alternate;
+}
 .casestudies__title {
   font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
   font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em;
@@ -672,7 +687,12 @@ img { max-width: 100%; display: block; }
 .cscard__cat {
   position: absolute; top: var(--s-4); left: var(--s-4); z-index: 2;
   font-family: var(--font-body), sans-serif; font-size: var(--text-caption); letter-spacing: 0.08em; text-transform: uppercase;
-  color: var(--accent-ink); background: var(--accent); padding: 6px 13px; border-radius: 999px;
+  color: #fff; padding: 6px 13px; border-radius: var(--r-ui);
+  /* deep-green fill with a golden liquid-glass contour */
+  background: rgba(8, 21, 18, 0.72);
+  border: 1px solid var(--accent);
+  box-shadow: inset 0 1px 0 var(--glass-highlight), 0 6px 20px -10px rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(12px) saturate(150%); backdrop-filter: blur(12px) saturate(150%);
 }
 .cscard__body { padding: clamp(20px, 2.4vw, 32px); display: flex; flex-direction: column; gap: var(--s-3); flex: 1; }
 .cscard__title { margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: clamp(1.3rem, 1.1rem + 0.8vw, 1.7rem); line-height: 1.2; color: var(--ivory); text-wrap: balance; }
@@ -681,6 +701,9 @@ img { max-width: 100%; display: block; }
 .cscard__more svg { transition: transform var(--dur-sm) var(--ease-soft); }
 .cscard:hover .cscard__more svg { transform: translateX(4px); }
 .casestudies__cta { margin-top: clamp(40px, 5vw, 64px); display: flex; justify-content: center; }
+/* deep-green CTA button */
+.casestudies__cta .btn { background: var(--sea-deep); border-color: var(--hairline-strong); color: var(--ivory); }
+.casestudies__cta .btn:hover { background: var(--sea-deep); border-color: var(--accent); }
 
 /* ===================== CONTENT (understated light editorial — main SEO body) ===================== */
 /* simple field grid (mirrors the Description block); text-first, generous whitespace */
@@ -708,6 +731,20 @@ img { max-width: 100%; display: block; }
 .content__field a:hover { color: var(--text); }
 
 /* ===================== FAQ (dark, editorial split + accordion) ===================== */
+/* soft golden "clouds" drifting slowly behind the content */
+/* overflow: clip (not hidden) clips the clouds without creating a scroll container,
+   so the sticky .faq__head keeps working */
+.faq { position: relative; isolation: isolate; overflow: clip; }
+.faq::before, .faq::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; aspect-ratio: 1; will-change: transform;
+  background: radial-gradient(circle, rgba(194, 154, 94, 0.14), rgba(194, 154, 94, 0) 66%);
+}
+.faq::before { width: min(60vw, 720px); top: -16%; left: -10%; animation: cloudDriftA 30s ease-in-out infinite alternate; }
+.faq::after {
+  width: min(54vw, 640px); right: -10%; bottom: -18%;
+  background: radial-gradient(circle, rgba(194, 154, 94, 0.10), rgba(194, 154, 94, 0) 66%);
+  animation: cloudDriftB 36s ease-in-out infinite alternate;
+}
 .faq__grid { display: grid; grid-template-columns: 1fr; gap: var(--s-8); }
 @media (min-width: 900px) {
   .faq__grid { grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr); column-gap: clamp(48px, 6vw, 110px); align-items: start; }
@@ -772,6 +809,8 @@ img { max-width: 100%; display: block; }
 /* Original layout, recolored to a warm premium light palette (ivory / sand /
    champagne) via .is-light on the section; only colors changed, not structure. */
 .formsec { position: relative; background: linear-gradient(180deg, var(--surface-raised) 0%, var(--paper) 55%, var(--paper-2) 100%); }
+/* size container so the heading stripe can span the full page-container width */
+.formsec .wrap { container-type: inline-size; }
 .formsec__grid { display: grid; grid-template-columns: 1fr; gap: clamp(36px, 5vw, 64px); }
 @media (min-width: 940px) {
   .formsec__grid { grid-template-columns: 1.45fr 0.8fr; column-gap: clamp(40px, 5vw, 96px); align-items: center; }
@@ -781,10 +820,19 @@ img { max-width: 100%; display: block; }
   font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em;
   color: var(--text); margin: 0; text-wrap: balance;
 }
-.formsec__stripe { margin-top: var(--s-5); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
+/* heading wrapper is the positioning anchor for the absolute stripe */
+.formsec__head { position: relative; }
+/* Stripe is OUT OF FLOW (absolute) so it can span the full page-container width
+   (100cqi) without affecting any column width. It sits just below the heading and
+   runs the full container, passing BEHIND the consultant image (lower z-index). */
+.formsec__stripe {
+  position: absolute; top: 100%; left: 0; margin-top: var(--s-5);
+  width: 100cqi; max-width: none; z-index: 0;
+  background: linear-gradient(90deg, var(--accent), transparent);
+}
 .formsec__form { margin-top: var(--s-7); }
 .formsec__fields { display: grid; grid-template-columns: 1fr; gap: var(--s-5); }
-@media (min-width: 560px) { .formsec__fields { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 560px) { .formsec__fields { grid-template-columns: 1fr 1fr; max-width: 90%; } }
 .formsec__field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
 .formsec__label { font-family: var(--font-body), sans-serif; font-size: var(--text-sm); letter-spacing: 0.02em; color: var(--text-soft); }
 .formsec__input,
@@ -821,8 +869,7 @@ img { max-width: 100%; display: block; }
 .formsec__radio-option input { accent-color: var(--champagne); }
 .formsec__radio-option:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
 
-.formsec__submit { margin-top: var(--s-6); min-width: 180px; justify-content: center; background: #fff; color: var(--sea-deep); border: 1px solid var(--hairline-strong); box-shadow: 0 10px 30px -18px rgba(8, 21, 18, 0.45); }
-.formsec__submit:hover { background: #fff; color: var(--sea-deep); border-color: var(--accent); }
+.formsec__submit { margin-top: var(--s-6); min-width: 180px; justify-content: center; }
 .formsec__loader { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(8, 21, 18, 0.35); border-top-color: var(--sea-deep); animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -832,19 +879,24 @@ img { max-width: 100%; display: block; }
 .formsec__policy { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
 .formsec__policy:hover { color: var(--text); }
 
-.formsec__aside { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--s-4); }
-.formsec__consultant-wrap { position: relative; width: 100%; display: flex; justify-content: center; }
-.formsec__consultant { width: min(320px, 80%); height: auto; border-radius: var(--r-ui); display: block; }
-/* animated golden divider flush under the consultant — no margins/padding */
+.formsec__aside { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--s-4); }
+/* image, divider and caption share the portrait width and sit at the same left edge */
+.formsec__consultant-wrap { position: relative; width: min(320px, 80%); }
+.formsec__consultant { width: 100%; height: auto; border-radius: var(--r-ui); display: block; }
+/* static golden divider flush under the consultant, fading out left and right */
 .formsec__consultant-wrap::after {
   content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
   background: linear-gradient(90deg, transparent, #c29a5e 30%, #c29a5e 70%, transparent);
-  background-size: 200% 100%; animation: dividerFlow 5s ease-in-out infinite alternate;
 }
-@keyframes dividerFlow { from { background-position: 0% 0; } to { background-position: 100% 0; } }
-.formsec__caption { display: flex; flex-direction: column; gap: 2px; align-self: stretch; align-items: flex-start; text-align: left; }
+.formsec__caption { display: flex; flex-direction: column; gap: 2px; width: min(320px, 80%); align-items: flex-start; text-align: left; }
 .formsec__caption strong { font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: 1.25rem; color: var(--text); }
 .formsec__caption span { font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--accent); letter-spacing: 0.04em; }
+/* desktop: nudge the portrait (and its divider) 150px left and float the caption to
+   the lower-right of the image, at roughly jacket-pocket height */
+@media (min-width: 940px) {
+  .formsec__consultant-wrap { transform: translateX(-150px); }
+  .formsec__caption { position: absolute; left: 54%; bottom: 18%; width: max-content; }
+}
 
 .formsec__popup {
   position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 80; max-width: 92vw;

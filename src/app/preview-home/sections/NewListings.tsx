@@ -45,7 +45,7 @@ export default async function NewListings({ lang = "en" }: { lang?: string }) {
           <div className="newlist__intro">
             <div className="newlist__head">
               <h2 className="newlist__title">{renderTitle("New Listings")}</h2>
-              <p className="newlist__lead">The newest additions to our collection.</p>
+              <p className="newlist__lead">The newest additions to our real estate collection.</p>
             </div>
             <a className="btn btn--ghost newlist__cta" href="/projects">
               Show all projects
