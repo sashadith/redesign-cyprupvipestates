@@ -5,28 +5,28 @@ import React from "react";
 
 export const dynamic = "force-static";
 
-const BRAND: Array<{ name: string; role: string; varName: string; hex: string; dark?: boolean }> = [
-  { name: "Sea Deep", role: "Primär-Dunkelgrün (Hintergrund)", varName: "--sea-deep", hex: "#081512", dark: true },
-  { name: "Sea", role: "Maison Green (Surface dunkel)", varName: "--sea", hex: "#102826", dark: true },
-  { name: "Paper", role: "Ivory / heller Hintergrund", varName: "--paper", hex: "#F5F1E8" },
-  { name: "Paper 2", role: "Sand / heller Surface", varName: "--paper-2", hex: "#EDE7D9" },
-  { name: "Ink Warm", role: "Warmes Braun (Text auf hell)", varName: "--ink-warm", hex: "#221C15", dark: true },
-  { name: "Ivory", role: "Text auf dunkel", varName: "--ivory", hex: "#EFE9DB" },
-  { name: "Champagne", role: "Gold-Akzent (Dark-Theme)", varName: "--champagne", hex: "#C29A5E" },
-  { name: "Bronze", role: "Gold-Akzent (Light-Theme)", varName: "--bronze", hex: "#8E6B3D" },
+const BRAND: Array<{ name: string; role: string; varName: string; hex: string }> = [
+  { name: "Sea Deep", role: "Primary dark green (background)", varName: "--sea-deep", hex: "#081512" },
+  { name: "Sea", role: "Maison Green (dark surface)", varName: "--sea", hex: "#102826" },
+  { name: "Paper", role: "Ivory / light background", varName: "--paper", hex: "#F5F1E8" },
+  { name: "Paper 2", role: "Sand / light surface", varName: "--paper-2", hex: "#EDE7D9" },
+  { name: "Ink Warm", role: "Warm brown (text on light)", varName: "--ink-warm", hex: "#221C15" },
+  { name: "Ivory", role: "Text on dark", varName: "--ivory", hex: "#EFE9DB" },
+  { name: "Champagne", role: "Gold accent (dark theme)", varName: "--champagne", hex: "#C29A5E" },
+  { name: "Bronze", role: "Gold accent (light theme)", varName: "--bronze", hex: "#8E6B3D" },
 ];
 
 const ROLE_TOKENS: Array<[string, string]> = [
-  ["--bg", "Seiten-Hintergrund (Dark: Sea Deep · Light: Paper)"],
-  ["--surface / --surface-raised", "Flächen / leicht erhöhte Flächen"],
-  ["--text / --text-soft / --text-faint", "Text: voll / gedämpft / sehr leise"],
-  ["--accent / --accent-ink / --accent-soft", "Gold-Akzent / Text auf Gold / Gold 10–14 %"],
-  ["--hairline / --hairline-strong", "Trennlinien (fein / stärker)"],
-  ["--glass-bg / --glass-border / --glass-highlight", "Frosted-Glass-Flächen (Buttons, Badges)"],
-  ["--glow / --glow-strong", "Gold-Schimmer / Hover-Glow"],
+  ["--bg", "Page background (dark: Sea Deep · light: Paper)"],
+  ["--surface / --surface-raised", "Surfaces / slightly raised surfaces"],
+  ["--text / --text-soft / --text-faint", "Text: full / muted / faint"],
+  ["--accent / --accent-ink / --accent-soft", "Gold accent / text on gold / gold 10–14%"],
+  ["--hairline / --hairline-strong", "Divider lines (fine / stronger)"],
+  ["--glass-bg / --glass-border / --glass-highlight", "Frosted-glass surfaces (buttons, badges)"],
+  ["--glow / --glow-strong", "Gold shimmer / hover glow"],
 ];
 
-const TYPE_SCALE: Array<{ tag: string; varName: string; size: string; cls: string; sample: string; italic?: boolean }> = [
+const TYPE_SCALE: Array<{ tag: string; varName: string; size: string; cls: string; sample: string }> = [
   { tag: "Display", varName: "--text-display", size: "clamp(3 → 5.5rem)", cls: "sg__display", sample: "Cyprus VIP Estates" },
   { tag: "Hero / H1", varName: "--text-h1", size: "clamp(2.6 → 4.25rem)", cls: "sg__display", sample: "Cyprus Property Experts" },
   { tag: "Heading 2", varName: "--text-h2", size: "clamp(1.95 → 3rem)", cls: "sg__display", sample: "There is Only One Cyprus" },
@@ -43,24 +43,25 @@ const SPACING: Array<[string, string]> = [
 ];
 
 const COMPONENTS: Array<[string, string]> = [
-  [".it", "Gold-Shimmer-Akzent — animiertes Gold-Wort in jeder Überschrift"],
-  [".shimmer / *__stripe", "Dünne, glühende Gold-Trennlinie unter Überschriften"],
-  [".btn · --primary · --glass · --ghost", "Buttons: dunkel/grün · Frosted-Glass · Outline"],
-  [".pcard", "Projekt-Karte (Featured / New Listings) mit Preis & Bild"],
-  [".ccard", "Standort-Karte (Paphos · Limassol · Larnaca)"],
-  [".cscard / .cscard__cat", "Case-Study-Karte + Gold-Glas-Kategorie-Badge"],
-  [".about__medallion", "Runde Gold-Medaillons (Vorteile)"],
-  [".bstat / .bstat__num", "Zahlen-Statistik mit Count-Up-Animation"],
-  [".formsec__* / .btn--primary", "Kontaktformular: Felder, Radios, Send-Button (Deep Green)"],
-  [".pf__*", "Footer-Raster (Marke · Spalten · Newsletter · Bottom)"],
-  [".faq__* / .accordion", "FAQ-Split mit Sticky-Kopf + Akkordeon"],
+  [".it", "Gold-shimmer accent — animated gold word in every heading"],
+  [".shimmer / *__stripe", "Thin, glowing gold divider under headings"],
+  [".btn · --primary · --glass · --ghost", "Buttons: dark/green · frosted glass · outline"],
+  [".pcard", "Project card (Featured / New Listings) with price & image"],
+  [".ccard", "Location card (Paphos · Limassol · Larnaca)"],
+  [".cscard / .cscard__cat", "Case-study card + gold-glass category badge"],
+  [".about__medallion", "Round gold medallions (benefits)"],
+  [".bstat / .bstat__num", "Number stat with count-up animation"],
+  [".formsec__* / .formsec__submit", "Contact form: fields, radios, deep-green Send button"],
+  [".pf__*", "Footer grid (brand · columns · newsletter · bottom)"],
+  [".faq__* / accordion", "FAQ split with sticky head + accordion"],
 ];
 
 const EFFECTS: Array<[string, string]> = [
-  ["cloudDriftA / cloudDriftB", "Langsam treibende goldene Gold-Wolken im Hintergrund (FAQ, Case Studies, Footer)"],
-  ["goldShine", "Schimmernder Gold-Verlauf (Akzent-Wörter & animierte Pfeile)"],
-  ["Lenis + GSAP ScrollTrigger", "Smooth-Scroll + Scroll-Reveals (Hero SplitText, Karten-Stagger, Bild-Wipe)"],
-  ["Parallax-Video", "Fixiertes Hintergrund-Video (sunset.mp4), läuft im Loop"],
+  ["cloudDriftA / cloudDriftB", "Slowly drifting golden clouds in the background (FAQ, Case Studies, Footer)"],
+  ["goldShine", "Shimmering gold gradient (accent words & animated arrows)"],
+  ["sweep", "Running gold reflection along the divider lines (.shimmer)"],
+  ["Lenis + GSAP ScrollTrigger", "Smooth scroll + scroll reveals (hero SplitText, card stagger, image wipe)"],
+  ["Parallax video", "Fixed background video (sunset.mp4) on loop"],
 ];
 
 export default function StylePage() {
@@ -71,15 +72,15 @@ export default function StylePage() {
         Design <span className="it">System</span>
       </h1>
       <p className="sg__intro">
-        Alle Farben, Schriften, Abstände und Bausteine, die für die neue Homepage
-        (<code className="sg__mono">/preview-home</code>) entwickelt wurden — mit ihren offiziellen Bezeichnungen.
-        Dark-Theme ist Standard; einzelne Sektionen nutzen das Light-(Ivory-)Theme über <code className="sg__mono">.is-light</code>.
+        Every colour, font, spacing value and building block developed for the new homepage
+        (<code className="sg__mono">/preview-home</code>) — with their official names. Dark theme is the default;
+        individual sections use the light (ivory) theme via <code className="sg__mono">.is-light</code>.
       </p>
 
       {/* ---------------- COLOURS ---------------- */}
       <section className="sg__section">
-        <h2 className="sg__h">Farben</h2>
-        <p className="sg__sub">Markenfarben (feste Werte). Die semantischen Rollen-Tokens leiten sich daraus pro Theme ab.</p>
+        <h2 className="sg__h">Colours</h2>
+        <p className="sg__sub">Brand colours (fixed values). The semantic role tokens derive from these per theme.</p>
         <hr className="shimmer sg__rule" />
 
         <div className="sg__swatches">
@@ -96,12 +97,12 @@ export default function StylePage() {
         </div>
 
         <div className="sg__panel sg__panel--light" data-theme="light">
-          <p className="sg__panel-label" style={{ color: "var(--ink-warm)" }}>Light-(Ivory-)Theme · .is-light</p>
+          <p className="sg__panel-label" style={{ color: "var(--ink-warm)" }}>Light (ivory) theme · .is-light</p>
           <p style={{ color: "var(--ink-warm)", margin: 0, fontFamily: "var(--font-display), serif", fontSize: "var(--text-h3)" }}>
             Discover Properties <span className="it">for Sale</span>
           </p>
           <p style={{ color: "var(--text-soft)", margin: "12px 0 0" }}>
-            Heller Hintergrund (Paper), warmes Braun für Text, Bronze als Gold-Akzent.
+            Light background (Paper), warm brown for text, bronze as the gold accent.
           </p>
         </div>
 
@@ -114,11 +115,11 @@ export default function StylePage() {
 
       {/* ---------------- TYPOGRAPHY ---------------- */}
       <section className="sg__section">
-        <h2 className="sg__h">Typografie</h2>
+        <h2 className="sg__h">Typography</h2>
         <p className="sg__sub">
-          <strong style={{ color: "var(--ivory)" }}>Fraunces</strong> — Display / Überschriften (Serif, auch kursiv für Akzente). · {" "}
-          <strong style={{ color: "var(--ivory)" }}>Mulish</strong> — Body / UI (Sans). · {" "}
-          <strong style={{ color: "var(--ivory)" }}>Playfair Display</strong> — kyrillischer Display-Fallback.
+          <strong style={{ color: "var(--ivory)" }}>Fraunces</strong> — display / headings (serif, also italic for accents). · {" "}
+          <strong style={{ color: "var(--ivory)" }}>Mulish</strong> — body / UI (sans). · {" "}
+          <strong style={{ color: "var(--ivory)" }}>Playfair Display</strong> — Cyrillic display fallback.
         </p>
         <hr className="shimmer sg__rule" />
         <div className="sg__type">
@@ -133,22 +134,26 @@ export default function StylePage() {
 
       {/* ---------------- ACCENTS ---------------- */}
       <section className="sg__section">
-        <h2 className="sg__h">Akzente</h2>
+        <h2 className="sg__h">Accents</h2>
         <hr className="shimmer sg__rule" />
         <div className="sg__cluster">
           <div className="sg__demo">
             <p style={{ margin: 0, fontFamily: "var(--font-display), serif", fontSize: "var(--text-h3)", color: "var(--ivory)" }}>
               Real Estate <span className="it">Success</span> Stories
             </p>
-            <p className="sg__demo-label">.it — animiertes Gold-Wort</p>
+            <p className="sg__demo-label">.it — animated gold word</p>
           </div>
           <div className="sg__demo">
             <hr className="shimmer sg__stripe" />
-            <p className="sg__demo-label">.shimmer / *__stripe — Gold-Trennlinie</p>
+            <p className="sg__demo-label">.shimmer / *__stripe — gold divider</p>
+          </div>
+          <div className="sg__demo">
+            <span className="sg__arrow" aria-hidden />
+            <p className="sg__demo-label">How-We-Work — animated gold arrow</p>
           </div>
           <div className="sg__demo">
             <span className="sg__badge">Investment Property</span>
-            <p className="sg__demo-label">.cscard__cat — Gold-Glas-Badge</p>
+            <p className="sg__demo-label">.cscard__cat — gold-glass badge</p>
           </div>
         </div>
       </section>
@@ -160,23 +165,23 @@ export default function StylePage() {
         <div className="sg__cluster">
           <div className="sg__demo">
             <a className="btn btn--primary" href="#"><span>Get Consultation</span></a>
-            <p className="sg__demo-label">.btn .btn--primary — dunkel/grün</p>
+            <p className="sg__demo-label">.btn .btn--primary — dark / green</p>
           </div>
           <div className="sg__demo">
             <a className="btn btn--glass" href="#"><span>View All Projects</span></a>
-            <p className="sg__demo-label">.btn .btn--glass — Frosted Glass</p>
+            <p className="sg__demo-label">.btn .btn--glass — frosted glass</p>
           </div>
           <div className="sg__demo">
             <a className="btn btn--ghost" href="#"><span>Show all projects</span></a>
-            <p className="sg__demo-label">.btn .btn--ghost — Outline</p>
+            <p className="sg__demo-label">.btn .btn--ghost — outline</p>
           </div>
         </div>
       </section>
 
       {/* ---------------- SPACING / RADIUS / MOTION ---------------- */}
       <section className="sg__section">
-        <h2 className="sg__h">Abstände &amp; Maße</h2>
-        <p className="sg__sub">8-px-Raster. Plus Container-Maße, Radius und Bewegungs-Tokens.</p>
+        <h2 className="sg__h">Spacing &amp; Sizing</h2>
+        <p className="sg__sub">8-px grid. Plus container sizing, radius and motion tokens.</p>
         <hr className="shimmer sg__rule" />
         <div className="sg__tokens">
           {SPACING.map(([k, v]) => (
@@ -188,19 +193,19 @@ export default function StylePage() {
           ))}
         </div>
         <ul className="sg__list" style={{ marginTop: "var(--s-7)" }}>
-          <li><code>--maxw</code><span>Container-Maximalbreite — 1360px</span></li>
-          <li><code>--gutter</code><span>Seitenrand — clamp(20px → 64px)</span></li>
-          <li><code>--section-y</code><span>Vertikaler Sektions-Abstand — clamp(2.8 → 6.25rem)</span></li>
-          <li><code>--r-ui</code><span>Eck-Radius (Buttons, Karten, Badges) — 16px</span></li>
-          <li><code>--ease / --ease-soft</code><span>Bewegungskurven (cubic-bezier)</span></li>
-          <li><code>--dur / --dur-sm</code><span>Übergangsdauer — 0.6s / 0.4s</span></li>
+          <li><code>--maxw</code><span>Container max width — 1360px</span></li>
+          <li><code>--gutter</code><span>Side padding — clamp(20px → 64px)</span></li>
+          <li><code>--section-y</code><span>Vertical section padding — clamp(2.8 → 6.25rem)</span></li>
+          <li><code>--r-ui</code><span>Corner radius (buttons, cards, badges) — 16px</span></li>
+          <li><code>--ease / --ease-soft</code><span>Motion curves (cubic-bezier)</span></li>
+          <li><code>--dur / --dur-sm</code><span>Transition duration — 0.6s / 0.4s</span></li>
         </ul>
       </section>
 
       {/* ---------------- COMPONENTS ---------------- */}
       <section className="sg__section">
-        <h2 className="sg__h">Bausteine</h2>
-        <p className="sg__sub">Wiederkehrende Komponenten und ihre Klassen-Bezeichnungen.</p>
+        <h2 className="sg__h">Components</h2>
+        <p className="sg__sub">Recurring components and their class names.</p>
         <hr className="shimmer sg__rule" />
         <ul className="sg__list">
           {COMPONENTS.map(([k, v]) => (
@@ -211,7 +216,7 @@ export default function StylePage() {
 
       {/* ---------------- EFFECTS ---------------- */}
       <section className="sg__section">
-        <h2 className="sg__h">Effekte &amp; Animation</h2>
+        <h2 className="sg__h">Effects &amp; Animation</h2>
         <hr className="shimmer sg__rule" />
         <ul className="sg__list">
           {EFFECTS.map(([k, v]) => (
@@ -221,8 +226,8 @@ export default function StylePage() {
       </section>
 
       <p className="sg__foot">
-        Quelle: <code className="sg__mono">src/app/preview-home/tokens.css</code> · Live-Vorschau:{" "}
-        <code className="sg__mono">/preview-home</code>. Diese Seite ist noindex (interne CI-Referenz).
+        Source: <code className="sg__mono">src/app/preview-home/tokens.css</code> · Live preview:{" "}
+        <code className="sg__mono">/preview-home</code>. This page is noindex (internal CI reference).
       </p>
     </main>
   );

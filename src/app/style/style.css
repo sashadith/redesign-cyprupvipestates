@@ -69,6 +69,17 @@
   letter-spacing: 0.08em; text-transform: uppercase; color: #fff; padding: 6px 13px; border-radius: var(--r-ui);
   background: rgba(88, 64, 28, 0.9); border: 1px solid var(--champagne);
 }
+/* sample animated gold arrow (mirrors the How-We-Work connector) */
+.sg__arrow {
+  display: inline-block; width: 60px; height: 22px;
+  background: linear-gradient(100deg, var(--accent) 0%, var(--accent) 38%, #F4DB9E 50%, var(--accent) 62%, var(--accent) 100%);
+  background-size: 230% 100%;
+  animation: goldShine 5s linear infinite;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='22' viewBox='0 0 54 22' fill='none'%3E%3Cpath d='M3 11H46' stroke='%23000' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M46 8 50 11 46 14' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='22' viewBox='0 0 54 22' fill='none'%3E%3Cpath d='M3 11H46' stroke='%23000' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M46 8 50 11 46 14' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+@media (prefers-reduced-motion: reduce) { .sg__arrow { animation: none; } }
+
 /* sample stripe (mirrors .shimmer / section stripe) */
 .sg__stripe { height: 1px; width: 220px; max-width: 100%; border: 0; margin: 0;
   background: linear-gradient(90deg, var(--champagne), transparent); box-shadow: 0 0 10px var(--glow); }
