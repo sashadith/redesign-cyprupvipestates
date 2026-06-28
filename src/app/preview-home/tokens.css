@@ -171,8 +171,9 @@ img { max-width: 100%; display: block; }
 .nav::before {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background: transparent; border-bottom: 1px solid transparent;
-  transition: background var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease),
-              backdrop-filter var(--dur-sm) var(--ease);
+  /* slower fade-in of the frosted background on scroll */
+  transition: background 1.4s var(--ease), border-color 1.4s var(--ease),
+              -webkit-backdrop-filter 1.4s var(--ease), backdrop-filter 1.4s var(--ease);
 }
 [data-scrolled] .nav::before {
   -webkit-backdrop-filter: blur(12px) saturate(140%); backdrop-filter: blur(12px) saturate(140%);
