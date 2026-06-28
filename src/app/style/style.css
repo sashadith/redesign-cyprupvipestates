@@ -1,0 +1,76 @@
+/* =====================================================================
+   Cyprus VIP Estates — Design System / CI reference (/style)
+   Uses the same tokens as /preview-home (tokens.css). Read-only reference.
+   ===================================================================== */
+
+.sg { max-width: 1120px; margin: 0 auto; padding: clamp(40px, 7vw, 104px) var(--gutter) 160px; }
+
+.sg__eyebrow {
+  font-family: var(--font-body), sans-serif; font-size: var(--text-caption); font-weight: 600;
+  letter-spacing: 0.3em; text-transform: uppercase; color: var(--champagne); margin: 0 0 var(--s-4);
+}
+.sg__title {
+  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  font-size: var(--text-display); line-height: 1.02; letter-spacing: -0.02em; color: var(--ivory); margin: 0;
+}
+.sg__intro { margin: var(--s-5) 0 0; max-width: 58ch; color: var(--text-soft); font-size: var(--text-lead); line-height: 1.55; }
+
+/* ---- sections ---- */
+.sg__section { margin-top: clamp(56px, 8vw, 112px); }
+.sg__h {
+  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em; color: var(--ivory); margin: 0;
+}
+.sg__sub { color: var(--text-soft); margin: var(--s-3) 0 0; max-width: 62ch; }
+.sg__rule { height: 1px; border: 0; margin: var(--s-5) 0 var(--s-7); background: linear-gradient(90deg, var(--champagne), transparent); }
+
+/* ---- colour swatches ---- */
+.sg__swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: var(--s-4); }
+.sg__swatch { border-radius: var(--r-ui); overflow: hidden; border: 1px solid var(--hairline); background: var(--glass-bg); }
+.sg__chip { height: 92px; border-bottom: 1px solid var(--hairline); }
+.sg__swatch-meta { padding: 12px 14px 14px; }
+.sg__name { font-family: var(--font-body), sans-serif; font-weight: 600; font-size: var(--text-sm); color: var(--ivory); }
+.sg__mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.72rem; }
+.sg__var { color: var(--champagne); margin-top: 4px; }
+.sg__val { color: var(--text-soft); margin-top: 1px; }
+
+/* a light panel to preview the ivory theme tokens inside the dark page */
+.sg__panel { border-radius: var(--r-ui); padding: var(--s-6); margin-top: var(--s-5); border: 1px solid var(--hairline); }
+.sg__panel--light { background: var(--paper); }
+.sg__panel-label { font-family: ui-monospace, monospace; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.7; margin: 0 0 var(--s-4); }
+
+/* ---- type scale ---- */
+.sg__type { display: flex; flex-direction: column; }
+.sg__type-row { padding: var(--s-5) 0; border-bottom: 1px solid var(--hairline); display: grid; gap: 8px; }
+.sg__type-tag { font-family: ui-monospace, monospace; font-size: 0.72rem; color: var(--champagne); }
+.sg__type-tag span { color: var(--text-faint); }
+.sg__type-sample { color: var(--ivory); margin: 0; }
+.sg__display { font-family: var(--font-display), serif; font-weight: 400; line-height: 1.05; letter-spacing: -0.02em; }
+.sg__bodyfont { font-family: var(--font-body), sans-serif; }
+
+/* ---- token list (spacing / radius / motion) ---- */
+.sg__tokens { display: flex; flex-direction: column; gap: 12px; }
+.sg__token { display: grid; grid-template-columns: 86px 64px 1fr; align-items: center; gap: 18px; }
+.sg__token code { font-family: ui-monospace, monospace; color: var(--champagne); font-size: var(--text-sm); }
+.sg__token .sg__val { color: var(--text-soft); margin: 0; }
+.sg__bar { height: 14px; background: linear-gradient(90deg, var(--champagne), var(--bronze)); border-radius: 4px; }
+
+/* ---- component showcase ---- */
+.sg__cluster { display: flex; flex-wrap: wrap; gap: var(--s-5); align-items: center; }
+.sg__demo { border: 1px solid var(--hairline); border-radius: var(--r-ui); padding: var(--s-6); background: var(--glass-bg); }
+.sg__demo-label { font-family: ui-monospace, monospace; font-size: 0.72rem; color: var(--champagne); margin: var(--s-4) 0 0; }
+.sg__list { margin: var(--s-3) 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.sg__list li { display: grid; grid-template-columns: minmax(140px, 220px) 1fr; gap: 16px; align-items: baseline; color: var(--text-soft); }
+.sg__list code { font-family: ui-monospace, monospace; color: var(--champagne); font-size: var(--text-sm); }
+
+/* sample badge (mirrors .cscard__cat) */
+.sg__badge {
+  display: inline-block; font-family: var(--font-body), sans-serif; font-size: var(--text-caption);
+  letter-spacing: 0.08em; text-transform: uppercase; color: #fff; padding: 6px 13px; border-radius: var(--r-ui);
+  background: rgba(88, 64, 28, 0.9); border: 1px solid var(--champagne);
+}
+/* sample stripe (mirrors .shimmer / section stripe) */
+.sg__stripe { height: 1px; width: 220px; max-width: 100%; border: 0; margin: 0;
+  background: linear-gradient(90deg, var(--champagne), transparent); box-shadow: 0 0 10px var(--glow); }
+
+.sg__foot { margin-top: clamp(64px, 9vw, 120px); padding-top: var(--s-6); border-top: 1px solid var(--hairline); color: var(--text-faint); font-size: var(--text-sm); }

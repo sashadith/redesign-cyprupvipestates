@@ -54,6 +54,6 @@ export default async function middleware(request: NextRequest) {
 export const config = {
   // Matcher ignoring `/_next/`, `/api/`, local uploads, and other non-localized paths.
   matcher: [
-    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|sandbox|preview).*)",
+    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|sandbox|preview|style).*)",
   ],
 };
