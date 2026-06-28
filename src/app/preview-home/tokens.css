@@ -908,7 +908,8 @@ img { max-width: 100%; display: block; }
 .formsec__radio-option input { accent-color: var(--champagne); }
 .formsec__radio-option:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
 
-.formsec__submit { margin-top: var(--s-6); min-width: 180px; justify-content: center; }
+.formsec__submit { margin-top: var(--s-6); min-width: 180px; justify-content: center; background: var(--sea-deep); color: var(--ivory); border-color: var(--hairline-strong); }
+.formsec__submit:hover { background: var(--sea-deep); border-color: var(--accent); color: var(--ivory); }
 .formsec__loader { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(8, 21, 18, 0.35); border-top-color: var(--sea-deep); animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 

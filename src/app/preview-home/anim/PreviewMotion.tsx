@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { gsap, ScrollTrigger, SplitText, prefersReducedMotion, isTouchDevice } from "./gsap";
+import { gsap, ScrollTrigger, SplitText, prefersReducedMotion } from "./gsap";
 
 /* Preview-only scroll/motion orchestrator. Mounted once in the page; drives all the
    Phase-2 animations off the existing DOM by class, so NO server component changes
@@ -17,9 +17,7 @@ export default function PreviewMotion() {
   useEffect(() => {
     if (prefersReducedMotion()) return;
 
-    const touch = isTouchDevice();
     const splits: Array<{ revert: () => void }> = [];
-    const magnetCleanups: Array<() => void> = [];
 
     const ctx = gsap.context(() => {
       const toArr = (sel: string) => gsap.utils.toArray<HTMLElement>(sel);
@@ -108,28 +106,6 @@ export default function PreviewMotion() {
           .to(img, { clipPath: "inset(0 0% 0 0)", duration: 0.9, ease: "power4.inOut" })
           .to(img, { scale: 1, duration: 1.2, ease: "power2.out" }, "-=0.2");
       });
-
-      /* ---------- 2.8 MAGNETIC BUTTONS (desktop only) ---------- */
-      if (!touch) {
-        document.querySelectorAll<HTMLElement>(".hero__cta .btn, .btn--primary").forEach((btn) => {
-          const onMove = (e: MouseEvent) => {
-            const r = btn.getBoundingClientRect();
-            gsap.to(btn, {
-              x: (e.clientX - (r.left + r.width / 2)) * 0.3,
-              y: (e.clientY - (r.top + r.height / 2)) * 0.3,
-              duration: 0.3,
-              ease: "power2.out",
-            });
-          };
-          const onLeave = () => gsap.to(btn, { x: 0, y: 0, duration: 0.4, ease: "elastic.out(1, 0.5)" });
-          btn.addEventListener("mousemove", onMove);
-          btn.addEventListener("mouseleave", onLeave);
-          magnetCleanups.push(() => {
-            btn.removeEventListener("mousemove", onMove);
-            btn.removeEventListener("mouseleave", onLeave);
-          });
-        });
-      }
     });
 
     // Re-measure triggers once webfonts/layout settle.
@@ -137,7 +113,6 @@ export default function PreviewMotion() {
 
     return () => {
       window.clearTimeout(refresh);
-      magnetCleanups.forEach((fn) => fn());
       splits.forEach((s) => {
         try {
           s.revert();
