@@ -80,7 +80,7 @@ export default function StylePage() {
       <section className="sg__section">
         <h2 className="sg__h">Farben</h2>
         <p className="sg__sub">Markenfarben (feste Werte). Die semantischen Rollen-Tokens leiten sich daraus pro Theme ab.</p>
-        <hr className="sg__rule" />
+        <hr className="shimmer sg__rule" />
 
         <div className="sg__swatches">
           {BRAND.map((c) => (
@@ -120,7 +120,7 @@ export default function StylePage() {
           <strong style={{ color: "var(--ivory)" }}>Mulish</strong> — Body / UI (Sans). · {" "}
           <strong style={{ color: "var(--ivory)" }}>Playfair Display</strong> — kyrillischer Display-Fallback.
         </p>
-        <hr className="sg__rule" />
+        <hr className="shimmer sg__rule" />
         <div className="sg__type">
           {TYPE_SCALE.map((t) => (
             <div className="sg__type-row" key={t.varName}>
@@ -134,7 +134,7 @@ export default function StylePage() {
       {/* ---------------- ACCENTS ---------------- */}
       <section className="sg__section">
         <h2 className="sg__h">Akzente</h2>
-        <hr className="sg__rule" />
+        <hr className="shimmer sg__rule" />
         <div className="sg__cluster">
           <div className="sg__demo">
             <p style={{ margin: 0, fontFamily: "var(--font-display), serif", fontSize: "var(--text-h3)", color: "var(--ivory)" }}>
@@ -143,7 +143,7 @@ export default function StylePage() {
             <p className="sg__demo-label">.it — animiertes Gold-Wort</p>
           </div>
           <div className="sg__demo">
-            <hr className="sg__stripe" />
+            <hr className="shimmer sg__stripe" />
             <p className="sg__demo-label">.shimmer / *__stripe — Gold-Trennlinie</p>
           </div>
           <div className="sg__demo">
@@ -156,7 +156,7 @@ export default function StylePage() {
       {/* ---------------- BUTTONS ---------------- */}
       <section className="sg__section">
         <h2 className="sg__h">Buttons</h2>
-        <hr className="sg__rule" />
+        <hr className="shimmer sg__rule" />
         <div className="sg__cluster">
           <div className="sg__demo">
             <a className="btn btn--primary" href="#"><span>Get Consultation</span></a>
@@ -177,7 +177,7 @@ export default function StylePage() {
       <section className="sg__section">
         <h2 className="sg__h">Abstände &amp; Maße</h2>
         <p className="sg__sub">8-px-Raster. Plus Container-Maße, Radius und Bewegungs-Tokens.</p>
-        <hr className="sg__rule" />
+        <hr className="shimmer sg__rule" />
         <div className="sg__tokens">
           {SPACING.map(([k, v]) => (
             <div className="sg__token" key={k}>
@@ -201,7 +201,7 @@ export default function StylePage() {
       <section className="sg__section">
         <h2 className="sg__h">Bausteine</h2>
         <p className="sg__sub">Wiederkehrende Komponenten und ihre Klassen-Bezeichnungen.</p>
-        <hr className="sg__rule" />
+        <hr className="shimmer sg__rule" />
         <ul className="sg__list">
           {COMPONENTS.map(([k, v]) => (
             <li key={k}><code>{k}</code><span>{v}</span></li>
@@ -212,7 +212,7 @@ export default function StylePage() {
       {/* ---------------- EFFECTS ---------------- */}
       <section className="sg__section">
         <h2 className="sg__h">Effekte &amp; Animation</h2>
-        <hr className="sg__rule" />
+        <hr className="shimmer sg__rule" />
         <ul className="sg__list">
           {EFFECTS.map(([k, v]) => (
             <li key={k}><code>{k}</code><span>{v}</span></li>
