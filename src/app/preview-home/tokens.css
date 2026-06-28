@@ -373,6 +373,7 @@ img { max-width: 100%; display: block; }
   font-weight: 300; font-size: clamp(2.625rem, 2.011rem + 3.07vw, 4.313rem); line-height: 1.04; letter-spacing: -0.02em;
   color: var(--ivory); margin: 0;
 }
+.hero__headline { display: block; }
 .hero__stripe { margin-top: var(--s-6); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
 .hero__desc {
   margin-top: var(--s-6); max-width: 54ch;
@@ -424,7 +425,7 @@ img { max-width: 100%; display: block; }
 .brochure__list svg { color: var(--accent); flex: none; }
 .brochure__cta .btn { padding: 15px 30px; }
 /* image — tilted -5deg, absolute bottom-right, exactly as the original (right:-50, bottom:-30) */
-.brochure__image { transform: rotate(-5deg); }
+.brochure__image { transform: rotate(-5deg); overflow: hidden; border-radius: 8px; }
 .brochure__media { width: 100%; height: auto; display: block; border-radius: 8px; }
 @media (min-width: 768px) {
   .brochure__image {
@@ -523,12 +524,12 @@ img { max-width: 100%; display: block; }
   color: var(--text); margin: 0; text-wrap: balance;
 }
 .cities__stripe { margin-top: var(--s-5); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
-.cities__lead { margin: var(--s-5) 0 0; max-width: 60ch; font-family: var(--font-body), sans-serif; font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.2rem); line-height: 1.6; color: var(--text-soft); }
+.cities__lead { margin: var(--s-5) 0 0; max-width: none; font-family: var(--font-body), sans-serif; font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.2rem); line-height: 1.6; color: var(--text-soft); }
 /* auto-fit: 1 col on phones, ~2 on tablets, 3-or-4 on desktop. With 3 cities
    the tracks stretch to fill (balanced); with 4 they sit naturally in one row.
    min(100%, 280px) keeps the track from ever overflowing a narrow viewport. */
 .cities__grid {
-  margin-top: var(--s-9); display: grid; gap: clamp(18px, 2.2vw, 32px);
+  margin-top: var(--s-6); display: grid; gap: calc(clamp(16px, 1.8vw, 26px) - 10px);
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
 }
 .ccard {
@@ -597,7 +598,7 @@ img { max-width: 100%; display: block; }
 .descblock__field p:last-child { margin-bottom: 0; }
 .descblock__field ul, .descblock__field ol { margin: 0 0 var(--s-4); }
 .descblock__field li, .descblock__field li span { color: rgba(239, 233, 219, 0.82); }
-.descblock__field a { color: var(--champagne); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; transition: color var(--dur-sm) var(--ease); }
+.descblock__field a { color: var(--champagne); text-decoration: none; text-underline-offset: 3px; text-decoration-thickness: 1px; transition: color var(--dur-sm) var(--ease); }
 .descblock__field a:hover { color: var(--ivory); }
 
 /* ===================== NEW LISTINGS (light gallery: title tile + latest 5) ===================== */
@@ -652,6 +653,24 @@ img { max-width: 100%; display: block; }
   text-transform: none; letter-spacing: 0.01em; font-weight: 400;
   font-size: clamp(0.9rem, 0.86rem + 0.18vw, 1rem); line-height: 1.45;
 }
+/* circles: +20% then -10% → ~103px (About medallions stay 95px) */
+.howwork .about__medallion { width: 103px; height: 103px; }
+.howwork .about__medallion img { width: 41px; height: 41px; }
+/* alternating up/down curved connector arrows, animated gold (single-row desktop only) */
+.howwork .about__bullet { position: relative; }
+@media (min-width: 1024px) {
+  .howwork .about__bullet:not(:last-child)::after {
+    content: ""; position: absolute; top: 52px; left: calc(100% + clamp(24px, 3vw, 44px) / 2);
+    transform: translate(-50%, -50%); width: 54px; height: 22px; pointer-events: none;
+    /* animated gold fill (same shimmer as .it), clipped to a straight arrow via mask */
+    background: linear-gradient(100deg, var(--accent) 0%, var(--accent) 38%, #F4DB9E 50%, var(--accent) 62%, var(--accent) 100%);
+    background-size: 230% 100%;
+    animation: goldShine 5s linear infinite;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='22' viewBox='0 0 54 22' fill='none'%3E%3Cpath d='M3 11H46' stroke='%23000' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M46 8 50 11 46 14' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='54' height='22' viewBox='0 0 54 22' fill='none'%3E%3Cpath d='M3 11H46' stroke='%23000' stroke-width='1.8' stroke-linecap='round'/%3E%3Cpath d='M46 8 50 11 46 14' stroke='%23000' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+}
+@media (prefers-reduced-motion: reduce) { .howwork .about__bullet::after { animation: none; } }
 
 /* ===================== FEATURED CASE STUDIES (dark editorial cards) ===================== */
 /* soft golden "clouds" drifting slowly behind the content */
@@ -673,7 +692,7 @@ img { max-width: 100%; display: block; }
 }
 .casestudies__stripe { margin-top: var(--s-5); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
 .casestudies__desc { margin: var(--s-6) 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-lead); line-height: 1.6; color: var(--text-soft); }
-.casestudies__grid { margin-top: var(--s-8); display: grid; gap: clamp(20px, 2.4vw, 36px); grid-template-columns: 1fr; }
+.casestudies__grid { margin-top: var(--s-6); display: grid; gap: clamp(20px, 2.4vw, 36px); grid-template-columns: 1fr; }
 @media (min-width: 760px) { .casestudies__grid { grid-template-columns: repeat(2, 1fr); } }
 .cscard {
   display: flex; flex-direction: column; overflow: hidden; border-radius: var(--r-ui);
@@ -688,10 +707,9 @@ img { max-width: 100%; display: block; }
   position: absolute; top: var(--s-4); left: var(--s-4); z-index: 2;
   font-family: var(--font-body), sans-serif; font-size: var(--text-caption); letter-spacing: 0.08em; text-transform: uppercase;
   color: #fff; padding: 6px 13px; border-radius: var(--r-ui);
-  /* deep-green fill with a golden liquid-glass contour */
-  background: rgba(8, 21, 18, 0.72);
+  /* darker-gold fill with a golden glass contour, no shadow */
+  background: rgba(88, 64, 28, 0.9);
   border: 1px solid var(--accent);
-  box-shadow: inset 0 1px 0 var(--glass-highlight), 0 6px 20px -10px rgba(0, 0, 0, 0.6);
   -webkit-backdrop-filter: blur(12px) saturate(150%); backdrop-filter: blur(12px) saturate(150%);
 }
 .cscard__body { padding: clamp(20px, 2.4vw, 32px); display: flex; flex-direction: column; gap: var(--s-3); flex: 1; }
@@ -700,19 +718,29 @@ img { max-width: 100%; display: block; }
 .cscard__more { margin-top: auto; display: inline-flex; align-items: center; gap: 8px; padding-top: var(--s-3); color: var(--accent); font-family: var(--font-body), sans-serif; font-size: var(--text-sm); font-weight: 500; }
 .cscard__more svg { transition: transform var(--dur-sm) var(--ease-soft); }
 .cscard:hover .cscard__more svg { transform: translateX(4px); }
-.casestudies__cta { margin-top: clamp(40px, 5vw, 64px); display: flex; justify-content: center; }
+.casestudies__cta { margin-top: clamp(56px, 6.5vw, 96px); display: flex; justify-content: center; }
 /* deep-green CTA button */
-.casestudies__cta .btn { background: var(--sea-deep); border-color: var(--hairline-strong); color: var(--ivory); }
+.casestudies__cta .btn { background: var(--sea-deep); border-color: var(--hairline-strong); color: var(--ivory); padding: 15px 26px; justify-content: center; }
 .casestudies__cta .btn:hover { background: var(--sea-deep); border-color: var(--accent); }
 
 /* ===================== CONTENT (understated light editorial — main SEO body) ===================== */
 /* simple field grid (mirrors the Description block); text-first, generous whitespace */
-.content__grid { display: grid; grid-template-columns: 1fr; gap: var(--s-8); }
-@media (min-width: 820px) {
-  .content__grid { grid-template-columns: 1fr 1fr; column-gap: clamp(48px, 5vw, 92px); row-gap: clamp(40px, 5vw, 72px); }
-  /* odd-last field spans the full width as a normal single-column text block */
-  .content__field:last-child:nth-child(odd) { grid-column: 1 / -1; }
+/* editorial split: sticky section header beside a single-column article */
+.content__layout { display: grid; grid-template-columns: 1fr; gap: var(--s-7); }
+@media (min-width: 900px) {
+  .content__layout { grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr); column-gap: clamp(48px, 6vw, 110px); align-items: start; }
+  .content__head { position: sticky; top: 104px; }
 }
+.content__title {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em;
+  color: var(--text); margin: 0; text-wrap: balance;
+}
+.content__stripe { margin-top: var(--s-5); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
+.content__lead { margin: var(--s-6) 0 0; max-width: 34ch; font-family: var(--font-body), sans-serif; font-size: var(--text-lead); line-height: 1.6; color: var(--text-soft); }
+.content__body { display: flex; flex-direction: column; gap: var(--s-7); max-width: 64ch; }
+/* the article's own leading title is replaced by the section title above */
+.content__body .content__field:first-child > h2:first-of-type { display: none; }
 /* typography for the rendered PortableText (RichText) on the light section */
 .content__field { color: var(--text-soft); }
 .content__field :is(h2, h3, h4) {
@@ -720,14 +748,14 @@ img { max-width: 100%; display: block; }
   line-height: 1.2; letter-spacing: -0.01em; text-wrap: balance; margin: 0 0 var(--s-4);
 }
 .content__field :is(h2, h3, h4):not(:first-child) { margin-top: var(--s-6); }
-.content__field h2 { font-size: clamp(1.5rem, 1.25rem + 1.2vw, 2rem); }
+.content__field h2 { font-size: clamp(1.25rem, 1.1rem + 0.7vw, 1.55rem); }
 .content__field p { margin: 0 0 var(--s-4); font-size: clamp(1rem, 0.97rem + 0.18vw, 1.0625rem); line-height: 1.75; color: var(--text-soft); }
 .content__field p:last-child { margin-bottom: 0; }
 .content__field ul, .content__field ol { margin: 0 0 var(--s-4); }
 .content__field li, .content__field li span { color: var(--text-soft); }   /* override RichText's dark-bg white */
 .content__field blockquote { color: var(--text); }
 .content__field strong { color: var(--text); font-weight: 600; }
-.content__field a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; transition: color var(--dur-sm) var(--ease); }
+.content__field a { color: var(--accent); text-decoration: none; text-underline-offset: 3px; text-decoration-thickness: 1px; transition: color var(--dur-sm) var(--ease); }
 .content__field a:hover { color: var(--text); }
 
 /* ===================== FAQ (dark, editorial split + accordion) ===================== */
@@ -790,19 +818,30 @@ img { max-width: 100%; display: block; }
 .faq__a-body p { margin: 0 0 var(--s-3); font-family: var(--font-body), sans-serif; font-size: clamp(0.95rem, 0.92rem + 0.16vw, 1.0625rem); line-height: 1.7; color: var(--text-soft); }
 .faq__a-body p:last-child { margin-bottom: 0; }
 .faq__a-body ul, .faq__a-body ol { margin: 0 0 var(--s-3); }
-.faq__a-body a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.faq__a-body a { color: var(--accent); text-decoration: none; text-underline-offset: 3px; }
 .faq__a-body a:hover { color: var(--ivory); }
 
-/* ===================== PARALLAX (full-bleed image breather) ===================== */
+/* ===================== PARALLAX (full-bleed looping video breather) ===================== */
+/* clip-path makes .parallax a window: the fixed video is clipped to the section
+   box but pinned to the viewport, so the section scrolls over a stationary video. */
 .parallax {
-  position: relative; min-height: clamp(300px, 44vh, 560px);
-  background-color: var(--sea-deep); background-position: center; background-repeat: no-repeat; background-size: cover;
+  position: relative; min-height: clamp(300px, 44vh, 560px); overflow: hidden; clip-path: inset(0);
+  background-color: var(--sea-deep);
 }
-@media (hover: hover) and (pointer: fine) { .parallax { background-attachment: fixed; } }
-@media (prefers-reduced-motion: reduce) { .parallax { background-attachment: scroll; } }
+.parallax__video {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; pointer-events: none;
+}
+/* desktop pointers: pin the video to the viewport (parallax — does not scroll) */
+@media (hover: hover) and (pointer: fine) {
+  .parallax__video { position: fixed; inset: auto; top: 0; left: 0; width: 100vw; height: 100vh; }
+}
+/* reduced-motion: no pinning — static cover that scrolls with the section */
+@media (prefers-reduced-motion: reduce) {
+  .parallax__video { position: absolute; inset: 0; top: 0; left: 0; width: 100%; height: 100%; }
+}
 .parallax__scrim {
-  position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(180deg, rgba(8, 21, 18, 0.55) 0%, rgba(8, 21, 18, 0.12) 22%, rgba(8, 21, 18, 0.12) 78%, rgba(8, 21, 18, 0.62) 100%);
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: linear-gradient(180deg, rgba(8, 21, 18, 0.38) 0%, rgba(8, 21, 18, 0.1) 22%, rgba(8, 21, 18, 0.1) 78%, rgba(8, 21, 18, 0.42) 100%);
 }
 
 /* ===================== CONTACT FORM (light, two-column) ===================== */
@@ -876,7 +915,7 @@ img { max-width: 100%; display: block; }
 .formsec__consent { margin-top: var(--s-5); display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--text-soft); }
 .formsec__consent input { margin-top: 3px; accent-color: var(--champagne); width: 16px; height: 16px; flex: none; }
 .formsec__consent .formsec__error { grid-column: 1 / -1; }
-.formsec__policy { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.formsec__policy { color: var(--accent); text-decoration: none; text-underline-offset: 2px; }
 .formsec__policy:hover { color: var(--text); }
 
 .formsec__aside { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--s-4); }
@@ -908,7 +947,7 @@ img { max-width: 100%; display: block; }
 /* match the original .footer: small top padding (no big bottom), .container geometry */
 .pf {
   position: relative; isolation: isolate; overflow: hidden;
-  background: var(--sea-deep); border-top: 1px solid var(--hairline); color: var(--text-soft); padding-top: clamp(1.25rem, 0.795rem + 2.27vw, 2.5rem);
+  background: var(--sea-deep); border-top: 1px solid var(--hairline); color: var(--text-soft); padding-top: calc(clamp(1.25rem, 0.795rem + 2.27vw, 2.5rem) + 30px);
 }
 /* soft golden "clouds" drifting behind the footer content */
 .pf::before, .pf::after {

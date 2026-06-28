@@ -15,6 +15,7 @@ import Faq from "./sections/Faq";
 import ParallaxBand from "./sections/ParallaxBand";
 import Form from "./sections/Form";
 import Footer from "./sections/Footer";
+import PreviewMotion from "./anim/PreviewMotion";
 
 /* Homepage redesign preview — built section by section.
    Pulls the REAL homepage content (local content DB) and restyles it.
@@ -27,6 +28,7 @@ export default async function PreviewHome() {
 
   return (
     <>
+      <PreviewMotion />
       <Nav />
       <main>
         <Hero heroBlock={homePage.heroBlock} />

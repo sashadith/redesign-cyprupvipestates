@@ -63,7 +63,7 @@ const Cities: FC<Props> = ({ block }) => {
         {title && <h2 className="cities__title">{renderTitle(title)}</h2>}
         <hr className="shimmer cities__stripe" />
         <p className="cities__lead">
-          From lively marinas to quiet old towns, each Cypriot city offers a different way to live by the sea.
+          From lively marinas to quiet old towns, each Cypriot city offers a different way to live by the sea. Whether you are drawn to the cosmopolitan energy of Limassol, the historic charm of Paphos, or the relaxed coastal pace of Larnaca — Cyprus rewards every lifestyle with world-class infrastructure, a stable legal framework, and over 340 days of sunshine each year.
         </p>
 
         {cities?.length > 0 && (

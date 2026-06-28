@@ -1,9 +1,11 @@
 import { urlFor } from "@/sanity/sanity.client";
 import type { Image as ImageType } from "@/types/homepage";
 
-/* Parallax image band — a full-bleed visual breather. Pure CSS parallax
-   (background-attachment: fixed) on desktop pointers; static cover on touch
-   and under reduced-motion. Reuses the original parallaxImage. */
+/* Parallax band — a full-bleed visual breather. Now a looping background video
+   (sunset.mp4). The original parallaxImage is kept as the poster fallback.
+   The video lives under /preview-assets so the i18n middleware leaves it alone. */
+
+const VIDEO_SRC = "/preview-assets/sunset.mp4";
 
 const safeUrl = (img: unknown) => {
   try {
@@ -14,11 +16,21 @@ const safeUrl = (img: unknown) => {
 };
 
 export default function ParallaxBand({ image }: { image?: ImageType }) {
-  const url = image ? safeUrl(image) : undefined;
-  if (!url) return null;
+  const poster = image ? safeUrl(image) : undefined;
 
   return (
-    <section className="parallax" style={{ backgroundImage: `url("${url}")` }}>
+    <section className="parallax">
+      <video
+        className="parallax__video"
+        src={VIDEO_SRC}
+        poster={poster}
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="metadata"
+        aria-hidden
+      />
       <span className="parallax__scrim" aria-hidden />
     </section>
   );

@@ -37,7 +37,7 @@ const Hero: FC<Props> = ({ heroBlock }) => {
       <div className="hero__inner wrap">
         <h1 className="hero__title">
           <span className="hero__brand">Cyprus VIP Estates</span>
-          Cyprus <span className="it">Property</span> Experts
+          <span className="hero__headline">Cyprus <span className="it">Property</span> Experts</span>
         </h1>
 
         <hr className="shimmer hero__stripe" />

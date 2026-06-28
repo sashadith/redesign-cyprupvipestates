@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import "./tokens.css";
+import LenisProvider from "./anim/LenisProvider";
 
 /* Locked set 2 — Fraunces (display) · Mulish (body); Playfair = Cyrillic fallback. */
 const display = Fraunces({
@@ -42,7 +43,9 @@ export default function PreviewHomeLayout({
       <head>
         <meta name="robots" content="noindex, nofollow" />
       </head>
-      <body>{children}</body>
+      <body>
+        <LenisProvider>{children}</LenisProvider>
+      </body>
     </html>
   );
 }

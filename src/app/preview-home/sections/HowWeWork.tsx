@@ -40,7 +40,7 @@ export default function HowWeWork({ block }: { block: HowWeWorkBlock }) {
             return (
               <li className="about__bullet" key={s._key}>
                 <span className="about__medallion">{icon && <img src={icon} alt="" />}</span>
-                {s.text && <span className="about__bullet-text">{s.text}</span>}
+                {s.text && <span className="about__bullet-text">{s.text.replace(/\s*ceremoniously/i, "")}</span>}
               </li>
             );
           })}

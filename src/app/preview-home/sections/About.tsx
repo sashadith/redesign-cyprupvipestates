@@ -15,8 +15,8 @@ const safeUrl = (img: unknown) => {
 
 // wrap the word "Cyprus" in the gold-italic accent
 const renderTitle = (title: string) =>
-  title.split(/(Cyprus)/i).map((part, i) =>
-    part.toLowerCase() === "cyprus" ? (
+  title.split(/(Only One)/i).map((part, i) =>
+    part.toLowerCase() === "only one" ? (
       <span key={i} className="it">{part}</span>
     ) : (
       <React.Fragment key={i}>{part}</React.Fragment>
@@ -31,7 +31,7 @@ const About: FC<Props> = ({ aboutBlock }) => {
   return (
     <section className="section is-light about">
       <div className="wrap">
-        {title && <h2 className="about__title">{renderTitle(title)}</h2>}
+        {title && <h2 className="about__title">{renderTitle(title.replace(/This is Cyprus/i, "There is Only One Cyprus"))}</h2>}
         <hr className="shimmer about__stripe" />
 
         {description && <p className="about__desc">{description}</p>}
