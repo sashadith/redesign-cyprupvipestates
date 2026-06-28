@@ -443,8 +443,10 @@ img { max-width: 100%; display: block; }
   font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em;
   color: var(--text); margin: 0; text-wrap: balance; max-width: 22ch;
 }
-/* mobile: title spans the full container width, like the description below */
-@media (max-width: 767px) { .about__title { max-width: none; } }
+/* mobile: title spans the full container width, like the description below.
+   text-wrap:normal (not balance) so each line fills the width instead of
+   wrapping into short balanced lines. */
+@media (max-width: 767px) { .about__title { max-width: none; text-wrap: normal; } }
 .about__stripe { margin-top: var(--s-5); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
 .about__desc {
   margin: var(--s-7) 0 56px; font-weight: 300; line-height: 1.6; color: var(--text-soft);
