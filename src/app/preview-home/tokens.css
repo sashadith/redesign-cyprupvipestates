@@ -356,6 +356,9 @@ img { max-width: 100%; display: block; }
 }
 .hero__media { position: absolute; inset: 0; z-index: 0; }
 .hero__media :where(div) { width: 100%; height: 100%; }
+/* poster image (Next <Image fill>) has no object-fit by default → it stretches;
+   match the video's cover so proportions are identical (preview-scoped). */
+.hero__media :where(img) { width: 100%; height: 100%; object-fit: cover; }
 /* dark scrim — green-tinted, legibility (AA) + cinematic */
 .hero__scrim {
   position: absolute; inset: 0; z-index: 1; pointer-events: none;
