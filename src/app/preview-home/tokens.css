@@ -441,12 +441,12 @@ img { max-width: 100%; display: block; }
 .about__title {
   font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
   font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em;
-  color: var(--text); margin: 0; text-wrap: balance; max-width: 22ch;
+  color: var(--text); margin: 0;
 }
-/* mobile: title spans the full container width, like the description below.
-   text-wrap:normal (not balance) so each line fills the width instead of
-   wrapping into short balanced lines. */
-@media (max-width: 767px) { .about__title { max-width: none; text-wrap: normal; } }
+/* desktop only: balanced heading at a tighter measure. On mobile the title keeps
+   the default (normal wrap, full container width) like the description below —
+   declaring text-wrap:normal there gets stripped by the minifier as an initial. */
+@media (min-width: 768px) { .about__title { text-wrap: balance; max-width: 22ch; } }
 .about__stripe { margin-top: var(--s-5); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
 .about__desc {
   margin: var(--s-7) 0 56px; font-weight: 300; line-height: 1.6; color: var(--text-soft);
@@ -913,11 +913,10 @@ img { max-width: 100%; display: block; }
 .formsec__radio-option input { accent-color: var(--champagne); }
 .formsec__radio-option:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
 
-.formsec__submit { margin-top: var(--s-6); min-width: 180px; justify-content: center; border-color: var(--hairline-strong); }
-/* two-class selector so the CSS minifier keeps these (single-class .formsec__submit
-   background/color get dropped as "overridden" vs .btn--primary) */
-.formsec .formsec__submit { background: var(--sea-deep); color: var(--ivory); }
-.formsec .formsec__submit:hover { background: var(--sea-deep); border-color: var(--accent); color: var(--ivory); }
+/* !important so the CSS minifier can't drop the deep-green as "overridden" vs
+   .btn--primary (it strips it from both 1- and 2-class non-hover selectors) */
+.formsec__submit { margin-top: var(--s-6); min-width: 180px; justify-content: center; background: var(--sea-deep) !important; color: var(--ivory) !important; border-color: var(--hairline-strong); }
+.formsec__submit:hover { border-color: var(--accent); }
 .formsec__loader { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(8, 21, 18, 0.35); border-top-color: var(--sea-deep); animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
