@@ -1,7 +1,9 @@
 // src/app/[lang]/layout.tsx
 import "@/app/globals.css";
+import "@/app/design-tokens.css"; // shared design tokens (definitions only — see file header)
+import "@/app/header-footer.css"; // global header + footer chrome (redesign) — see file header
 import type { Metadata } from "next";
-import { Rubik } from "next/font/google";
+import { Rubik, Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import { cookies, draftMode } from "next/headers";
 import { GoogleTagManager } from "@next/third-parties/google";
 import { ModalProvider } from "../context/ModalContext";
@@ -13,6 +15,7 @@ import LenisProvider from "../components/LenisProvider/LenisProvider";
 import LinkedInPixel from "../components/LinkedInPixel/LinkedInPixel";
 import AnalyticsTracker from "../components/AnalyticsTracker/AnalyticsTracker";
 import SkipLink from "../components/SkipLink/SkipLink";
+import NavHeroFlag from "../components/Header/NavHeroFlag";
 import { MotionConfig } from "framer-motion";
 import Script from "next/script";
 import { DEFAULT_OG_IMAGE } from "@/lib/seo";
@@ -26,6 +29,31 @@ const SKIP_LINK_LABELS: Record<string, string> = {
 };
 
 const rubik = Rubik({ subsets: ["latin", "cyrillic"] });
+
+// Redesign chrome fonts — define the CSS vars the global header/footer use.
+// Applied as `.variable` classes on <body> (they only DEFINE the vars; the body
+// text itself stays Rubik). Config MUST match the blog listing (BlogInsights) so
+// the same font files are reused. --font-display: Fraunces (incl. italic accents),
+// --font-body: Mulish, --font-display-cyr: Playfair (Cyrillic display fallback).
+const fraunces = Fraunces({
+  subsets: ["latin", "latin-ext"],
+  weight: ["300", "400", "500"],
+  style: ["normal", "italic"],
+  variable: "--font-display",
+  display: "swap",
+});
+const mulish = Mulish({
+  subsets: ["latin", "latin-ext", "cyrillic"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-body",
+  display: "swap",
+});
+const playfairCyr = Playfair_Display({
+  subsets: ["cyrillic"],
+  weight: ["400", "500"],
+  variable: "--font-display-cyr",
+  display: "swap",
+});
 
 // Third-party tracking master switch. Re-enabled 2026-06-23 (owner request, audit H3):
 // Google Analytics 4, Microsoft Clarity, Facebook Pixel (+ FB domain-verification meta).
@@ -76,9 +104,20 @@ export default function RootLayout({
   const isDraftPreview = draftMode().isEnabled;
 
   return (
-    <html lang={params.lang}>
+    <html lang={params.lang} suppressHydrationWarning>
       <LenisProvider />
-      <body className={rubik.className}>
+      <body className={`${rubik.className} ${fraunces.variable} ${mulish.variable} ${playfairCyr.variable}`}>
+        {/* Pre-paint: mark dark-hero routes (home, /projects) so the global nav is
+            transparent there from the first frame (no bar → transparent flash).
+            Client-side navigation is handled by <NavHeroFlag>. Keep the route test
+            in sync with isDarkHeroPath() in navShared.tsx. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var p=location.pathname.replace(/\\/+$/,'')||'/';if(/^\\/(de|pl|ru)?$/.test(p)||/^(\\/(de|pl|ru))?\\/projects$/.test(p))document.documentElement.setAttribute('data-hero-dark','')}catch(e){}})()",
+          }}
+        />
+        <NavHeroFlag />
         <SkipLink label={SKIP_LINK_LABELS[params.lang] ?? SKIP_LINK_LABELS.en} />
         {isDraftPreview && (
           <div style={{ position: "sticky", top: 0, zIndex: 9999, background: "#1B4B43", color: "#fff", textAlign: "center", fontSize: 13, padding: "6px 12px" }}>

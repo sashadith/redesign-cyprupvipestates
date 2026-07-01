@@ -16,6 +16,8 @@ export type navLink = {
   label: string;
   link: string;
   subLinks: Sublink[];
+  /** Optional visual style hook (e.g. "accent" → champagne). CMS-editable. */
+  variant?: string;
 };
 
 export type Header = {

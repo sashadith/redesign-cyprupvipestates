@@ -1,33 +1,53 @@
 import React from "react";
-import styles from "./Footer.module.scss";
-import { getFooterByLang } from "@/sanity/sanity.utils";
 import Link from "next/link";
-import {
-  Link as FooterLink,
+import { getFooterByLang } from "@/sanity/sanity.utils";
+import { urlFor } from "@/sanity/sanity.client";
+import type {
+  Contact,
   SocialLink,
   Paragraph,
-  Contact,
   FooterColumn,
   FooterColumnLink,
-} from "@/types/footer"; // Импортируйте тип Link и переименуйте его, чтобы избежать конфликта с Link из next/link
-import Image from "next/image";
-import { urlFor } from "@/sanity/sanity.client";
-import NewsletterForm from "../NewsletterForm/NewsletterForm";
-import ContactLink from "../ContactLink/ContactLink";
+  Link as FooterLink,
+} from "@/types/footer";
+import FooterContact from "./FooterContact";
+import FooterNewsletter from "./FooterNewsletter";
+
+/* Global site footer — quiet-luxury redesign (migrated from the staging preview).
+   All content still comes from the CMS via getFooterByLang; contact links and the
+   newsletter keep their previous tracking / CRM behaviour (see FooterContact /
+   FooterNewsletter). Only the design/markup changed. */
 
 type Props = {
   params: { lang: string };
 };
 
+const safeUrl = (img: unknown) => {
+  try {
+    return urlFor(img as never).url();
+  } catch {
+    return undefined;
+  }
+};
+
+const placeholderFor = (lang: string) =>
+  lang === "de"
+    ? "Ihre E-Mail Adresse"
+    : lang === "pl"
+      ? "Twój adres e-mail"
+      : lang === "ru"
+        ? "Ваш email"
+        : "Your email";
+
 const Footer = async ({ params }: Props) => {
   const data = await getFooterByLang(params.lang);
+  if (!data) return null;
 
   const {
     logo,
     socialLinks,
     companyTitle,
     companyParagraphs,
-    vatNumber,
     contactTitle,
     contacts,
     newsletterTitle,
@@ -38,194 +58,109 @@ const Footer = async ({ params }: Props) => {
     discklaimer,
   } = data;
 
-  const cleanLink = (link: string) => {
-    // Оставляем буквы, цифры, символы @ и +
-    return link.replace(/[^a-zA-Z0-9@+]/g, "");
-  };
-
-  const getContactHref = (contact: Contact) => {
-    const cleanedLabel = cleanLink(contact.label);
-
-    switch (contact.type) {
-      case "Email":
-        return `mailto:${cleanedLabel}`;
-
-      case "Phone":
-        // Если это телефон, возвращаем ссылку для звонка
-        return `tel:${cleanedLabel}`;
-
-      case "Link":
-        // Если в label содержится номер телефона, формируем ссылку на WhatsApp
-        if (cleanedLabel.match(/^\+?\d+$/)) {
-          const whatsappNumber = cleanedLabel.replace("+", ""); // Убираем плюс для WhatsApp
-          return `https://wa.me/${whatsappNumber}`;
-        }
-        // Если это обычная ссылка, проверяем на наличие http/https
-        return cleanedLabel.startsWith("http://") ||
-          cleanedLabel.startsWith("https://")
-          ? cleanedLabel
-          : `https://${cleanedLabel}`;
-
-      default:
-        return "#";
-    }
-  };
-
-  const getPlaceholderText = (lang: string) => {
-    switch (lang) {
-      case "en":
-        return "Your email";
-      case "de":
-        return "Ihre E-Mail Adresse";
-      case "pl":
-        return "Twój adres e-mail";
-      case "ru":
-        return "Ваш email";
-      default:
-        return "Your email"; // Значение по умолчанию
-    }
-  };
+  const logoUrl = safeUrl(logo);
 
   return (
-    <footer className={styles.footer} id="footer">
-      <div className={styles.top}>
-        <div className="container">
-          <div className={styles.footerGrid}>
-            <div className={styles.logoLinks}>
-              <div className={styles.logoBlock}>
-                <Image
-                  alt="Cyprys VIP Estates"
-                  src={urlFor(logo).url()}
-                  width={400}
-                  height={400}
-                  className={styles.image}
-                  unoptimized
-                />
+    <footer className="pf" id="footer">
+      <div className="pf__container">
+        <div className="pf__top">
+          <div className="pf__brand">
+            {logoUrl && <img className="pf__logo" src={logoUrl} alt="Cyprus VIP Estates" />}
+          </div>
+
+          <div className="pf__col">
+            {companyTitle && <p className="pf__col-title">{companyTitle}</p>}
+            {companyParagraphs?.length > 0 && (
+              <div className="pf__about">
+                {companyParagraphs.map((p: Paragraph) => (
+                  <p key={p._key}>{p.paragraph}</p>
+                ))}
               </div>
-              <div className={styles.socialLinks}>
-                {socialLinks.map((socialLink: SocialLink) => (
-                  <Link
-                    href={socialLink.link}
-                    key={socialLink._key}
-                    className={styles.socialLink}
-                    target="_blank"
-                    rel="noopener nofollow"
-                  >
-                    <Image
-                      alt={socialLink.label}
-                      src={urlFor(socialLink.icon).url()}
-                      width={30}
-                      height={30}
-                      unoptimized
-                    />
+            )}
+          </div>
+
+          <div className="pf__col">
+            {contactTitle && <p className="pf__col-title">{contactTitle}</p>}
+            <div className="pf__contacts">
+              {contacts?.map((c: Contact) => (
+                <FooterContact key={c._key} contact={c} />
+              ))}
+            </div>
+            {socialLinks?.length > 0 && (
+              <div className="pf__social">
+                {socialLinks.map((s: SocialLink) => {
+                  const icon = safeUrl(s.icon);
+                  return (
+                    <a
+                      key={s._key}
+                      href={s.link}
+                      target="_blank"
+                      rel="noopener nofollow"
+                      className="pf__social-link"
+                      aria-label={s.label}
+                    >
+                      {icon && <img src={icon} alt="" width={20} height={20} />}
+                    </a>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="pf__col pf__col--news">
+            {newsletterTitle && <p className="pf__col-title">{newsletterTitle}</p>}
+            <FooterNewsletter
+              placeholder={placeholderFor(params.lang)}
+              buttonLabel={newsletterButtonLabel}
+              lang={params.lang}
+            />
+          </div>
+        </div>
+
+        {footerColumns?.length > 0 && (
+          <nav className="pf__nav" aria-label="Footer navigation">
+            {footerColumns.map((col: FooterColumn) =>
+              col?.title || col?.links?.length ? (
+                <div key={col._key} className="pf__navcol">
+                  {col.title && <p className="pf__col-title">{col.title}</p>}
+                  {col.links?.length > 0 && (
+                    <ul>
+                      {col.links.map((l: FooterColumnLink) =>
+                        l?.label && l?.url ? (
+                          <li key={l._key}>
+                            <Link
+                              href={l.url}
+                              {...(l.url.startsWith("http")
+                                ? { target: "_blank", rel: "noopener noreferrer" }
+                                : {})}
+                            >
+                              {l.label}
+                            </Link>
+                          </li>
+                        ) : null
+                      )}
+                    </ul>
+                  )}
+                </div>
+              ) : null
+            )}
+          </nav>
+        )}
+
+        <div className="pf__bottom">
+          <div className="pf__bottom-row">
+            {copyright && <p className="pf__copy">{copyright}</p>}
+            {policyLinks?.length > 0 && (
+              <div className="pf__policy">
+                {policyLinks.map((p: FooterLink) => (
+                  <Link key={p._key} href={p.link}>
+                    {p.label}
                   </Link>
                 ))}
               </div>
-            </div>
-            <div className={styles.companyBlock}>
-              <p className={styles.title}>{companyTitle}</p>
-              <div className={styles.paragraphs}>
-                {companyParagraphs.map((paragraph: Paragraph) => (
-                  <p key={paragraph._key} className={styles.paragraph}>
-                    {paragraph.paragraph}
-                  </p>
-                ))}
-              </div>
-              {/* <p className={styles.paragraph}>{vatNumber}</p> */}
-            </div>
-            <div className={styles.contactBlock}>
-              <p className={styles.title}>{contactTitle}</p>
-              <div className={styles.contacts}>
-                {contacts.map((contact: Contact) => (
-                  <ContactLink key={contact._key} contact={contact} />
-                ))}
-              </div>
-            </div>
-            <div className={styles.newsLetterBlock}>
-              <p className={styles.title}>{newsletterTitle}</p>
-              <NewsletterForm
-                placeholder={getPlaceholderText(params.lang)}
-                buttonLabel={newsletterButtonLabel}
-                lang={params.lang}
-              />
-            </div>
+            )}
           </div>
-        </div>
-      </div>
-      {footerColumns?.length > 0 && (
-        <div className={styles.footerMiddle}>
-          <div className="container">
-            <nav
-              className={styles.footerColumns}
-              aria-label="Footer navigation"
-            >
-              {footerColumns.map((column: FooterColumn) => {
-                if (!column?.title && !column?.links?.length) return null;
-
-                return (
-                  <div key={column._key} className={styles.footerColumn}>
-                    {column.title && (
-                      <p className={styles.title}>{column.title}</p>
-                    )}
-
-                    {column.links?.length > 0 && (
-                      <ul className={styles.columnLinks}>
-                        {column.links.map((link: FooterColumnLink) => {
-                          if (!link?.label || !link?.url) return null;
-
-                          const isExternal = link.url.startsWith("http");
-
-                          return (
-                            <li key={link._key} className={styles.columnLink}>
-                              <Link
-                                href={link.url}
-                                {...(isExternal
-                                  ? {
-                                      target: "_blank",
-                                      rel: "noopener noreferrer",
-                                    }
-                                  : {})}
-                              >
-                                {link.label}
-                              </Link>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </div>
-                );
-              })}
-            </nav>
-          </div>
-        </div>
-      )}
-      {/* <div className={styles.footerDivider}></div> */}
-      <div className={styles.bottom}>
-        <div className="container">
-          <div className={styles.bottomWrapper}>
-            <div className={styles.bottomLeft}>
-              <p className={styles.policyLink}>{copyright}</p>
-            </div>
-            <div className={styles.bottomRight}>
-              <div className={styles.policyLinks}>
-                {policyLinks.map(
-                  (
-                    policyLink: FooterLink, // Укажите тип для policyLink
-                  ) => (
-                    <Link
-                      href={policyLink.link}
-                      key={policyLink._key}
-                      className={styles.policyLink}
-                    >
-                      {policyLink.label}
-                    </Link>
-                  ),
-                )}
-              </div>
-            </div>
-          </div>
-          <div className={styles.discklaimer}>{discklaimer}</div>
+          {discklaimer && <p className="pf__disclaimer">{discklaimer}</p>}
         </div>
       </div>
     </footer>
