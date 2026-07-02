@@ -193,6 +193,16 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string): Pr
       if (Array.isArray(b.projects)) b.projects = await resolveProjectRefs(b.projects, lang);
       b.filteredProjects = await computeFilteredProjects(lang, b.filterCity, b.filterPropertyType);
     }
+    // Inline Related Article: hydrate the referenced internal blog's title/excerpt/slug.
+    if (b._type === "inlineRelatedArticleBlock" && b.article?._ref) {
+      const art = await prisma.blog.findFirst({
+        where: { sanityId: b.article._ref },
+        select: { title: true, excerpt: true, slug: true, language: true },
+      });
+      b.resolved = art
+        ? { title: art.title ?? "", excerpt: art.excerpt ?? "", slug: art.slug ?? "", language: art.language ?? lang }
+        : null;
+    }
     out.push(D(b));
   }
   return out;
@@ -224,7 +234,7 @@ async function _getHomePageByLang(lang: string): Promise<Homepage> {
     fcb.caseStudies = ids.map((id: string) => byId.get(id)).filter(Boolean).map((c: AnyRow) => ({
       _id: c.sanityId, _type: "caseStudy", title: c.title, excerpt: c.excerpt, category: c.category,
       clientOverview: c.clientOverview, slug: slugObj(c), previewImage: D(c.previewImage),
-      publishedAt: c.publishedAt, _updatedAt: c.updatedAt,
+      publishedAt: c.publishedAt?.toISOString?.() ?? null, _updatedAt: c.updatedAt,
     }));
   }
 
@@ -387,7 +397,7 @@ async function _getBlogPostByLang(lang: string, slug: string): Promise<Blog> {
     blogs.forEach((b) => m.set(b.sanityId, {
       _id: b.sanityId, _type: "blog", title: b.title,
       category: b.category ? { _id: b.category.sanityId, _type: "category", title: b.category.title, slug: slugObj(b.category), language: b.category.language } : null,
-      slug: slugObj(b), publishedAt: b.publishedAt, previewImage: D(b.previewImage),
+      slug: slugObj(b), publishedAt: b.publishedAt?.toISOString?.() ?? null, previewImage: D(b.previewImage),
       // Blog posts live at /[lang]/blog/<slug> in their own language.
       href: localizedHref(b.language, ["blog", b.slug]),
     }));
@@ -411,7 +421,7 @@ async function _getBlogPostByLang(lang: string, slug: string): Promise<Blog> {
 
   const out: AnyRow = {
     ...base(row, "blog"),
-    title: row.title, slug: slugObj(row), seo: row.seo, publishedAt: row.publishedAt,
+    title: row.title, slug: slugObj(row), seo: row.seo, publishedAt: row.publishedAt?.toISOString?.() ?? null,
     category: row.category ? { _id: row.category.sanityId, title: row.category.title, slug: slugObj(row.category) } : null,
     author: row.author ? {
       _id: row.author.sanityId, name: row.author.name, position: row.author.position,
@@ -445,7 +455,7 @@ export async function getBlogPostsByLang(lang: string): Promise<Blog[]> {
   return Promise.all(rows.map(async (b) => D({
     ...base(b, "blog"), title: b.title, slug: slugObj(b), previewImage: D(b.previewImage),
     category: b.category ? { title: b.category.title, slug: slugObj(b.category) } : null,
-    publishedAt: b.publishedAt, language: b.language,
+    publishedAt: b.publishedAt?.toISOString?.() ?? null, language: b.language,
     _translations: await translationsFor(prisma.blog as any, b.translationGroupId),
   }))) as unknown as Blog[];
 }
@@ -458,7 +468,7 @@ export async function getBlogPostsByLangWithPagination(lang: string, limit: numb
   return Promise.all(rows.map(async (b) => D({
     _id: b.sanityId, title: b.title, excerpt: b.excerpt, slug: slugObj(b), previewImage: D(b.previewImage),
     category: b.category ? { title: b.category.title, slug: slugObj(b.category) } : null,
-    publishedAt: b.publishedAt, language: b.language,
+    publishedAt: b.publishedAt?.toISOString?.() ?? null, language: b.language,
     _translations: await translationsFor(prisma.blog as any, b.translationGroupId),
   }))) as unknown as Blog[];
 }
@@ -484,7 +494,7 @@ async function _getCaseStudyByLang(lang: string, slug: string): Promise<CaseStud
       _id: p.sanityId, title: p.title, excerpt: p.excerpt, slug: p.slug,
       previewImage: D(p.previewImage), keyFeatures: p.keyFeatures, isSold: p.isSold,
     })),
-    publishedAt: row.publishedAt, language: row.language,
+    publishedAt: row.publishedAt?.toISOString?.() ?? null, language: row.language,
     _translations: await translationsFor(prisma.caseStudy as any, row.translationGroupId),
   };
   return D(out) as unknown as CaseStudy;
@@ -495,7 +505,7 @@ export async function getCaseStudiesByLang(lang: string): Promise<CaseStudy[]> {
   return Promise.all(rows.map(async (c) => D({
     ...base(c, "caseStudy"), title: c.title, slug: slugObj(c), seo: c.seo, category: c.category,
     excerpt: c.excerpt, clientOverview: c.clientOverview, previewImage: D(c.previewImage),
-    publishedAt: c.publishedAt, language: c.language,
+    publishedAt: c.publishedAt?.toISOString?.() ?? null, language: c.language,
     _translations: await translationsFor(prisma.caseStudy as any, c.translationGroupId),
   }))) as unknown as CaseStudy[];
 }
@@ -505,7 +515,7 @@ export async function getCaseStudiesByLangWithPagination(lang: string, limit: nu
   return Promise.all(rows.map(async (c) => D({
     _id: c.sanityId, _type: "caseStudy", title: c.title, excerpt: c.excerpt, slug: slugObj(c),
     previewImage: D(c.previewImage), category: c.category, clientOverview: c.clientOverview,
-    publishedAt: c.publishedAt, _updatedAt: c.updatedAt, language: c.language,
+    publishedAt: c.publishedAt?.toISOString?.() ?? null, _updatedAt: c.updatedAt, language: c.language,
     _translations: await translationsFor(prisma.caseStudy as any, c.translationGroupId),
   }))) as unknown as CaseStudy[];
 }
@@ -682,16 +692,15 @@ async function queryFilteredRows(lang: string, f: ProjectFilters) {
 }
 
 export async function getFilteredProjects(lang: string, skip: number, limit: number, filters: ProjectFilters) {
-  const sort = filters.sort ?? "recommended";
+  // empty/missing sort → "recommended" (deterministic: featured → priority →
+  // price-segment interleave → stable title tiebreak)
+  const sort = filters.sort || "recommended";
   const rows = await queryFilteredRows(lang, filters);
-  // isNew = within latest 20 by createdAt
-  const latest = await prisma.project.findMany({ where: { language: lang as any }, orderBy: { createdAt: "desc" }, take: 20, select: { sanityId: true } });
-  const newIds = new Set(latest.map((r) => r.sanityId));
   const items: ProjectListItem[] = rows.map((p) => ({
     _id: p.sanityId, _createdAt: p.createdAt?.toISOString?.(), title: p.title, excerpt: p.excerpt ?? undefined,
     slug: { current: p.slug }, previewImage: D(p.previewImage), images: Array.isArray(p.images) ? D((p.images as any[]).slice(0, 5)) : undefined,
     keyFeatures: (p.keyFeatures as any) ?? undefined, isSold: p.isSold, videoId: p.videoId ?? undefined,
-    isFeatured: p.isFeatured, listingPriority: p.listingPriority, isNew: newIds.has(p.sanityId),
+    isFeatured: p.isFeatured, listingPriority: p.listingPriority, isNew: p.isNew, // manual flag (admin), default false
   }));
   const sorted = sort === "recommended" ? sortProjectsRecommended(items) : sortProjectsStandard(items, sort);
   return sorted.slice(skip, skip + limit);
@@ -726,6 +735,16 @@ export async function getAllProjectsLocationsByLang(lang: string) {
     city: (p.keyFeatures as any)?.city, price: (p.keyFeatures as any)?.price,
     previewUrl: previewUrlOf(p), previewAlt: (p.previewImage as any)?.alt ?? p.title,
   })) as any;
+}
+
+// Distances (minutes to beach/airport/school/… ) for a set of projects, by id.
+// Used by the new /preview-projects explorer to enrich cards + map popups.
+export async function getProjectDistancesByIds(ids: string[]): Promise<Record<string, any>> {
+  if (!ids.length) return {};
+  const rows = await prisma.project.findMany({ where: { sanityId: { in: ids } }, select: { sanityId: true, distances: true } });
+  const map: Record<string, any> = {};
+  for (const r of rows) if (r.distances) map[r.sanityId] = r.distances;
+  return map;
 }
 
 export async function getFileBySlug(slug: string): Promise<SanityFile | null> {
