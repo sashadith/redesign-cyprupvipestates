@@ -1259,15 +1259,10 @@ export async function analyzeDeveloperFeed(developerAccountId: string, _prev: an
       const url = String(formData.get("url") ?? "").trim();
       if (!/^https?:\/\//i.test(url)) return { error: "Enter a valid http(s) feed URL." };
       sourceUrl = url;
-      const res = await fetch(url, {
-        redirect: "follow",
-        signal: AbortSignal.timeout(20000),
-        headers: { "user-agent": "CVE-FeedAnalyzer/1.0" },
-      });
-      if (!res.ok) return { error: `Fetch failed: HTTP ${res.status}` };
-      const buf = Buffer.from(await res.arrayBuffer());
-      if (buf.byteLength > MAX_FEED_BYTES) return { error: `Feed too large (> ${MAX_FEED_BYTES / 1024 / 1024} MB).` };
-      xml = buf.toString("utf8");
+      // SSRF-safe: rejects URLs resolving to private/internal addresses and
+      // re-validates every redirect hop; streams with the size cap.
+      const { fetchFeedXml } = await import("@/lib/devFeeds/fetchFeed");
+      xml = await fetchFeedXml(url, MAX_FEED_BYTES);
     } else {
       const file = formData.get("file") as File | null;
       if (!file || file.size === 0) return { error: "Choose an XML file to upload." };
