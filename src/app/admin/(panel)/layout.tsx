@@ -42,6 +42,14 @@ function buildModules(isAdmin: boolean): NavModule[] {
     },
     { key: "analytics", label: "Analytics", pages: [{ href: "/admin/analytics", label: "Analytics" }] },
     { key: "website", label: "Website", pages: websitePages },
+    {
+      key: "feeds",
+      label: "Dev Feeds",
+      pages: [
+        { href: "/admin/feeds", label: "Developers" },
+        { href: "/admin/feeds/compare", label: "Field comparison" },
+      ],
+    },
     { key: "settings", label: "Settings", pages: [{ href: "/admin/account", label: "My Account" }] },
     ...(isAdmin
       ? [{ key: "users", label: "Users", pages: [{ href: "/admin/users", label: "Users" }] }]

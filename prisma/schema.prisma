@@ -97,6 +97,7 @@ model Project {
   bedrooms        String?
   completionDate  String?
   isFeatured      Boolean @default(false)
+  isNew           Boolean @default(false)
   isSold          Boolean @default(false)
   listingPriority Int     @default(0)
   latitude        Float?
@@ -579,4 +580,46 @@ model AiGenerationQueue {
   processedAt DateTime?
 
   @@map("ai_generation_queue")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// DEVELOPER FEED ANALYSIS — discovery / standardization tool (v1).
+// Fully additive and ISOLATED: no relations to Project / Property / Developer /
+// Lead / anything existing. Stores a developer identity plus the result of
+// analyzing an uploaded XML file or a feed URL. Nothing here reads from or
+// writes to public content. DeveloperAccount 1─▶ N DeveloperFeedAnalysis.
+// ─────────────────────────────────────────────────────────────────────────
+
+model DeveloperAccount {
+  id          String   @id @default(uuid())
+  name        String
+  slug        String   @unique
+  website     String?
+  contactInfo String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  analyses DeveloperFeedAnalysis[]
+
+  @@map("developer_accounts")
+}
+
+model DeveloperFeedAnalysis {
+  id                 String   @id @default(uuid())
+  developerAccountId String
+  sourceType         String // "FILE" | "URL"
+  sourceUrl          String? // set when sourceType = "URL"
+  sourceFileName     String? // original filename when sourceType = "FILE"
+  rawXml             String? // retained raw feed (size-capped in app) for re-analysis; String → Postgres text
+  itemNodePath       String? // detected repeating item node, e.g. "properties.property"
+  itemCount          Int      @default(0)
+  fields             Json? // analyzed + manually-edited field list (array of field descriptors)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  developerAccount DeveloperAccount @relation(fields: [developerAccountId], references: [id], onDelete: Cascade)
+
+  @@index([developerAccountId])
+  @@map("developer_feed_analyses")
 }

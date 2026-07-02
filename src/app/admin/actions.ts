@@ -292,6 +292,7 @@ export async function updateProjectMeta(id: string, formData: FormData) {
       status: status as any,
       scheduledAt: scheduledAtFromForm(formData, status),
       isFeatured: formData.get("isFeatured") === "on",
+      isNew: formData.get("isNew") === "on",
       isSold: formData.get("isSold") === "on",
       listingPriority: num("listingPriority") ?? 0,
       price: num("price"),
@@ -316,7 +317,13 @@ export async function updateBlogMeta(id: string, formData: FormData) {
   await requireSession();
   const status = String(formData.get("status") ?? "PUBLISHED");
   if (!CONTENT_STATUSES.includes(status)) throw new Error("Invalid status");
-  const patch = { ...(await slugFromForm(prisma.blog, id, formData)), ...(await publishedAtOnPublish(prisma.blog, id, status)) };
+  // Editable publication date (Berlin wall-time → UTC). An explicit value wins;
+  // otherwise keep the auto-set-on-first-publish behaviour.
+  const explicitPublishedAt = zonedInputToUtc(String(formData.get("publishedAt") ?? ""));
+  const patch = {
+    ...(await slugFromForm(prisma.blog, id, formData)),
+    ...(explicitPublishedAt ? { publishedAt: explicitPublishedAt } : await publishedAtOnPublish(prisma.blog, id, status)),
+  };
   const row = await prisma.blog.update({
     where: { id },
     data: {
@@ -817,6 +824,18 @@ export async function saveBlogContentBlocks(id: string, items: BlockItem[]) {
   return { ok: true };
 }
 
+// Internal blog articles for the Inline Related Article picker (ref + label).
+export async function listBlogArticlesForPicker(): Promise<{ ref: string; title: string; language: string }[]> {
+  await requireSession();
+  const rows = await prisma.blog.findMany({
+    select: { sanityId: true, title: true, slug: true, language: true },
+    orderBy: [{ language: "asc" }, { title: "asc" }],
+  });
+  return rows
+    .filter((r) => r.sanityId)
+    .map((r) => ({ ref: r.sanityId as string, title: (r.title || r.slug || "Untitled") as string, language: r.language as string }));
+}
+
 export async function saveSinglepageContentBlocks(id: string, items: BlockItem[]) {
   await requireSession();
   if (!Array.isArray(items)) throw new Error("Invalid blocks");
@@ -1155,4 +1174,157 @@ export async function saveCaseStudyContentBlocks(id: string, items: BlockItem[])
 
 export async function logout() {
   await signOut({ redirectTo: "/admin/login" });
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// DEVELOPER FEED ANALYSIS (discovery / standardization tool).
+// Creates developer accounts and analyzes uploaded XML files / feed URLs into a
+// field-mapping table. NOTHING here writes to Project/Property or public content.
+// ─────────────────────────────────────────────────────────────────────────
+
+async function uniqueAccountSlug(desired: string, excludeId?: string): Promise<string> {
+  const base = slugify(desired) || "developer";
+  let slug = base;
+  let n = 2;
+  while (
+    await prisma.developerAccount.findFirst({
+      where: { slug, ...(excludeId ? { NOT: { id: excludeId } } : {}) },
+      select: { id: true },
+    })
+  ) {
+    slug = `${base}-${n++}`;
+  }
+  return slug;
+}
+
+export async function createDeveloperAccount(_prev: any, formData: FormData) {
+  await requireSession();
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return { error: "Developer name is required." };
+  const slug = await uniqueAccountSlug(String(formData.get("slug") ?? "") || name);
+  const website = String(formData.get("website") ?? "").trim() || null;
+  const contactInfo = String(formData.get("contactInfo") ?? "").trim() || null;
+  const notes = String(formData.get("notes") ?? "").trim() || null;
+  const dev = await prisma.developerAccount.create({ data: { name, slug, website, contactInfo, notes } });
+  revalidatePath("/admin/feeds");
+  redirect(`/admin/feeds/${dev.id}`);
+}
+
+export async function updateDeveloperAccount(id: string, formData: FormData) {
+  await requireSession();
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) throw new Error("Developer name is required.");
+  await prisma.developerAccount.update({
+    where: { id },
+    data: {
+      name,
+      website: String(formData.get("website") ?? "").trim() || null,
+      contactInfo: String(formData.get("contactInfo") ?? "").trim() || null,
+      notes: String(formData.get("notes") ?? "").trim() || null,
+    },
+  });
+  revalidatePath(`/admin/feeds/${id}`);
+  revalidatePath("/admin/feeds");
+}
+
+export async function deleteDeveloperAccount(id: string) {
+  await requireSession();
+  await prisma.developerAccount.delete({ where: { id } }); // cascades analyses
+  revalidatePath("/admin/feeds");
+  redirect("/admin/feeds");
+}
+
+export async function deleteFeedAnalysis(id: string) {
+  await requireSession();
+  const row = await prisma.developerFeedAnalysis.findUnique({ where: { id }, select: { developerAccountId: true } });
+  await prisma.developerFeedAnalysis.delete({ where: { id } });
+  if (row) revalidatePath(`/admin/feeds/${row.developerAccountId}`);
+}
+
+// Analyze an uploaded XML file OR a feed URL. Stores the raw XML (size-capped)
+// plus the analyzed field descriptors. Read-only w.r.t. the actual feed source.
+export async function analyzeDeveloperFeed(developerAccountId: string, _prev: any, formData: FormData) {
+  await requireSession();
+  const { analyzeXml, MAX_FEED_BYTES } = await import("@/lib/devFeeds/analyze");
+
+  const mode = String(formData.get("mode") ?? "file");
+  let xml = "";
+  let sourceType = "FILE";
+  let sourceUrl: string | null = null;
+  let sourceFileName: string | null = null;
+
+  try {
+    if (mode === "url") {
+      sourceType = "URL";
+      const url = String(formData.get("url") ?? "").trim();
+      if (!/^https?:\/\//i.test(url)) return { error: "Enter a valid http(s) feed URL." };
+      sourceUrl = url;
+      const res = await fetch(url, {
+        redirect: "follow",
+        signal: AbortSignal.timeout(20000),
+        headers: { "user-agent": "CVE-FeedAnalyzer/1.0" },
+      });
+      if (!res.ok) return { error: `Fetch failed: HTTP ${res.status}` };
+      const buf = Buffer.from(await res.arrayBuffer());
+      if (buf.byteLength > MAX_FEED_BYTES) return { error: `Feed too large (> ${MAX_FEED_BYTES / 1024 / 1024} MB).` };
+      xml = buf.toString("utf8");
+    } else {
+      const file = formData.get("file") as File | null;
+      if (!file || file.size === 0) return { error: "Choose an XML file to upload." };
+      if (file.size > MAX_FEED_BYTES) return { error: `File too large (> ${MAX_FEED_BYTES / 1024 / 1024} MB).` };
+      sourceFileName = file.name || "feed.xml";
+      xml = Buffer.from(await file.arrayBuffer()).toString("utf8");
+    }
+  } catch (e: any) {
+    return { error: e?.name === "TimeoutError" ? "Feed fetch timed out." : `Could not read feed: ${e?.message ?? e}` };
+  }
+
+  if (!xml.trim()) return { error: "The feed/file is empty." };
+
+  let result;
+  try {
+    result = await analyzeXml(xml);
+  } catch (e: any) {
+    return { error: `Could not parse XML: ${e?.message ?? e}` };
+  }
+  if (!result.itemNodePath || result.fields.length === 0) {
+    return { error: "No repeating item nodes / fields were detected in this feed." };
+  }
+
+  const row = await prisma.developerFeedAnalysis.create({
+    data: {
+      developerAccountId,
+      sourceType,
+      sourceUrl,
+      sourceFileName,
+      rawXml: xml, // already size-capped above
+      itemNodePath: result.itemNodePath,
+      itemCount: result.itemCount,
+      fields: result.fields as any,
+    },
+  });
+  revalidatePath(`/admin/feeds/${developerAccountId}`);
+  redirect(`/admin/feeds/${developerAccountId}/analysis/${row.id}`);
+}
+
+// Persist manual edits to the mapping table (a JSON array posted from the client
+// editor): include/ignore, suggested internal field, recommendation, notes.
+export async function saveFeedMapping(analysisId: string, _prev: any, formData: FormData) {
+  await requireSession();
+  const raw = String(formData.get("fields") ?? "");
+  let fields: any;
+  try {
+    fields = JSON.parse(raw);
+  } catch {
+    return { error: "Invalid mapping payload." };
+  }
+  if (!Array.isArray(fields)) return { error: "Invalid mapping payload." };
+  const row = await prisma.developerFeedAnalysis.update({
+    where: { id: analysisId },
+    data: { fields: fields as any },
+    select: { developerAccountId: true },
+  });
+  revalidatePath(`/admin/feeds/${row.developerAccountId}/analysis/${analysisId}`);
+  revalidatePath("/admin/feeds/compare");
+  return { ok: true };
 }
