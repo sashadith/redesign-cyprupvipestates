@@ -1245,7 +1245,7 @@ export async function deleteFeedAnalysis(id: string) {
 // plus the analyzed field descriptors. Read-only w.r.t. the actual feed source.
 export async function analyzeDeveloperFeed(developerAccountId: string, _prev: any, formData: FormData) {
   await requireSession();
-  const { analyzeXml, analyzeJson, MAX_FEED_BYTES } = await import("@/lib/devFeeds/analyze");
+  const { analyzeXml, analyzePayload, MAX_FEED_BYTES } = await import("@/lib/devFeeds/analyze");
 
   const mode = String(formData.get("mode") ?? "file");
   let payload = "";
@@ -1312,9 +1312,9 @@ export async function analyzeDeveloperFeed(developerAccountId: string, _prev: an
 
   let result;
   try {
-    result = sourceType === "API" ? analyzeJson(payload) : await analyzeXml(payload);
+    result = sourceType === "API" ? await analyzePayload(payload) : await analyzeXml(payload);
   } catch (e: any) {
-    return { error: `Could not parse ${sourceType === "API" ? "JSON" : "XML"}: ${e?.message ?? e}` };
+    return { error: `Could not parse ${sourceType === "API" ? "API response" : "XML"}: ${e?.message ?? e}` };
   }
   if (!result.itemNodePath || result.fields.length === 0) {
     return { error: "No repeating item node / fields were detected in this source." };
@@ -1402,7 +1402,7 @@ export async function saveFeedMapping(analysisId: string, _prev: any, formData: 
 // by field path. Non-destructive: only the analysis row's fields/counts change.
 export async function reanalyzeFeed(analysisId: string, _prev: any, _formData: FormData) {
   await requireSession();
-  const { analyzeXml, analyzeJson, MAX_FEED_BYTES } = await import("@/lib/devFeeds/analyze");
+  const { analyzeXml, analyzePayload, MAX_FEED_BYTES } = await import("@/lib/devFeeds/analyze");
   const row = await prisma.developerFeedAnalysis.findUnique({ where: { id: analysisId } });
   if (!row) return { error: "Analysis not found." };
   const isApi = row.sourceType === "API";
@@ -1425,9 +1425,9 @@ export async function reanalyzeFeed(analysisId: string, _prev: any, _formData: F
 
   let result;
   try {
-    result = isApi ? analyzeJson(xml) : await analyzeXml(xml);
+    result = isApi ? await analyzePayload(xml) : await analyzeXml(xml);
   } catch (e: any) {
-    return { error: `Could not parse ${isApi ? "JSON" : "XML"}: ${e?.message ?? e}` };
+    return { error: `Could not parse ${isApi ? "API response" : "XML"}: ${e?.message ?? e}` };
   }
   if (!result.itemNodePath || result.fields.length === 0) {
     return { error: "No repeating item nodes / fields were detected on re-analysis." };

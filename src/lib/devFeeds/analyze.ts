@@ -226,6 +226,12 @@ export function analyzeJson(text: string): AnalysisResult {
   return analyzeTree(parsed);
 }
 
+// Route a raw payload to the right analyzer by sniffing its first non-space char.
+// (An "API" source can return XML or JSON — e.g. BBF's /feed is XML-over-HTTP.)
+export async function analyzePayload(text: string): Promise<AnalysisResult> {
+  return text.trimStart().startsWith("<") ? analyzeXml(text) : analyzeJson(text);
+}
+
 export async function analyzeXml(xml: string): Promise<AnalysisResult> {
   const parsed = await parseXml(xml);
   const { itemNodePath, items } = detectItems(parsed);
