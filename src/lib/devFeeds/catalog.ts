@@ -27,6 +27,7 @@ export const INTERNAL_CATALOG: CatalogEntry[] = [
   { key: "propertyType", label: "Property type", location: { kind: "column", model: "Project", column: "propertyType" }, filterable: true },
   { key: "price", label: "Price", location: { kind: "column", model: "Project", column: "price" }, filterable: true },
   { key: "bedrooms", label: "Bedrooms", location: { kind: "column", model: "Project", column: "bedrooms" }, filterable: true },
+  { key: "isNew", label: "New build", location: { kind: "column", model: "Project", column: "isNew" }, filterable: true },
   { key: "completionDate", label: "Completion date", location: { kind: "column", model: "Project", column: "completionDate" }, filterable: false },
   { key: "latitude", label: "Latitude", location: { kind: "column", model: "Project", column: "latitude" }, filterable: false },
   { key: "longitude", label: "Longitude", location: { kind: "column", model: "Project", column: "longitude" }, filterable: false },
@@ -38,6 +39,7 @@ export const INTERNAL_CATALOG: CatalogEntry[] = [
   // Meaningful fields developers commonly send that we do NOT store yet — the
   // core output of this discovery tool (candidate new unified website fields).
   { key: "unitNumber", label: "Unit number", location: { kind: "none" }, filterable: false },
+  { key: "bathrooms", label: "Bathrooms", location: { kind: "none" }, filterable: false },
   { key: "coveredArea", label: "Covered area", location: { kind: "none" }, filterable: false },
   { key: "totalArea", label: "Total area", location: { kind: "none" }, filterable: false },
   { key: "plotSize", label: "Plot size", location: { kind: "none" }, filterable: false },
@@ -57,9 +59,13 @@ const SYNONYMS: Record<string, string> = {
   // bedrooms
   bedrooms: "bedrooms", bedroom: "bedrooms", beds: "bedrooms", bed: "bedrooms",
   rooms: "bedrooms", room: "bedrooms", noofbedrooms: "bedrooms", numbedrooms: "bedrooms",
+  // bathrooms (canonical field; not stored yet)
+  bathrooms: "bathrooms", bathroom: "bathrooms", baths: "bathrooms", bath: "bathrooms",
+  // new-build flag → existing Project.isNew
+  newbuild: "isNew", isnew: "isNew",
   // covered / internal area
   coveredarea: "coveredArea", internalarea: "coveredArea", livingarea: "coveredArea",
-  builtarea: "coveredArea", area: "coveredArea", sqm: "coveredArea", size: "coveredArea", floorsize: "coveredArea",
+  builtarea: "coveredArea", built: "coveredArea", area: "coveredArea", sqm: "coveredArea", size: "coveredArea", floorsize: "coveredArea",
   // total / gross area
   totalarea: "totalArea", grossarea: "totalArea", totalsize: "totalArea",
   // plot / land
@@ -98,9 +104,16 @@ export function suggestInternalField(externalName: string): string | null {
   const n = normalizeName(externalName);
   if (!n) return null;
   if (SYNONYMS[n]) return SYNONYMS[n];
-  // keyword containment fallback (handles prefixed/suffixed names like "prop_price_eur")
-  for (const [syn, key] of Object.entries(SYNONYMS)) {
-    if (syn.length >= 4 && n.includes(syn)) return key;
+  // keyword containment fallback (handles prefixed/suffixed names like "prop_price_eur").
+  // Match the LONGEST synonym first, so a specific term wins over a generic
+  // substring (e.g. "bathroom" beats "room" for "fullBathrooms").
+  const syns = Object.entries(SYNONYMS)
+    .filter(([s]) => s.length >= 4)
+    .sort((a, b) => b[0].length - a[0].length);
+  for (const [syn, key] of syns) {
+    if (!n.includes(syn)) continue;
+    if (key === "price" && n.includes("freq")) continue; // price_freq is sale/rent, not a price
+    return key;
   }
   return null;
 }
@@ -122,9 +135,9 @@ export function inferType(externalName: string, values: string[]): InferredType 
   const nameHas = (...ks: string[]) => ks.some((k) => n.includes(k));
 
   // name-driven semantic types first
-  if (nameHas("price", "amount", "cost", "eur", "usd") || (nameHas("value") && sample.every(isNumeric))) return "price";
+  if ((nameHas("price", "amount", "cost", "eur", "usd") && !n.includes("freq")) || (nameHas("value") && sample.every(isNumeric))) return "price";
   if (nameHas("lat", "lng", "lon", "coordinate", "coord")) return "coordinates";
-  if (nameHas("area", "sqm", "size", "plot", "m2")) return "area";
+  if (nameHas("area", "sqm", "size", "plot", "m2", "built")) return "area";
   if (nameHas("date", "completion", "delivery", "handover", "ready")) return "date";
   if (nameHas("status", "availability", "available")) return "status";
   if (nameHas("image", "photo", "picture", "media", "thumbnail")) return "image";
