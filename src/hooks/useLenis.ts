@@ -20,6 +20,13 @@ export const useLenis = () => {
       // Больше не нужно указывать smooth*, всё работает по умолчанию
     });
 
+    // Expose the live instance globally so components that need to drive the
+    // page's smooth scroll can reach it (the blog pager's scroll-to-top and the
+    // ROI modal's scroll lock both read window.lenis). Without this, callers fall
+    // back to window.scrollTo, which Lenis's RAF loop immediately overrides — so
+    // the page doesn't actually scroll up while Lenis is running.
+    (window as any).lenis = lenis;
+
     const raf = (time: number) => {
       lenis.raf(time);
       requestAnimationFrame(raf);
@@ -28,6 +35,7 @@ export const useLenis = () => {
     requestAnimationFrame(raf);
 
     return () => {
+      if ((window as any).lenis === lenis) (window as any).lenis = undefined;
       lenis.destroy();
     };
   }, []);
