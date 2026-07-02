@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { deleteFeedAnalysis } from "@/app/admin/actions";
 import MappingTable from "./mapping-table";
+import ReanalyzeButton from "./reanalyze-button";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,10 @@ export default async function AnalysisPage({ params }: { params: { id: string; a
         <Link href={`/admin/feeds/${a.developerAccount.id}`} className="text-sm text-[#6B7280] hover:underline">
           ← {a.developerAccount.name}
         </Link>
-        <h1 className="text-xl font-semibold text-[#111827] mt-1">Feed analysis</h1>
+        <div className="flex items-center justify-between mt-1">
+          <h1 className="text-xl font-semibold text-[#111827]">Feed analysis</h1>
+          <ReanalyzeButton analysisId={a.id} />
+        </div>
       </div>
 
       <div className="bg-white rounded-lg border border-[#E5E7EB] p-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -50,7 +54,7 @@ export default async function AnalysisPage({ params }: { params: { id: string; a
           No fields were detected in this feed.
         </div>
       ) : (
-        <MappingTable analysisId={a.id} initialFields={fields as any} />
+        <MappingTable key={a.updatedAt.getTime()} analysisId={a.id} initialFields={fields as any} />
       )}
 
       <form action={del} className="pt-2">

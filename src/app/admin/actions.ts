@@ -1323,3 +1323,60 @@ export async function saveFeedMapping(analysisId: string, _prev: any, formData: 
   revalidatePath("/admin/feeds/compare");
   return { ok: true };
 }
+
+// Re-run the analysis on a stored feed using the retained raw XML (or, if none,
+// the original source URL). Re-computes fields with the CURRENT parser/catalog
+// (so heuristic improvements take effect) and preserves the admin's manual notes
+// by field path. Non-destructive: only the analysis row's fields/counts change.
+export async function reanalyzeFeed(analysisId: string, _prev: any, _formData: FormData) {
+  await requireSession();
+  const { analyzeXml, MAX_FEED_BYTES } = await import("@/lib/devFeeds/analyze");
+  const row = await prisma.developerFeedAnalysis.findUnique({ where: { id: analysisId } });
+  if (!row) return { error: "Analysis not found." };
+
+  let xml = row.rawXml ?? "";
+  let refetched = false;
+  try {
+    if (!xml.trim()) {
+      if (row.sourceType === "URL" && row.sourceUrl) {
+        const { fetchFeedXml } = await import("@/lib/devFeeds/fetchFeed");
+        xml = await fetchFeedXml(row.sourceUrl, MAX_FEED_BYTES);
+        refetched = true;
+      } else {
+        return { error: "No retained XML and no source URL to re-fetch." };
+      }
+    }
+  } catch (e: any) {
+    return { error: e?.name === "TimeoutError" ? "Feed re-fetch timed out." : `Could not re-fetch feed: ${e?.message ?? e}` };
+  }
+
+  let result;
+  try {
+    result = await analyzeXml(xml);
+  } catch (e: any) {
+    return { error: `Could not parse XML: ${e?.message ?? e}` };
+  }
+  if (!result.itemNodePath || result.fields.length === 0) {
+    return { error: "No repeating item nodes / fields were detected on re-analysis." };
+  }
+
+  // Preserve manual notes (by field path) across the refresh.
+  const oldFields = Array.isArray(row.fields) ? (row.fields as any[]) : [];
+  const oldNotes = new Map<string, string>();
+  for (const f of oldFields) if (f?.path && f?.notes) oldNotes.set(f.path, f.notes);
+  const merged = result.fields.map((f) => (oldNotes.has(f.path) ? { ...f, notes: oldNotes.get(f.path)! } : f));
+
+  await prisma.developerFeedAnalysis.update({
+    where: { id: analysisId },
+    data: {
+      fields: merged as any,
+      itemNodePath: result.itemNodePath,
+      itemCount: result.itemCount,
+      ...(refetched ? { rawXml: xml } : {}), // refresh retained XML only if we re-fetched
+    },
+  });
+  revalidatePath(`/admin/feeds/${row.developerAccountId}/analysis/${analysisId}`);
+  revalidatePath(`/admin/feeds/${row.developerAccountId}`);
+  revalidatePath("/admin/feeds/compare");
+  return { ok: true };
+}

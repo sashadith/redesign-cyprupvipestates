@@ -5,7 +5,7 @@
 // NO writes to Project. Uses the already-installed `xml2js`.
 
 import { parseStringPromise } from "xml2js";
-import { inferType, suggestInternalField, recommend, CATALOG_BY_KEY, locationLabel, type InferredType, type Recommendation } from "./catalog";
+import { inferType, suggestInternalField, recommend, CATALOG_BY_KEY, locationLabel, NUMERIC_KEYS, type InferredType, type Recommendation } from "./catalog";
 
 export const MAX_FEED_BYTES = 5 * 1024 * 1024; // 5 MB app-level cap (see rawXml)
 
@@ -65,12 +65,25 @@ function walkChildren(obj: any, path: string, out: { path: string; items: any[] 
   }
 }
 
-// Pick the repeating item node. Prefer the largest array of objects; if a feed
-// has a single item (no arrays), fall back to the deepest object that looks like
-// a record (most leaf fields).
+// Arrays whose element is a media node (an image/photo/gallery/floorplan list)
+// must never be chosen as the repeating PROPERTY node — feeds often carry more
+// image nodes than properties, which used to hijack detection.
+const MEDIA_KEYS = new Set([
+  "image", "images", "img", "photo", "photos", "picture", "pictures",
+  "gallery", "galleries", "floorplan", "floorplans", "media", "thumbnail",
+  "thumbnails", "video", "videos", "attachment", "attachments",
+]);
+const lastSeg = (p: string) => p.split(".").pop()!.toLowerCase();
+
+// Pick the repeating item node. Media arrays are excluded; among the rest the
+// largest array of objects wins (tie-break: richer object). If a feed has a
+// single item (no arrays), fall back to the deepest record-like object.
 export function detectItems(parsed: any): { itemNodePath: string | null; items: any[] } {
-  const candidates: { path: string; items: any[] }[] = [];
-  findItemArrays(parsed, "", candidates);
+  const all: { path: string; items: any[] }[] = [];
+  findItemArrays(parsed, "", all);
+  // Prefer non-media candidates; only fall back to media ones if nothing else.
+  const nonMedia = all.filter((c) => !MEDIA_KEYS.has(lastSeg(c.path)));
+  const candidates = nonMedia.length ? nonMedia : all;
   if (candidates.length) {
     candidates.sort((a, b) => {
       if (b.items.length !== a.items.length) return b.items.length - a.items.length;
@@ -128,6 +141,19 @@ function flattenItem(node: any, prefix: string, out: Record<string, string[]>) {
 
 const leafName = (path: string) => path.replace(/^@/, "").split(".").pop()!.replace(/^@/, "");
 const uniq = (arr: string[]) => Array.from(new Set(arr));
+const isNum = (v: string) => v != null && String(v).trim() !== "" && !isNaN(Number(String(v).replace(/[\s,€$£%]/g, "")));
+// Localized / generic wrappers whose own name carries no meaning — match on the
+// PARENT segment instead (so "Description.description.en" → "description").
+const WRAPPER = /^(en|de|pl|ru|gr|el|fr|it|es|value|text|_)$/i;
+
+// The name to match a field on: usually its leaf, but for localized/generic
+// wrappers use the parent path segment.
+function matchName(path: string): string {
+  const leaf = leafName(path);
+  if (!WRAPPER.test(leaf)) return leaf;
+  const segs = path.split(".");
+  return segs.length >= 2 ? segs[segs.length - 2].replace(/^@/, "") : leaf;
+}
 
 // Build the field descriptor list from the detected items.
 export function buildFields(items: any[]): FieldDescriptor[] {
@@ -145,11 +171,19 @@ export function buildFields(items: any[]): FieldDescriptor[] {
   const fields: FieldDescriptor[] = Object.keys(perField).sort().map((path) => {
     const values = perField[path];
     const examples = uniq(values).slice(0, 3);
-    const type = inferType(leafName(path), values);
-    const suggested = suggestInternalField(leafName(path));
+    const name = matchName(path);
+    const type = inferType(name, values);
+    let suggested = suggestInternalField(name);
+    let note = "";
+    // Non-numeric guard: a numeric-expecting field mapped from a name but whose
+    // sampled values are non-numeric labels (e.g. "Area" = "Polis") → drop it.
+    if (suggested && NUMERIC_KEYS.has(suggested) && !values.some(isNum)) {
+      suggested = null;
+      note = "Values look non-numeric — likely a label, not this field. Review.";
+    }
     const entry = suggested ? CATALOG_BY_KEY[suggested] : undefined;
     const exists = !!entry && entry.location.kind !== "none";
-    const rec = recommend(suggested, type, leafName(path));
+    const rec = recommend(suggested, type, name);
     return {
       path,
       originalName: leafName(path),
@@ -161,7 +195,7 @@ export function buildFields(items: any[]): FieldDescriptor[] {
       internalLocation: entry ? locationLabel(entry.location) : null,
       recommendation: rec,
       include: rec !== "ignore",
-      notes: "",
+      notes: note,
     };
   });
   return fields;

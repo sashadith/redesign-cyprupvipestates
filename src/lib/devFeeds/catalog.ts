@@ -100,9 +100,21 @@ export function normalizeName(name: string): string {
 }
 
 /** Suggest a canonical internal field for an external field name (or null). */
+// Internal fields that only make sense with numeric values — used by the
+// analyzer to drop a name-based suggestion when the sampled values are clearly
+// non-numeric labels (e.g. a field named "Area" whose values are place names).
+export const NUMERIC_KEYS = new Set([
+  "price", "coveredArea", "totalArea", "plotSize", "bedrooms", "bathrooms", "latitude", "longitude",
+]);
+
 export function suggestInternalField(externalName: string): string | null {
   const n = normalizeName(externalName);
   if (!n) return null;
+  // Contact / company / agent metadata is NOT a property field — never map it to
+  // projectName / city (e.g. companyName, agent1FirstName, companyRegion, companyTownCity).
+  if (/(agent|contact|company)/.test(n)) return null;
+  // Units-of-measure fields (floorSizeUnits, plotSizeUnits) are metadata, not areas.
+  if (/units$/.test(n)) return null;
   if (SYNONYMS[n]) return SYNONYMS[n];
   // keyword containment fallback (handles prefixed/suffixed names like "prop_price_eur").
   // Match the LONGEST synonym first, so a specific term wins over a generic
@@ -133,11 +145,14 @@ export function inferType(externalName: string, values: string[]): InferredType 
   const n = normalizeName(externalName);
   const sample = values.filter((v) => v != null && String(v).trim() !== "").map(String);
   const nameHas = (...ks: string[]) => ks.some((k) => n.includes(k));
+  const hasNum = sample.length === 0 || sample.some(isNumeric);
 
-  // name-driven semantic types first
-  if ((nameHas("price", "amount", "cost", "eur", "usd") && !n.includes("freq")) || (nameHas("value") && sample.every(isNumeric))) return "price";
-  if (nameHas("lat", "lng", "lon", "coordinate", "coord")) return "coordinates";
-  if (nameHas("area", "sqm", "size", "plot", "m2", "built")) return "area";
+  // units-of-measure fields (floorSizeUnits, plotSizeUnits) are plain strings, not areas
+  if (/units$/.test(n)) return "string";
+  // name-driven semantic types first — numeric-expecting types require numeric values
+  if (((nameHas("price", "amount", "cost", "eur", "usd") && !n.includes("freq")) && hasNum) || (nameHas("value") && sample.every(isNumeric))) return "price";
+  if (nameHas("lat", "lng", "lon", "coordinate", "coord") && hasNum) return "coordinates";
+  if (nameHas("area", "sqm", "size", "plot", "m2", "built") && hasNum) return "area";
   if (nameHas("date", "completion", "delivery", "handover", "ready")) return "date";
   if (nameHas("status", "availability", "available")) return "status";
   if (nameHas("image", "photo", "picture", "media", "thumbnail")) return "image";
