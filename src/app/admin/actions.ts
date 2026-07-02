@@ -1245,13 +1245,14 @@ export async function deleteFeedAnalysis(id: string) {
 // plus the analyzed field descriptors. Read-only w.r.t. the actual feed source.
 export async function analyzeDeveloperFeed(developerAccountId: string, _prev: any, formData: FormData) {
   await requireSession();
-  const { analyzeXml, MAX_FEED_BYTES } = await import("@/lib/devFeeds/analyze");
+  const { analyzeXml, analyzeJson, MAX_FEED_BYTES } = await import("@/lib/devFeeds/analyze");
 
   const mode = String(formData.get("mode") ?? "file");
-  let xml = "";
+  let payload = "";
   let sourceType = "FILE";
   let sourceUrl: string | null = null;
   let sourceFileName: string | null = null;
+  let sourceConfig: any = null;
 
   try {
     if (mode === "url") {
@@ -1259,31 +1260,64 @@ export async function analyzeDeveloperFeed(developerAccountId: string, _prev: an
       const url = String(formData.get("url") ?? "").trim();
       if (!/^https?:\/\//i.test(url)) return { error: "Enter a valid http(s) feed URL." };
       sourceUrl = url;
-      // SSRF-safe: rejects URLs resolving to private/internal addresses and
-      // re-validates every redirect hop; streams with the size cap.
       const { fetchFeedXml } = await import("@/lib/devFeeds/fetchFeed");
-      xml = await fetchFeedXml(url, MAX_FEED_BYTES);
+      payload = await fetchFeedXml(url, MAX_FEED_BYTES);
+    } else if (mode === "api") {
+      const api = await buildApiRequest(formData);
+      if ("error" in api) return api;
+      sourceType = "API";
+      sourceUrl = api.url;
+      const { safeFetchText } = await import("@/lib/devFeeds/fetchFeed");
+      // Try the chosen auth method; for bearer, fall back to x-api-key on 401/403.
+      const attempts = api.authMethod === "bearer" ? ["bearer", "x-api-key"] : [api.authMethod];
+      let lastErr = "";
+      let usedAuth = api.authMethod;
+      for (const am of attempts) {
+        try {
+          payload = await safeFetchText(api.url, {
+            maxBytes: MAX_FEED_BYTES,
+            method: api.method,
+            headers: api.headersFor(am),
+            body: api.method === "POST" ? api.body : undefined,
+            accept: "application/json",
+          });
+          usedAuth = am;
+          lastErr = "";
+          break;
+        } catch (e: any) {
+          lastErr = String(e?.message ?? e); // never contains the key
+          if (!/HTTP 401|HTTP 403/.test(lastErr)) break; // only fall back on auth failures
+        }
+      }
+      if (!payload) return { error: `API request failed: ${lastErr || "no response"}` };
+      // Store the request recipe WITHOUT the secret (only the credential ref).
+      sourceConfig = {
+        method: api.method, baseUrl: api.baseUrl, path: api.path,
+        authMethod: usedAuth, authHeaderName: api.authMethod === "custom" ? api.authHeaderName : undefined,
+        requestBody: api.method === "POST" ? api.body : undefined, credentialRef: api.credentialRef,
+        notes: api.notes || undefined,
+      };
     } else {
       const file = formData.get("file") as File | null;
       if (!file || file.size === 0) return { error: "Choose an XML file to upload." };
       if (file.size > MAX_FEED_BYTES) return { error: `File too large (> ${MAX_FEED_BYTES / 1024 / 1024} MB).` };
       sourceFileName = file.name || "feed.xml";
-      xml = Buffer.from(await file.arrayBuffer()).toString("utf8");
+      payload = Buffer.from(await file.arrayBuffer()).toString("utf8");
     }
   } catch (e: any) {
-    return { error: e?.name === "TimeoutError" ? "Feed fetch timed out." : `Could not read feed: ${e?.message ?? e}` };
+    return { error: e?.name === "TimeoutError" ? "Request timed out." : `Could not read source: ${e?.message ?? e}` };
   }
 
-  if (!xml.trim()) return { error: "The feed/file is empty." };
+  if (!payload.trim()) return { error: "The source returned an empty response." };
 
   let result;
   try {
-    result = await analyzeXml(xml);
+    result = sourceType === "API" ? analyzeJson(payload) : await analyzeXml(payload);
   } catch (e: any) {
-    return { error: `Could not parse XML: ${e?.message ?? e}` };
+    return { error: `Could not parse ${sourceType === "API" ? "JSON" : "XML"}: ${e?.message ?? e}` };
   }
   if (!result.itemNodePath || result.fields.length === 0) {
-    return { error: "No repeating item nodes / fields were detected in this feed." };
+    return { error: "No repeating item node / fields were detected in this source." };
   }
 
   const row = await prisma.developerFeedAnalysis.create({
@@ -1292,7 +1326,8 @@ export async function analyzeDeveloperFeed(developerAccountId: string, _prev: an
       sourceType,
       sourceUrl,
       sourceFileName,
-      rawXml: xml, // already size-capped above
+      rawXml: payload, // raw payload (XML or JSON), already size-capped
+      sourceConfig: sourceConfig ?? Prisma.DbNull,
       itemNodePath: result.itemNodePath,
       itemCount: result.itemCount,
       fields: result.fields as any,
@@ -1300,6 +1335,43 @@ export async function analyzeDeveloperFeed(developerAccountId: string, _prev: an
   });
   revalidatePath(`/admin/feeds/${developerAccountId}`);
   redirect(`/admin/feeds/${developerAccountId}/analysis/${row.id}`);
+}
+
+// Validate the API-mode form and build the request recipe. The API key is read
+// from the server env by credential ref and used only to build request headers;
+// it is NEVER returned, stored, or logged.
+async function buildApiRequest(formData: FormData) {
+  const baseUrl = String(formData.get("baseUrl") ?? "").trim();
+  const path = String(formData.get("path") ?? "").trim();
+  const method = String(formData.get("method") ?? "GET").toUpperCase() === "POST" ? "POST" : "GET";
+  const authMethod = ["bearer", "x-api-key", "custom"].includes(String(formData.get("authMethod")))
+    ? String(formData.get("authMethod"))
+    : "bearer";
+  const authHeaderName = String(formData.get("authHeaderName") ?? "").trim();
+  const credentialRef = String(formData.get("credentialRef") ?? "").trim();
+  const requestBody = String(formData.get("requestBody") ?? "").trim();
+  const notes = String(formData.get("notes") ?? "").trim();
+
+  if (!/^https?:\/\//i.test(baseUrl)) return { error: "Enter a valid API base URL (http/https)." };
+  if (!/^[A-Za-z0-9_]+$/.test(credentialRef)) return { error: "Credential ref must be letters, digits or underscores (e.g. BBF)." };
+  if (authMethod === "custom" && !authHeaderName) return { error: "Custom auth requires a header name." };
+  if (method === "POST" && requestBody) {
+    try { JSON.parse(requestBody); } catch { return { error: "Request body must be valid JSON." }; }
+  }
+  const key = process.env[`DEV_FEED_KEY_${credentialRef}`];
+  if (!key) return { error: `Server credential "DEV_FEED_KEY_${credentialRef}" is not configured on this environment.` };
+
+  const url = baseUrl.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "");
+  const body = method === "POST" ? (requestBody || "{}") : undefined;
+  const headersFor = (am: string): Record<string, string> => {
+    const h: Record<string, string> = {};
+    if (am === "bearer") h["authorization"] = `Bearer ${key}`;
+    else if (am === "x-api-key") h["x-api-key"] = key;
+    else h[authHeaderName.toLowerCase()] = key;
+    if (method === "POST") h["content-type"] = "application/json";
+    return h;
+  };
+  return { url, baseUrl, path, method: method as "GET" | "POST", authMethod, authHeaderName, credentialRef, body, notes, headersFor };
 }
 
 // Persist manual edits to the mapping table (a JSON array posted from the client
@@ -1330,9 +1402,10 @@ export async function saveFeedMapping(analysisId: string, _prev: any, formData: 
 // by field path. Non-destructive: only the analysis row's fields/counts change.
 export async function reanalyzeFeed(analysisId: string, _prev: any, _formData: FormData) {
   await requireSession();
-  const { analyzeXml, MAX_FEED_BYTES } = await import("@/lib/devFeeds/analyze");
+  const { analyzeXml, analyzeJson, MAX_FEED_BYTES } = await import("@/lib/devFeeds/analyze");
   const row = await prisma.developerFeedAnalysis.findUnique({ where: { id: analysisId } });
   if (!row) return { error: "Analysis not found." };
+  const isApi = row.sourceType === "API";
 
   let xml = row.rawXml ?? "";
   let refetched = false;
@@ -1343,18 +1416,18 @@ export async function reanalyzeFeed(analysisId: string, _prev: any, _formData: F
         xml = await fetchFeedXml(row.sourceUrl, MAX_FEED_BYTES);
         refetched = true;
       } else {
-        return { error: "No retained XML and no source URL to re-fetch." };
+        return { error: "No retained payload to re-analyze." };
       }
     }
   } catch (e: any) {
-    return { error: e?.name === "TimeoutError" ? "Feed re-fetch timed out." : `Could not re-fetch feed: ${e?.message ?? e}` };
+    return { error: e?.name === "TimeoutError" ? "Re-fetch timed out." : `Could not re-fetch source: ${e?.message ?? e}` };
   }
 
   let result;
   try {
-    result = await analyzeXml(xml);
+    result = isApi ? analyzeJson(xml) : await analyzeXml(xml);
   } catch (e: any) {
-    return { error: `Could not parse XML: ${e?.message ?? e}` };
+    return { error: `Could not parse ${isApi ? "JSON" : "XML"}: ${e?.message ?? e}` };
   }
   if (!result.itemNodePath || result.fields.length === 0) {
     return { error: "No repeating item nodes / fields were detected on re-analysis." };

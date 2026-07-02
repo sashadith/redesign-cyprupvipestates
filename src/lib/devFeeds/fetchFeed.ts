@@ -73,30 +73,47 @@ async function assertHostPublic(hostname: string): Promise<void> {
   }
 }
 
-/** Fetch a feed URL as text, SSRF-safe, size- and time-capped. Throws on any violation. */
-export async function fetchFeedXml(rawUrl: string, maxBytes: number, timeoutMs = 20000): Promise<string> {
+export type SafeFetchOpts = {
+  maxBytes: number;
+  timeoutMs?: number;
+  method?: "GET" | "POST";
+  headers?: Record<string, string>; // caller-supplied (may carry auth) — NEVER logged
+  body?: string;
+  accept?: string;
+};
+
+/** SSRF-safe, size- and time-capped text fetch for ANY method/headers/body. Throws
+ *  on any violation. Caller headers may carry secrets, so this never logs the
+ *  request URL, headers, or body. Auth headers are dropped on a cross-host redirect. */
+export async function safeFetchText(rawUrl: string, opts: SafeFetchOpts): Promise<string> {
+  const { maxBytes, timeoutMs = 20000, method = "GET", body, accept } = opts;
+  let hopHeaders = opts.headers ?? {};
   let current = rawUrl;
   for (let hop = 0; hop < 4; hop++) {
     let u: URL;
     try {
       u = new URL(current);
     } catch {
-      throw new Error("Invalid feed URL.");
+      throw new Error("Invalid URL.");
     }
-    if (u.protocol !== "http:" && u.protocol !== "https:") throw new Error("Only http(s) feed URLs are allowed.");
+    if (u.protocol !== "http:" && u.protocol !== "https:") throw new Error("Only http(s) URLs are allowed.");
     if (u.username || u.password) throw new Error("URLs with embedded credentials are not allowed.");
     await assertHostPublic(u.hostname);
 
     const res = await fetch(u, {
+      method,
       redirect: "manual",
       signal: AbortSignal.timeout(timeoutMs),
-      headers: { "user-agent": "CVE-FeedAnalyzer/1.0", accept: "application/xml,text/xml,*/*" },
+      headers: { "user-agent": "CVE-FeedAnalyzer/1.0", accept: accept ?? "application/xml,text/xml,application/json,*/*", ...hopHeaders },
+      ...(body != null && method !== "GET" ? { body } : {}),
     });
 
     if (res.status >= 300 && res.status < 400) {
       const loc = res.headers.get("location");
       if (!loc) throw new Error(`Redirect (${res.status}) without a location.`);
-      current = new URL(loc, u).toString(); // re-validate the next hop on the next loop
+      const next = new URL(loc, u);
+      if (next.hostname !== u.hostname) hopHeaders = {}; // don't forward auth to a different host
+      current = next.toString(); // re-validate the next hop on the next loop
       continue;
     }
     if (!res.ok) throw new Error(`Fetch failed: HTTP ${res.status}`);
@@ -122,4 +139,9 @@ export async function fetchFeedXml(rawUrl: string, maxBytes: number, timeoutMs =
     return Buffer.concat(chunks).toString("utf8");
   }
   throw new Error("Too many redirects.");
+}
+
+/** Back-compat helper: GET a feed URL as text (used by the XML file/URL flow). */
+export async function fetchFeedXml(rawUrl: string, maxBytes: number, timeoutMs = 20000): Promise<string> {
+  return safeFetchText(rawUrl, { maxBytes, timeoutMs, method: "GET" });
 }

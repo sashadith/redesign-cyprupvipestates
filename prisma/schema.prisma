@@ -608,11 +608,12 @@ model DeveloperAccount {
 model DeveloperFeedAnalysis {
   id                 String   @id @default(uuid())
   developerAccountId String
-  sourceType         String // "FILE" | "URL"
-  sourceUrl          String? // set when sourceType = "URL"
+  sourceType         String // "FILE" | "URL" | "API"
+  sourceUrl          String? // "URL": feed URL; "API": full request URL (non-secret)
   sourceFileName     String? // original filename when sourceType = "FILE"
-  rawXml             String? // retained raw feed (size-capped in app) for re-analysis; String → Postgres text
-  itemNodePath       String? // detected repeating item node, e.g. "properties.property"
+  rawXml             String? // retained raw payload (XML or JSON), size-capped, for re-analysis; String → Postgres text
+  sourceConfig       Json? // "API" request recipe (method/auth/headerName/body/credentialRef) — NEVER the secret itself
+  itemNodePath       String? // detected repeating item node, e.g. "properties.property" or a JSON path
   itemCount          Int      @default(0)
   fields             Json? // analyzed + manually-edited field list (array of field descriptors)
   createdAt          DateTime @default(now())

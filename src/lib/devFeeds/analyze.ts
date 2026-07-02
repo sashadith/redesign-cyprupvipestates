@@ -207,6 +207,25 @@ export function buildFields(items: any[]): FieldDescriptor[] {
   return fields;
 }
 
+// Analyze an already-parsed object tree (from XML or JSON). Shared engine.
+export function analyzeTree(parsed: any): AnalysisResult {
+  const { itemNodePath, items } = detectItems(parsed);
+  const fields = buildFields(items);
+  return { itemNodePath, itemCount: items.length, fields };
+}
+
+// Analyze a JSON payload (e.g. an API response) — same detection/flatten/typing/
+// suggestion engine as XML; `itemNodePath` is the JSON path to the item array.
+export function analyzeJson(text: string): AnalysisResult {
+  let parsed: any;
+  try {
+    parsed = JSON.parse(text);
+  } catch (e: any) {
+    throw new Error(`Response is not valid JSON: ${e?.message ?? e}`);
+  }
+  return analyzeTree(parsed);
+}
+
 export async function analyzeXml(xml: string): Promise<AnalysisResult> {
   const parsed = await parseXml(xml);
   const { itemNodePath, items } = detectItems(parsed);
