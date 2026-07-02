@@ -175,11 +175,17 @@ export function buildFields(items: any[]): FieldDescriptor[] {
     const type = inferType(name, values);
     let suggested = suggestInternalField(name);
     let note = "";
-    // Non-numeric guard: a numeric-expecting field mapped from a name but whose
-    // sampled values are non-numeric labels (e.g. "Area" = "Polis") → drop it.
+    // Non-numeric guard: a numeric-expecting field whose sampled values are
+    // non-numeric labels isn't that field. If the name is place-ish (e.g. "Area"
+    // = "Polis"/"Venus Rock") treat it as a locality/district; otherwise drop it.
     if (suggested && NUMERIC_KEYS.has(suggested) && !values.some(isNum)) {
-      suggested = null;
-      note = "Values look non-numeric — likely a label, not this field. Review.";
+      if (/area|location|region|district|zone|neighbourhood|suburb|locality|town/i.test(name)) {
+        suggested = "district";
+        note = "Text values → treated as area/district (locality), not surface area.";
+      } else {
+        suggested = null;
+        note = "Values look non-numeric — likely a label, not this field. Review.";
+      }
     }
     const entry = suggested ? CATALOG_BY_KEY[suggested] : undefined;
     const exists = !!entry && entry.location.kind !== "none";

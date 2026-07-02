@@ -40,6 +40,10 @@ export const INTERNAL_CATALOG: CatalogEntry[] = [
   // core output of this discovery tool (candidate new unified website fields).
   { key: "unitNumber", label: "Unit number", location: { kind: "none" }, filterable: false },
   { key: "bathrooms", label: "Bathrooms", location: { kind: "none" }, filterable: false },
+  { key: "district", label: "District / area (locality)", location: { kind: "none" }, filterable: false },
+  { key: "constructionYear", label: "Construction year", location: { kind: "none" }, filterable: false },
+  { key: "floorplans", label: "Floor plan (media)", location: { kind: "none" }, filterable: false },
+  { key: "imageAltText", label: "Image alt text (media metadata)", location: { kind: "none" }, filterable: false },
   { key: "coveredArea", label: "Covered area", location: { kind: "none" }, filterable: false },
   { key: "totalArea", label: "Total area", location: { kind: "none" }, filterable: false },
   { key: "plotSize", label: "Plot size", location: { kind: "none" }, filterable: false },
@@ -93,6 +97,14 @@ const SYNONYMS: Record<string, string> = {
   // media / description
   image: "images", images: "images", photo: "images", photos: "images", picture: "images", pictures: "images", media: "images", thumbnail: "images",
   description: "description", desc: "description", details: "description", text: "description",
+  // year / construction — NOT surface area (guards against the "built" synonym)
+  yearbuilt: "constructionYear", constructionyear: "constructionYear", yearofconstruction: "constructionYear", buildyear: "constructionYear",
+  // floor plans → media (NOT floor level)
+  floorplan: "floorplans", floorplans: "floorplans", floorplanimage: "floorplans",
+  // image alt text → media metadata (NOT the project description)
+  alttext: "imageAltText", alt: "imageAltText", imagealt: "imageAltText",
+  // locality / district — place names, distinct from city/region and from surface area
+  location: "district", neighbourhood: "district", suburb: "district", zone: "district", locality: "district",
 };
 
 export function normalizeName(name: string): string {
@@ -125,6 +137,7 @@ export function suggestInternalField(externalName: string): string | null {
   for (const [syn, key] of syns) {
     if (!n.includes(syn)) continue;
     if (key === "price" && n.includes("freq")) continue; // price_freq is sale/rent, not a price
+    if (syn === "built" && n.includes("year")) continue; // yearBuilt is a year, not covered area
     return key;
   }
   return null;
@@ -152,7 +165,7 @@ export function inferType(externalName: string, values: string[]): InferredType 
   // name-driven semantic types first — numeric-expecting types require numeric values
   if (((nameHas("price", "amount", "cost", "eur", "usd") && !n.includes("freq")) && hasNum) || (nameHas("value") && sample.every(isNumeric))) return "price";
   if (nameHas("lat", "lng", "lon", "coordinate", "coord") && hasNum) return "coordinates";
-  if (nameHas("area", "sqm", "size", "plot", "m2", "built") && hasNum) return "area";
+  if ((nameHas("area", "sqm", "size", "plot", "m2") || (n.includes("built") && !n.includes("year"))) && hasNum) return "area";
   if (nameHas("date", "completion", "delivery", "handover", "ready")) return "date";
   if (nameHas("status", "availability", "available")) return "status";
   if (nameHas("image", "photo", "picture", "media", "thumbnail")) return "image";
