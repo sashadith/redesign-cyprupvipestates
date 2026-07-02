@@ -1,19 +1,48 @@
+// Single Blog Post — migrated to the approved "Cyprus Insights" article design
+// (dark hero + light reading body, sticky TOC, reading progress). Keeps the LIVE
+// production data, SEO, JSON-LD, ISR/static params, header/footer, forms, CRM and
+// multilingual content; only the visual layer is the staging redesign. Design CSS
+// (.iart__*) + tokens are imported here so they load on the article route; the
+// fonts (Fraunces/Mulish/Playfair) are already global via [lang]/layout.tsx.
+import "@/app/preview-home/tokens.css";
+import "@/app/preview-insights/insights.css";
+
 import React from "react";
 import { notFound } from "next/navigation";
-import AccordionContainer from "@/app/components/AccordionContainer/AccordionContainer";
-import BlogIntro from "@/app/components/BlogIntro/BlogIntro";
-import BlogVideo from "@/app/components/BlogVideo/BlogVideo";
-import Footer from "@/app/components/Footer/Footer";
-import Header from "@/app/components/Header/Header";
-import TextContentComponent from "@/app/components/TextContentComponent/TextContentComponent";
-import { i18n } from "@/i18n.config";
-import { localizedHref } from "@/lib/locale";
+import { Metadata } from "next";
+
 import {
   getBlogPostByLang,
   getFormStandardDocumentByLang,
   getBlogSlugs,
   ALL_LOCALES,
 } from "@/sanity/sanity.utils";
+import { urlFor } from "@/sanity/sanity.client";
+import { abs, localizedPath, SITE_URL, languageAlternates, pathBuilders } from "@/lib/seo";
+import { i18n } from "@/i18n.config";
+import { localizedHref } from "@/lib/locale";
+import { Translation } from "@/types/homepage";
+import { FormStandardDocument } from "@/types/formStandardDocument";
+import { blogStrings } from "../blogI18n";
+
+import { extractToc, renderInsightsBlock } from "@/app/preview-insights/insightsBlocks";
+import InsightsReader from "@/app/preview-insights/InsightsReader";
+import ReadingProgress from "@/app/preview-insights/ReadingProgress";
+import ArticleMotion from "@/app/preview-insights/ArticleMotion";
+import Form from "@/app/preview-home/sections/Form";
+
+import Header from "@/app/components/Header/Header";
+import Footer from "@/app/components/Footer/Footer";
+import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
+import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
+import SchemaBlogPost from "@/app/components/SchemaBlogPost/SchemaBlogPost";
+import SchemaBlogFaq from "@/app/components/SchemaBlogFaq/SchemaBlogFaq";
+import LinkedInConversionTracker from "@/app/components/LinkedInConversionTracker/LinkedInConversionTracker";
+import ProjectsSectionSlider from "@/app/components/ProjectsSectionSlider/ProjectsSectionSlider";
+import FormMinimalBlockComponent from "@/app/components/FormMinimalBlockComponent/FormMinimalBlockComponent";
+import BlogVideo from "@/app/components/BlogVideo/BlogVideo";
+
+type Props = { params: { lang: string; slug: string } };
 
 export const revalidate = 3600;
 export async function generateStaticParams() {
@@ -23,45 +52,8 @@ export async function generateStaticParams() {
   }
   return params;
 }
-import {
-  AccordionBlock,
-  TextContent,
-  ImageFullBlock,
-  DoubleTextBlock,
-  ButtonBlock,
-  FaqBlock,
-  FormMinimalBlock,
-  ProjectsSectionBlock,
-  TableBlock,
-  RelatedArticle as RelatedArticleType,
-} from "@/types/blog";
-import { FormStandardDocument } from "@/types/formStandardDocument";
-import { Metadata } from "next";
-import DoubleTextBlockComponent from "@/app/components/DoubleTextBlockComponent/DoubleTextBlockComponent";
-import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
-import { Translation } from "@/types/homepage";
-import ContactFullBlockComponent from "@/app/components/ContactFullBlockComponent/ContactFullBlockComponent";
-import ImageFullBlockComponent from "@/app/components/ImageFullBlockComponent/ImageFullBlockComponent";
-import ButtonBlockComponent from "@/app/components/ButtonBlockComponent/ButtonBlockComponent";
-import FormMinimalBlockComponent from "@/app/components/FormMinimalBlockComponent/FormMinimalBlockComponent";
-import FormStatic from "@/app/components/FormStatic/FormStatic";
-import Breadcrumbs from "@/app/components/Breadcrumbs/Breadcrumbs";
-import BreadcrumbsBlog from "@/app/components/BreadcrumbsBlog/BreadcrumbsBlog";
-import SchemaBlogPost from "@/app/components/SchemaBlogPost/SchemaBlogPost";
-import ProjectsSectionSlider from "@/app/components/ProjectsSectionSlider/ProjectsSectionSlider";
-import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
-import TableBlockComponent from "@/app/components/TableBlockComponent/TableBlockComponent";
-import LinkedInConversionTracker from "@/app/components/LinkedInConversionTracker/LinkedInConversionTracker";
-import BlogAuthor from "@/app/components/BlogAuthor/BlogAuthor";
-import RelatedArticle from "@/app/components/RelatedArticle/RelatedArticle";
-import { urlFor } from "@/sanity/sanity.client";
-import { languageAlternates, pathBuilders } from "@/lib/seo";
 
-type Props = {
-  params: { lang: string; slug: string };
-};
-
-// Dynamic metadata for SEO
+// SEO — unchanged from production (title/description/canonical/hreflang/OG/twitter).
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = params;
   const data = await getBlogPostByLang(lang, slug);
@@ -80,10 +72,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: data?.seo.metaTitle,
     description: data?.seo.metaDescription,
-    alternates: {
-      canonical: url,
-      languages,
-    },
+    alternates: { canonical: url, languages },
     openGraph: {
       title: data?.seo.metaTitle,
       description: data?.seo.metaDescription,
@@ -92,14 +81,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       locale: lang,
       type: "article",
       images: previewImageUrl
-        ? [
-            {
-              url: previewImageUrl,
-              width: 1200,
-              height: 630,
-              alt: data?.title,
-            },
-          ]
+        ? [{ url: previewImageUrl, width: 1200, height: 630, alt: data?.title }]
         : [],
     },
     twitter: {
@@ -111,212 +93,222 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+const safeUrl = (img: unknown) => {
+  try {
+    return urlFor(img as never).url();
+  } catch {
+    return undefined;
+  }
+};
+
+const wordCount = (blocks: any[]) => {
+  let n = 0;
+  for (const b of blocks ?? []) {
+    if (b?._type === "textContent" && Array.isArray(b.content)) {
+      for (const node of b.content) {
+        if (node?._type === "block")
+          n += (node.children ?? []).map((c: any) => c?.text ?? "").join(" ").split(/\s+/).filter(Boolean).length;
+      }
+    }
+  }
+  return n;
+};
+
+const HOME_LABEL: Record<string, string> = { en: "Home", de: "Startseite", pl: "Strona główna", ru: "Главная" };
+
 const PagePost = async ({ params }: Props) => {
   const { lang, slug } = params;
   const blog = await getBlogPostByLang(lang, slug);
+  if (!blog) notFound();
 
-  // console.log(JSON.stringify(blog.relatedArticles, null, 2));
+  const t = blogStrings(lang);
+  const formDocument: FormStandardDocument = await getFormStandardDocumentByLang(lang);
 
-  if (!blog) {
-    notFound();
-  }
+  const fmtDate = (d?: unknown) => {
+    if (!d) return "";
+    const dt = new Date(d as string);
+    return isNaN(dt.getTime())
+      ? ""
+      : dt.toLocaleDateString(t.dateLocale, { day: "numeric", month: "long", year: "numeric" });
+  };
 
-  const formDocument: FormStandardDocument =
-    await getFormStandardDocumentByLang(params.lang);
+  const toc = extractToc(blog.contentBlocks as any[]);
+  const minutes = Math.max(1, Math.round(wordCount(blog.contentBlocks as any[]) / 200));
+  const heroUrl = safeUrl(blog.previewImage);
+  const author = blog.author as any;
+  const authorUrl = safeUrl(author?.image);
+  const related = (blog.relatedArticles ?? []) as any[];
+  const contentBlocks = (blog.contentBlocks ?? []) as any[];
 
-  const blogPageTranslationSlugs: { [key: string]: { current: string } }[] =
-    blog?._translations
-      ?.filter((item) => item && item.slug)
-      .map((item) => {
-        const newItem: { [key: string]: { current: string } } = {};
-
-        for (const key in item.slug) {
-          if (key !== "_type" && item.slug[key]) {
-            newItem[key] = { current: item.slug[key].current };
-          }
-        }
-        return newItem;
-      }) || [];
-
-  const translations = i18n.languages.reduce<Translation[]>((acc, lang) => {
-    const translationSlug = blogPageTranslationSlugs
-      ?.reduce(
-        (acc: string[], slug: { [key: string]: { current: string } }) => {
-          const current = slug[lang.id]?.current;
-          if (current) {
-            acc.push(current);
-          }
-          return acc;
-        },
-        [],
-      )
+  // Language-switcher translations (same logic as production).
+  const translationSlugs = blog?._translations
+    ?.filter((item: any) => item && item.slug)
+    .map((item: any) => {
+      const out: { [k: string]: { current: string } } = {};
+      for (const key in item.slug) if (key !== "_type" && item.slug[key]) out[key] = { current: item.slug[key].current };
+      return out;
+    }) || [];
+  const translations = i18n.languages.reduce<Translation[]>((acc, l) => {
+    const s = translationSlugs
+      ?.reduce((a: string[], sl: any) => {
+        const cur = sl[l.id]?.current;
+        if (cur) a.push(cur);
+        return a;
+      }, [])
       .join(" ");
-
-    return translationSlug
-      ? [
-          ...acc,
-          {
-            language: lang.id,
-            path: localizedHref(lang.id, ["blog", translationSlug]),
-          },
-        ]
-      : acc;
+    return s ? [...acc, { language: l.id, path: localizedHref(l.id, ["blog", s]) }] : acc;
   }, []);
 
-  const renderContentBlock = (block: any) => {
-    switch (block._type) {
-      case "textContent":
-        return (
-          <TextContentComponent key={block._key} block={block as TextContent} />
-        );
-      case "accordionBlock":
-        return (
-          <AccordionContainer
-            key={block._key}
-            block={block as AccordionBlock}
-          />
-        );
-      case "imageFullBlock":
-        return (
-          <ImageFullBlockComponent
-            key={block._key}
-            block={block as ImageFullBlock}
-          />
-        );
-      case "doubleTextBlock":
-        return (
-          <DoubleTextBlockComponent
-            key={block._key}
-            block={block as DoubleTextBlock}
-          />
-        );
-      case "buttonBlock":
-        return (
-          <ButtonBlockComponent key={block._key} block={block as ButtonBlock} />
-        );
-      case "faqBlock":
-        return (
-          <div className="container" key={block._key}>
-            <AccordionContainer block={(block as FaqBlock).faq} />
-          </div>
-        );
-      case "formMinimalBlock":
-        return (
-          <FormMinimalBlockComponent
-            key={(block as FormMinimalBlock)._key}
-            form={(block as FormMinimalBlock).form}
-            lang={lang}
-            offerButtonCustomText={(block as FormMinimalBlock).buttonText}
-          />
-        );
-      case "projectsSectionBlock": {
-        const b = block as ProjectsSectionBlock;
-        // ручных проектов нет — берём фильтрованные
-        const manual = Array.isArray(b.projects) ? b.projects : [];
-        const projectsToShow = manual.length
-          ? manual
-          : Array.isArray(b.filteredProjects)
-            ? b.filteredProjects
-            : [];
+  // Breadcrumb structured data (preserves the SEO the old BreadcrumbsBlog carried).
+  const canonical = abs(localizedPath(lang, ["blog", slug]));
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: HOME_LABEL[lang] ?? HOME_LABEL.en, item: abs(localizedPath(lang, [])) },
+      { "@type": "ListItem", position: 2, name: "Blog", item: abs(localizedPath(lang, ["blog"])) },
+      { "@type": "ListItem", position: 3, name: blog.title, item: canonical },
+    ],
+  };
 
-        return (
-          <ProjectsSectionSlider
-            key={b._key}
-            block={{
-              ...b,
-              projects: projectsToShow,
-            }}
-            lang={lang}
-          />
-        );
+  // The staging reading view styles text/table/faq/image/double/accordion blocks
+  // with the .iart__ design (via renderInsightsBlock). Production posts also use
+  // projectsSectionBlock (68) and formMinimalBlock (29) — these are preserved via
+  // the existing production components so no article content is dropped.
+  const renderArticleBlock = (block: any) => {
+    switch (block?._type) {
+      case "projectsSectionBlock": {
+        const b = block;
+        const manual = Array.isArray(b.projects) ? b.projects : [];
+        const projectsToShow = manual.length ? manual : Array.isArray(b.filteredProjects) ? b.filteredProjects : [];
+        return <ProjectsSectionSlider block={{ ...b, projects: projectsToShow }} lang={lang} />;
       }
-      case "tableBlock":
-        return (
-          <TableBlockComponent key={block._key} block={block as TableBlock} />
-        );
+      case "formMinimalBlock":
+        return <FormMinimalBlockComponent form={block.form} lang={lang} offerButtonCustomText={block.buttonText} />;
       default:
-        return <p key={block._key}>Unsupported block type</p>;
+        return renderInsightsBlock(block);
     }
   };
 
-  const currentPostId = blog._id;
+  const hasVideo = !!(blog.videoBlock && blog.videoBlock.videoId && blog.videoBlock.posterImage);
 
   return (
     <>
       <Header params={params} translations={translations} />
       <SchemaBlogPost blog={blog} lang={lang} />
-      <BreadcrumbsBlog
-        lang={lang}
-        segments={[slug]}
-        currentTitle={blog.title}
-      />
-      <main>
+      <SchemaBlogFaq blocks={contentBlocks} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }} />
+      <ArticleMotion />
+      <ReadingProgress />
+
+      <main className="iart">
         <LinkedInConversionTracker conversionId={27871521} />
-        <div className="container">
-          {/* <div className="post-grid"> */}
-          <div className="post-content">
-            <BlogIntro
-              title={blog.title}
-              categoryTitle={blog.category?.title ?? ""}
-              date={blog.publishedAt}
-              previewImage={blog.previewImage}
-            />
-            {blog.author && <BlogAuthor author={blog.author} />}
-            <article>
-              {(blog.contentBlocks ?? []).map((block: any) => renderContentBlock(block))}
-            </article>
-            {/* <BlogButtonWrapper>
-                <LinkPrimary href={localizedHref(lang, "blog")}>
-                  {lang === "en"
-                    ? "Back to all articles"
-                    : "Вернуться ко всем статьям"}
-                </LinkPrimary>
-              </BlogButtonWrapper> */}
-          </div>
-          <div className="post-content sidebar">
-            <aside className="aside">
-              {blog.videoBlock &&
-                blog.videoBlock.videoId &&
-                blog.videoBlock.posterImage && (
-                  <BlogVideo
-                    videoId={blog.videoBlock.videoId}
-                    posterImage={blog.videoBlock.posterImage}
-                    title={blog.title}
-                  />
+        <article>
+          <header className={`iart__hero${heroUrl ? " iart__hero--image" : ""}`}>
+            {heroUrl && (
+              <div className="iart__hero-bg" aria-hidden="true">
+                <img src={heroUrl} alt="" />
+                <span className="iart__hero-scrim" />
+              </div>
+            )}
+            <div className="wrap iart__hero-inner">
+              <p className="iart__kicker">
+                <a className="iart__back" href={localizedHref(lang, "blog")}>{t.heroTitle}</a>
+                {blog.category?.title && (
+                  <>
+                    <span className="iart__sep">/</span>
+                    <span className="iart__cat">{blog.category.title}</span>
+                  </>
                 )}
-            </aside>
+              </p>
+              <h1 className="iart__title">{blog.title}</h1>
+              <div className="iart__meta">
+                {author?.name && (
+                  <span className="iart__byline">
+                    {authorUrl && <img className="iart__byline-img" src={authorUrl} alt={author.name} />}
+                    <span className="iart__byline-name">{author.name}</span>
+                  </span>
+                )}
+                <span className="iart__meta-dot">{minutes} {t.minRead}</span>
+                {fmtDate(blog.publishedAt) && <span className="iart__meta-dot">{fmtDate(blog.publishedAt)}</span>}
+              </div>
+            </div>
+          </header>
+
+          <div className="iart__body section is-light">
+            <div className="wrap iart__layout">
+              <aside className="iart__aside">
+                <InsightsReader headings={toc} label={t.tocLabel} />
+              </aside>
+
+              <div className="iart__content">
+                {hasVideo && (
+                  <div className="iart__figure">
+                    <BlogVideo videoId={blog.videoBlock.videoId} posterImage={blog.videoBlock.posterImage} title={blog.title} />
+                  </div>
+                )}
+                {contentBlocks.map((b: any) => (
+                  <React.Fragment key={b._key}>{renderArticleBlock(b)}</React.Fragment>
+                ))}
+
+                {author?.name && (
+                  <aside className="iart__author">
+                    {authorUrl && <img className="iart__author-img" src={authorUrl} alt={author.name} />}
+                    <div className="iart__author-body">
+                      <div className="iart__author-meta">
+                        <p className="iart__author-label">{t.writtenBy}</p>
+                        <p className="iart__author-name">{author.name}</p>
+                        {author.position && <p className="iart__author-role">{author.position}</p>}
+                      </div>
+                      {author.bio && <p className="iart__author-bio">{author.bio}</p>}
+                      {author.linkedin && (
+                        <a className="iart__author-link" href={author.linkedin} target="_blank" rel="noopener noreferrer">
+                          LinkedIn ↗
+                        </a>
+                      )}
+                    </div>
+                  </aside>
+                )}
+              </div>
+            </div>
           </div>
-          {/* </div> */}
-          {blog.relatedArticles && blog.relatedArticles.length > 0 && (
-            <div className="related-articles-section">
-              <h2 className="h2-white">
-                {lang === "en"
-                  ? "Related Articles"
-                  : lang === "pl"
-                    ? "Powiązane artykuły"
-                    : lang === "ru"
-                      ? "Похожие статьи"
-                      : lang === "de"
-                        ? "Ähnliche Artikel"
-                        : "Related Articles"}
+        </article>
+
+        {related.length > 0 && (
+          <section className="iart__related">
+            <div className="wrap">
+              <h2 className="iart__related-title">
+                {t.relatedLead} <span className="it">{t.relatedAccent}</span>
               </h2>
-              <div className="related-articles-list">
-                {blog.relatedArticles.map((article: RelatedArticleType) => (
-                  <RelatedArticle
-                    key={article._id}
-                    title={article.title}
-                    category={article.category}
-                    href={article.href}
-                    previewImage={article.previewImage}
-                  />
+              <hr className="shimmer iart__related-stripe" />
+              <div className="ins__grid">
+                {related.slice(0, 3).map((a: any) => (
+                  <a className="icard" href={a.href || "#"} key={a._id}>
+                    <div className="icard__media">
+                      {safeUrl(a.previewImage) ? (
+                        <img src={safeUrl(a.previewImage)} alt={a.title} loading="lazy" />
+                      ) : (
+                        <div className="icard__ph" />
+                      )}
+                      {a.category?.title && <span className="icard__cat">{a.category.title}</span>}
+                    </div>
+                    <div className="icard__body">
+                      <h3 className="icard__title">{a.title}</h3>
+                      <div className="icard__foot">
+                        <span className="icard__date">{fmtDate(a.publishedAt)}</span>
+                        <span className="icard__more">{t.read}</span>
+                      </div>
+                    </div>
+                  </a>
                 ))}
               </div>
             </div>
-          )}
-          {/* <LastArticles params={{ lang, id: currentPostId }} /> */}
-        </div>
-        <FormStatic lang={params.lang} />
+          </section>
+        )}
+
+        <Form lang={lang} />
       </main>
+
       <Footer params={params} />
       <ModalBrochure lang={lang} formDocument={formDocument} />
       <WhatsAppButton lang={params.lang} />
