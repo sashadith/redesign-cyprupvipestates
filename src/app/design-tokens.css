@@ -1,0 +1,76 @@
+/* =====================================================================
+   Cyprus VIP Estates — shared design tokens (foundation layer).
+
+   Step 1 of the staging → production design migration: DEFINITIONS ONLY.
+   Ported verbatim from the redesign's tokens.css :root layer — brand colours,
+   8px spacing scale, fluid type scale, radius, easing/duration, container
+   width, plus the semantic theme variables (dark = default, light variant).
+
+   Deliberately excluded (kept for later steps, to avoid changing the live UI):
+   - global element/reset/`body` styles (would restyle every page)
+   - utility / typography / button classes (`.wrap`, `.h1`, `.btn`, …)
+   - `color-scheme` (would recolour native controls & scrollbars site-wide)
+
+   Nothing on the live site references these variables yet, so this file adds
+   them without any visual change. Remove the import in [lang]/layout.tsx to
+   revert entirely.
+   ===================================================================== */
+
+:root {
+  /* brand constants */
+  --sea-deep: #081512;  /* deepened Maison green */
+  --sea:      #102826;
+  --paper:    #F5F1E8;
+  --paper-2:  #EDE7D9;
+  --ink-warm: #221C15;
+  --ivory:    #EFE9DB;
+  --champagne:#C29A5E;
+  --bronze:   #8E6B3D;
+
+  /* spacing — 8px */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px;
+  --s-6: 32px; --s-7: 48px; --s-8: 64px; --s-9: 96px; --s-10: 128px; --s-11: 160px;
+  --section-y: clamp(2.813rem, 1.563rem + 6.25vw, 6.25rem);
+  --maxw: 1360px;
+  --gutter: clamp(20px, 5vw, 64px);
+
+  /* type scale */
+  --text-caption: 0.78rem; --text-sm: 0.875rem; --text-body: 1.0625rem;
+  --text-lead: clamp(1.125rem, 1.04rem + 0.42vw, 1.375rem);
+  --text-h3: clamp(1.45rem, 1.2rem + 1.1vw, 1.95rem);
+  --text-h2: clamp(1.95rem, 1.4rem + 2.3vw, 3rem);
+  --text-h1: clamp(2.6rem, 1.85rem + 3.4vw, 4.25rem);
+  --text-display: clamp(3rem, 2rem + 5vw, 5.5rem);
+  --text-hero: clamp(1.5rem, 6.5vw, 4.3rem); /* one-line title */
+
+  --r-ui: 16px;
+  --ease: cubic-bezier(0.22, 0.61, 0.21, 1);
+  --ease-soft: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur: 0.6s; --dur-sm: 0.4s;
+}
+
+/* semantic theme variables — dark (green) is the default. Definitions only;
+   `color-scheme` intentionally omitted so native controls are unaffected. */
+:root, [data-theme="dark"] {
+  --bg: var(--sea-deep); --surface: var(--sea); --surface-raised: rgba(239,233,219,0.045);
+  --text: var(--ivory); --text-soft: rgba(239,233,219,0.72); --text-faint: rgba(239,233,219,0.45);
+  --accent: var(--champagne); --accent-ink: var(--sea-deep); --accent-soft: rgba(194,154,94,0.14);
+  --hairline: rgba(239,233,219,0.16); --hairline-strong: rgba(239,233,219,0.30);
+  --glass-bg: rgba(239,233,219,0.06); --glass-solid: rgba(16,40,38,0.85);
+  --glass-border: rgba(239,233,219,0.18); --glass-highlight: rgba(255,255,255,0.12);
+  --glow: rgba(194,154,94,0.20); --glow-strong: rgba(216,178,104,0.55);
+  --glow-word: var(--glow); --glow-btn: var(--glow-strong);
+}
+
+/* light (ivory) variant — applies only under [data-theme="light"] / .is-light,
+   which are not present on live pages, so this stays inert until opted into. */
+[data-theme="light"], .is-light {
+  --bg: var(--paper); --surface: var(--paper-2); --surface-raised: #FBF9F3;
+  --text: var(--ink-warm); --text-soft: rgba(34,28,21,0.74); --text-faint: rgba(34,28,21,0.48);
+  --accent: var(--bronze); --accent-ink: #FFFFFF; --accent-soft: rgba(142,107,61,0.10);
+  --hairline: rgba(34,28,21,0.14); --hairline-strong: rgba(34,28,21,0.24);
+  --glass-bg: rgba(255,255,255,0.55); --glass-solid: rgba(245,241,232,0.92);
+  --glass-border: rgba(34,28,21,0.10); --glass-highlight: rgba(255,255,255,0.55);
+  --glow: rgba(189,137,72,0.18); --glow-strong: rgba(189,137,72,0.5);
+  --glow-word: rgba(255,255,255,0.95); --glow-btn: rgba(255,255,255,0.85);
+}
