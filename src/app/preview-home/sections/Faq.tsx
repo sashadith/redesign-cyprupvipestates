@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { PortableText } from "@portabletext/react";
 import { RichText } from "@/app/components/RichText/RichText";
 import type { FaqSection } from "@/types/homepage";
+import { homeStrings } from "./homeI18n";
 
 /* FAQ — dark section, editorial split: heading/context on the left (sticky),
    an accordion of question/answer items on the right. Reuses the original
@@ -34,8 +35,9 @@ const toPlainText = (blocks: any): string =>
         .trim()
     : "";
 
-export default function Faq({ section }: { section: FaqSection }) {
+export default function Faq({ section, lang = "en" }: { section: FaqSection; lang?: string }) {
   const [open, setOpen] = useState<number | null>(null);
+  const t = homeStrings(lang);
   const items = section?.faq?.faq?.items;
   if (!items?.length) return null;
   const { faqTitle } = section;
@@ -62,7 +64,7 @@ export default function Faq({ section }: { section: FaqSection }) {
           <div className="faq__head">
             {faqTitle && <h2 className="faq__title">{renderTitle(faqTitle)}</h2>}
             <hr className="shimmer faq__stripe" />
-            <p className="faq__lead">Everything buyers ask us about property in Cyprus, in one place.</p>
+            <p className="faq__lead">{t.faqLead}</p>
           </div>
 
           <ul className="faq__list">

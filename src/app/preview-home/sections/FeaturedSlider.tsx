@@ -7,6 +7,7 @@ import "swiper/css";
 import type { FeaturedProject } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client";
 import { localePrefix } from "@/lib/locale";
+import { homeStrings } from "./homeI18n";
 
 const safeUrl = (img: unknown) => {
   try {
@@ -17,11 +18,10 @@ const safeUrl = (img: unknown) => {
 };
 
 const fmtPrice = (p?: number) =>
-  p && p > 0
-    ? new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(p)
-    : "Price on request";
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(p || 0);
 
 const Card: React.FC<{ project: FeaturedProject; lang: string }> = ({ project, lang }) => {
+  const t = homeStrings(lang);
   const img = safeUrl(project.previewImage);
   const url = `${localePrefix(lang)}/projects/${project.slug}`;
   const { price } = project.keyFeatures || {};
@@ -30,7 +30,7 @@ const Card: React.FC<{ project: FeaturedProject; lang: string }> = ({ project, l
     <a className="pcard" href={url}>
       <div className="pcard__media">
         {img && <img src={img} alt={project.title} />}
-        {project.isSold && <span className="pcard__sold">Sold</span>}
+        {project.isSold && <span className="pcard__sold">{t.sold}</span>}
         <div className="pcard__shade" />
       </div>
       <div className="pcard__body">
@@ -38,11 +38,11 @@ const Card: React.FC<{ project: FeaturedProject; lang: string }> = ({ project, l
         <p className="pcard__price">
           {price && price > 0 ? (
             <>
-              <span className="pcard__from">from</span>
+              <span className="pcard__from">{t.priceFrom}</span>
               {fmtPrice(price)}
             </>
           ) : (
-            "Price on request"
+            t.priceOnRequest
           )}
         </p>
       </div>

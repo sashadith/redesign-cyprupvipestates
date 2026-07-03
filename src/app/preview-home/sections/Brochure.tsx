@@ -20,9 +20,9 @@ const safeUrl = (img: unknown) => {
   }
 };
 
-type Props = { brochure: BrochureType };
+type Props = { brochure: BrochureType; cta?: React.ReactNode };
 
-const Brochure: FC<Props> = ({ brochure }) => {
+const Brochure: FC<Props> = ({ brochure, cta }) => {
   const { logo, title, subtitle, description, list, buttonLabel, image } = brochure;
   const logoUrl = safeUrl(logo);
   const imageUrl = safeUrl(image);
@@ -55,7 +55,7 @@ const Brochure: FC<Props> = ({ brochure }) => {
 
             {buttonLabel && (
               <div className="brochure__cta">
-                <a className="btn btn--primary" href="#"><span>{buttonLabel}</span></a>
+                {cta ?? <a className="btn btn--primary" href="#"><span>{buttonLabel}</span></a>}
               </div>
             )}
           </div>

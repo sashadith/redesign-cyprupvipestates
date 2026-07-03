@@ -45,7 +45,7 @@ export default async function PreviewHome() {
         )}
         {homePage.contentBlocks?.length ? <Content blocks={homePage.contentBlocks} /> : null}
         {homePage.faqSection && <Faq section={homePage.faqSection} />}
-        {homePage.parallaxImage && <ParallaxBand image={homePage.parallaxImage} />}
+        {homePage.parallaxImage && <ParallaxBand image={homePage.parallaxImage} videoSrc="/preview-assets/sunset.mp4" />}
         <Form lang="en" />
 
         <span className="preview-badge">Preview · Hero → Footer</span>

@@ -1,5 +1,11 @@
+// Home Page — migrated to the approved staging redesign (deep-green + champagne,
+// Fraunces/Mulish). Keeps LIVE production data, SEO, JSON-LD (Organization, in
+// layout), ISR/static params, global Header/Footer, forms, CRM and multilingual
+// content; only the visual layer is the staging design. Section CSS + tokens are
+// imported here so they load on the home route; fonts are already global.
+import "@/app/preview-home/tokens.css";
+
 import { Metadata } from "next";
-import Link from "next/link";
 import {
   getFormStandardDocumentByLang,
   getHomePageByLang,
@@ -7,51 +13,47 @@ import {
 } from "../../sanity/sanity.utils";
 import { i18n } from "@/i18n.config";
 import { abs, localizedPath, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import { Translation } from "@/types/homepage";
+import { FormStandardDocument } from "@/types/formStandardDocument";
+import type { TextContent, DoubleTextBlock } from "@/types/blog";
+
+// Global chrome (production)
+import Header from "../components/Header/Header";
+import Footer from "../components/Footer/Footer";
+import WhatsAppButton from "../components/WhatsAppButton/WhatsAppButton";
+import ModalBrochure from "../components/ModalBrochure/ModalBrochure";
+
+// Staging redesign sections
+import PreviewMotion from "@/app/preview-home/anim/PreviewMotion";
+import Hero from "@/app/preview-home/sections/Hero";
+import Brochure from "@/app/preview-home/sections/Brochure";
+import About from "@/app/preview-home/sections/About";
+import FeaturedProjects from "@/app/preview-home/sections/FeaturedProjects";
+import Cities from "@/app/preview-home/sections/Cities";
+import Description from "@/app/preview-home/sections/Description";
+import NewListings from "@/app/preview-home/sections/NewListings";
+import Benefits from "@/app/preview-home/sections/Benefits";
+import HowWeWork from "@/app/preview-home/sections/HowWeWork";
+import CaseStudies from "@/app/preview-home/sections/CaseStudies";
+import Content from "@/app/preview-home/sections/Content";
+import Faq from "@/app/preview-home/sections/Faq";
+import ParallaxBand from "@/app/preview-home/sections/ParallaxBand";
+import Form from "@/app/preview-home/sections/Form";
+import ConsultButton from "@/app/preview-home/sections/ConsultButton";
+import { homeStrings } from "@/app/preview-home/sections/homeI18n";
 
 export const revalidate = 1800;
 export function generateStaticParams() {
   return ALL_LOCALES.map((lang) => ({ lang }));
 }
-import { Translation } from "@/types/homepage";
-import Header from "../components/Header/Header";
-import Hero from "../components/Hero/Hero";
-import ModalBrochure from "../components/ModalBrochure/ModalBrochure";
-import BrochureBlock from "../components/BrochureBlock/BrochureBlock";
-import AboutBlock from "../components/AboutBlock/AboutBlock";
-import Footer from "../components/Footer/Footer";
-import ProjectsBlock from "../components/ProjectsBlock/ProjectsBlock";
-import HeaderWrapper from "../components/HeaderWrapper/HeaderWrapper";
-import { FormStandardDocument } from "@/types/formStandardDocument";
-import ParallaxImage from "../components/ParallaxImage/ParallaxImage";
-import DescriptionBlock from "../components/DescriptionBlock/DescriptionBlock";
-import NewListnigs from "../components/NewListnigs/NewListnigs";
-import Reviews from "../components/Reviews/Reviews";
-import FormStatic from "../components/FormStatic/FormStatic";
-import LogosCarousel from "../components/LogosCarousel/LogosCarousel";
-import DevelopersLogos from "../components/DevelopersLogos/DevelopersLogos";
-import BenefitsBlock from "../components/BenefitsBlock/BenefitsBlock";
-import HowWeWorkBlock from "../components/HowWeWorkBlock/HowWeWorkBlock";
-import ReviewsFullBlockComponent from "../components/ReviewsFullBlockComponent/ReviewsFullBlockComponent";
-import WhatsAppButton from "../components/WhatsAppButton/WhatsAppButton";
-import HomepageHero from "../components/HomepageHero/HomepageHero";
-import FeaturedProjectsHomepage from "../components/FeaturedProjectsHomepage/FeaturedProjectsHomepage";
-import FaqHomepage from "../components/FaqHomepage/FaqHomepage";
-import { DoubleTextBlock, TextContent } from "@/types/blog";
-import TextContentComponent from "../components/TextContentComponent/TextContentComponent";
-import DoubleTextBlockComponent from "../components/DoubleTextBlockComponent/DoubleTextBlockComponent";
-import CitiesHomepage from "../components/CitiesHomepage/CitiesHomepage";
-import FeaturedCaseStudies from "../components/FeaturedCaseStudies/FeaturedCaseStudies";
 
-type Props = {
-  params: { lang: string; slug: string };
-};
+type Props = { params: { lang: string; slug: string } };
 
-// Dynamic metadata for SEO
+// SEO — unchanged from production (title/desc/canonical/hreflang/OG).
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = params;
   const homePage = await getHomePageByLang(lang);
 
-  // The homepage lives at `/{lang}` in every locale.
   const canonical = abs(localizedPath(lang));
   const languages: Record<string, string> = {};
   for (const l of ALL_LOCALES) languages[l] = abs(localizedPath(l));
@@ -74,119 +76,68 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function Home({ params }: Props) {
-  const homePage = await getHomePageByLang(params.lang);
+  const { lang } = params;
+  const homePage = await getHomePageByLang(lang);
+  const formDocument: FormStandardDocument = await getFormStandardDocumentByLang(lang);
+  const t = homeStrings(lang);
 
-  const formDocument: FormStandardDocument =
-    await getFormStandardDocumentByLang(params.lang);
-
-  // console.log("homePage", homePage);
-  // console.log("formDocument", formDocument);
-
+  // Language-switcher translations (same logic as production).
   const homePageTranslationSlugs: { [key: string]: { current: string } }[] =
     homePage?._translations.map((item) => {
       const newItem: { [key: string]: { current: string } } = {};
-
-      for (const key in item.slug) {
-        if (key !== "_type") {
-          newItem[key] = { current: item.slug[key].current };
-        }
-      }
+      for (const key in item.slug) if (key !== "_type") newItem[key] = { current: item.slug[key].current };
       return newItem;
     });
 
-  const renderContentBlock = (block: TextContent | DoubleTextBlock) => {
-    switch (block._type) {
-      case "textContent":
-        return (
-          <TextContentComponent key={block._key} block={block as TextContent} />
-        );
-
-      case "doubleTextBlock":
-        return (
-          <DoubleTextBlockComponent
-            key={block._key}
-            block={block as DoubleTextBlock}
-          />
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  const translations = i18n.languages.reduce<Translation[]>((acc, lang) => {
+  const translations = i18n.languages.reduce<Translation[]>((acc, l) => {
     const translationSlug = homePageTranslationSlugs
-      ?.reduce(
-        (acc: string[], slug: { [key: string]: { current: string } }) => {
-          const current = slug[lang.id]?.current;
-          if (current) {
-            acc.push(current);
-          }
-          return acc;
-        },
-        [],
-      )
+      ?.reduce((a: string[], slug: { [key: string]: { current: string } }) => {
+        const current = slug[l.id]?.current;
+        if (current) a.push(current);
+        return a;
+      }, [])
       .join(" ");
-
-    return translationSlug
-      ? [
-          ...acc,
-          {
-            language: lang.id,
-            path: localizedPath(lang.id),
-          },
-        ]
-      : acc;
+    return translationSlug ? [...acc, { language: l.id, path: localizedPath(l.id) }] : acc;
   }, []);
 
   return (
     <>
       <Header params={params} translations={translations} />
+      <PreviewMotion />
       <main>
-        {/* <Hero slides={homePage.sliderMain} /> */}
-        <HomepageHero heroBlock={homePage.heroBlock} />
-        <BrochureBlock brochure={homePage.brochureBlock} />
-        <AboutBlock aboutBlock={homePage.aboutBlock} />
-        <FeaturedProjectsHomepage
-          featuredProjectsBlock={homePage.featuredProjectsBlock}
-          lang={params.lang}
+        <Hero
+          heroBlock={homePage.heroBlock}
+          lang={lang}
+          consultCta={<ConsultButton className="btn btn--glass"><span>{t.getConsultation}</span></ConsultButton>}
         />
-        {homePage.citiesBlock && (
-          <CitiesHomepage citiesBlock={homePage.citiesBlock} />
-        )}
-        <DescriptionBlock descriptionBlock={homePage.descriptionBlock} />
-        <NewListnigs lang={params.lang} />
-        <BenefitsBlock benefitsBlock={homePage.benefitsBlock} />
-        <HowWeWorkBlock work={homePage.howWeWorkBlock} />
-        {homePage.contentBlocks?.length ? (
-          <div className="contentBlocks">
-            {homePage.contentBlocks.map(renderContentBlock)}
-          </div>
-        ) : null}
+        <Brochure
+          brochure={homePage.brochureBlock}
+          cta={
+            homePage.brochureBlock?.buttonLabel ? (
+              <ConsultButton className="btn btn--primary"><span>{homePage.brochureBlock.buttonLabel}</span></ConsultButton>
+            ) : undefined
+          }
+        />
+        <About aboutBlock={homePage.aboutBlock} />
+        <FeaturedProjects block={homePage.featuredProjectsBlock} lang={lang} />
+        {homePage.citiesBlock && <Cities block={homePage.citiesBlock} lang={lang} />}
+        {homePage.descriptionBlock && <Description block={homePage.descriptionBlock} />}
+        <NewListings lang={lang} />
+        {homePage.benefitsBlock && <Benefits block={homePage.benefitsBlock} />}
+        {homePage.howWeWorkBlock && <HowWeWork block={homePage.howWeWorkBlock} />}
         {homePage.featuredCaseStudiesBlock && (
-          <FeaturedCaseStudies
-            block={homePage.featuredCaseStudiesBlock}
-            lang={params.lang}
-          />
+          <CaseStudies block={homePage.featuredCaseStudiesBlock} lang={lang} />
         )}
-        {homePage.faqSection && (
-          <FaqHomepage faqSection={homePage.faqSection} />
-        )}
-        {/* <DevelopersLogos
-          logos={homePage.logosBlock?.logos}
-          lang={params.lang}
-        /> */}
-        <ParallaxImage image={homePage.parallaxImage} />
-        <ReviewsFullBlockComponent
-          block={homePage.reviewsFullBlock}
-          lang={params.lang}
-        />
-        {/* <Reviews reviews={homePage.reviewsBlock} /> */}
-        <FormStatic lang={params.lang} />
-        <ModalBrochure lang={params.lang} formDocument={formDocument} />
-        <WhatsAppButton lang={params.lang} />
+        {homePage.contentBlocks?.length ? (
+          <Content blocks={homePage.contentBlocks as Array<TextContent | DoubleTextBlock>} lang={lang} />
+        ) : null}
+        {homePage.faqSection && <Faq section={homePage.faqSection} lang={lang} />}
+        {homePage.parallaxImage && <ParallaxBand image={homePage.parallaxImage} />}
+        <Form lang={lang} />
       </main>
       <Footer params={params} />
+      <ModalBrochure lang={lang} formDocument={formDocument} />
+      <WhatsAppButton lang={lang} />
     </>
   );
 }
