@@ -18,4 +18,9 @@ export const prefersReducedMotion = () =>
 export const isTouchDevice = () =>
   typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
 
+/** Shared handle to the active Lenis instance (set by LenisProvider) so other
+   components can drive smooth programmatic scrolls instead of fighting it with
+   native window.scrollTo. Null on touch / reduced-motion (native scroll). */
+export const lenisRef: { current: any } = { current: null };
+
 export { gsap, ScrollTrigger, SplitText };
