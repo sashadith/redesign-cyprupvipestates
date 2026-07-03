@@ -49,3 +49,7 @@ next-env.d.ts
 
 # local media (served from the VPS / proxied in dev) — never versioned
 /public/uploads
+
+# Claude Code agent tooling — local to the working dir, not product code
+/.agents/
+/skills-lock.json
