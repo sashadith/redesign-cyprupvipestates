@@ -1,7 +1,7 @@
 # Staging — redesign preview online
 
-**URL:** https://design.cyprusvipestates.com  (HTTP Basic Auth — credentials shared
-privately, **not** in this repo). Redesign preview: `/preview-home`.
+**URL:** https://design.cyprusvipestates.com  (**public** — no login required).
+Redesign preview: `/preview-home`.
 
 ## What's deployed
 
@@ -11,11 +11,18 @@ privately, **not** in this repo). Redesign preview: `/preview-home`.
   `public/uploads` are symlinked from production; it has its own `.env`).
 - nginx vhost `design.cyprusvipestates.com` → Let's Encrypt SSL (auto-renew).
 
-## Protected from indexing / public access (all three)
+## Access & indexing
 
-1. **HTTP Basic Auth** — nginx `auth_basic` + `/etc/nginx/.htpasswd-staging`.
-2. **`X-Robots-Tag: noindex, nofollow`** on every response.
-3. **`robots.txt`** → `Disallow: /` (served openly so crawlers read it).
+Staging is **publicly accessible** (HTTP 200, no Basic Auth). It is kept **out of
+search indexes** by two protections:
+
+1. **`X-Robots-Tag: noindex, nofollow`** on every response (nginx `add_header … always`).
+2. **`robots.txt`** → `Disallow: /` (served openly so crawlers read it).
+
+> Basic Auth was removed from the nginx vhost on request (2026-07-01); staging is
+> intentionally open. The old `auth_basic` config survives only as a commented
+> line + a `.bak` vhost, and `/etc/nginx/.htpasswd-staging` is now unused. Not
+> restored — see the vhost comment "Basic Auth removed on request".
 
 ## Deploy / update staging
 

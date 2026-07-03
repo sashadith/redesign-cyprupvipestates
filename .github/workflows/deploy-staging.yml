@@ -86,8 +86,10 @@ jobs:
               -o ServerAliveInterval=30 -o ServerAliveCountMax=20 "$VPS_USER@$VPS_HOST" \
             "cd $STAGING_DIR && NODE_OPTIONS=--max_old_space_size=2048 npm run build && pm2 reload cve-staging --update-env"
 
-      - name: Smoke test (staging up + auth-gated → expect 401)
+      - name: Smoke test (staging up → expect 200)
         run: |
+          # Staging is intentionally public (Basic Auth removed on request; still
+          # noindexed via X-Robots-Tag + robots.txt). Verify it serves successfully.
           code=$(curl -s -o /dev/null -w '%{http_code}' https://design.cyprusvipestates.com/)
-          echo "staging / (no creds) -> HTTP $code"
-          test "$code" = "401"
+          echo "staging / -> HTTP $code"
+          test "$code" = "200"
