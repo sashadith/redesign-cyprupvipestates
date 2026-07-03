@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+# Deploy a CLEAN, COMMITTED git ref (default: main) to PRODUCTION → https://cyprusvipestates.com
+#
+# ⚠️  TEMPLATE — REVIEW BEFORE FIRST USE. This script has never been run. Confirm
+#     the CONFIG below against the real VPS layout (live app dir + PM2 name), then
+#     do a `--dry-run` first. It is intentionally stricter than deploy-staging.sh:
+#
+#       • deploys ONLY committed code from a git ref (never the dirty working tree),
+#         so uncommitted / untracked WIP can never reach production;
+#       • requires a typed confirmation (or --yes);
+#       • DB migrations and `npm ci` are OPT-IN (they can affect shared state);
+#       • runs a post-deploy health check.
+#
+# Usage:
+#   ./scripts/deploy-prod.sh --dry-run              # preview the file sync, no changes
+#   ./scripts/deploy-prod.sh                        # deploy `main` (prompts to confirm)
+#   CVP_PROD_REF=main CVP_RUN_MIGRATE=1 ./scripts/deploy-prod.sh
+#
+# Requires VPS SSH access (key at ~/.ssh/cvp_vps, or set CVP_SSH_KEY).
+set -euo pipefail
+
+# ---- CONFIG — verify every line against your VPS before running -------------
+KEY="${CVP_SSH_KEY:-$HOME/.ssh/cvp_vps}"
+HOST="${CVP_PROD_HOST:-root@72.60.89.239}"
+DIR="${CVP_PROD_DIR:-/var/www/cyprusvipestates}"   # TODO: confirm the LIVE app dir
+APP="${CVP_PROD_APP:-cyprusvipestates}"            # TODO: confirm the LIVE pm2 app name
+REF="${CVP_PROD_REF:-main}"                         # committed ref to deploy
+RUN_INSTALL="${CVP_RUN_INSTALL:-0}"                 # 1 = npm ci (only if deps changed)
+RUN_MIGRATE="${CVP_RUN_MIGRATE:-0}"                 # 1 = npx prisma migrate deploy
+HEALTH_URL="${CVP_HEALTH_URL:-https://cyprusvipestates.com/projects}"
+# ----------------------------------------------------------------------------
+
+DRY=0; ASSUME_YES=0
+for a in "$@"; do
+  case "$a" in
+    --dry-run) DRY=1 ;;
+    --yes)     ASSUME_YES=1 ;;
+    *) echo "unknown flag: $a"; exit 2 ;;
+  esac
+done
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$REPO_ROOT"
+
+# The ref must exist and be an ancestor of its pushed remote (i.e. already on origin),
+# so we never ship a local-only commit no one has reviewed.
+git rev-parse --verify "$REF" >/dev/null 2>&1 || { echo "✗ unknown git ref: $REF"; exit 1; }
+if ! git merge-base --is-ancestor "$REF" "origin/$REF" 2>/dev/null; then
+  echo "⚠️  $REF is not fully pushed to origin/$REF — push & get it reviewed first."
+  [ "$ASSUME_YES" = 1 ] || { echo "aborting (use --yes to override)"; exit 1; }
+fi
+REF_SHA="$(git rev-parse --short "$REF")"
+
+echo "──────────────────────────────────────────────"
+echo " PRODUCTION DEPLOY"
+echo "   ref:      $REF ($REF_SHA)"
+echo "   host:     $HOST"
+echo "   dir:      $DIR"
+echo "   pm2 app:  $APP"
+echo "   npm ci:   $([ "$RUN_INSTALL" = 1 ] && echo yes || echo 'no (reuse node_modules)')"
+echo "   migrate:  $([ "$RUN_MIGRATE" = 1 ] && echo 'yes (prisma migrate deploy)' || echo no)"
+[ "$DRY" = 1 ] && echo "   MODE:     DRY RUN (no changes will be made)"
+echo "──────────────────────────────────────────────"
+
+if [ "$ASSUME_YES" != 1 ] && [ "$DRY" != 1 ]; then
+  read -r -p "Type 'deploy-prod' to proceed: " ans
+  [ "$ans" = "deploy-prod" ] || { echo "aborted."; exit 1; }
+fi
+
+# 1) Export a CLEAN tree of the ref (committed files only — no untracked WIP).
+STAGE="$(mktemp -d)"; trap 'rm -rf "$STAGE"' EXIT
+echo "→ exporting clean $REF → $STAGE"
+git archive "$REF" | tar -x -C "$STAGE"
+
+# 2) Sync to the live app dir. Same excludes as staging so we never clobber the
+#    server's node_modules, build cache, env, or the symlinked media dir.
+RSYNC_OPTS=(-az --delete
+  --exclude node_modules --exclude .next --exclude .git --exclude .local-db
+  --exclude '.env' --exclude '.env.local' --exclude 'scripts/images' --exclude 'public/uploads')
+[ "$DRY" = 1 ] && RSYNC_OPTS+=(--dry-run -v)
+
+echo "→ rsync clean $REF tree to $HOST:$DIR"
+rsync "${RSYNC_OPTS[@]}" -e "ssh -i $KEY" "$STAGE/" "$HOST:$DIR/"
+
+if [ "$DRY" = 1 ]; then
+  echo "✓ dry run complete — no build, migrate, or reload performed."
+  exit 0
+fi
+
+# 3) Build + (optional) install/migrate + reload on the VPS.
+echo "→ build + reload on the VPS"
+ssh -i "$KEY" "$HOST" bash -s <<REMOTE
+set -euo pipefail
+cd "$DIR"
+$([ "$RUN_INSTALL" = 1 ] && echo 'npm ci' || echo 'echo "· skip npm ci (reusing existing node_modules)"')
+$([ "$RUN_MIGRATE" = 1 ] && echo 'npx prisma migrate deploy' || echo 'echo "· skip prisma migrate"')
+NODE_OPTIONS=--max_old_space_size=2048 npm run build
+pm2 reload "$APP" --update-env
+REMOTE
+
+# 4) Health check.
+if command -v curl >/dev/null 2>&1; then
+  echo "→ health check $HEALTH_URL"
+  code="$(curl -s -o /dev/null -w '%{http_code}' "$HEALTH_URL" || echo 000)"
+  echo "   HTTP $code"
+  [ "$code" = 200 ] || { echo "⚠️  non-200 — verify manually, consider rollback (pm2 logs $APP)."; exit 1; }
+fi
+
+echo "✓ Production updated → https://cyprusvipestates.com  (ref $REF @ $REF_SHA)"
