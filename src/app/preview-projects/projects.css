@@ -1,0 +1,512 @@
+/* =====================================================================
+   Cyprus VIP Estates — Projects search (isolated preview).
+   Built on the homepage design tokens (tokens.css). Dark, map-centric.
+   ===================================================================== */
+
+:root { --px-nav: 74px; --px-filter: 74px; }
+
+.px { display: block; background: var(--sea-deep); color: var(--text); padding-top: var(--px-nav); min-height: 100vh; }
+
+/* ---------------- FILTER BAR (sticky under the nav) ---------------- */
+.px__filters {
+  position: sticky; top: var(--px-nav); z-index: 30;
+  background: rgba(8, 21, 18, 0.92); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--hairline);
+}
+.px__filters-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding-block: 14px; }
+
+/* ---- shared control look: 44px pills ---- */
+.px__search {
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 44px; padding: 0 14px; border-radius: 999px;
+  background: var(--glass-bg); border: 1px solid var(--hairline-strong); color: var(--text-faint);
+}
+.px__search svg { flex: none; }
+.px__search input {
+  flex: 1; min-width: 0; background: none; border: 0; outline: none; color: var(--ivory);
+  font-family: var(--font-body), sans-serif; font-size: var(--text-sm);
+}
+.px__search input::placeholder { color: var(--text-faint); }
+
+.px__select, .px__price input {
+  height: 44px; border-radius: 999px; background: var(--glass-bg); border: 1px solid var(--hairline-strong);
+  color: var(--text-soft); font-family: var(--font-body), sans-serif; font-size: var(--text-sm); padding: 0 16px;
+  appearance: none; -webkit-appearance: none; cursor: pointer; outline: none;
+  transition: color var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease);
+}
+.px__select {
+  max-width: 100%; text-overflow: ellipsis;
+  background-image: url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 4.5L6 8l3.5-3.5' stroke='%23C29A5E' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; padding-right: 34px;
+}
+.px__select:hover, .px__price input:hover { border-color: var(--accent); }
+.px__select:focus, .px__price input:focus { border-color: var(--accent); color: var(--ivory); }
+
+.px__price { display: inline-flex; align-items: center; gap: 6px; }
+.px__price input { flex: 1 1 78px; width: auto; min-width: 0; cursor: text; color: var(--ivory); padding: 0 12px; }
+.px__price input::placeholder { color: var(--text-faint); }
+.px__price-sep { flex: none; color: var(--text-faint); }
+
+/* numeric price inputs: remove the browser spinner arrows.
+   webkit (Chrome/Edge/Safari) needs the pseudo-elements; Firefox uses
+   -moz-appearance: textfield. Input value/validation is unchanged. */
+.px__price input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
+.px__price input[type="number"]::-webkit-outer-spin-button,
+.px__price input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
+
+/* Native dropdowns are OS-rendered, so options can only be lightly styled.
+   color-scheme: dark makes the popup use the dark system UI (Chrome/Edge/FF and
+   Safari ≥ recent); option bg/color is honoured on Win/Linux/Android, partially
+   on macOS. This is the safest native-only approach — see report for limits. */
+.px__select, .px__price input { color-scheme: dark; }
+.px__select option { background: var(--sea-deep); color: var(--ivory); }
+
+.px__reset {
+  height: 44px; padding: 0 16px; border-radius: 999px; cursor: pointer; white-space: nowrap;
+  background: none; border: 1px solid var(--hairline-strong); color: var(--text-soft);
+  font-family: var(--font-body), sans-serif; font-size: var(--text-sm);
+  transition: color var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease);
+}
+.px__reset:hover { color: var(--ivory); border-color: var(--accent); }
+
+/* map toggle button in the filter bar (primary action) */
+.px__mapbtn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: 999px; cursor: pointer; white-space: nowrap;
+  background: var(--accent); color: var(--accent-ink); border: 1px solid var(--accent);
+  font-family: var(--font-body), sans-serif; font-size: var(--text-sm); font-weight: 600;
+  transition: filter var(--dur-sm) var(--ease);
+}
+.px__mapbtn:hover { filter: brightness(1.06); }
+
+/* ---- custom select (PxSelect): trigger reuses the .px__select pill, panel + options styled to match ---- */
+.pxsel { position: relative; display: block; }
+.pxsel__btn { display: flex; align-items: center; width: 100%; cursor: pointer; }
+.pxsel__btn:focus-visible { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.pxsel__value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pxsel__value.is-placeholder { color: var(--text-soft); }
+.pxsel__panel {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 50;
+  margin: 0; padding: 6px; list-style: none; max-height: 320px; overflow-y: auto;
+  background: var(--sea-deep); border: 1px solid var(--hairline-strong); border-radius: var(--r-ui);
+  box-shadow: 0 24px 50px -24px rgba(0, 0, 0, 0.85);
+}
+.pxsel__opt {
+  padding: 9px 12px; border-radius: calc(var(--r-ui) - 7px); cursor: pointer;
+  font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--text-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pxsel__opt.is-active { background: rgba(255, 255, 255, 0.06); color: var(--ivory); }
+.pxsel__opt.is-selected { color: var(--champagne); }
+.pxsel__opt.is-selected.is-active { background: var(--accent-soft); }
+
+/* "More filters" / "Hide filters" disclosure toggles (mobile only) */
+.px__morebtn,
+.px__lessbtn {
+  align-items: center; justify-content: space-between; gap: 10px; height: 44px; padding: 0 16px; border-radius: 999px; cursor: pointer;
+  background: none; border: 1px solid var(--hairline-strong); color: var(--text-soft);
+  font-family: var(--font-body), sans-serif; font-size: var(--text-sm);
+  transition: color var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease);
+}
+.px__morebtn:hover,
+.px__lessbtn:hover { color: var(--ivory); border-color: var(--accent); }
+.px__morebtn-label { display: inline-flex; align-items: center; gap: 8px; }
+.px__morebtn-badge {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: 0.7rem; font-weight: 700;
+}
+.px__morebtn svg,
+.px__lessbtn svg { flex: none; }
+
+/* ---- filter-row layout: City · Price · Type · Beds · [Search grows] · Map · Reset ---- */
+.px__filters-row > .pxsel,
+.px__filters-row > .px__price { flex: 0 1 auto; min-width: 0; }
+/* small flex-basis on purpose: search grows to fill remaining space, so its
+   rendered width is unchanged, but line-wrapping is decided by basis — a large
+   basis made Reset wrap onto a 2nd line in Safari (which sizes the selects/number
+   inputs a touch wider than Chrome). A slim basis keeps the whole row on one line. */
+.px__filters-row > .px__search { flex: 1 1 110px; min-width: 110px; }
+.px__filters-row > .px__mapbtn,
+.px__filters-row > .px__reset { flex: 0 0 auto; }
+.px__morebtn,
+.px__lessbtn { display: none; } /* desktop/tablet: everything is inline, no disclosure */
+
+/* tablet: the four filters fill one row, Search + actions on the next */
+@media (max-width: 900px) {
+  .px__filters-row > .pxsel { flex: 1 1 150px; }
+  .px__filters-row > .px__price { flex: 1 1 190px; }
+  .px__filters-row > .px__search { flex: 1 1 60%; }
+  .px__filters-row > .px__mapbtn { flex: 1 1 auto; }
+  .px__filters-row > .px__reset { flex: 0 1 auto; }
+}
+
+/* mobile collapsed: City · Price · [More filters].
+   expanded: City · Price · Type|Beds · Search+Map+Reset · [Hide filters]. */
+@media (max-width: 600px) {
+  .px__filters-row { gap: 8px; }
+  .px__filters-row > .px__f-city { flex: 1 1 100%; order: 0; }
+  .px__filters-row > .px__price { flex: 1 1 100%; order: 1; }
+
+  /* collapsed: only City, Price + the "More filters" button */
+  .px__filters-row > .px__f-type,
+  .px__filters-row > .px__f-beds,
+  .px__filters-row > .px__search,
+  .px__filters-row > .px__mapbtn,
+  .px__filters-row > .px__reset,
+  .px__filters-row > .px__lessbtn { display: none; }
+  .px__filters-row > .px__morebtn { display: inline-flex; flex: 1 1 100%; order: 2; }
+
+  /* expanded: swap the More button for the additional filters + "Hide filters" */
+  .px__filters-row.is-more-open > .px__morebtn { display: none; }
+  .px__filters-row.is-more-open > .px__f-type,
+  .px__filters-row.is-more-open > .px__f-beds { display: block; flex: 1 1 calc(50% - 4px); order: 2; }
+  .px__filters-row.is-more-open > .px__search { display: inline-flex; flex: 1 1 0; min-width: 0; order: 3; }
+  .px__filters-row.is-more-open > .px__mapbtn,
+  .px__filters-row.is-more-open > .px__reset { display: inline-flex; flex: 0 0 auto; order: 3; }
+  .px__filters-row.is-more-open > .px__lessbtn { display: inline-flex; flex: 1 1 100%; order: 4; }
+}
+
+/* Expand / collapse animation for the mobile disclosure. Uses @starting-style +
+   transition-behavior: allow-discrete to animate the display none↔shown change.
+   Browsers without support (and reduced-motion users) get the instant toggle. */
+@media (max-width: 600px) and (prefers-reduced-motion: no-preference) {
+  /* revealed items fade + slide in/out */
+  .px__filters-row > .px__f-type,
+  .px__filters-row > .px__f-beds,
+  .px__filters-row > .px__search,
+  .px__filters-row > .px__mapbtn,
+  .px__filters-row > .px__reset,
+  .px__filters-row > .px__lessbtn {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.24s var(--ease), transform 0.24s var(--ease), display 0.24s var(--ease);
+    transition-behavior: allow-discrete;
+  }
+  .px__filters-row.is-more-open > .px__f-type,
+  .px__filters-row.is-more-open > .px__f-beds,
+  .px__filters-row.is-more-open > .px__search,
+  .px__filters-row.is-more-open > .px__mapbtn,
+  .px__filters-row.is-more-open > .px__reset,
+  .px__filters-row.is-more-open > .px__lessbtn {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  @starting-style {
+    .px__filters-row.is-more-open > .px__f-type,
+    .px__filters-row.is-more-open > .px__f-beds,
+    .px__filters-row.is-more-open > .px__search,
+    .px__filters-row.is-more-open > .px__mapbtn,
+    .px__filters-row.is-more-open > .px__reset,
+    .px__filters-row.is-more-open > .px__lessbtn {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+  /* "More" button: vanish instantly when expanding; reappear only AFTER the
+     revealed items have finished collapsing (delay) so they never overlap */
+  .px__filters-row > .px__morebtn {
+    transition: display 0.24s 0.24s;
+    transition-behavior: allow-discrete;
+  }
+  .px__filters-row.is-more-open > .px__morebtn { transition: none; }
+}
+
+/* ---------------- FULL-WIDTH RESULTS ---------------- */
+/* overflow-x: clip contains the map-tile preview's bleed (it can extend a few px
+   past the viewport on wide screens) without a horizontal scrollbar. Only the X
+   axis is clipped, so the bleed's vertical fade is preserved, and the sticky
+   filter bar (a sibling, not a descendant) is unaffected. */
+.px__results { padding-block: clamp(24px, 3vw, 44px) clamp(56px, 7vw, 100px); overflow-x: clip; }
+.px__results-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; margin-bottom: clamp(18px, 2.5vw, 30px); }
+.px__results-head .px__select--sort { flex: 0 1 auto; min-width: 0; }
+.px__count { margin: 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--text-soft); }
+.px__count strong { color: var(--ivory); font-weight: 700; font-size: 1.05rem; }
+.px__count-area { color: var(--accent); }
+.px__empty { color: var(--text-soft); font-family: var(--font-body), sans-serif; }
+
+.px__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: clamp(10px, 1.1vw, 16px); }
+
+/* floating map button (always reachable) */
+.px__mapfab {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 25;
+  display: none; align-items: center; gap: 8px; height: 48px; padding: 0 22px; border-radius: 999px; cursor: pointer;
+  background: var(--accent); color: var(--accent-ink); border: 0; box-shadow: 0 14px 34px -14px rgba(0, 0, 0, 0.7);
+  font-family: var(--font-body), sans-serif; font-size: var(--text-sm); font-weight: 700;
+}
+/* Mobile: the filter-bar .px__mapbtn stays visible and is the map trigger; the
+   floating FAB is retired (kept hidden via its base display:none). */
+
+/* ---------------- MAP OVERLAY ---------------- */
+.px__mapoverlay { position: fixed; inset: var(--px-nav) 0 0 0; z-index: 60; display: flex; flex-direction: column; background: var(--sea-deep); animation: pxFade 0.25s var(--ease); }
+@keyframes pxFade { from { opacity: 0; } to { opacity: 1; } }
+.px__mapoverlay-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px clamp(16px, 3vw, 32px); border-bottom: 1px solid var(--hairline); background: var(--sea-deep); }
+.px__mapoverlay-count { margin: 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--text-soft); }
+.px__mapoverlay-count strong { color: var(--ivory); font-weight: 700; }
+.px__mapoverlay-close {
+  display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border-radius: 999px; cursor: pointer;
+  background: var(--glass-bg); border: 1px solid var(--hairline-strong); color: var(--ivory);
+  font-family: var(--font-body), sans-serif; font-size: var(--text-sm); font-weight: 500;
+  transition: border-color var(--dur-sm) var(--ease);
+}
+.px__mapoverlay-close:hover { border-color: var(--accent); }
+.px__mapoverlay-map { flex: 1; position: relative; min-height: 0; }
+.px__mapoverlay-map .px-leaflet { height: 100%; width: 100%; }
+
+/* ---------------- PROJECT CARD ---------------- */
+/* Namespaced `prj*` (NOT `pcard*`): the preview-home design system (tokens.css,
+   loaded site-wide) already owns `.pcard` as a DIFFERENT overlay card and would
+   otherwise override these rules. Full-bleed image + readability scrim. */
+/* Houdini angle for the travelling golden reflection on hover */
+@property --prj-sheen { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+
+.prj {
+  position: relative; z-index: 1; display: flex; flex-direction: column; overflow: hidden; text-decoration: none; min-width: 0;
+  background: var(--sea-deep); border: 1px solid var(--hairline);
+  border-radius: var(--r-ui) var(--r-ui) 3px 3px; /* bottom corners only minimally rounded */
+  transition: border-color 0.4s var(--ease), box-shadow var(--dur-sm) var(--ease);
+}
+/* 4:3 image area; the title/location/price overlay sits over the scrim here.
+   The rounded top corners live HERE (on the image's direct overflow parent) and
+   the layer is promoted with translateZ(0): otherwise Chrome clips the hover-
+   scaled image to this box's square rectangle for a frame before applying the
+   card's rounded clip — a brief flash of square corners on mouseover. */
+.prj__media {
+  position: relative; aspect-ratio: 4 / 3; overflow: hidden;
+  border-radius: var(--r-ui) var(--r-ui) 0 0;
+  transform: translateZ(0);
+}
+/* hover: NO block movement — the border fades to gold with a moving reflection,
+   plus the gentle image zoom below */
+.prj:hover, .prj.is-active { border-color: var(--accent); box-shadow: 0 16px 40px -30px rgba(0, 0, 0, 0.7); }
+.prj::after {
+  content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; border-radius: inherit; padding: 1.5px;
+  background: conic-gradient(from var(--prj-sheen), transparent 0deg, transparent 232deg, var(--champagne) 290deg, var(--ivory) 314deg, var(--champagne) 338deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  opacity: 0; transition: opacity 0.45s var(--ease);
+}
+.prj:hover::after, .prj.is-active::after { opacity: 1; animation: prj-sheen-spin 4s linear infinite; }
+@keyframes prj-sheen-spin { to { --prj-sheen: 360deg; } }
+@media (prefers-reduced-motion: reduce) { .prj:hover::after, .prj.is-active::after { animation: none; } }
+
+/* image fills the entire block */
+.prj__img, .prj__ph { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+.prj__img { transition: transform 0.9s var(--ease); }
+.prj:hover .prj__img, .prj.is-active .prj__img { transform: scale(1.05); }
+.prj__ph { background: linear-gradient(135deg, var(--sea), var(--sea-deep)); }
+
+/* readability scrim: opaque where the text sits, clearing toward the top */
+.prj__shade {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  /* fade concentrated lower so more of the image stays visible up top */
+  background: linear-gradient(to top,
+    rgba(6, 16, 14, 0.95) 0%, rgba(6, 16, 14, 0.8) 15%, rgba(6, 16, 14, 0.4) 33%, rgba(6, 16, 14, 0.1) 50%, transparent 64%);
+}
+
+.prj__badges { position: absolute; top: 14px; left: 14px; z-index: 3; display: flex; gap: 6px; }
+.prj__badge {
+  font-family: var(--font-body), sans-serif; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ivory); background: rgba(8, 21, 18, 0.72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  padding: 4px 10px; border-radius: 999px; border: 1px solid var(--hairline-strong);
+}
+.prj__badge--new { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.prj__type {
+  position: absolute; top: 14px; right: 14px; z-index: 3; font-family: var(--font-body), sans-serif; font-size: 0.7rem;
+  letter-spacing: 0.06em; color: var(--ivory); background: rgba(8, 21, 18, 0.62); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  padding: 4px 10px; border-radius: 999px; border: 1px solid var(--hairline-strong);
+}
+
+/* text anchored to the bottom, over the scrim: Title · Location · "from €price" */
+.prj__info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 2px; }
+.prj__title { margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: 1.45rem; line-height: 1.15; color: var(--ivory); text-shadow: 0 1px 16px rgba(0, 0, 0, 0.55); }
+.prj__loc { margin: 2px 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: rgba(239, 233, 219, 0.82); text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5); }
+/* price sits in the footer spec row, right-aligned (on sea-deep, no text-shadow) */
+.prj__price { flex: none; line-height: 1; font-family: var(--font-display), serif; font-weight: 500; font-size: 1.5rem; color: var(--champagne); letter-spacing: -0.01em; white-space: nowrap; }
+.prj__price-from { font-family: var(--font-body), sans-serif; font-size: 0.78rem; font-weight: 400; color: var(--text-soft); letter-spacing: 0; }
+
+/* docked footer (sea-deep) with specs + distances, attached below the image */
+.prj__footer { background: var(--sea-deep); padding: 14px 18px 16px; }
+.prj__specrow { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.prj__specs { display: flex; flex-wrap: wrap; gap: 6px 14px; min-width: 0; font-family: var(--font-body), sans-serif; font-size: 0.78rem; color: var(--text-soft); }
+.prj__specs span { position: relative; }
+.prj__specs span + span::before { content: ""; position: absolute; left: -8px; top: 50%; width: 3px; height: 3px; border-radius: 50%; background: var(--hairline-strong); transform: translateY(-50%); }
+.prj__dist { margin-top: 11px; padding-top: 11px; border-top: 1px solid var(--hairline); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 10px; font-family: var(--font-body), sans-serif; font-size: 0.78rem; color: var(--ivory); }
+.prj__dist span { display: inline-flex; align-items: baseline; gap: 4px; }
+.prj__dist i { font-style: normal; color: var(--text-soft); }
+.prj__dist small { font-size: 0.66rem; color: var(--text-faint); margin-left: 2px; }
+
+/* ---------------- MAP TEASER TILE (in grid) ---------------- */
+/* Frameless map that dissolves into the background; decoupled from .prj.
+   z-index 0 keeps the bleed one level BELOW the cards (z-index 1). isolate
+   contains Leaflet's z-indexes below the full-screen overlay. Matches the card
+   block via the same aspect-ratio; the map fills the area above the caption. */
+.prjmap {
+  position: relative; z-index: 0; display: flex; flex-direction: column; min-height: 300px;
+  cursor: pointer; isolation: isolate; background: transparent; border: 0; padding: 0;
+  font: inherit; color: inherit; text-align: left; -webkit-appearance: none; appearance: none;
+}
+.prjmap__media { position: relative; flex: 1 1 auto; min-height: 0; --bleed: clamp(60px, 8vw, 124px); }
+.prjmap__bleed {
+  position: absolute; inset: calc(-1 * var(--bleed)); pointer-events: none;
+  /* organic island: three offset radial blobs unioned into a non-rectangular
+     shape, biased lower-left so top + right fade out before the bleed edge */
+  -webkit-mask-image:
+    radial-gradient(56% 56% at 38% 46%, #000 12%, transparent 74%),
+    radial-gradient(42% 44% at 56% 56%, #000 8%, transparent 70%),
+    radial-gradient(46% 46% at 44% 72%, #000 6%, transparent 78%);
+  mask-image:
+    radial-gradient(56% 56% at 38% 46%, #000 12%, transparent 74%),
+    radial-gradient(42% 44% at 56% 56%, #000 8%, transparent 70%),
+    radial-gradient(46% 46% at 44% 72%, #000 6%, transparent 78%);
+}
+.prjmap__bleed .px-leaflet--mini { pointer-events: none; background: transparent; }
+.prjmap__bleed .px-leaflet--mini .leaflet-tile { filter: brightness(1.32) contrast(0.92); transition: filter var(--dur-sm) var(--ease); }
+.prjmap:hover .prjmap__bleed .px-leaflet--mini .leaflet-tile { filter: brightness(1.6) contrast(0.95); }
+
+.prjmap__cap { position: relative; z-index: 1; flex: none; padding-top: 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.prjmap__title {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: 1.45rem; line-height: 1.2; color: var(--ivory);
+}
+.prjmap__title svg { color: var(--champagne); flex: none; width: 22px; height: 22px; }
+.prjmap__sub { font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--text-soft); text-align: center; }
+
+/* ---------------- PAGER ---------------- */
+.px__pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-top: clamp(36px, 5vw, 60px); }
+.px__pager-link {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 42px; height: 42px; padding: 0 12px; border-radius: 999px;
+  font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--text-soft); text-decoration: none;
+  background: var(--glass-bg); border: 1px solid var(--hairline-strong);
+  transition: color var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease);
+}
+.px__pager-link:hover { color: var(--ivory); border-color: var(--accent); }
+.px__pager-link.is-active { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); cursor: default; }
+.px__pager-link.is-disabled { opacity: 0.4; pointer-events: none; }
+.px__pager-gap { color: var(--text-faint); padding: 0 2px; }
+
+/* ---------------- MAP (leaflet base) ---------------- */
+.px-map__loading { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-soft); font-family: var(--font-body), sans-serif; font-size: var(--text-sm); }
+.px-leaflet { height: 100%; width: 100%; background: var(--sea); }
+/* lift the dark Carto tiles a touch (a bit lighter, still premium-dark) */
+.px-leaflet .leaflet-tile { filter: brightness(1.32) contrast(0.92); }
+
+/* ---------------- LEAFLET: pins, popups, clusters ---------------- */
+.px-pin { background: transparent; border: 0; }
+/* property marker = the CVE skyline-in-a-diamond emblem, glowing champagne so the
+   gold line-art reads against the dark map — distinct from the round POI lights */
+.px-pin__mark {
+  display: block; width: 100%; height: 100%;
+  filter: drop-shadow(0 0 3px rgba(246, 224, 170, 0.85)) drop-shadow(0 0 8px rgba(246, 224, 170, 0.4));
+  animation: px-pin-glow 4s ease-in-out infinite;
+}
+/* idle emblems softly "breathe" their glow; the 6 variants run at different
+   durations/offsets so the markers shimmer independently, never in lockstep */
+@keyframes px-pin-glow {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(246, 224, 170, 0.7)) drop-shadow(0 0 6px rgba(246, 224, 170, 0.28)); }
+  50%      { filter: drop-shadow(0 0 4px rgba(246, 224, 170, 1)) drop-shadow(0 0 13px rgba(246, 224, 170, 0.6)); }
+}
+.px-pin--g0 .px-pin__mark { animation-duration: 3.7s; animation-delay: -0.3s; }
+.px-pin--g1 .px-pin__mark { animation-duration: 4.6s; animation-delay: -1.9s; }
+.px-pin--g2 .px-pin__mark { animation-duration: 4.1s; animation-delay: -3.2s; }
+.px-pin--g3 .px-pin__mark { animation-duration: 5.0s; animation-delay: -0.9s; }
+.px-pin--g4 .px-pin__mark { animation-duration: 3.4s; animation-delay: -2.6s; }
+.px-pin--g5 .px-pin__mark { animation-duration: 4.4s; animation-delay: -4.1s; }
+.px-pin.is-active .px-pin__mark {
+  filter: drop-shadow(0 0 5px var(--champagne)) drop-shadow(0 0 16px var(--glow-strong)) brightness(1.12);
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .px-pin__mark { animation: none; filter: drop-shadow(0 0 3px rgba(246, 224, 170, 0.85)) drop-shadow(0 0 8px rgba(246, 224, 170, 0.4)); }
+}
+
+/* dark popup → preview card */
+.px-pop .leaflet-popup-content-wrapper { background: var(--sea-deep); border: 1px solid var(--hairline-strong); border-radius: 14px; box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.8); padding: 0; overflow: hidden; }
+.px-pop .leaflet-popup-content { margin: 0; width: 230px !important; }
+.px-pop .leaflet-popup-tip { background: var(--sea-deep); border: 1px solid var(--hairline-strong); }
+.px-pop__card { display: block; text-decoration: none; }
+.px-pop__img { display: block; width: 100%; height: 124px; object-fit: cover; }
+.px-pop__body { display: block; padding: 11px 13px 13px; }
+.px-pop__price { display: block; font-family: var(--font-display), serif; font-weight: 500; font-size: 1.1rem; color: var(--champagne); }
+.px-pop__title { display: block; margin-top: 2px; font-family: var(--font-display), serif; font-weight: 400; font-size: 0.92rem; line-height: 1.2; color: var(--ivory); }
+.px-pop__city { display: block; margin-top: 3px; font-family: var(--font-body), sans-serif; font-size: 0.78rem; color: var(--text-soft); }
+.px-pop__dist { display: flex; flex-wrap: wrap; gap: 3px 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--hairline); font-family: var(--font-body), sans-serif; font-size: 0.72rem; color: var(--ivory); }
+.px-pop__dist span { display: inline-flex; align-items: baseline; gap: 3px; }
+.px-pop__dist i { font-style: normal; color: var(--text-soft); }
+.px-pop__dist small { font-size: 0.6rem; color: var(--text-faint); margin-left: 1px; }
+
+/* cluster bubbles → champagne/sea */
+.px-leaflet .marker-cluster { background: rgba(194, 154, 94, 0.22); }
+.px-leaflet .marker-cluster div {
+  background: var(--champagne); color: var(--sea-deep);
+  font-family: var(--font-body), sans-serif; font-weight: 700; font-size: 0.78rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+/* hide the Leaflet attribution (bottom-right .leaflet-bottom.leaflet-right block) */
+.px-leaflet .leaflet-control-attribution,
+.px-leaflet .leaflet-bottom.leaflet-right { display: none; }
+.px-leaflet .leaflet-bar a { background: var(--sea-deep); color: var(--ivory); border-color: var(--hairline-strong); }
+.px-leaflet .leaflet-bar a:hover { background: var(--sea); }
+
+/* ---------------- POI layer (OSM) ---------------- */
+.px-mapwrap { position: relative; height: 100%; width: 100%; }
+
+.px-poi {
+  position: absolute; left: 12px; bottom: 14px; z-index: 500;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 7px;
+  max-width: min(640px, calc(100% - 24px));
+  padding: 9px 11px;
+  background: var(--glass-bg, rgba(8, 21, 18, 0.72));
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border: 1px solid var(--hairline-strong); border-radius: var(--r-ui, 14px);
+  box-shadow: 0 20px 50px -28px rgba(0, 0, 0, 0.85);
+}
+.px-poi__lead {
+  font-family: var(--font-body), sans-serif; font-size: 0.62rem; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-faint);
+  padding-right: 3px;
+}
+.px-poi__chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 11px 5px 9px; cursor: pointer;
+  font-family: var(--font-body), sans-serif; font-size: 0.76rem; color: var(--text-soft);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--hairline); border-radius: 999px;
+  transition: color 0.6s cubic-bezier(0.32, 0.72, 0, 1), background 0.6s cubic-bezier(0.32, 0.72, 0, 1), border-color 0.6s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.px-poi__chip:hover { color: var(--ivory); background: rgba(255, 255, 255, 0.08); }
+.px-poi__chip.is-on { color: var(--ivory); background: rgba(255, 255, 255, 0.1); }
+.px-poi__dot { width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35); }
+.px-poi__hint {
+  font-family: var(--font-body), sans-serif; font-size: 0.7rem; color: var(--text-faint);
+  padding-left: 2px;
+}
+.px-poi__hint.is-load { color: var(--champagne); }
+
+/* POI map pins (colored dots) */
+.px-poi-pin { background: transparent; border: 0; }
+/* each POI is a small light source glowing constantly in its own colour — a
+   bright core wrapped in a soft same-colour halo, like city lights from orbit */
+.px-poi-pin span {
+  display: block; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--c);
+  box-shadow: 0 0 4px 1px var(--c), 0 0 10px 3px var(--c); /* fallback for no color-mix */
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--c) 50%, #03161a),
+    0 0 4px 1px var(--c),
+    0 0 9px 3px color-mix(in srgb, var(--c) 60%, transparent),
+    0 0 17px 6px color-mix(in srgb, var(--c) 30%, transparent);
+}
+/* POI name tooltip */
+.leaflet-tooltip.px-poi-tip {
+  background: var(--sea-deep); color: var(--ivory);
+  border: 1px solid var(--hairline-strong); border-radius: 8px;
+  font-family: var(--font-body), sans-serif; font-size: 0.72rem; padding: 3px 8px;
+  box-shadow: 0 10px 30px -16px rgba(0, 0, 0, 0.85);
+}
+.leaflet-tooltip.px-poi-tip::before { display: none; }
+
+@media (max-width: 640px) {
+  .px-poi { left: 8px; right: 8px; bottom: 10px; max-width: none; gap: 6px; padding: 8px; }
+  .px-poi__lead { width: 100%; }
+}
