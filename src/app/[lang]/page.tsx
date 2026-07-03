@@ -132,7 +132,7 @@ export default async function Home({ params }: Props) {
           <Content blocks={homePage.contentBlocks as Array<TextContent | DoubleTextBlock>} lang={lang} />
         ) : null}
         {homePage.faqSection && <Faq section={homePage.faqSection} lang={lang} />}
-        {homePage.parallaxImage && <ParallaxBand image={homePage.parallaxImage} />}
+        <ParallaxBand image={homePage.parallaxImage} videoSrc="/uploads/sunset.mp4" />
         <Form lang={lang} />
       </main>
       <Footer params={params} />
