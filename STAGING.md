@@ -11,6 +11,19 @@ Redesign preview: `/preview-home`.
   `public/uploads` are symlinked from production; it has its own `.env`).
 - nginx vhost `design.cyprusvipestates.com` → Let's Encrypt SSL (auto-renew).
 
+> ⚠️ **`public/uploads` is not staging's own directory — it's a symlink to
+> `/var/www/cyprusvipestates/public/uploads`.** Staging and production share
+> the exact same uploaded/mirrored files. There is no isolation: deleting,
+> overwriting, or losing an upload while "only" working on staging destroys it
+> on production too, and vice versa. This is exactly how a production
+> `rsync --delete` incident (2026-07) also wiped staging's uploads in the same
+> stroke — see the incident note in `scripts/deploy-prod.sh`. Treat any
+> destructive operation anywhere near `public/uploads`, on either app, as
+> touching **both**. Neither app's deploy script (`deploy-staging.sh`,
+> `scripts/deploy-prod.sh`) syncs `public/uploads` at all — uploaded content
+> only ever exists on whichever machine's disk the admin process that created
+> it was running on, with no automated off-server backup.
+
 ## Access & indexing
 
 Staging is **publicly accessible** (HTTP 200, no Basic Auth). It is kept **out of

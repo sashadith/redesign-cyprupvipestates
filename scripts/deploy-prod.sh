@@ -1,15 +1,26 @@
 #!/usr/bin/env bash
 # Deploy a CLEAN, COMMITTED git ref (default: main) to PRODUCTION → https://cyprusvipestates.com
 #
-# ⚠️  TEMPLATE — REVIEW BEFORE FIRST USE. This script has never been run. Confirm
-#     the CONFIG below against the real VPS layout (live app dir + PM2 name), then
-#     do a `--dry-run` first. It is intentionally stricter than deploy-staging.sh:
+# In active use since 2026-07-15. Intentionally stricter than deploy-staging.sh:
 #
 #       • deploys ONLY committed code from a git ref (never the dirty working tree),
 #         so uncommitted / untracked WIP can never reach production;
 #       • requires a typed confirmation (or --yes);
+#       • verifies $DIR is actually the app it claims to be before ever running
+#         a destructive rsync against it, and previews every deletion a real
+#         run would make before it's allowed to proceed (see step 1.5) — this
+#         is the guard the original incident below didn't have;
 #       • DB migrations and `npm ci` are OPT-IN (they can affect shared state);
 #       • runs a post-deploy health check.
+#
+# Incident this script's safety checks exist because of: an earlier ad-hoc
+# (non-scripted) `rsync --delete` production deploy assumed $DIR held the same
+# git history as the local working repo. It didn't — $DIR was tracked by a
+# separate, diverged git repo — and the mismatch wiped files unique to it,
+# including the entire public/uploads directory (2.7GB, ~21,523 files, no
+# recent backup). Recovered from a stale tarball; anything uploaded after that
+# tarball and before the incident was permanently lost. Never run a raw rsync
+# --delete against $DIR outside this script.
 #
 # Usage:
 #   ./scripts/deploy-prod.sh --dry-run              # preview the file sync, no changes
@@ -72,6 +83,39 @@ fi
 STAGE="$(mktemp -d)"; trap 'rm -rf "$STAGE"' EXIT
 echo "→ exporting clean $REF → $STAGE"
 git archive "$REF" | tar -x -C "$STAGE"
+
+# 1.5) Identity + blast-radius check — the guard the original incident (see
+#      header) didn't have. Two parts:
+#        a) $DIR must actually be THIS app, not some other directory that
+#           happens to be configured here by mistake.
+#        b) preview every deletion a real (non-dry-run) rsync would make,
+#           and require a SEPARATE typed confirmation if it would delete
+#           anything — the initial "type deploy-prod" above happens before
+#           we know what would be destroyed, so it can't cover this.
+echo "→ verifying $HOST:$DIR is the expected app"
+remote_name="$(ssh -i "$KEY" "$HOST" "node -pe \"require('$DIR/package.json').name\" 2>/dev/null" || echo "")"
+if [ "$remote_name" != "cyprusvipestates" ]; then
+  echo "✗ $HOST:$DIR/package.json name is '$remote_name', expected 'cyprusvipestates'."
+  echo "  Refusing to run a destructive rsync against a directory that doesn't identify as this app."
+  exit 1
+fi
+echo "   ✓ $DIR identifies as cyprusvipestates"
+
+echo "→ previewing deletions (dry run) before any real sync"
+preview_opts=(-rlptDz --delete --dry-run
+  --exclude node_modules --exclude .next --exclude .git --exclude .local-db
+  --exclude '.env' --exclude '.env.local' --exclude 'scripts/images' --exclude 'public/uploads')
+deletions="$(rsync "${preview_opts[@]}" -e "ssh -i $KEY" "$STAGE/" "$HOST:$DIR/" 2>&1 | grep '^deleting ' || true)"
+if [ -n "$deletions" ]; then
+  echo "⚠️  This deploy would DELETE the following on $HOST:$DIR (not in $REF):"
+  echo "$deletions" | sed 's/^/     /'
+  if [ "$DRY" != 1 ] && [ "$ASSUME_YES" != 1 ]; then
+    read -r -p "Type 'delete these files' to proceed anyway, or Ctrl-C to abort: " del_ans
+    [ "$del_ans" = "delete these files" ] || { echo "aborted — nothing was changed."; exit 1; }
+  fi
+else
+  echo "   ✓ no deletions — this sync is purely additive/updating"
+fi
 
 # 2) Sync to the live app dir. Same excludes as staging so we never clobber the
 #    server's node_modules, build cache, env, or the symlinked media dir.
