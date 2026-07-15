@@ -77,10 +77,20 @@ export default async function middleware(request: NextRequest) {
 export const config = {
   // Matcher ignoring `/_next/`, `/api/`, local uploads, and other non-localized paths.
   // "c/" = client presentations (src/app/c/[token]), a route outside the [lang]
-  // tree like preview-*; without this exclusion next-intl's i18n middleware
-  // rewrites /c/<token> to /en/c/<token>, which doesn't exist → 404 on every
+  // tree; without this exclusion next-intl's i18n middleware rewrites
+  // /c/<token> to /en/c/<token>, which doesn't exist → 404 on every
   // presentation link.
+  //
+  // The preview-* exclusions must be the exact top-level route names, NOT a
+  // bare "preview" prefix: src/app/[lang]/preview-project/[slug] IS under the
+  // [lang] tree and NEEDS the i18n middleware to inject the locale segment.
+  // A bare "preview" also matches "preview-project" (prefix match), which
+  // excluded that route from ever getting its [lang] segment injected — every
+  // /preview-project/<slug> request then had only 2 URL segments where the
+  // route needs 3 ([lang]/preview-project/[slug]), failed to match, and fell
+  // through to the [lang]/[...slug] singlepage catch-all (which then 500'd
+  // trying to use "preview-project" as a Prisma `language` value).
   matcher: [
-    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|sandbox|preview|style|c/).*)",
+    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|sandbox|preview-case-studies|preview-faq|preview-home|preview-insights|preview-projects|style|c/).*)",
   ],
 };

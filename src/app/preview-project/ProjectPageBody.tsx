@@ -1,0 +1,212 @@
+import React from "react";
+import { prisma } from "@/lib/prisma";
+import type { Translation } from "@/types/homepage";
+
+import Header from "@/app/components/Header/Header";
+import Footer from "@/app/components/Footer/Footer";
+import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
+import Form from "@/app/preview-home/sections/Form";
+
+import HeroMedia from "@/app/preview-project/HeroMedia";
+import Benefits from "@/app/preview-project/Benefits";
+import areaLibrary from "@/app/preview-project/areas.json";
+import PlanGrid from "@/app/preview-project/PlanGrid";
+import PropertyMapBlock from "@/app/preview-project/PropertyMapBlock";
+import UnitsView from "@/app/preview-project/UnitsView";
+import type { ProjectVM } from "@/app/preview-project/feeds";
+import { splitDescriptionParagraphs } from "@/lib/text";
+
+// Shared render body for both the SEO-facing slug route
+// (src/app/[lang]/preview-project/[slug]/page.tsx) and the legacy query-string
+// admin-preview route (src/app/[lang]/preview-project/page.tsx). `banner`, when
+// given, renders the "Preview / internal name / dev switcher" strip — the
+// public slug route omits it entirely (no reason to expose internal feed names
+// or a "Preview" label on an indexable page).
+
+const fmtPrice = (n: number | null | undefined, cur = "EUR") =>
+  n == null ? "Price on request" : `${cur === "EUR" ? "€" : cur + " "}${n.toLocaleString("en-US")}`;
+
+const LocationPin = () => (
+  <svg viewBox="0 0 24 24" fill="none">
+    <path d="M12 21.5s6.8-6.1 6.8-11.1a6.8 6.8 0 1 0-13.6 0c0 5 6.8 11.1 6.8 11.1Z" stroke="currentColor" strokeWidth="1.3" />
+    <circle cx="12" cy="10.2" r="2.7" fill="currentColor" />
+  </svg>
+);
+
+export default async function ProjectPageBody({
+  p, lang, params, translations, banner,
+}: {
+  p: ProjectVM;
+  lang: string;
+  params: { lang: string };
+  translations: Translation[];
+  banner?: React.ReactNode;
+}) {
+  const avail = p.units.filter((u) => u.status === "available");
+  const priceFrom = p.priceFrom ?? avail.map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b)[0] ?? null;
+  const types = Array.from(new Set(p.units.map((u) => u.type).filter(Boolean)));
+  const benefits = (p.amenities?.length ? p.amenities : Array.from(new Set(p.units.flatMap((u) => u.features)))).filter(Boolean);
+  // Neighbourhood text: prefer the APPROVED area description from the DB in the
+  // page's language (English fallback); otherwise the static demo library.
+  const slugOfArea = (a: string) => a.toLowerCase().replace(/ph/g, "f").replace(/[^a-z]/g, "");
+  const areaRow = p.area ? await prisma.areaDescription.findFirst({ where: { areaSlug: slugOfArea(p.area), status: "approved" } }) : null;
+  const areaCol = ({ en: "textEN", de: "textDE", pl: "textPL", ru: "textRU" } as Record<string, string>)[params.lang] ?? "textEN";
+  const areaText = areaRow ? ((areaRow as any)[areaCol] || areaRow.textEN) : null;
+  const areaInfo = areaText
+    ? { name: p.area, text: areaText as string }
+    : (areaLibrary as Record<string, { title?: string; text: string }>)[p.area];
+  const locSeen = new Set<string>();
+  const locCols = ([
+    p.district && { name: p.district, tag: "District" },
+    p.town && { name: p.town, tag: "Locality" },
+    p.area && { name: p.area, tag: "Area" },
+  ].filter(Boolean) as { name: string; tag: string }[])
+    // drop levels that repeat the same place (normalise ph→f so "Paphos" === "Pafos")
+    .filter((c) => { const k = c.name.toLowerCase().replace(/ph/g, "f").replace(/[^a-z]/g, ""); return locSeen.has(k) ? false : (locSeen.add(k), true); });
+  const isSold = (p.stage || p.status || "").toLowerCase().includes("sold");
+
+  // Plot / build-area ranges, computed from the currently AVAILABLE units (not
+  // sold/reserved) — values aren't always suffixed "m²" at the source, so extract
+  // the leading number rather than trusting the raw string.
+  const numOf = (v: string) => { const m = (v || "").replace(",", ".").match(/[\d.]+/); return m ? parseFloat(m[0]) : null; };
+  const rangeM2 = (vals: (number | null)[]) => {
+    const nums = vals.filter((n): n is number => n != null && n > 0);
+    if (!nums.length) return null;
+    const lo = Math.min(...nums), hi = Math.max(...nums);
+    return lo === hi ? `${lo} m²` : `${lo}–${hi} m²`;
+  };
+  const plotRange = rangeM2(avail.map((u) => numOf(u.areaPlot)));
+  const builtRange = rangeM2(avail.map((u) => numOf(u.areaBuilt)));
+
+  // facts panel — only rows that actually have data
+  const facts = [
+    { label: "Location", value: p.location },
+    types.length ? { label: "Property type", value: types.join(", ") } : null,
+    p.units.length ? { label: "Units", value: `${p.units.length}${avail.length !== p.units.length ? ` (${avail.length} available)` : ""}` } : null,
+    p.stage ? { label: "Status", value: p.stage } : { label: "Status", value: p.status },
+    plotRange ? { label: "Plot", value: plotRange } : null,
+    builtRange ? { label: "Build area", value: builtRange } : null,
+    p.completion ? { label: "Completion", value: p.completion } : null,
+    p.energy ? { label: "Energy rating", value: p.energy } : null,
+    // "Total units" from the feed is redundant with the "Units" fact above — drop it.
+    ...(p.extraFacts ?? []).filter((f) => !/^\s*total\s+units\s*$/i.test(f.label)),
+  ].filter(Boolean) as { label: string; value: string }[];
+
+  return (
+    <>
+      <Header params={params} translations={translations} />
+      <main className="pp" data-theme="dark">
+        <div className="pp-atmos" aria-hidden><span /><span /><span /></div>
+
+        {banner}
+
+        {/* ---------- FULL-WIDTH HERO (video loop if set, else image gallery) ---------- */}
+        <header className="pp-hero">
+          <HeroMedia images={p.gallery} alt={p.publicName} galleryLabel="View {n} photos" videoUrl={p.heroVideo} />
+          <div className="pp-hero__scrim" aria-hidden />
+          <div className="pp-hero__overlay">
+            <div className="pp-wrap">
+              <div className="pp-eyebrow">
+                <span className={`pp-badge pp-badge--${isSold ? "sold" : "ok"}`}>{isSold ? "SOLD OUT" : (p.stage || p.status)}</span>
+                <span className="pp-loc">{p.location}</span>
+              </div>
+              <h1 className="pp-title">{p.publicName}</h1>
+              <div className="pp-hero__stats">
+                <div className="pp-hero__price"><b>{priceFrom != null ? fmtPrice(priceFrom, p.currency) : "—"}</b><span>{priceFrom != null ? "from · +VAT" : "from"}</span></div>
+                <div><b>{types.join(" · ") || "—"}</b><span>type</span></div>
+                {p.units.length > 0 && <div><b>{avail.length}{avail.length !== p.units.length && <small>/{p.units.length}</small>}</b><span>available</span></div>}
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* ---------- ABOUT + HIGHLIGHTS ---------- */}
+        <section className="pp-wrap pp-section pp-about">
+          <div className="pp-about__main">
+            {p.description && (
+              <>
+                <h2 className="pp-h2">About this development</h2>
+                {splitDescriptionParagraphs(p.description).map((lines, i) => (
+                  <p key={i} className="pp-desc">
+                    {lines.map((line, j) => (
+                      <React.Fragment key={j}>
+                        {line}
+                        {j < lines.length - 1 && <br />}
+                      </React.Fragment>
+                    ))}
+                  </p>
+                ))}
+              </>
+            )}
+          </div>
+          <aside className="pp-about__side">
+            <div className="pp-panel">
+              <div className="pp-panel__facts">
+                {facts.map((f) => (
+                  <div className="pp-fact" key={f.label}><span>{f.label}</span><b>{f.value}</b></div>
+                ))}
+              </div>
+              {benefits.length > 0 && (
+                <div className="pp-panel__amen">
+                  <div className="pp-panel__label">Features &amp; amenities</div>
+                  <Benefits items={benefits} />
+                </div>
+              )}
+            </div>
+          </aside>
+        </section>
+
+        <div className="pp-wrap"><hr className="shimmer pp-rule" /></div>
+
+        {/* ---------- PLANS & RENDERS ---------- */}
+        {(p.plans.length > 0 || p.renders.length > 0) && (
+          <section className="pp-wrap pp-section">
+            <h2 className="pp-h2">Development Plans <span className="pp-count">{p.plans.length + p.renders.length}</span></h2>
+            <PlanGrid images={[...p.renders, ...p.plans]} />
+          </section>
+        )}
+
+        {/* ---------- THE NEIGHBOURHOOD ---------- */}
+        {locCols.length > 0 && (
+          <section className="pp-wrap pp-section">
+            <div className={areaInfo ? "pp-panel pp-hood" : "pp-hood pp-hood--bare"}>
+              {areaInfo && <span className="pp-hood__pin" aria-hidden><LocationPin /></span>}
+              <h2 className="pp-h2 pp-hood__loc">
+                {locCols.map((c, i) => (
+                  <React.Fragment key={c.tag}>
+                    {i > 0 && <span className="pp-loc-dot" aria-hidden>·</span>}
+                    <span className="pp-loc-col"><span className={`pp-loc-name${i === locCols.length - 1 ? " it" : ""}`}>{c.name}</span><span className="pp-loc-tag">{c.tag}</span></span>
+                  </React.Fragment>
+                ))}
+                {!areaInfo && <span className="pp-hood__pin-inline" aria-hidden><LocationPin /></span>}
+              </h2>
+              {areaInfo && <p className="pp-desc">{areaInfo.text}</p>}
+            </div>
+          </section>
+        )}
+
+        {/* ---------- FULL-WIDTH MAP ---------- */}
+        {p.center && (
+          <section className="pp-mapsection">
+            <PropertyMapBlock lat={p.center.lat} lng={p.center.lng} locale={lang} />
+          </section>
+        )}
+
+        {/* ---------- UNITS ---------- */}
+        {p.units.length > 0 && (
+          <section className="pp-wrap pp-section pp-units-sec">
+            <div className="pp-units-head">
+              <h2 className="pp-h2">Available units</h2>
+              <p className="pp-hint" style={{ margin: 0 }}>{avail.length} available{p.units.length !== avail.length ? ` · ${p.units.length - avail.length} sold` : ""}</p>
+            </div>
+            <UnitsView units={p.units} />
+          </section>
+        )}
+
+        <Form lang={lang} />
+      </main>
+      <Footer params={params} />
+      <WhatsAppButton lang={lang} />
+    </>
+  );
+}
