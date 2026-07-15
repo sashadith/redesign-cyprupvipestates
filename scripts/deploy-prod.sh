@@ -102,7 +102,7 @@ fi
 echo "   ✓ $DIR identifies as cyprusvipestates"
 
 echo "→ previewing deletions (dry run) before any real sync"
-preview_opts=(-rlptDz --delete --dry-run
+preview_opts=(-rlptDz --delete --dry-run -v
   --exclude node_modules --exclude .next --exclude .git --exclude .local-db
   --exclude '.env' --exclude '.env.local' --exclude 'scripts/images' --exclude 'public/uploads')
 deletions="$(rsync "${preview_opts[@]}" -e "ssh -i $KEY" "$STAGE/" "$HOST:$DIR/" 2>&1 | grep '^deleting ' || true)"
