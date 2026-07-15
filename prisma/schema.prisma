@@ -191,9 +191,9 @@ model Singlepage {
   allowIntroBlock Boolean @default(false)
   parentSanityId  String? // parentPage reference (resolved to build nested slug)
 
-  previewImage  Json?
-  seo           Json?
-  contentBlocks Json?
+  previewImage        Json?
+  seo                 Json?
+  contentBlocks       Json?
   // Editor-curated contextual links to other SAME-LANGUAGE landing pages.
   // Shape: [{ _key, _ref (target sanityId), _type: "singlepageRef" }]
   relatedLandingPages Json?
@@ -417,20 +417,23 @@ model MediaFolder {
 
 // ─── ADMIN USERS / SESSIONS ──────────────────────────────────────────────────
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
+  id            String               @id @default(uuid())
+  email         String               @unique
   password      String
   name          String
-  role          UserRole  @default(EDITOR)
+  role          UserRole             @default(EDITOR)
   avatar        String?
-  isActive      Boolean   @default(true)
+  photoPng      String? // transparent-background cutout PNG, used free-floating (no frame) in the Client Presentation closing section — distinct from the small square `avatar`
+  phone         String? // advisor's own contact number, shown large/clickable in the Client Presentation closing section (distinct from the company WhatsApp number used by the contact buttons there)
+  isActive      Boolean              @default(true)
   lastLoginAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  assignedLeads Lead[]    @relation("AssignedLeads")
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  assignedLeads Lead[]               @relation("AssignedLeads")
   uploadedMedia Media[]
   sessions      Session[]
   resetTokens   PasswordResetToken[]
+  presentationsAsAdvisor ClientPresentation[]
 
   @@map("users")
 }
@@ -478,12 +481,14 @@ model Lead {
   timeline             LeadTimeline?
   financing            LeadFinancing?
   propertyTypeInterest String[]       @default([])
+  lastMatchFilters     Json? // last-used Property Matching panel filters (bedrooms/locations/propertyTypes/etc.), auto-saved so the admin sees what the client is searching for on the next visit
   message              String?
   notes                String?
   assignedToId         String?
   assignedTo           User?          @relation("AssignedLeads", fields: [assignedToId], references: [id])
   projectInterestId    String?
   projectInterest      Project?       @relation(fields: [projectInterestId], references: [id])
+  presentations        ClientPresentation[]
   pageSource           String?
   utmSource            String?
   utmMedium            String?
@@ -496,12 +501,15 @@ model Lead {
   telegramNotified     Boolean        @default(false)
   emailNotified        Boolean        @default(false)
   activities           LeadActivity[]
+  deletedAt            DateTime? // soft delete — set via /admin/crm trash flow; excluded from all normal queries
+  deletedById          String?
 
   @@index([status])
   @@index([createdAt])
   @@index([email])
   @@index([source])
   @@index([assignedToId])
+  @@index([deletedAt])
   @@map("leads")
 }
 
@@ -591,16 +599,26 @@ model AiGenerationQueue {
 // ─────────────────────────────────────────────────────────────────────────
 
 model DeveloperAccount {
-  id          String   @id @default(uuid())
-  name        String
-  slug        String   @unique
-  website     String?
-  contactInfo String?
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String   @id @default(uuid())
+  name             String
+  slug             String   @unique
+  website          String?
+  contactInfo      String?
+  contactPerson    String? // Ansprechpartner
+  phone            String?
+  email            String?
+  developerCloudUrl String? // login/cloud portal link
+  driveFolderUrl   String? // Google/OneDrive shared folder used as a no-feed source
+  driveFileId      String? // last price file synced (Drive file id)
+  driveFileModified String? // that file's modifiedTime — skip sync when unchanged
+  driveSyncedAt    DateTime? // last successful drive availability sync
+  driveSyncInterval String? @default("daily") // daily | 2day | weekly | off
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  analyses DeveloperFeedAnalysis[]
+  analyses     DeveloperFeedAnalysis[]
+  developments Development[]
 
   @@map("developer_accounts")
 }
@@ -623,4 +641,234 @@ model DeveloperFeedAnalysis {
 
   @@index([developerAccountId])
   @@map("developer_feed_analyses")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// FEED-DRIVEN DEVELOPMENTS (Phase 1). Additive + isolated: the 24h sync writes
+// Development/DevelopmentUnit from the developer feeds (see src/app/preview-project/
+// feeds.ts adapters → canonical ProjectVM). Admin edits live in DevelopmentOverride
+// and ALWAYS win over feed values; the sync never touches overrides. Images are
+// mirrored to our object storage; only our URLs are stored here.
+// ─────────────────────────────────────────────────────────────────────────
+model Development {
+  id                 String @id @default(uuid())
+  developerAccountId String
+  dev                String // adapter key: island-blue|inex|bbf|aristo|pafilia|domenica|medousa|agg
+  feedProjectId      String // id/name within the feed
+  feedKey            String @unique // "<dev>:<feedProjectId>", e.g. "inex:1"
+  slug               String? @unique // SEO-facing URL slug (english, kebab-case), set on publish — see src/lib/developmentSeo.ts
+
+  // feed-derived scalars (filter/sort)
+  developerName  String // original project name from the feed
+  publicName     String // feed name (admin alias → DevelopmentOverride)
+  developer      String? // display developer label
+  category       String?
+  status         String?
+  stage          String?
+  completion     String?
+  energy         String?
+  district       String?
+  town           String?
+  area           String?
+  priceFrom      Int?
+  priceTo        Int?
+  currency       String? @default("EUR")
+  latitude       Float?
+  longitude      Float?
+  unitsTotal     Int     @default(0)
+  unitsAvailable Int     @default(0)
+
+  // rich/nested (JSONB) — feed values; images already mirrored to our storage
+  description String? // feed description (plain text)
+  amenities   Json? // string[]
+  gallery     Json? // [{ small, medium, large }] mirrored
+  plans       Json?
+  extraFacts  Json? // [{ label, value }]
+
+  // sync + publication lifecycle
+  syncedAt      DateTime?
+  driveFolderId    String? // Drive project subfolder (for image/plan import)
+  driveImagesModified String? // signature of the mirrored images — skip when unchanged
+  publishStatus String    @default("draft") // draft | ready | published | archived
+  publishedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  developerAccount DeveloperAccount     @relation(fields: [developerAccountId], references: [id], onDelete: Cascade)
+  units            DevelopmentUnit[]
+  override         DevelopmentOverride?
+  presentationItems ClientPresentationItem[]
+
+  @@index([developerAccountId])
+  @@index([publishStatus])
+  @@index([district, area])
+  @@map("developments")
+}
+
+model DevelopmentUnit {
+  id            String   @id @default(uuid())
+  developmentId String
+  ref           String?
+  name          String?
+  label         String? // display label, e.g. "Block C · Nr. 504"
+  type          String?
+  status        String?  @default("available") // available | reserved | sold
+  price         Int?
+  currency      String?  @default("EUR")
+  beds          String?
+  baths         String?
+  areaBuilt       String? // total built area
+  areaInternal    String? // covered internal area
+  areaPlot        String?
+  areaVeranda     String? // covered veranda
+  areaVerandaOpen String? // uncovered veranda
+  floor           String? // level / floor
+  unitNumber      String?
+  storage         String? // yes | no
+  guestWc         String? // yes | no
+  orientation     String?
+  latitude        Float?
+  longitude       Float?
+  attrs           Json? // [{ name, value }] extra spec
+  amenities       Json? // per-unit amenities (Sea View, VRV, corner …)
+  photos          Json? // [{ small, medium, large }] mirrored
+  plans         Json?
+  sortIndex     Int      @default(0)
+  source        String   @default("feed") // feed | manual — sync only ever wipes/rewrites "feed" units
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  development Development @relation(fields: [developmentId], references: [id], onDelete: Cascade)
+
+  @@index([developmentId])
+  @@map("development_units")
+}
+
+// Admin overrides — win over feed values at render time; sync never writes here.
+model DevelopmentOverride {
+  id            String   @id @default(uuid())
+  developmentId String   @unique
+  alias         String? // public name override
+  district      String?
+  town          String?
+  area          String? // corrected marketing area (e.g. micro-quarter → Kato Paphos)
+  mainImage     String? // admin-selected hero (mirrored URL)
+  gallery       Json? // admin-managed ordered gallery (reorder/delete/upload); wins over feed gallery
+  heroVideo     String? // uploaded loop (mirrored URL)
+  descriptionEN String?
+  descriptionDE String?
+  descriptionPL String?
+  descriptionRU String?
+  amenities     Json? // admin-checked amenities merged with feed ones
+  vatApplies    Boolean? // null = follow feed; true/false = admin decision (e.g. renovated no-VAT)
+  completion    String?
+  energy        String?
+  latitude      Float? // admin-set map coordinates (win over feed); parsed from a Maps link or lat,lng
+  longitude     Float?
+  seo           Json? // optional per-language SEO overrides: { titleEN/DE/PL/RU, descEN/DE/PL/RU } — empty/missing = auto-generated (see src/lib/developmentSeo.ts)
+  updatedAt     DateTime @updatedAt
+
+  development Development @relation(fields: [developmentId], references: [id], onDelete: Cascade)
+
+  @@map("development_overrides")
+}
+
+// Reusable neighbourhood copy — one per area, shared by all developments there.
+model AreaDescription {
+  id        String   @id @default(uuid())
+  areaSlug  String   @unique // normalized area key (lowercase, ph→f)
+  areaName  String
+  district  String?
+  textEN    String?
+  textDE    String?
+  textPL    String?
+  textRU    String?
+  source    String   @default("manual") // ai | manual
+  status    String   @default("draft") // draft | approved
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("area_descriptions")
+}
+
+// Global, admin-editable AI prompt templates — shared across ALL projects (one
+// row per feature), editable from within any project's own page via "Adjust
+// prompt" rather than a separate settings screen. `key` namespaces features the
+// same way PromptTuner's localStorage `presetKey` does (e.g. "seoMeta" for the
+// Development SEO title/description generator) — extensible to future features.
+model AiPromptTemplate {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  template  String
+  updatedAt DateTime @updatedAt
+
+  @@map("ai_prompt_templates")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// CLIENT PRESENTATION SYSTEM — a personal, token-protected property selection
+// page generated from a CRM lead + curated Development matches. Public page:
+// src/app/c/[token]/page.tsx (no locale prefix, always noindex). Admin entry
+// point: the "Property Matching" section on src/app/admin/(panel)/crm/[id]/page.tsx.
+// ─────────────────────────────────────────────────────────────────────────
+
+model ClientPresentation {
+  id           String    @id @default(uuid())
+  leadId       String
+  token        String    @unique // 12+ char URL-safe crypto-random, see src/lib/crm/presentationToken.ts
+  status       String    @default("active") // active | expired | revoked
+  locale       Locale    @default(en)
+  greetingName String // how the client is addressed, editable
+  personalNote String? // optional message from advisor, shown as a signed blockquote
+  filterBedrooms  Int[]    @default([]) // DEPRECATED — superseded by criteria.bedrooms; kept read-only, see backfill migration
+  filterLocations String[] @default([]) // DEPRECATED — superseded by criteria.districts/areas; kept read-only, see backfill migration
+  criteria     Json? // { districts, areas, bedrooms, budgetMin, budgetMax, propertyTypes } — the actual matching-panel filter state at generation time (or last edit-save). The public page's "your preferences" chips render EXCLUSIVELY from this, never from Lead fields directly — a lead's own profile (budget/type) can differ from what was actually searched for this specific presentation.
+  advisorId    String? // User relation — whose contact card shows in the closing section
+  advisor      User?     @relation(fields: [advisorId], references: [id])
+  expiresAt    DateTime? // default now + 30 days, extendable from the admin
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  lead  Lead                     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  items ClientPresentationItem[]
+  views PresentationView[]
+
+  @@index([leadId])
+  @@map("client_presentations")
+}
+
+model ClientPresentationItem {
+  id             String    @id @default(uuid())
+  presentationId String
+  developmentId  String
+  unitIds        Json? // DEPRECATED — DevelopmentUnit UUIDs, orphaned by feed re-syncs (units wiped/recreated). Kept read-only for units with no ref (manual units, stable UUIDs). No longer written to; see unitRefs.
+  unitRefs       Json? // array of normalizeRef()'d unit refs (src/lib/unitRef.ts) — stable across feed re-syncs, resolved against Development.units at render time. null = all available units
+  sortIndex      Int       @default(0)
+  advisorComment String? // one-line personal note per property, optional
+  isFavorited    Boolean   @default(false) // client clicked the heart
+  favoritedAt    DateTime?
+  aliasName      String? // per-presentation display name override, wins over DevelopmentOverride.alias and Development.publicName
+  isNew          Boolean   @default(false) // "New for you" badge — set when added via the edit page, cleared on first overlay view
+  newAddedAt     DateTime?
+
+  presentation ClientPresentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+  development  Development        @relation(fields: [developmentId], references: [id], onDelete: Cascade)
+
+  @@unique([presentationId, developmentId])
+  @@map("client_presentation_items")
+}
+
+model PresentationView {
+  id             String   @id @default(uuid())
+  presentationId String
+  sessionHash    String // same cookieless daily-rotating approach as PageView, see src/lib/visitorHash.ts
+  developmentId  String? // null = page-level view; set = a specific property card/overlay opened
+  durationSec    Int? // sent via sendBeacon on close/hide, best effort
+  createdAt      DateTime @default(now())
+
+  presentation ClientPresentation @relation(fields: [presentationId], references: [id], onDelete: Cascade)
+
+  @@index([presentationId])
+  @@index([createdAt])
+  @@map("presentation_views")
 }

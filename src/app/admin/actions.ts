@@ -202,6 +202,70 @@ export async function adminSetPassword(id: string, _prev: any, formData: FormDat
   return { ok: `Password updated for ${u.email}.` };
 }
 
+// Full edit (ADMIN only): name/email/role/isActive + optional password reset +
+// both profile photos. avatar/photoPng are URLs already uploaded client-side
+// (see PhotoUploadField.tsx) via /api/admin/upload — this action just persists
+// them; empty string clears the photo.
+export async function updateUserAction(id: string, _prev: any, formData: FormData): Promise<{ ok?: string; error?: string }> {
+  const session = await requireAdmin();
+  const name = String(formData.get("name") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const role = String(formData.get("role") ?? "EDITOR");
+  const isActive = formData.get("isActive") === "on";
+  const newPassword = String(formData.get("password") ?? "");
+  const avatar = String(formData.get("avatar") ?? "").trim();
+  const photoPng = String(formData.get("photoPng") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+
+  if (!name) return { error: "Name is required." };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "A valid email is required." };
+  if (!["ADMIN", "EDITOR"].includes(role)) return { error: "Invalid role." };
+  if (newPassword && newPassword.length < 12) return { error: "Password must be at least 12 characters." };
+
+  const existing = await prisma.user.findUnique({ where: { id } });
+  if (!existing) return { error: "User not found." };
+  if (email !== existing.email && (await prisma.user.findUnique({ where: { email } }))) {
+    return { error: "Email already in use." };
+  }
+  if (existing.role === "ADMIN" && role !== "ADMIN") {
+    const admins = await prisma.user.count({ where: { role: "ADMIN" } });
+    if (admins <= 1) return { error: "Cannot demote the last admin." };
+  }
+  const isSelf = (session.user as any)?.id === id;
+  if (isSelf && !isActive) return { error: "You cannot deactivate yourself." };
+  if (isSelf && existing.role === "ADMIN" && role !== "ADMIN") return { error: "You cannot demote yourself." };
+
+  await prisma.user.update({
+    where: { id },
+    data: {
+      name, email, role: role as any, isActive,
+      avatar: avatar || null,
+      photoPng: photoPng || null,
+      phone: phone || null,
+      ...(newPassword ? { password: await bcrypt.hash(newPassword, 10) } : {}),
+    },
+  });
+  revalidatePath("/admin/users");
+  revalidatePath(`/admin/users/${id}/edit`);
+  return { ok: "User updated." };
+}
+
+// Self-service (any active user): name + both photos only — role/email/isActive
+// are ADMIN-only, edited via updateUserAction above.
+export async function updateOwnProfileAction(_prev: any, formData: FormData): Promise<{ ok?: string; error?: string }> {
+  const session = await requireSession();
+  const uid = (session.user as any)?.id;
+  const name = String(formData.get("name") ?? "").trim();
+  const avatar = String(formData.get("avatar") ?? "").trim();
+  const photoPng = String(formData.get("photoPng") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+  if (!name) return { error: "Name is required." };
+
+  await prisma.user.update({ where: { id: uid }, data: { name, avatar: avatar || null, photoPng: photoPng || null, phone: phone || null } });
+  revalidatePath("/admin/account");
+  return { ok: "Profile updated." };
+}
+
 // ── Self-service password reset (forgot-password flow) ──
 const resetMailer = nodemailer.createTransport({
   host: process.env.EMAIL_HOST || "smtp.hostinger.com",
@@ -458,7 +522,7 @@ export async function createLead(_prev: any, formData: FormData): Promise<{ erro
 // and assignment are managed by their own controls and are intentionally untouched here.
 export async function updateLead(id: string, _prev: any, formData: FormData): Promise<{ error?: string }> {
   const session = await requireSession();
-  const existing = await prisma.lead.findUnique({ where: { id }, select: { id: true } });
+  const existing = await prisma.lead.findFirst({ where: { id, deletedAt: null }, select: { id: true } });
   if (!existing) return { error: "Lead not found." };
 
   const firstName = String(formData.get("firstName") ?? "").trim();
@@ -503,8 +567,8 @@ export async function mergeLeads(targetId: string, sourceId: string) {
   const session = await requireSession();
   if (!targetId || !sourceId || targetId === sourceId) throw new Error("Invalid merge");
   const [target, source] = await Promise.all([
-    prisma.lead.findUnique({ where: { id: targetId }, select: { id: true } }),
-    prisma.lead.findUnique({ where: { id: sourceId } }),
+    prisma.lead.findFirst({ where: { id: targetId, deletedAt: null }, select: { id: true } }),
+    prisma.lead.findFirst({ where: { id: sourceId, deletedAt: null } }),
   ]);
   if (!target || !source) throw new Error("Lead not found");
   const summary = `Merged duplicate: ${source.firstName} ${source.lastName} <${source.email}> · ${source.source.replace(/_/g, " ")} · ${source.createdAt.toISOString().slice(0, 10)}`;
@@ -517,6 +581,44 @@ export async function mergeLeads(targetId: string, sourceId: string) {
   ]);
   revalidatePath(`/admin/crm/${targetId}`);
   revalidatePath("/admin/crm");
+}
+
+// Soft delete (trash) — hides the lead everywhere without losing anything;
+// restorable within 90 days (see cron/publish-scheduled's purge step) or
+// permanently deletable by an ADMIN from /admin/crm/trash.
+export async function softDeleteLeadAction(id: string, redirectTo?: string) {
+  const session = await requireSession();
+  const uid = (session.user as any)?.id ?? null;
+  await prisma.lead.update({ where: { id }, data: { deletedAt: new Date(), deletedById: uid } });
+  await prisma.leadActivity.create({
+    data: { leadId: id, type: "DELETED", content: "Lead moved to trash", createdBy: session.user?.name ?? "admin", createdById: uid },
+  });
+  revalidatePath("/admin/crm");
+  revalidatePath("/admin/crm/trash");
+  revalidatePath("/admin");
+  if (redirectTo) redirect(redirectTo);
+}
+
+export async function restoreLeadAction(id: string) {
+  const session = await requireSession();
+  await prisma.lead.update({ where: { id }, data: { deletedAt: null, deletedById: null } });
+  await prisma.leadActivity.create({
+    data: { leadId: id, type: "RESTORED", content: "Lead restored from trash", createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
+  });
+  revalidatePath("/admin/crm");
+  revalidatePath("/admin/crm/trash");
+  revalidatePath("/admin");
+}
+
+// Hard delete — cascades to LeadActivity + ClientPresentation (and, via that,
+// ClientPresentationItem/PresentationView) per the schema's onDelete: Cascade.
+// ADMIN only — this is the one truly irreversible step in the whole flow.
+export async function permanentlyDeleteLeadAction(id: string) {
+  const session = await requireSession();
+  if ((session.user as any)?.role !== "ADMIN") throw new Error("Forbidden");
+  await prisma.lead.delete({ where: { id } });
+  revalidatePath("/admin/crm/trash");
+  revalidatePath("/admin");
 }
 
 // Homepage "Featured Projects" slider — per-language curated list stored on the homepage
@@ -1202,43 +1304,68 @@ export async function createDeveloperAccount(_prev: any, formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: "Developer name is required." };
   const slug = await uniqueAccountSlug(String(formData.get("slug") ?? "") || name);
-  const website = String(formData.get("website") ?? "").trim() || null;
-  const contactInfo = String(formData.get("contactInfo") ?? "").trim() || null;
-  const notes = String(formData.get("notes") ?? "").trim() || null;
-  const dev = await prisma.developerAccount.create({ data: { name, slug, website, contactInfo, notes } });
-  revalidatePath("/admin/feeds");
-  redirect(`/admin/feeds/${dev.id}`);
+  const s = (k: string) => String(formData.get(k) ?? "").trim() || null;
+  const dev = await prisma.developerAccount.create({
+    data: {
+      name, slug,
+      website: s("website"), contactInfo: s("contactInfo"),
+      contactPerson: s("contactPerson"), phone: s("phone"), email: s("email"),
+      developerCloudUrl: s("developerCloudUrl"), driveFolderUrl: s("driveFolderUrl"), notes: s("notes"),
+    },
+  });
+  revalidatePath("/admin/developments");
+  redirect(`/admin/developments/developers/${dev.id}`);
 }
 
 export async function updateDeveloperAccount(id: string, formData: FormData) {
   await requireSession();
   const name = String(formData.get("name") ?? "").trim();
   if (!name) throw new Error("Developer name is required.");
+  const s = (k: string) => String(formData.get(k) ?? "").trim() || null;
   await prisma.developerAccount.update({
     where: { id },
     data: {
       name,
-      website: String(formData.get("website") ?? "").trim() || null,
-      contactInfo: String(formData.get("contactInfo") ?? "").trim() || null,
-      notes: String(formData.get("notes") ?? "").trim() || null,
+      website: s("website"), contactInfo: s("contactInfo"),
+      contactPerson: s("contactPerson"), phone: s("phone"), email: s("email"),
+      developerCloudUrl: s("developerCloudUrl"), driveFolderUrl: s("driveFolderUrl"), notes: s("notes"),
     },
   });
-  revalidatePath(`/admin/feeds/${id}`);
-  revalidatePath("/admin/feeds");
+  revalidatePath(`/admin/developments/developers/${id}`);
+  revalidatePath("/admin/developments");
+}
+
+// Collapsible-form variant: returns state so the client can close the editor on success.
+export async function saveDeveloperContact(id: string, _prev: any, formData: FormData): Promise<{ ok?: boolean; error?: string }> {
+  await requireSession();
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) return { error: "Name is required." };
+  const s = (k: string) => String(formData.get(k) ?? "").trim() || null;
+  await prisma.developerAccount.update({
+    where: { id },
+    data: {
+      name,
+      website: s("website"), contactInfo: s("contactInfo"),
+      contactPerson: s("contactPerson"), phone: s("phone"), email: s("email"),
+      developerCloudUrl: s("developerCloudUrl"), driveFolderUrl: s("driveFolderUrl"), notes: s("notes"),
+    },
+  });
+  revalidatePath(`/admin/developments/developers/${id}`);
+  return { ok: true };
 }
 
 export async function deleteDeveloperAccount(id: string) {
   await requireSession();
   await prisma.developerAccount.delete({ where: { id } }); // cascades analyses
-  revalidatePath("/admin/feeds");
-  redirect("/admin/feeds");
+  revalidatePath("/admin/developments");
+  redirect("/admin/developments");
 }
 
 export async function deleteFeedAnalysis(id: string) {
   await requireSession();
   const row = await prisma.developerFeedAnalysis.findUnique({ where: { id }, select: { developerAccountId: true } });
   await prisma.developerFeedAnalysis.delete({ where: { id } });
-  if (row) revalidatePath(`/admin/feeds/${row.developerAccountId}`);
+  if (row) revalidatePath(`/admin/developments/developers/${row.developerAccountId}`);
 }
 
 // Analyze an uploaded XML file OR a feed URL. Stores the raw XML (size-capped)
@@ -1333,8 +1460,8 @@ export async function analyzeDeveloperFeed(developerAccountId: string, _prev: an
       fields: result.fields as any,
     },
   });
-  revalidatePath(`/admin/feeds/${developerAccountId}`);
-  redirect(`/admin/feeds/${developerAccountId}/analysis/${row.id}`);
+  revalidatePath(`/admin/developments/developers/${developerAccountId}`);
+  redirect(`/admin/developments/developers/${developerAccountId}/analysis/${row.id}`);
 }
 
 // Validate the API-mode form and build the request recipe. The API key is read
@@ -1391,8 +1518,8 @@ export async function saveFeedMapping(analysisId: string, _prev: any, formData: 
     data: { fields: fields as any },
     select: { developerAccountId: true },
   });
-  revalidatePath(`/admin/feeds/${row.developerAccountId}/analysis/${analysisId}`);
-  revalidatePath("/admin/feeds/compare");
+  revalidatePath(`/admin/developments/developers/${row.developerAccountId}/analysis/${analysisId}`);
+  revalidatePath("/admin/developments/developers/compare");
   return { ok: true };
 }
 
@@ -1448,8 +1575,8 @@ export async function reanalyzeFeed(analysisId: string, _prev: any, _formData: F
       ...(refetched ? { rawXml: xml } : {}), // refresh retained XML only if we re-fetched
     },
   });
-  revalidatePath(`/admin/feeds/${row.developerAccountId}/analysis/${analysisId}`);
-  revalidatePath(`/admin/feeds/${row.developerAccountId}`);
-  revalidatePath("/admin/feeds/compare");
+  revalidatePath(`/admin/developments/developers/${row.developerAccountId}/analysis/${analysisId}`);
+  revalidatePath(`/admin/developments/developers/${row.developerAccountId}`);
+  revalidatePath("/admin/developments/developers/compare");
   return { ok: true };
 }

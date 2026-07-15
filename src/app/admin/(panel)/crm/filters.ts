@@ -11,7 +11,7 @@ export type LeadSearchParams = Record<string, string | string[] | undefined>;
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v ?? "").trim();
 
 export function buildLeadWhere(sp: LeadSearchParams): Prisma.LeadWhereInput {
-  const where: Prisma.LeadWhereInput = {};
+  const where: Prisma.LeadWhereInput = { deletedAt: null };
   const q = one(sp.q);
   if (q) {
     where.OR = [

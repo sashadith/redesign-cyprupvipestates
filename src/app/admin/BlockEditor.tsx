@@ -12,6 +12,7 @@ const newKey = () => `new-${Date.now().toString(36)}-${counter++}`;
 
 function summarize(b: any): string {
   if (!b || typeof b !== "object") return "";
+  if (b._type === "inlineRelatedArticleBlock") return b.label || "Related article";
   return b.title || b.doubleTextBlockTitle || b.faqTitle || b.buttonLabel || "";
 }
 
@@ -47,6 +48,49 @@ export default function BlockEditor({ targetId, kind, initialBlocks }: { targetI
     });
   const del = (i: number) => setItems((prev) => prev.filter((_, idx) => idx !== i));
   const addText = () => setItems((prev) => [...prev, { key: newKey(), type: "textContent", html: "<p></p>" }]);
+  const addRelated = () =>
+    setItems((prev) => {
+      const key = newKey();
+      return [...prev, { key, type: "inlineRelatedArticleBlock", block: { _type: "inlineRelatedArticleBlock", _key: key, label: "Related Article", article: null } }];
+    });
+  // Table block — columns are the header row; seed a 2×1 grid, editable via +col / +row.
+  const addTable = () =>
+    setItems((prev) => {
+      const key = newKey();
+      return [...prev, { key, type: "tableBlock", block: {
+        _type: "tableBlock", _key: key,
+        columns: ["Column 1", "Column 2"],
+        rows: [{ _key: newKey(), _type: "tableRow", cells: ["", ""] }],
+      } }];
+    });
+  // FAQ block — wraps an accordion (faq.items); answers are rich text. Shape matches
+  // the Sanity faqBlock so the existing frontend renderer picks it up unchanged.
+  const addFaq = () =>
+    setItems((prev) => {
+      const key = newKey();
+      return [...prev, { key, type: "faqBlock", block: {
+        _type: "faqBlock", _key: key,
+        faq: { _type: "accordionBlock", _key: newKey(), items: [{ _key: newKey(), question: "", answer: [] }] },
+      } }];
+    });
+  // Image block — upload + alt via the imageFullBlock editor; renders full-width.
+  const addImage = () =>
+    setItems((prev) => {
+      const key = newKey();
+      return [...prev, { key, type: "imageFullBlock", block: {
+        _type: "imageFullBlock", _key: key, title: "", hasDescription: false,
+        imageMain: { picture: { _type: "image", alt: "", asset: null }, aspectRatio: "16:9" },
+      } }];
+    });
+  // Button block — link (buttonText + URL + target); empty URL keeps the modal CTA.
+  const addButton = () =>
+    setItems((prev) => {
+      const key = newKey();
+      return [...prev, { key, type: "buttonBlock", block: {
+        _type: "buttonBlock", _key: key, buttonText: "Learn more", url: "", target: "_self",
+        justifyContent: "center", alignItems: "center",
+      } }];
+    });
 
   async function save() {
     setStatus("saving");
@@ -119,10 +163,29 @@ export default function BlockEditor({ targetId, kind, initialBlocks }: { targetI
         {items.length === 0 && <p className="text-sm text-[#6B7280]">No content blocks yet.</p>}
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 flex flex-wrap gap-2">
         <button type="button" onClick={addText} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-1.5 hover:bg-[#1B4B43]/5">
           + Add text block
         </button>
+        <button type="button" onClick={addRelated} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-1.5 hover:bg-[#1B4B43]/5">
+          + Add related article
+        </button>
+        {kind === "blog" && (
+          <>
+            <button type="button" onClick={addTable} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-1.5 hover:bg-[#1B4B43]/5">
+              + Add table
+            </button>
+            <button type="button" onClick={addFaq} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-1.5 hover:bg-[#1B4B43]/5">
+              + Add FAQ
+            </button>
+            <button type="button" onClick={addImage} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-1.5 hover:bg-[#1B4B43]/5">
+              + Add image
+            </button>
+            <button type="button" onClick={addButton} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-1.5 hover:bg-[#1B4B43]/5">
+              + Add button
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

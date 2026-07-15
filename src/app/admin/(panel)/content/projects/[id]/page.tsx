@@ -73,6 +73,7 @@ export default async function EditProject({ params }: { params: { id: string } }
           </div>
           <div className="flex gap-6">
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="isFeatured" defaultChecked={p.isFeatured} /> Featured</label>
+            <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="isNew" defaultChecked={p.isNew} /> New</label>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="isSold" defaultChecked={p.isSold} /> Sold</label>
           </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { refToLocalUrl } from "@/lib/sanityRefs";
+import { listBlogArticlesForPicker } from "../actions";
 import { portableTextToHtml } from "@/lib/portableText/ptToHtml.mjs";
 import RichTextField from "../RichTextField";
 import { findRichFields, getAtPath, setAtPath, isHtmlMarker } from "@/lib/portableText/richText";
@@ -85,11 +86,24 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
   // Replace a rich field (by path) with an {__html} marker, immutably.
   const setRich = (path: string, html: string) => { const next = clone(block); setAtPath(next, path, { __html: html }); onChange(next); };
 
+  if (type === "inlineRelatedArticleBlock") {
+    return <InlineRelatedArticleEditor block={block} set={set} />;
+  }
+
   if (type === "buttonBlock") {
     return (
       <div className="grid grid-cols-2 gap-2">
         <label className="col-span-2 text-xs text-[#6B7280]">Button text
           <input className={input} value={block.buttonText ?? ""} onChange={(e) => set({ buttonText: e.target.value })} />
+        </label>
+        <label className="col-span-2 text-xs text-[#6B7280]">Link URL <span className="text-[#9CA3AF]">(leave empty for the brochure popup)</span>
+          <input className={input} value={block.url ?? ""} placeholder="https://…  or  /en/contacts" onChange={(e) => set({ url: e.target.value })} />
+        </label>
+        <label className="text-xs text-[#6B7280]">Open in
+          <select className={input} value={block.target ?? "_self"} onChange={(e) => set({ target: e.target.value })}>
+            <option value="_self">Same tab</option>
+            <option value="_blank">New tab</option>
+          </select>
         </label>
         <label className="text-xs text-[#6B7280]">Align
           <select className={input} value={block.alignItems ?? "center"} onChange={(e) => set({ alignItems: e.target.value })}>
@@ -342,6 +356,45 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
         <RichField key={f.path} label={f.label} value={getAtPath(block, f.path)} onChange={(html) => setRich(f.path, html)} />
       ))}
       <JsonFallback block={block} onChange={onChange} hasRich={rich.length > 0} />
+    </div>
+  );
+}
+
+// Inline Related Article: pick a label + one internal blog article. Stores the
+// article as a Sanity-style reference; the public side resolves title/excerpt/url.
+function InlineRelatedArticleEditor({ block, set }: { block: any; set: (patch: any) => void }) {
+  const [list, setList] = useState<{ ref: string; title: string; language: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    let alive = true;
+    listBlogArticlesForPicker()
+      .then((rows) => { if (alive) setList(rows); })
+      .catch(() => {})
+      .finally(() => { if (alive) setLoading(false); });
+    return () => { alive = false; };
+  }, []);
+  const ref = block.article?._ref ?? "";
+  return (
+    <div className="space-y-2">
+      <label className="text-xs text-[#6B7280] block">Label
+        <select className={input} value={block.label ?? "Related Article"} onChange={(e) => set({ label: e.target.value })}>
+          <option value="Related Article">Related Article</option>
+          <option value="Related Guide">Related Guide</option>
+        </select>
+      </label>
+      <label className="text-xs text-[#6B7280] block">Linked article
+        <select className={input} value={ref}
+          onChange={(e) => set({ article: e.target.value ? { _type: "reference", _ref: e.target.value } : null })}>
+          <option value="">{loading ? "Loading…" : "— Select an article —"}</option>
+          {list.map((a) => (
+            <option key={a.ref} value={a.ref}>{a.title}{a.language !== "en" ? ` (${a.language})` : ""}</option>
+          ))}
+        </select>
+      </label>
+      {ref && !list.some((a) => a.ref === ref) && !loading && (
+        <p className="text-[11px] text-[#C0392B]">Selected article not found — it may have been deleted.</p>
+      )}
+      <p className="text-[11px] text-[#9CA3AF]">Title, excerpt and URL are pulled automatically from the selected article.</p>
     </div>
   );
 }

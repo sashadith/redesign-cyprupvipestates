@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 import { updateLeadStatus, addLeadNote, assignLead, mergeLeads } from "../../../actions";
 import { StatusBadge } from "@/app/admin/status-badge";
+import { listPresentationLocations } from "./presentationActions";
+import PropertyMatching from "./PropertyMatching";
+import ExistingPresentations, { type PresentationRow } from "./ExistingPresentations";
+import DeleteLeadButton from "../DeleteLeadButton";
+import CollapsibleList from "../CollapsibleList";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +17,8 @@ const STATUSES = ["NEW", "QUALIFIED", "CONTACTED", "VIEWING_SCHEDULED", "OFFER",
 export default async function LeadDetail({ params }: { params: { id: string } }) {
   const { id } = params;
   const [lead, users] = await Promise.all([
-    prisma.lead.findUnique({
-      where: { id },
+    prisma.lead.findFirst({
+      where: { id, deletedAt: null },
       include: {
         activities: { orderBy: { createdAt: "desc" } },
         projectInterest: true,
@@ -27,6 +33,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
   const duplicates = await prisma.lead.findMany({
     where: {
       id: { not: id },
+      deletedAt: null,
       OR: [{ email: lead.email }, ...(lead.phone ? [{ phone: lead.phone }] : [])],
     },
     orderBy: { createdAt: "desc" },
@@ -38,6 +45,43 @@ export default async function LeadDetail({ params }: { params: { id: string } })
   const lastChange = lead.activities.find((a) => a.type === "STATUS_CHANGE");
   const stageSince = lastChange?.createdAt ?? lead.createdAt;
   const stageDays = Math.floor((Date.now() - new Date(stageSince).getTime()) / 86_400_000);
+
+  // Client Presentation system: matching-panel data + existing presentations for this lead.
+  const [session, locations, presentationRows] = await Promise.all([
+    auth(),
+    listPresentationLocations(),
+    prisma.clientPresentation.findMany({
+      where: { leadId: id },
+      orderBy: { createdAt: "desc" },
+      include: {
+        views: { select: { developmentId: true, durationSec: true, createdAt: true } },
+        items: { select: { developmentId: true, isFavorited: true, development: { select: { publicName: true, override: { select: { alias: true } } } } } },
+      },
+    }).then((rows) =>
+      rows.map((p): PresentationRow => {
+        const uniqueDays = new Set(p.views.map((v) => v.createdAt.toISOString().slice(0, 10))).size;
+        const perDev = new Map<string, { views: number; durationSec: number }>();
+        for (const v of p.views) {
+          if (!v.developmentId) continue;
+          const cur = perDev.get(v.developmentId) ?? { views: 0, durationSec: 0 };
+          cur.views += 1; cur.durationSec += v.durationSec ?? 0;
+          perDev.set(v.developmentId, cur);
+        }
+        const nameOf = (devId: string) => {
+          const it = p.items.find((i) => i.developmentId === devId);
+          return it?.development.override?.alias || it?.development.publicName || "—";
+        };
+        return {
+          id: p.id, token: p.token, status: p.status, createdAt: p.createdAt, expiresAt: p.expiresAt,
+          viewCount: p.views.length, favoritedCount: p.items.filter((i) => i.isFavorited).length,
+          uniqueDays,
+          perDevelopment: Array.from(perDev.entries()).map(([developmentId, v]) => ({ developmentId, name: nameOf(developmentId), views: v.views, durationSec: v.durationSec })),
+          favoritedNames: p.items.filter((i) => i.isFavorited).map((i) => i.development.override?.alias || i.development.publicName),
+        };
+      }),
+    ),
+  ]);
+  const currentUser = session?.user ? { id: (session.user as any).id as string, name: session.user.name ?? "Advisor" } : null;
 
   async function setStatus(formData: FormData) {
     "use server";
@@ -71,6 +115,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
         <h1 className="text-2xl font-semibold">{lead.firstName} {lead.lastName}</h1>
         <StatusBadge status={lead.status} />
         <Link href={`/admin/crm/${id}/edit`} className="ml-auto text-sm text-[#1B4B43] hover:underline">Edit details</Link>
+        <DeleteLeadButton id={id} redirectTo="/admin/crm" label="Delete lead" />
       </div>
       <p className="text-xs text-[#9CA3AF] mb-6">In {lead.status.replace(/_/g, " ")} for {stageDays} day{stageDays === 1 ? "" : "s"}</p>
 
@@ -94,6 +139,17 @@ export default async function LeadDetail({ params }: { params: { id: string } })
           <p className="text-[11px] text-[#9A3412]/70 mt-2">Merging moves the other lead’s activity here and deletes it.</p>
         </div>
       )}
+
+      <div className="space-y-6 mb-6">
+        <ExistingPresentations presentations={presentationRows} leadId={id} />
+        <PropertyMatching
+          leadId={id}
+          lead={{ firstName: lead.firstName, budgetMin: lead.budgetMin, budgetMax: lead.budgetMax, propertyTypeInterest: lead.propertyTypeInterest, languagePreference: lead.languagePreference, phone: lead.phone, lastMatchFilters: lead.lastMatchFilters as any }}
+          locations={locations}
+          currentUser={currentUser}
+          users={users}
+        />
+      </div>
 
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-2 bg-white rounded-lg border border-[#E5E7EB] p-5">
@@ -163,14 +219,14 @@ export default async function LeadDetail({ params }: { params: { id: string } })
         {lead.activities.length === 0 ? (
           <p className="text-sm text-[#6B7280]">No activity yet.</p>
         ) : (
-          <ul className="space-y-3">
-            {lead.activities.map((a) => (
-              <li key={a.id} className="text-sm">
+          <CollapsibleList itemCount={lead.activities.length} previewCount={5}>
+            {lead.activities.map((a, i) => (
+              <div key={a.id} className={`text-sm ${i > 0 ? "mt-3" : ""}`}>
                 <span className="text-xs text-[#6B7280]">{new Date(a.createdAt).toLocaleString("en-GB")} · {a.type}{a.createdBy ? ` · ${a.createdBy}` : ""}</span>
                 <div>{a.content}</div>
-              </li>
+              </div>
             ))}
-          </ul>
+          </CollapsibleList>
         )}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/app/admin/status-badge";
+import DeleteLeadButton from "./DeleteLeadButton";
 import {
   buildLeadWhere, orderForSort, leadQueryString,
   LEAD_STATUSES, LEAD_SOURCES, LEAD_LOCALES, LEAD_PAGE_SIZE, type LeadSearchParams,
@@ -61,11 +62,12 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
               <th className="text-left font-medium px-4 py-2.5">Status</th>
               <th className="text-left font-medium px-4 py-2.5">Assigned</th>
               <th className="text-left font-medium px-4 py-2.5">Received</th>
+              <th className="text-right font-medium px-4 py-2.5"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E5E7EB]">
             {leads.length === 0 ? (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-[#6B7280]">No leads match these filters.</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-[#6B7280]">No leads match these filters.</td></tr>
             ) : leads.map((l) => (
               <tr key={l.id} className="hover:bg-[#F8F9FA]">
                 <td className="px-4 py-2.5">
@@ -77,6 +79,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
                 <td className="px-4 py-2.5"><StatusBadge status={l.status} /></td>
                 <td className="px-4 py-2.5 text-[#6B7280]">{l.assignedTo?.name ?? "—"}</td>
                 <td className="px-4 py-2.5 text-[#6B7280]">{new Date(l.createdAt).toLocaleDateString("en-GB")}</td>
+                <td className="px-4 py-2.5 text-right"><DeleteLeadButton id={l.id} /></td>
               </tr>
             ))}
           </tbody>

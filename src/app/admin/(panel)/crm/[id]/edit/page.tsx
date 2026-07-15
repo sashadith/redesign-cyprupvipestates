@@ -7,7 +7,7 @@ import EditLeadForm from "./edit-lead-form";
 export const dynamic = "force-dynamic";
 
 export default async function EditLead({ params }: { params: { id: string } }) {
-  const lead = await prisma.lead.findUnique({ where: { id: params.id } });
+  const lead = await prisma.lead.findFirst({ where: { id: params.id, deletedAt: null } });
   if (!lead) notFound();
   const action = updateLead.bind(null, lead.id);
 

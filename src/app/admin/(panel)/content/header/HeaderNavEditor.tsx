@@ -37,7 +37,16 @@ export default function HeaderNavEditor({ name, initial }: { name: string; initi
         <div key={n._key} className="border border-[#E5E7EB] rounded-md p-3 space-y-2">
           <div className="flex gap-2 items-center">
             <input className={`${input} w-44 shrink-0`} value={n.label ?? ""} placeholder="Menu label" onChange={(e) => setItem(i, { label: e.target.value })} />
-            <input className={input} value={n.link ?? ""} placeholder="/path or section-id" onChange={(e) => setItem(i, { link: e.target.value })} />
+            <input className={input} value={n.link ?? ""} placeholder="/path, section-id, or https://…" onChange={(e) => setItem(i, { link: e.target.value })} />
+            <select
+              className={`${input} w-36 shrink-0`}
+              title="Menu item style"
+              value={n.variant ?? ""}
+              onChange={(e) => setItem(i, { variant: e.target.value || undefined })}
+            >
+              <option value="">Default style</option>
+              <option value="accent">Accent (gold)</option>
+            </select>
             <div className="flex gap-1 shrink-0">
               <button type="button" onClick={() => moveItem(i, -1)} disabled={i === 0} className="text-xs px-1.5 py-1 rounded border border-[#E5E7EB] disabled:opacity-40">↑</button>
               <button type="button" onClick={() => moveItem(i, 1)} disabled={i === items.length - 1} className="text-xs px-1.5 py-1 rounded border border-[#E5E7EB] disabled:opacity-40">↓</button>

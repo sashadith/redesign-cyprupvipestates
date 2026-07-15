@@ -1,0 +1,426 @@
+/* Client Presentation page — built on the redesign token set (tokens.css):
+   sea-deep/champagne dark palette, Fraunces display + Mulish body + Playfair
+   Cyrillic fallback for RU. Bespoke markup (not the shared .pcard), but same
+   visual language. */
+
+.cp-page {
+  background: var(--sea-deep);
+  color: var(--ivory);
+  font-family: var(--font-body), sans-serif; /* Mulish already covers the Cyrillic subset itself */
+  min-height: 100vh;
+}
+
+/* ---------- HERO ---------- */
+.cp-hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(2rem, 6vw, 6rem) clamp(1.25rem, 5vw, 3rem);
+  background: radial-gradient(120% 100% at 50% 0%, rgba(194, 154, 94, 0.12), transparent 60%), var(--sea-deep);
+}
+/* Auto-picked from whichever district most of the selected properties are in
+   (see page.tsx) — reuses the homepage's own city photos, faded well back so
+   it reads as texture rather than competing with the greeting. */
+.cp-hero__bg {
+  position: absolute; inset: 0; z-index: 0;
+  background-size: cover; background-position: center;
+  opacity: 0.1; pointer-events: none;
+  /* Fades the photo to fully transparent from ~50% down, revealing .cp-hero's
+     own sea-deep background beneath rather than hard-cutting at the edge. */
+  mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, black 50%, transparent 100%);
+}
+/* Desktop only — mobile keeps the 0.1 base opacity above untouched. This is
+   also the fail-safe fallback value (matches what HeroGreeting.tsx's entrance
+   animation settles at on desktop) in case the animation never runs at all. */
+@media (min-width: 768px) {
+  .cp-hero__bg { opacity: 0.7; }
+}
+/* Soft radial "sea-deep cloud" behind the text column ONLY — legibility here
+   comes from this glow, not from darkening the whole image (that's what the
+   raised .cp-hero__bg opacity above is for). Desktop-only: not rendered at
+   all below 768px, so mobile is visually and structurally unchanged. Three
+   gradient stops (strong centre → transitional → fully transparent) rather
+   than a hard two-stop fade, so there's no visible edge — it reads as
+   atmosphere, not a shape. Sized as a % of .cp-hero's own box (min-height:
+   100vh), so it scales with the section regardless of content height —
+   wider than the ~58rem text column for "generous padding", taller than it
+   is wide so the top and bottom fade out too, per spec. */
+.cp-hero__cloud { display: none; }
+@media (min-width: 768px) {
+  .cp-hero__cloud {
+    display: block; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background: radial-gradient(
+      ellipse 40% 80% at 50% 50%,
+      rgba(8, 21, 18, 0.9) 0%,
+      rgba(8, 21, 18, 0.45) 45%,
+      rgba(8, 21, 18, 0) 75%
+    );
+  }
+}
+.cp-hero__inner { position: relative; z-index: 1; max-width: 58rem; text-align: center; }
+.cp-hero__logo { height: clamp(8.25rem, 18vw, 13.5rem); width: auto; margin: 0 auto 2.5rem; }
+.cp-hero__tag.eyebrow { justify-content: center; margin: 0 0 1.5rem; }
+.cp-hero__eyebrow {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-size: var(--text-h2);
+  font-weight: 400;
+  color: var(--ivory);
+  margin: 0 0 0.75rem;
+}
+/* Force "Greeting, Name" onto one line on tablet/desktop — below 640px the
+   clamp()'s vw component already shrinks the text with viewport width, but
+   its 2.25rem floor doesn't shrink far enough for a phone's own width, so
+   nowrap there would clip; natural wrap is the safe fallback on small phones. */
+@media (min-width: 640px) { .cp-hero__eyebrow { white-space: nowrap; } }
+.cp-hero__intro {
+  font-size: clamp(1.1rem, 2.2vw, 1.4rem);
+  color: rgba(239, 233, 219, 0.75);
+  max-width: 34.8rem;
+  margin: 0 auto;
+}
+.cp-hero__reqs { margin: 3.5rem 0 0; }
+.cp-hero__reqsTitle {
+  font-family: var(--font-body), sans-serif; font-size: var(--text-caption); font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase; color: rgba(239, 233, 219, 0.5); margin: 0 0 0.75rem;
+}
+.cp-hero__reqchips { display: flex; flex-wrap: wrap; gap: 0.6rem; justify-content: center; }
+.cp-hero__reqchip {
+  font-size: 0.9rem; color: var(--champagne); border: 1px solid rgba(194, 154, 94, 0.4);
+  background: rgba(194, 154, 94, 0.08); border-radius: 999px; padding: 0.4rem 1rem;
+  /* Same border/text colour as before — just a soft frosted-glass backdrop
+     behind the pill so the hero photo underneath reads slightly softer here. */
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+/* No static reveal CSS at all, by design: every [data-fx] element here
+   (HeroGreeting.tsx, and the other reveal components sharing ./anim.ts) is
+   ordinary, fully-visible-by-default CSS. GSAP is the ONLY thing that ever
+   hides them — transiently, via gsap.set() inside a try/catch — so any
+   animation failure (throw, missing selector, disabled ScrollTrigger) simply
+   leaves this content visible rather than stuck invisible. */
+.cp-hero__note {
+  margin: 2.5rem auto 0;
+  max-width: 34rem;
+  font-family: var(--font-body), sans-serif;
+  font-style: italic;
+  font-size: 1.15rem;
+  line-height: 1.6;
+  color: hsla(42, 38%, 90%, 0.75);
+  border-top: 1px solid var(--hairline);
+  padding-top: 1.5rem;
+}
+/* Shared by the note's own signature AND the intro's signature directly below
+   it (see HeroGreeting.tsx) — same font/size/color/spacing everywhere. */
+.cp-hero__signature {
+  display: block;
+  margin-top: 0.75rem;
+  font-style: normal;
+  font-size: 0.8rem;
+  color: rgba(239, 233, 219, 0.6);
+}
+
+/* ---------- MAP ---------- */
+/* isolation: isolate scopes Leaflet's internal pane z-indexes (which can run
+   up to ~700) to this section, so they can never paint above the overlay
+   (z-index 60) that sits later in the DOM — see .cp-overlay. */
+.cp-mapsection { height: 78vh; min-height: 28.6rem; position: relative; isolation: isolate; }
+.cp-map { height: 100%; }
+/* project.css's `.pp-map.px-mapwrap` (a shared class the map wrapper also
+   carries) hard-caps height at min(51vh, 450px) — that rule beats a plain
+   `.cp-map` by specificity regardless of source order, which is why raising
+   .cp-mapsection's height alone had no visible effect. Matching all three
+   classes here outranks it and lets the map actually fill the section. */
+.cp-map.pp-map.px-mapwrap { height: 100%; }
+/* POI legend heading — sits inline before the pills, same row, same small
+   muted recipe as projects.css's own .px-poi__lead (kept as a page-scoped
+   rule rather than reusing that class directly, so the main Projects page's
+   legend is untouched). Purely decorative text with no click handling, so
+   it can't intercept map/legend gestures. */
+.cp-map .px-poi__heading {
+  font-family: var(--font-body), sans-serif; font-size: 0.62rem; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-faint);
+  padding-right: 3px; margin: 0;
+}
+
+/* ---------- CARDS ---------- */
+.cp-cardswrap { position: relative; }
+
+.cp-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  padding: clamp(2rem, 5vw, 4rem) clamp(1.25rem, 5vw, 3rem) clamp(2rem, 5vw, 4rem);
+  max-width: 90rem;
+  margin: 0 auto;
+}
+.cp-card {
+  position: relative;
+  /* Subtle depth, not a visible band — same --sea in the top-left corner,
+     just a touch darker toward the bottom-right. */
+  background: linear-gradient(135deg, var(--sea) 0%, #0B1D1A 100%);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.cp-card:hover {
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.55);
+  border-color: transparent;
+}
+.cp-card__media { position: relative; aspect-ratio: 4 / 3; background: rgba(255, 255, 255, 0.04); overflow: hidden; }
+/* No more card-level lift on hover — the picture itself zooms in tight
+   instead, clipped by .cp-card's own overflow: hidden. */
+.cp-card__img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+.cp-card:hover .cp-card__img { transform: scale(1.08); }
+.cp-card__img--empty { width: 100%; height: 100%; }
+.cp-card__newbadge {
+  position: absolute; top: 0.75rem; left: 0.75rem; z-index: 1;
+  background: var(--champagne); color: var(--sea-deep);
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em;
+  padding: 0.3rem 0.7rem; border-radius: 999px;
+}
+.cp-card__heart {
+  position: absolute; top: 0.75rem; right: 0.75rem;
+  width: 2.25rem; height: 2.25rem; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(8, 21, 18, 0.55); backdrop-filter: blur(4px);
+  color: var(--ivory); border: none; cursor: pointer;
+}
+.cp-card__heart.is-on { color: var(--champagne); }
+.cp-card__body { padding: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem; flex: 1; }
+.cp-card__title {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-size: 1.4rem; font-weight: 400; line-height: 1.1; margin: 0; color: var(--ivory);
+}
+/* Pulled in against the title above it, 50% more open than the fully
+   cancelled-out gap this had before. */
+.cp-card__loc { font-size: 0.85rem; color: rgba(239, 233, 219, 0.6); margin: -0.2rem 0 0; }
+/* Price on its own line (bigger, champagne); the "+VAT · N units" meta line
+   is a separate paragraph directly below it, spaced by the body's normal
+   0.4rem flex gap like every other row. */
+/* Fraunces for the Latin/numeric part, falling back to Playfair Display
+   (--font-display-cyr) for the Cyrillic "от" prefix — same stack as
+   .cp-card__title. An explicit line-height keeps the two fonts' differing
+   metrics from shifting the line's baseline. */
+.cp-card__price {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-size: 1.35rem; font-weight: 500; line-height: 1.15; color: var(--champagne); margin: 0;
+}
+.cp-card__meta { font-size: 0.8rem; font-weight: 400; color: rgba(239, 233, 219, 0.55); margin: 0; display: flex; align-items: baseline; gap: 0.35rem; }
+.cp-card__note {
+  font-style: italic; font-size: 0.85rem; color: var(--champagne);
+  margin: 0.5rem 0 0; padding-top: 0.5rem; border-top: 1px solid var(--hairline);
+}
+.cp-card__cta {
+  margin-top: auto; align-self: flex-start;
+  background: transparent; border: 1px solid var(--champagne); color: var(--champagne);
+  border-radius: 999px; padding: 0.5rem 1.25rem; font-size: 0.85rem; cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.cp-card__cta:hover { background: var(--champagne); color: var(--sea-deep); }
+
+/* ---------- GOLD RING (running gold frame) ----------
+   A rotating conic-gradient masked down to a thin ring via the padding +
+   content-box/border-box XOR trick — works on any box regardless of its own
+   background colour, and (being a custom-property angle animation rather
+   than a rotated square) traces a fixed rectangular ring instead of visibly
+   spinning the corners. Always-on for the property overlay panel; hover-only
+   (opacity/animation-play-state gated) for cards. */
+@property --gf-angle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+@keyframes gfSpin { to { --gf-angle: 360deg; } }
+.cp-goldring { position: relative; }
+.cp-goldring::before {
+  content: ""; position: absolute; inset: 0; z-index: 5; border-radius: inherit;
+  padding: 1.5px; pointer-events: none;
+  background: conic-gradient(from var(--gf-angle), transparent 0deg, var(--champagne) 70deg, #F6E2AE 110deg, var(--champagne) 150deg, transparent 220deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  animation: gfSpin 5s linear infinite;
+}
+.cp-goldring--hover::before { opacity: 0; transition: opacity 0.35s ease; animation-play-state: paused; }
+.cp-goldring--hover:hover::before { opacity: 1; animation-play-state: running; }
+@media (prefers-reduced-motion: reduce) { .cp-goldring::before { animation: none; --gf-angle: 45deg; } }
+
+/* ---------- OVERLAY ---------- */
+.cp-overlay {
+  position: fixed; inset: 0; z-index: 60;
+  background: rgba(4, 10, 9, 0.85);
+  display: flex; align-items: center; justify-content: center;
+  padding: clamp(0px, 3vw, 2rem);
+}
+.cp-overlay__panel {
+  background: var(--sea-deep); color: var(--ivory);
+  width: 100%; max-width: 52rem; max-height: 100vh;
+  overflow-y: auto; border-radius: 0;
+  position: relative;
+}
+@media (min-width: 640px) {
+  .cp-overlay__panel { max-height: 90vh; border-radius: 16px; }
+}
+.cp-overlay__close {
+  position: absolute; top: 1rem; right: 1rem; z-index: 2;
+  width: 2.25rem; height: 2.25rem; border-radius: 999px;
+  background: rgba(8, 21, 18, 0.6); color: var(--ivory); border: none; cursor: pointer;
+}
+/* Swipeable hero gallery — a native horizontally-scrollable snap track (no JS
+   gesture library) so touch drag feels native and page vertical scroll is
+   untouched; a tap that didn't scroll the track opens the full lightbox. */
+.cp-overlay__gallery { position: relative; isolation: isolate; }
+/* Small breathing room above the picture itself (not a big overlay-level
+   safe-area gap — that was reverted) so it doesn't sit perfectly flush
+   against the panel's top edge under the close button. */
+@media (max-width: 39.999em) { .cp-overlay__gallery { margin-top: 10px; } }
+.cp-overlay__track {
+  display: flex; width: 100%; aspect-ratio: 16/9;
+  overflow-x: auto; scroll-snap-type: x mandatory;
+  scrollbar-width: none; -ms-overflow-style: none;
+  touch-action: pan-x pan-y;
+}
+.cp-overlay__track::-webkit-scrollbar { display: none; }
+.cp-overlay__slide { flex: 0 0 100%; scroll-snap-align: center; }
+.cp-overlay__slidebtn { display: block; width: 100%; height: 100%; padding: 0; border: none; background: none; cursor: zoom-in; }
+.cp-overlay__slidebtn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cp-overlay__heroCount {
+  position: absolute; bottom: 0.75rem; right: 0.75rem; z-index: 2; pointer-events: none;
+  background: rgba(8, 21, 18, 0.6); color: var(--ivory); font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 999px;
+}
+.cp-overlay__navbtn {
+  position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+  width: 2.5rem; height: 2.5rem; border-radius: 999px; border: 1px solid var(--hairline);
+  background: rgba(8, 21, 18, 0.55); color: var(--ivory); font-size: 1.4rem; line-height: 1; cursor: pointer;
+  opacity: 0; transition: opacity 0.2s ease;
+}
+.cp-overlay__gallery:hover .cp-overlay__navbtn { opacity: 1; }
+.cp-overlay__navbtn--prev { left: 0.75rem; }
+.cp-overlay__navbtn--next { right: 0.75rem; }
+/* Touch-only devices rely on the swipe itself — arrows are a desktop hover affordance. */
+@media (hover: none) { .cp-overlay__navbtn { display: none; } }
+.cp-overlay__dots { position: absolute; bottom: 0.75rem; left: 50%; transform: translateX(-50%); z-index: 2; display: flex; gap: 0.35rem; }
+.cp-overlay__dot { width: 6px; height: 6px; border-radius: 999px; background: rgba(239, 233, 219, 0.35); }
+.cp-overlay__dot.is-on { background: var(--champagne); }
+.cp-overlay__body { padding: 1.5rem clamp(1.25rem, 4vw, 2.5rem) 2.5rem; }
+.cp-overlay__title { font-family: var(--font-display), var(--font-display-cyr), Georgia, serif; font-size: 1.85rem; font-weight: 400; margin: 0 0 1rem; }
+.cp-overlay__desc { font-size: 1.1rem; color: rgba(239, 233, 219, 0.85); line-height: 1.7; margin: 0 0 1rem; }
+.cp-overlay__amenities { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+/* Same icon mapping as the public site's .pp-benefit pills (src/app/preview-
+   project/amenityIcons.tsx) — themed for this dark surface: champagne icon,
+   ivory label, vertically centered. */
+.cp-overlay__amenity {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  font-size: 0.8rem; border: 1px solid var(--hairline); border-radius: 999px;
+  padding: 0.3rem 0.8rem; color: rgba(239, 233, 219, 0.8);
+}
+.cp-overlay__amenity-ic { display: inline-flex; flex-shrink: 0; width: 16px; height: 16px; color: var(--champagne); }
+.cp-overlay__amenity-ic svg { width: 100%; height: 100%; }
+.cp-overlay__units { margin-top: 1.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.cp-overlay__units h3 { font-family: var(--font-display), var(--font-display-cyr), Georgia, serif; font-weight: 400; font-size: 1.1rem; margin: 0 0 0.75rem; }
+.cp-overlay__units table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.cp-overlay__units th { text-align: left; color: rgba(239, 233, 219, 0.5); font-weight: 400; padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--hairline); }
+.cp-overlay__units td { padding: 0.5rem; border-bottom: 1px solid var(--hairline); }
+/* Beds+area and price+status are stacked inside one cell each (4 columns
+   instead of 6) so the table fits a mobile panel width without a horizontal
+   scrollbar or clipped columns. */
+.cp-overlay__stack { display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-start; }
+.cp-overlay__stack-sub { font-size: 0.78rem; color: rgba(239, 233, 219, 0.6); }
+.cp-unit-status { font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 999px; }
+.cp-unit-status--available { background: rgba(34, 197, 94, 0.15); color: #4ADE80; }
+.cp-unit-status--reserved { background: rgba(194, 154, 94, 0.2); color: var(--champagne); }
+.cp-unit-status--sold { background: rgba(255, 255, 255, 0.08); color: rgba(239, 233, 219, 0.5); }
+
+/* ---------- CLOSING ---------- */
+/* Same drifting-gold-clouds background used elsewhere on the page
+   (tokens.css's cloudDriftA/B) — moved here from the property cards. */
+.cp-closing { position: relative; isolation: isolate; overflow: hidden; padding: clamp(3rem, 8vw, 6rem) clamp(1.25rem, 5vw, 3rem); border-top: 1px solid var(--hairline); }
+.cp-closing::before, .cp-closing::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; aspect-ratio: 1; will-change: transform;
+}
+.cp-closing::before { width: min(60vw, 640px); top: -20%; left: -10%; background: radial-gradient(circle, rgba(194, 154, 94, 0.14), rgba(194, 154, 94, 0) 66%); animation: cloudDriftA 22s ease-in-out infinite alternate; }
+.cp-closing::after { width: min(55vw, 580px); right: -10%; bottom: -20%; background: radial-gradient(circle, rgba(194, 154, 94, 0.10), rgba(194, 154, 94, 0) 66%); animation: cloudDriftB 27s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) { .cp-closing::before, .cp-closing::after { animation: none; } }
+.cp-closing__inner { position: relative; max-width: 68rem; margin: 0 auto; }
+
+/* Two-column layout: photo column ~35%, text column ~65% (7fr/13fr keeps that
+   ratio without the gap pushing it over 100%, unlike raw 35%/65%). Row height
+   is set by the photo (min-height below), so align-items: center vertically
+   centers the text column against it, per spec. */
+.cp-closing__grid { display: grid; grid-template-columns: 7fr 13fr; gap: clamp(2rem, 5vw, 4rem); align-items: center; }
+.cp-closing__photocol { display: flex; flex-direction: column; align-items: center; }
+/* Transparent cutout — no frame/border/background, just floats on the
+   sea-deep section like a real portrait rather than a boxed-in profile pic.
+   Sized ~27% larger than the original 380px so it reads as the dominant
+   element of the left column. */
+.cp-closing__photo { display: block; height: 480px; max-height: 50vh; width: auto; max-width: 100%; object-fit: contain; }
+.cp-closing__avatar { width: 6rem; height: 6rem; border-radius: 999px; object-fit: cover; border: 1px solid var(--hairline); }
+/* No animation (unlike .shimmer elsewhere) — a static line fading to
+   transparent on both ends. Sits flush under the photo/avatar (no gap) so it
+   reads as a pedestal; AdvisorPhotoBlock measures the actual photo width via
+   JS and sets this element's inline width to 1.15x it (falls back to the 85%
+   default below until that measurement lands on mount). */
+.cp-closing__divider { width: 85%; max-width: 16rem; height: 1px; margin-top: 1.25rem; background: linear-gradient(to right, transparent, var(--champagne), transparent); }
+.cp-closing__divider--photo { margin-top: 0; max-width: none; }
+
+.cp-closing__textcol { text-align: left; }
+/* Tightened into one composed block on an 8/16/24/32px rhythm, rather than
+   loosely scattered lines — see the per-rule margins below. */
+.cp-closing__eyebrow.eyebrow { margin: 0 0 1.5rem; }
+.cp-closing__name { font-family: var(--font-display), var(--font-display-cyr), Georgia, serif; font-size: var(--text-h3); line-height: 1.1; font-weight: 400; margin: 0; }
+.cp-closing__title { font-size: 0.85rem; color: rgba(239, 233, 219, 0.6); margin: 0.1rem 0 1.5rem; }
+.cp-closing__trust { font-family: var(--font-body), sans-serif; max-width: 55ch; color: rgba(239, 233, 219, 0.75); line-height: 1.7; margin: 0 0 2rem; }
+.cp-closing__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: flex-start; margin-bottom: 1.5rem; }
+.cp-closing__btn {
+  border: 1px solid var(--champagne); color: var(--champagne); text-decoration: none;
+  border-radius: 999px; padding: 0.6rem 1.5rem; font-size: 0.9rem; transition: background 0.2s, color 0.2s;
+}
+.cp-closing__btn:hover { background: var(--champagne); color: var(--sea-deep); }
+.cp-closing__btn--whatsapp { border-color: #25D366; color: #25D366; }
+.cp-closing__btn--whatsapp:hover { background: #25D366; color: #04140F; }
+
+/* Refined contact list — replaces the old single large phone display. Thin-
+   line inline SVG icons (no icon library), Mulish text (not the decorative
+   serif), champagne on hover. */
+.cp-closing__contactlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.85rem; }
+.cp-closing__contactlink {
+  display: inline-flex; align-items: center; gap: 0.75rem;
+  font-family: var(--font-body), sans-serif; font-size: 1.05rem; letter-spacing: 0.015em;
+  color: var(--ivory); text-decoration: none; transition: color 0.2s ease;
+}
+.cp-closing__contactlink:hover { color: var(--champagne); }
+.cp-closing__contactlink svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--champagne); }
+
+.cp-closing__legal { text-align: center; max-width: 32rem; margin: clamp(2.5rem, 6vw, 4rem) auto 0; font-size: 0.75rem; color: rgba(239, 233, 219, 0.45); line-height: 1.6; }
+.cp-closing__legal a { color: rgba(239, 233, 219, 0.6); white-space: nowrap; }
+
+@media (max-width: 47.999em) {
+  .cp-closing__grid { grid-template-columns: 1fr; text-align: left; }
+  .cp-closing__photo { height: 280px; }
+  .cp-closing__actions { flex-direction: column; }
+  .cp-closing__btn { text-align: center; }
+  /* Only the eyebrow/name/role block centers on mobile — the trust text and
+     buttons below stay left-aligned/full-width as before. */
+  .cp-closing__eyebrow.eyebrow { display: block; text-align: center; }
+  .cp-closing__name, .cp-closing__title { text-align: center; }
+}
+
+/* ---------- NOT AVAILABLE ---------- */
+.cp-gone {
+  min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1rem; text-align: center; padding: 2rem;
+  background: var(--sea-deep); color: var(--ivory);
+  font-family: var(--font-body), sans-serif;
+}
+/* Same size as the hero logo (.cp-hero__logo) — this page is the dead-end
+   equivalent of the hero, so the brand mark should read at the same weight.
+   (Spacing below it still comes from .cp-gone's own flex gap.) */
+.cp-gone__logo { height: clamp(8.25rem, 18vw, 13.5rem); width: auto; }
+.cp-gone h1 { font-family: var(--font-display), var(--font-display-cyr), Georgia, serif; font-weight: 400; font-size: 1.5rem; margin: 0; }
+.cp-gone p { max-width: 28rem; color: rgba(239, 233, 219, 0.7); margin: 0; }
+.cp-gone__btn {
+  margin-top: 1rem; border: 1px solid var(--champagne); color: var(--champagne); text-decoration: none;
+  border-radius: 999px; padding: 0.6rem 1.5rem; font-size: 0.9rem;
+}

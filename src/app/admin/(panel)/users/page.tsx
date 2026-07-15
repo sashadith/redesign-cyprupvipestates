@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -35,12 +36,15 @@ export default async function UsersPage() {
                 <td className="px-4 py-2.5">{u.isActive ? "✓" : "—"}</td>
                 <td className="px-4 py-2.5 text-[#6B7280]">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString("en-GB") : "—"}</td>
                 <td className="px-4 py-2.5 text-right">
-                  <UserRowActions
-                    userId={u.id}
-                    email={u.email}
-                    isActive={u.isActive}
-                    isSelf={(session?.user as any)?.id === u.id}
-                  />
+                  <div className="flex items-center justify-end gap-3">
+                    <Link href={`/admin/users/${u.id}/edit`} className="text-xs text-[#1B4B43] hover:underline">Edit</Link>
+                    <UserRowActions
+                      userId={u.id}
+                      email={u.email}
+                      isActive={u.isActive}
+                      isSelf={(session?.user as any)?.id === u.id}
+                    />
+                  </div>
                 </td>
               </tr>
             ))}

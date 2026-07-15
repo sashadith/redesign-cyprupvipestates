@@ -13,7 +13,7 @@ const COL_ACCENT: Record<string, string> = {
 const BOARD_CAP = 2000;
 
 export default async function CrmBoard() {
-  const leads = await prisma.lead.findMany({ orderBy: { updatedAt: "desc" }, take: BOARD_CAP });
+  const leads = await prisma.lead.findMany({ where: { deletedAt: null }, orderBy: { updatedAt: "desc" }, take: BOARD_CAP });
   const capped = leads.length === BOARD_CAP;
   const byStatus: Record<string, typeof leads> = Object.fromEntries(PIPELINE.map((s) => [s, []]));
   for (const l of leads) (byStatus[l.status] ??= []).push(l);

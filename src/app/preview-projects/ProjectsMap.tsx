@@ -17,12 +17,12 @@ const CYPRUS_BOUNDS = L.latLngBounds([34.45, 32.1], [35.15, 34.1]);
 const fmtPrice = (p: number | null, s: ProjectsStrings) =>
   p == null ? s.priceOnRequest : `€${p.toLocaleString(s.numLocale)}`;
 
-const pinIcon = (active: boolean, variant = 0) =>
+export const pinIcon = (active: boolean, variant = 0) =>
   L.divIcon({
     // the CVE skyline-in-a-diamond emblem; idle pins carry a glow-stagger class
     // (g0..g5) so they twinkle out of sync
     className: `px-pin${active ? " is-active" : ` px-pin--g${variant}`}`,
-    html: `<img class="px-pin__mark" src="/img/cve-mark.png" alt="" draggable="false" />`,
+    html: `<img class="px-pin__mark" src="/uploads/projects/cve-mark.png" alt="" draggable="false" />`,
     iconSize: active ? [38, 48] : [28, 36],
     iconAnchor: active ? [19, 24] : [14, 18],
     popupAnchor: active ? [0, -26] : [0, -20],
@@ -149,7 +149,7 @@ function FitBounds({ markers }: { markers: MapMarker[] }) {
 
 /* ---------------- POIs (OpenStreetMap via Overpass) ---------------- */
 type PoiCat = { key: string; label: string; color: string; filter: string; test: (t: any) => boolean };
-const POI_CATS: PoiCat[] = [
+export const POI_CATS: PoiCat[] = [
   // Private listed before Public so a private school is classified as private
   // (mutually-exclusive classification picks the first matching active cat).
   { key: "school_private", label: "Private School", color: "#A05CFF", filter: '["amenity"="school"]', test: (t) => t.amenity === "school" && (t["operator:type"] === "private" || t.fee === "yes") },
@@ -175,7 +175,7 @@ let POI_LOADING: Promise<LocalPoi[]> | null = null;
 function loadLocalPois(): Promise<LocalPoi[]> {
   if (POI_DATA) return Promise.resolve(POI_DATA);
   if (!POI_LOADING) {
-    POI_LOADING = fetch("/poi/cyprus.json")
+    POI_LOADING = fetch("/uploads/projects/cyprus.json")
       .then((r) => (r.ok ? r.json() : { pois: [] }))
       .then((j) => {
         POI_DATA = ((j.pois as Array<{ lat: number; lng: number; n?: string; c: string }>) ?? []).map((p, i) => ({
@@ -191,21 +191,27 @@ function loadLocalPois(): Promise<LocalPoi[]> {
 const POI_COLOR: Record<string, string> = Object.fromEntries(POI_CATS.map((c) => [c.key, c.color]));
 const POI_RENDER_CAP = 1200; // safety cap on simultaneously-rendered markers
 
-// Reuse one icon instance per colour (7 categories) so POI markers don't churn.
+// A few categories get a dedicated icon instead of a dot (there aren't many).
+const POI_SVG: Record<string, string> = {
+  // golf = a flag planted on the putting green (hole)
+  golf: `<svg viewBox="0 0 24 24" fill="none" stroke="var(--c)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V4l7 2.5L12 9"/><ellipse cx="12" cy="19.3" rx="6" ry="1.9" fill="var(--c)" stroke="none"/></svg>`,
+  airport: `<svg viewBox="0 0 24 24" fill="var(--c)"><path d="M21 15.5 13.5 11V4.2a1.5 1.5 0 0 0-3 0V11L3 15.5V17l7.5-2.2V19l-2 1.4V22l3.5-1 3.5 1v-1.6L13.5 19v-4.2z"/></svg>`,
+};
+// Reuse one icon instance per key so POI markers don't churn. Dots expose the
+// colour as --c so the CSS can build a same-colour glow halo.
 const POI_ICON_CACHE: Record<string, L.DivIcon> = {};
-const poiIcon = (color: string) =>
-  (POI_ICON_CACHE[color] ??= L.divIcon({
-    className: "px-poi-pin",
-    // expose the colour as --c so the CSS can build a same-colour glow halo
-    html: `<span style="--c:${color}"></span>`,
-    iconSize: [10, 10],
-    iconAnchor: [5, 5],
-  }));
+const poiIcon = (color: string, cat: string) => {
+  const svg = POI_SVG[cat];
+  const key = svg ? cat : color;
+  return (POI_ICON_CACHE[key] ??= svg
+    ? L.divIcon({ className: "px-poi-ic", html: `<span style="--c:${color}">${svg}</span>`, iconSize: [40, 40], iconAnchor: [20, 20] })
+    : L.divIcon({ className: "px-poi-pin", html: `<span style="--c:${color}"></span>`, iconSize: [10, 10], iconAnchor: [5, 5] }));
+};
 
 /* Renders POIs from the local dataset for the visible area (zoom ≥ 11). Data is
    loaded once from our own server and filtered in memory, so toggling categories
    and panning is instant — no Overpass round-trip per click. */
-function PoiLayers({ active, onState }: { active: Set<string>; onState: (s: "idle" | "loading" | "zoom") => void }) {
+export function PoiLayers({ active, onState }: { active: Set<string>; onState: (s: "idle" | "loading" | "zoom") => void }) {
   const map = useMap();
   const [data, setData] = useState<LocalPoi[] | null>(POI_DATA);
   const [poi, setPoi] = useState<PoiItem[]>([]);
@@ -253,7 +259,7 @@ function PoiLayers({ active, onState }: { active: Set<string>; onState: (s: "idl
   return (
     <>
       {poi.map((p) => (
-        <Marker key={p.id} position={[p.lat, p.lng]} icon={poiIcon(p.color)}>
+        <Marker key={p.id} position={[p.lat, p.lng]} icon={poiIcon(p.color, p.cat)}>
           {p.name && (
             <Tooltip direction="top" offset={[0, -6]} className="px-poi-tip">
               {p.name}
@@ -298,7 +304,7 @@ const GESTURE_TEXT: Record<string, GestureText> = {
    text we set from the SITE locale (not the device language). Its init hook is
    registered by the side-effect `import "leaflet-gesture-handling"` at the top
    of this file, so `map.gestureHandling` exists by the time this runs. */
-function GestureZoom({ locale }: { locale: string }) {
+export function GestureZoom({ locale }: { locale: string }) {
   const map = useMap();
   useEffect(() => {
     const opts = map.options as unknown as { gestureHandlingOptions?: Record<string, unknown> };

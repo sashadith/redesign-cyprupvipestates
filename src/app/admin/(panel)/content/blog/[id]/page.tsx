@@ -52,6 +52,10 @@ export default async function EditBlog({ params }: { params: { id: string } }) {
               </select>
             </div>
             <div>
+              <label className="block text-sm mb-1">Publication date <span className="text-[#9CA3AF]">(German time)</span></label>
+              <input type="datetime-local" name="publishedAt" defaultValue={utcToZonedInput(b.publishedAt)} className={input} />
+            </div>
+            <div>
               <label className="block text-sm mb-1">Publish at <span className="text-[#9CA3AF]">(German time, when Scheduled)</span></label>
               <input type="datetime-local" name="scheduledAt" defaultValue={utcToZonedInput(b.scheduledAt)} className={input} />
             </div>

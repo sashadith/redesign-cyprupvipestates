@@ -402,17 +402,17 @@ export default function ProjectsExplorer({
           <p className="px__empty">{s.empty}</p>
         ) : (
           <div className="px__grid">
-            {/* On page 1 the map preview takes the 3rd slot — replacing the 3rd
+            {/* The map preview takes the 3rd slot on EVERY page — replacing the 3rd
                card when there are ≥3 results, or simply appended when there are
                fewer (so it never disappears on small result sets). */}
             {cards.map((c, i) =>
-              !isMobile && page === 1 && cards.length >= 3 && i === 2 ? (
+              !isMobile && cards.length >= 3 && i === 2 ? (
                 <MapTile key="map-tile" markers={markers} total={total} onOpen={() => setMapOpen(true)} s={s} />
               ) : (
                 <Card key={c.id} c={c} active={hoveredId === c.id} onHover={setHoveredId} s={s} />
               ),
             )}
-            {!isMobile && page === 1 && cards.length > 0 && cards.length < 3 && (
+            {!isMobile && cards.length > 0 && cards.length < 3 && (
               <MapTile key="map-tile" markers={markers} total={total} onOpen={() => setMapOpen(true)} s={s} />
             )}
           </div>

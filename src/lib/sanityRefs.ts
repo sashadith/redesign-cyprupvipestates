@@ -47,6 +47,10 @@ function isAssetHolder(node: any): boolean {
  * is not mutated).
  */
 export function dereferenceAssets<T = any>(node: T): T {
+  // Preserve Date instances — Object.entries(date) is [] so the generic
+  // object-walk below would otherwise collapse every Date into {} (this is why
+  // blog publishedAt was unreadable downstream).
+  if (node instanceof Date) return node;
   if (Array.isArray(node)) {
     return node.map((n) => dereferenceAssets(n)) as unknown as T;
   }

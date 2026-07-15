@@ -10,15 +10,15 @@ export default async function Dashboard() {
   const since30 = new Date(); since30.setDate(since30.getDate() - 30);
 
   const [leadsTotal, leads7d, leads30d, projects, blogs, pages, recent, byStatus, bySource] = await Promise.all([
-    prisma.lead.count(),
-    prisma.lead.count({ where: { createdAt: { gte: since7 } } }),
-    prisma.lead.count({ where: { createdAt: { gte: since30 } } }),
+    prisma.lead.count({ where: { deletedAt: null } }),
+    prisma.lead.count({ where: { deletedAt: null, createdAt: { gte: since7 } } }),
+    prisma.lead.count({ where: { deletedAt: null, createdAt: { gte: since30 } } }),
     prisma.project.count(),
     prisma.blog.count(),
     prisma.singlepage.count(),
-    prisma.lead.findMany({ orderBy: { createdAt: "desc" }, take: 8 }),
-    prisma.lead.groupBy({ by: ["status"], _count: true }),
-    prisma.lead.groupBy({ by: ["source"], _count: true }),
+    prisma.lead.findMany({ where: { deletedAt: null }, orderBy: { createdAt: "desc" }, take: 8 }),
+    prisma.lead.groupBy({ by: ["status"], _count: true, where: { deletedAt: null } }),
+    prisma.lead.groupBy({ by: ["source"], _count: true, where: { deletedAt: null } }),
   ]);
 
   const statusCount = (s: string) => byStatus.find((r) => r.status === s)?._count ?? 0;
