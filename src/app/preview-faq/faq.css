@@ -1,0 +1,189 @@
+/* FAQ — redesigned preview. Reuses preview-home/tokens.css (design tokens, .nav,
+   .wrap, .btn, .it, cloudDrift keyframes) — this file only adds page-specific
+   rules, namespaced .faqp__*. Hero borrows the Insights index's light-editorial
+   treatment (.is-light token re-scope) since this is the same "index/utility
+   page" family, not a cinematic brand moment like the homepage hero. */
+
+.faqp { display: block; overflow-x: clip; background: var(--sea-deep); }
+
+/* Light-hero pages: a deep-green bar sits behind the top nav at the very top,
+   immediately on load (LightHeroFlag sets data-light-hero — see layout.tsx's
+   import order comment above). Identical rule to preview-insights/insights.css
+   (same selector, same values) so the header matches /preview-case-studies
+   exactly — duplicated here rather than importing insights.css wholesale,
+   consistent with this file's own self-contained-stylesheet-per-route
+   convention (see header comment). */
+html[data-light-hero]:not([data-scrolled]) .nav::before {
+  background: linear-gradient(180deg, var(--sea-deep) 0%, rgba(8,21,18,0.92) 100%);
+  border-bottom: 1px solid rgba(239,233,219,0.10);
+}
+
+/* ---------------------------------------------------------------- HERO --- */
+.faqp__hero {
+  position: relative; isolation: isolate; overflow: visible; z-index: 1;
+  padding: clamp(120px, 16vh, 200px) 0 clamp(48px, 6vw, 76px);
+  background: linear-gradient(180deg, var(--surface-raised) 0%, var(--paper) 64%, var(--paper-2) 100%);
+  border-bottom: 1px solid var(--hairline);
+}
+.faqp__hero::before, .faqp__hero::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; aspect-ratio: 1; will-change: transform;
+  background: radial-gradient(circle, rgba(142,107,61,0.10), rgba(142,107,61,0) 66%);
+}
+.faqp__hero::before { width: min(56vw, 640px); top: -10%; left: -10%; animation: cloudDriftA 30s ease-in-out infinite alternate; }
+.faqp__hero::after { width: min(48vw, 560px); right: -8%; bottom: -10%; background: radial-gradient(circle, rgba(142,107,61,0.07), rgba(142,107,61,0) 66%); animation: cloudDriftB 36s ease-in-out infinite alternate; }
+
+/* Left-aligned two-column layout — same approach as Insights' .ins__hero-grid
+   (text column + visual column, replicated in this file's own .faqp__*
+   namespace rather than importing insights.css, since each preview route
+   keeps its own self-contained stylesheet). */
+.faqp__hero-grid { display: grid; grid-template-columns: 1fr; gap: clamp(40px, 6vw, 72px); align-items: center; }
+/* Art column widened (was 1.05fr/0.95fr, ~even split) so the now-larger hero
+   image actually has room to render bigger — .faqp__hero-text tops out at
+   56ch (~500-550px) regardless, so it wasn't using its former column width
+   anyway; giving that slack to the image doesn't cramp the text. */
+@media (min-width: 960px) { .faqp__hero-grid { grid-template-columns: 0.7fr 1.3fr; } }
+.faqp__hero-text { max-width: 56ch; }
+.faqp__eyebrow {
+  margin: 0 0 var(--s-4); font-family: var(--font-body), sans-serif; font-size: var(--text-caption);
+  font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent);
+}
+/* Font-size/line-height intentionally match .ins__hero-title (Cyprus Insights'
+   own hero heading, preview-insights/insights.css) exactly, via the SAME
+   shared token rather than a separately-hand-tuned clamp() — --text-display
+   is defined once in tokens.css (:root) and is the site's one hero-heading
+   size scale; every hero heading should reference it directly instead of
+   re-deriving an approximate clamp expression per page. */
+.faqp__hero-title {
+  margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  font-size: var(--text-display); line-height: 1.0; letter-spacing: -0.02em; color: var(--text); text-wrap: balance;
+}
+/* Keeps "Asked Questions" on one line — never lets "Questions" wrap away
+   from "Asked" — regardless of where text-wrap: balance chooses to break
+   before it. */
+.faqp__hero-title-lock { white-space: nowrap; }
+.faqp__hero-lead {
+  margin: var(--s-6) 0 0; max-width: 48ch; font-family: var(--font-body), sans-serif;
+  font-size: var(--text-lead); font-weight: 300; line-height: 1.55; color: var(--text-soft);
+}
+.faqp__hero-meta {
+  margin: var(--s-5) 0 0; font-family: ui-monospace, monospace; font-size: var(--text-sm);
+  letter-spacing: 0.06em; color: var(--text-faint);
+}
+
+/* Hero visual — a "FAQ" plaque + villa + question-mark medallion illustration,
+   fitting the page's informational (not listing/marketing) nature. Same slot
+   Insights gives its device mockup: hidden on mobile, right column ≥960px.
+   Source (from cyprusvipestates.com/uploads) has a transparent background
+   (verified: alpha 0 at the edges), so it blends straight into the hero's
+   paper-toned gradient with no card/box artifact — resized 1536x1024 →
+   1100x733 WebP (325KB → ~136KB); displayed at up to 760px, still under the
+   1100px source so it isn't upscaled/blurred. */
+.faqp__hero-art { display: none; }
+@media (min-width: 960px) { .faqp__hero-art { display: flex; justify-content: center; align-items: center; } }
+.faqp__hero-mark { width: min(100%, 760px); height: auto; }
+
+/* ------------------------------------------------------------- TOOLBAR ---
+   Scrolls naturally with the page (not sticky) — still no horizontal scroll:
+   .faqp__chips below wraps onto multiple rows via flex-wrap instead. */
+.faqp__toolbar {
+  background: rgba(8, 21, 18, 0.92); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--hairline);
+}
+.faqp__toolbar-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding-block: 16px; }
+
+/* Wraps onto multiple rows rather than scrolling sideways — usable at any
+   width without a horizontal-scroll affordance the user has to discover. */
+.faqp__chips { display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 auto; }
+.faqp__chip {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 16px; border-radius: 999px;
+  background: none; border: 1px solid var(--hairline-strong); color: var(--text-soft);
+  font-family: var(--font-body), sans-serif; font-size: var(--text-sm); cursor: pointer; white-space: nowrap;
+  transition: color var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease);
+}
+.faqp__chip:hover { color: var(--ivory); border-color: var(--accent); }
+.faqp__chip.is-active { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+.faqp__chip-n {
+  font-family: ui-monospace, monospace; font-size: 0.72rem; color: inherit; opacity: 0.65;
+}
+
+/* --------------------------------------------------------------- META --- */
+.faqp__meta-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: clamp(20px, 2.6vw, 30px) 4px; }
+.faqp__count { margin: 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--text-faint); }
+.faqp__toggleall {
+  background: none; border: 0; padding: 0; cursor: pointer; color: var(--accent);
+  font-family: var(--font-body), sans-serif; font-size: var(--text-sm); text-decoration: underline; text-underline-offset: 3px;
+}
+.faqp__toggleall:hover { color: var(--ivory); }
+
+/* ------------------------------------------------------------ CATEGORY --- */
+.faqp__list { padding-bottom: clamp(40px, 5vw, 64px); }
+
+/* Soft golden "clouds" drifting behind the dark list below the hero — same
+   treatment (colors/keyframes) as .descblock/.casestudies (tokens.css),
+   reused verbatim rather than re-derived. Placed inside EACH section
+   (.faqp__cat), not once at the top of the whole list, so the clouds break
+   up the page visually as a reader scrolls through many categories — sized
+   down from the tokens.css original since nine instances stack down a long
+   page. z-index:-1 + pointer-events:none (same as the source pattern) keeps
+   them decorative only, never intercepting accordion clicks or reducing
+   question/answer text contrast. */
+.faqp__cat { position: relative; isolation: isolate; overflow: clip; padding-top: clamp(40px, 5vw, 64px); }
+.faqp__cat::before, .faqp__cat::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; aspect-ratio: 1; will-change: transform;
+  background: radial-gradient(circle, rgba(194, 154, 94, 0.14), rgba(194, 154, 94, 0) 66%);
+}
+.faqp__cat::before { width: min(36vw, 420px); top: -4%; left: -8%; animation: cloudDriftA 30s ease-in-out infinite alternate; }
+.faqp__cat::after {
+  width: min(30vw, 360px); right: -8%; bottom: 6%;
+  background: radial-gradient(circle, rgba(194, 154, 94, 0.10), rgba(194, 154, 94, 0) 66%);
+  animation: cloudDriftB 36s ease-in-out infinite alternate;
+}
+.faqp__cat-head { max-width: 62ch; margin-bottom: clamp(20px, 2.4vw, 28px); }
+.faqp__cat-title {
+  margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  font-size: clamp(1.5rem, 1.3rem + 0.9vw, 2rem); color: var(--text); letter-spacing: -0.01em;
+}
+.faqp__cat-desc { margin: var(--s-2) 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--text-faint); }
+
+/* ------------------------------------------------------------- ITEMS ----- */
+.faqp__items { border-top: 1px solid var(--hairline); }
+
+.faqp__item {
+  display: grid; grid-template-rows: 1fr; opacity: 1;
+  border-bottom: 1px solid var(--hairline);
+}
+.faqp__item > * { overflow: hidden; min-height: 0; }
+
+.faqp__q-wrap { margin: 0; }
+.faqp__q {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s-4); width: 100%; text-align: left;
+  appearance: none; background: none; border: 0; cursor: pointer; padding: var(--s-5) 4px;
+  font-family: var(--font-body), sans-serif; font-weight: 600; font-size: clamp(0.98rem, 0.92rem + 0.28vw, 1.1rem); color: var(--text);
+}
+.faqp__q:hover { color: var(--accent); }
+.faqp__q:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; border-radius: 6px; }
+.faqp__q-ic {
+  flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 999px;
+  border: 1px solid var(--hairline-strong); color: var(--text-soft);
+  transition: transform var(--dur-sm) var(--ease-soft), border-color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease);
+}
+.faqp__q-ic.is-open { transform: rotate(180deg); border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.faqp__q:hover .faqp__q-ic { border-color: var(--accent); }
+
+.faqp__a-wrap { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.42s var(--ease-soft); }
+.faqp__item.is-open .faqp__a-wrap { grid-template-rows: 1fr; }
+.faqp__a { overflow: hidden; min-height: 0; padding: 0 32px 0 4px; opacity: 0; transition: opacity 0.3s ease; }
+.faqp__item.is-open .faqp__a { opacity: 1; padding-bottom: var(--s-5); }
+.faqp__a p { margin: 0 0 var(--s-3); font-family: var(--font-body), sans-serif; font-size: clamp(0.95rem, 0.92rem + 0.16vw, 1.0625rem); line-height: 1.7; color: var(--text-soft); }
+.faqp__a p:last-child { margin-bottom: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .faqp__item, .faqp__a-wrap, .faqp__a, .faqp__q-ic { transition: none; }
+}
+
+/* ----------------------------------------------------------- RESPONSIVE --- */
+@media (max-width: 640px) {
+  .faqp__toolbar-row { padding-block: 12px; gap: 10px; }
+  .faqp__meta-row { flex-wrap: wrap; }
+  .faqp__a { padding-right: 4px; }
+}

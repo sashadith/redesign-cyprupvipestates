@@ -1,0 +1,130 @@
+/* Case Studies — redesigned preview. Reuses preview-home/tokens.css (design
+   tokens, .nav, .wrap, .btn, .it, .cscard__cat) AND preview-insights/
+   insights.css (.ins__hero, .ins__hero-grid, .ins__device, .ins__guide,
+   .ins__topics — imported verbatim in layout.tsx, not re-approximated). This
+   file only adds what neither of those cover: the story feature blocks and
+   their stat strip. */
+
+.csp { display: block; }
+
+/* ---------------------------------------------------------- STORY LIST ---
+   Soft golden "clouds" drifting behind the dark list — same treatment as
+   .descblock/.casestudies (tokens.css), reused verbatim, just re-scoped. */
+.csp__list { position: relative; isolation: isolate; overflow: clip; background: var(--sea-deep); padding-top: clamp(24px, 4vw, 48px); }
+.csp__list::before, .csp__list::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; aspect-ratio: 1; will-change: transform;
+  background: radial-gradient(circle, rgba(194, 154, 94, 0.14), rgba(194, 154, 94, 0) 66%);
+}
+.csp__list::before { width: min(60vw, 720px); top: -6%; left: -10%; animation: cloudDriftA 30s ease-in-out infinite alternate; }
+.csp__list::after {
+  width: min(54vw, 640px); right: -10%; bottom: -8%;
+  background: radial-gradient(circle, rgba(194, 154, 94, 0.10), rgba(194, 154, 94, 0) 66%);
+  animation: cloudDriftB 36s ease-in-out infinite alternate;
+}
+.csp__stories { display: flex; flex-direction: column; }
+
+.csstory {
+  display: grid; grid-template-columns: 1fr; gap: clamp(28px, 4vw, 44px);
+  align-items: center; padding-block: clamp(48px, 6vw, 88px);
+  border-bottom: 1px solid var(--hairline);
+}
+.csstory:last-child { border-bottom: 0; }
+@media (min-width: 860px) {
+  .csstory { grid-template-columns: 1fr 1fr; gap: clamp(40px, 5.5vw, 80px); }
+  .csstory--reverse .csstory__media { order: 2; }
+  .csstory--reverse .csstory__body { order: 1; }
+}
+
+/* position: relative so .cscard__cat's own position:absolute (tokens.css)
+   anchors to this media box — the badge itself needs no rule of its own here,
+   it reuses .cscard__cat's exact treatment rather than a near-duplicate under
+   a new name */
+.csstory__media { position: relative; border-radius: var(--r-ui); overflow: hidden; aspect-ratio: 4 / 3; background: var(--surface); }
+.csstory__media img { width: 100%; height: 100%; object-fit: cover; }
+
+.csstory__body { display: flex; flex-direction: column; gap: var(--s-4); }
+.csstory__title {
+  margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  font-size: clamp(1.35rem, 1.15rem + 1vw, 2rem); line-height: 1.2; letter-spacing: -0.01em;
+  color: var(--text); text-wrap: balance;
+}
+.csstory__stats { margin: var(--s-2) 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s-4) var(--s-5); }
+.csstory__stat { display: flex; align-items: flex-start; gap: 10px; }
+.csstory__stat svg { flex: none; margin-top: 2px; color: var(--accent); }
+.csstory__stat dt { margin: 0; font-family: var(--font-body), sans-serif; font-size: var(--text-caption); letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-faint); }
+.csstory__stat dd { margin: 2px 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); font-weight: 600; color: var(--text); }
+.csstory__cap { text-transform: capitalize; }
+
+.csstory__cta { align-self: flex-start; margin-top: var(--s-2); }
+.csstory__cta svg { transition: transform var(--dur-sm) var(--ease-soft); }
+.csstory__cta:hover svg { transform: translateX(4px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .csstory__cta svg { transition: none; }
+}
+
+/* --------------------------------------------------- GUIDE (no outro) ---
+   CaseStudiesSeo never passes an outro column (this page's CMS content
+   doesn't cleanly split into one — see its own comment), so .ins__guide-cols
+   renders a single .ins__guide-intro child. The base insights.css 2-column
+   grid (1.15fr 0.85fr ≥900px) would leave that child in the left track only,
+   with dead space on the right — let it span full width instead. */
+.ins__guide-cols:has(> .ins__guide-intro:only-child) { grid-template-columns: 1fr; }
+.ins__guide-cols:has(> .ins__guide-intro:only-child) .ins__guide-intro { max-width: none; }
+
+/* This page's guide has 7 topics — fixed 2-column on desktop reads better
+   here than insights.css's own auto-fit (which packs in 3-4 narrower cards
+   at typical widths). Scoped to this page only, not changed at the shared
+   source, since the live Insights page's own topic count/rhythm may suit the
+   wider auto-fit layout better.
+
+   ".csp .ins__topics" (not just ".ins__topics"): Next's dev-mode CSS chunking
+   does NOT reliably preserve the layout.tsx import order (tokens.css →
+   insights.css → case-studies.css) in the final bundle — verified by
+   inspecting the compiled output, insights.css's rule actually lands AFTER
+   this file's, which meant the two-selector "last one wins" tiebreak went
+   the wrong way and this override silently did nothing. Scoping through the
+   .csp wrapper (this page's <main>) raises specificity above the base rule's
+   single class, so it wins regardless of bundle order. */
+@media (min-width: 768px) {
+  .csp .ins__topics { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ===================================================== CASE STUDY DETAIL ===
+   Header/article shell reuses Insights' .iart__hero/.iart__body/.iart__content
+   verbatim (insights.css) — this section only adds what's unique to a case
+   study: a wider hero title (case-study titles are full sentences, not
+   article headlines), the excerpt line under it, the client-overview stat
+   band, and the privacy note. */
+
+/* Compound selector (.iart__title.csd__title, not just .csd__title): same
+   cascade-order risk as the .ins__topics override above — a single-class
+   selector competing with .iart__title's own max-width:18ch would depend on
+   unreliable bundle order. The compound selector's higher specificity wins
+   deterministically instead. */
+.iart__title.csd__title { max-width: 42ch; }
+
+.csd__hero-excerpt {
+  margin: var(--s-6) 0 0; max-width: 60ch; font-family: var(--font-body), sans-serif;
+  font-size: var(--text-lead); font-weight: 300; line-height: 1.55; color: rgba(239,233,219,0.88);
+}
+
+.csd__stats-band { background: var(--sea-deep); border-bottom: 1px solid var(--hairline); padding-block: clamp(28px, 4vw, 44px); }
+.csd__stats-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--s-5); }
+@media (min-width: 640px) { .csd__stats-row { grid-template-columns: repeat(4, 1fr); } }
+/* Slightly larger stat values on the detail page's own stat band only — the
+   same .csstory__stat markup is reused on the index story list, which must
+   keep its original size, hence scoping through .csd__stats-row rather than
+   touching .csstory__stat dd directly. */
+.csd__stats-row .csstory__stat dd { font-size: 1.2rem; }
+
+/* Image-to-text rhythm: .iart__figure (insights.css, shared verbatim with
+   blog articles) declares a symmetric clamp(32px,4vw,52px) margin — but in
+   this content, an image block is always preceded by a blank paragraph from
+   the source rich text, which collapses down to a visually smaller ~28px
+   gap above the image, while the figure's own margin-bottom (nothing to
+   collapse against below) renders its full ~52px. Scoped to .csd only —
+   reducing the image's own bottom margin to match, without touching
+   insights.css's shared blog-article rhythm. */
+.csd .iart__figure { margin-bottom: clamp(20px, 2.4vw, 28px); }
+.csd__privacy { margin-top: clamp(20px, 2.6vw, 28px); padding-top: clamp(20px, 2.6vw, 28px); border-top: 1px solid var(--hairline); font-family: var(--font-body), sans-serif; font-size: var(--text-caption); line-height: 1.6; color: var(--text-faint); max-width: 68ch; }
