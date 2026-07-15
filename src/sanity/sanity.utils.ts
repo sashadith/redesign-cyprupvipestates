@@ -510,6 +510,22 @@ export async function getCaseStudiesByLang(lang: string): Promise<CaseStudy[]> {
   }))) as unknown as CaseStudy[];
 }
 
+// Like getCaseStudiesByLang, but also includes fullTitle — neither existing
+// list function selects it, only the single-case-study detail query
+// (_getCaseStudyByLang) does. Added for the redesigned /preview-case-studies
+// index, whose story headings use the fuller title. A dedicated function
+// rather than extending the two above, since those also feed the live page
+// and sitemap generation.
+export async function getCaseStudiesByLangWithDetails(lang: string): Promise<CaseStudy[]> {
+  const rows = await prisma.caseStudy.findMany({ where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED" }, orderBy: { updatedAt: "desc" } });
+  return Promise.all(rows.map(async (c) => D({
+    ...base(c, "caseStudy"), title: c.title, fullTitle: c.fullTitle, slug: slugObj(c), seo: c.seo, category: c.category,
+    excerpt: c.excerpt, clientOverview: c.clientOverview, previewImage: D(c.previewImage),
+    publishedAt: c.publishedAt?.toISOString?.() ?? null, language: c.language,
+    _translations: await translationsFor(prisma.caseStudy as any, c.translationGroupId),
+  }))) as unknown as CaseStudy[];
+}
+
 export async function getCaseStudiesByLangWithPagination(lang: string, limit: number, offset: number): Promise<CaseStudy[]> {
   const rows = await prisma.caseStudy.findMany({ where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED" }, orderBy: { updatedAt: "desc" }, skip: offset, take: limit });
   return Promise.all(rows.map(async (c) => D({

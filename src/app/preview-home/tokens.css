@@ -112,7 +112,7 @@ img { max-width: 100%; display: block; }
 
 /* ---------- buttons (approved V5) ---------- */
 .btn {
-  display: inline-flex; align-items: center; gap: var(--s-3);
+  display: inline-flex; align-items: center; gap: var(--s-3); line-height: normal;
   font-family: var(--font-body), sans-serif; font-size: var(--text-sm); font-weight: 500; letter-spacing: 0.03em;
   border-radius: var(--r-ui); padding: 15px 16px 15px 26px; border: 1px solid transparent;
   cursor: pointer; text-decoration: none; color: inherit;
@@ -192,9 +192,12 @@ img { max-width: 100%; display: block; }
 .nav__right { margin-left: auto; display: flex; align-items: center; gap: var(--s-3); }
 
 /* ---- desktop links ---- */
-.nav__item { position: relative; }
+/* Option A: parent label is a plain link (always navigates); the caret is a
+   separate toggle button. Submenu opens on hover (mouse) or .is-open (the caret
+   toggle, driving touch + keyboard). */
+.nav__item { position: relative; display: inline-flex; align-items: center; }
 .nav__link {
-  display: inline-flex; align-items: center; gap: 5px; position: relative; padding: 8px 2px;
+  display: inline-flex; align-items: center; position: relative; padding: 8px 2px;
   font-family: var(--font-body), sans-serif; font-size: var(--text-sm); font-weight: 500; letter-spacing: 0.02em;
   color: rgba(239,233,219,0.82); text-decoration: none; white-space: nowrap;
   transition: color var(--dur-sm) var(--ease);
@@ -203,10 +206,21 @@ img { max-width: 100%; display: block; }
   content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: var(--champagne);
   transform: scaleX(0); transform-origin: left; transition: transform var(--dur-sm) var(--ease);
 }
-.nav__item:hover .nav__link, .nav__item:focus-within .nav__link { color: var(--ivory); }
-.nav__item:hover .nav__link::after, .nav__item:focus-within .nav__link::after { transform: scaleX(1); }
-.nav__caret { color: rgba(239,233,219,0.55); transition: transform var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease); }
-.nav__item:hover .nav__caret, .nav__item:focus-within .nav__caret { transform: rotate(180deg); color: var(--accent); }
+.nav__item:hover .nav__link, .nav__link:focus-visible { color: var(--ivory); }
+.nav__item:hover .nav__link::after, .nav__link:focus-visible::after { transform: scaleX(1); }
+/* accent variant (e.g. Private Collection) — champagne, set via CMS variant:"accent" */
+.nav__link--accent { color: var(--champagne); }
+.nav__item:hover .nav__link--accent, .nav__link--accent:focus-visible { color: var(--champagne); }
+.nav__item:hover .nav__link--accent::after, .nav__link--accent:focus-visible::after { background: var(--champagne); }
+.nav__caret-btn {
+  display: inline-flex; align-items: center; margin-left: 2px; padding: 8px 4px;
+  background: none; border: 0; cursor: pointer; color: rgba(239,233,219,0.55);
+  transition: color var(--dur-sm) var(--ease);
+}
+.nav__caret-btn:hover { color: var(--ivory); }
+.nav__caret-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.nav__caret { transition: transform var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease); }
+.nav__item:hover .nav__caret, .nav__item.is-open .nav__caret { transform: rotate(180deg); color: var(--accent); }
 .nav__dropdown {
   position: absolute; top: calc(100% + 12px); left: 0; min-width: 230px; display: grid; gap: 2px; padding: var(--s-3);
   background: var(--glass-solid); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
@@ -216,7 +230,7 @@ img { max-width: 100%; display: block; }
 }
 /* transparent bridge over the 12px gap so hover doesn't drop between link and panel */
 .nav__dropdown::before { content: ""; position: absolute; top: -14px; left: 0; right: 0; height: 14px; }
-.nav__item:hover .nav__dropdown, .nav__item:focus-within .nav__dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
+.nav__item:hover .nav__dropdown, .nav__item.is-open .nav__dropdown { opacity: 1; visibility: visible; transform: translateY(0); }
 .nav__dropdown a {
   color: rgba(239,233,219,0.82); text-decoration: none; font-size: var(--text-sm); padding: 9px 12px; border-radius: 8px;
   transition: background var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease);
@@ -288,14 +302,17 @@ img { max-width: 100%; display: block; }
 .mitem { border-bottom: 1px solid var(--hairline); }
 /* row: the link (its own text) navigates; the toggle fills the rest of the row */
 .mitem__row { display: flex; align-items: stretch; }
+/* Option A: the label fills the row (large tap target → navigates); the chevron
+   is a fixed-width control on the right, divided off, that toggles the submenu. */
 .mitem__link {
-  flex: 0 1 auto; align-self: center; padding: 16px 0; text-decoration: none; color: var(--ivory);
+  flex: 1; display: flex; align-items: center; padding: 16px 0; text-decoration: none; color: var(--ivory);
   font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: 1.55rem; line-height: 1.1;
 }
-.mitem__link:only-child { flex: 1; } /* no submenu → whole row navigates */
+.mitem__link--accent { color: var(--champagne); } /* accent variant (e.g. Private Collection) */
 .mitem__toggle {
-  flex: 1; display: flex; align-items: center; justify-content: flex-end; padding: 0 2px 0 16px;
-  background: transparent; border: 0; color: var(--accent); cursor: pointer;
+  flex: 0 0 56px; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: 0;
+  margin-left: 12px; background: transparent; border: 0; border-left: 1px solid var(--hairline);
+  color: var(--accent); cursor: pointer;
 }
 .mitem__toggle svg { width: 14px; height: 14px; transition: transform var(--dur-sm) var(--ease); }
 .mitem__toggle.is-open { color: var(--champagne); }
@@ -867,6 +884,11 @@ img { max-width: 100%; display: block; }
   font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em;
   color: var(--text); margin: 0; text-wrap: balance;
 }
+/* optional per-page lead paragraph under the title (see Form.tsx's subtitle prop) */
+.formsec__subtitle {
+  margin: var(--s-4) 0 0; max-width: 58ch; font-family: var(--font-body), sans-serif;
+  font-size: var(--text-lead); font-weight: 300; line-height: 1.55; color: var(--text-soft);
+}
 /* heading wrapper is the positioning anchor for the absolute stripe */
 .formsec__head { position: relative; }
 /* Stripe is OUT OF FLOW (absolute) so it can span the full page-container width
@@ -881,6 +903,9 @@ img { max-width: 100%; display: block; }
 .formsec__fields { display: grid; grid-template-columns: 1fr; gap: var(--s-5); }
 @media (min-width: 560px) { .formsec__fields { grid-template-columns: 1fr 1fr; max-width: 90%; } }
 .formsec__field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+/* optional field that spans both columns at the 2-col breakpoint (e.g. the
+   FAQ page's "Your question" textarea) — no-op at 1 column */
+.formsec__field--full { grid-column: 1 / -1; }
 .formsec__label { font-family: var(--font-body), sans-serif; font-size: var(--text-sm); letter-spacing: 0.02em; color: var(--text-soft); }
 .formsec__input,
 .formsec .PhoneInputInput {
@@ -895,6 +920,9 @@ img { max-width: 100%; display: block; }
   outline: none; border-color: var(--accent); background: rgba(255, 255, 255, 0.7);
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
+/* addon on top of .formsec__input — same border/background/focus treatment,
+   just the sizing a multi-line field needs */
+.formsec__textarea { resize: vertical; min-height: 110px; line-height: 1.5; }
 /* react-phone-number-input layout on dark */
 .formsec .PhoneInput { display: flex; align-items: center; gap: 10px; }
 .formsec .PhoneInputCountry {
@@ -958,7 +986,7 @@ img { max-width: 100%; display: block; }
 /* match the original .footer: small top padding (no big bottom), .container geometry */
 .pf {
   position: relative; isolation: isolate; overflow: hidden;
-  background: var(--sea-deep); border-top: 1px solid var(--hairline); color: var(--text-soft); padding-top: calc(clamp(1.25rem, 0.795rem + 2.27vw, 2.5rem) + 30px);
+  background: var(--sea-deep); border-top: 1px solid var(--hairline); color: var(--text-soft); padding-top: 90px;
 }
 /* soft golden "clouds" drifting behind the footer content */
 .pf::before, .pf::after {
@@ -966,9 +994,10 @@ img { max-width: 100%; display: block; }
 }
 .pf::before { width: min(60vw, 640px); top: -34%; left: -8%; background: radial-gradient(circle, rgba(194, 154, 94, 0.14), rgba(194, 154, 94, 0) 66%); animation: cloudDriftA 22s ease-in-out infinite alternate; }
 .pf::after { width: min(55vw, 580px); right: -8%; bottom: -34%; background: radial-gradient(circle, rgba(194, 154, 94, 0.10), rgba(194, 154, 94, 0) 66%); animation: cloudDriftB 27s ease-in-out infinite alternate; }
-.pf__container { position: relative; max-width: 1360px; margin: 0 auto; padding: 0 20px; }
+.pf__container { position: relative; max-width: var(--maxw); margin: 0 auto; padding: 0 var(--gutter); }
 /* top row: 4 columns (logo+social | company | contact | newsletter) — same grid as the nav row */
-.pf__top { display: grid; grid-template-columns: 1fr; gap: clamp(1.25rem, 0.341rem + 4.55vw, 3.75rem); }
+/* column-gap split from the old single `gap` shorthand to match .ins__topics' rhythm — see header-footer.css for the full rationale (this file duplicates those same footer rules for the redesigned home page). */
+.pf__top { display: grid; grid-template-columns: 1fr; row-gap: clamp(1.25rem, 0.341rem + 4.55vw, 3.75rem); column-gap: clamp(20px, 2vw, 28px); }
 @media (min-width: 768px) { .pf__top { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1100px) { .pf__top { grid-template-columns: repeat(4, 1fr); } }
 
@@ -1018,9 +1047,10 @@ img { max-width: 100%; display: block; }
 .pf__news-msg { margin: 10px 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-caption); color: var(--accent); }
 
 /* footer nav columns — same grid + margin as the old .footerMiddle/.footerColumns */
+/* same row-gap/column-gap split as .pf__top above */
 .pf__nav {
   margin-top: clamp(1.25rem, 0.341rem + 4.55vw, 3.75rem); padding-top: clamp(28px, 4vw, 48px); border-top: 1px solid var(--hairline);
-  display: grid; grid-template-columns: 1fr; gap: clamp(1.25rem, 0.341rem + 4.55vw, 3.75rem);
+  display: grid; grid-template-columns: 1fr; row-gap: clamp(1.25rem, 0.341rem + 4.55vw, 3.75rem); column-gap: clamp(20px, 2vw, 28px);
 }
 @media (min-width: 768px) { .pf__nav { grid-template-columns: repeat(2, 1fr); } }
 @media (min-width: 1100px) { .pf__nav { grid-template-columns: repeat(4, 1fr); } }
