@@ -30,8 +30,15 @@ type Processed = {
   width: number | null; height: number | null; blurDataUrl: string | null;
 };
 
-async function processImage(input: Buffer, srcExt: string): Promise<Processed> {
-  // GIF: keep as-is so animation is preserved (Sharp would flatten it).
+// AVATAR_SIZE/PHOTO_MAX_HEIGHT: the two User-profile-photo upload modes (Part 8
+// of the CRM/Presentation task) — square cropped avatar for the admin UI, and a
+// tall transparent cutout for the Client Presentation closing section.
+const AVATAR_SIZE = 256;
+const PHOTO_MAX_HEIGHT = 800;
+
+async function processImage(input: Buffer, srcExt: string, mode?: string | null): Promise<Processed> {
+  // GIF: keep as-is so animation is preserved (Sharp would flatten it) — never
+  // applies to the avatar/photoPng modes, which reject non-PNG/JPEG upstream.
   if (srcExt === "gif") {
     let w: number | null = null, h: number | null = null;
     try { const d = imageSize(input); w = d.width ?? null; h = d.height ?? null; } catch {}
@@ -40,6 +47,20 @@ async function processImage(input: Buffer, srcExt: string): Promise<Processed> {
 
   const img = sharp(input, { failOn: "none" }).rotate(); // bake EXIF orientation, then strip metadata
   const meta = await img.metadata();
+
+  if (mode === "avatar") {
+    // Square, cropped to fill — the small round/square admin avatar.
+    const out = await img.resize({ width: AVATAR_SIZE, height: AVATAR_SIZE, fit: "cover" }).webp({ quality: QUALITY }).toBuffer({ resolveWithObject: true });
+    return { buf: out.data, ext: "webp", mime: "image/webp", width: out.info.width ?? null, height: out.info.height ?? null, blurDataUrl: null };
+  }
+  if (mode === "photoPng") {
+    // Transparent cutout for the Client Presentation closing section — never
+    // recompressed to WebP/JPEG, so the alpha channel survives exactly as
+    // uploaded. Height-capped (not width), since these are tall portrait cutouts.
+    const out = await img.resize({ height: PHOTO_MAX_HEIGHT, withoutEnlargement: true }).png({ compressionLevel: 9 }).toBuffer({ resolveWithObject: true });
+    return { buf: out.data, ext: "png", mime: "image/png", width: out.info.width ?? null, height: out.info.height ?? null, blurDataUrl: null };
+  }
+
   const tooBig = (meta.width ?? 0) > MAX_EDGE || (meta.height ?? 0) > MAX_EDGE;
   let pipe = tooBig
     ? img.resize({ width: MAX_EDGE, height: MAX_EDGE, fit: "inside", withoutEnlargement: true })
@@ -76,12 +97,22 @@ export async function POST(req: Request) {
   const folder = String(form.get("folder") ?? "").trim().slice(0, 80) || null;
   if (file.size > 15 * 1024 * 1024) return NextResponse.json({ error: "File too large (max 15MB)" }, { status: 400 });
 
+  // "avatar" and "photoPng" are the two User-profile-photo modes (Part 8) —
+  // everything else keeps the general media-library behavior unchanged.
+  const mode = String(form.get("mode") ?? "").trim() || null;
+  if (mode === "photoPng" && srcExt !== "png") {
+    return NextResponse.json({ error: "Only PNG files are accepted here (transparent background required)." }, { status: 400 });
+  }
+  if (mode === "avatar" && srcExt === "gif") {
+    return NextResponse.json({ error: "Animated GIFs aren't supported for the avatar." }, { status: 400 });
+  }
+
   const raw = Buffer.from(await file.arrayBuffer());
 
   // Process; fall back to raw bytes if Sharp can't read the file (never hard-fail an upload).
   let p: Processed;
   try {
-    p = await processImage(raw, srcExt);
+    p = await processImage(raw, srcExt, mode);
   } catch {
     let w: number | null = null, h: number | null = null;
     try { const d = imageSize(raw); w = d.width ?? null; h = d.height ?? null; } catch {}
