@@ -76,7 +76,11 @@ export default async function middleware(request: NextRequest) {
 
 export const config = {
   // Matcher ignoring `/_next/`, `/api/`, local uploads, and other non-localized paths.
+  // "c/" = client presentations (src/app/c/[token]), a route outside the [lang]
+  // tree like preview-*; without this exclusion next-intl's i18n middleware
+  // rewrites /c/<token> to /en/c/<token>, which doesn't exist → 404 on every
+  // presentation link.
   matcher: [
-    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|sandbox|preview|style).*)",
+    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|sandbox|preview|style|c/).*)",
   ],
 };
