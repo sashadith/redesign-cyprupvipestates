@@ -72,7 +72,16 @@ jobs:
 
       - name: Rsync source to the VPS (preserves node_modules, .env, uploads)
         run: |
-          rsync -az --delete \
+          # Deliberately NO --delete. This job only ever has the pushed COMMIT
+          # checked out (actions/checkout), never any locally-uncommitted work —
+          # so --delete here means "wipe anything on staging that isn't in this
+          # push," including WIP another session rsynced straight from a dirty
+          # working tree via deploy-staging.sh. That's exactly what happened once
+          # (an auto-deploy silently deleted uncommitted admin-panel work). This
+          # step is now additive-only: it can add/update files, never remove them.
+          # Files renamed/deleted in git accumulate stale copies on staging until
+          # manually cleaned up — an acceptable trade for never destroying WIP.
+          rsync -az \
             --exclude node_modules --exclude .next --exclude .git --exclude .local-db \
             --exclude '.env' --exclude '.env.local' --exclude 'scripts/images' --exclude 'public/uploads' \
             -e "ssh -i ~/.ssh/id_vps -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30 -o ServerAliveCountMax=20" \
