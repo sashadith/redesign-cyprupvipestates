@@ -33,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
 // q82 mozjpeg, content-hashed filename) but sized for a full-bleed hero rather
 // than the homepage's small 800x600 city-tile thumbnails (Cities.tsx).
 const DISTRICT_HERO_IMAGES: Record<string, string> = {
-  paphos: "/uploads/images/d4626698d968a5d2eb807050e1a17ea2b9e9174d-1672x941.jpg",
+  paphos: "/uploads/images/61b30f9ea861f57b62622d20ab25a95dedad5c63-2560x1441.jpg",
   limassol: "/uploads/images/7002ff319a170a66ef37739e608e14a0e3b0a9c1-2560x1441.jpg",
   larnaca: "/uploads/images/986aea3f8ad4e98e9b5962fe5b48841707229c5a-2560x1441.jpg",
 };
