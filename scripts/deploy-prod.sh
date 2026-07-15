@@ -75,7 +75,20 @@ git archive "$REF" | tar -x -C "$STAGE"
 
 # 2) Sync to the live app dir. Same excludes as staging so we never clobber the
 #    server's node_modules, build cache, env, or the symlinked media dir.
-RSYNC_OPTS=(-az --delete
+#
+#    Deliberately NOT `-a` (archive = -rlptgoD): the `-o`/`-g` (owner/group)
+#    bits make rsync preserve the SOURCE files' numeric UID/GID — and since
+#    $STAGE is a local mktemp dir, that's whatever local-machine user exported
+#    it (e.g. macOS's default first-user uid 501:staff), not a real user on
+#    the VPS. Running as root, rsync happily applies that foreign uid/gid to
+#    the remote tree, which once locked $DIR itself to 700 owned by 501:staff
+#    — invisible to `curl` (the app still serves HTML fine) but it makes every
+#    /_next/static/* and /uploads/* asset 403 for nginx's www-data worker,
+#    since traversal into $DIR is denied before nginx ever reaches the file.
+#    Omitting -o/-g leaves synced files owned by whoever rsync runs as on the
+#    remote (root here) — always correct. Belt-and-suspenders: step 3 also
+#    force-fixes $DIR's own ownership/permissions before every build.
+RSYNC_OPTS=(-rlptDz --delete
   --exclude node_modules --exclude .next --exclude .git --exclude .local-db
   --exclude '.env' --exclude '.env.local' --exclude 'scripts/images' --exclude 'public/uploads')
 [ "$DRY" = 1 ] && RSYNC_OPTS+=(--dry-run -v)
@@ -92,6 +105,11 @@ fi
 echo "→ build + reload on the VPS"
 ssh -i "$KEY" "$HOST" bash -s <<REMOTE
 set -euo pipefail
+# Force-correct $DIR's own ownership/permissions before every build, regardless
+# of what rsync just did — see the RSYNC_OPTS comment above for the incident
+# this guards against. Cheap (one dir, not recursive) and idempotent.
+chown root:root "$DIR"
+chmod 755 "$DIR"
 cd "$DIR"
 $([ "$RUN_INSTALL" = 1 ] && echo 'npm ci' || echo 'echo "· skip npm ci (reusing existing node_modules)"')
 $([ "$RUN_MIGRATE" = 1 ] && echo 'npx prisma migrate deploy' || echo 'echo "· skip prisma migrate"')
@@ -99,12 +117,27 @@ NODE_OPTIONS=--max_old_space_size=2048 npm run build
 pm2 reload "$APP" --update-env
 REMOTE
 
-# 4) Health check.
+# 4) Health check. Checks the HTML document AND one of its own referenced
+#    /_next/static/ assets — the document alone isn't enough (it's server-
+#    rendered by the Node app directly and will happily 200 even when nginx
+#    is 403-ing every static asset, exactly what happened in the incident
+#    this comment documents — see the RSYNC_OPTS comment above).
 if command -v curl >/dev/null 2>&1; then
   echo "→ health check $HEALTH_URL"
-  code="$(curl -s -o /dev/null -w '%{http_code}' "$HEALTH_URL" || echo 000)"
+  html="$(curl -s -w '\n%{http_code}' "$HEALTH_URL" || echo $'\n000')"
+  code="$(echo "$html" | tail -1)"
   echo "   HTTP $code"
-  [ "$code" = 200 ] || { echo "⚠️  non-200 — verify manually, consider rollback (pm2 logs $APP)."; exit 1; }
+  [ "$code" = 200 ] || { echo "⚠️  non-200 on the page itself — verify manually, consider rollback (pm2 logs $APP)."; exit 1; }
+
+  asset="$(echo "$html" | grep -oE '/_next/static/[^"'"'"']+\.(js|css)' | head -1)"
+  if [ -n "$asset" ]; then
+    origin="$(echo "$HEALTH_URL" | grep -oE '^https?://[^/]+')"
+    asset_code="$(curl -s -o /dev/null -w '%{http_code}' "$origin$asset" || echo 000)"
+    echo "   static asset check ($asset): HTTP $asset_code"
+    [ "$asset_code" = 200 ] || { echo "⚠️  static asset 403/404 — the page looks fine but its JS/CSS won't load for real visitors. Check $DIR ownership/permissions (pm2 logs $APP)."; exit 1; }
+  else
+    echo "   ⚠️  couldn't find a /_next/static/ asset reference in the page to check — skipping (not fatal)."
+  fi
 fi
 
 echo "✓ Production updated → https://cyprusvipestates.com  (ref $REF @ $REF_SHA)"
