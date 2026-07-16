@@ -32,6 +32,10 @@ export type ProjectCardData = {
   isNew: boolean;
   isFeatured: boolean;
   distances?: Distances | null;
+  // null/undefined defaults to showing "+VAT" (same as the detail page) —
+  // only an explicit false (admin-marked "no VAT", e.g. a renovated resale)
+  // omits it.
+  vatApplies?: boolean | null;
 };
 
 export type MapMarker = {
@@ -124,6 +128,10 @@ function Card({ c, active, onHover, s }: { c: ProjectCardData; active: boolean; 
           <div className="prj__price">
             {c.price != null && <span className="prj__price-from">{s.priceFrom}</span>}
             {fmtPrice(c.price, s)}
+            {/* Development cards only (vatApplies is never set on legacy cards, which
+                never had this concept) — undefined !== false is intentional: only an
+                explicit override marks "no VAT", same as the detail page's default. */}
+            {c.price != null && c.vatApplies !== undefined && c.vatApplies !== false && <span className="prj__vat"> +VAT</span>}
           </div>
         </div>
         {cardDistances(c.distances, s).length > 0 && (

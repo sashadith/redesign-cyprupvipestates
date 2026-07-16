@@ -13,8 +13,10 @@ export default function DevelopmentSchema({ p, lang, canonical }: { p: ProjectVM
   if (!p.center || !p.gallery.length) return null;
 
   const avail = p.units.filter((u) => u.status === "available");
-  const priceFrom = p.priceFrom ?? avail.map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b)[0] ?? null;
-  const priceTo = p.priceTo ?? avail.map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => b - a)[0] ?? null;
+  // p.priceFrom/priceTo are already fully resolved by resolveDevelopmentPrice()
+  // in mapRowToVM (src/lib/developmentCard.ts) — the single source of truth
+  // every surface (this schema, the page itself, the merged /projects card) uses.
+  const { priceFrom, priceTo } = p;
 
   const listing: Record<string, any> = {
     "@context": "https://schema.org",

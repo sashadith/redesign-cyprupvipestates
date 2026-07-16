@@ -138,6 +138,7 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
       isNew: !!p.isNew,
       isFeatured: !!p.isFeatured,
       distances: distMap[p._id] ?? null,
+      vatApplies: p._source === "development" ? (kf.vatApplies ?? null) : undefined,
     };
   });
 

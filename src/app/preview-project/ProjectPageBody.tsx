@@ -15,6 +15,7 @@ import PropertyMapBlock from "@/app/preview-project/PropertyMapBlock";
 import UnitsView from "@/app/preview-project/UnitsView";
 import type { ProjectVM } from "@/app/preview-project/feeds";
 import { splitDescriptionParagraphs } from "@/lib/text";
+import { resolveDevelopmentType } from "@/lib/developmentCard";
 
 // Shared render body for both the SEO-facing slug route
 // (src/app/[lang]/preview-project/[slug]/page.tsx) and the legacy query-string
@@ -43,8 +44,12 @@ export default async function ProjectPageBody({
   banner?: React.ReactNode;
 }) {
   const avail = p.units.filter((u) => u.status === "available");
-  const priceFrom = p.priceFrom ?? avail.map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b)[0] ?? null;
-  const types = Array.from(new Set(p.units.map((u) => u.type).filter(Boolean)));
+  // p.priceFrom is already fully resolved (override -> Development.priceFrom ->
+  // cheapest available unit) by resolveDevelopmentPrice() in mapRowToVM — see
+  // src/lib/developmentCard.ts, the single source of truth every surface
+  // (this page, DevelopmentSchema, the merged /projects listing card) must use.
+  const priceFrom = p.priceFrom;
+  const types = resolveDevelopmentType(p.category, p.units).split(" · ").filter(Boolean);
   const benefits = (p.amenities?.length ? p.amenities : Array.from(new Set(p.units.flatMap((u) => u.features)))).filter(Boolean);
   // Neighbourhood text: prefer the APPROVED area description from the DB in the
   // page's language (English fallback); otherwise the static demo library.
@@ -112,7 +117,7 @@ export default async function ProjectPageBody({
               </div>
               <h1 className="pp-title">{p.publicName}</h1>
               <div className="pp-hero__stats">
-                <div className="pp-hero__price"><b>{priceFrom != null ? fmtPrice(priceFrom, p.currency) : "—"}</b><span>{priceFrom != null ? "from · +VAT" : "from"}</span></div>
+                <div className="pp-hero__price"><b>{priceFrom != null ? fmtPrice(priceFrom, p.currency) : "—"}</b><span>{priceFrom != null ? `from${p.vatApplies !== false ? " · +VAT" : ""}` : "from"}</span></div>
                 <div><b>{types.join(" · ") || "—"}</b><span>type</span></div>
                 {p.units.length > 0 && <div><b>{avail.length}{avail.length !== p.units.length && <small>/{p.units.length}</small>}</b><span>available</span></div>}
               </div>

@@ -4,6 +4,7 @@ import type { Development, DevelopmentOverride, DevelopmentUnit } from "@prisma/
 import type { ProjectVM } from "@/app/preview-project/feeds";
 import type { UnitVM } from "@/app/preview-project/UnitsView";
 import type { SeoOverride } from "@/lib/developmentSeo";
+import { resolveDevelopmentPrice, resolveDevelopmentLocation } from "@/lib/developmentCard";
 
 /* Render a development straight from the DB (Phase 1, Increment 4). Reads the
    synced Development/Units + merges the admin DevelopmentOverride (alias, area,
@@ -12,15 +13,6 @@ import type { SeoOverride } from "@/lib/developmentSeo";
    fallback for anything not yet synced. */
 
 const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
-const joinLoc = (...parts: string[]) => {
-  const seen = new Set<string>();
-  const out: string[] = [];
-  for (const raw of parts) {
-    const p = (raw || "").trim();
-    if (p && !seen.has(p.toLowerCase())) { seen.add(p.toLowerCase()); out.push(p); }
-  }
-  return out.join(" · ");
-};
 const statusLabel = (s: string) => (s === "sold" ? "Sold" : s === "reserved" ? "Reserved" : "Available");
 
 type Row = Development & { units: DevelopmentUnit[]; override: DevelopmentOverride | null };
@@ -63,19 +55,14 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
     description: "",
   }));
 
-  // Unit-driven feeds (and manually-created developments — no adapter ever
-  // sets a project-level price for those) leave Development.priceFrom null
-  // even though real unit prices exist. Fall back to the cheapest available,
-  // priced unit rather than showing no price at all.
-  const availableUnitPrices = units.filter((u) => u.status === "available" && u.price != null).map((u) => u.price as number);
-  const priceFrom = d.priceFrom ?? (availableUnitPrices.length ? Math.min(...availableUnitPrices) : null);
+  const { priceFrom, priceTo } = resolveDevelopmentPrice(d.priceFrom, d.priceTo, units);
 
   return {
     id: d.feedProjectId, dev: d.dev, publicName: ov?.alias || d.publicName, developerName: d.developerName, developer: d.developer ?? "",
-    location: joinLoc(district, town, area), district, town, area,
+    location: resolveDevelopmentLocation(district, town, area), district, town, area,
     status: d.status ?? "", category: d.category ?? undefined,
     stage: d.stage ?? undefined, completion: ov?.completion || d.completion || "", energy: ov?.energy || d.energy || "",
-    priceFrom, priceTo: d.priceTo ?? null, currency: d.currency ?? "EUR",
+    priceFrom, priceTo, currency: d.currency ?? "EUR",
     description: ({ en: ov?.descriptionEN, de: ov?.descriptionDE, pl: ov?.descriptionPL, ru: ov?.descriptionRU } as Record<string, string | null | undefined>)[lang] || ov?.descriptionEN || d.description || "",
     gallery: finalGallery, plans: arr<string>(d.plans), renders: [], amenities,
     extraFacts: arr<{ label: string; value: string }>(d.extraFacts), heroVideo: ov?.heroVideo || undefined,

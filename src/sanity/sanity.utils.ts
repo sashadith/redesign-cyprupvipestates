@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
 import { localizedHref } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
+import { resolveDevelopmentPrice, resolveBedRange, resolveDevelopmentLocation, resolveDevelopmentType } from "@/lib/developmentCard";
 import { Homepage } from "@/types/homepage";
 import { Header } from "@/types/header";
 import { FormStandardDocument } from "@/types/formStandardDocument";
@@ -662,7 +663,7 @@ export async function getAllProjectsByLang(lang: string): Promise<Project[]> {
 // ── Filtered projects (DB where + existing JS sorting) ──
 type ProjectListItem = {
   _id: string; title: string; excerpt?: string; slug: any; previewImage: any; images?: any[];
-  keyFeatures?: { price?: number; city?: string; propertyType?: string; bedrooms?: string; coveredArea?: string; plotSize?: string; completionDate?: string };
+  keyFeatures?: { price?: number; city?: string; propertyType?: string; bedrooms?: string; coveredArea?: string; plotSize?: string; completionDate?: string; energyEfficiency?: string; vatApplies?: boolean | null };
   isSold?: boolean; videoId?: string; isNew?: boolean; isFeatured?: boolean; listingPriority?: number; _createdAt?: string;
   // "project" (default, legacy Sanity-origin) or "development" (the new Prisma-backed
   // pipeline, merged into this same listing — see queryFilteredDevelopmentRows below).
@@ -708,16 +709,6 @@ function bedroomsMatch(range: string | null | undefined, want: string): boolean 
   return Number.isFinite(n) && lo <= n && n <= hi;
 }
 
-// Bedrooms aren't a single range on Development itself (that's per-unit) — derive a
-// "lo-hi" range across non-sold units, same shape bedroomsMatch() already expects for
-// legacy projects' own bedrooms range string, so both sources share one matching rule.
-function devBedroomRange(units: { beds: string | null; status: string | null }[]): string | null {
-  const nums = units
-    .filter((u) => u.status !== "sold")
-    .flatMap((u) => String(u.beds ?? "").match(/\d+/g)?.map(Number) ?? []);
-  return nums.length ? `${Math.min(...nums)}-${Math.max(...nums)}` : null;
-}
-
 // The unified /projects listing (Part D): a published Development appears here
 // UNLESS it supersedes a legacy Project that's still PUBLISHED — once that legacy
 // project is deactivated (ARCHIVED) via the admin toggle, the Development takes its
@@ -726,13 +717,21 @@ function devBedroomRange(units: { beds: string | null; status: string | null }[]
 // latitude/longitude/...) so the three consumers below (getFilteredProjects,
 // getFilteredProjectsCount, getFilteredProjectLocationsByLang) need no special-casing
 // beyond the _source tag used to build the right card link.
+//
+// Every derived field (price, beds, location, type) MUST come from the shared
+// resolvers in @/lib/developmentCard — the same ones mapRowToVM() uses for the
+// detail page. This card query previously re-derived these inline with weaker
+// logic (no unit-price fallback, no min==max collapse, town-only location) and
+// drifted from the detail page: a Development showed "Price on request" and
+// "2-2 bed" on the card while its own detail page correctly showed a real price
+// and per-unit beds. Do not reintroduce inline derivation here.
 async function queryFilteredDevelopmentRows(f: ProjectFilters) {
   const { city = "", priceFrom = null, priceTo = null, propertyType = "", bedrooms = "", q = "", north = null, south = null, east = null, west = null } = f;
   const qActive = q && q.length >= 3 ? q.toLowerCase() : "";
 
   const devs = await prisma.development.findMany({
     where: { publishStatus: "published", supersedesProjects: { none: { status: "PUBLISHED" } } },
-    include: { override: true, units: { select: { beds: true, status: true } } },
+    include: { override: true, units: { select: { beds: true, status: true, price: true, type: true } } },
   });
 
   return devs
@@ -744,16 +743,15 @@ async function queryFilteredDevelopmentRows(f: ProjectFilters) {
       const area = ov?.area || d.area || "";
       const gallery: string[] = (Array.isArray(ov?.gallery) && (ov!.gallery as string[]).length ? (ov!.gallery as string[]) : (Array.isArray(d.gallery) ? (d.gallery as string[]) : []));
       const previewImage = ov?.mainImage || gallery[0] || null;
-      const bedRange = devBedroomRange(d.units);
-      const devPriceFrom = d.priceFrom ?? null;
-      const devPriceTo = d.priceTo ?? devPriceFrom;
+      const bedRange = resolveBedRange(d.units);
+      const { priceFrom: devPriceFrom, priceTo: devPriceTo } = resolveDevelopmentPrice(d.priceFrom, d.priceTo, d.units);
       return {
         sanityId: d.id, slug: d.slug as string, title: ov?.alias || d.publicName,
         excerpt: null as string | null, previewImage, images: gallery,
         keyFeatures: {
-          city: town, propertyType: d.category ?? "", bedrooms: bedRange ?? "",
-          completionDate: ov?.completion || d.completion || "", energyEfficiency: ov?.energy || d.energy || "",
-          price: devPriceFrom,
+          city: resolveDevelopmentLocation(district, town, area), propertyType: resolveDevelopmentType(d.category, d.units),
+          bedrooms: bedRange, completionDate: ov?.completion || d.completion || "", energyEfficiency: ov?.energy || d.energy || "",
+          price: devPriceFrom, vatApplies: ov?.vatApplies ?? null,
         },
         isSold: false, videoId: null as string | null, isFeatured: false, listingPriority: 0, isNew: false,
         createdAt: d.createdAt, latitude: ov?.latitude ?? d.latitude, longitude: ov?.longitude ?? d.longitude,
