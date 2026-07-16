@@ -173,6 +173,17 @@ DB_URL_LINE="\${DB_URL_LINE%\\"}"
 DB_URL_LINE="\${DB_URL_LINE#\\"}"
 BUILD_DB_URL="\${DB_URL_LINE}&connection_limit=5&pool_timeout=30"
 DATABASE_URL="\$BUILD_DB_URL" NODE_OPTIONS=--max_old_space_size=2048 npm run build
+
+# Hard gate: verify every known runtime-only asset (files read via fs at
+# request time, invisible to the build above) exists in \$DIR BEFORE the
+# reload below makes this build live. A missing DejaVuSans.ttf passed a
+# clean build and then 500'd in production on the first Phase 3 attempt —
+# see MERGE_AUDIT.md / RETRY_READINESS.md. \$DIR IS the live directory in
+# this script's in-place rsync+build model (no separate -next tree), so
+# "only then swap" here means "only then reload" — that's the moment this
+# build actually takes effect.
+bash "$DIR/scripts/verify-runtime-assets.sh" "$DIR"
+
 pm2 reload "$APP" --update-env
 REMOTE
 

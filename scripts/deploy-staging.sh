@@ -47,10 +47,16 @@ echo "→ build + reload on the VPS"
 # and confirmed during the 2026-07 staging->production merge (see
 # MERGE_AUDIT.md phase 1.3). The real .env on disk is never modified — only
 # this one-off build invocation gets the capped DATABASE_URL.
+# Hard gate after the line below: verify every known runtime-only asset
+# (files read via fs at request time, invisible to the build itself) exists
+# in $DIR BEFORE the reload makes this build live — same reasoning as
+# deploy-prod.sh; see MERGE_AUDIT.md / RETRY_READINESS.md.
 ssh -i "$KEY" "$HOST" "cd $DIR && rm -rf .next && \
   DB_URL_LINE=\$(grep '^DATABASE_URL=' .env | cut -d= -f2-); \
   DB_URL_LINE=\${DB_URL_LINE%\\\"}; DB_URL_LINE=\${DB_URL_LINE#\\\"}; \
   DATABASE_URL=\"\${DB_URL_LINE}&connection_limit=5&pool_timeout=30\" \
-  NODE_OPTIONS=--max_old_space_size=2048 npm run build && pm2 reload cve-staging --update-env"
+  NODE_OPTIONS=--max_old_space_size=2048 npm run build && \
+  bash $DIR/scripts/verify-runtime-assets.sh $DIR && \
+  pm2 reload cve-staging --update-env"
 
 echo "✓ Staging updated → https://design.cyprusvipestates.com"
