@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 export const ALLOWED_HOSTS = new Set([
   "cyprusvipestates.com",
   "www.cyprusvipestates.com",
-  "72.60.89.239", // staging VPS — remove after cutover
+  "design.cyprusvipestates.com", // staging domain — form testing there must keep working
   "localhost",
 ]);
 
