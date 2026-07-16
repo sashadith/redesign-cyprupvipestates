@@ -138,6 +138,12 @@ model Project {
   // for the admin banner/redirect-on-deactivate flow.
   supersededByDevelopmentId String?
   supersededByDevelopment   Development? @relation(fields: [supersededByDevelopmentId], references: [id])
+  // Development ids an admin has explicitly rejected as a match for this legacy
+  // project, from the Phase 5.2 overlap-review UI (string[] of Development.id).
+  // A legacy project can have more than one candidate in the heuristic table
+  // (e.g. "Kamares Village" matched two unrelated Developments), so rejection
+  // is tracked per candidate, not as a single yes/no on the project itself.
+  overlapRejectedDevelopmentIds Json?
 
   @@unique([language, slug])
   @@index([translationGroupId])

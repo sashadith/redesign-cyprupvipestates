@@ -17,7 +17,10 @@ export default async function ProjectsAdmin({ searchParams }: { searchParams: { 
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-semibold">Projects</h1>
-        <Link href="/admin/content/projects/new" className="rounded-md bg-[#1B4B43] text-white text-sm px-4 py-2 hover:bg-[#142E2D]">+ New project</Link>
+        <div className="flex gap-2">
+          <Link href="/admin/content/projects/overlaps" className="rounded-md border border-[#E5E7EB] text-sm px-4 py-2 hover:bg-[#F8F9FA]">Development overlaps</Link>
+          <Link href="/admin/content/projects/new" className="rounded-md bg-[#1B4B43] text-white text-sm px-4 py-2 hover:bg-[#142E2D]">+ New project</Link>
+        </div>
       </div>
       <div className="flex items-center gap-4 mb-4">
         <div className="flex gap-1">
