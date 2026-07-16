@@ -1,6 +1,20 @@
+import { NEW_PROJECTS_INDEXABLE } from "@/lib/developmentSeo";
+
 const websiteUrl = "https://cyprusvipestates.com";
 
-const sitemaps = ["projects", "blog", "pages", "developers", "case-studies"];
+// "developments" (the new Prisma-backed Development pipeline) only gets
+// listed once NEW_PROJECTS_INDEXABLE is flipped on — until then its own
+// sub-sitemap generator returns zero pages anyway (see
+// src/app/sitemaps/[type]/route.ts), so there's no reason to advertise an
+// always-empty sitemap to crawlers in the meantime.
+const sitemaps = [
+  "projects",
+  "blog",
+  "pages",
+  "developers",
+  "case-studies",
+  ...(NEW_PROJECTS_INDEXABLE ? ["developments"] : []),
+];
 
 function escapeXml(value: string) {
   return value
