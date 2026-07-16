@@ -52,6 +52,7 @@ echo "→ build + reload on the VPS"
 # in $DIR BEFORE the reload makes this build live — same reasoning as
 # deploy-prod.sh; see MERGE_AUDIT.md / RETRY_READINESS.md.
 ssh -i "$KEY" "$HOST" "cd $DIR && rm -rf .next && \
+  npx prisma generate && \
   DB_URL_LINE=\$(grep '^DATABASE_URL=' .env | cut -d= -f2-); \
   DB_URL_LINE=\${DB_URL_LINE%\\\"}; DB_URL_LINE=\${DB_URL_LINE#\\\"}; \
   DATABASE_URL=\"\${DB_URL_LINE}&connection_limit=5&pool_timeout=30\" \

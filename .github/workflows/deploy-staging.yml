@@ -102,6 +102,7 @@ jobs:
           ssh -i ~/.ssh/id_vps -o BatchMode=yes -o StrictHostKeyChecking=accept-new \
               -o ServerAliveInterval=30 -o ServerAliveCountMax=20 "$VPS_USER@$VPS_HOST" \
             "cd $STAGING_DIR && \
+             npx prisma generate && \
              DB_URL_LINE=\$(grep '^DATABASE_URL=' .env | cut -d= -f2-); \
              DB_URL_LINE=\${DB_URL_LINE%\\\"}; DB_URL_LINE=\${DB_URL_LINE#\\\"}; \
              DATABASE_URL=\"\${DB_URL_LINE}&connection_limit=5&pool_timeout=30\" \

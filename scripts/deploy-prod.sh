@@ -158,6 +158,15 @@ cd "$DIR"
 $([ "$RUN_INSTALL" = 1 ] && echo 'npm ci' || echo 'echo "· skip npm ci (reusing existing node_modules)"')
 $([ "$RUN_MIGRATE" = 1 ] && echo 'npx prisma migrate deploy' || echo 'echo "· skip prisma migrate"')
 
+# Always regenerate the Prisma Client, unconditionally — schema.prisma is
+# rsynced above regardless of RUN_INSTALL, but node_modules is excluded from
+# that rsync, so a schema change without npm ci leaves the OLD generated
+# client in place. That passed a clean rsync and then failed next build with
+# "Object literal may only specify known properties" on the very first field
+# added since the client was last generated — a real production deploy
+# caught this (2026-07-16, Phase 5). Cheap and idempotent; never skip it.
+npx prisma generate
+
 # Build-time-only connection cap. next build's static-generation phase spawns
 # one worker PER AVAILABLE CPU, each opening its own Prisma pool at the
 # default size (2*cpus+1) — on a machine with more cores than this VPS
