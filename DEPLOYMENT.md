@@ -73,6 +73,29 @@ connections than Postgres's `max_connections` allows. Only the one-off build
 invocation is capped; the real `.env` on disk, and pm2's serving processes,
 are never touched.
 
+## Post-deploy smoke test
+
+After every production deploy, check:
+
+- Homepage (`/`) — 200
+- One project detail page (`/projects/<slug>`) — 200
+- One `/c/<token>` client-presentation link — 200
+- `/sitemap.xml` — 200
+- Lead form (`/api/leads`) — a request with valid required fields returns
+  `{"ok":true,"created":true}`; a request missing them returns `{"ok":false}`
+  with HTTP 200 (the anti-spam guard's designed behavior, not an error). A
+  full real submission triggers a live Telegram message + email to the
+  business — only do that with explicit go-ahead, and delete the test lead
+  (`Lead` + its `LeadActivity` rows) afterward.
+- `/api/dev/sync` with no `Authorization` header — 401 (see Phase 4.3).
+
+**Admin login is a manual check, not an automated one.** The admin's
+password lives only in the `users` table, changed through the panel — never
+in `.env` (see `prisma/seed-admin.mjs` below). There is no environment value
+to script a login test against, and there shouldn't be: the account owner
+should log in themselves after a deploy that could plausibly affect
+auth, and report if it fails.
+
 ## The `verify-runtime-assets.sh` gate
 
 Runs against a freshly-built tree, before that build is allowed to go live
@@ -176,6 +199,21 @@ crontab on 2026-07-16 once production took over both jobs post-cutover —
 kept in place, commented, for the record.
 
 ## Lessons learned
+
+**`.env` as a stale bootstrap credential, not a source of truth.**
+`prisma/seed-admin.mjs` originally used `upsert`, which overwrote the admin
+user's password hash with `ADMIN_PASSWORD` from `.env` on every run. Since
+the account's *real* password lives in the database and is changed through
+the admin panel, any re-run of the seed script — or simply `.env` never
+being updated after a panel password change — silently reset it back to a
+stale value. This looked exactly like a broken account (`CredentialsSignin`)
+and was investigated as one twice before the actual cause (a deliberate
+panel password change the seed script would have clobbered on its next run)
+was found. Fixed by making the script create-only: it now checks whether the
+account exists first and never touches an existing user's password.
+`ADMIN_PASSWORD` in `.env` is only relevant for creating this account for
+the very first time on a fresh database — it's fine, and expected, for it to
+be absent or stale afterward.
 
 **The runtime-asset class of failure.** The first production cutover
 attempt (2026-07-16) passed a clean build with zero errors and still 500'd
