@@ -664,6 +664,10 @@ type ProjectListItem = {
   _id: string; title: string; excerpt?: string; slug: any; previewImage: any; images?: any[];
   keyFeatures?: { price?: number; city?: string; propertyType?: string; bedrooms?: string; coveredArea?: string; plotSize?: string; completionDate?: string };
   isSold?: boolean; videoId?: string; isNew?: boolean; isFeatured?: boolean; listingPriority?: number; _createdAt?: string;
+  // "project" (default, legacy Sanity-origin) or "development" (the new Prisma-backed
+  // pipeline, merged into this same listing — see queryFilteredDevelopmentRows below).
+  // Card links need this to know whether to build /projects/{slug} or /preview-project/{slug}.
+  _source?: "project" | "development";
 };
 const getNumericPrice = (p: ProjectListItem) => Number(p?.keyFeatures?.price ?? 0);
 const getCompletionTimestamp = (p: ProjectListItem) => { const r = p?.keyFeatures?.completionDate; if (!r) return null; const t = new Date(r).getTime(); return Number.isNaN(t) ? null : t; };
@@ -704,6 +708,70 @@ function bedroomsMatch(range: string | null | undefined, want: string): boolean 
   return Number.isFinite(n) && lo <= n && n <= hi;
 }
 
+// Bedrooms aren't a single range on Development itself (that's per-unit) — derive a
+// "lo-hi" range across non-sold units, same shape bedroomsMatch() already expects for
+// legacy projects' own bedrooms range string, so both sources share one matching rule.
+function devBedroomRange(units: { beds: string | null; status: string | null }[]): string | null {
+  const nums = units
+    .filter((u) => u.status !== "sold")
+    .flatMap((u) => String(u.beds ?? "").match(/\d+/g)?.map(Number) ?? []);
+  return nums.length ? `${Math.min(...nums)}-${Math.max(...nums)}` : null;
+}
+
+// The unified /projects listing (Part D): a published Development appears here
+// UNLESS it supersedes a legacy Project that's still PUBLISHED — once that legacy
+// project is deactivated (ARCHIVED) via the admin toggle, the Development takes its
+// place automatically, findable through the same search/filters as legacy projects.
+// Shaped to match prisma.project's raw row fields (sanityId/slug/title/keyFeatures/
+// latitude/longitude/...) so the three consumers below (getFilteredProjects,
+// getFilteredProjectsCount, getFilteredProjectLocationsByLang) need no special-casing
+// beyond the _source tag used to build the right card link.
+async function queryFilteredDevelopmentRows(f: ProjectFilters) {
+  const { city = "", priceFrom = null, priceTo = null, propertyType = "", bedrooms = "", q = "", north = null, south = null, east = null, west = null } = f;
+  const qActive = q && q.length >= 3 ? q.toLowerCase() : "";
+
+  const devs = await prisma.development.findMany({
+    where: { publishStatus: "published", supersedesProjects: { none: { status: "PUBLISHED" } } },
+    include: { override: true, units: { select: { beds: true, status: true } } },
+  });
+
+  return devs
+    .filter((d) => !!d.slug) // not yet SEO-slugged (see developmentSeo.ts) → not publicly linkable
+    .map((d) => {
+      const ov = d.override;
+      const town = ov?.town || d.town || "";
+      const district = ov?.district || d.district || "";
+      const area = ov?.area || d.area || "";
+      const gallery: string[] = (Array.isArray(ov?.gallery) && (ov!.gallery as string[]).length ? (ov!.gallery as string[]) : (Array.isArray(d.gallery) ? (d.gallery as string[]) : []));
+      const previewImage = ov?.mainImage || gallery[0] || null;
+      const bedRange = devBedroomRange(d.units);
+      const devPriceFrom = d.priceFrom ?? null;
+      const devPriceTo = d.priceTo ?? devPriceFrom;
+      return {
+        sanityId: d.id, slug: d.slug as string, title: ov?.alias || d.publicName,
+        excerpt: null as string | null, previewImage, images: gallery,
+        keyFeatures: {
+          city: town, propertyType: d.category ?? "", bedrooms: bedRange ?? "",
+          completionDate: ov?.completion || d.completion || "", energyEfficiency: ov?.energy || d.energy || "",
+          price: devPriceFrom,
+        },
+        isSold: false, videoId: null as string | null, isFeatured: false, listingPriority: 0, isNew: false,
+        createdAt: d.createdAt, latitude: ov?.latitude ?? d.latitude, longitude: ov?.longitude ?? d.longitude,
+        _matchLocations: [town, district, area].map((v) => v.toLowerCase()),
+        _searchText: `${d.publicName} ${ov?.alias ?? ""}`.toLowerCase(),
+        _priceFrom: devPriceFrom, _priceTo: devPriceTo,
+        _source: "development" as const,
+      };
+    })
+    .filter((d) => !city || d._matchLocations.includes(city.toLowerCase()))
+    .filter((d) => !propertyType || d.keyFeatures.propertyType.toLowerCase().includes(propertyType.toLowerCase()))
+    .filter((d) => !qActive || d._searchText.includes(qActive))
+    .filter((d) => priceFrom == null || d._priceTo == null || d._priceTo >= priceFrom)
+    .filter((d) => priceTo == null || d._priceFrom == null || d._priceFrom <= priceTo)
+    .filter((d) => !bedrooms || bedroomsMatch(d.keyFeatures.bedrooms, bedrooms))
+    .filter((d) => north == null || south == null || east == null || west == null || (d.latitude != null && d.longitude != null && d.latitude <= north && d.latitude >= south && d.longitude <= east && d.longitude >= west));
+}
+
 async function queryFilteredRows(lang: string, f: ProjectFilters) {
   const { city = "", priceFrom = null, priceTo = null, propertyType = "", bedrooms = "", q = "", north = null, south = null, east = null, west = null } = f;
   const qActive = q && q.length >= 3 ? q : "";
@@ -718,7 +786,11 @@ async function queryFilteredRows(lang: string, f: ProjectFilters) {
         ? { latitude: { lte: north, gte: south }, longitude: { lte: east, gte: west } } : {}),
     },
   });
-  return rows.filter((p) => p.previewImage && (!bedrooms || bedroomsMatch(p.bedrooms, bedrooms)));
+  const projectRows = rows
+    .filter((p) => p.previewImage && (!bedrooms || bedroomsMatch(p.bedrooms, bedrooms)))
+    .map((p) => ({ ...p, _source: "project" as const }));
+  const devRows = await queryFilteredDevelopmentRows(f);
+  return [...projectRows, ...devRows];
 }
 
 export async function getFilteredProjects(lang: string, skip: number, limit: number, filters: ProjectFilters) {
@@ -731,6 +803,7 @@ export async function getFilteredProjects(lang: string, skip: number, limit: num
     slug: { current: p.slug }, previewImage: D(p.previewImage), images: Array.isArray(p.images) ? D((p.images as any[]).slice(0, 5)) : undefined,
     keyFeatures: (p.keyFeatures as any) ?? undefined, isSold: p.isSold, videoId: p.videoId ?? undefined,
     isFeatured: p.isFeatured, listingPriority: p.listingPriority, isNew: p.isNew, // manual flag (admin), default false
+    _source: p._source,
   }));
   const sorted = sort === "recommended" ? sortProjectsRecommended(items) : sortProjectsStandard(items, sort);
   return sorted.slice(skip, skip + limit);
@@ -748,13 +821,16 @@ export async function getFilteredProjectLocationsByLang(lang: string, filters: P
     location: { lat: p.latitude as number, lng: p.longitude as number },
     city: (p.keyFeatures as any)?.city, price: (p.keyFeatures as any)?.price,
     previewUrl: previewUrlOf(p), previewAlt: (p.previewImage as any)?.alt ?? p.title,
+    _source: p._source,
   }));
 }
 
 function previewUrlOf(p: AnyRow): string | undefined {
   const pi = D(p.previewImage) as any;
+  if (typeof pi === "string") return pi; // Development rows: previewImage is already a plain /uploads URL
   if (pi?.asset?.url) return pi.asset.url;
   const imgs = D(p.images) as any[];
+  if (typeof imgs?.[0] === "string") return imgs[0];
   return imgs?.[0]?.asset?.url;
 }
 
