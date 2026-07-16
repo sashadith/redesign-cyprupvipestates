@@ -130,6 +130,15 @@ model Project {
   caseStudyLinks CaseStudyProject[]
   leads          Lead[]
 
+  // Phase 5 (legacy <-> Development overlap): set when an admin confirms this
+  // legacy project has been superseded by a Development. Visibility itself is
+  // unaffected by this field alone — it's still controlled entirely by
+  // `status` (ARCHIVED = hidden from listing/detail/sitemap, all three
+  // already gate on status:"PUBLISHED"). This field only records the link,
+  // for the admin banner/redirect-on-deactivate flow.
+  supersededByDevelopmentId String?
+  supersededByDevelopment   Development? @relation(fields: [supersededByDevelopmentId], references: [id])
+
   @@unique([language, slug])
   @@index([translationGroupId])
   @@index([language, status])
@@ -137,6 +146,7 @@ model Project {
   @@index([isFeatured])
   @@index([listingPriority])
   @@index([status, scheduledAt])
+  @@index([supersededByDevelopmentId])
   @@map("projects")
 }
 
@@ -698,6 +708,7 @@ model Development {
   units            DevelopmentUnit[]
   override         DevelopmentOverride?
   presentationItems ClientPresentationItem[]
+  supersedesProjects Project[]
 
   @@index([developerAccountId])
   @@index([publishStatus])
