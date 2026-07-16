@@ -377,6 +377,25 @@ export async function updateProjectMeta(id: string, formData: FormData) {
   revalidateProjectPublic(row.language, row.slug);
 }
 
+// Phase 5.3: dedicated ACTIVATE/DEACTIVATE control for legacy projects —
+// always available regardless of whether a Development overlap match exists
+// (see /admin/content/projects/overlaps). Deliberately separate from
+// updateProjectMeta's generic status dropdown: this is the one action point
+// Phase 5.4's supersession banner and 5.5's redirect-on-deactivate dialog
+// hook into. Toggles only between PUBLISHED and ARCHIVED — a DRAFT/SCHEDULED
+// project is treated as "not active" and gets activated straight to PUBLISHED.
+export async function toggleProjectActive(id: string) {
+  await requireSession();
+  const p = await prisma.project.findUnique({ where: { id }, select: { status: true, language: true, slug: true } });
+  if (!p) throw new Error("Not found");
+  const newStatus = p.status === "ARCHIVED" ? "PUBLISHED" : "ARCHIVED";
+  const patch = await publishedAtOnPublish(prisma.project, id, newStatus);
+  await prisma.project.update({ where: { id }, data: { ...patch, status: newStatus as any } });
+  revalidatePath(`/admin/content/projects/${id}`);
+  revalidatePath("/admin/content/projects");
+  revalidateProjectPublic(p.language, p.slug);
+}
+
 export async function updateBlogMeta(id: string, formData: FormData) {
   await requireSession();
   const status = String(formData.get("status") ?? "PUBLISHED");

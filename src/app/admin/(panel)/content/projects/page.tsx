@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { toggleProjectActive } from "../../../actions";
 
 export const dynamic = "force-dynamic";
 const LOCALES = ["en", "de", "pl", "ru"];
@@ -46,6 +47,7 @@ export default async function ProjectsAdmin({ searchParams }: { searchParams: { 
               <th className="text-left font-medium px-4 py-2.5">Price</th>
               <th className="text-left font-medium px-4 py-2.5">Status</th>
               <th className="text-left font-medium px-4 py-2.5">Flags</th>
+              <th className="text-left font-medium px-4 py-2.5"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E5E7EB]">
@@ -59,6 +61,20 @@ export default async function ProjectsAdmin({ searchParams }: { searchParams: { 
                 <td className="px-4 py-2.5 text-[#6B7280]">{p.price ? `€${p.price.toLocaleString()}` : "—"}</td>
                 <td className="px-4 py-2.5 text-[#6B7280]">{p.status}</td>
                 <td className="px-4 py-2.5 text-xs text-[#6B7280]">{p.isFeatured ? "★ featured " : ""}{p.isSold ? "· sold" : ""}</td>
+                <td className="px-4 py-2.5">
+                  <form action={toggleProjectActive.bind(null, p.id)}>
+                    <button
+                      type="submit"
+                      className={
+                        p.status === "ARCHIVED"
+                          ? "rounded-md bg-[#1B4B43] text-white text-xs px-3 py-1.5 hover:bg-[#142E2D]"
+                          : "rounded-md border border-[#E5E7EB] text-xs px-3 py-1.5 hover:bg-[#F8F9FA]"
+                      }
+                    >
+                      {p.status === "ARCHIVED" ? "Activate" : "Deactivate"}
+                    </button>
+                  </form>
+                </td>
               </tr>
             ))}
           </tbody>
