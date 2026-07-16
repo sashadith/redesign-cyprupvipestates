@@ -1,0 +1,2170 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ProjectsReport>
+  <Project Name="Cypress Park Living" City="Paphos" Year="2026">
+    <Unit>
+      <Title>Cypress Park Living M101</Title>
+      <Id>122</Id>
+      <Price>330000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>82</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>15.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>97.5</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living N003</Title>
+      <Id>125</Id>
+      <Price>310000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>81.3</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>15.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>96.8</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living N101</Title>
+      <Id>126</Id>
+      <Price>420000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>120.5</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>33.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>154</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living N103</Title>
+      <Id>127</Id>
+      <Price>310000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>81.3</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>15.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>96.8</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living O001</Title>
+      <Id>128</Id>
+      <Price>310000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>81.3</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>15.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>96.8</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living O003</Title>
+      <Id>129</Id>
+      <Price>430000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>120.5</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>33.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>154</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living O101</Title>
+      <Id>130</Id>
+      <Price>300000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>82</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>15.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>97.5</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living O103</Title>
+      <Id>132</Id>
+      <Price>430000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>122</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>33.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>155.5</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living J101</Title>
+      <Id>133</Id>
+      <Price>330000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>77</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>17.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>94.5</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living J102</Title>
+      <Id>134</Id>
+      <Price>330000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>77</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>17.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>94.5</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living J103</Title>
+      <Id>135</Id>
+      <Price>330000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>77</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>17.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>94.5</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living J104</Title>
+      <Id>136</Id>
+      <Price>335000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>77</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>17.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>94.5</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living J201</Title>
+      <Id>137</Id>
+      <Price>335000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>77</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>17.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>94.5</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living J202</Title>
+      <Id>138</Id>
+      <Price>335000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>77</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>17.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>94.5</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living J203</Title>
+      <Id>139</Id>
+      <Price>335000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>77</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>17.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>94.5</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living J204</Title>
+      <Id>140</Id>
+      <Price>340000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>77</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>17.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>94.5</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living K102</Title>
+      <Id>142</Id>
+      <Price>320000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>81.3</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>17.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>98.8</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living K103</Title>
+      <Id>143</Id>
+      <Price>320000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>81.3</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>17.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>98.8</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living K202</Title>
+      <Id>144</Id>
+      <Price>335000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>81.3</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>17.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>98.8</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living B102</Title>
+      <Id>146</Id>
+      <Price>325000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>82</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>18</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>100</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living B103</Title>
+      <Id>147</Id>
+      <Price>320000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>82</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>18</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>100</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living E103</Title>
+      <Id>168</Id>
+      <Price>410000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>100</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>26</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>126</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living E202</Title>
+      <Id>170</Id>
+      <Price>240000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>50</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>13</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>63</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living E203</Title>
+      <Id>171</Id>
+      <Price>420000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>100</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>26</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>126</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living F101</Title>
+      <Id>172</Id>
+      <Price>420000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>100</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>26</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>126</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living F102</Title>
+      <Id>173</Id>
+      <Price>230000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>50</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>13</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>63</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living F103</Title>
+      <Id>174</Id>
+      <Price>240000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>50</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>13</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>63</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living F202</Title>
+      <Id>175</Id>
+      <Price>250000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>50</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>13</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>63</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living G101</Title>
+      <Id>176</Id>
+      <Price>395000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>100</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>26</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>126</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living G102</Title>
+      <Id>177</Id>
+      <Price>220000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>50</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>13</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>63</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living G103</Title>
+      <Id>178</Id>
+      <Price>230000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>50</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>13</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>63</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living G201</Title>
+      <Id>179</Id>
+      <Price>405000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>100</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>26</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>126</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living G202</Title>
+      <Id>180</Id>
+      <Price>230000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>50</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>13</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>63</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living G203</Title>
+      <Id>181</Id>
+      <Price>240000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>50</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>13</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>63</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living H101</Title>
+      <Id>182</Id>
+      <Price>230000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>50</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>13</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>63</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living H102</Title>
+      <Id>183</Id>
+      <Price>220000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>50</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>13</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>63</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living H103</Title>
+      <Id>184</Id>
+      <Price>395000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>100</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>26</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>126</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living H201</Title>
+      <Id>185</Id>
+      <Price>240000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>50</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>13</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>63</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living H202</Title>
+      <Id>186</Id>
+      <Price>230000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>50</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>13</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>63</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Cypress Park Living H203</Title>
+      <Id>187</Id>
+      <Price>405000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>100</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>26</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>126</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+  </Project>
+  <Project Name="Panorama Apartments" City="Paphos" Year="2026">
+    <Unit>
+      <Title>Panorama Apartments A106</Title>
+      <Id>34</Id>
+      <Price>285000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>54</InternalArea>
+        <SwimmingPool>Communal</SwimmingPool>
+        <CoveredVeranda>15</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>69</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Panorama Apartments B03</Title>
+      <Id>47</Id>
+      <Price>305000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>52</InternalArea>
+        <SwimmingPool>Communal</SwimmingPool>
+        <CoveredVeranda>15</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>67</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Panorama Apartments B103</Title>
+      <Id>49</Id>
+      <Price>295000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>52</InternalArea>
+        <SwimmingPool>Communal</SwimmingPool>
+        <CoveredVeranda>15</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>67</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Panorama Apartments C101</Title>
+      <Id>81</Id>
+      <Price>285000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>52</InternalArea>
+        <SwimmingPool>Communal</SwimmingPool>
+        <CoveredVeranda>12</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>67</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Panorama Apartments C201</Title>
+      <Id>83</Id>
+      <Price>295000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>52</InternalArea>
+        <SwimmingPool>Communal</SwimmingPool>
+        <CoveredVeranda>12</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>64</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Panorama Apartments Duplex D203</Title>
+      <Id>111</Id>
+      <Price>620000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>104</InternalArea>
+        <SwimmingPool>Communal</SwimmingPool>
+        <CoveredVeranda>29</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>133</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Panorama Apartments E101</Title>
+      <Id>86</Id>
+      <Price>350000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>80</InternalArea>
+        <SwimmingPool>Communal</SwimmingPool>
+        <CoveredVeranda>20</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>100</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Panorama Apartments E104</Title>
+      <Id>97</Id>
+      <Price>365000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>78</InternalArea>
+        <SwimmingPool>Communal</SwimmingPool>
+        <CoveredVeranda>19.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>97.5</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Panorama Apartments Duplex E203</Title>
+      <Id>101</Id>
+      <Price>620000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>104</InternalArea>
+        <SwimmingPool>Communal</SwimmingPool>
+        <CoveredVeranda>29</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>133</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+  </Project>
+  <Project Name="Adonidos Gardens" City="Paphos" Year="2026">
+    <Unit>
+      <Title>Adonidos Gardens S103</Title>
+      <Id>63</Id>
+      <Price>190000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>ST</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Studio apartments</Type>
+        <Garage />
+        <InternalArea>45</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>14</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>59</TotalCoveredArea>
+        <Utilities />
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Adonidos Gardens U101</Title>
+      <Id>298</Id>
+      <Price>230000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>1</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>50</InternalArea>
+        <SwimmingPool />
+        <CoveredVeranda>13</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>63</TotalCoveredArea>
+        <Utilities />
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Adonidos Gardens U102</Title>
+      <Id>299</Id>
+      <Price>190000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>ST</Bedrooms>
+        <Bathrooms>1</Bathrooms>
+        <Type>Apartments</Type>
+        <Garage />
+        <InternalArea>36</InternalArea>
+        <SwimmingPool />
+        <CoveredVeranda>7.69</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>43.69</TotalCoveredArea>
+        <Utilities />
+      </Attributes>
+    </Unit>
+  </Project>
+  <Project Name="MEDOUSA RESALES" City="Paphos" Year="2026">
+    <Unit>
+      <Title>MEDOUSA RESALES Villa 3</Title>
+      <Id>285</Id>
+      <Price>780000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Offices>0</Offices>
+        <Bathrooms>3</Bathrooms>
+        <Type>Villa</Type>
+        <Garage />
+        <InternalArea>152.7</InternalArea>
+        <SwimmingPool>4x7</SwimmingPool>
+        <CoveredVeranda>35</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>187.7</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>310</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>MEDOUSA RESALES Villa 5</Title>
+      <Id>286</Id>
+      <Price>780000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Offices>0</Offices>
+        <Bathrooms>3</Bathrooms>
+        <Type>Villa</Type>
+        <Garage />
+        <InternalArea>152.7</InternalArea>
+        <SwimmingPool>4x7</SwimmingPool>
+        <CoveredVeranda>35</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>187.7</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>310</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>MEDOUSA RESALES Villa 3 (NO VAT)</Title>
+      <Id>472</Id>
+      <Price>1180000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Offices />
+        <Bathrooms>5</Bathrooms>
+        <Type>Villa</Type>
+        <Garage />
+        <InternalArea>217.85</InternalArea>
+        <SwimmingPool>3.5x11</SwimmingPool>
+        <CoveredVeranda>107.1</CoveredVeranda>
+        <UncoveredVeranda />
+        <TotalCoveredArea>324.95</TotalCoveredArea>
+        <roofterrace />
+        <Plot>453</Plot>
+      </Attributes>
+    </Unit>
+  </Project>
+  <Project Name="Infinity" City="Paphos" Year="2026">
+    <Unit>
+      <Title>Infinity 2 (bungalow)</Title>
+      <Id>265</Id>
+      <Price>620000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>2</Type>
+        <Garage />
+        <InternalArea>110.16</InternalArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <CoveredVeranda>12.93</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>123.09</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Basement />
+        <Plot>322</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Infinity 5</Title>
+      <Id>268</Id>
+      <Price>650000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <Type>5</Type>
+        <Garage />
+        <InternalArea>127.19</InternalArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <CoveredVeranda>37.12</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>164.31</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Basement />
+        <Plot>317</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Infinity 8</Title>
+      <Id>271</Id>
+      <Price>600000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <Type>8</Type>
+        <Garage />
+        <InternalArea>150.67</InternalArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <CoveredVeranda>25.55</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>176.22</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Basement />
+        <Plot>290</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Infinity 12</Title>
+      <Id>275</Id>
+      <Price>650000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <Type>12</Type>
+        <Garage>29.75</Garage>
+        <InternalArea>152.29</InternalArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <CoveredVeranda>29.8</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>182.09</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Basement />
+        <Plot>299.01</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Infinity 13</Title>
+      <Id>276</Id>
+      <Price>650000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <Type>13</Type>
+        <Garage />
+        <InternalArea>152.29</InternalArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <CoveredVeranda>29.8</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>182.09</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Basement />
+        <Plot>347.65</Plot>
+      </Attributes>
+    </Unit>
+  </Project>
+  <Project Name="Golden Hills" City="Paphos" Year="2026">
+    <Unit>
+      <Title>Golden Hills 11</Title>
+      <Id>326</Id>
+      <Price>750000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>4</Bathrooms>
+        <Type>Villa</Type>
+        <Garage />
+        <InternalArea>185.61</InternalArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <CoveredVeranda>33.31</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>272.92</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Basement>54</Basement>
+        <Plot>303.68</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Golden Hills 12</Title>
+      <Id>327</Id>
+      <Price>750000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>4</Bathrooms>
+        <Type>Villa</Type>
+        <Garage />
+        <InternalArea>185.61</InternalArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <CoveredVeranda>33.31</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>272.92</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Basement>54</Basement>
+        <Plot>300.48</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Golden Hills 16</Title>
+      <Id>353</Id>
+      <Price>750000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <Type>Villa</Type>
+        <Garage />
+        <InternalArea>140.04</InternalArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <CoveredVeranda>35.16</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>245.04</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Basement>69.84</Basement>
+        <Plot>311.6</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Golden Hills 18</Title>
+      <Id>355</Id>
+      <Price>850000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <Type>Villa</Type>
+        <Garage>20.92</Garage>
+        <InternalArea>150.89</InternalArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <CoveredVeranda>46.57</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>294.26</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Basement>75.88</Basement>
+        <Plot>379.87</Plot>
+      </Attributes>
+    </Unit>
+  </Project>
+  <Project Name="Business Centre (MBC)" City="Paphos" Year="2026">
+    <Unit>
+      <Title>Business Centre (MBC) Entire Building</Title>
+      <Id>408</Id>
+      <Price>7000000</Price>
+      <ProjectType>Commercial</ProjectType>
+      <Attributes>
+        <Offices>44</Offices>
+        <Bathrooms>0</Bathrooms>
+        <Type>Two Floors</Type>
+        <Garage />
+        <InternalArea>1260</InternalArea>
+        <SwimmingPool />
+        <CoveredVeranda>136</CoveredVeranda>
+        <Kitchen />
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <Elevator>YES</Elevator>
+        <TotalCoveredArea>2094</TotalCoveredArea>
+        <Storages>YES</Storages>
+        <roofterrace>0</roofterrace>
+        <ConferenceRoom>YES</ConferenceRoom>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Business Centre (MBC) 101</Title>
+      <Id>403</Id>
+      <Price>1700000</Price>
+      <ProjectType>Commercial</ProjectType>
+      <Attributes>
+        <Offices>11</Offices>
+        <Bathrooms>0</Bathrooms>
+        <Type>Half First Floor</Type>
+        <Garage />
+        <InternalArea>315</InternalArea>
+        <SwimmingPool />
+        <CoveredVeranda>34</CoveredVeranda>
+        <Kitchen />
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <Elevator>YES</Elevator>
+        <TotalCoveredArea>349</TotalCoveredArea>
+        <Storages>YES</Storages>
+        <roofterrace>0</roofterrace>
+        <ConferenceRoom>YES</ConferenceRoom>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Business Centre (MBC) 102</Title>
+      <Id>405</Id>
+      <Price>1700000</Price>
+      <ProjectType>Commercial</ProjectType>
+      <Attributes>
+        <Offices>11</Offices>
+        <Bathrooms>0</Bathrooms>
+        <Type>Half First Floor</Type>
+        <Garage />
+        <InternalArea>315</InternalArea>
+        <SwimmingPool />
+        <CoveredVeranda>34</CoveredVeranda>
+        <Kitchen />
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <Elevator>YES</Elevator>
+        <TotalCoveredArea>349</TotalCoveredArea>
+        <Storages>YES</Storages>
+        <roofterrace>0</roofterrace>
+        <ConferenceRoom>YES</ConferenceRoom>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Business Centre (MBC) 202</Title>
+      <Id>402</Id>
+      <Price>1800000</Price>
+      <ProjectType>Commercial</ProjectType>
+      <Attributes>
+        <Offices>11</Offices>
+        <Bathrooms>0</Bathrooms>
+        <Type>Half second  Floor</Type>
+        <Garage />
+        <InternalArea>315</InternalArea>
+        <SwimmingPool />
+        <CoveredVeranda>34</CoveredVeranda>
+        <Kitchen />
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <Elevator>YES</Elevator>
+        <TotalCoveredArea>349</TotalCoveredArea>
+        <Storages>YES</Storages>
+        <roofterrace>0</roofterrace>
+        <ConferenceRoom>YES</ConferenceRoom>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Business Centre (MBC) 201</Title>
+      <Id>407</Id>
+      <Price>1800000</Price>
+      <ProjectType>Commercial</ProjectType>
+      <Attributes>
+        <Offices>11</Offices>
+        <Bathrooms>0</Bathrooms>
+        <Type>Half second  Floor</Type>
+        <Garage />
+        <InternalArea>315</InternalArea>
+        <SwimmingPool />
+        <CoveredVeranda>34</CoveredVeranda>
+        <Kitchen />
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <Elevator>YES</Elevator>
+        <TotalCoveredArea>349</TotalCoveredArea>
+        <Storages>YES</Storages>
+        <roofterrace>0</roofterrace>
+        <ConferenceRoom>YES</ConferenceRoom>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+  </Project>
+  <Project Name="show house" City="Paphos" Year="2026" />
+  <Project Name="Aurelia Homes" City="Paphos" Year="2026">
+    <Unit>
+      <Title>Aurelia Homes 9</Title>
+      <Id>463</Id>
+      <Price>800000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Type>9</Type>
+        <Bathrooms>3</Bathrooms>
+        <Garage />
+        <InternalArea>159</InternalArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <CoveredVeranda>54.9</CoveredVeranda>
+        <Kitchen />
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <Elevator />
+        <TotalCoveredArea>213.9</TotalCoveredArea>
+        <Storages />
+        <roofterrace>0</roofterrace>
+        <Basement />
+        <Plot>867.6</Plot>
+        <ConferenceRoom />
+        <Utilities />
+      </Attributes>
+    </Unit>
+  </Project>
+  <Project Name="Marelia Valley" City="Paphos" Year="2026">
+    <Unit>
+      <Title>Marelia Valley 101</Title>
+      <Id>371</Id>
+      <Price>320000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>78.75</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>23.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>102.25</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Marelia Valley 102</Title>
+      <Id>372</Id>
+      <Price>320000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>77.2</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>23.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>100.7</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Marelia Valley 103</Title>
+      <Id>373</Id>
+      <Price>320000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>77.8</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>23</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>100.8</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Marelia Valley 104</Title>
+      <Id>374</Id>
+      <Price>320000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>78.75</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>23.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>102.25</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Marelia Valley 201</Title>
+      <Id>387</Id>
+      <Price>330000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>78.75</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>23.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>102.25</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Marelia Valley 202</Title>
+      <Id>388</Id>
+      <Price>330000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>77.2</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>23.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>100.8</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Marelia Valley 101</Title>
+      <Id>391</Id>
+      <Price>320000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartment </Type>
+        <Garage>Yes</Garage>
+        <InternalArea>78.75</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>23.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>102.25</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Marelia Valley 102</Title>
+      <Id>393</Id>
+      <Price>320000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>77.8</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>23</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>100.8</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Marelia Valley 103</Title>
+      <Id>395</Id>
+      <Price>320000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>76.5</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>23.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>100</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Marelia Valley 104</Title>
+      <Id>396</Id>
+      <Price>320000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>77.7</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>23.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>101.2</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Marelia Valley 201</Title>
+      <Id>397</Id>
+      <Price>330000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>78.75</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>23.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>102.25</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Marelia Valley 202</Title>
+      <Id>398</Id>
+      <Price>330000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>77.8</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>23</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>100.8</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Marelia Valley 203</Title>
+      <Id>399</Id>
+      <Price>330000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>76.5</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>23.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>100</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Marelia Valley 204</Title>
+      <Id>400</Id>
+      <Price>330000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type>Apartment</Type>
+        <Garage>Yes</Garage>
+        <InternalArea>77.7</InternalArea>
+        <SwimmingPool>COMMUNAL</SwimmingPool>
+        <CoveredVeranda>23.5</CoveredVeranda>
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <TotalCoveredArea>101.2</TotalCoveredArea>
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+      </Attributes>
+    </Unit>
+  </Project>
+  <Project Name="Royal Horizon" City="Paphos" Year="2026">
+    <Unit>
+      <Title>Royal Horizon E</Title>
+      <Id>468</Id>
+      <Price>850000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3+1</Bedrooms>
+        <Bathrooms>4</Bathrooms>
+        <Type />
+        <Garage>Yes</Garage>
+        <InternalArea>201.95</InternalArea>
+        <SwimmingPool>4x10</SwimmingPool>
+        <CoveredVeranda>69.3</CoveredVeranda>
+        <Kitchen />
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <Elevator />
+        <TotalCoveredArea>271.25</TotalCoveredArea>
+        <Storages />
+        <roofterrace>0</roofterrace>
+        <Basement />
+        <ConferenceRoom />
+        <Plot>544</Plot>
+        <Utilities />
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Royal Horizon D</Title>
+      <Id>469</Id>
+      <Price>1200000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3+1</Bedrooms>
+        <Bathrooms>4</Bathrooms>
+        <Type />
+        <Garage>Yes</Garage>
+        <InternalArea>201.75</InternalArea>
+        <SwimmingPool>4x10</SwimmingPool>
+        <CoveredVeranda>69.3</CoveredVeranda>
+        <Kitchen />
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <Elevator />
+        <TotalCoveredArea>271.05</TotalCoveredArea>
+        <Storages />
+        <roofterrace>0</roofterrace>
+        <Basement />
+        <ConferenceRoom />
+        <Plot>848</Plot>
+        <Utilities />
+      </Attributes>
+    </Unit>
+  </Project>
+  <Project Name="Michelle Park" City="Paphos" Year="2026">
+    <Unit>
+      <Title>Michelle Park Duplex 102</Title>
+      <Id>449</Id>
+      <Price>490000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type />
+        <Garage>Yes</Garage>
+        <InternalArea>76</InternalArea>
+        <SwimmingPool>Communal</SwimmingPool>
+        <CoveredVeranda>28.84</CoveredVeranda>
+        <Kitchen />
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <Elevator />
+        <TotalCoveredArea>104.84</TotalCoveredArea>
+        <Storages />
+        <roofterrace>0</roofterrace>
+        <Plot>0</Plot>
+        <ConferenceRoom />
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Michelle Park Penthouse 301</Title>
+      <Id>453</Id>
+      <Price>600000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type />
+        <Garage>Yes</Garage>
+        <InternalArea>75.4</InternalArea>
+        <SwimmingPool>Communal</SwimmingPool>
+        <CoveredVeranda>17.76</CoveredVeranda>
+        <Kitchen />
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <Elevator />
+        <TotalCoveredArea>93.16</TotalCoveredArea>
+        <Storages />
+        <roofterrace>16.5</roofterrace>
+        <Plot>0</Plot>
+        <ConferenceRoom />
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Michelle Park Penthouse 302</Title>
+      <Id>454</Id>
+      <Price>600000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Type />
+        <Garage>Yes</Garage>
+        <InternalArea>75.4</InternalArea>
+        <SwimmingPool>Communal</SwimmingPool>
+        <CoveredVeranda>17.76</CoveredVeranda>
+        <Kitchen />
+        <UncoveredVeranda>0</UncoveredVeranda>
+        <Elevator />
+        <TotalCoveredArea>93.16</TotalCoveredArea>
+        <Storages />
+        <roofterrace>16.5</roofterrace>
+        <Plot>0</Plot>
+        <ConferenceRoom />
+      </Attributes>
+    </Unit>
+  </Project>
+  <Project Name="Amore Hills" City="Paphos" Year="2026">
+    <Unit>
+      <Title>Amore Hills 1</Title>
+      <Id>474</Id>
+      <Price>580000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>134</InternalArea>
+        <CoveredVeranda>19.6</CoveredVeranda>
+        <TotalCoveredArea>153.6</TotalCoveredArea>
+        <SwimmingPool>3X6</SwimmingPool>
+        <Plot>300</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 3</Title>
+      <Id>477</Id>
+      <Price>580000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>163.65</InternalArea>
+        <CoveredVeranda>26.16</CoveredVeranda>
+        <TotalCoveredArea>189.81</TotalCoveredArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <Plot>290</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 4</Title>
+      <Id>478</Id>
+      <Price>580000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>163.65</InternalArea>
+        <CoveredVeranda>26.16</CoveredVeranda>
+        <TotalCoveredArea>189.81</TotalCoveredArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <Plot>311</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 5</Title>
+      <Id>479</Id>
+      <Price>580000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>163.65</InternalArea>
+        <CoveredVeranda>26.16</CoveredVeranda>
+        <TotalCoveredArea>189.81</TotalCoveredArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <Plot>294</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 6</Title>
+      <Id>480</Id>
+      <Price>580000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>163.65</InternalArea>
+        <CoveredVeranda>26.16</CoveredVeranda>
+        <TotalCoveredArea>189.81</TotalCoveredArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <Plot>285</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 7</Title>
+      <Id>481</Id>
+      <Price>600000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>133.43</InternalArea>
+        <CoveredVeranda>36.3</CoveredVeranda>
+        <TotalCoveredArea>169.73</TotalCoveredArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <Plot>285</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 8</Title>
+      <Id>482</Id>
+      <Price>600000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>149.74</InternalArea>
+        <CoveredVeranda>28.8</CoveredVeranda>
+        <TotalCoveredArea>178.54</TotalCoveredArea>
+        <SwimmingPool>3.5x6</SwimmingPool>
+        <Plot>302</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 9</Title>
+      <Id>484</Id>
+      <Price>580000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>149.74</InternalArea>
+        <CoveredVeranda>28.8</CoveredVeranda>
+        <TotalCoveredArea>178.54</TotalCoveredArea>
+        <SwimmingPool>3.5x6</SwimmingPool>
+        <Plot>280</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 10</Title>
+      <Id>485</Id>
+      <Price>580000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>149.74</InternalArea>
+        <CoveredVeranda>28.8</CoveredVeranda>
+        <TotalCoveredArea>178.54</TotalCoveredArea>
+        <SwimmingPool>3x7</SwimmingPool>
+        <Plot>280</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 15</Title>
+      <Id>490</Id>
+      <Price>550000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>137.18</InternalArea>
+        <CoveredVeranda>41.72</CoveredVeranda>
+        <TotalCoveredArea>178.9</TotalCoveredArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <Plot>320</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 16</Title>
+      <Id>491</Id>
+      <Price>550000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>155.73</InternalArea>
+        <CoveredVeranda>24.09</CoveredVeranda>
+        <TotalCoveredArea>179.82</TotalCoveredArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <Plot>320</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 17</Title>
+      <Id>492</Id>
+      <Price>650000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>163.65</InternalArea>
+        <CoveredVeranda>26.16</CoveredVeranda>
+        <TotalCoveredArea>189.81</TotalCoveredArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <Plot>323</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 18</Title>
+      <Id>493</Id>
+      <Price>650000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>163.65</InternalArea>
+        <CoveredVeranda>26.16</CoveredVeranda>
+        <TotalCoveredArea>189.81</TotalCoveredArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <Plot>309</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 19</Title>
+      <Id>494</Id>
+      <Price>650000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>163.65</InternalArea>
+        <CoveredVeranda>26.16</CoveredVeranda>
+        <TotalCoveredArea>189.81</TotalCoveredArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <Plot>316</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 20</Title>
+      <Id>495</Id>
+      <Price>650000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>163.65</InternalArea>
+        <CoveredVeranda>26.16</CoveredVeranda>
+        <TotalCoveredArea>189.81</TotalCoveredArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <Plot>299</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 21</Title>
+      <Id>496</Id>
+      <Price>800000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>4</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>158.3</InternalArea>
+        <CoveredVeranda>32.59</CoveredVeranda>
+        <TotalCoveredArea>190.89</TotalCoveredArea>
+        <SwimmingPool>3.5x7</SwimmingPool>
+        <Plot>340</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 23</Title>
+      <Id>498</Id>
+      <Price>700000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>157.8</InternalArea>
+        <CoveredVeranda>28.45</CoveredVeranda>
+        <TotalCoveredArea>186.25</TotalCoveredArea>
+        <SwimmingPool>3.5x7</SwimmingPool>
+        <Plot>324</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 24</Title>
+      <Id>499</Id>
+      <Price>700000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>157.8</InternalArea>
+        <CoveredVeranda>28.45</CoveredVeranda>
+        <TotalCoveredArea>186.25</TotalCoveredArea>
+        <SwimmingPool>3x6</SwimmingPool>
+        <Plot>331</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Amore Hills 2</Title>
+      <Id>476</Id>
+      <Price>580000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <InternalArea>114.13</InternalArea>
+        <CoveredVeranda>11</CoveredVeranda>
+        <TotalCoveredArea>125.13</TotalCoveredArea>
+        <SwimmingPool>  -</SwimmingPool>
+        <Plot>300</Plot>
+      </Attributes>
+    </Unit>
+  </Project>
+  <Project Name="Azure Living" City="Paphos" Year="2026">
+    <Unit>
+      <Title>Azure Living C101</Title>
+      <Id>514</Id>
+      <Price>430000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Type>Apartment</Type>
+        <Bedrooms>2</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Garage>Communal</Garage>
+        <InternalArea>76.5</InternalArea>
+        <SwimmingPool>Communal</SwimmingPool>
+        <CoveredVeranda />
+        <UncoveredVeranda>20.15</UncoveredVeranda>
+        <TotalArea>96.65</TotalArea>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Azure Living C201</Title>
+      <Id>516</Id>
+      <Price>525000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Type>Apartment</Type>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Garage>Communal</Garage>
+        <InternalArea>98</InternalArea>
+        <SwimmingPool>Communal</SwimmingPool>
+        <CoveredVeranda />
+        <UncoveredVeranda>37.2</UncoveredVeranda>
+        <TotalArea>135.2</TotalArea>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Azure Living C202</Title>
+      <Id>517</Id>
+      <Price>525000</Price>
+      <ProjectType>Apartment</ProjectType>
+      <Attributes>
+        <Type>Apartment</Type>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>2</Bathrooms>
+        <Garage>Communal</Garage>
+        <InternalArea>98</InternalArea>
+        <SwimmingPool>Communal</SwimmingPool>
+        <CoveredVeranda />
+        <UncoveredVeranda>37.2</UncoveredVeranda>
+        <TotalArea>135.2</TotalArea>
+      </Attributes>
+    </Unit>
+  </Project>
+  <Project Name="Armonia Homes" City="Paphos" Year="2026">
+    <Unit>
+      <Title>Armonia Homes 4</Title>
+      <Id>525</Id>
+      <Price>580000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>160</InternalArea>
+        <CoveredVeranda>27.6</CoveredVeranda>
+        <RoofGarden>32</RoofGarden>
+        <TotalCoveredArea>187.6</TotalCoveredArea>
+        <roofterrace />
+        <SwimmingPool>3X6</SwimmingPool>
+        <Plot>290</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Armonia Homes 5</Title>
+      <Id>526</Id>
+      <Price>580000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>160</InternalArea>
+        <CoveredVeranda>27.6</CoveredVeranda>
+        <RoofGarden>32</RoofGarden>
+        <TotalCoveredArea>187.6</TotalCoveredArea>
+        <roofterrace />
+        <SwimmingPool>3X6</SwimmingPool>
+        <Plot>290</Plot>
+      </Attributes>
+    </Unit>
+    <Unit>
+      <Title>Armonia Homes 11</Title>
+      <Id>532</Id>
+      <Price>580000</Price>
+      <ProjectType>Villa</ProjectType>
+      <Attributes>
+        <Bedrooms>3</Bedrooms>
+        <Bathrooms>3</Bathrooms>
+        <InternalArea>159.3</InternalArea>
+        <CoveredVeranda>12.7</CoveredVeranda>
+        <RoofGarden>25.6</RoofGarden>
+        <TotalCoveredArea>172</TotalCoveredArea>
+        <roofterrace />
+        <SwimmingPool>3X6</SwimmingPool>
+        <Plot>280</Plot>
+      </Attributes>
+    </Unit>
+  </Project>
+  <Project Name="Azure villas" City="Paphos" Year="2026" />
+</ProjectsReport>
