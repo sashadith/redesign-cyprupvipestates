@@ -77,7 +77,7 @@ export default async function ProjectsPreview({ searchParams }: { searchParams: 
       completion: kf.completionDate ?? "",
       isNew: !!p.isNew,
       isFeatured: !!p.isFeatured,
-      distances: distMap[p._id] ?? null,
+      distances: p._source === "development" ? (p.distances ?? null) : (distMap[p._id] ?? null),
       vatApplies: p._source === "development" ? (kf.vatApplies ?? null) : undefined,
       unitsAvailable: p.unitsAvailable,
       unitsTotal: p.unitsTotal,

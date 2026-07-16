@@ -371,3 +371,20 @@
   .pp-hero__grid { grid-template-columns: 1fr; }
   .pp-spec { grid-template-columns: 1fr; }
 }
+
+/* distances strip (src/app/components/DistancesStrip) — full 8-category variant
+   on the detail page; same grid, smaller everything for the presentation
+   overlay's compact variant (see .cp-overlay .dist-strip in presentation.css). */
+.dist-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px;
+  background: var(--hairline); border: 1px solid var(--hairline); border-radius: var(--r-ui); overflow: hidden; }
+.dist-strip__item { background: var(--sea-deep); padding: 16px 18px; display: flex; align-items: center; gap: 12px; }
+.dist-strip__ic { flex: none; color: var(--champagne); }
+.dist-strip__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dist-strip__label { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
+.dist-strip__value { font-family: var(--font-body); font-weight: 600; color: var(--ivory); font-size: 1rem; }
+
+.dist-strip--compact { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+.dist-strip--compact .dist-strip__item { padding: 10px 12px; gap: 8px; }
+.dist-strip--compact .dist-strip__ic svg { width: 16px; height: 16px; }
+.dist-strip--compact .dist-strip__label { font-size: 0.62rem; }
+.dist-strip--compact .dist-strip__value { font-size: 0.85rem; }

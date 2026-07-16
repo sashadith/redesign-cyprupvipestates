@@ -83,3 +83,21 @@ export function resolveDevelopmentType(category: string | null | undefined, unit
   if (types.length) return types.join(" · ");
   return (category ?? "").trim();
 }
+
+// The merged /projects listing card reuses the LEGACY compact-4-footer
+// renderer (cardDistances/CARD_DIST_ORDER in ProjectsExplorer.tsx — Beach ·
+// School · Golf · Airport) verbatim, so a Development's stored distances
+// (numbers, key "golf" — see src/lib/developmentDistances.ts) need adapting
+// to that renderer's expected shape (numeric strings, key "golfCourt") at the
+// card-DTO boundary only. The DB storage shape and the new DistancesStrip
+// component both keep the "golf"/number shape — only this one adapter exists,
+// so the two shapes can't silently drift back together wrong.
+export function toCardDistances(distances: Record<string, number> | null | undefined): Record<string, string> | null {
+  if (!distances) return null;
+  const out: Record<string, string> = {};
+  for (const [key, minutes] of Object.entries(distances)) {
+    const cardKey = key === "golf" ? "golfCourt" : key;
+    out[cardKey] = String(minutes);
+  }
+  return Object.keys(out).length ? out : null;
+}

@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
 import { localizedHref } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
-import { resolveDevelopmentPrice, resolveBedRange, resolveDevelopmentLocation, resolveDevelopmentType } from "@/lib/developmentCard";
+import { resolveDevelopmentPrice, resolveBedRange, resolveDevelopmentLocation, resolveDevelopmentType, toCardDistances } from "@/lib/developmentCard";
 import { Homepage } from "@/types/homepage";
 import { Header } from "@/types/header";
 import { FormStandardDocument } from "@/types/formStandardDocument";
@@ -673,6 +673,11 @@ type ProjectListItem = {
   // (no unit data), which is exactly what tells the card to render no banner.
   unitsAvailable?: number;
   unitsTotal?: number;
+  // Development rows only, already shaped for the legacy card-footer renderer
+  // (see toCardDistances in developmentCard.ts). Legacy Project rows instead
+  // get theirs from getProjectDistancesByIds's separate distMap lookup — the
+  // page.tsx callers prefer THIS field only when _source === "development".
+  distances?: Record<string, string> | null;
 };
 const getNumericPrice = (p: ProjectListItem) => Number(p?.keyFeatures?.price ?? 0);
 const getCompletionTimestamp = (p: ProjectListItem) => { const r = p?.keyFeatures?.completionDate; if (!r) return null; const t = new Date(r).getTime(); return Number.isNaN(t) ? null : t; };
@@ -763,6 +768,9 @@ async function queryFilteredDevelopmentRows(f: ProjectFilters) {
         // rows already loaded above, no extra query.
         unitsAvailable: d.units.filter((u) => u.status === "available").length,
         unitsTotal: d.units.length,
+        // Compact-4 card footer (Beach/School/Golf/Airport) — reuses the
+        // legacy renderer as-is; see toCardDistances for the shape adapter.
+        distances: toCardDistances(d.distances as Record<string, number> | null),
         _matchLocations: [town, district, area].map((v) => v.toLowerCase()),
         _searchText: `${d.publicName} ${ov?.alias ?? ""}`.toLowerCase(),
         _priceFrom: devPriceFrom, _priceTo: devPriceTo,
@@ -810,6 +818,7 @@ export async function getFilteredProjects(lang: string, skip: number, limit: num
     keyFeatures: (p.keyFeatures as any) ?? undefined, isSold: p.isSold, videoId: p.videoId ?? undefined,
     isFeatured: p.isFeatured, listingPriority: p.listingPriority, isNew: p.isNew, // manual flag (admin), default false
     _source: p._source, unitsAvailable: (p as any).unitsAvailable, unitsTotal: (p as any).unitsTotal,
+    distances: (p as any).distances,
   }));
   const sorted = sort === "recommended" ? sortProjectsRecommended(items) : sortProjectsStandard(items, sort);
   return sorted.slice(skip, skip + limit);

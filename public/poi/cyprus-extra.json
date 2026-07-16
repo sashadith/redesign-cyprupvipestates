@@ -1,0 +1,12 @@
+{
+  "pois": [
+    { "lat": 34.7180, "lng": 32.4857, "n": "Paphos International Airport", "c": "airport_intl" },
+    { "lat": 34.8751, "lng": 33.6249, "n": "Larnaca International Airport", "c": "airport_intl" },
+    { "lat": 34.7720, "lng": 32.4297, "n": "Paphos", "c": "city_center" },
+    { "lat": 34.6786, "lng": 33.0413, "n": "Limassol", "c": "city_center" },
+    { "lat": 34.9182, "lng": 33.6291, "n": "Larnaca", "c": "city_center" },
+    { "lat": 35.1856, "lng": 33.3823, "n": "Nicosia", "c": "city_center" },
+    { "lat": 34.9880, "lng": 34.0044, "n": "Ayia Napa / Protaras", "c": "city_center" },
+    { "lat": 35.0367, "lng": 32.4297, "n": "Polis", "c": "city_center" }
+  ]
+}

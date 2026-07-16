@@ -317,7 +317,7 @@
    as the "New for you" badge on client presentation cards. */
 .scarcity-badge {
   font-family: var(--font-body), sans-serif; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.04em;
-  color: var(--sea-deep); background: var(--champagne);
+  color: var(--ivory); background: #8C2F2F;
   padding: 4px 10px; border-radius: 999px; white-space: nowrap;
 }
 .prj__type {

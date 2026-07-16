@@ -21,6 +21,9 @@ export type ProjectVM = {
   heroVideo?: string; // looping hero video (admin-uploaded in prod)
   vatApplies?: boolean | null; // admin override only — null/undefined = unknown, don't show "+VAT"
   center: { lat: number; lng: number } | null; units: UnitVM[];
+  // Auto-computed (haversine), DB pipeline only — see src/lib/developmentDistances.ts.
+  // undefined/null for live-feed-rendered projects (no DB row yet to read it from).
+  distances?: Record<string, number> | null;
 };
 
 // ---------- shared helpers ----------

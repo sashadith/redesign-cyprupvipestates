@@ -7,6 +7,7 @@ import { generateProjectDescription } from "@/lib/ai/projectDescription";
 import type { FourLang } from "@/lib/ai/areaContent";
 import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart } from "@/lib/imageMirror";
 import { resolveMapsUrlToGeo } from "@/lib/mapsGeo";
+import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
 import { syncDeveloperDrive, type DriveSyncResult } from "@/lib/driveAvailabilitySync";
 import { uniqueDevelopmentSlug } from "@/lib/developmentSeo";
 import { generateSeoMeta, getSeoPromptTemplate, saveSeoPromptTemplate, type SeoMetaResult } from "@/lib/ai/seoMeta";
@@ -349,6 +350,11 @@ export async function saveMapLocationAction(developmentId: string, rawGeo: strin
       update: { latitude: geo.lat, longitude: geo.lng },
       create: { developmentId, latitude: geo.lat, longitude: geo.lng },
     });
+    // Auto recompute (haversine, src/lib/developmentDistances.ts) — the whole
+    // point of an admin overriding the pin is usually that the feed's own
+    // geocoding was wrong, so the distances shown to visitors must reflect
+    // the corrected location immediately, not the next sync.
+    await recomputeDevelopmentDistances(developmentId);
     revalidatePath(`/admin/developments/${developmentId}`);
     return { ok: true, message: `Saved: ${geo.lat}, ${geo.lng}`, lat: geo.lat, lng: geo.lng };
   } catch (e) {

@@ -16,6 +16,7 @@ import UnitsView from "@/app/preview-project/UnitsView";
 import type { ProjectVM } from "@/app/preview-project/feeds";
 import { splitDescriptionParagraphs } from "@/lib/text";
 import { resolveDevelopmentType } from "@/lib/developmentCard";
+import DistancesStrip from "@/app/components/DistancesStrip/DistancesStrip";
 
 // Shared render body for both the SEO-facing slug route
 // (src/app/[lang]/preview-project/[slug]/page.tsx) and the legacy query-string
@@ -187,6 +188,14 @@ export default async function ProjectPageBody({
               </h2>
               {areaInfo && <p className="pp-desc">{areaInfo.text}</p>}
             </div>
+          </section>
+        )}
+
+        {/* ---------- DISTANCES ---------- */}
+        {p.distances && (
+          <section className="pp-wrap pp-section">
+            <h2 className="pp-h2">Distances</h2>
+            <DistancesStrip distances={p.distances} lang={lang} />
           </section>
         )}
 

@@ -140,6 +140,7 @@ export default async function ClientPresentationPage({ params }: { params: { tok
         amenities: vm.amenities ?? [],
         gallery: vm.gallery,
         units,
+        distances: vm.distances ?? null,
       };
     })
     .filter((x): x is PresentationDevelopmentVM => x !== null);

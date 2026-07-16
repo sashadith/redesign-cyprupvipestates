@@ -6,6 +6,7 @@ import { extractTextFromDocx, extractTextFromPdf } from "./ai/projectInfoExtract
 import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart } from "./imageMirror";
 import { resolveMapsUrlToGeo } from "./mapsGeo";
 import { normalizeRef } from "./unitRef";
+import { recomputeDevelopmentDistances } from "./developmentDistances";
 import type { ExtractedUnit } from "./ai/pricelistExtract";
 
 const MAX_IMAGES = 10;
@@ -131,6 +132,13 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
     update: { unitsTotal: p.units.length, unitsAvailable: avail, syncedAt: new Date(), ...rich },
     include: { override: true },
   });
+
+  // Auto recompute (haversine, src/lib/developmentDistances.ts) — resolves
+  // override lat/lng first (so a corrected admin pin always wins over the
+  // feed's own geocoding), unconditionally on every sync so a Development
+  // that only ever got its coordinates from an earlier light sync still ends
+  // up with distances computed as soon as they exist, not just on rich runs.
+  await recomputeDevelopmentDistances(dev.id);
 
   // Upsert units by ref. Light sync updates status/price; full import also areas.
   // The ref comes from a fresh AI re-extraction each sync, which isn't byte-stable

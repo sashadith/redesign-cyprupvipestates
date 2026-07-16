@@ -8,6 +8,7 @@ import type { PLocale } from "./copy";
 import { COPY } from "./copy";
 import { splitDescriptionParagraphs } from "@/lib/text";
 import { iconFor } from "@/app/preview-project/amenityIcons";
+import DistancesStrip from "@/app/components/DistancesStrip/DistancesStrip";
 
 export type OverlayUnit = {
   id: string; ref: string; label: string; type: string; beds: string; areaBuilt: string;
@@ -15,7 +16,7 @@ export type OverlayUnit = {
 };
 
 export default function PropertyOverlay({
-  open, onClose, publicName, gallery, description, amenities, units, locale,
+  open, onClose, publicName, gallery, description, amenities, units, distances, locale,
 }: {
   open: boolean;
   onClose: () => void;
@@ -24,6 +25,7 @@ export default function PropertyOverlay({
   description: string;
   amenities: string[];
   units: OverlayUnit[];
+  distances?: Record<string, number> | null;
   locale: PLocale;
 }) {
   const c = COPY[locale];
@@ -89,6 +91,8 @@ export default function PropertyOverlay({
               ))}
             </div>
           )}
+
+          {distances && <DistancesStrip distances={distances} lang={locale} variant="compact" />}
 
           {units.length > 0 && (
             <div className="cp-overlay__units">

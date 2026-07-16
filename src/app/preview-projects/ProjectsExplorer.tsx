@@ -134,10 +134,6 @@ function Card({ c, active, onHover, s, locale }: { c: ProjectCardData; active: b
           <div className="prj__price">
             {c.price != null && <span className="prj__price-from">{s.priceFrom}</span>}
             {fmtPrice(c.price, s)}
-            {/* Development cards only (vatApplies is never set on legacy cards, which
-                never had this concept) — undefined !== false is intentional: only an
-                explicit override marks "no VAT", same as the detail page's default. */}
-            {c.price != null && c.vatApplies !== undefined && c.vatApplies !== false && <span className="prj__vat"> +VAT</span>}
           </div>
         </div>
         {cardDistances(c.distances, s).length > 0 && (

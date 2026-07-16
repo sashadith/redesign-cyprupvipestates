@@ -718,6 +718,13 @@ model Development {
   gallery     Json? // [{ small, medium, large }] mirrored
   plans       Json?
   extraFacts  Json? // [{ label, value }]
+  // Auto-computed (haversine, no AI/external API) from resolved coordinates
+  // (override lat/lng -> this row's own) — { beach, restaurants, shops,
+  // airport, hospital, school, cityCenter, golf }, minutes, keys >60min or
+  // unresolvable omitted entirely. See src/lib/developmentDistances.ts, the
+  // single source of truth every write path (feedSync, driveAvailabilitySync,
+  // admin map-location save, the one-off backfill script) recomputes through.
+  distances   Json?
 
   // sync + publication lifecycle
   syncedAt      DateTime?

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getPreviewProject, listProjectIds, type ProjectVM } from "@/app/preview-project/feeds";
 import type { UnitVM } from "@/app/preview-project/UnitsView";
 import { mirrorAll, devKeyFor, scheduleAppRestart } from "@/lib/imageMirror";
+import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
 
 /* Feed sync (Phase 1). Pulls every development of a developer from its feed
    (reusing the feeds.ts adapters → canonical ProjectVM) and upserts into
@@ -116,6 +117,10 @@ async function syncDeveloperCore(dev: string, opts: { mirror?: boolean } = {}): 
       const development = existing
         ? await prisma.development.update({ where: { feedKey }, data })
         : await prisma.development.create({ data });
+      // Auto recompute (haversine, src/lib/developmentDistances.ts) — resolves
+      // override lat/lng first, so a deliberately-corrected admin pin is never
+      // clobbered by the feed's own (possibly wrong) coordinates.
+      await recomputeDevelopmentDistances(development.id);
       // If a human imported the real unit list (manual units exist), the feed's
       // partial list is ignored entirely — never re-add feed units on top.
       const manualUnits = await prisma.developmentUnit.count({ where: { developmentId: development.id, source: "manual" } });

@@ -18,6 +18,7 @@ export type PresentationDevelopmentVM = PresentationItemVM & {
   amenities: string[];
   gallery: string[];
   units: OverlayUnit[];
+  distances: Record<string, number> | null;
 };
 
 export default function PresentationBody({
@@ -117,6 +118,7 @@ export default function PresentationBody({
         description={open?.description ?? ""}
         amenities={open?.amenities ?? []}
         units={open?.units ?? []}
+        distances={open?.distances ?? null}
         locale={locale}
       />
     </>

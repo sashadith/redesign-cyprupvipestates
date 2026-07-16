@@ -71,6 +71,7 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
       ? { lat: (ov?.latitude ?? d.latitude)!, lng: (ov?.longitude ?? d.longitude)! }
       : null,
     units,
+    distances: (d.distances as Record<string, number> | null) ?? null,
     slug: d.slug ?? null,
     publishStatus: d.publishStatus,
     seoOverride: (d.override?.seo as SeoOverride | null) ?? null,

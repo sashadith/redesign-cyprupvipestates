@@ -20,6 +20,8 @@ TARGET="${1:?usage: verify-runtime-assets.sh <path-to-built-tree>}"
 REQUIRED_FILES=(
   "public/fonts/DejaVuSans.ttf"
   "public/medousa-feed.xml"
+  "public/poi/cyprus.json"
+  "public/poi/cyprus-extra.json"
 )
 
 fail=0
