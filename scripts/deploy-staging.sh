@@ -38,6 +38,19 @@ echo "→ build + reload on the VPS"
 # an object (evaluating 'e.ok')" — the action ID the client calls doesn't resolve).
 # A full rm -rf .next before building has fixed it every time; do it unconditionally
 # rather than waiting for the symptom to reappear.
-ssh -i "$KEY" "$HOST" "cd $DIR && rm -rf .next && NODE_OPTIONS=--max_old_space_size=2048 npm run build && pm2 reload cve-staging --update-env"
+#
+# Build-time-only connection cap: next build's static-generation phase spawns
+# one worker per available CPU, each opening its own Prisma pool at the
+# default size (2*cpus+1) — on a machine with more cores than this VPS,
+# that stacks on top of the already-running app instances' connections and
+# can blow past Postgres's max_connections ("too many clients already"), hit
+# and confirmed during the 2026-07 staging->production merge (see
+# MERGE_AUDIT.md phase 1.3). The real .env on disk is never modified — only
+# this one-off build invocation gets the capped DATABASE_URL.
+ssh -i "$KEY" "$HOST" "cd $DIR && rm -rf .next && \
+  DB_URL_LINE=\$(grep '^DATABASE_URL=' .env | cut -d= -f2-); \
+  DB_URL_LINE=\${DB_URL_LINE%\\\"}; DB_URL_LINE=\${DB_URL_LINE#\\\"}; \
+  DATABASE_URL=\"\${DB_URL_LINE}&connection_limit=5&pool_timeout=30\" \
+  NODE_OPTIONS=--max_old_space_size=2048 npm run build && pm2 reload cve-staging --update-env"
 
 echo "✓ Staging updated → https://design.cyprusvipestates.com"

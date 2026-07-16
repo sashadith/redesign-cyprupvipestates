@@ -157,7 +157,22 @@ chmod 755 "$DIR"
 cd "$DIR"
 $([ "$RUN_INSTALL" = 1 ] && echo 'npm ci' || echo 'echo "· skip npm ci (reusing existing node_modules)"')
 $([ "$RUN_MIGRATE" = 1 ] && echo 'npx prisma migrate deploy' || echo 'echo "· skip prisma migrate"')
-NODE_OPTIONS=--max_old_space_size=2048 npm run build
+
+# Build-time-only connection cap. next build's static-generation phase spawns
+# one worker PER AVAILABLE CPU, each opening its own Prisma pool at the
+# default size (2*cpus+1) — on a machine with more cores than this VPS
+# (e.g. a laptop doing an isolated build over the SSH tunnel), that stacks on
+# top of the already-running app instances' connections and can blow past
+# Postgres's max_connections ("FATAL: sorry, too many clients already"),
+# hit and confirmed during the 2026-07 staging->production merge (see
+# MERGE_AUDIT.md phase 1.3). Capped here at the build step ONLY — the actual
+# runtime .env is never modified, so pm2's serving processes keep their
+# normal pool sizing; only this one-off \`npm run build\` invocation is capped.
+DB_URL_LINE="\$(grep '^DATABASE_URL=' .env | cut -d= -f2-)"
+DB_URL_LINE="\${DB_URL_LINE%\\"}"
+DB_URL_LINE="\${DB_URL_LINE#\\"}"
+BUILD_DB_URL="\${DB_URL_LINE}&connection_limit=5&pool_timeout=30"
+DATABASE_URL="\$BUILD_DB_URL" NODE_OPTIONS=--max_old_space_size=2048 npm run build
 pm2 reload "$APP" --update-env
 REMOTE
 
