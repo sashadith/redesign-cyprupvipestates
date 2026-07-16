@@ -14,10 +14,14 @@ const STATUSES = ["DRAFT", "PUBLISHED", "SCHEDULED", "ARCHIVED"];
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
 
 export default async function EditProject({ params }: { params: { id: string } }) {
-  const p = await prisma.project.findUnique({ where: { id: params.id } });
+  const p = await prisma.project.findUnique({
+    where: { id: params.id },
+    include: { supersededByDevelopment: { select: { id: true, publicName: true, slug: true, publishStatus: true } } },
+  });
   if (!p) notFound();
   const seo = (p.seo as any) ?? {};
   const save = updateProjectMeta.bind(null, p.id);
+  const showSupersededBanner = p.status === "PUBLISHED" && p.supersededByDevelopment?.publishStatus === "published";
 
   return (
     <div className="max-w-2xl">
@@ -38,6 +42,22 @@ export default async function EditProject({ params }: { params: { id: string } }
         </form>
       </div>
       <p className="text-sm text-[#6B7280] mb-6">{p.language.toUpperCase()} · /{p.slug} <span className="text-[#C29A5E]">(slug editable below)</span></p>
+      {showSupersededBanner && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 flex items-center justify-between gap-4">
+          <span className="text-sm text-amber-800">
+            New version published —{" "}
+            <Link href={`/admin/developments/${p.supersededByDevelopment!.id}`} className="underline hover:no-underline">
+              {p.supersededByDevelopment!.publicName}
+            </Link>{" "}
+            is live. Deactivate this listing?
+          </span>
+          <form action={toggleProjectActive.bind(null, p.id)}>
+            <button type="submit" className="rounded-md bg-amber-800 text-white text-sm font-medium px-3 py-1.5 hover:bg-amber-900 whitespace-nowrap">
+              Deactivate now
+            </button>
+          </form>
+        </div>
+      )}
       <TranslationsPanel type="project" groupId={p.translationGroupId} currentId={p.id} currentLang={p.language} />
       <a href={`/api/preview?path=${encodeURIComponent(localizedHref(p.language, ["projects", p.slug]))}`} target="_blank" rel="noopener" className="inline-block mb-5 text-sm text-[#1B4B43] hover:underline">Preview draft ↗</a>
 

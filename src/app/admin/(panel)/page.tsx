@@ -9,7 +9,7 @@ export default async function Dashboard() {
   const since7 = new Date(); since7.setDate(since7.getDate() - 7);
   const since30 = new Date(); since30.setDate(since30.getDate() - 30);
 
-  const [leadsTotal, leads7d, leads30d, projects, blogs, pages, recent, byStatus, bySource] = await Promise.all([
+  const [leadsTotal, leads7d, leads30d, projects, blogs, pages, recent, byStatus, bySource, supersededActive] = await Promise.all([
     prisma.lead.count({ where: { deletedAt: null } }),
     prisma.lead.count({ where: { deletedAt: null, createdAt: { gte: since7 } } }),
     prisma.lead.count({ where: { deletedAt: null, createdAt: { gte: since30 } } }),
@@ -19,6 +19,9 @@ export default async function Dashboard() {
     prisma.lead.findMany({ where: { deletedAt: null }, orderBy: { createdAt: "desc" }, take: 8 }),
     prisma.lead.groupBy({ by: ["status"], _count: true, where: { deletedAt: null } }),
     prisma.lead.groupBy({ by: ["source"], _count: true, where: { deletedAt: null } }),
+    // Phase 5.4: legacy projects linked to a now-published Development that are
+    // still live themselves — each one is a candidate for the admin to deactivate.
+    prisma.project.count({ where: { status: "PUBLISHED", supersededByDevelopment: { publishStatus: "published" } } }),
   ]);
 
   const statusCount = (s: string) => byStatus.find((r) => r.status === s)?._count ?? 0;
@@ -36,12 +39,24 @@ export default async function Dashboard() {
     { label: "Projects", value: projects },
   ];
 
+  const supersededLabel = supersededActive === 1
+    ? "Legacy listing superseded but still active"
+    : "Legacy listings superseded but still active";
+
   const sources = bySource.map((r) => ({ key: r.source, count: r._count })).sort((a, b) => b.count - a.count);
   const maxSource = Math.max(1, ...sources.map((s) => s.count));
 
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-6">Dashboard</h1>
+      {supersededActive > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 flex items-center justify-between">
+          <span className="text-sm text-amber-800">
+            <span className="font-semibold">{supersededActive}</span> {supersededLabel.toLowerCase()}.
+          </span>
+          <Link href="/admin/content/projects/overlaps" className="text-sm text-amber-800 underline hover:no-underline">Review</Link>
+        </div>
+      )}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
         {stats.map((s) => (
           <div key={s.label} className="bg-white rounded-lg border border-[#E5E7EB] p-5">
