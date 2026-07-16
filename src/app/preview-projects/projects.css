@@ -313,12 +313,40 @@
 .prj__badge--new { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
 /* Scarcity indicator (src/app/components/ScarcityBanner) — shares the
    top-left .prj__badges flex row so it never overlaps .prj__type (top-right).
-   Quiet confidence, not alarm: no animation/pulsing, same gold-pill language
-   as the "New for you" badge on client presentation cards. */
+   Carmine pill + a slow, continuous glowing ring: this banner IS the attention
+   mechanism (urgency is the point), so unlike .prj's hover sheen the ring runs
+   at all times, not just on hover. Same shared component renders on the client
+   presentation cards (presentation.css loads alongside this file there — see
+   src/app/c/layout.tsx — so this one rule already covers both surfaces). */
 .scarcity-badge {
+  position: relative;
   font-family: var(--font-body), sans-serif; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.04em;
   color: var(--ivory); background: #8C2F2F;
   padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+}
+/* Houdini angle driving the travelling glow — same conic-gradient/mask ring
+   technique as .prj::after and .cp-goldring::before (reused, not reinvented),
+   but slower (6s vs. their 4s/5s) so a grid of banners doesn't read as one
+   synchronized pulse, and always-on rather than hover-gated. --scarcity-delay
+   is a per-instance negative animation-delay set inline by ScarcityBanner.tsx,
+   deterministically derived from the card's own id (never Math.random()/
+   Date.now() — those would diverge between SSR and hydration). Border/mask
+   overlay only — no size change, so no layout shift; only the gradient angle
+   animates (GPU-cheap), never box-shadow or filter. */
+@property --scarcity-sheen { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.scarcity-badge::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; border-radius: inherit; padding: 1px;
+  background: conic-gradient(from var(--scarcity-sheen), transparent 0deg, transparent 232deg, var(--champagne) 290deg, var(--ivory) 314deg, var(--champagne) 338deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: scarcity-sheen-spin 6s linear infinite;
+  animation-delay: var(--scarcity-delay, 0s);
+}
+@keyframes scarcity-sheen-spin { to { --scarcity-sheen: 360deg; } }
+@media (prefers-reduced-motion: reduce) {
+  .scarcity-badge::after { animation: none; background: var(--champagne); }
 }
 .prj__type {
   position: absolute; top: 14px; right: 14px; z-index: 3; font-family: var(--font-body), sans-serif; font-size: 0.7rem;

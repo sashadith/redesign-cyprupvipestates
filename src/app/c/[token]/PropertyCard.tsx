@@ -70,7 +70,7 @@ export default function PropertyCard({
         {item.mainImage ? <img src={item.mainImage} alt={item.publicName} className="cp-card__img" data-fx="cardimg" loading="lazy" /> : <div className="cp-card__img cp-card__img--empty" />}
         <div className="cp-card__badges">
           {item.isNew && <span className="cp-card__newbadge">{newForYouLabel}</span>}
-          <ScarcityBanner available={item.unitsAvailable} total={item.unitsTotal} locale={locale} />
+          <ScarcityBanner available={item.unitsAvailable} total={item.unitsTotal} locale={locale} seedKey={item.developmentId} />
         </div>
         <button type="button" className={`cp-card__heart${favorited ? " is-on" : ""}`} onClick={toggleFavorite} disabled={busy} aria-pressed={favorited} aria-label="Favorite">
           <svg viewBox="0 0 24 24" width="18" height="18" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth={favorited ? "0" : "1.8"}>

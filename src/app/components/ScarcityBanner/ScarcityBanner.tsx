@@ -37,21 +37,50 @@ export function resolveScarcity(available: number, total: number): ScarcityResul
   return { tier: available === 1 ? "last" : "left", count: available };
 }
 
+// Deterministic small "random-ish" delay so the animated ring (see
+// .scarcity-badge::after in projects.css) doesn't sweep in lockstep across
+// every banner in a grid — a synchronized sweep reads as mechanical. Must NOT
+// use Math.random()/Date.now(): this renders on the server, and a value that
+// differs between the SSR pass and the client's hydration pass would be a
+// hydration mismatch (the exact class of bug fixed elsewhere in this card
+// just before this feature). A plain string hash of a stable, already-
+// identical-on-both-sides key (the card's own id) is deterministic by
+// construction — same input, same output, every time.
+function seedDelaySeconds(seed: string, loopSeconds: number): number {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return h % loopSeconds;
+}
+
 export default function ScarcityBanner({
   available,
   total,
   locale,
   className,
+  seedKey,
 }: {
   available: number;
   total: number;
   locale: string;
   className?: string;
+  // The card/development's own stable id — used only to stagger the glow
+  // animation's start point. Optional: without it every instance starts in
+  // sync, which is still correct, just less lively.
+  seedKey?: string;
 }) {
   const result = resolveScarcity(available, total);
   if (!result) return null;
   const loc: ScarcityLocale = locale === "de" || locale === "pl" || locale === "ru" ? locale : "en";
   const copy = SCARCITY_COPY[loc];
   const text = result.tier === "last" ? copy.last : copy.left(result.count);
-  return <span className={`scarcity-badge${className ? ` ${className}` : ""}`}>{text}</span>;
+  // Negative delay = the animation acts as though it already ran for that
+  // long, so every instance is visibly at a different point in the sweep
+  // immediately, rather than all starting together and only drifting apart
+  // over the first cycle.
+  const style = seedKey ? ({ "--scarcity-delay": `-${seedDelaySeconds(seedKey, 6)}s` } as React.CSSProperties) : undefined;
+  return (
+    <span className={`scarcity-badge${className ? ` ${className}` : ""}`} style={style}>
+      {text}
+    </span>
+  );
 }

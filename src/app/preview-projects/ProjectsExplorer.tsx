@@ -115,7 +115,7 @@ function Card({ c, active, onHover, s, locale }: { c: ProjectCardData; active: b
         <div className="prj__badges">
           {c.isNew && <span className="prj__badge prj__badge--new">{s.badgeNew}</span>}
           {c.isFeatured && <span className="prj__badge">{s.badgeFeatured}</span>}
-          {c.unitsTotal != null && <ScarcityBanner available={c.unitsAvailable ?? 0} total={c.unitsTotal} locale={locale} />}
+          {c.unitsTotal != null && <ScarcityBanner available={c.unitsAvailable ?? 0} total={c.unitsTotal} locale={locale} seedKey={c.id} />}
         </div>
         {c.type && <span className="prj__type">{c.type}</span>}
         <div className="prj__info">
