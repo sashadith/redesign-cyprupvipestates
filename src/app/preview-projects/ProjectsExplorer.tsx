@@ -129,7 +129,17 @@ function Card({ c, active, onHover, s, locale }: { c: ProjectCardData; active: b
             {c.bedrooms && <span>{c.bedrooms} {s.bedUnit}</span>}
             {c.area && <span>{c.area} {s.areaUnit}</span>}
             {c.energy && <span>{s.energyPrefix} {c.energy}</span>}
-            {c.completion && <span>{new Date(c.completion).getFullYear() || ""}</span>}
+            {/* c.completion is already resolved to a plain year string (or "")
+                server-side — see resolveCompletionYear in src/lib/text.ts.
+                Never compute a Date here: parsing the free-text completion
+                values Development rows can carry ("Q1 2028", "Ready", …) is
+                engine-dependent, and a mismatch between the server's parse
+                and the browser's during hydration caused the year to flash
+                then vanish, leaving a dangling "•" separator behind (the
+                outer guard was checking the raw string, not the parsed
+                result). Gating on the same already-resolved string here
+                means the separator and the value can never disagree. */}
+            {c.completion && <span>{c.completion}</span>}
           </div>
           <div className="prj__price">
             {c.price != null && <span className="prj__price-from">{s.priceFrom}</span>}

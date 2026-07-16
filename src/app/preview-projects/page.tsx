@@ -9,6 +9,7 @@ import { urlFor } from "@/sanity/sanity.client";
 import ProjectsExplorer, { type ProjectCardData, type MapMarker } from "./ProjectsExplorer";
 import Nav from "../preview-home/sections/Nav";
 import Footer from "../preview-home/sections/Footer";
+import { resolveCompletionYear } from "@/lib/text";
 
 /* Cyprus VIP Estates — Projects search (isolated redesign preview, EN).
    Map-centric explorer: URL-driven filters → server fetch → list + live map. The
@@ -74,7 +75,7 @@ export default async function ProjectsPreview({ searchParams }: { searchParams: 
       area: kf.coveredArea ?? "",
       type: kf.propertyType ?? "",
       energy: kf.energyEfficiency ?? "",
-      completion: kf.completionDate ?? "",
+      completion: resolveCompletionYear(kf.completionDate),
       isNew: !!p.isNew,
       isFeatured: !!p.isFeatured,
       distances: p._source === "development" ? (p.distances ?? null) : (distMap[p._id] ?? null),

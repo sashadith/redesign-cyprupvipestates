@@ -31,6 +31,7 @@ import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 import Form from "@/app/preview-home/sections/Form";
 
 import ProjectsExplorer, { type ProjectCardData, type MapMarker } from "@/app/preview-projects/ProjectsExplorer";
+import { resolveCompletionYear } from "@/lib/text";
 
 // Filters change per request (URL-driven) — always render fresh, like the preview.
 export const dynamic = "force-dynamic";
@@ -134,7 +135,7 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
       area: kf.coveredArea ?? "",
       type: kf.propertyType ?? "",
       energy: kf.energyEfficiency ?? "",
-      completion: kf.completionDate ?? "",
+      completion: resolveCompletionYear(kf.completionDate),
       isNew: !!p.isNew,
       isFeatured: !!p.isFeatured,
       distances: p._source === "development" ? (p.distances ?? null) : (distMap[p._id] ?? null),
