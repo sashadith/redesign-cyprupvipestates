@@ -16,6 +16,19 @@ export default async function ProjectsAdmin({ searchParams }: { searchParams: { 
     include: { supersededByDevelopment: { select: { slug: true } } },
   });
 
+  // ACTIVATE/DEACTIVATE cascades across every locale row of the same real
+  // project — batch-fetch sibling locales per translationGroupId so the
+  // dialog can name them, without an N+1 query per row.
+  const groupIds = Array.from(new Set(projects.map((p) => p.translationGroupId).filter((v): v is string => !!v)));
+  const siblings = groupIds.length
+    ? await prisma.project.findMany({ where: { translationGroupId: { in: groupIds } }, select: { translationGroupId: true, language: true } })
+    : [];
+  const localesByGroup = new Map<string, string[]>();
+  for (const s of siblings) {
+    if (!s.translationGroupId) continue;
+    localesByGroup.set(s.translationGroupId, [...(localesByGroup.get(s.translationGroupId) ?? []), s.language]);
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
@@ -69,6 +82,7 @@ export default async function ProjectsAdmin({ searchParams }: { searchParams: { 
                     status={p.status}
                     hasConfirmedLink={!!p.supersededByDevelopment}
                     prefillTarget={p.supersededByDevelopment ? localizedHref(p.language, ["preview-project", p.supersededByDevelopment.slug ?? ""]) : null}
+                    locales={p.translationGroupId ? (localesByGroup.get(p.translationGroupId) ?? [p.language]) : [p.language]}
                     variant="compact"
                   />
                 </td>

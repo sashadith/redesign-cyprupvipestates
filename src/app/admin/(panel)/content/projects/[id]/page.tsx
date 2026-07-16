@@ -27,13 +27,19 @@ export default async function EditProject({ params }: { params: { id: string } }
   const prefillTarget = p.supersededByDevelopment
     ? localizedHref(p.language, ["preview-project", p.supersededByDevelopment.slug ?? ""])
     : null;
+  // ACTIVATE/DEACTIVATE cascades across every locale row of this same real
+  // project (see toggleProjectActive/deactivateProjectWithRedirect) — the
+  // dialog names them, so fetch the sibling locales here.
+  const siblingLocales = p.translationGroupId
+    ? (await prisma.project.findMany({ where: { translationGroupId: p.translationGroupId }, select: { language: true } })).map((r) => r.language)
+    : [p.language];
 
   return (
     <div className="max-w-2xl">
       <Link href="/admin/content/projects" className="text-sm text-[#1B4B43] hover:underline">← Back to projects</Link>
       <div className="flex items-center justify-between mt-2 mb-1">
         <h1 className="text-2xl font-semibold">{p.title}</h1>
-        <DeactivateControl projectId={p.id} status={p.status} hasConfirmedLink={hasConfirmedLink} prefillTarget={prefillTarget} />
+        <DeactivateControl projectId={p.id} status={p.status} hasConfirmedLink={hasConfirmedLink} prefillTarget={prefillTarget} locales={siblingLocales} />
       </div>
       <p className="text-sm text-[#6B7280] mb-6">{p.language.toUpperCase()} · /{p.slug} <span className="text-[#C29A5E]">(slug editable below)</span></p>
       {showSupersededBanner && (
@@ -45,7 +51,7 @@ export default async function EditProject({ params }: { params: { id: string } }
             </Link>{" "}
             is live. Deactivate this listing?
           </span>
-          <DeactivateControl projectId={p.id} status={p.status} hasConfirmedLink={hasConfirmedLink} prefillTarget={prefillTarget} variant="banner" />
+          <DeactivateControl projectId={p.id} status={p.status} hasConfirmedLink={hasConfirmedLink} prefillTarget={prefillTarget} locales={siblingLocales} variant="banner" />
         </div>
       )}
       <TranslationsPanel type="project" groupId={p.translationGroupId} currentId={p.id} currentLang={p.language} />

@@ -384,38 +384,75 @@ export async function updateProjectMeta(id: string, formData: FormData) {
 // Phase 5.4's supersession banner and 5.5's redirect-on-deactivate dialog
 // hook into. Toggles only between PUBLISHED and ARCHIVED — a DRAFT/SCHEDULED
 // project is treated as "not active" and gets activated straight to PUBLISHED.
+// The 4 per-language rows of one real-world legacy project share one
+// translationGroupId. ACTIVATE/DEACTIVATE and the redirect it can create must
+// apply to the whole group in one action — otherwise DE/PL/RU keep showing
+// the old listing (and duplicating the merged /projects listing's Development
+// card) after the admin "deactivates" only the row they happened to be
+// viewing. Falls back to the single row if translationGroupId is somehow null
+// (not observed in practice — all 887 legacy rows have one).
+async function projectGroupRows(id: string) {
+  const anchor = await prisma.project.findUnique({ where: { id }, select: { translationGroupId: true, language: true, slug: true, supersededByDevelopmentId: true } });
+  if (!anchor) return null;
+  if (!anchor.translationGroupId) return [{ id, language: anchor.language, slug: anchor.slug, supersededByDevelopmentId: anchor.supersededByDevelopmentId }];
+  return prisma.project.findMany({ where: { translationGroupId: anchor.translationGroupId }, select: { id: true, language: true, slug: true, supersededByDevelopmentId: true } });
+}
+
 export async function toggleProjectActive(id: string) {
   await requireSession();
-  const p = await prisma.project.findUnique({ where: { id }, select: { status: true, language: true, slug: true } });
+  const p = await prisma.project.findUnique({ where: { id }, select: { status: true } });
   if (!p) throw new Error("Not found");
   const newStatus = p.status === "ARCHIVED" ? "PUBLISHED" : "ARCHIVED";
-  const patch = await publishedAtOnPublish(prisma.project, id, newStatus);
-  await prisma.project.update({ where: { id }, data: { ...patch, status: newStatus as any } });
-  revalidatePath(`/admin/content/projects/${id}`);
+  const rows = await projectGroupRows(id);
+  if (!rows) throw new Error("Not found");
+  for (const row of rows) {
+    const patch = await publishedAtOnPublish(prisma.project, row.id, newStatus);
+    await prisma.project.update({ where: { id: row.id }, data: { ...patch, status: newStatus as any } });
+    revalidatePath(`/admin/content/projects/${row.id}`);
+    revalidateProjectPublic(row.language, row.slug);
+  }
   revalidatePath("/admin/content/projects");
-  revalidateProjectPublic(p.language, p.slug);
 }
 
 // Phase 5.5: deactivate with an optional 301 redirect target (typically the
-// linked Development's live URL, prefilled by the caller). An empty/null
-// target removes any existing redirect row instead of creating one. The
-// redirect only takes effect while the project stays ARCHIVED — see
+// linked Development's live URL, prefilled by the caller for the row they
+// were viewing). Cascades across every locale row of the project group: the
+// row the admin was looking at gets their (possibly edited) target; every
+// other locale row gets its own auto-computed target — the same Development,
+// linked through that locale's own /preview-project prefix (see
+// localizedHref) — since asking an admin to hand-edit four URLs one at a time
+// isn't a reasonable dialog. An empty/null target on the viewed row removes
+// its redirect only; sibling rows still get their auto-computed target as
+// long as a Development link exists (an admin who explicitly doesn't want a
+// redirect at all should reject the overlap, not just blank the field).
+// The redirect only takes effect while a project stays ARCHIVED — see
 // getLegacyProjectRedirect in sanity.utils.ts — so re-activating later makes
 // it dormant again without needing to delete the row.
 export async function deactivateProjectWithRedirect(id: string, redirectTarget: string | null) {
   await requireSession();
-  const p = await prisma.project.findUnique({ where: { id }, select: { language: true, slug: true } });
-  if (!p) throw new Error("Not found");
-  const target = (redirectTarget ?? "").trim();
-  await prisma.$transaction([
-    prisma.project.update({ where: { id }, data: { status: "ARCHIVED" } }),
-    target
-      ? prisma.legacyProjectRedirect.upsert({ where: { projectId: id }, update: { targetPath: target }, create: { projectId: id, targetPath: target } })
-      : prisma.legacyProjectRedirect.deleteMany({ where: { projectId: id } }),
-  ]);
-  revalidatePath(`/admin/content/projects/${id}`);
+  const rows = await projectGroupRows(id);
+  if (!rows) throw new Error("Not found");
+  const devId = rows.find((r) => r.id === id)?.supersededByDevelopmentId ?? null;
+  const dev = devId ? await prisma.development.findUnique({ where: { id: devId }, select: { slug: true } }) : null;
+
+  const ops = rows.flatMap((row) => {
+    const target = row.id === id
+      ? (redirectTarget ?? "").trim()
+      : (dev?.slug ? localizedHref(row.language, ["preview-project", dev.slug]) : "");
+    return [
+      prisma.project.update({ where: { id: row.id }, data: { status: "ARCHIVED" } }),
+      target
+        ? prisma.legacyProjectRedirect.upsert({ where: { projectId: row.id }, update: { targetPath: target }, create: { projectId: row.id, targetPath: target } })
+        : prisma.legacyProjectRedirect.deleteMany({ where: { projectId: row.id } }),
+    ];
+  });
+  await prisma.$transaction(ops);
+
+  for (const row of rows) {
+    revalidatePath(`/admin/content/projects/${row.id}`);
+    revalidateProjectPublic(row.language, row.slug);
+  }
   revalidatePath("/admin/content/projects");
-  revalidateProjectPublic(p.language, p.slug);
 }
 
 export async function updateBlogMeta(id: string, formData: FormData) {

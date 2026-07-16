@@ -10,12 +10,14 @@ export default function DeactivateControl({
   status,
   hasConfirmedLink,
   prefillTarget,
+  locales,
   variant = "default",
 }: {
   projectId: string;
   status: string;
   hasConfirmedLink: boolean;
   prefillTarget: string | null;
+  locales: string[];
   variant?: "default" | "banner" | "compact";
 }) {
   const [open, setOpen] = useState(false);
@@ -63,7 +65,10 @@ export default function DeactivateControl({
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-6" role="dialog" aria-modal="true">
           <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 w-full max-w-md space-y-4">
             <h3 className="text-base font-semibold">Deactivate this listing?</h3>
-            <p className="text-sm text-[#6B7280]">It will be hidden from the listing, its own page, and the sitemap.</p>
+            <p className="text-sm text-[#6B7280]">
+              This will deactivate the project in all languages ({locales.map((l) => l.toUpperCase()).join(", ")}) — hidden from the
+              listing, its own page, and the sitemap in every one.
+            </p>
             {hasConfirmedLink ? (
               <div className="space-y-2">
                 <label className="flex items-center gap-2 text-sm">
