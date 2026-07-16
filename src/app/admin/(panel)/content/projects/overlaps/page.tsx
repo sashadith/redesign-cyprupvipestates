@@ -103,7 +103,7 @@ export default async function OverlapsAdmin() {
                   {r.state === "confirmed" && <span className="text-emerald-700 font-medium">Confirmed</span>}
                   {r.state === "rejected" && <span className="text-[#6B7280]">Rejected</span>}
                   {r.state === "pending" && <span className="text-amber-700">Pending</span>}
-                  {r.state === "missing" && <span className="text-red-600">Can't review</span>}
+                  {r.state === "missing" && <span className="text-red-600">Can&apos;t review</span>}
                 </td>
                 <td className="px-4 py-2.5">
                   {r.state === "pending" && r.legacy && r.dev && (
@@ -130,7 +130,7 @@ export default async function OverlapsAdmin() {
       <p className="text-xs text-[#6B7280] mt-4 max-w-3xl">
         5 Developments from the audit had no legacy counterpart at all
         (venus-ridge-villas, prodromi-modern-living, city-gardens,
-        kato-paphos-residences, blackpine) and aren't listed here — there's
+        kato-paphos-residences, blackpine) and aren&apos;t listed here — there&apos;s
         nothing to link them against.
       </p>
     </div>
