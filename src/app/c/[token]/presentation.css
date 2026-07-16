@@ -178,12 +178,19 @@
 .cp-card__img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
 .cp-card:hover .cp-card__img { transform: scale(1.08); }
 .cp-card__img--empty { width: 100%; height: 100%; }
-.cp-card__newbadge {
+/* Wraps the "New for you" badge and the scarcity banner (shared component,
+   src/app/components/ScarcityBanner) — both are top-left, stacked so they
+   never overlap when a property is both new and running low on units. */
+.cp-card__badges {
   position: absolute; top: 0.75rem; left: 0.75rem; z-index: 1;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem;
+}
+.cp-card__newbadge {
   background: var(--champagne); color: var(--sea-deep);
   font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em;
   padding: 0.3rem 0.7rem; border-radius: 999px;
 }
+.cp-card__badges .scarcity-badge { font-size: 0.7rem; }
 .cp-card__heart {
   position: absolute; top: 0.75rem; right: 0.75rem;
   width: 2.25rem; height: 2.25rem; border-radius: 999px;

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { PLocale } from "./copy";
 import { COPY, formatUnitsCount } from "./copy";
+import ScarcityBanner from "@/app/components/ScarcityBanner/ScarcityBanner";
 
 export type PresentationItemVM = {
   developmentId: string;
@@ -14,6 +15,7 @@ export type PresentationItemVM = {
   priceFrom: number | null;
   currency: string;
   unitsAvailable: number;
+  unitsTotal: number;
   mainImage: string | null;
   advisorComment: string | null;
   isFavorited: boolean;
@@ -66,7 +68,10 @@ export default function PropertyCard({
     <div id={`cp-card-${item.developmentId}`} className="cp-card cp-goldring cp-goldring--hover" data-fx="card">
       <div className="cp-card__media">
         {item.mainImage ? <img src={item.mainImage} alt={item.publicName} className="cp-card__img" data-fx="cardimg" loading="lazy" /> : <div className="cp-card__img cp-card__img--empty" />}
-        {item.isNew && <span className="cp-card__newbadge">{newForYouLabel}</span>}
+        <div className="cp-card__badges">
+          {item.isNew && <span className="cp-card__newbadge">{newForYouLabel}</span>}
+          <ScarcityBanner available={item.unitsAvailable} total={item.unitsTotal} locale={locale} />
+        </div>
         <button type="button" className={`cp-card__heart${favorited ? " is-on" : ""}`} onClick={toggleFavorite} disabled={busy} aria-pressed={favorited} aria-label="Favorite">
           <svg viewBox="0 0 24 24" width="18" height="18" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth={favorited ? "0" : "1.8"}>
             <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733C11.285 4.876 9.623 3.75 7.688 3.75 5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />

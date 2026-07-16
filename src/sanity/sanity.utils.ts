@@ -669,6 +669,10 @@ type ProjectListItem = {
   // pipeline, merged into this same listing — see queryFilteredDevelopmentRows below).
   // Card links need this to know whether to build /projects/{slug} or /preview-project/{slug}.
   _source?: "project" | "development";
+  // Development rows only — feeds the ScarcityBanner. undefined for legacy rows
+  // (no unit data), which is exactly what tells the card to render no banner.
+  unitsAvailable?: number;
+  unitsTotal?: number;
 };
 const getNumericPrice = (p: ProjectListItem) => Number(p?.keyFeatures?.price ?? 0);
 const getCompletionTimestamp = (p: ProjectListItem) => { const r = p?.keyFeatures?.completionDate; if (!r) return null; const t = new Date(r).getTime(); return Number.isNaN(t) ? null : t; };
@@ -755,6 +759,10 @@ async function queryFilteredDevelopmentRows(f: ProjectFilters) {
         },
         isSold: false, videoId: null as string | null, isFeatured: false, listingPriority: 0, isNew: false,
         createdAt: d.createdAt, latitude: ov?.latitude ?? d.latitude, longitude: ov?.longitude ?? d.longitude,
+        // For the scarcity banner (src/app/components/ScarcityBanner) — same unit
+        // rows already loaded above, no extra query.
+        unitsAvailable: d.units.filter((u) => u.status === "available").length,
+        unitsTotal: d.units.length,
         _matchLocations: [town, district, area].map((v) => v.toLowerCase()),
         _searchText: `${d.publicName} ${ov?.alias ?? ""}`.toLowerCase(),
         _priceFrom: devPriceFrom, _priceTo: devPriceTo,
@@ -801,7 +809,7 @@ export async function getFilteredProjects(lang: string, skip: number, limit: num
     slug: { current: p.slug }, previewImage: D(p.previewImage), images: Array.isArray(p.images) ? D((p.images as any[]).slice(0, 5)) : undefined,
     keyFeatures: (p.keyFeatures as any) ?? undefined, isSold: p.isSold, videoId: p.videoId ?? undefined,
     isFeatured: p.isFeatured, listingPriority: p.listingPriority, isNew: p.isNew, // manual flag (admin), default false
-    _source: p._source,
+    _source: p._source, unitsAvailable: (p as any).unitsAvailable, unitsTotal: (p as any).unitsTotal,
   }));
   const sorted = sort === "recommended" ? sortProjectsRecommended(items) : sortProjectsStandard(items, sort);
   return sorted.slice(skip, skip + limit);

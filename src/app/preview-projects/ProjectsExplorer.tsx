@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import PxSelect from "./PxSelect";
 import { projectsStrings, type ProjectsStrings } from "@/app/[lang]/projects/projectsI18n";
+import ScarcityBanner from "@/app/components/ScarcityBanner/ScarcityBanner";
 
 export type Distances = {
   beach?: string;
@@ -36,6 +37,10 @@ export type ProjectCardData = {
   // only an explicit false (admin-marked "no VAT", e.g. a renovated resale)
   // omits it.
   vatApplies?: boolean | null;
+  // Development cards only (legacy Sanity-origin cards have no unit data —
+  // left undefined, ScarcityBanner renders nothing without a total).
+  unitsAvailable?: number;
+  unitsTotal?: number;
 };
 
 export type MapMarker = {
@@ -96,7 +101,7 @@ const ProjectsMiniMap = dynamic(() => import("./ProjectsMap").then((m) => m.Mini
 const fmtPrice = (p: number | null, s: ProjectsStrings) =>
   p == null ? s.priceOnRequest : `€${p.toLocaleString(s.numLocale)}`;
 
-function Card({ c, active, onHover, s }: { c: ProjectCardData; active: boolean; onHover: (id: string | null) => void; s: ProjectsStrings }) {
+function Card({ c, active, onHover, s, locale }: { c: ProjectCardData; active: boolean; onHover: (id: string | null) => void; s: ProjectsStrings; locale: string }) {
   return (
     <a
       className={`prj${active ? " is-active" : ""}`}
@@ -110,6 +115,7 @@ function Card({ c, active, onHover, s }: { c: ProjectCardData; active: boolean; 
         <div className="prj__badges">
           {c.isNew && <span className="prj__badge prj__badge--new">{s.badgeNew}</span>}
           {c.isFeatured && <span className="prj__badge">{s.badgeFeatured}</span>}
+          {c.unitsTotal != null && <ScarcityBanner available={c.unitsAvailable ?? 0} total={c.unitsTotal} locale={locale} />}
         </div>
         {c.type && <span className="prj__type">{c.type}</span>}
         <div className="prj__info">
@@ -417,7 +423,7 @@ export default function ProjectsExplorer({
               !isMobile && cards.length >= 3 && i === 2 ? (
                 <MapTile key="map-tile" markers={markers} total={total} onOpen={() => setMapOpen(true)} s={s} />
               ) : (
-                <Card key={c.id} c={c} active={hoveredId === c.id} onHover={setHoveredId} s={s} />
+                <Card key={c.id} c={c} active={hoveredId === c.id} onHover={setHoveredId} s={s} locale={locale} />
               ),
             )}
             {!isMobile && cards.length > 0 && cards.length < 3 && (

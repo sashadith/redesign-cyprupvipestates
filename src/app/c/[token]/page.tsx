@@ -129,6 +129,7 @@ export default async function ClientPresentationPage({ params }: { params: { tok
         priceFrom: vm.priceFrom ?? null,
         currency: vm.currency || "EUR",
         unitsAvailable: availableCount,
+        unitsTotal: vm.units.length,
         mainImage: vm.gallery[0] ?? null,
         advisorComment: it.advisorComment,
         isFavorited: it.isFavorited,
