@@ -582,6 +582,20 @@ async function _getProjectByLang(lang: string, slug: string): Promise<Project | 
   return D(out) as unknown as Project;
 }
 
+// Phase 5.5: when a legacy project's own lookup above returns null, check
+// whether it exists but is ARCHIVED with a configured redirect target — if
+// so, the detail page should 301 to that target instead of 404ing. Only
+// matches ARCHIVED rows: an active redirect record on a project that's since
+// been re-activated is dormant by design (see LegacyProjectRedirect in
+// schema.prisma) rather than needing cleanup on re-activate.
+export async function getLegacyProjectRedirect(lang: string, slug: string): Promise<string | null> {
+  const row = await prisma.project.findFirst({
+    where: { language: lang as any, slug, status: "ARCHIVED" },
+    select: { redirectTarget: { select: { targetPath: true } } },
+  });
+  return row?.redirectTarget?.targetPath ?? null;
+}
+
 export async function getAllDevelopersByLang(lang: string): Promise<Developer[]> {
   const rows = await prisma.developer.findMany({ where: { language: lang as any, slug: { not: "" } }, orderBy: { title: "asc" } });
   return rows.map((d) => ({ _id: d.sanityId, _updatedAt: d.updatedAt, title: d.title, slug: slugObj(d), slugStr: d.slug, logo: D(d.logo), excerpt: d.excerpt })) as unknown as Developer[];

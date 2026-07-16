@@ -396,6 +396,28 @@ export async function toggleProjectActive(id: string) {
   revalidateProjectPublic(p.language, p.slug);
 }
 
+// Phase 5.5: deactivate with an optional 301 redirect target (typically the
+// linked Development's live URL, prefilled by the caller). An empty/null
+// target removes any existing redirect row instead of creating one. The
+// redirect only takes effect while the project stays ARCHIVED — see
+// getLegacyProjectRedirect in sanity.utils.ts — so re-activating later makes
+// it dormant again without needing to delete the row.
+export async function deactivateProjectWithRedirect(id: string, redirectTarget: string | null) {
+  await requireSession();
+  const p = await prisma.project.findUnique({ where: { id }, select: { language: true, slug: true } });
+  if (!p) throw new Error("Not found");
+  const target = (redirectTarget ?? "").trim();
+  await prisma.$transaction([
+    prisma.project.update({ where: { id }, data: { status: "ARCHIVED" } }),
+    target
+      ? prisma.legacyProjectRedirect.upsert({ where: { projectId: id }, update: { targetPath: target }, create: { projectId: id, targetPath: target } })
+      : prisma.legacyProjectRedirect.deleteMany({ where: { projectId: id } }),
+  ]);
+  revalidatePath(`/admin/content/projects/${id}`);
+  revalidatePath("/admin/content/projects");
+  revalidateProjectPublic(p.language, p.slug);
+}
+
 export async function updateBlogMeta(id: string, formData: FormData) {
   await requireSession();
   const status = String(formData.get("status") ?? "PUBLISHED");

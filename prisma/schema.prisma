@@ -144,6 +144,7 @@ model Project {
   // (e.g. "Kamares Village" matched two unrelated Developments), so rejection
   // is tracked per candidate, not as a single yes/no on the project itself.
   overlapRejectedDevelopmentIds Json?
+  redirectTarget                LegacyProjectRedirect?
 
   @@unique([language, slug])
   @@index([translationGroupId])
@@ -154,6 +155,23 @@ model Project {
   @@index([status, scheduledAt])
   @@index([supersededByDevelopmentId])
   @@map("projects")
+}
+
+// Phase 5.5: optional 301 redirect target for a deactivated (ARCHIVED) legacy
+// project, typically the linked Development's live URL. Only takes effect
+// while the project stays ARCHIVED (see getLegacyProjectRedirect in
+// sanity.utils.ts, gated on status:"ARCHIVED") — re-activating the project
+// makes this dormant again without needing to delete the row.
+model LegacyProjectRedirect {
+  id         String   @id @default(uuid())
+  projectId  String   @unique
+  targetPath String // server-relative path, e.g. "/preview-project/slug" or "/de/preview-project/slug"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@map("legacy_project_redirects")
 }
 
 // ─── CONTENT: BLOG ───────────────────────────────────────────────────────────

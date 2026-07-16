@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { updateProjectMeta, toggleProjectActive } from "../../../../actions";
+import { updateProjectMeta } from "../../../../actions";
 import PtEditor from "@/app/admin/PtEditor";
 import ImagePicker from "@/app/admin/ImagePicker";
 import GalleryPicker from "@/app/admin/GalleryPicker";
 import TranslationsPanel from "@/app/admin/TranslationsPanel";
+import DeactivateControl from "../DeactivateControl";
 import { utcToZonedInput } from "@/lib/tz";
 import { localizedHref } from "@/lib/locale";
 
@@ -22,24 +23,17 @@ export default async function EditProject({ params }: { params: { id: string } }
   const seo = (p.seo as any) ?? {};
   const save = updateProjectMeta.bind(null, p.id);
   const showSupersededBanner = p.status === "PUBLISHED" && p.supersededByDevelopment?.publishStatus === "published";
+  const hasConfirmedLink = !!p.supersededByDevelopment;
+  const prefillTarget = p.supersededByDevelopment
+    ? localizedHref(p.language, ["preview-project", p.supersededByDevelopment.slug ?? ""])
+    : null;
 
   return (
     <div className="max-w-2xl">
       <Link href="/admin/content/projects" className="text-sm text-[#1B4B43] hover:underline">← Back to projects</Link>
       <div className="flex items-center justify-between mt-2 mb-1">
         <h1 className="text-2xl font-semibold">{p.title}</h1>
-        <form action={toggleProjectActive.bind(null, p.id)}>
-          <button
-            type="submit"
-            className={
-              p.status === "ARCHIVED"
-                ? "rounded-md bg-[#1B4B43] text-white text-sm font-medium px-4 py-2 hover:bg-[#142E2D]"
-                : "rounded-md border border-[#E5E7EB] text-sm font-medium px-4 py-2 hover:bg-[#F8F9FA]"
-            }
-          >
-            {p.status === "ARCHIVED" ? "Activate" : "Deactivate"}
-          </button>
-        </form>
+        <DeactivateControl projectId={p.id} status={p.status} hasConfirmedLink={hasConfirmedLink} prefillTarget={prefillTarget} />
       </div>
       <p className="text-sm text-[#6B7280] mb-6">{p.language.toUpperCase()} · /{p.slug} <span className="text-[#C29A5E]">(slug editable below)</span></p>
       {showSupersededBanner && (
@@ -51,11 +45,7 @@ export default async function EditProject({ params }: { params: { id: string } }
             </Link>{" "}
             is live. Deactivate this listing?
           </span>
-          <form action={toggleProjectActive.bind(null, p.id)}>
-            <button type="submit" className="rounded-md bg-amber-800 text-white text-sm font-medium px-3 py-1.5 hover:bg-amber-900 whitespace-nowrap">
-              Deactivate now
-            </button>
-          </form>
+          <DeactivateControl projectId={p.id} status={p.status} hasConfirmedLink={hasConfirmedLink} prefillTarget={prefillTarget} variant="banner" />
         </div>
       )}
       <TranslationsPanel type="project" groupId={p.translationGroupId} currentId={p.id} currentLang={p.language} />

@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { Metadata } from "next";
 import { localizedHref } from "@/lib/locale";
 import {
@@ -8,6 +8,7 @@ import {
   getNotFoundPageByLang,
   getProjectByLang,
   getProjectSlugs,
+  getLegacyProjectRedirect,
   ALL_LOCALES,
 } from "@/sanity/sanity.utils";
 
@@ -111,6 +112,8 @@ const ProjectPage = async ({ params }: Props) => {
   const project = await getProjectByLang(lang, slug);
 
   if (!project) {
+    const redirectTarget = await getLegacyProjectRedirect(lang, slug);
+    if (redirectTarget) permanentRedirect(redirectTarget);
     notFound();
   }
 
