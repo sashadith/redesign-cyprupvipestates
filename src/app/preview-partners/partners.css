@@ -1,0 +1,110 @@
+/* Partners — redesigned. Reuses preview-home/tokens.css's REAL visual
+   language directly — no separate visual system invented for this page.
+
+   Hero: the exact .hero/.hero__media/.hero__scrim/.hero__inner/.hero__title
+   (which nests .hero__brand + .hero__headline)/.hero__stripe/.hero__desc/
+   .hero__cta classes the homepage's own cinematic hero uses (Hero.tsx),
+   with the page's existing photo as the background image in place of
+   Home's video. This is the right reference (not FAQ/Insights/Case-Studies'
+   .ins__hero) because Partners is a conversion/landing page, not a content
+   index — .ins__hero is a lighter, two-column "magazine" pattern built for
+   listing pages with a device-mockup visual, which Partners has no
+   equivalent of.
+
+   Section headers throughout (eyebrow + H2 + shimmer stripe) reuse the
+   IDENTICAL composition as .ins__eyebrow + .benefits__title/.newlist__title-
+   style headings, just namespaced .pnr__eyebrow/.pnr__title since no single
+   shared class already covers "eyebrow + H2" independent of one specific
+   section's context.
+
+   Card/list treatments:
+   - "Benefits of partnering" (4 items) reuses Insights' .ins__topics/
+     .ins__topic/.ins__topic-no/.ins__topic-title glass-card pattern verbatim
+     (imported via insights.css, already loaded by preview-home/tokens
+     dependents — see layout.tsx import).
+   - "Who we work with" (3 items) reuses the homepage's .about__medallion
+     icon-badge pattern verbatim (same border/glow/hover-lift), with its own
+     3-column grid sized for 3 items instead of .about__bullets' 6-column
+     grid (built for 6 amenity icons — reusing it as-is would leave 3 empty
+     tracks). Title/description typography below the medallion borrows the
+     .bstat__title/.bstat__desc sizes (same weight/size already used for a
+     title+description pair elsewhere in this exact design system).
+   - "How it works" is the one section with no direct existing analog (nothing
+     else in this system needs a linear 3-step sequence) — a deliberately
+     different, editorial treatment (large serif numerals, connecting line,
+     no card chrome) for real compositional variation instead of a third grid
+     of cards. Sizes/spacing still come from the shared type scale and
+     spacing tokens, not invented values. */
+
+.pnr { display: block; overflow-x: clip; background: var(--sea-deep); }
+
+/* ---------------------------------------------------------------- HERO --- */
+/* Structure mirrors Hero.tsx exactly: .hero > .hero__media (image instead of
+   video) + .hero__scrim + .hero__inner.wrap > .hero__title (brand + headline
+   spans) + .hero__stripe + .hero__desc + .hero__cta. All typography/spacing
+   for those classes already exists in tokens.css — nothing new needed here
+   except sizing the still image the same as the video/poster fill. */
+.pnr__hero-media img { width: 100%; height: 100%; object-fit: cover; }
+.pnr__hero-note {
+  margin-top: var(--s-5); max-width: 56ch; font-family: var(--font-body), sans-serif;
+  font-size: var(--text-caption); line-height: 1.6; color: var(--text-faint);
+}
+
+/* ------------------------------------------------------------- SECTION --- */
+/* Shared eyebrow + H2 + stripe header, used above every content section
+   below the hero — identical composition/tokens to .ins__eyebrow +
+   .benefits__title, just not tied to one section's specific class names. */
+.pnr__eyebrow {
+  margin: 0 0 var(--s-3); font-family: var(--font-body), sans-serif; font-size: var(--text-caption);
+  font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent);
+}
+.pnr__title {
+  margin: 0; font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em;
+  color: var(--ivory); text-wrap: balance;
+}
+.pnr__stripe { margin-top: var(--s-5); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
+.pnr__section-head { max-width: 56ch; margin-bottom: clamp(40px, 5vw, 64px); }
+
+.pnr__stats-section { border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); }
+
+/* --------------------------------------------------- BENEFIT TOPIC CARDS - */
+/* Reuses .ins__topics/.ins__topic exactly (see insights.css) — only the
+   grid-template narrows from auto-fill to a fixed 2-col desktop layout since
+   4 items reads better as a tight 2×2 than a loose auto-fill wrap. */
+.pnr__benefit-grid { grid-template-columns: 1fr; }
+@media (min-width: 640px) { .pnr__benefit-grid { grid-template-columns: repeat(2, 1fr); } }
+
+/* ------------------------------------------------------- PARTNER TYPES --- */
+/* Reuses .about__medallion (icon badge) verbatim; grid sized for 3 items
+   (not .about__bullets' 6-col grid, built for 6 amenity icons). */
+.pnr__type-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: clamp(32px, 4vw, 48px); }
+@media (min-width: 720px) { .pnr__type-grid { grid-template-columns: repeat(3, 1fr); } }
+.pnr__type { display: flex; flex-direction: column; align-items: center; gap: var(--s-4); text-align: center; }
+.pnr__type-star { width: 34px; height: 32px; }
+.pnr__type-title { margin: 0; font-family: var(--font-body), sans-serif; font-weight: 500; font-size: var(--text-lead); color: var(--ivory); }
+.pnr__type-desc { margin: 0; max-width: 32ch; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.6; color: var(--text-soft); }
+
+/* ----------------------------------------------------------- HOW IT WORKS */
+/* The one genuinely new composition: an editorial numbered sequence (no
+   card background/border at all) so it reads as a distinct rhythm from the
+   two card sections above it, not a third grid. */
+.pnr__step-grid { display: grid; grid-template-columns: 1fr; gap: clamp(40px, 6vw, 64px); }
+@media (min-width: 780px) { .pnr__step-grid { grid-template-columns: repeat(3, 1fr); } }
+.pnr__step { position: relative; }
+.pnr__step-num {
+  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 300;
+  font-size: clamp(2.6rem, 2rem + 2.4vw, 3.6rem); line-height: 1; color: var(--accent);
+  margin: 0 0 var(--s-4);
+}
+.pnr__step-title {
+  margin: 0 0 var(--s-3); font-family: var(--font-body), sans-serif; font-weight: 600;
+  font-size: var(--text-lead); color: var(--ivory);
+}
+.pnr__step-desc { margin: 0; max-width: 36ch; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.65; color: var(--text-soft); }
+@media (min-width: 780px) {
+  .pnr__step:not(:last-child)::after {
+    content: ""; position: absolute; top: 0.55em; left: calc(100% - 8px); width: clamp(24px, 4vw, 48px);
+    height: 1px; background: linear-gradient(90deg, var(--hairline-strong), transparent);
+  }
+}

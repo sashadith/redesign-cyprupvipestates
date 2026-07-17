@@ -49,6 +49,21 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
+  // Partners redesign — LOCAL PREVIEW ONLY, not deployed. Rewrites the real
+  // /partners, /de/partners, /pl/partners, /ru/partners to the new
+  // preview-partners/[lang] design so the page (and its lead-capture form,
+  // gated by /api/email's PARTNERS_PATH_RE on the exact /partners path) can
+  // be verified end-to-end at the real URL before any cutover decision. The
+  // live hardcoded /[lang]/partners/page.tsx is untouched on disk; remove
+  // this block to fall straight back to it.
+  const partnersMatch = request.nextUrl.pathname.match(/^\/(?:(de|pl|ru)\/)?partners$/);
+  if (partnersMatch) {
+    const lang = partnersMatch[1] || "en";
+    const url = request.nextUrl.clone();
+    url.pathname = `/preview-partners/${lang}`;
+    return NextResponse.rewrite(url);
+  }
+
   // Singlepage canonicalisation. The catch-all singlepage route matches a page by its leaf slug
   // alone, so a nested page (parent/child) also resolves at a flat "/leaf" or wrong-parent URL —
   // duplicate content. Map each nested leaf to its canonical path and 308-redirect anything else.
@@ -103,6 +118,6 @@ export const config = {
   // in production. Confirmed live (2026-07-17): both preview-home's hero video
   // and the FAQ hero illustration were silently broken by this gap.
   matcher: [
-    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|sandbox|preview-assets|preview-case-studies|preview-faq|preview-home|preview-insights|preview-projects|style|c/).*)",
+    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|sandbox|preview-assets|preview-case-studies|preview-faq|preview-home|preview-insights|preview-partners|preview-projects|style|c/).*)",
   ],
 };
