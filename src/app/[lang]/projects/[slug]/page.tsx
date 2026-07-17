@@ -1,3 +1,7 @@
+import "@/app/preview-home/tokens.css";
+import "@/app/preview-projects/projects.css";
+import "@/app/preview-project/project.css";
+
 import React from "react";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
