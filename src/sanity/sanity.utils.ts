@@ -667,7 +667,8 @@ type ProjectListItem = {
   isSold?: boolean; videoId?: string; isNew?: boolean; isFeatured?: boolean; listingPriority?: number; _createdAt?: string;
   // "project" (default, legacy Sanity-origin) or "development" (the new Prisma-backed
   // pipeline, merged into this same listing — see queryFilteredDevelopmentRows below).
-  // Card links need this to know whether to build /projects/{slug} or /preview-project/{slug}.
+  // Both sources now share the same /projects/{slug} path (cutover 2026-07-17);
+  // callers still key off this to pick the right card-field shape (e.g. distances).
   _source?: "project" | "development";
   // Development rows only — feeds the ScarcityBanner. undefined for legacy rows
   // (no unit data), which is exactly what tells the card to render no banner.

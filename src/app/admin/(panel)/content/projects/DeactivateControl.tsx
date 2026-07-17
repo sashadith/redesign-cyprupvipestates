@@ -76,7 +76,7 @@ export default function DeactivateControl({
                   Redirect visitors to the new listing (301)
                 </label>
                 {addRedirect && (
-                  <input value={target} onChange={(e) => setTarget(e.target.value)} className={input} placeholder="/preview-project/slug" />
+                  <input value={target} onChange={(e) => setTarget(e.target.value)} className={input} placeholder="/projects/slug" />
                 )}
               </div>
             ) : (

@@ -165,13 +165,33 @@ model Project {
 model LegacyProjectRedirect {
   id         String   @id @default(uuid())
   projectId  String   @unique
-  targetPath String // server-relative path, e.g. "/preview-project/slug" or "/de/preview-project/slug"
+  targetPath String // server-relative path, e.g. "/projects/slug" or "/de/projects/slug"
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@map("legacy_project_redirects")
+}
+
+// Generic admin action audit trail — distinct from LeadActivity (which is
+// scoped to a single CRM Lead and can't represent an action like "archived 4
+// legacy project rows"). Minimal by design: one row per meaningful admin
+// action, enough to answer "who did what, when, to what" without a join.
+model AdminAuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actorName  String?
+  actorEmail String?
+  action     String // e.g. "batch_deactivate_confirmed_overlap"
+  targetType String // e.g. "Project" (the legacy translation-group anchor)
+  targetId   String
+  detail     Json?
+  createdAt  DateTime @default(now())
+
+  @@index([action])
+  @@index([targetType, targetId])
+  @@map("admin_audit_logs")
 }
 
 // ─── CONTENT: BLOG ───────────────────────────────────────────────────────────

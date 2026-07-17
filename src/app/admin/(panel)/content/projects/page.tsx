@@ -81,7 +81,7 @@ export default async function ProjectsAdmin({ searchParams }: { searchParams: { 
                     projectId={p.id}
                     status={p.status}
                     hasConfirmedLink={!!p.supersededByDevelopment}
-                    prefillTarget={p.supersededByDevelopment ? localizedHref(p.language, ["preview-project", p.supersededByDevelopment.slug ?? ""]) : null}
+                    prefillTarget={p.supersededByDevelopment ? localizedHref(p.language, ["projects", p.supersededByDevelopment.slug ?? ""]) : null}
                     locales={p.translationGroupId ? (localesByGroup.get(p.translationGroupId) ?? [p.language]) : [p.language]}
                     variant="compact"
                   />

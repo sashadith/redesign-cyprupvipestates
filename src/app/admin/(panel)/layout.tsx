@@ -47,6 +47,7 @@ function buildModules(isAdmin: boolean, trashCount: number): NavModule[] {
       pages: [
         { href: "/admin/developments", label: "All developments" },
         { href: "/admin/developments/areas", label: "Area descriptions" },
+        { href: "/admin/developers/publishing-queue", label: "Publishing Queue" },
       ],
     },
     { key: "analytics", label: "Analytics", pages: [{ href: "/admin/analytics", label: "Analytics" }] },

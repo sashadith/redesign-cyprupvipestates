@@ -25,7 +25,7 @@ export default async function EditProject({ params }: { params: { id: string } }
   const showSupersededBanner = p.status === "PUBLISHED" && p.supersededByDevelopment?.publishStatus === "published";
   const hasConfirmedLink = !!p.supersededByDevelopment;
   const prefillTarget = p.supersededByDevelopment
-    ? localizedHref(p.language, ["preview-project", p.supersededByDevelopment.slug ?? ""])
+    ? localizedHref(p.language, ["projects", p.supersededByDevelopment.slug ?? ""])
     : null;
   // ACTIVATE/DEACTIVATE cascades across every locale row of this same real
   // project (see toggleProjectActive/deactivateProjectWithRedirect) — the

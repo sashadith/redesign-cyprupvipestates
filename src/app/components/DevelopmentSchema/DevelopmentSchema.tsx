@@ -51,10 +51,10 @@ export default function DevelopmentSchema({ p, lang, canonical }: { p: ProjectVM
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: abs(localizedHref(lang)) },
-      // Points at the new pipeline's own listing page (not the legacy "/projects",
-      // a different system) — update to "projects" once the cutover in the plan
-      // (README: SEO-Fundament plan) retires the old route and takes over the path.
-      { "@type": "ListItem", position: 2, name: "Projects", item: abs(localizedHref(lang, "preview-projects")) },
+      // Cutover (2026-07-17): the unified listing at /[lang]/projects now serves
+      // both legacy and Development results — link there, not the old isolated
+      // /preview-projects design sandbox.
+      { "@type": "ListItem", position: 2, name: "Projects", item: abs(localizedHref(lang, "projects")) },
       { "@type": "ListItem", position: 3, name: p.publicName, item: canonical },
     ],
   };

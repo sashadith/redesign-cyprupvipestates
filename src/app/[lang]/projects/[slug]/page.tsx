@@ -7,26 +7,42 @@ import {
   getFormStandardDocumentByLang,
   getNotFoundPageByLang,
   getProjectByLang,
-  getProjectSlugs,
   getLegacyProjectRedirect,
-  ALL_LOCALES,
 } from "@/sanity/sanity.utils";
 
-export const revalidate = 3600;
-export async function generateStaticParams() {
-  const params: { lang: string; slug: string }[] = [];
-  for (const lang of ALL_LOCALES) {
-    for (const slug of await getProjectSlugs(lang)) params.push({ lang, slug });
-  }
-  return params;
-}
+// Cutover: this route now serves BOTH systems at one shared path — a published
+// Development (new Prisma pipeline) is tried FIRST; a legacy Sanity-origin
+// Project (below, unchanged) is the fallback. This is also the collision rule:
+// on a slug collision the PUBLISHED entity wins, and checking Development
+// first means an ARCHIVED legacy row can never shadow a live Development even
+// if their slugs happened to coincide (verified zero live collisions exist at
+// cutover time — see the 2026-07-17 SEO-activation commit message).
+// force-dynamic (not the legacy route's former revalidate=3600 ISR): the
+// Development branch needs always-fresh admin-edit visibility and previously
+// ran force-dynamic at its old /preview-project/[slug] address; unifying both
+// branches under one dynamic config was simpler and safer than threading
+// revalidatePath calls through every Development admin mutation. Legacy pages
+// lose build-time SSG as a result — acceptable, DB reads here are cheap and
+// every other DB-driven route in this app (the merged listing, presentations,
+// the old preview-project route) already runs force-dynamic the same way.
+export const dynamic = "force-dynamic";
+
+import ProjectPageBody from "@/app/preview-project/ProjectPageBody";
+import DevelopmentSchema from "@/app/components/DevelopmentSchema/DevelopmentSchema";
+import { getDbProjectBySlug } from "@/lib/developmentRender";
+import { resolveMetaTitle, resolveMetaDescription, NEW_PROJECTS_INDEXABLE } from "@/lib/developmentSeo";
+import { abs, staticAlternates, DEFAULT_OG_IMAGE } from "@/lib/seo";
+
 import Header from "@/app/components/Header/Header";
 import Footer from "@/app/components/Footer/Footer";
 import { i18n } from "@/i18n.config";
 import { Translation } from "@/types/homepage";
 import PropertyIntro from "@/app/components/PropertyIntro/PropertyIntro";
 import PropertyDescription from "@/app/components/PropertyDescription/PropertyDescription";
-import dynamic from "next/dynamic";
+// Renamed from the default "dynamic" export name — this file also exports the
+// route-segment config `dynamic = "force-dynamic"` above, and both live in the
+// same module scope.
+import nextDynamic from "next/dynamic";
 import PropertyDistances from "@/app/components/PropertyDistances/PropertyDistances";
 import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
 import { FormStandardDocument } from "@/types/formStandardDocument";
@@ -35,7 +51,7 @@ import PropertyFeatures from "@/app/components/PropertyFeatures/PropertyFeatures
 import HeaderWrapper from "@/app/components/HeaderWrapper/HeaderWrapper";
 import { ButtonModal } from "@/app/components/ButtonModal/ButtonModal";
 import ProjectSlider from "@/app/components/ProjectSlider/ProjectSlider";
-const ProjectSameCity = dynamic(() => import("@/app/components/ProjectSameCity/ProjectSameCity"));
+const ProjectSameCity = nextDynamic(() => import("@/app/components/ProjectSameCity/ProjectSameCity"));
 import { urlFor } from "@/sanity/sanity.client";
 import QualificationForm from "@/app/components/QualificationForm/QualificationForm";
 import FullDescriptionBlock from "@/app/components/FullDescriptionBlock/FullDescriptionBlock";
@@ -47,7 +63,7 @@ import NotFoundPageComponent from "@/app/components/NotFoundPageComponent/NotFou
 // Heavy, below-the-fold/modal components — code-split out of the initial bundle.
 // ROI modal (recharts) is client-only (opens on click); related-projects slider (Swiper)
 // keeps SSR so its internal links stay in the HTML for SEO, but its JS chunk is split.
-const ModalRoiCalculator = dynamic(() => import("@/app/components/ModalRoiCalculator/ModalRoiCalculator"), { ssr: false });
+const ModalRoiCalculator = nextDynamic(() => import("@/app/components/ModalRoiCalculator/ModalRoiCalculator"), { ssr: false });
 import MetaViewContentTracker from "@/app/components/MetaViewContentTracker/MetaViewContentTracker";
 import LinkedInConversionTracker from "@/app/components/LinkedInConversionTracker/LinkedInConversionTracker";
 import ProjectPdfButton from "@/app/components/ProjectPdfButton/ProjectPdfButton";
@@ -59,6 +75,29 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = params;
+
+  // Development wins on a slug collision when published — see the dispatch-order
+  // comment above the route's `dynamic` export.
+  const dev = await getDbProjectBySlug(slug);
+  if (dev && dev.publishStatus === "published") {
+    const title = resolveMetaTitle(dev, lang, dev.seoOverride);
+    const description = resolveMetaDescription(dev, lang, dev.seoOverride);
+    const { canonical, languages } = staticAlternates(lang, ["projects", slug]);
+    const ogImage = dev.gallery[0] ? abs(dev.gallery[0]) : DEFAULT_OG_IMAGE;
+    const canIndex = NEW_PROJECTS_INDEXABLE;
+    return {
+      title,
+      description,
+      alternates: { canonical, languages },
+      robots: { index: canIndex, follow: canIndex },
+      openGraph: {
+        title, description, url: canonical, siteName: "Cyprus VIP Estates", locale: lang, type: "website",
+        images: [{ url: ogImage, width: 1200, height: 630, alt: dev.publicName }],
+      },
+      twitter: { card: "summary_large_image", title, description, images: [ogImage] },
+    };
+  }
+
   const data = await getProjectByLang(lang, slug);
 
   let previewImageUrl: string | undefined = undefined;
@@ -109,6 +148,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 const ProjectPage = async ({ params }: Props) => {
   const { lang, slug } = params;
+
+  const dev = await getDbProjectBySlug(slug);
+  if (dev && dev.publishStatus === "published") {
+    const { canonical } = staticAlternates(lang, ["projects", slug]);
+    const devTranslations: Translation[] = i18n.languages.map((l) => ({
+      language: l.id,
+      path: localizedHref(l.id, ["projects", slug]),
+    }));
+    return (
+      <>
+        <DevelopmentSchema p={dev} lang={lang} canonical={canonical} />
+        <ProjectPageBody p={dev} lang={lang} params={params} translations={devTranslations} />
+      </>
+    );
+  }
+
   const project = await getProjectByLang(lang, slug);
 
   if (!project) {
@@ -160,7 +215,7 @@ const ProjectPage = async ({ params }: Props) => {
       : acc;
   }, []);
 
-  const MapWithNoSSR = dynamic(
+  const MapWithNoSSR = nextDynamic(
     () => import("../../../components/PropertyMap/PropertyMap"),
     {
       ssr: false,

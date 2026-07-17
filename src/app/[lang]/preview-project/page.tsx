@@ -3,7 +3,7 @@
 // drafts and for developers that haven't been assigned a slug yet. Once a
 // Development has a slug (assigned automatically on publish, see
 // src/lib/developmentSeo.ts), this route 301s straight to the real SEO-facing
-// slug route (src/app/[lang]/preview-project/[slug]/page.tsx) so no two URLs
+// slug route (src/app/[lang]/projects/[slug]/page.tsx) so no two URLs
 // ever serve the same published project.
 import "@/app/preview-home/tokens.css";
 import "@/app/preview-projects/projects.css";
@@ -34,8 +34,10 @@ export default async function PreviewProjectPage({ params, searchParams }: { par
   const dbP = forceFeed ? null : await getDbProject(dev, target);
   // A published (or any slugged) development has a real SEO URL — send traffic
   // there instead of rendering this admin view twice under two addresses.
+  // Straight to /projects/[slug] (not the old /preview-project/[slug], which is
+  // now itself just a redirect stub to here) — no reason to double-hop.
   if (dbP?.slug) {
-    permanentRedirect(localizedHref(lang, ["preview-project", dbP.slug]));
+    permanentRedirect(localizedHref(lang, ["projects", dbP.slug]));
   }
   const p = dbP ?? (await getPreviewProject(dev, target));
   const translations: Translation[] = i18n.languages.map((l) => ({ language: l.id, path: localizedHref(l.id, "preview-project") }));

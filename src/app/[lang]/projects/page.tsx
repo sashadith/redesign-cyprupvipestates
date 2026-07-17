@@ -127,7 +127,7 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
     return {
       id: p._id,
       title: p.title,
-      href: slug ? localizedHref(lang, [p._source === "development" ? "preview-project" : "projects", slug]) : "#",
+      href: slug ? localizedHref(lang, ["projects", slug]) : "#",
       image: p._source === "development" ? (p.previewImage as string | undefined) : safeUrl(p.previewImage),
       city: kf.city ?? "",
       price: typeof kf.price === "number" ? kf.price : Number(kf.price) || null,
@@ -150,7 +150,7 @@ export default async function ProjectsPage({ params, searchParams }: Props) {
     .map((m: any) => ({
       id: m._id,
       title: m.title,
-      href: m.slug ? localizedHref(lang, [m._source === "development" ? "preview-project" : "projects", m.slug]) : "#",
+      href: m.slug ? localizedHref(lang, ["projects", m.slug]) : "#",
       city: m.city ?? "",
       price: typeof m.price === "number" ? m.price : Number(m.price) || null,
       lat: m.location.lat,

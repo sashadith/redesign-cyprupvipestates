@@ -19,11 +19,12 @@ export const DESC_MAX = 160;
 
 // The "prod-only switch": the new Development pages carry the full SEO
 // machinery (per-project title/description, canonical, hreflang, structured
-// data) starting now, but stay noindex until this is flipped — set
-// NEW_PROJECTS_INDEXABLE=true in the production env at cutover time (when the
-// interim /preview-project/[slug] route is renamed to /projects/[slug] and the
-// old Sanity Project pages are retired). Staging keeps its own nginx
-// X-Robots-Tag backstop regardless, so this never needs per-domain logic.
+// data), but stay noindex until this is flipped — set NEW_PROJECTS_INDEXABLE
+// =true in the production env at cutover time. Set true 2026-07-17, alongside
+// the route rename from the interim /preview-project/[slug] to /projects/[slug]
+// (now the SAME route legacy Project pages use — see that page's dispatch-
+// order comment). Staging keeps its own nginx X-Robots-Tag backstop
+// regardless, so this never needs per-domain logic.
 export const NEW_PROJECTS_INDEXABLE = process.env.NEW_PROJECTS_INDEXABLE === "true";
 
 // ---------- slug ----------

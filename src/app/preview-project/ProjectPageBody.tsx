@@ -18,12 +18,12 @@ import { splitDescriptionParagraphs } from "@/lib/text";
 import { resolveDevelopmentType } from "@/lib/developmentCard";
 import DistancesStrip from "@/app/components/DistancesStrip/DistancesStrip";
 
-// Shared render body for both the SEO-facing slug route
-// (src/app/[lang]/preview-project/[slug]/page.tsx) and the legacy query-string
-// admin-preview route (src/app/[lang]/preview-project/page.tsx). `banner`, when
-// given, renders the "Preview / internal name / dev switcher" strip — the
-// public slug route omits it entirely (no reason to expose internal feed names
-// or a "Preview" label on an indexable page).
+// Shared render body for both the SEO-facing slug route (the Development
+// branch of src/app/[lang]/projects/[slug]/page.tsx) and the admin-only
+// query-string preview route (src/app/[lang]/preview-project/page.tsx).
+// `banner`, when given, renders the "Preview / internal name / dev switcher"
+// strip — the public slug route omits it entirely (no reason to expose
+// internal feed names or a "Preview" label on an indexable page).
 
 const fmtPrice = (n: number | null | undefined, cur = "EUR") =>
   n == null ? "Price on request" : `${cur === "EUR" ? "€" : cur + " "}${n.toLocaleString("en-US")}`;

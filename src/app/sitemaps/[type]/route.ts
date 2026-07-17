@@ -325,11 +325,11 @@ async function generateCaseStudiesSitemap(): Promise<SitemapPage[]> {
 // New Development pipeline (Prisma-only, no Sanity row — a single Development
 // serves all 4 languages via the [lang] route param, unlike the per-language
 // Sanity content types above). Gated behind NEW_PROJECTS_INDEXABLE, same flag
-// src/app/[lang]/preview-project/[slug]/page.tsx uses for its own robots meta
-// — while the flag is off (pre-cutover default), this returns zero pages, so
-// the sitemap route exists and is wired up but advertises nothing yet. Lives
-// at the interim /preview-project/[slug] path; will move to /projects/[slug]
-// at the full cutover (see src/lib/developmentSeo.ts's own comment on that).
+// src/app/[lang]/projects/[slug]/page.tsx uses for its own robots meta — while
+// the flag is off, this returns zero pages, so the sitemap route exists and
+// is wired up but advertises nothing yet. Lives at /projects/[slug], the same
+// path legacy Project pages use (cutover 2026-07-17) — see that page's
+// dispatch-order comment for the collision rule.
 async function generateDevelopmentsSitemap(): Promise<SitemapPage[]> {
   if (!NEW_PROJECTS_INDEXABLE) return [];
 
@@ -343,16 +343,16 @@ async function generateDevelopmentsSitemap(): Promise<SitemapPage[]> {
     if (!dev.slug) continue;
     const alternates: Alt[] = langs.map((l) => ({
       hreflang: l,
-      href: buildUrl(localizedHref(l, ["preview-project", dev.slug!])),
+      href: buildUrl(localizedHref(l, ["projects", dev.slug!])),
     }));
-    alternates.push({ hreflang: "x-default", href: buildUrl(localizedHref("en", ["preview-project", dev.slug!])) });
+    alternates.push({ hreflang: "x-default", href: buildUrl(localizedHref("en", ["projects", dev.slug!])) });
 
     const gallery = Array.isArray(dev.gallery) ? (dev.gallery as unknown as string[]) : [];
 
     for (const lang of langs) {
       const prefix = localePrefix(lang);
       pages.push({
-        route: `${prefix}/preview-project/${dev.slug}`,
+        route: `${prefix}/projects/${dev.slug}`,
         changefreq: "weekly",
         priority: 0.6,
         lastmod: dev.updatedAt?.toISOString(),

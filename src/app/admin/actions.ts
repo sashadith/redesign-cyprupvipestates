@@ -419,7 +419,7 @@ export async function toggleProjectActive(id: string) {
 // were viewing). Cascades across every locale row of the project group: the
 // row the admin was looking at gets their (possibly edited) target; every
 // other locale row gets its own auto-computed target — the same Development,
-// linked through that locale's own /preview-project prefix (see
+// linked through that locale's own /projects prefix (see
 // localizedHref) — since asking an admin to hand-edit four URLs one at a time
 // isn't a reasonable dialog. An empty/null target on the viewed row removes
 // its redirect only; sibling rows still get their auto-computed target as
@@ -438,7 +438,7 @@ export async function deactivateProjectWithRedirect(id: string, redirectTarget: 
   const ops = rows.flatMap((row) => {
     const target = row.id === id
       ? (redirectTarget ?? "").trim()
-      : (dev?.slug ? localizedHref(row.language, ["preview-project", dev.slug]) : "");
+      : (dev?.slug ? localizedHref(row.language, ["projects", dev.slug]) : "");
     return [
       prisma.project.update({ where: { id: row.id }, data: { status: "ARCHIVED" } }),
       target

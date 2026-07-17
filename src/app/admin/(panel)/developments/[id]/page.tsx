@@ -16,13 +16,13 @@ import ArchiveButton from "./ArchiveButton";
 import MapLocationField from "./MapLocationField";
 import { getDbProject } from "@/lib/developmentRender";
 import { autoMetaTitle, autoMetaDescription, developmentSlug, TITLE_MAX, DESC_MAX } from "@/lib/developmentSeo";
+import { computePublishGate, areaSlugOf } from "@/lib/developmentPublishGate";
 import { getSeoPromptTemplate } from "@/lib/ai/seoMeta";
 import SeoMetaFields from "./SeoMetaFields";
 
 export const dynamic = "force-dynamic";
 
 const arr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
-const areaSlugOf = (a: string) => a.toLowerCase().replace(/ph/g, "f").replace(/[^a-z]/g, "");
 
 const STATUS_STYLE: Record<string, string> = {
   draft: "bg-[#F3F4F6] text-[#6B7280]",
@@ -54,15 +54,10 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
   const areaDesc = area ? await prisma.areaDescription.findFirst({ where: { areaSlug: areaSlugOf(area), status: "approved" } }) : null;
   const description = ov?.descriptionEN || d.description || "";
 
-  const gate = [
-    { ok: !!description, label: "Description filled" },
-    { ok: !!area, label: "Area set" },
-    { ok: !!district, label: "District set" },
-    { ok: lat != null && lng != null, label: "Map location set" },
-    { ok: !!d.stage, label: "Status set" },
-    { ok: !!areaDesc, label: "Neighbourhood description exists for this area" },
-    { ok: gallery.length > 0 || !!ov?.mainImage, label: "Has images" },
-  ];
+  const gate = computePublishGate({
+    description, area, district, lat, lng, stage: d.stage,
+    hasAreaDescription: !!areaDesc, gallery, mainImage: ov?.mainImage,
+  });
   const canPublish = gate.every((g) => g.ok);
 
   // Reconstruct the id from the feedKey (minus the "dev:" prefix) so getDbProject
@@ -71,7 +66,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
   // Once a slug exists, link straight to the real SEO-facing URL — the ?dev=&id=
   // route now just 301s there anyway.
   const previewHref = d.slug
-    ? `/preview-project/${encodeURIComponent(d.slug)}`
+    ? `/projects/${encodeURIComponent(d.slug)}`
     : `/preview-project?dev=${d.dev}&id=${encodeURIComponent(d.feedKey.slice(d.dev.length + 1))}`;
 
   // Auto-generated title/description per language, shown as placeholders so the
@@ -191,7 +186,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
                 <input name="slug" defaultValue={d.slug ?? ""} placeholder={d.slug ? undefined : `auto: ${slugPlaceholder}`} className={field} />
                 <p className="text-xs text-[#9CA3AF] mt-1">
                   {d.slug
-                    ? <>Live at <code>/preview-project/{d.slug}</code>. Assigned automatically on first publish — changing it moves the public URL, so only do this deliberately.</>
+                    ? <>Live at <code>/projects/{d.slug}</code>. Assigned automatically on first publish — changing it moves the public URL, so only do this deliberately.</>
                     : "Assigned automatically the first time this project is published. Set one now to reserve a specific URL."}
                 </p>
               </div>
