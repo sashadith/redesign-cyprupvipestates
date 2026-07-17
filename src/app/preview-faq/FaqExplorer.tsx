@@ -133,41 +133,43 @@ export default function FaqExplorer({ categories }: { categories: FaqCategory[] 
         )}
       </div>
 
-      <div className="wrap faqp__list" ref={listRef}>
+      <div className="faqp__list" ref={listRef}>
         {visibleCats.map((cat) => (
           <section className="faqp__cat" id={cat.slug} key={cat.slug}>
-            <div className="faqp__cat-head">
-              <h2 className="faqp__cat-title">{cat.label}</h2>
-              <p className="faqp__cat-desc">{cat.description}</p>
-            </div>
-            <div className="faqp__items">
-              {cat.items.map((it) => {
-                const isOpen = openIds.has(it.id);
-                const panelId = `faqp-a-${it.id}`;
-                const btnId = `faqp-q-${it.id}`;
-                return (
-                  <div className={`faqp__item${isOpen ? " is-open" : ""}`} id={`faq-${it.id}`} key={it.id}>
-                    <h3 className="faqp__q-wrap">
-                      <button
-                        type="button"
-                        id={btnId}
-                        className="faqp__q"
-                        aria-expanded={isOpen}
-                        aria-controls={panelId}
-                        onClick={() => toggle(it.id)}
-                      >
-                        <span>{it.question}</span>
-                        <span className={`faqp__q-ic ${isOpen ? "is-open" : ""}`}><Chevron /></span>
-                      </button>
-                    </h3>
-                    <div className="faqp__a-wrap" id={panelId} role="region" aria-labelledby={btnId}>
-                      <div className="faqp__a">
-                        {it.answer.map((p, i) => <p key={i}>{p}</p>)}
+            <div className="wrap">
+              <div className="faqp__cat-head">
+                <h2 className="faqp__cat-title">{cat.label}</h2>
+                <p className="faqp__cat-desc">{cat.description}</p>
+              </div>
+              <div className="faqp__items">
+                {cat.items.map((it) => {
+                  const isOpen = openIds.has(it.id);
+                  const panelId = `faqp-a-${it.id}`;
+                  const btnId = `faqp-q-${it.id}`;
+                  return (
+                    <div className={`faqp__item${isOpen ? " is-open" : ""}`} id={`faq-${it.id}`} key={it.id}>
+                      <h3 className="faqp__q-wrap">
+                        <button
+                          type="button"
+                          id={btnId}
+                          className="faqp__q"
+                          aria-expanded={isOpen}
+                          aria-controls={panelId}
+                          onClick={() => toggle(it.id)}
+                        >
+                          <span>{it.question}</span>
+                          <span className={`faqp__q-ic ${isOpen ? "is-open" : ""}`}><Chevron /></span>
+                        </button>
+                      </h3>
+                      <div className="faqp__a-wrap" id={panelId} role="region" aria-labelledby={btnId}>
+                        <div className="faqp__a">
+                          {it.answer.map((p, i) => <p key={i}>{p}</p>)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           </section>
         ))}

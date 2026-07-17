@@ -126,7 +126,10 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
    down from the tokens.css original since nine instances stack down a long
    page. z-index:-1 + pointer-events:none (same as the source pattern) keeps
    them decorative only, never intercepting accordion clicks or reducing
-   question/answer text contrast. */
+   question/answer text contrast. .faqp__cat is full-bleed (the .wrap max-width
+   container now sits INSIDE it, around faqp__cat-head/faqp__items only) so the
+   clip boundary is the viewport, not the 1360px content column — otherwise the
+   clouds never reach the edges they're drawn to reach. */
 .faqp__cat { position: relative; isolation: isolate; overflow: clip; padding-top: clamp(40px, 5vw, 64px); }
 .faqp__cat::before, .faqp__cat::after {
   content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; aspect-ratio: 1; will-change: transform;

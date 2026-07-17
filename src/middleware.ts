@@ -90,7 +90,13 @@ export const config = {
   // route needs 3 ([lang]/preview-project/[slug]), failed to match, and fell
   // through to the [lang]/[...slug] singlepage catch-all (which then 500'd
   // trying to use "preview-project" as a Prisma `language` value).
+  //
+  // preview-assets (public/preview-assets/*, e.g. sunset.mp4, faq-hero-2.webp)
+  // was missing from this list — every request to it got rewritten to
+  // /en/preview-assets/*, a path with no matching static file or route, 404ing
+  // in production. Confirmed live (2026-07-17): both preview-home's hero video
+  // and the FAQ hero illustration were silently broken by this gap.
   matcher: [
-    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|sandbox|preview-case-studies|preview-faq|preview-home|preview-insights|preview-projects|style|c/).*)",
+    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|sandbox|preview-assets|preview-case-studies|preview-faq|preview-home|preview-insights|preview-projects|style|c/).*)",
   ],
 };
