@@ -1,0 +1,114 @@
+import React from "react";
+import Link from "next/link";
+import { PortableText } from "@portabletext/react";
+
+/* Redesigned SEO body for the Insights index. Parses the flat PortableText into
+   intro / topic cards (H3 groups) / outro, and renders a structured dark guide
+   instead of a plain prose dump. */
+
+const blockText = (b: any) => (b?.children ?? []).map((c: any) => c?.text ?? "").join("").trim();
+
+type Topic = { title: string; body: any[] };
+
+function parseSeo(blocks: any[]): { intro: any[]; topics: Topic[]; outro: any[] } {
+  const intro: any[] = [];
+  const topics: Topic[] = [];
+  const outro: any[] = [];
+  let phase: "intro" | "topics" | "outro" = "intro";
+  let current: Topic | null = null;
+
+  for (const b of blocks ?? []) {
+    const isH3 = b?._type === "block" && b?.style === "h3";
+    const isH2 = b?._type === "block" && b?.style === "h2";
+    if (phase === "intro") {
+      if (isH3) { phase = "topics"; current = { title: blockText(b), body: [] }; topics.push(current); }
+      else intro.push(b);
+    } else if (phase === "topics") {
+      if (isH3) { current = { title: blockText(b), body: [] }; topics.push(current); }
+      else if (isH2) { phase = "outro"; outro.push(b); }
+      else if (current) current.body.push(b);
+    } else {
+      outro.push(b);
+    }
+  }
+  return { intro, topics, outro };
+}
+
+const seoComponents = {
+  block: {
+    normal: ({ children }: any) => <p className="ins__guide-p">{children}</p>,
+    h2: ({ children }: any) => <h3 className="ins__guide-h">{children}</h3>,
+    h3: ({ children }: any) => <h4 className="ins__guide-h4">{children}</h4>,
+    h4: ({ children }: any) => <h4 className="ins__guide-h4">{children}</h4>,
+  },
+  list: {
+    bullet: ({ children }: any) => <ul className="ins__guide-ul">{children}</ul>,
+    number: ({ children }: any) => <ol className="ins__guide-ul">{children}</ol>,
+  },
+  listItem: { bullet: ({ children }: any) => <li>{children}</li>, number: ({ children }: any) => <li>{children}</li> },
+  marks: {
+    strong: ({ children }: any) => <strong>{children}</strong>,
+    em: ({ children }: any) => <em>{children}</em>,
+    link: ({ children, value }: any) => <Link href={value?.href || "#"} className="ins__guide-link">{children}</Link>,
+  },
+};
+
+export default function InsightsSeo({
+  content,
+  eyebrow = "The Guide",
+  title = "Inside Cyprus Insights",
+}: {
+  content: any[];
+  eyebrow?: string;
+  title?: string;
+}) {
+  if (!content?.length) return null;
+  const { intro, topics, outro } = parseSeo(content);
+  // accent the last word (gold shimmer), like the preview's "Insights"
+  const words = title.trim().split(/\s+/);
+  const accent = words.pop() ?? "";
+  const lead = words.join(" ");
+
+  return (
+    <section className="ins__guide is-light">
+      <div className="wrap">
+        <header className="ins__guide-head">
+          <p className="ins__eyebrow">{eyebrow}</p>
+          <h2 className="ins__guide-title">
+            {lead ? `${lead} ` : ""}<span className="it">{accent}</span>
+          </h2>
+          <hr className="shimmer ins__guide-stripe" />
+        </header>
+
+        {(intro.length > 0 || outro.length > 0) && (
+          <div className="ins__guide-cols">
+            {intro.length > 0 && (
+              <div className="ins__guide-intro">
+                <PortableText value={intro} components={seoComponents as any} />
+              </div>
+            )}
+            {outro.length > 0 && (
+              <aside className="ins__guide-outro">
+                <PortableText value={outro} components={seoComponents as any} />
+              </aside>
+            )}
+          </div>
+        )}
+
+        {topics.length > 0 && (
+          <div className="ins__topics">
+            {topics.map((t, i) => (
+              <article className="ins__topic" key={i}>
+                <span className="ins__topic-no">{String(i + 1).padStart(2, "0")}</span>
+                <h3 className="ins__topic-title">{t.title}</h3>
+                <div className="ins__topic-body">
+                  <PortableText value={t.body} components={seoComponents as any} />
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
