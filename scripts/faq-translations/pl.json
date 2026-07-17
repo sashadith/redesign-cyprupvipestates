@@ -1,0 +1,669 @@
+[
+  {
+    "slug": "foreigner",
+    "label": "Zakup nieruchomości przez cudzoziemca",
+    "description": "Uprawnienia dla nabywców z UE, spoza UE oraz kupujących zdalnie.",
+    "items": [
+      {
+        "id": "can-foreigners-buy-property-in-cyprus",
+        "question": "Czy cudzoziemcy mogą kupować nieruchomości na Cyprze?",
+        "answer": [
+          "Tak, cudzoziemcy mogą kupować nieruchomości na Cyprze, a kraj ten pozostaje jednym z bardziej dostępnych europejskich kierunków dla zagranicznych nabywców nieruchomości. Obywatele państw członkowskich UE zazwyczaj napotykają mniej ograniczeń przy zakupie nieruchomości, podczas gdy od kupujących spoza UE może być wymagane uzyskanie zgody Rady Ministrów. W praktyce zgoda ta jest często załatwiana w ramach procesu prawnego i zwykle nie uniemożliwia dojścia transakcji do skutku.",
+          "Zagraniczni nabywcy kupują na Cyprze różne rodzaje nieruchomości, w tym mieszkania, wille, domy szeregowe oraz inwestycje na etapie budowy (off-plan). Część kupujących poszukuje domów wakacyjnych, inni przeprowadzają się na stałe lub inwestują z myślą o dochodach z wynajmu.",
+          "Proces zakupu zazwyczaj rozpoczyna się od wyboru nieruchomości i podpisania umowy rezerwacyjnej, aby ją zabezpieczyć. Następnie prawnik przeprowadza kontrolę prawną, weryfikuje dokumenty własności, sprawdza pozwolenia i przygotowuje umowę sprzedaży. Po podpisaniu umowa jest składana w Rejestrze Gruntów (Land Registry) w celu zabezpieczenia praw kupującego.",
+          "Zagraniczni nabywcy powinni również uwzględnić dodatkowe koszty wykraczające poza cenę zakupu, takie jak opłaty prawne, podatki oraz wahania kursów walut."
+        ]
+      },
+      {
+        "id": "can-i-buy-property-in-cyprus-remotely",
+        "question": "Czy mogę kupić nieruchomość na Cyprze zdalnie?",
+        "answer": [
+          "Tak. Zdalny zakup nieruchomości na Cyprze staje się coraz bardziej powszechny, szczególnie wśród inwestorów i zagranicznych nabywców, którzy nie mogą podróżować w trakcie trwania transakcji. Wiele transakcji jest finalizowanych z wykorzystaniem reprezentacji prawnej oraz pełnomocnictwa.",
+          "Zdalne transakcje zakupu zazwyczaj obejmują:",
+          "Oglądanie nieruchomości online lub wirtualne wycieczki wideo Komunikację cyfrową z agentami i prawnikami Przegląd umów za pośrednictwem poczty elektronicznej Przelewy bankowe na potrzeby płatności etapowych Reprezentację podczas procedur prawnych",
+          "Choć zdalny zakup jest możliwy, niezależna kontrola prawna pozostaje istotna. Przed podjęciem zobowiązania kupujący powinni upewnić się, że nieruchomość posiada odpowiednie pozwolenia, zweryfikować status własności oraz zrozumieć harmonogramy płatności.",
+          "Zdalny zakup może pozwolić zaoszczędzić czas, jednak nigdy nie należy pomijać badania due diligence."
+        ]
+      },
+      {
+        "id": "can-non-eu-citizens-buy-property-in-cyprus",
+        "question": "Czy obywatele spoza UE mogą kupować nieruchomości na Cyprze?",
+        "answer": [
+          "Tak. Obywatele spoza UE mogą kupować nieruchomości na Cyprze, choć w porównaniu z nabywcami z UE mogą ich dotyczyć dodatkowe procedury.",
+          "W niektórych przypadkach wymagana jest zgoda Rady Ministrów. Proces uzyskiwania tej zgody jest zazwyczaj prowadzony przez prawnika kupującego i uważany jest za standardowy krok administracyjny, a nie poważną przeszkodę.",
+          "Nabywcy spoza UE często kupują nieruchomości z myślą o:",
+          "Przeprowadzce Przejściu na emeryturę Domach wakacyjnych Długoterminowej inwestycji Generowaniu dochodu z wynajmu",
+          "Wymogi mogą się różnić w zależności od narodowości, planowanego sposobu wykorzystania nieruchomości oraz indywidualnych okoliczności. Ponieważ przepisy mogą się zmieniać, kupujący powinni zawsze potwierdzić aktualne wymogi prawne przed podjęciem dalszych kroków."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "process",
+    "label": "Proces zakupu",
+    "description": "Krok po kroku, od rezerwacji do ostatecznego przeniesienia własności.",
+    "items": [
+      {
+        "id": "how-does-the-property-buying-process-work-in-cyprus",
+        "question": "Jak wygląda proces zakupu nieruchomości na Cyprze?",
+        "answer": [
+          "Proces zakupu nieruchomości na Cyprze zazwyczaj przebiega w kilku etapach.",
+          "Krok 1: Wybór nieruchomości. Kupujący porównują projekty, lokalizacje, deweloperów oraz potencjał inwestycyjny przed wyborem nieruchomości. Krok 2: Umowa rezerwacyjna. Umowa rezerwacyjna może zostać podpisana w celu tymczasowego wycofania nieruchomości z rynku. Krok 3: Kontrola prawna (due diligence). Prawnicy sprawdzają dokumenty własności, pozwolenia, zadłużenia, obciążenia oraz zatwierdzenia dotyczące inwestycji. Krok 4: Przygotowanie i podpisanie umowy. Umowa sprzedaży jest przygotowywana i podpisywana przez obie strony. Krok 5: Rejestracja umowy. Umowa jest zazwyczaj składana w odpowiednich organach w celu zabezpieczenia praw kupującego. Krok 6: Finalizacja płatności i procedury przeniesienia własności. Pozostałe płatności są dokonywane zgodnie z ustalonym harmonogramem.",
+          "Dokładny przebieg procesu różni się w przypadku nieruchomości z rynku wtórnego oraz nowych inwestycji."
+        ]
+      },
+      {
+        "id": "how-long-does-buying-property-in-cyprus-take",
+        "question": "Ile trwa zakup nieruchomości na Cyprze?",
+        "answer": [
+          "Czas trwania zależy od rodzaju nieruchomości, finansowania, kontroli prawnej oraz sytuacji kupującego.",
+          "Prosty zakup może zająć kilka tygodni, natomiast bardziej złożone transakcje obejmujące kredyty hipoteczne, inwestycje na etapie budowy lub dodatkowe zgody mogą trwać dłużej.",
+          "Czynniki wpływające na czas trwania obejmują:",
+          "Dostępność dokumentów Zatwierdzenie kredytu hipotecznego Weryfikację prawną Harmonogramy dewelopera Przelewy międzynarodowe Procedury związane z rezydencją",
+          "Kupujący poszukujący nieruchomości inwestycyjnych często stawiają na szybkość, natomiast osoby przeprowadzające się mogą kłaść większy nacisk na dokładne badanie due diligence."
+        ]
+      },
+      {
+        "id": "is-visiting-cyprus-necessary-before-purchase",
+        "question": "Czy wizyta na Cyprze jest konieczna przed zakupem?",
+        "answer": [
+          "Nie zawsze, jednak wizyta może dostarczyć cennego wglądu w lokalizacje, infrastrukturę, okolicę oraz styl życia.",
+          "Dwie nieruchomości o zbliżonej cenie mogą przyciągać zupełnie różne profile kupujących, w zależności od:",
+          "Odległości od plaż Szkół Komunikacji Restauracji Aktywności sezonowej Popytu na wynajem",
+          "Wielu inwestorów dokonuje zakupu zdalnie, natomiast kupujący kierujący się względami stylu życia często wolą osobiście odwiedzić nieruchomość przed podjęciem długoterminowej decyzji."
+        ]
+      },
+      {
+        "id": "what-is-a-reservation-agreement",
+        "question": "Czym jest umowa rezerwacyjna?",
+        "answer": [
+          "Umowa rezerwacyjna to wstępny dokument, którego celem jest tymczasowe zarezerwowanie nieruchomości na czas przeprowadzania kontroli prawnej.",
+          "Zazwyczaj określa ona:",
+          "Kwotę rezerwacji Okres rezerwacji Warunki Zasady zwrotu",
+          "Warunki znacznie różnią się w zależności od sprzedawcy i dewelopera."
+        ]
+      },
+      {
+        "id": "is-a-reservation-deposit-refundable",
+        "question": "Czy zadatek rezerwacyjny podlega zwrotowi?",
+        "answer": [
+          "Możliwość zwrotu zależy wyłącznie od warunków umowy.",
+          "Niektóre zadatki mogą podlegać zwrotowi w określonych okolicznościach, podczas gdy inne nie. Kupujący powinni dokładnie przeanalizować umowę rezerwacyjną przed jej podpisaniem."
+        ]
+      },
+      {
+        "id": "when-is-the-purchase-contract-signed",
+        "question": "Kiedy podpisywana jest umowa sprzedaży?",
+        "answer": [
+          "Umowa jest zazwyczaj podpisywana po zakończeniu kontroli prawnej i uzgodnieniu warunków.",
+          "Termin różni się w zależności od:",
+          "Rodzaju nieruchomości Dewelopera Finansowania Negocjacji"
+        ]
+      },
+      {
+        "id": "what-happens-after-signing-the-contract",
+        "question": "Co dzieje się po podpisaniu umowy?",
+        "answer": [
+          "Po podpisaniu umowa może zostać zarejestrowana w odpowiednich organach w celu ochrony praw kupującego.",
+          "Kolejne kroki często obejmują:",
+          "Harmonogramy płatności Procedury przeniesienia własności Finalizację kredytu hipotecznego Ostateczne procesy związane z nabyciem własności"
+        ]
+      },
+      {
+        "id": "what-mistakes-do-foreign-buyers-make-when-purchasing-propert",
+        "question": "Jakie błędy popełniają zagraniczni nabywcy przy zakupie nieruchomości na Cyprze?",
+        "answer": [
+          "Do typowych błędów należą:",
+          "Dokonywanie wyboru wyłącznie na podstawie ceny, niedoszacowanie dodatkowych kosztów, poleganie wyłącznie na materiałach marketingowych, pomijanie kontroli prawnej oraz zakładanie, że prognozowane zwroty z wynajmu są gwarantowane. Staranne planowanie oraz niezależne doradztwo mogą znacząco zmniejszyć ryzyko."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "legal",
+    "label": "Dokumenty i wsparcie prawne",
+    "description": "Wymagana dokumentacja oraz to, co sprawdza dla Ciebie prawnik.",
+    "items": [
+      {
+        "id": "what-documents-are-required-to-buy-property-in-cyprus",
+        "question": "Jakie dokumenty są wymagane do zakupu nieruchomości na Cyprze?",
+        "answer": [
+          "Wymagane dokumenty różnią się w zależności od narodowości kupującego oraz rodzaju transakcji, ale zazwyczaj obejmują:",
+          "Dokument tożsamości (paszport) Potwierdzenie adresu Dokumentację źródła pochodzenia środków Umowy rezerwacyjne Umowy sprzedaży Informacje finansowe (w przypadku kredytu hipotecznego)",
+          "W przypadku nabywców spoza UE lub zakupów związanych z rezydencją może być wymagana dodatkowa dokumentacja."
+        ]
+      },
+      {
+        "id": "do-i-need-a-lawyer-when-buying-property-in-cyprus",
+        "question": "Czy przy zakupie nieruchomości na Cyprze potrzebuję prawnika?",
+        "answer": [
+          "Zdecydowanie zaleca się skorzystanie z niezależnej reprezentacji prawnej, która uznawana jest za jedno z najważniejszych zabezpieczeń w trakcie procesu zakupu.",
+          "Prawnik zazwyczaj sprawdza:",
+          "Status własności Istniejące zadłużenia Pozwolenia planistyczne Pozwolenia budowlane Warunki umowy Procedury rejestracji",
+          "Zakup bez kontroli prawnej znacząco zwiększa ryzyko."
+        ]
+      },
+      {
+        "id": "what-does-a-lawyer-check-during-the-purchase-process",
+        "question": "Co sprawdza prawnik podczas procesu zakupu?",
+        "answer": [
+          "Prawnicy zazwyczaj weryfikują:",
+          "Czy sprzedawca jest prawnym właścicielem nieruchomości Istniejące kredyty lub obciążenia Pozwolenia budowlane Pozwolenia planistyczne Poprawność umowy Wymogi rejestracyjne",
+          "Kontrole te pomagają zmniejszyć ryzyko sporów lub nieoczekiwanych zobowiązań po zakupie."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "costs",
+    "label": "Koszty, podatki i VAT",
+    "description": "Co faktycznie zapłacisz poza ceną z ogłoszenia.",
+    "items": [
+      {
+        "id": "what-additional-costs-should-i-expect-besides-the-property-p",
+        "question": "Jakich dodatkowych kosztów powinienem się spodziewać poza ceną nieruchomości?",
+        "answer": [
+          "Cena nieruchomości podana w ogłoszeniu rzadko jest ostateczną kwotą, jaką wydaje kupujący. Zakup nieruchomości na Cyprze często wiąże się z kilkoma dodatkowymi kosztami, które należy uwzględnić w kalkulacji budżetu.",
+          "Do typowych dodatkowych wydatków należą:",
+          "Opłaty prawne. Niezależni prawnicy zazwyczaj pobierają wynagrodzenie za przegląd umów, weryfikację własności oraz wsparcie w transakcji. Opłata skarbowa (stamp duty). Opłata państwowa naliczana według wartości nieruchomości. VAT. Niektóre nowe inwestycje mogą obejmować podatek VAT, podczas gdy nieruchomości z rynku wtórnego zazwyczaj nie. Opłaty za przeniesienie własności (transfer fees). Mogą one obowiązywać w określonych przypadkach, w zależności od tego, czy VAT został już zapłacony od danej nieruchomości. Ubezpieczenie nieruchomości. Szczególnie istotne w przypadku nieruchomości finansowanych kredytem. Koszty bankowe i wymiany walut. Przelewy międzynarodowe mogą generować nieoczekiwane wydatki.",
+          "Zrozumienie całkowitego kosztu nabycia jest kluczowe, szczególnie dla inwestorów porównujących prognozowane zyski z wynajmu lub długoterminowe zwroty."
+        ]
+      },
+      {
+        "id": "is-vat-included-when-buying-property-in-cyprus",
+        "question": "Czy VAT jest wliczony w cenę przy zakupie nieruchomości na Cyprze?",
+        "answer": [
+          "Sposób naliczania VAT zależy głównie od tego, czy nieruchomość jest nowo wybudowana, czy pochodzi z rynku wtórnego.",
+          "Nowe nieruchomości często podlegają opodatkowaniu VAT, natomiast nieruchomości z rynku wtórnego mogą być z niego zwolnione. W określonych okolicznościach mogą mieć zastosowanie obniżone stawki VAT, gdy zakupiona nieruchomość staje się głównym miejscem zamieszkania kupującego.",
+          "Ponieważ przepisy dotyczące VAT ulegają zmianom, a uprawnienie do ulgi zależy od indywidualnej sytuacji, kupujący powinni zawsze potwierdzić aktualne wymogi przed sfinalizowaniem transakcji.",
+          "Błędne założenia dotyczące VAT mogą znacząco wpłynąć na całkowity budżet zakupu."
+        ]
+      },
+      {
+        "id": "how-much-extra-money-should-buyers-budget-beyond-the-propert",
+        "question": "Ile dodatkowych środków powinni zaplanować kupujący poza ceną nieruchomości?",
+        "answer": [
+          "Nie istnieje uniwersalny wskaźnik procentowy, ponieważ całkowite koszty dodatkowe zależą od rodzaju nieruchomości, struktury finansowania oraz zasad opodatkowania.",
+          "Na planowanie budżetu wpływa kilka czynników:",
+          "Czy obowiązuje VAT Czy wymagane jest finansowanie Złożoność kwestii prawnych Wartość nieruchomości Umowy z deweloperem Planowane przeznaczenie (inwestycja lub zamieszkanie)",
+          "Kupujący skoncentrowani na zwrocie z inwestycji powinni oceniać koszty nabycia łącznie z prognozowanym dochodem z wynajmu oraz przyszłym potencjałem odsprzedaży.",
+          "Skupianie się wyłącznie na cenie zakupu może prowadzić do nierealistycznych oczekiwań co do rentowności."
+        ]
+      },
+      {
+        "id": "what-taxes-do-property-buyers-pay-in-cyprus",
+        "question": "Jakie podatki płacą nabywcy nieruchomości na Cyprze?",
+        "answer": [
+          "Podatki różnią się w zależności od rodzaju transakcji oraz tego, czy nieruchomość jest nowa, czy pochodzi z rynku wtórnego.",
+          "Potencjalne koszty mogą obejmować:",
+          "VAT Opłatę skarbową Opłaty związane z przeniesieniem własności Kwestie podatku od zysków kapitałowych przy sprzedaży Opłaty komunalne",
+          "Obowiązki podatkowe zmieniają się z czasem i mogą różnić się w zależności od sytuacji kupującego.",
+          "Ponieważ opodatkowanie bezpośrednio wpływa na wyniki inwestycji, wielu zagranicznych nabywców korzysta z profesjonalnego doradztwa prawnego lub finansowego przed zakupem."
+        ]
+      },
+      {
+        "id": "what-vat-rates-apply-to-property-purchases-in-cyprus",
+        "question": "Jakie stawki VAT obowiązują przy zakupie nieruchomości na Cyprze?",
+        "answer": [
+          "Obowiązujące stawki VAT zależą od kilku czynników, w tym:",
+          "Kategorii nieruchomości Planowanego przeznaczenia Uprawnień kupującego Przepisów rządowych obowiązujących w momencie zakupu",
+          "W określonych warunkach mogą obowiązywać stawki obniżone, natomiast w innych przypadkach stosowana jest stawka standardowa.",
+          "Wymogi kwalifikacyjne mogą się zmieniać z czasem, dlatego kupujący powinni weryfikować aktualne przepisy, zamiast polegać na nieaktualnych informacjach."
+        ]
+      },
+      {
+        "id": "can-reduced-vat-apply-when-buying-property",
+        "question": "Czy przy zakupie nieruchomości można skorzystać z obniżonego VAT?",
+        "answer": [
+          "W niektórych okolicznościach może mieć zastosowanie obniżona stawka VAT, szczególnie gdy zakupiona nieruchomość staje się głównym miejscem zamieszkania, a nie jest wyłącznie nieruchomością inwestycyjną.",
+          "Warunki kwalifikacji często obejmują:",
+          "Planowane przeznaczenie Powierzchnię nieruchomości Status rezydencji Wymogi regulacyjne",
+          "Ponieważ obniżony VAT może znacząco zmniejszyć koszty nabycia, kupujący rozważający przeprowadzkę często dokładnie analizują te zasady."
+        ]
+      },
+      {
+        "id": "are-resale-properties-taxed-differently-from-new-development",
+        "question": "Czy nieruchomości z rynku wtórnego są opodatkowane inaczej niż nowe inwestycje?",
+        "answer": [
+          "Tak, opodatkowanie nieruchomości z rynku wtórnego i nowo wybudowanych często się różni.",
+          "Nowe inwestycje mogą podlegać VAT, podczas gdy nieruchomości z rynku wtórnego często rządzą się inną strukturą kosztów.",
+          "To rozróżnienie może wpływać na:",
+          "Początkowy koszt nabycia Opłaty związane z przeniesieniem własności Kalkulacje inwestycyjne Długoterminową rentowność",
+          "Kupujący porównujący inwestycje na etapie budowy z nieruchomościami z rynku wtórnego powinni oceniać całkowite koszty posiadania, a nie skupiać się wyłącznie na cenach ofertowych."
+        ]
+      },
+      {
+        "id": "what-are-transfer-fees-when-buying-property",
+        "question": "Czym są opłaty za przeniesienie własności przy zakupie nieruchomości?",
+        "answer": [
+          "Opłaty za przeniesienie własności to koszty związane z przeniesieniem praw własności.",
+          "To, czy opłaty za przeniesienie własności mają zastosowanie i jak są naliczane, zależy od wielu czynników, w tym od wcześniejszego sposobu opodatkowania VAT oraz obowiązujących przepisów.",
+          "Wydatki związane z przeniesieniem własności mogą znacząco wpływać na całkowity koszt zakupu, dlatego są istotne przy planowaniu budżetu."
+        ]
+      },
+      {
+        "id": "how-much-are-legal-fees-when-buying-property-in-cyprus",
+        "question": "Ile wynoszą opłaty prawne przy zakupie nieruchomości na Cyprze?",
+        "answer": [
+          "Opłaty prawne różnią się w zależności od:",
+          "Złożoności transakcji Wartości nieruchomości Doświadczenia prawnika Wymaganych usług dodatkowych",
+          "Niezależne wsparcie prawne często obejmuje:",
+          "Weryfikację własności Sprawdzenie pozwoleń Przegląd umów Doradztwo w zakresie rejestracji",
+          "Choć niektórzy kupujący dążą do minimalizacji wydatków prawnych, niewystarczająca kontrola prawna może znacząco zwiększyć ryzyko."
+        ]
+      },
+      {
+        "id": "are-annual-property-taxes-payable-in-cyprus",
+        "question": "Czy na Cyprze płaci się roczny podatek od nieruchomości?",
+        "answer": [
+          "Cypr zniósł ogólnokrajowy podatek od nieruchomości kilka lat temu. Niektóre opłaty lokalne lub komunalne mogą jednak nadal obowiązywać, w zależności od lokalizacji.",
+          "Właściciele powinni uwzględnić bieżące koszty, takie jak:",
+          "Opłaty komunalne Opłaty eksploatacyjne Ubezpieczenie Wspólne koszty utrzymania inwestycji",
+          "Bieżące koszty posiadania mają szczególne znaczenie dla inwestorów długoterminowych."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "investment",
+    "label": "Inwestycje i zwrot z wynajmu",
+    "description": "Rentowność, strategia oraz miejsca, w których kupują inwestorzy.",
+    "items": [
+      {
+        "id": "is-cyprus-good-for-property-investment",
+        "question": "Czy Cypr jest dobrym miejscem do inwestowania w nieruchomości?",
+        "answer": [
+          "Cypr wciąż przyciąga inwestorów w nieruchomości dzięki turystyce, popytowi na przeprowadzki, sprzyjającemu klimatowi oraz rosnącemu zainteresowaniu ze strony zagranicznych nabywców. Do popularnych strategii inwestycyjnych należą wynajem długoterminowy, wynajem wakacyjny, odsprzedaż po zakończeniu budowy oraz mieszkania generujące dochód.",
+          "Wyniki inwestycji znacznie się różnią w zależności od:",
+          "Lokalizacji Rodzaju nieruchomości Ceny zakupu Strategii wynajmu Jakości dewelopera Infrastruktury w okolicy",
+          "Miasta takie jak Pafos i Limassol często przyciągają różne profile inwestorów. Niektórzy kupujący są zainteresowani głównie korzyściami związanymi ze stylem życia lub możliwościami emerytalnymi, podczas gdy inni koncentrują się na generowaniu zwrotu z wynajmu lub osiąganiu długoterminowego wzrostu kapitału.",
+          "Żadna inwestycja w nieruchomości nie jest wolna od ryzyka, dlatego prognozowaną rentowność należy oceniać łącznie z podatkami, kosztami utrzymania, okresami pustostanów oraz kosztami zarządzania."
+        ]
+      },
+      {
+        "id": "what-rental-yields-can-investors-expect-in-cyprus",
+        "question": "Jakiego zwrotu z wynajmu mogą oczekiwać inwestorzy na Cyprze?",
+        "answer": [
+          "Zwroty z wynajmu na Cyprze znacznie się różnią i zależą od rodzaju nieruchomości, miasta, sezonowości oraz strategii wynajmu.",
+          "Nieruchomości skierowane na rynek turystyczny mogą oferować wyższe sezonowe zwroty z wynajmu, choć poziom obłożenia może się różnić w ciągu roku. Wynajem długoterminowy może zapewnić większą przewidywalność, choć potencjalnie niższe szczytowe zwroty.",
+          "Do istotnych czynników wpływających na zwrot należą:",
+          "Odległość od morza Popularność miasta Infrastruktura Stan nieruchomości Pobliskie szkoły lub centra biznesowe Popyt ze strony ekspatów lub turystów",
+          "Inwestorzy powinni obliczać oczekiwany dochód w oparciu o realistyczne założenia dotyczące obłożenia, a nie optymistyczne prognozy."
+        ]
+      },
+      {
+        "id": "why-do-international-investors-buy-property-in-cyprus",
+        "question": "Dlaczego zagraniczni inwestorzy kupują nieruchomości na Cyprze?",
+        "answer": [
+          "Motywacje inwestorów znacznie się różnią.",
+          "Do typowych powodów należą:",
+          "Generowanie dochodu z wynajmu. Część kupujących dąży do generowania regularnego dochodu poprzez wynajem długoterminowy lub krótkoterminowy. Oczekiwania wzrostu wartości kapitału. Inni oczekują, że wartość nieruchomości wzrośnie z czasem. Dywersyfikacja. Nieruchomości mogą być postrzegane jako alternatywny składnik aktywów w porównaniu z akcjami czy środkami pieniężnymi. Inwestycja związana ze stylem życia. Niektórzy kupujący łączą użytek osobisty z przyszłymi planami wynajmu. Planowanie emerytury. Posiadanie nieruchomości może stanowić element długoterminowych decyzji dotyczących stylu życia.",
+          "Różne motywacje wymagają różnych strategii inwestycyjnych."
+        ]
+      },
+      {
+        "id": "what-is-considered-a-good-rental-yield",
+        "question": "Co uznaje się za dobry zwrot z wynajmu?",
+        "answer": [
+          "Odpowiedź zależy od celów inwestycyjnych oraz tolerancji na ryzyko.",
+          "Niektórzy inwestorzy stawiają na pierwszym miejscu:",
+          "Stabilne obłożenie Niższe wymagania w zakresie utrzymania Długoterminowy wzrost wartości",
+          "Inni w większym stopniu koncentrują się na maksymalizacji krótkoterminowych zwrotów.",
+          "Rentowności nigdy nie należy oceniać w oderwaniu od innych czynników. Wydatki, podatki, koszty utrzymania, okresy pustostanów oraz koszty zarządzania wpływają na rzeczywistą rentowność."
+        ]
+      },
+      {
+        "id": "is-paphos-good-for-property-investment",
+        "question": "Czy Pafos jest dobrym miejscem do inwestowania w nieruchomości?",
+        "answer": [
+          "Pafos pozostaje popularny wśród zagranicznych inwestorów dzięki turystyce, przeprowadzkom emerytalnym oraz społecznościom międzynarodowym.",
+          "Kwestie inwestycyjne często obejmują:",
+          "Popyt na wynajem wakacyjny Atrakcyjność stylu życia Lokalizację nadmorską Zagranicznych nabywców Społeczności emerytalne",
+          "Trafność wyboru zależy od celów inwestycyjnych, a nie wyłącznie od popularności."
+        ]
+      },
+      {
+        "id": "is-short-term-rental-more-profitable-than-long-term-rental",
+        "question": "Czy wynajem krótkoterminowy jest bardziej opłacalny niż wynajem długoterminowy?",
+        "answer": [
+          "Wynajem krótkoterminowy może generować wyższy dochód w okresach wysokiego obłożenia, szczególnie w rejonach turystycznych.",
+          "Może się jednak wiązać również z:",
+          "Wahaniami sezonowymi Większym nakładem pracy związanym z zarządzaniem Wydatkami marketingowymi Kosztami sprzątania Kwestiami regulacyjnymi",
+          "Wynajem długoterminowy może zapewnić bardziej przewidywalne obłożenie.",
+          "Rentowność zależy od rodzaju nieruchomości i lokalizacji."
+        ]
+      },
+      {
+        "id": "is-long-term-rental-safer-for-investors",
+        "question": "Czy wynajem długoterminowy jest bezpieczniejszy dla inwestorów?",
+        "answer": [
+          "Niektórzy inwestorzy preferują długoterminowych najemców, ponieważ dochód może być bardziej przewidywalny. Inni stawiają na elastyczność i potencjalnie wyższe zwroty z wynajmu wakacyjnego. Preferowana strategia zależy od tolerancji na ryzyko oraz celów inwestycyjnych."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "residency",
+    "label": "Rezydencja i przeprowadzka",
+    "description": "Posiadanie nieruchomości, status rezydencji oraz przeprowadzka na Cypr.",
+    "items": [
+      {
+        "id": "can-buying-property-help-obtain-residency-in-cyprus",
+        "question": "Czy zakup nieruchomości może pomóc w uzyskaniu rezydencji na Cyprze?",
+        "answer": [
+          "Posiadanie nieruchomości może wspierać uzyskanie rezydencji na Cyprze, w zależności od wymogów danego programu oraz sytuacji kupującego. Przepisy dotyczące rezydencji mogą się zmieniać, a uprawnienie często zależy od wartości inwestycji, dochodu oraz dokumentacji.",
+          "Część zagranicznych nabywców kupuje nieruchomości nie tylko ze względów związanych ze stylem życia, ale również dlatego, że planują przeprowadzić się na stałe lub spędzać na Cyprze znaczną część czasu.",
+          "Rozważając rezydencję, kupujący powinni ocenić:",
+          "Minimalne wymogi inwestycyjne Uprawnienia dla członków rodziny Czas rozpatrywania wniosku Dostęp do opieki zdrowotnej Skutki podatkowe Długoterminowe cele związane z przeprowadzką",
+          "Przed podjęciem decyzji o zakupie motywowanej głównie kwestiami rezydencji zaleca się skorzystanie z doradztwa prawnego i imigracyjnego."
+        ]
+      },
+      {
+        "id": "does-buying-property-automatically-grant-permanent-residency",
+        "question": "Czy zakup nieruchomości automatycznie zapewnia stałą rezydencję?",
+        "answer": [
+          "Nie. Zakup nieruchomości nie zapewnia automatycznie statusu stałego rezydenta.",
+          "Choć posiadanie nieruchomości może czasem wspierać określone ścieżki uzyskania rezydencji, zazwyczaj obowiązują odrębne warunki.",
+          "Wnioskodawcy mogą nadal być zobowiązani do spełnienia wymogów dotyczących:",
+          "Dochodu Dokumentacji Zasobów finansowych Weryfikacji przeszłości Statusu prawnego",
+          "Założenie, że samo posiadanie nieruchomości gwarantuje rezydencję, może prowadzić do nierealistycznych oczekiwań."
+        ]
+      },
+      {
+        "id": "what-residency-options-exist-for-foreigners-moving-to-cyprus",
+        "question": "Jakie opcje rezydencji istnieją dla cudzoziemców przeprowadzających się na Cypr?",
+        "answer": [
+          "Ścieżki uzyskania rezydencji różnią się w zależności od narodowości, planowanego czasu pobytu oraz sytuacji osobistej.",
+          "Do typowych powodów przeprowadzki należą:",
+          "Przejście na emeryturę Praca zdalna Przeprowadzka rodziny Działalność inwestycyjna Zmiana stylu życia Prowadzenie działalności gospodarczej",
+          "Dostępne ścieżki oraz wymogi mogą się z czasem zmieniać."
+        ]
+      },
+      {
+        "id": "can-retirees-relocate-permanently-to-cyprus",
+        "question": "Czy emeryci mogą przeprowadzić się na Cypr na stałe?",
+        "answer": [
+          "Tak. Cypr od dawna przyciąga emerytów dzięki swojemu klimatowi, wolniejszemu tempu życia, nadmorskiemu otoczeniu oraz międzynarodowym społecznościom.",
+          "Kupujący planujący emeryturę często biorą pod uwagę takie czynniki jak:",
+          "Dostęp do opieki zdrowotnej Koszty utrzymania Bezpieczeństwo Klimat Opcje rezydencji Wymogi dotyczące utrzymania nieruchomości",
+          "Część emerytów preferuje mieszkania wymagające mniejszej ilości konserwacji, podczas gdy inni szukają will lub osiedli przeznaczonych do długoterminowego zamieszkania."
+        ]
+      },
+      {
+        "id": "is-cyprus-a-good-place-for-retirement",
+        "question": "Czy Cypr jest dobrym miejscem na emeryturę?",
+        "answer": [
+          "Wielu zagranicznych rezydentów uważa Cypr za atrakcyjne miejsce na emeryturę ze względu na:",
+          "Łagodne zimy Śródziemnomorski styl życia Międzynarodowe społeczności Życie na świeżym powietrzu Dostępność opieki zdrowotnej Wolniejsze tempo życia w porównaniu z większymi europejskimi miastami",
+          "Trafność takiego wyboru zależy jednak od indywidualnych preferencji, oczekiwań językowych, potrzeb zdrowotnych oraz planowania finansowego."
+        ]
+      },
+      {
+        "id": "can-families-relocate-permanently-to-cyprus",
+        "question": "Czy rodziny mogą przeprowadzić się na Cypr na stałe?",
+        "answer": [
+          "Tak. Rodziny przeprowadzają się na Cypr z różnych powodów, w tym ze względu na preferencje dotyczące stylu życia, możliwości pracy zdalnej, edukację oraz klimat.",
+          "Rodzice często oceniają:",
+          "Szkoły Bezpieczeństwo Opiekę zdrowotną Infrastrukturę Otoczenie społeczności Koszty utrzymania",
+          "Różne regiony mogą odpowiadać różnym priorytetom rodzinnym."
+        ]
+      },
+      {
+        "id": "which-areas-in-cyprus-are-popular-among-families",
+        "question": "Które rejony Cypru są popularne wśród rodzin?",
+        "answer": [
+          "Preferencje znacznie się różnią w zależności od celów związanych ze stylem życia.",
+          "Rodziny zazwyczaj kierują się:",
+          "Dostępem do szkół Placówkami opieki zdrowotnej Dzielnicami mieszkalnymi Mniejszym natężeniem ruchu Terenami rekreacyjnymi Długoterminową infrastrukturą osiedlową",
+          "Niektóre rejony przyciągają emerytów, podczas gdy inne są bardziej atrakcyjne dla pracujących rodzin lub inwestorów."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "location",
+    "label": "Wybór lokalizacji zakupu",
+    "description": "Dopasowanie lokalizacji do Twoich celów, a nie tylko jej popularności.",
+    "items": [
+      {
+        "id": "which-city-in-cyprus-is-best-for-buying-property",
+        "question": "Które miasto na Cyprze jest najlepsze do zakupu nieruchomości?",
+        "answer": [
+          "Nie ma jednej odpowiedzi, ponieważ najbardziej odpowiednia lokalizacja zależy wyłącznie od priorytetów kupującego.",
+          "Osoba kupująca nieruchomość głównie z myślą o dochodzie z wynajmu może oceniać lokalizacje inaczej niż rodzina przeprowadzająca się na stałe. Podobnie kupujący planujący emeryturę często koncentrują się na klimacie, dostępie do opieki zdrowotnej oraz tempie życia, a nie wyłącznie na wzroście wartości inwestycji.",
+          "Kupujący zazwyczaj porównują takie czynniki jak:",
+          "ceny nieruchomości, popyt na wynajem, bliskość plaż, infrastrukturę, szkoły, międzynarodowe społeczności oraz długoterminową aktywność deweloperską.",
+          "Lepszym pytaniem jest często nie \"Które miasto jest najlepsze?\", lecz \"Które miasto pasuje do moich celów?\""
+        ]
+      },
+      {
+        "id": "how-should-buyers-choose-the-right-location-in-cyprus",
+        "question": "Jak kupujący powinni wybrać odpowiednią lokalizację na Cyprze?",
+        "answer": [
+          "Wybór lokalizacji powinien najlepiej zaczynać się od określenia celu posiadania nieruchomości.",
+          "Pytania, które kupujący często sobie zadają, obejmują:",
+          "Czy nieruchomość jest przeznaczona na inwestycję, czy do użytku osobistego? Czy nieruchomość będzie generować dochód z wynajmu? Czy planowana jest przeprowadzka na stałe? Czy szkoły są istotne? Czy emerytura jest główną motywacją? Jak ważny jest dostęp do lotnisk lub opieki zdrowotnej?",
+          "Oczekiwania związane ze stylem życia często wpływają na satysfakcję bardziej niż cena zakupu. Zakup podyktowany wyłącznie popularnością danego rejonu może nie przynieść pożądanego rezultatu."
+        ]
+      },
+      {
+        "id": "is-buying-property-near-the-beach-always-better",
+        "question": "Czy zakup nieruchomości blisko plaży jest zawsze lepszym wyborem?",
+        "answer": [
+          "Nieruchomości położone blisko morza często przyciągają uwagę, ponieważ życie na wybrzeżu pozostaje bardzo pożądane wśród zagranicznych nabywców.",
+          "Sama bliskość morza nie przekłada się jednak automatycznie na lepsze wyniki inwestycyjne ani lepszy styl życia.",
+          "Niektórzy kupujący cenią sobie spokojniejsze okolice, wygodniejsze zamieszkanie przez cały rok lub lepiej rozwiniętą infrastrukturę lokalną bardziej niż bezpośredni dostęp do plaży.",
+          "Wartość lokalizacji zależy od planowanego sposobu użytkowania, a nie od założeń."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "financing",
+    "label": "Finansowanie i kredyty hipoteczne",
+    "description": "Pożyczanie środków jako zagraniczny nabywca — od zadatku po zatwierdzenie kredytu.",
+    "items": [
+      {
+        "id": "can-foreigners-get-a-mortgage-in-cyprus",
+        "question": "Czy cudzoziemcy mogą otrzymać kredyt hipoteczny na Cyprze?",
+        "answer": [
+          "Tak, zagraniczni nabywcy mogą uzyskać kredyt hipoteczny na Cyprze, choć warunki jego zatwierdzenia różnią się w zależności od narodowości, statusu rezydencji, dochodu oraz wymogów kredytodawcy.",
+          "Banki zazwyczaj oceniają stabilność finansową przed zatwierdzeniem finansowania. Kupujący nabywający domy wakacyjne, nieruchomości inwestycyjne lub miejsca stałego zamieszkania mogą napotkać różne kryteria udzielania kredytu.",
+          "Dostępność kredytu hipotecznego często zależy od takich czynników jak:",
+          "Kraj zamieszkania Status zatrudnienia Poziom dochodów Istniejące zobowiązania finansowe Historia kredytowa Wartość nieruchomości Wysokość wkładu własnego",
+          "Część zagranicznych nabywców decyduje się na finansowanie kredytem, aby zachować płynność finansową na potrzeby dodatkowych inwestycji, zamiast płacić w całości gotówką.",
+          "Ponieważ polityka kredytowa zmienia się z czasem, kupujący powinni potwierdzić aktualne warunki kredytu hipotecznego bezpośrednio w instytucjach finansowych lub u doradców."
+        ]
+      },
+      {
+        "id": "which-banks-offer-mortgages-to-overseas-property-buyers",
+        "question": "Które banki oferują kredyty hipoteczne zagranicznym nabywcom nieruchomości?",
+        "answer": [
+          "Dostępność kredytów hipotecznych zmienia się z czasem, a różni kredytodawcy mogą inaczej oceniać wnioskodawców zagranicznych.",
+          "Banki często oceniają:",
+          "Stabilność dochodów Istniejące zobowiązania dłużne Rodzaj zatrudnienia Rezydencję podatkową Narodowość Przeznaczenie nieruchomości",
+          "Kupujący powinni porównywać opcje finansowania, zamiast polegać na jednej instytucji, ponieważ warunki, szybkość zatwierdzenia oraz limity kredytowania mogą się znacznie różnić."
+        ]
+      },
+      {
+        "id": "how-much-deposit-is-required-when-buying-property",
+        "question": "Jaki zadatek jest wymagany przy zakupie nieruchomości?",
+        "answer": [
+          "Wymagany zadatek zależy od ustaleń dotyczących finansowania, warunków dewelopera oraz umowy sprzedaży.",
+          "Kupujący zazwyczaj spotykają się z zadatkami na kilku etapach:",
+          "Zadatek rezerwacyjny. Wpłacany w celu tymczasowego wycofania nieruchomości z rynku. Wkład własny do kredytu hipotecznego. Wymagany w przypadku finansowania za pośrednictwem banku. Płatności etapowe związane z budową. Typowe w przypadku inwestycji na etapie budowy.",
+          "Całkowita kwota wpłacana z góry różni się w zależności od transakcji i zawsze powinna zostać potwierdzona przed podjęciem zobowiązania."
+        ]
+      },
+      {
+        "id": "what-down-payment-is-typically-required-for-mortgages",
+        "question": "Jaki wkład własny jest zwykle wymagany przy kredytach hipotecznych?",
+        "answer": [
+          "Wymagana kwota wstępna zależy od kryteriów kredytodawcy oraz profilu kupującego.",
+          "Na wymagany wkład wpływa kilka czynników:",
+          "Kwota kredytu Rodzaj nieruchomości Narodowość kupującego Historia finansowa Stabilność dochodów Planowane przeznaczenie nieruchomości",
+          "Wyższy wkład własny może czasem zwiększyć szanse na zatwierdzenie kredytu lub poprawić warunki finansowania."
+        ]
+      },
+      {
+        "id": "can-buyers-obtain-mortgages-without-cyprus-residency",
+        "question": "Czy kupujący mogą otrzymać kredyt hipoteczny bez cypryjskiej rezydencji?",
+        "answer": [
+          "W niektórych sytuacjach tak.",
+          "Zatwierdzenie kredytu hipotecznego nie zawsze wymaga stałej rezydencji na Cyprze. Kryteria udzielania kredytu nierezydentom mogą jednak różnić się od tych stosowanych wobec lokalnych rezydentów.",
+          "Kwalifikacja zależy od indywidualnej sytuacji finansowej oraz wymogów banku."
+        ]
+      },
+      {
+        "id": "can-self-employed-buyers-get-mortgages-in-cyprus",
+        "question": "Czy osoby prowadzące własną działalność gospodarczą mogą otrzymać kredyt hipoteczny na Cyprze?",
+        "answer": [
+          "Tak, ale może być wymagana dodatkowa dokumentacja finansowa.",
+          "Wnioskodawcy prowadzący własną działalność często muszą wykazać:",
+          "Historię stabilnych dochodów Dokumentację podatkową Prowadzoną działalność gospodarczą Sprawozdania finansowe Istniejące zobowiązania",
+          "Procedura zatwierdzenia może czasem trwać dłużej niż w przypadku osób zatrudnionych na etacie, ze względu na złożoność oceny dochodów."
+        ]
+      },
+      {
+        "id": "are-fixed-rate-mortgages-available",
+        "question": "Czy dostępne są kredyty hipoteczne o stałym oprocentowaniu?",
+        "answer": [
+          "Struktury kredytów hipotecznych zmieniają się z czasem i mogą obejmować różne modele spłaty.",
+          "Kupujący porównujący opcje finansowania powinni ocenić:",
+          "Rodzaj oprocentowania Elastyczność spłaty Długoterminową dostępność finansową Ekspozycję walutową Warunki wcześniejszej spłaty",
+          "Wybór finansowania wyłącznie na podstawie początkowego oprocentowania może pomijać koszty długoterminowe."
+        ]
+      },
+      {
+        "id": "what-payment-schedules-exist-for-off-plan-properties",
+        "question": "Jakie harmonogramy płatności obowiązują przy nieruchomościach na etapie budowy?",
+        "answer": [
+          "Inwestycje na etapie budowy często wykorzystują strukturę płatności etapowych, powiązaną z postępem prac budowlanych.",
+          "Płatności mogą następować na etapach takich jak:",
+          "Rezerwacja Podpisanie umowy Kamienie milowe budowy Zakończenie budowy Ostateczne procedury przeniesienia własności",
+          "Dokładny harmonogram różni się w zależności od projektu i dewelopera.",
+          "Zrozumienie harmonogramu płatności jest istotne dla planowania budżetu i płynności finansowej."
+        ]
+      },
+      {
+        "id": "should-buyers-pay-in-euros-or-transfer-from-another-currency",
+        "question": "Czy kupujący powinni płacić w euro, czy przelewać środki z innej waluty?",
+        "answer": [
+          "Zagraniczni nabywcy często muszą brać pod uwagę kwestie związane z wymianą walut.",
+          "Wahania kursów walut mogą znacząco wpływać na całkowity koszt nabycia, szczególnie w przypadku transakcji o wysokiej wartości.",
+          "Kupujący przelewający środki międzynarodowo czasem biorą pod uwagę:",
+          "Moment wymiany walut Opłaty za przelew Specjalistów ds. wymiany walut Koszty bankowe",
+          "Ignorowanie ekspozycji walutowej może nieoczekiwanie zwiększyć całkowite wydatki związane z zakupem."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "offplan",
+    "label": "Nieruchomości na etapie budowy i nowe inwestycje",
+    "description": "Zakup przed zakończeniem budowy — proces i ryzyko.",
+    "items": [
+      {
+        "id": "what-does-off-plan-property-mean",
+        "question": "Co oznacza nieruchomość na etapie budowy (off-plan)?",
+        "answer": [
+          "Nieruchomość off-plan to nieruchomość kupowana przed pełnym zakończeniem budowy. W niektórych przypadkach kupujący rezerwują lokale, gdy budowa dopiero się rozpoczęła, w innych zaś dokonują zakupu na późniejszych etapach budowy.",
+          "Wielu zagranicznych nabywców wybiera inwestycje na etapie budowy, ponieważ chcą mieć dostęp do nowszych projektów, elastycznych harmonogramów płatności lub lokalizacji, w których w przyszłości spodziewany jest wzrost popytu.",
+          "Zakup przed zakończeniem budowy oznacza, że decyzje są często podejmowane na podstawie planów, specyfikacji, wizualizacji oraz informacji od dewelopera, a nie na podstawie gotowego domu. Stwarza to zarówno możliwości, jak i dodatkowe kwestie do rozważenia."
+        ]
+      },
+      {
+        "id": "why-do-investors-buy-off-plan-properties-in-cyprus",
+        "question": "Dlaczego inwestorzy kupują nieruchomości na etapie budowy na Cyprze?",
+        "answer": [
+          "Inwestorzy są często zainteresowani projektami na etapie budowy, ponieważ ceny zakupu na wcześniejszych etapach mogą różnić się od cen bliżej ukończenia. Część kupujących oczekuje potencjalnego wzrostu wartości w trakcie budowy, podczas gdy inni stawiają na elastyczność płatności.",
+          "Kolejnym powodem jest dostęp do nowoczesnych inwestycji. Nowe projekty mogą oferować zaktualizowane układy pomieszczeń, rozwiązania energooszczędne, udogodnienia wspólne lub lokalizacje z rozwijającą się infrastrukturą.",
+          "Oczekiwania inwestycyjne należy jednak zawsze zestawiać z ryzykiem budowlanym oraz zmieniającymi się warunkami rynkowymi."
+        ]
+      },
+      {
+        "id": "are-off-plan-properties-cheaper-than-completed-homes",
+        "question": "Czy nieruchomości na etapie budowy są tańsze niż gotowe domy?",
+        "answer": [
+          "Niekoniecznie.",
+          "W niektórych sytuacjach ceny na wczesnym etapie mogą wydawać się atrakcyjne w porównaniu z nieruchomościami gotowymi. W innych przypadkach inwestycje premium mogą już być pozycjonowane na wyższym poziomie cenowym.",
+          "Lepszym pytaniem jest często nie to, czy nieruchomość na etapie budowy jest tańsza, lecz czy jej całkowita długoterminowa wartość jest zgodna z celami inwestycyjnymi.",
+          "Porównania powinny uwzględniać:",
+          "Oczekiwania co do jakości budowy Strukturę płatności Przyszłe koszty utrzymania Potencjał lokalizacji Popyt rynkowy",
+          "Sama niższa cena wejścia nie oznacza automatycznie lepszych wyników inwestycyjnych."
+        ]
+      },
+      {
+        "id": "is-buying-off-plan-property-risky",
+        "question": "Czy zakup nieruchomości na etapie budowy jest ryzykowny?",
+        "answer": [
+          "Każdy zakup nieruchomości wiąże się z pewnym stopniem ryzyka, a inwestycje na etapie budowy wprowadzają dodatkowe czynniki, ponieważ budowa nie została jeszcze zakończona.",
+          "Potencjalne obawy mogą obejmować opóźnienia terminów zakończenia budowy, zmiany specyfikacji, zmieniające się warunki rynkowe lub różnice między początkowymi oczekiwaniami a końcowym rezultatem.",
+          "Ryzyko niekoniecznie oznacza, że kupujący powinni unikać nowych inwestycji. Podkreśla ono raczej znaczenie kontroli prawnej, weryfikacji dewelopera oraz realistycznych oczekiwań.",
+          "Wiele udanych inwestycji dokonywanych jest w projektach na etapie budowy, jednak przeprowadzenie due diligence pozostaje niezbędne."
+        ]
+      },
+      {
+        "id": "what-happens-if-construction-is-delayed",
+        "question": "Co się dzieje, gdy budowa jest opóźniona?",
+        "answer": [
+          "Opóźnienia w budowie mogą wynikać z wielu przyczyn, w tym niedoborów siły roboczej, problemów w łańcuchu dostaw, procedur związanych z pozwoleniami lub szerszych uwarunkowań gospodarczych.",
+          "Wpływ opóźnień w dużej mierze zależy od warunków umowy.",
+          "Kupujący powinni rozumieć:",
+          "Przewidywane terminy zakończenia budowy Klauzule dotyczące przedłużenia terminu Obowiązki płatnicze Postanowienia dotyczące opóźnień",
+          "Założenie, że projekty zawsze kończą się dokładnie zgodnie z harmonogramem, może prowadzić do nierealistycznych oczekiwań."
+        ]
+      },
+      {
+        "id": "can-the-final-property-differ-from-marketing-materials",
+        "question": "Czy gotowa nieruchomość może różnić się od materiałów marketingowych?",
+        "answer": [
+          "W niektórych przypadkach mogą wystąpić drobne różnice między materiałami wizualnymi a ukończonymi nieruchomościami.",
+          "Wizualizacje i materiały promocyjne mają na celu zilustrowanie koncepcji, podczas gdy ukończone projekty zależą od realiów budowlanych, zastosowanych materiałów oraz sposobu realizacji.",
+          "Nie oznacza to automatycznie niskiej jakości. Kupujący powinni jednak dokładnie przeanalizować specyfikację i zrozumieć, co dokładnie obejmuje umowa."
+        ]
+      },
+      {
+        "id": "how-do-payment-schedules-work-for-new-developments",
+        "question": "Jak działają harmonogramy płatności w przypadku nowych inwestycji?",
+        "answer": [
+          "Wielu deweloperów strukturyzuje płatności zgodnie z postępem budowy, zamiast wymagać natychmiastowej pełnej zapłaty.",
+          "To etapowe podejście jest jednym z powodów, dla których część kupujących preferuje zakupy na etapie budowy.",
+          "Termin płatności może być powiązany z takimi kamieniami milowymi jak:",
+          "rezerwacja, podpisanie umowy, postęp prac konstrukcyjnych, etapy zakończenia budowy oraz ostateczne przekazanie nieruchomości.",
+          "Dokładne harmonogramy różnią się w zależności od projektu i dewelopera.",
+          "Wczesne zrozumienie harmonogramu płatności pomaga kupującym bardziej realistycznie zaplanować finanse."
+        ]
+      },
+      {
+        "id": "why-do-developers-offer-staged-payment-plans",
+        "question": "Dlaczego deweloperzy oferują etapowe plany płatności?",
+        "answer": [
+          "Płatności etapowe mogą ułatwić dokonywanie zakupów o wyższej wartości oraz rozłożyć zobowiązania finansowe na dłuższy okres.",
+          "Dla inwestorów oznacza to czasem, że kapitał pozostaje dostępny na inne okazje w trakcie trwania budowy.",
+          "Dla osób planujących przeprowadzkę płatności etapowe mogą lepiej wpisywać się w długoterminowe planowanie.",
+          "Istnienie elastycznych płatności nie eliminuje ryzyka inwestycyjnego, ale może zmienić dynamikę dostępności finansowej."
+        ]
+      },
+      {
+        "id": "are-new-developments-safer-investments-than-resale-propertie",
+        "question": "Czy nowe inwestycje są bezpieczniejszą lokatą kapitału niż nieruchomości z rynku wtórnego?",
+        "answer": [
+          "Żadna z tych kategorii nie jest automatycznie bezpieczniejsza.",
+          "Nowe inwestycje mogą oferować takie zalety jak nowoczesne standardy, gwarancje oraz nowszą infrastrukturę. Nieruchomości z rynku wtórnego mogą zapewniać istniejącą historię wynajmu, natychmiastową możliwość zamieszkania oraz wyraźniejsze dane rynkowe.",
+          "Trafność inwestycji zależy bardziej od konkretnych projektów niż od ogólnych kategorii.",
+          "Ogólne założenia typu \"nowe jest zawsze lepsze\" lub \"rynek wtórny jest zawsze bezpieczniejszy\" rzadko mają charakter uniwersalny."
+        ]
+      },
+      {
+        "id": "what-guarantees-do-developers-usually-provide",
+        "question": "Jakie gwarancje zazwyczaj oferują deweloperzy?",
+        "answer": [
+          "Gwarancje różnią się w zależności od projektu i dewelopera.",
+          "Kupujący często analizują informacje dotyczące jakości budowy, gwarancji lub zobowiązań związanych z wykonanymi pracami.",
+          "Zakres ochrony jest zróżnicowany i powinien zostać poznany przed zakupem, a nie zakładany po jego dokonaniu."
+        ]
+      }
+    ]
+  }
+]

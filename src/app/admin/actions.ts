@@ -1170,6 +1170,48 @@ export async function saveSitePageContent(id: string, html: string) {
   return { ok: true };
 }
 
+// ── FAQ page (categories + Q&A items) — a SiteDocument like the pages above,
+// but with a structured `categories` array instead of free-text fields, so it
+// gets its own small editor (src/app/admin/(panel)/content/faq/) rather than
+// the generic Landing Pages form. See src/types/faq.ts for the shape.
+export async function saveFaqPage(lang: string, categoriesJson: string) {
+  await requireSession();
+  let categories: unknown;
+  try {
+    categories = JSON.parse(categoriesJson);
+  } catch {
+    throw new Error("Invalid categories JSON");
+  }
+  if (!Array.isArray(categories)) throw new Error("categories must be an array");
+  await prisma.siteDocument.upsert({
+    where: { type_language: { type: "faqPage", language: lang as any } },
+    update: { data: { categories } },
+    create: { sanityId: `faqPage-${lang}`, type: "faqPage", language: lang as any, data: { categories } },
+  });
+  revalidatePath("/admin/content/faq");
+  revalidatePath("/faq");
+  revalidatePath("/de/faq");
+  revalidatePath("/pl/faq");
+  revalidatePath("/ru/faq");
+  return { ok: true };
+}
+
+// Seeds a new language's faqPage row from an existing one (EN by default) as a
+// starting draft — same spirit as createTranslation below, but against
+// SiteDocument's type+language key rather than a translationGroupId model.
+export async function createFaqTranslation(lang: string, fromLang: string = "en") {
+  await requireSession();
+  const existing = await prisma.siteDocument.findUnique({ where: { type_language: { type: "faqPage", language: lang as any } } });
+  if (!existing) {
+    const source = await prisma.siteDocument.findUnique({ where: { type_language: { type: "faqPage", language: fromLang as any } } });
+    const categories = (source?.data as any)?.categories ?? [];
+    await prisma.siteDocument.create({
+      data: { sanityId: `faqPage-${lang}`, type: "faqPage", language: lang as any, data: { categories } },
+    });
+  }
+  revalidatePath("/admin/content/faq");
+}
+
 // ── Translations: create a linked translation of an existing document ──
 // Keeps the document-per-language model (linked by translationGroupId). Copies
 // the source content as a starting point, assigns the same group, sets the

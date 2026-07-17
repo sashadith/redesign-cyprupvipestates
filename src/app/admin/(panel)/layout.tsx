@@ -27,6 +27,7 @@ function buildModules(isAdmin: boolean, trashCount: number): NavModule[] {
     ...(isAdmin ? [{ href: "/admin/settings", label: "Footer" }] : []),
     { href: "/admin/content/forms", label: "Forms" },
     { href: "/admin/content/landing", label: "Landing Pages" },
+    { href: "/admin/content/faq", label: "FAQ" },
     { href: "/admin/media", label: "Media" },
   ];
 

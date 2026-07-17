@@ -23,6 +23,7 @@ import { BlogPage } from "@/types/blogPage";
 import { NotFoundPage } from "@/types/notFoundPage";
 import { CaseStudy } from "@/types/caseStudy";
 import { CaseStudiesPage } from "@/types/caseStudiesPage";
+import { FaqPage } from "@/types/faq";
 
 type AnyRow = Record<string, any>;
 const D = <T>(v: T): T => dereferenceAssets(v);
@@ -549,6 +550,31 @@ export async function getCaseStudiesPageByLang(lang: string): Promise<CaseStudie
 
 export async function getTotalCaseStudiesByLang(lang: string): Promise<number> {
   return prisma.caseStudy.count({ where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED" } });
+}
+
+// Redesigned FAQ page content (categories + Q&A items) — same SiteDocument
+// pattern as caseStudiesPage above (one row per type+language), not the
+// translationGroupId/per-item pattern used for blog/case-study/project: the
+// FAQ page is a single fixed-path page (categories are in-page sections, not
+// separately addressable URLs), so "type=faqPage, language=lang" is already
+// the complete key — no slug or translationGroupId needed.
+export async function getFaqPageByLang(lang: string): Promise<FaqPage | null> {
+  const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "faqPage", language: lang as any } } });
+  if (!row) return null;
+  const d = (row.data as AnyRow) ?? {};
+  return {
+    categories: Array.isArray(d.categories) ? d.categories : [],
+    language: row.language,
+    _translations: await getFaqPageLanguages(),
+  };
+}
+
+// Which languages currently have a published faqPage row — used by the page's
+// LangSwitch (a language with no row yet falls back to the old Sanity FAQ via
+// middleware, not a broken link, so the switcher must know to omit it).
+async function getFaqPageLanguages(): Promise<{ language: string }[]> {
+  const rows = await prisma.siteDocument.findMany({ where: { type: "faqPage" }, select: { language: true } });
+  return rows.map((r) => ({ language: r.language }));
 }
 
 export async function getProjectsPageByLang(lang: string): Promise<ProjectsPage> {

@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { gsap, ScrollTrigger, prefersReducedMotion, lenisRef } from "../preview-home/anim/gsap";
+import { gsap, ScrollTrigger, prefersReducedMotion, lenisRef } from "../../preview-home/anim/gsap";
 import { faqRevealAllRef } from "./FaqMotion";
-import type { FaqCategory } from "./faqData";
+import type { FaqCategory } from "@/types/faq";
+import { faqCopy } from "./copy";
 
 /* The FAQ browser: category chips, one accordion section per category,
    multi-open items (unlike the single-open article FaqAccordion — here
@@ -21,7 +22,8 @@ const Chevron = () => (
   </svg>
 );
 
-export default function FaqExplorer({ categories }: { categories: FaqCategory[] }) {
+export default function FaqExplorer({ categories, lang = "en" }: { categories: FaqCategory[]; lang?: string }) {
+  const t = faqCopy(lang);
   const [activeCat, setActiveCat] = useState<string>("all");
   const [openIds, setOpenIds] = useState<Set<string>>(new Set());
   const [hydrated, setHydrated] = useState(false);
@@ -107,9 +109,9 @@ export default function FaqExplorer({ categories }: { categories: FaqCategory[] 
     <>
       <div className="faqp__toolbar">
         <div className="wrap faqp__toolbar-row">
-          <div className="faqp__chips" role="tablist" aria-label="FAQ categories">
+          <div className="faqp__chips" role="tablist" aria-label={t.categoriesAriaLabel}>
             <button className={`faqp__chip ${activeCat === "all" ? "is-active" : ""}`} onClick={() => selectCat("all")}>
-              All <span className="faqp__chip-n">{totalAll}</span>
+              {t.allChipLabel} <span className="faqp__chip-n">{totalAll}</span>
             </button>
             {categories.map((c) => (
               <button
@@ -125,10 +127,10 @@ export default function FaqExplorer({ categories }: { categories: FaqCategory[] 
       </div>
 
       <div className="wrap faqp__meta-row">
-        <p className="faqp__count" aria-live="polite">{totalVisible} questions</p>
+        <p className="faqp__count" aria-live="polite">{t.questionsCount(totalVisible)}</p>
         {allVisibleIds.length > 1 && (
           <button type="button" className="faqp__toggleall" onClick={toggleAll}>
-            {allExpanded ? "Collapse all" : "Expand all"}
+            {allExpanded ? t.collapseAll : t.expandAll}
           </button>
         )}
       </div>

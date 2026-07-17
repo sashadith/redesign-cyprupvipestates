@@ -2,9 +2,14 @@
 // text, paragraph-split from the flattened schema text). Category grouping, slugs and
 // descriptions are new IA work for the redesign — the live Sanity "faq" singlepage has
 // no category field yet. See preview-faq/page.tsx for how this feeds the FAQPage schema.
+//
+// This EN content is now also the seed source for the `faqPage` SiteDocument row
+// (prisma.siteDocument, type="faqPage", language="en") that [lang]/page.tsx actually
+// reads at request time — see scripts/seed-faq-translations.mjs. This file stays as
+// the canonical EN reference/fallback; it's not re-imported by the live page anymore.
 
-export type FaqItem = { id: string; question: string; answer: string[] };
-export type FaqCategory = { slug: string; label: string; description: string; items: FaqItem[] };
+import type { FaqCategory } from "@/types/faq";
+export type { FaqItem, FaqCategory } from "@/types/faq";
 
 export const FAQ_CATEGORIES: FaqCategory[] = [
   {

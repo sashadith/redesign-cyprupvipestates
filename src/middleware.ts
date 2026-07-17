@@ -20,23 +20,26 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
-  // FAQ redesign — English (default, prefixless) locale ONLY, still. /de/faq,
-  // /pl/faq, /ru/faq are untouched and keep hitting the old Sanity-backed
-  // implementation; preview-faq itself has no DE/PL/RU content yet (a bigger
-  // build — new CMS-backed structure — tracked separately from this rewrite).
-  if (request.nextUrl.pathname === "/faq") {
+  // FAQ redesign — now locale-aware for all 4 languages, same shape as the
+  // Case Studies block below (both were English/prefixless-only until their
+  // respective translation work). /faq, /de/faq, /pl/faq, /ru/faq all rewrite
+  // to preview-faq/[lang] — the visible URL never changes. Content per
+  // language lives in the faqPage SiteDocument; a language with no row yet
+  // would 404 via the page's own notFound() rather than silently falling
+  // back, so this only ships once every language actually has content (see
+  // scripts/seed-faq-translations.mjs).
+  const faqMatch = request.nextUrl.pathname.match(/^\/(?:(de|pl|ru)\/)?faq$/);
+  if (faqMatch) {
+    const lang = faqMatch[1] || "en";
     const url = request.nextUrl.clone();
-    url.pathname = "/preview-faq";
+    url.pathname = `/preview-faq/${lang}`;
     return NextResponse.rewrite(url);
   }
 
-  // Case Studies redesign — now locale-aware for all 4 languages (previously
-  // English/prefixless only, matching the FAQ block above; case-studies grew
-  // real de/pl/ru support first because the underlying data was already fully
-  // translated in the DB, unlike FAQ's static English-only content).
-  // /case-studies, /de/case-studies, /pl/case-studies, /ru/case-studies (and
-  // their /slug children) all rewrite to preview-case-studies/[lang]/... —
-  // the visible URL never changes, only what's rendered behind it.
+  // Case Studies redesign — locale-aware for all 4 languages. /case-studies,
+  // /de/case-studies, /pl/case-studies, /ru/case-studies (and their /slug
+  // children) all rewrite to preview-case-studies/[lang]/... — the visible
+  // URL never changes, only what's rendered behind it.
   const caseStudiesMatch = request.nextUrl.pathname.match(/^\/(?:(de|pl|ru)\/)?case-studies(?:\/([^/]+))?$/);
   if (caseStudiesMatch) {
     const [, localeSeg, slug] = caseStudiesMatch;
