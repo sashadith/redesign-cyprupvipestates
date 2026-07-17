@@ -375,6 +375,51 @@ async function generateSitemap(type: SitemapType) {
   return [];
 }
 
+// Per-process, in-module cache (PM2 runs this app in 2-instance cluster mode,
+// so each instance holds its own copy — accepted trade-off, still a large win
+// over zero caching, no shared-cache infra introduced). Plain `export const
+// revalidate` does NOT cache this route (empirically verified: dynamic [type]
+// segment + Prisma, not fetch — 4 sequential requests each independently
+// regenerated). Time-based only, no revalidateTag / admin wiring.
+type CacheEntry = { pages: SitemapPage[]; generatedAt: number };
+const sitemapCache = new Map<SitemapType, CacheEntry>();
+const REVALIDATE_MS = 3600 * 1000;
+
+// Never serve an empty sitemap: a 200 with zero URLs is worse than a 500
+// (Google retries 5xx but takes an empty sitemap at face value). On a fresh
+// cache hit, serve it. On miss/expiry, regenerate and cache on success; if
+// regeneration fails, fall back to the last-known-good cached copy if one
+// exists. Only a first-ever request (no cache at all) with a failing
+// generation has no fallback — the caller returns 503.
+async function getSitemapPages(type: SitemapType): Promise<SitemapPage[]> {
+  const cached = sitemapCache.get(type);
+  const isFresh = cached && Date.now() - cached.generatedAt < REVALIDATE_MS;
+  if (cached && isFresh) {
+    console.log(`[sitemap] type=${type} cache HIT (age ${Date.now() - cached.generatedAt}ms)`);
+    return cached.pages;
+  }
+
+  const genStart = Date.now();
+  try {
+    const pages = await generateSitemap(type);
+    const genMs = Date.now() - genStart;
+    console.log(`[sitemap] type=${type} cache MISS, generated ${pages.length} pages in ${genMs}ms`);
+    sitemapCache.set(type, { pages, generatedAt: Date.now() });
+    return pages;
+  } catch (err) {
+    const ms = Date.now() - genStart;
+    if (cached) {
+      console.error(
+        `[sitemap] type=${type} regeneration FAILED after ${ms}ms, serving stale cache from ${new Date(cached.generatedAt).toISOString()}:`,
+        err,
+      );
+      return cached.pages;
+    }
+    console.error(`[sitemap] type=${type} FAILED after ${ms}ms, no cache available:`, err);
+    throw err;
+  }
+}
+
 export async function GET(
   _request: Request,
   { params }: { params: { type: string } },
@@ -385,25 +430,15 @@ export async function GET(
     return new Response("Sitemap not found", { status: 404 });
   }
 
-  // Observability only — no behavior change. `projects` is by far the heaviest
-  // of the 6 sitemap types (5 sequential Prisma queries, no caching yet), and
-  // GSC has reported an intermittent, unreproduced 500 for it with nothing in
-  // our available logs (nginx access/error, PM2) identifying a cause. This
-  // gives the *next* occurrence a log line to find instead of another silent
-  // gap. Re-throws unchanged — still a 500 to the client, exactly as before —
-  // so this can be deployed alone to observe real timing/failure data before
-  // any caching change.
-  const genStart = Date.now();
   let pages: SitemapPage[];
   try {
-    pages = await generateSitemap(type);
-  } catch (err) {
-    const ms = Date.now() - genStart;
-    console.error(`[sitemap] type=${type} FAILED after ${ms}ms:`, err);
-    throw err;
+    pages = await getSitemapPages(type);
+  } catch {
+    return new Response("Sitemap temporarily unavailable", {
+      status: 503,
+      headers: { "Retry-After": "60" },
+    });
   }
-  const genMs = Date.now() - genStart;
-  console.log(`[sitemap] type=${type} generated ${pages.length} pages in ${genMs}ms`);
 
   const uniquePages = Array.from(
     new Map(pages.map((page) => [buildUrl(page.route), page])).values(),
