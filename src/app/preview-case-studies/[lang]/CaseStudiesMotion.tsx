@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { gsap, ScrollTrigger, SplitText, prefersReducedMotion } from "../preview-home/anim/gsap";
+import { gsap, ScrollTrigger, SplitText, prefersReducedMotion } from "../../preview-home/anim/gsap";
 
 /* Scroll/motion orchestrator for the Case Studies index — same conventions as
    InsightsMotion/FaqMotion: no-ops under prefers-reduced-motion, once:true

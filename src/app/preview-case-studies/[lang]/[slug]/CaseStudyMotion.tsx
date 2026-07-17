@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { gsap, ScrollTrigger, prefersReducedMotion } from "../../preview-home/anim/gsap";
+import { gsap, ScrollTrigger, prefersReducedMotion } from "../../../preview-home/anim/gsap";
 
 /* Load + scroll motion for a Case Study detail page — adapted from
    preview-insights/ArticleMotion.tsx (same hero/TOC/content-block choreography,

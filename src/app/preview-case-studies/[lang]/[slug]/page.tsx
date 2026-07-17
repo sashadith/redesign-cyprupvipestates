@@ -2,22 +2,25 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PortableText } from "@portabletext/react";
 import { LuEuro, LuMapPin, LuHouse, LuClock } from "react-icons/lu";
-import Nav from "../../preview-home/sections/Nav";
-import Footer from "../../preview-home/sections/Footer";
-import Form from "../../preview-home/sections/Form";
-import LightHeroFlag from "../../preview-insights/LightHeroFlag";
-import ReadingProgress from "../../preview-insights/ReadingProgress";
-import InsightsReader from "../../preview-insights/InsightsReader";
-import { renderInsightsBlock, insightsComponents } from "../../preview-insights/insightsBlocks";
+import Nav from "../../../preview-home/sections/Nav";
+import Footer from "../../../preview-home/sections/Footer";
+import Form from "../../../preview-home/sections/Form";
+import LightHeroFlag from "../../../preview-insights/LightHeroFlag";
+import ReadingProgress from "../../../preview-insights/ReadingProgress";
+import InsightsReader from "../../../preview-insights/InsightsReader";
+import { renderInsightsBlock, insightsComponents } from "../../../preview-insights/insightsBlocks";
 import CaseStudyMotion from "./CaseStudyMotion";
 import { urlFor } from "@/sanity/sanity.client";
 import { getCaseStudyByLang } from "@/sanity/sanity.utils";
-import { CASE_CATEGORY_LABELS } from "../../preview-home/sections/homeI18n";
-import { abs, localizedPath, SITE_URL } from "@/lib/seo";
+import { CASE_CATEGORY_LABELS } from "../../../preview-home/sections/homeI18n";
+import { abs, languageAlternates, pathBuilders, SITE_URL } from "@/lib/seo";
+import { localizedHref } from "@/lib/locale";
+import type { Translation } from "@/types/homepage";
+import { caseStudiesCopy } from "../copy";
 
-/* Cyprus VIP Estates — Case Study detail, redesigned. Isolated preview (see
-   ../layout.tsx); the live /case-studies/[slug] Sanity-backed page is
-   untouched. Header/hero reuse Insights' OWN .iart__hero article structure
+/* Cyprus VIP Estates — Case Study detail, redesigned. See ../layout.tsx for
+   why this lives outside src/app/[lang] despite having its own [lang]
+   segment. Header/hero reuse Insights' OWN .iart__hero article structure
    verbatim (background image, scrim, kicker back-link, title, same
    ReadingProgress + sticky TOC) — an explicit requirement, matching how the
    Case Studies INDEX already reuses Insights' .ins__hero.
@@ -35,19 +38,6 @@ import { abs, localizedPath, SITE_URL } from "@/lib/seo";
       several scrolls in. */
 
 export const dynamic = "force-dynamic";
-const LANG = "en";
-
-const PROPERTY_TYPE_LABELS: Record<string, string> = {
-  villa: "Villa", apartment: "Apartment", penthouse: "Penthouse", townhouse: "Townhouse", plot: "Plot",
-};
-
-const STAGES = [
-  { key: "clientSituation", title: "Client Situation" },
-  { key: "requirements", title: "Client Requirements" },
-  { key: "solution", title: "Our Solution" },
-  { key: "selectedProperty", title: "Selected Property" },
-  { key: "result", title: "Result" },
-] as const;
 
 const safeUrl = (img: unknown) => {
   try {
@@ -77,22 +67,26 @@ function stripDoubleBreakAfterImages(content: any[]): any[] {
   });
 }
 
-
-type Props = { params: { slug: string } };
+type Props = { params: { lang: string; slug: string } };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const cs = await getCaseStudyByLang(LANG, params.slug);
+  const cs = await getCaseStudyByLang(params.lang, params.slug);
   if (!cs) return {};
-  const canonical = abs(localizedPath(LANG, ["case-studies", params.slug]));
+  const { canonical, languages } = languageAlternates({
+    lang: params.lang,
+    slug: params.slug,
+    pathFor: pathBuilders.caseStudy,
+    translations: cs._translations,
+  });
   const title = cs.seo?.metaTitle || cs.title;
   const description = cs.seo?.metaDescription || cs.excerpt;
   const ogImage = cs.previewImage ? safeUrl(cs.previewImage) : undefined;
   return {
     title,
     description,
-    alternates: { canonical },
+    alternates: { canonical, languages },
     openGraph: {
-      title, description, url: canonical, siteName: "Cyprus VIP Estates", locale: LANG, type: "article",
+      title, description, url: canonical, siteName: "Cyprus VIP Estates", locale: params.lang, type: "article",
       images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: cs.title }] : undefined,
     },
     twitter: { card: "summary_large_image", title, description, images: ogImage ? [ogImage] : undefined },
@@ -100,10 +94,24 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CaseStudyDetailPage({ params }: Props) {
-  const cs = await getCaseStudyByLang(LANG, params.slug);
+  const { lang, slug } = params;
+  const cs = await getCaseStudyByLang(lang, slug);
   if (!cs) notFound();
 
-  const labels = CASE_CATEGORY_LABELS.en;
+  const t = caseStudiesCopy(lang);
+  const labels = CASE_CATEGORY_LABELS[lang] ?? CASE_CATEGORY_LABELS.en;
+  const PROPERTY_TYPE_LABELS: Record<string, string> = {
+    villa: t.propertyTypeVilla, apartment: t.propertyTypeApartment, penthouse: t.propertyTypePenthouse,
+    townhouse: t.propertyTypeTownhouse, plot: t.propertyTypePlot,
+  };
+  const STAGES = [
+    { key: "clientSituation", title: t.stageClientSituation },
+    { key: "requirements", title: t.stageClientRequirements },
+    { key: "solution", title: t.stageOurSolution },
+    { key: "selectedProperty", title: t.stageSelectedProperty },
+    { key: "result", title: t.stageResult },
+  ] as const;
+
   const heroUrl = cs.previewImage ? safeUrl(cs.previewImage) : undefined;
   const overview = cs.clientOverview;
   const stages = STAGES.map((s) => ({ ...s, content: (cs.caseDetails as any)?.[s.key] })).filter((s) => s.content?.length);
@@ -113,7 +121,16 @@ export default async function CaseStudyDetailPage({ params }: Props) {
     b?._type === "textContent" ? { ...b, content: stripDoubleBreakAfterImages(b.content) } : b,
   );
 
-  const canonical = abs(localizedPath(LANG, ["case-studies", params.slug]));
+  // Per-story translations (this specific case study's sibling slugs in other
+  // languages), not the fixed per-locale path the index page uses.
+  const translations: Translation[] = (cs._translations ?? []).flatMap((tr: any) =>
+    Object.entries(tr.slug ?? {}).map(([language, s]: [string, any]) => ({
+      language,
+      path: localizedHref(language, ["case-studies", s?.current]),
+    })),
+  );
+
+  const canonical = abs(localizedHref(lang, ["case-studies", slug]));
   const ogImage = heroUrl ? abs(heroUrl) : undefined;
   const articleJsonLd = {
     "@context": "https://schema.org",
@@ -132,7 +149,7 @@ export default async function CaseStudyDetailPage({ params }: Props) {
     },
     datePublished: cs.publishedAt,
     dateModified: cs._updatedAt || cs.publishedAt,
-    inLanguage: LANG,
+    inLanguage: lang,
     isAccessibleForFree: true,
   };
 
@@ -142,7 +159,7 @@ export default async function CaseStudyDetailPage({ params }: Props) {
       <LightHeroFlag />
       <CaseStudyMotion />
       <ReadingProgress />
-      <Nav />
+      <Nav lang={lang} translations={translations} homeHref={localizedHref(lang)} />
       <main className="iart csd">
         <article>
           <header className={`iart__hero${heroUrl ? " iart__hero--image" : ""}`}>
@@ -154,7 +171,7 @@ export default async function CaseStudyDetailPage({ params }: Props) {
             )}
             <div className="wrap iart__hero-inner">
               <p className="iart__kicker">
-                <a className="iart__back" href="/preview-case-studies">Case Studies</a>
+                <a className="iart__back" href={localizedHref(lang, "case-studies")}>{t.backLink}</a>
                 {cs.category && <><span className="iart__sep">/</span><span className="iart__cat">{labels[cs.category]}</span></>}
               </p>
               <h1 className="iart__title csd__title">{cs.fullTitle || cs.title}</h1>
@@ -167,31 +184,29 @@ export default async function CaseStudyDetailPage({ params }: Props) {
               <div className="wrap csd__stats-row">
                 <div className="csstory__stat">
                   <LuEuro size={16} />
-                  <div><dt>Budget</dt><dd>{overview.budget}</dd></div>
+                  <div><dt>{t.statBudget}</dt><dd>{overview.budget}</dd></div>
                 </div>
                 <div className="csstory__stat">
                   <LuMapPin size={16} />
-                  <div><dt>Location</dt><dd>{overview.location}</dd></div>
+                  <div><dt>{t.statLocation}</dt><dd>{overview.location}</dd></div>
                 </div>
                 <div className="csstory__stat">
                   <LuHouse size={16} />
-                  <div><dt>Property</dt><dd>{PROPERTY_TYPE_LABELS[overview.propertyType] || overview.propertyType}</dd></div>
+                  <div><dt>{t.statProperty}</dt><dd>{PROPERTY_TYPE_LABELS[overview.propertyType] || overview.propertyType}</dd></div>
                 </div>
                 <div className="csstory__stat">
                   <LuClock size={16} />
-                  <div><dt>Timeline</dt><dd>{overview.purchaseTimeline}</dd></div>
+                  <div><dt>{t.statTimeline}</dt><dd>{overview.purchaseTimeline}</dd></div>
                 </div>
               </div>
-              <p className="wrap csd__privacy">
-                Client privacy comes first — sensitive business information and identifying details are not disclosed in this case study.
-              </p>
+              <p className="wrap csd__privacy">{t.privacyNote}</p>
             </section>
           )}
 
           <div className="iart__body section is-light">
             <div className="wrap iart__layout">
               <aside className="iart__aside">
-                <InsightsReader headings={toc} label="The Journey" />
+                <InsightsReader headings={toc} label={t.journeyLabel} />
               </aside>
 
               <div className="iart__content">
@@ -211,17 +226,17 @@ export default async function CaseStudyDetailPage({ params }: Props) {
         {related.length > 0 && (
           <section className="iart__related">
             <div className="wrap">
-              <h2 className="iart__related-title">Related <span className="it">Properties</span></h2>
+              <h2 className="iart__related-title">{t.relatedTitlePlain}<span className="it">{t.relatedTitleItalic}</span></h2>
               <hr className="shimmer iart__related-stripe" />
               <div className="newlist__grid">
                 {related.map((p) => {
                   const img = safeUrl(p.previewImage);
-                  const slug = typeof p.slug === "string" ? p.slug : p.slug?.[LANG]?.current ?? (Object.values(p.slug ?? {})[0] as any)?.current ?? "";
+                  const pslug = typeof p.slug === "string" ? p.slug : p.slug?.[lang]?.current ?? (Object.values(p.slug ?? {})[0] as any)?.current ?? "";
                   return (
-                    <a className="pcard" href={`/projects/${slug}`} key={p._id}>
+                    <a className="pcard" href={localizedHref(lang, ["projects", pslug])} key={p._id}>
                       <div className="pcard__media">{img && <img src={img} alt={p.title} loading="lazy" />}</div>
                       <div className="pcard__shade" />
-                      {p.isSold && <span className="pcard__sold">Sold</span>}
+                      {p.isSold && <span className="pcard__sold">{t.soldBadge}</span>}
                       <div className="pcard__body"><h3 className="pcard__title">{p.title}</h3></div>
                     </a>
                   );
@@ -232,12 +247,12 @@ export default async function CaseStudyDetailPage({ params }: Props) {
         )}
 
         <Form
-          lang="en"
-          title={<>Ready to write <span className="it">your own</span> success story?</>}
-          subtitle="Leave your details and our team will get in touch to discuss your goals, answer your questions, and help turn your plans into the next success story."
+          lang={lang}
+          title={<>{t.formDetailTitlePlain}<span className="it">{t.formDetailTitleItalic}</span></>}
+          subtitle={t.formDetailSubtitle}
         />
       </main>
-      <Footer lang="en" />
+      <Footer lang={lang} />
     </>
   );
 }

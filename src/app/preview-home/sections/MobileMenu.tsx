@@ -2,9 +2,26 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import type { navLink } from "@/types/header";
-import { LANGS, Globe, ChevronDown } from "./navShared";
+import type { Translation } from "@/types/homepage";
+import { i18n } from "@/i18n.config";
+import { Globe, ChevronDown } from "./navShared";
+import { LANG_LABELS, langCode, resolveNav } from "@/app/components/Header/navShared";
 
-export default function MobileMenu({ navLinks }: { navLinks: navLink[] }) {
+export default function MobileMenu({
+  navLinks,
+  lang = "en",
+  translations,
+}: {
+  navLinks: navLink[];
+  lang?: string;
+  translations?: Translation[];
+}) {
+  // Same opt-in rule as LangSwitch: no `translations` prop → legacy stub list
+  // (every language shown, none link anywhere) for unaffected pre-existing
+  // callers; `translations` present → real per-language links, current
+  // language marked active, untranslated languages omitted.
+  const hasRealSwitching = translations !== undefined;
+  const byLang = new Map((translations ?? []).map((t) => [t.language, t.path]));
   const [open, setOpen] = useState(false);
   const [openSub, setOpenSub] = useState<string | null>(null); // one submenu at a time
   const [langOpen, setLangOpen] = useState(false);
@@ -95,7 +112,7 @@ export default function MobileMenu({ navLinks }: { navLinks: navLink[] }) {
               return (
                 <li className="mitem" key={l._key}>
                   <div className="mitem__row">
-                    <a className="mitem__link" href={l.link || "#"} onClick={close}>
+                    <a className="mitem__link" href={resolveNav(lang, l.link).href} onClick={close}>
                       {l.label}
                     </a>
                     {hasSub && (
@@ -116,7 +133,7 @@ export default function MobileMenu({ navLinks }: { navLinks: navLink[] }) {
                       <ul className="msub__list">
                         {l.subLinks.map((s) => (
                           <li key={s._key}>
-                            <a href={s.link || "#"} onClick={close}>
+                            <a href={resolveNav(lang, s.link).href} onClick={close}>
                               {s.label}
                             </a>
                           </li>
@@ -142,17 +159,34 @@ export default function MobileMenu({ navLinks }: { navLinks: navLink[] }) {
               onClick={() => setLangOpen((o) => !o)}
             >
               <Globe />
-              <span className="mlang__cur">EN</span>
+              <span className="mlang__cur">{langCode(lang)}</span>
               <ChevronDown className="mlang__caret" />
             </button>
             <ul id="mlang-list" className="mlang__list" role="menu">
-              {LANGS.map(([code, name]) => (
-                <li key={code} role="none">
-                  <a href="#" role="menuitem" className={code === "EN" ? "is-active" : ""} onClick={close}>
-                    {name}
-                  </a>
-                </li>
-              ))}
+              {i18n.languages.map((l) => {
+                const name = LANG_LABELS[l.id]?.name ?? l.id;
+                if (l.id === lang) {
+                  return (
+                    <li key={l.id} role="none">
+                      <a role="menuitem" aria-current="page" className="is-active">{name}</a>
+                    </li>
+                  );
+                }
+                if (!hasRealSwitching) {
+                  return (
+                    <li key={l.id} role="none">
+                      <a href="#" role="menuitem" onClick={close}>{name}</a>
+                    </li>
+                  );
+                }
+                const path = byLang.get(l.id);
+                if (!path) return null;
+                return (
+                  <li key={l.id} role="none">
+                    <a href={path} role="menuitem" onClick={close}>{name}</a>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </div>
