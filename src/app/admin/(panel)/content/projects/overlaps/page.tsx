@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { OVERLAP_CANDIDATES } from "./candidates";
 import { confirmOverlap, rejectOverlap } from "./actions";
+import RevertOverlapControl from "./RevertOverlapControl";
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,15 @@ export default async function OverlapsAdmin() {
   const [legacyProjects, developments] = await Promise.all([
     prisma.project.findMany({
       where: { language: "en", slug: { in: legacySlugs } },
-      select: { id: true, slug: true, title: true, status: true, supersededByDevelopmentId: true, overlapRejectedDevelopmentIds: true },
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        status: true,
+        supersededByDevelopmentId: true,
+        overlapRejectedDevelopmentIds: true,
+        redirectTarget: { select: { targetPath: true } },
+      },
     }),
     prisma.development.findMany({
       where: { slug: { in: devSlugs } },
@@ -119,6 +128,14 @@ export default async function OverlapsAdmin() {
                         </button>
                       </form>
                     </div>
+                  )}
+                  {r.state === "confirmed" && r.legacy && r.dev && (
+                    <RevertOverlapControl
+                      legacyProjectId={r.legacy.id}
+                      developmentId={r.dev.id}
+                      legacyArchived={r.legacy.status === "ARCHIVED"}
+                      hasRedirect={!!r.legacy.redirectTarget}
+                    />
                   )}
                 </td>
               </tr>
