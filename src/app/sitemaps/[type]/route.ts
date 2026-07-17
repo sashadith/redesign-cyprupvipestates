@@ -385,7 +385,25 @@ export async function GET(
     return new Response("Sitemap not found", { status: 404 });
   }
 
-  const pages = await generateSitemap(type);
+  // Observability only — no behavior change. `projects` is by far the heaviest
+  // of the 6 sitemap types (5 sequential Prisma queries, no caching yet), and
+  // GSC has reported an intermittent, unreproduced 500 for it with nothing in
+  // our available logs (nginx access/error, PM2) identifying a cause. This
+  // gives the *next* occurrence a log line to find instead of another silent
+  // gap. Re-throws unchanged — still a 500 to the client, exactly as before —
+  // so this can be deployed alone to observe real timing/failure data before
+  // any caching change.
+  const genStart = Date.now();
+  let pages: SitemapPage[];
+  try {
+    pages = await generateSitemap(type);
+  } catch (err) {
+    const ms = Date.now() - genStart;
+    console.error(`[sitemap] type=${type} FAILED after ${ms}ms:`, err);
+    throw err;
+  }
+  const genMs = Date.now() - genStart;
+  console.log(`[sitemap] type=${type} generated ${pages.length} pages in ${genMs}ms`);
 
   const uniquePages = Array.from(
     new Map(pages.map((page) => [buildUrl(page.route), page])).values(),
