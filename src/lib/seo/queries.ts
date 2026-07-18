@@ -198,7 +198,16 @@ function labRegressionFailures(
 export async function getCwvFailingByClass(): Promise<CwvClassSummary[]> {
   const since = new Date(Date.now() - CWV_LOOKBACK_DAYS * DAY);
   const baselineCutoff = new Date(Date.now() - CWV_BASELINE_WINDOW_DAYS * DAY);
-  const rows = await prisma.cwvMetric.findMany({ where: { date: { gte: since } }, orderBy: { date: "desc" } });
+  const [rows, developments] = await Promise.all([
+    prisma.cwvMetric.findMany({ where: { date: { gte: since } }, orderBy: { date: "desc" } }),
+    // /projects/{slug} is shared by legacy Project pages (PropertyIntro) and
+    // Development pages (HeroMedia) — two different templates, same URL
+    // shape. Without this, a legacy page tracked for its own real traffic
+    // (see buildTargetUrls' top-click selection in psi-sync) would pollute
+    // the "development-page" CWV bucket with an unrelated template's numbers.
+    prisma.development.findMany({ where: { publishStatus: "published", slug: { not: null } }, select: { slug: true } }),
+  ]);
+  const developmentSlugs = new Set(developments.map((d) => d.slug!));
 
   const byUrl = new Map<string, typeof rows>();
   for (const r of rows) {
@@ -230,7 +239,7 @@ export async function getCwvFailingByClass(): Promise<CwvClassSummary[]> {
     }
     if (!failingMetrics.length) continue;
 
-    const cls = templateClassOf(url);
+    const cls = templateClassOf(url, developmentSlugs);
     const entry = byClass.get(cls) ?? { urls: [], metrics: new Set<CwvFailingMetric>(), oldestDate: last3[0].date };
     entry.urls.push(url);
     for (const f of failingMetrics) entry.metrics.add(f);

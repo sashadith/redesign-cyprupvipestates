@@ -14,11 +14,23 @@ const TEMPLATE_CLASS_LABEL: Record<TemplateClass, string> = {
   "other-landing-page": "other landing pages",
 };
 
-export function templateClassOf(url: string): TemplateClass {
+// developmentSlugs, when passed, disambiguates "development-page" from
+// "other-landing-page" for a /projects/{slug} URL — the two share an
+// identical URL shape (a legacy Sanity Project and a Development can both
+// live at /projects/{slug}) but render via completely different components
+// (PropertyIntro vs HeroMedia), so lumping them into one CWV bucket mixes
+// two unrelated templates' numbers together. Omit it to classify by URL
+// shape alone (fine for contexts without cheap DB access to the Development
+// table; every /projects/{slug} URL then reads as "development-page").
+export function templateClassOf(url: string, developmentSlugs?: Set<string>): TemplateClass {
   if (/^\/(de|pl|ru)?$/.test(url)) return "homepage";
-  if (/^\/(de|pl|ru)?\/projects$/.test(url)) return "projects-listing";
-  if (/^\/(de|pl|ru)?\/projects\/[^/]+$/.test(url)) return "development-page";
-  if (/^\/(de|pl|ru)?\/blog\/[^/]+$/.test(url)) return "blog-post";
+  if (/^(?:\/(de|pl|ru))?\/projects$/.test(url)) return "projects-listing";
+  const projectMatch = url.match(/^(?:\/(?:de|pl|ru))?\/projects\/([^/]+)$/);
+  if (projectMatch) {
+    if (!developmentSlugs || developmentSlugs.has(projectMatch[1])) return "development-page";
+    return "other-landing-page";
+  }
+  if (/^(?:\/(de|pl|ru))?\/blog\/[^/]+$/.test(url)) return "blog-post";
   return "other-landing-page";
 }
 

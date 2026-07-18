@@ -60,13 +60,19 @@ export type AdvisorPayload = {
 
 async function gatherCwvSummary() {
   const since = new Date(Date.now() - 4 * DAY); // last few nights of readings
-  const rows = await prisma.cwvMetric.findMany({ where: { date: { gte: since } }, orderBy: { date: "desc" } });
+  const [rows, developments] = await Promise.all([
+    prisma.cwvMetric.findMany({ where: { date: { gte: since } }, orderBy: { date: "desc" } }),
+    // See src/lib/seo/queries.ts's getCwvFailingByClass for why this is needed —
+    // /projects/{slug} is shared by legacy Project pages and Development pages.
+    prisma.development.findMany({ where: { publishStatus: "published", slug: { not: null } }, select: { slug: true } }),
+  ]);
+  const developmentSlugs = new Set(developments.map((d) => d.slug!));
   const latestByUrl = new Map<string, (typeof rows)[number]>();
   for (const r of rows) if (!latestByUrl.has(r.url)) latestByUrl.set(r.url, r);
 
   const byClass = new Map<TemplateClass, { total: number; failing: number; metrics: Set<string> }>();
   for (const [url, r] of Array.from(latestByUrl)) {
-    const cls = templateClassOf(url);
+    const cls = templateClassOf(url, developmentSlugs);
     const entry = byClass.get(cls) ?? { total: 0, failing: 0, metrics: new Set<string>() };
     entry.total++;
     const fails: string[] = [];
