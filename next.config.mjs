@@ -17,6 +17,14 @@ const nextConfig = {
     // Uploads are capped at 2560px on the long edge, so the optimizer never needs the 3840 size.
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 2560],
   },
+  async headers() {
+    return [
+      // Client Presentation pages are token-protected and must never be indexed
+      // — belt-and-braces alongside the page's own <meta robots> (see
+      // src/app/c/[token]/page.tsx generateMetadata) and robots.ts's disallow.
+      { source: "/c/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] },
+    ];
+  },
   async rewrites() {
     return [
       {
@@ -28,6 +36,15 @@ const nextConfig = {
         ? [{ source: "/uploads/:path*", destination: "https://cyprusvipestates.com/uploads/:path*" }]
         : []),
     ];
+  },
+  experimental: {
+    // Developer brochures uploaded to the PDF-import server action
+    // (src/app/admin/(panel)/developments/[id]/actions.ts) can be ~20 MB —
+    // well over Next's default 1 MB server-action body limit, which would
+    // otherwise reject the upload outright.
+    serverActions: {
+      bodySizeLimit: "50mb",
+    },
   },
 };
 

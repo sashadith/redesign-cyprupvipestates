@@ -7,6 +7,7 @@ import { sendTelegramMessage } from "@/lib/telegram";
 import { getAutoReplyEmail } from "@/lib/emailTemplates";
 import { parseAttribution } from "@/lib/attribution";
 import { recordInboundLead } from "@/lib/leadNotify";
+import { matchDevelopmentsForLead } from "@/lib/crm/matching";
 import { ALLOWED_HOSTS, safeUrl, escapeHtml, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
 import nodemailer from "nodemailer";
 
@@ -124,14 +125,31 @@ export async function POST(request: Request) {
     // Timeline entry (audit L1). This route does its own Telegram below, so skip it here.
     await recordInboundLead({ leadId: lead.id, source, email: emailNorm, name: fullName, phone: phoneNorm, page, notifyTelegram: false });
 
+    // Top property matches (non-fatal, best-effort) — auto-match against the
+    // lead's own data, no admin filters, so this is necessarily a rough first
+    // pass (no bedroom/location signal exists on a fresh Lead — see matching.ts).
+    let matchLines = "";
+    try {
+      const matches = await matchDevelopmentsForLead({ budgetMin, budgetMax, propertyTypeInterest });
+      const top3 = matches.filter((m) => m.score > 0).slice(0, 3);
+      if (top3.length) {
+        matchLines =
+          `\n<b>Top matches:</b>\n` +
+          top3.map((m) => `• ${escapeHtml(m.development.publicName)} — ${m.score}%${m.development.district ? ` (${escapeHtml(m.development.district)})` : ""}`).join("\n") +
+          "\n";
+      }
+    } catch (e) { console.error("Auto-match error:", e); }
+
     // Telegram notification (non-fatal)
     const tg =
-      `<b>🏠 New Lead — Cyprus VIP Estates</b>\n\n` +
+      `<b>New Lead — Cyprus VIP Estates</b>\n\n` +
       `<b>${escapeHtml(fullName || "-")}</b>\n` +
-      `📧 ${escapeHtml(emailNorm)}\n📱 ${escapeHtml(phoneNorm)}\n` +
+      `Email: ${escapeHtml(emailNorm)}\nPhone: ${escapeHtml(phoneNorm)}\n` +
       `Preferred: ${escapeHtml(preferred)}\n` +
-      (messageNorm ? `💬 ${escapeHtml(messageNorm)}\n` : "") +
-      `🔗 ${escapeHtml(page)}\n\n<a href="${crmLink}">Open in CRM</a>`;
+      (messageNorm ? `Message: ${escapeHtml(messageNorm)}\n` : "") +
+      `Page: ${escapeHtml(page)}\n` +
+      matchLines +
+      `\n<a href="${crmLink}">Open in CRM</a>`;
     let tgOk = false;
     try { await sendTelegramMessage(tg); tgOk = true; await prisma.lead.update({ where: { id: lead.id }, data: { telegramNotified: true } }); }
     catch (e) { console.error("Telegram error:", e); }

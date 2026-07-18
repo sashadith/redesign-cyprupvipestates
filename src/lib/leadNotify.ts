@@ -29,10 +29,10 @@ export async function recordInboundLead(opts: {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
   const link = `${siteUrl}/admin/crm/${opts.leadId}`;
   const msg =
-    `<b>🏠 New ${esc(opts.source.replace(/_/g, " "))} lead</b>\n` +
+    `<b>New ${esc(opts.source.replace(/_/g, " "))} lead</b>\n` +
     `<b>${esc(opts.name || "-")}</b>\n` +
-    `📧 ${esc(opts.email)}\n📱 ${esc(opts.phone || "-")}\n` +
-    (opts.page ? `🔗 ${esc(opts.page)}\n` : "") +
+    `Email: ${esc(opts.email)}\nPhone: ${esc(opts.phone || "-")}\n` +
+    (opts.page ? `Page: ${esc(opts.page)}\n` : "") +
     `\n<a href="${link}">Open in CRM</a>`;
   try {
     await sendTelegramMessage(msg);

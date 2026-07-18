@@ -9,6 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           "/admin",
           "/api",
+          "/c/", // token-protected client presentation pages — also carry their own noindex meta + X-Robots-Tag
           "/_next",
           "/_assets",
           "/_static",
