@@ -96,7 +96,7 @@ async function readyToPublishBatch(): Promise<ActionItem[]> {
   const [devs, approvedAreas] = await Promise.all([
     prisma.development.findMany({
       where: { publishStatus: { not: "published" }, createdAt: { lte: minAge } },
-      include: { override: true },
+      include: { override: true, units: { select: { status: true } } },
     }),
     prisma.areaDescription.findMany({ where: { status: "approved" }, select: { areaSlug: true } }),
   ]);
@@ -112,6 +112,7 @@ async function readyToPublishBatch(): Promise<ActionItem[]> {
       lat: ov?.latitude ?? d.latitude, lng: ov?.longitude ?? d.longitude,
       stage: ov?.stage || d.stage, hasAreaDescription: area ? approvedSlugs.has(areaSlugOf(area)) : false,
       gallery: arr(ov?.gallery).length ? arr(ov?.gallery) : arr(d.gallery), mainImage: ov?.mainImage,
+      soldOut: computeAvailability(d.units).soldOut,
     });
     if (gate.every((g) => g.ok)) {
       readyCount++;

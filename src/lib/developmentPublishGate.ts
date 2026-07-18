@@ -24,13 +24,22 @@ export function computePublishGate(input: {
   hasAreaDescription: boolean;
   gallery: string[];
   mainImage: string | null | undefined;
+  // A sold-out development needs no construction stage to be validly
+  // published/archived — availability is computed from units, never from
+  // this field (see src/lib/developmentAvailability.ts). Optional so
+  // existing callers that never pass it keep the old (stricter) behaviour.
+  soldOut?: boolean;
 }): PublishGateCheck[] {
   return [
     { key: "description", ok: !!input.description, label: "Description filled", chip: "description" },
     { key: "area", ok: !!input.area, label: "Area set", chip: "area" },
     { key: "district", ok: !!input.district, label: "District set", chip: "district" },
     { key: "location", ok: input.lat != null && input.lng != null, label: "Map location set", chip: "location" },
-    { key: "status", ok: !!input.stage, label: "Status set", chip: "status" },
+    {
+      key: "stage", ok: !!input.stage || !!input.soldOut,
+      label: input.soldOut ? "Construction stage (sold out — optional)" : "Construction stage set",
+      chip: "stage",
+    },
     { key: "areaDescription", ok: input.hasAreaDescription, label: "Neighbourhood description exists for this area", chip: "area desc" },
     { key: "images", ok: input.gallery.length > 0 || !!input.mainImage, label: "Has images", chip: "images" },
   ];

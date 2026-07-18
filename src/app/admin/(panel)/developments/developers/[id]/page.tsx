@@ -8,6 +8,7 @@ import DeveloperContact from "./DeveloperContact";
 import DriveSyncButton from "./DriveSyncButton";
 import DriveIntervalSelect from "./DriveIntervalSelect";
 import BackLink from "../../BackLink";
+import { computeAvailability } from "@/lib/developmentAvailability";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,7 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
       analyses: { orderBy: { createdAt: "desc" } },
       developments: {
         orderBy: [{ publicName: "asc" }],
-        include: { _count: { select: { units: true } }, override: { select: { alias: true } } },
+        include: { _count: { select: { units: true } }, override: { select: { alias: true } }, units: { select: { status: true } } },
       },
     },
   });
@@ -73,6 +74,7 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
               <tbody className="divide-y divide-[#F3F4F6]">
                 {activeDevelopments.map((r) => {
                   const alias = r.override?.alias;
+                  const soldOut = computeAvailability(r.units).soldOut;
                   return (
                     <tr key={r.id} className="hover:bg-[#F8F9FA]">
                       <td className="px-3 py-2">
@@ -85,8 +87,13 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
                       <td className="px-3 py-2 text-right text-[#6B7280] whitespace-nowrap">{r._count.units || "—"} units</td>
                       <td className="px-3 py-2">
                         <span className={`inline-block rounded px-2 py-0.5 text-xs capitalize ${STATUS_STYLE[r.publishStatus] ?? "bg-[#F3F4F6] text-[#6B7280]"}`}>{r.publishStatus}</span>
+                        {soldOut && (
+                          <span title="Computed from unit data — updates with every sync" className="ml-1.5 inline-block rounded px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700">
+                            SOLD OUT
+                          </span>
+                        )}
                         {r.dev === "drive" && !r.driveFolderId && (
-                          <span title="Kein passender Google-Drive-Ordner — keine Bilder/Grundrisse" className="ml-1.5 inline-block rounded px-2 py-0.5 text-xs border border-[#FCD34D] bg-[#FFFBEB] text-[#92400E]">No folder</span>
+                          <span title="No matching Google Drive folder — no photos/floor plans" className="ml-1.5 inline-block rounded px-2 py-0.5 text-xs border border-[#FCD34D] bg-[#FFFBEB] text-[#92400E]">No folder</span>
                         )}
                       </td>
                     </tr>

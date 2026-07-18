@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { runSync } from "./actions";
 import DevelopmentsTable from "./DevelopmentsTable";
+import { computeAvailability } from "@/lib/developmentAvailability";
 
 export const dynamic = "force-dynamic";
 
@@ -27,7 +28,7 @@ export default async function DevelopmentsPage({ searchParams }: { searchParams?
     prisma.development.findMany({
       where,
       orderBy: [{ dev: "asc" }, { publicName: "asc" }],
-      include: { _count: { select: { units: true } }, override: { select: { alias: true } } },
+      include: { _count: { select: { units: true } }, override: { select: { alias: true } }, units: { select: { status: true } } },
     }),
     prisma.development.groupBy({ by: ["dev"], _count: { _all: true }, orderBy: { dev: "asc" } }),
     prisma.development.groupBy({ by: ["publishStatus"], _count: { _all: true } }),
@@ -91,6 +92,7 @@ export default async function DevelopmentsPage({ searchParams }: { searchParams?
           priceFrom: fmtPrice(r.priceFrom),
           units: r._count.units ? String(r._count.units) : "—",
           status: r.publishStatus,
+          soldOut: computeAvailability(r.units).soldOut,
           noFolder: r.dev === "drive" && !r.driveFolderId,
           synced: fmtDate(r.syncedAt),
         }))}

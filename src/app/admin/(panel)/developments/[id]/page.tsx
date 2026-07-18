@@ -58,12 +58,12 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
   // Override wins — see DevelopmentOverride.stage's schema comment for why this
   // moved off Development.stage (feedSync.ts silently reverted admin choices).
   const resolvedStage = ov?.stage || d.stage;
+  const { soldOut, available } = computeAvailability(d.units);
   const gate = computePublishGate({
     description, area, district, lat, lng, stage: resolvedStage,
-    hasAreaDescription: !!areaDesc, gallery, mainImage: ov?.mainImage,
+    hasAreaDescription: !!areaDesc, gallery, mainImage: ov?.mainImage, soldOut,
   });
   const canPublish = gate.every((g) => g.ok);
-  const { soldOut, available } = computeAvailability(d.units);
   const availabilityWarning = availabilityContradiction(resolvedStage, d.status, soldOut, available);
 
   // Reconstruct the id from the feedKey (minus the "dev:" prefix) so getDbProject
@@ -107,9 +107,17 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
             {ov?.alias || d.publicName}
             {d.developer && <span className="text-sm font-normal text-[#6B7280]">— {d.developer}</span>}
           </h1>
-          <p className="text-sm text-[#6B7280]">{d.dev} · {d.developerName} · <span className={`rounded px-2 py-0.5 text-xs capitalize ${STATUS_STYLE[d.publishStatus]}`}>{d.publishStatus}</span>{d.dev === "drive" && !d.driveFolderId && (
-            <span title="Kein passender Google-Drive-Ordner — keine Bilder/Grundrisse" className="ml-1.5 inline-block rounded px-2 py-0.5 text-xs border border-[#FCD34D] bg-[#FFFBEB] text-[#92400E]">No folder</span>
-          )}</p>
+          <p className="text-sm text-[#6B7280]">{d.dev} · {d.developerName} · <span className={`rounded px-2 py-0.5 text-xs capitalize ${STATUS_STYLE[d.publishStatus]}`}>{d.publishStatus}</span>
+            <span
+              title="Computed from unit data — updates with every sync"
+              className={`ml-1.5 inline-block rounded px-2 py-0.5 text-xs font-medium ${soldOut ? "bg-red-100 text-red-700" : "bg-[#F3F4F6] text-[#6B7280]"}`}
+            >
+              {d.units.length === 0 ? "No unit data" : soldOut ? "SOLD OUT" : `${available}/${d.units.length} available`}
+            </span>
+            {d.dev === "drive" && !d.driveFolderId && (
+              <span title="No matching Google Drive folder — no photos/floor plans" className="ml-1.5 inline-block rounded px-2 py-0.5 text-xs border border-[#FCD34D] bg-[#FFFBEB] text-[#92400E]">No folder</span>
+            )}
+          </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {d.dev === "drive" && <SyncWithDriveButton developmentId={d.id} />}
@@ -140,7 +148,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
           </div>
 
           <div>
-            <label className={label}>Status <span className="font-normal text-[#9CA3AF]">— shown as a badge on the public page</span></label>
+            <label className={label}>Construction stage</label>
             <select name="stage" defaultValue={ov?.stage ?? ""} className={field}>
               <option value="">—</option>
               {resolvedStage && !["Available", "Under Construction", "Key-Ready", "Sold"].includes(resolvedStage) && <option value={resolvedStage}>{resolvedStage}</option>}
@@ -149,6 +157,9 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
               <option value="Key-Ready">Key-Ready</option>
               <option value="Sold">Sold</option>
             </select>
+            <p className="text-xs text-[#9CA3AF] mt-1">
+              Availability ({d.units.length === 0 ? "no unit data" : soldOut ? "sold out" : `${available} available`}) is computed from units automatically and cannot be set manually.
+            </p>
           </div>
 
           <div className="grid grid-cols-3 gap-3">

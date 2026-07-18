@@ -66,13 +66,13 @@ export default async function PublishingQueuePage({
 
     // Override wins — see DevelopmentOverride.stage's schema comment.
     const resolvedStage = ov?.stage || d.stage;
+    const { soldOut, available } = computeAvailability(d.units);
     const gate = computePublishGate({
       description, area, district, lat, lng, stage: resolvedStage,
       hasAreaDescription: area ? approvedSlugs.has(areaSlugOf(area)) : false,
-      gallery, mainImage: ov?.mainImage,
+      gallery, mainImage: ov?.mainImage, soldOut,
     });
     const passCount = gate.filter((g) => g.ok).length;
-    const { soldOut, available } = computeAvailability(d.units);
 
     return {
       id: d.id,
