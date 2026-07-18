@@ -16,4 +16,8 @@ export type StoredSuggestion = {
   dismissedAt?: string;
   dismissalReason?: string;
   preparedPrompt?: string;
+  // Free-text findings recorded after implementation — a follow-up lever
+  // identified during the work but deliberately not executed (e.g. a
+  // bigger architectural item filed for its own future session).
+  implementationNotes?: string;
 };

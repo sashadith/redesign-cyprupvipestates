@@ -140,11 +140,27 @@ export async function getPerLocaleTrend(days = 90): Promise<LocaleTrend[]> {
 // (transient load, PSI flakiness) shouldn't trigger an alert. Grouped by
 // template class since a Development-page layout issue affects every
 // Development page, not just the one or two we happened to sample that night.
+//
+// Lab vs field: the homepage LCP investigation (2026-07-19, see
+// docs/SEO-GROWTH-ROADMAP-2026.md) found a lab-only page can sit well over
+// 3500ms in PSI's simulated throttling even when its real observed trace
+// (main-thread work, network timeline) is healthy — Lighthouse's simulated
+// LCP isn't directly comparable to CrUX field data. Holding lab rows to the
+// same absolute threshold as real-user field data means a page that was
+// simply never going to clear 3500ms in a lab run sits in the Action Center
+// forever with no way to resolve it, training everyone to ignore it. So:
+// lab-sourced rows are judged on RELATIVE regression instead — did the
+// worst of the last 3 readings get >25% worse than this page's own 14-day
+// baseline? Field-sourced rows (once CrUX has enough real-user traffic to
+// report) keep the absolute-threshold check, since that's real-user data
+// being compared against Google's own published CWV pass/fail cutoffs.
 export const CWV_LCP_MAX_MS = 3500;
 export const CWV_CLS_MAX = 0.15;
 export const CWV_INP_MAX_MS = 350;
 export const CWV_SUSTAINED_COUNT = 3;
-const CWV_LOOKBACK_DAYS = 10; // generous window — plenty of headroom for 3 nightly reads even if a night or two is missed
+export const CWV_BASELINE_WINDOW_DAYS = 14;
+export const CWV_REGRESSION_THRESHOLD = 0.25;
+const CWV_LOOKBACK_DAYS = CWV_BASELINE_WINDOW_DAYS + 10; // baseline window + the usual sustained-3 buffer
 
 export type CwvFailingMetric = "LCP" | "CLS" | "INP";
 export type CwvClassSummary = {
@@ -155,7 +171,7 @@ export type CwvClassSummary = {
   since: Date;
 };
 
-function failsThreshold(r: { lcp: number; cls: number; inp: number | null }): CwvFailingMetric[] {
+function fieldThresholdFailures(r: { lcp: number; cls: number; inp: number | null }): CwvFailingMetric[] {
   const metrics: CwvFailingMetric[] = [];
   if (r.lcp > CWV_LCP_MAX_MS) metrics.push("LCP");
   if (r.cls > CWV_CLS_MAX) metrics.push("CLS");
@@ -163,27 +179,62 @@ function failsThreshold(r: { lcp: number; cls: number; inp: number | null }): Cw
   return metrics;
 }
 
+function labRegressionFailures(
+  last3: Array<{ lcp: number; cls: number; inp: number | null }>,
+  baseline: { lcp: number; cls: number; inp: number | null },
+): CwvFailingMetric[] {
+  const metrics: CwvFailingMetric[] = [];
+  const worstLcp = Math.max(...last3.map((r) => r.lcp));
+  const worstCls = Math.max(...last3.map((r) => r.cls));
+  const inpVals = last3.map((r) => r.inp).filter((v): v is number => v != null);
+  const worstInp = inpVals.length ? Math.max(...inpVals) : null;
+
+  if (worstLcp > baseline.lcp * (1 + CWV_REGRESSION_THRESHOLD)) metrics.push("LCP");
+  if (worstCls > baseline.cls * (1 + CWV_REGRESSION_THRESHOLD)) metrics.push("CLS");
+  if (baseline.inp != null && worstInp != null && worstInp > baseline.inp * (1 + CWV_REGRESSION_THRESHOLD)) metrics.push("INP");
+  return metrics;
+}
+
 export async function getCwvFailingByClass(): Promise<CwvClassSummary[]> {
   const since = new Date(Date.now() - CWV_LOOKBACK_DAYS * DAY);
+  const baselineCutoff = new Date(Date.now() - CWV_BASELINE_WINDOW_DAYS * DAY);
   const rows = await prisma.cwvMetric.findMany({ where: { date: { gte: since } }, orderBy: { date: "desc" } });
 
-  const latestByUrl = new Map<string, typeof rows>();
+  const byUrl = new Map<string, typeof rows>();
   for (const r of rows) {
-    const arr = latestByUrl.get(r.url) ?? [];
-    if (arr.length < CWV_SUSTAINED_COUNT) arr.push(r);
-    latestByUrl.set(r.url, arr);
+    const arr = byUrl.get(r.url) ?? [];
+    arr.push(r);
+    byUrl.set(r.url, arr);
   }
 
+  const avg = (vals: number[]) => vals.reduce((a, b) => a + b, 0) / vals.length;
+
   const byClass = new Map<TemplateClass, { urls: string[]; metrics: Set<CwvFailingMetric>; oldestDate: Date }>();
-  for (const [url, readings] of Array.from(latestByUrl)) {
+  for (const [url, readings] of Array.from(byUrl)) {
     if (readings.length < CWV_SUSTAINED_COUNT) continue; // not enough history yet
-    const perReadingFailures = readings.map(failsThreshold);
-    if (perReadingFailures.some((f) => f.length === 0)) continue; // at least one clean reading — not sustained
+    const last3 = readings.slice(0, CWV_SUSTAINED_COUNT);
+
+    let failingMetrics: CwvFailingMetric[];
+    if (last3[0].source === "lab") {
+      const older = readings.slice(CWV_SUSTAINED_COUNT).filter((r) => r.date >= baselineCutoff);
+      if (!older.length) continue; // no baseline yet on this page — one data point can't show a regression
+      const inpBaselineVals = older.map((r) => r.inp).filter((v): v is number => v != null);
+      failingMetrics = labRegressionFailures(last3, {
+        lcp: avg(older.map((r) => r.lcp)),
+        cls: avg(older.map((r) => r.cls)),
+        inp: inpBaselineVals.length ? avg(inpBaselineVals) : null,
+      });
+    } else {
+      const perReadingFailures = last3.map(fieldThresholdFailures);
+      failingMetrics = perReadingFailures.every((f) => f.length > 0) ? Array.from(new Set(perReadingFailures.flat())) : [];
+    }
+    if (!failingMetrics.length) continue;
+
     const cls = templateClassOf(url);
-    const entry = byClass.get(cls) ?? { urls: [], metrics: new Set<CwvFailingMetric>(), oldestDate: readings[0].date };
+    const entry = byClass.get(cls) ?? { urls: [], metrics: new Set<CwvFailingMetric>(), oldestDate: last3[0].date };
     entry.urls.push(url);
-    for (const f of perReadingFailures.flat()) entry.metrics.add(f);
-    const oldest = readings[readings.length - 1].date;
+    for (const f of failingMetrics) entry.metrics.add(f);
+    const oldest = last3[last3.length - 1].date;
     if (oldest < entry.oldestDate) entry.oldestDate = oldest;
     byClass.set(cls, entry);
   }

@@ -19,7 +19,12 @@ export default function HeroMedia({ images, alt, galleryLabel, videoUrl }: { ima
         </div>
       ) : (
         <button className="pp-hero__img" type="button" onClick={() => setLb(0)} aria-label="Open gallery">
-          {imgs[0] ? <img src={atSize(imgs[0], "large")} alt={alt} /> : <span className="pp-hero__ph" />}
+          {/* Plain <img>, not next/image (external CDN URLs) — fetchPriority is
+              the equivalent of next/image's `priority` for this element, the
+              page's LCP candidate. Missing on every Development detail page
+              until this fix (2026-07-19, same CWV rollout as the homepage/blog
+              hero fixes). */}
+          {imgs[0] ? <img src={atSize(imgs[0], "large")} alt={alt} fetchPriority="high" decoding="async" /> : <span className="pp-hero__ph" />}
         </button>
       )}
       {imgs.length > 1 && (

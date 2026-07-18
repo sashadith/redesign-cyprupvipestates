@@ -33,6 +33,13 @@ export default function SuggestionCard({ runId, suggestion }: { runId: string; s
       <p className="text-sm text-[#374151] mb-2">{suggestion.rationale}</p>
       <p className="text-xs text-[#6B7280] mb-3"><span className="font-medium text-[#374151]">Action:</span> {suggestion.action} · {EFFORT_LABEL[suggestion.effort]}</p>
 
+      {suggestion.implementationNotes && (
+        <div className="bg-[#FBF0D9] border border-[#F0E0B8] rounded-md p-3 mb-3">
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-[#8A6D1D] block mb-1">Follow-up noted</span>
+          <p className="text-xs text-[#374151] whitespace-pre-wrap">{suggestion.implementationNotes}</p>
+        </div>
+      )}
+
       {suggestion.status === "approved" && suggestion.preparedPrompt ? (
         <div className="bg-[#F8F9FA] border border-[#E5E7EB] rounded-md p-3">
           <div className="flex items-center justify-between mb-1.5">

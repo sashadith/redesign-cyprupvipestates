@@ -18,7 +18,11 @@ export default function ArticleMotion() {
         { scale: 1.16 },
         { scale: 1.06, duration: 1.8, ease: "power2.out" },
       );
-      gsap.from(".iart__hero-bg", { autoAlpha: 0, duration: 1.2, ease: "power1.out" });
+      // No autoAlpha here — it hid the hero <img> (this template's LCP
+      // element) behind opacity:0/visibility:hidden until this JS animation
+      // revealed it, same anti-pattern found on the homepage headline
+      // (2026-07-19). The Ken Burns zoom above is untouched — a transform
+      // doesn't hide the element from LCP the way autoAlpha does.
 
       gsap
         .timeline({ defaults: { ease: "power3.out" } })
