@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { soldOutFromCounts } from "@/lib/developmentAvailability";
 
 /* Scores every published Development against a lead's criteria for the Client
    Presentation system (see prisma/schema.prisma ClientPresentation models and
@@ -139,6 +140,13 @@ export async function matchDevelopmentsForLead(lead: LeadLike, filters: MatchFil
     const gallery = arr<string>(ov?.gallery).length ? arr<string>(ov?.gallery) : arr<string>(d.gallery);
     const mainImage = ov?.mainImage || gallery[0] || null;
     const available = d.units.filter((u) => u.status === "available");
+    // Hard exclude — a genuinely sold-out development can never be a NEW
+    // presentation candidate, independent of the admin-toggleable
+    // `onlyAvailable` filter below (that one controls near-sold inclusion,
+    // not this: a true sold-out state is never negotiable). See Part 2c —
+    // existing presentations that already contain one are untouched, this
+    // only gates what can be newly matched/added.
+    if (soldOutFromCounts(available.length, d.units.length)) continue;
     if (filters.onlyAvailable && available.length === 0) continue;
 
     // ---- BUDGET (40) ----

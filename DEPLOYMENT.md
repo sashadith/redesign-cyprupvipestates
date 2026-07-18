@@ -192,6 +192,16 @@ hardcoded in the crontab):
 | `0 4 * * *` | `feed-sync` | production, `?key=$CRON_SECRET` |
 | `30 3 * * *` | `cvp-db-backup.sh` | DB dump, not app-specific |
 | `0 5 * * 0` | `cvp-uploads-backup.sh` | shared uploads dir, weekly |
+| `0 5 * * *` | `action-digest` (Action Center Telegram digest) | production, `?key=$CRON_SECRET` — **not yet installed, see note below** |
+
+VPS system clock is UTC (confirmed: `Development.syncedAt` rows written by
+`feed-sync`'s `0 4 * * *` entry land at `04:00:xx.xxxZ`) — crontab times above
+are plain UTC, not Cyprus-local. `action-digest` is specified as "daily 08:00
+Cyprus time"; Cyprus is EEST (UTC+3) in summer, so `0 5 * * *` UTC = 08:00
+Cyprus — **this entry has not been added to the production crontab yet**
+(a live infra change, done separately from this code change). Note it'll need
+revisiting to `0 6 * * *` when Cyprus switches to EET (UTC+2) in winter, since
+the VPS crontab has no timezone awareness of its own.
 
 Staging's own `drive-sync`/`feed-sync` entries (previously hitting
 `127.0.0.1:3200`) were **disabled** (commented out, not deleted) in the

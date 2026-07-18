@@ -50,6 +50,7 @@ export type ProjectsStrings = {
   // ---- project card ----
   badgeNew: string;
   badgeFeatured: string;
+  badgeSoldOut: string;
   bedUnit: string; // "{n} bed"
   areaUnit: string; // "{n} m²"
   energyPrefix: string; // "Energy {grade}"
@@ -143,6 +144,7 @@ const EN: ProjectsStrings = {
   empty: "No projects match your search. Try widening the filters.",
   badgeNew: "New",
   badgeFeatured: "Featured",
+  badgeSoldOut: "Sold out",
   bedUnit: "bed",
   areaUnit: "m²",
   energyPrefix: "Energy",
@@ -228,6 +230,7 @@ const DE: ProjectsStrings = {
   empty: "Keine Projekte entsprechen Ihrer Suche. Erweitern Sie die Filter.",
   badgeNew: "Neu",
   badgeFeatured: "Hervorgehoben",
+  badgeSoldOut: "Ausverkauft",
   bedUnit: "Schlafz.",
   areaUnit: "m²",
   energyPrefix: "Energie",
@@ -313,6 +316,7 @@ const PL: ProjectsStrings = {
   empty: "Brak projektów pasujących do wyszukiwania. Rozszerz filtry.",
   badgeNew: "Nowość",
   badgeFeatured: "Wyróżnione",
+  badgeSoldOut: "Wyprzedane",
   bedUnit: "syp.",
   areaUnit: "m²",
   energyPrefix: "Energia",
@@ -398,6 +402,7 @@ const RU: ProjectsStrings = {
   empty: "Нет проектов по вашему запросу. Расширьте фильтры.",
   badgeNew: "Новинка",
   badgeFeatured: "Избранное",
+  badgeSoldOut: "Продано",
   bedUnit: "спал.",
   areaUnit: "m²",
   energyPrefix: "Энергия",

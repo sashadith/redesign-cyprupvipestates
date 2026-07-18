@@ -194,6 +194,42 @@ model AdminAuditLog {
   @@map("admin_audit_logs")
 }
 
+// One row per cron invocation (publish-scheduled | feed-sync | drive-sync),
+// written in a try/finally so a run that crashes before completing still
+// leaves a row (ok=false, message = the caught error) — a job that dies
+// silently is exactly the failure mode Action Center rule (j) needs to catch.
+// See src/lib/actionCenter/rules/system.ts for how "URGENT" is derived: latest
+// row ok=false, OR no row at all within 2x the job's expected interval (catches
+// a crontab that stopped firing entirely, which a pure success/failure log
+// can't distinguish from "nothing to do" — the exact gap from the migration-day
+// incident where cron entries were silently disabled).
+model CronRunLog {
+  id         String   @id @default(uuid())
+  job        String // "publish-scheduled" | "feed-sync" | "drive-sync"
+  ok         Boolean
+  message    String? // error text, or a short summary e.g. "16 developments updated"
+  durationMs Int?
+  ranAt      DateTime @default(now())
+
+  @@index([job, ranAt])
+  @@map("cron_run_logs")
+}
+
+// Action Center (admin dashboard) snooze state — the only persisted piece of
+// that feature; the items themselves are computed live on every dashboard load
+// from existing data (see src/lib/actionCenter/). itemId is the rule's own
+// stable id (derived from the entity, e.g. "sold-out:<developmentId>").
+model ActionCenterSnooze {
+  id           String   @id @default(uuid())
+  itemId       String
+  snoozedUntil DateTime
+  userId       String?
+  createdAt    DateTime @default(now())
+
+  @@index([itemId])
+  @@map("action_center_snoozes")
+}
+
 // ─── CONTENT: BLOG ───────────────────────────────────────────────────────────
 model Blog {
   id                 String        @id @default(uuid())
@@ -825,6 +861,16 @@ model DevelopmentOverride {
   vatApplies    Boolean? // null = follow feed; true/false = admin decision (e.g. renovated no-VAT)
   completion    String?
   energy        String?
+  // Construction-stage override (Available | Under Construction | Key-Ready | Sold).
+  // Moved here 2026-07-18 from Development.stage: that column is ALSO written by
+  // feedSync.ts on every sync for feed-based developers (qubehub/INEX/BBF sets a
+  // real feed-derived stage; island-blue etc. have no stage field and always sync
+  // it back to null) — an admin's manual choice on the same column was silently
+  // wiped by the next day's sync (Celestia, 2026-07-17/18). Same protection every
+  // other admin-editable field here already has: sync never writes to this table.
+  // Resolution everywhere is `ov?.stage || d.stage` (override wins, raw feed value
+  // is the fallback for developers whose feed genuinely provides one).
+  stage         String?
   latitude      Float? // admin-set map coordinates (win over feed); parsed from a Maps link or lat,lng
   longitude     Float?
   seo           Json? // optional per-language SEO overrides: { titleEN/DE/PL/RU, descEN/DE/PL/RU } — empty/missing = auto-generated (see src/lib/developmentSeo.ts)

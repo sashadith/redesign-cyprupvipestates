@@ -34,6 +34,7 @@ export const COPY: Record<PLocale, {
   unitsPlural: { one: string; few?: string; many: string };
   newForYou: string;
   vatLabel: string;
+  soldOut: string;
   lifeNearby: string;
   closingEyebrow: string;
   closingTrust: string;
@@ -65,6 +66,7 @@ export const COPY: Record<PLocale, {
     unitsPlural: { one: "unit", many: "units" },
     newForYou: "New for you",
     vatLabel: "+VAT",
+    soldOut: "Sold out",
     lifeNearby: "LIFE NEARBY",
     closingEyebrow: "DIRECT CONTACT",
     closingTrust: "I personally answer every message - usually within the hour. Ask me anything about the properties in your selection, arranging a viewing, or the details of buying in Cyprus. No obligation, no rush.",
@@ -96,6 +98,7 @@ export const COPY: Record<PLocale, {
     unitsPlural: { one: "Objekt", many: "Objekte" },
     newForYou: "Neu für Sie",
     vatLabel: "+MwSt.",
+    soldOut: "Ausverkauft",
     lifeNearby: "LEBEN IN DER NÄHE",
     closingEyebrow: "DIREKTER KONTAKT",
     closingTrust: "Ich beantworte jede Nachricht persönlich - in der Regel innerhalb einer Stunde. Stellen Sie mir jede Frage zu den Objekten Ihrer Auswahl, zur Organisation einer Besichtigung oder zu den Details des Kaufs. Ohne Verpflichtung und ohne Eile.",
@@ -127,6 +130,7 @@ export const COPY: Record<PLocale, {
     unitsPlural: { one: "obiekt", few: "obiekty", many: "obiektów" },
     newForYou: "Nowe dla Ciebie",
     vatLabel: "+VAT",
+    soldOut: "Wyprzedane",
     lifeNearby: "ŻYCIE W POBLIŻU",
     closingEyebrow: "BEZPOŚREDNI KONTAKT",
     closingTrust: "Osobiście odpowiadam na każdą wiadomość - zazwyczaj w ciągu godziny. Zadaj mi dowolne pytanie o nieruchomości z Twojej selekcji, organizację oględzin lub szczegóły zakupu. Bez zobowiązań i bez pośpiechu.",
@@ -158,6 +162,7 @@ export const COPY: Record<PLocale, {
     unitsPlural: { one: "объект", few: "объекта", many: "объектов" },
     newForYou: "Новое для вас",
     vatLabel: "+НДС",
+    soldOut: "Продано",
     lifeNearby: "ЖИЗНЬ РЯДОМ",
     closingEyebrow: "ПРЯМОЙ КОНТАКТ",
     closingTrust: "Я лично отвечаю на каждое сообщение - обычно в течение часа. Задайте любой вопрос по объектам из вашей подборки, организации просмотра или деталям покупки. Без обязательств и без спешки.",

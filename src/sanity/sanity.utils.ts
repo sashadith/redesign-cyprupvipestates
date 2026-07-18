@@ -10,6 +10,7 @@ import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
 import { localizedHref } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
 import { resolveDevelopmentPrice, resolveBedRange, resolveDevelopmentLocation, resolveDevelopmentType, toCardDistances } from "@/lib/developmentCard";
+import { soldOutFromCounts } from "@/lib/developmentAvailability";
 import { Homepage } from "@/types/homepage";
 import { Header } from "@/types/header";
 import { FormStandardDocument } from "@/types/formStandardDocument";
@@ -719,16 +720,28 @@ function interleaveByPriceSegments(ps: ProjectListItem[]) {
   let added = true; while (added) { added = false; for (const b of pattern) { const n = buckets[b].shift(); if (n) { result.push(n); added = true; } } }
   return result;
 }
-function sortProjectsRecommended(ps: ProjectListItem[]) { return [...interleaveByPriceSegments(ps.filter((p) => p.isFeatured)), ...interleaveByPriceSegments(ps.filter((p) => !p.isFeatured))]; }
+// Sold-out cards sort last regardless of the active sort mode (Part 2b) —
+// applied as a final partition rather than threaded into every sort branch
+// below, so it can never be forgotten when a new sort mode is added later.
+// Legacy Project rows (no unit data) are never sold-out by this check.
+const isSoldOutItem = (p: ProjectListItem) => (p as any).unitsTotal != null && soldOutFromCounts((p as any).unitsAvailable ?? 0, (p as any).unitsTotal);
+function pushSoldOutLast(items: ProjectListItem[]): ProjectListItem[] {
+  const active = items.filter((p) => !isSoldOutItem(p));
+  const soldOut = items.filter(isSoldOutItem);
+  return [...active, ...soldOut];
+}
+function sortProjectsRecommended(ps: ProjectListItem[]) {
+  return pushSoldOutLast([...interleaveByPriceSegments(ps.filter((p) => p.isFeatured)), ...interleaveByPriceSegments(ps.filter((p) => !p.isFeatured))]);
+}
 function sortProjectsStandard(ps: ProjectListItem[], sort: string) {
   const items = [...ps];
   switch (sort) {
-    case "priceAsc": return items.sort((a, b) => getNumericPrice(a) - getNumericPrice(b));
-    case "priceDesc": return items.sort((a, b) => getNumericPrice(b) - getNumericPrice(a));
-    case "titleAsc": return items.sort((a, b) => (a.title || "").localeCompare(b.title || ""));
-    case "titleDesc": return items.sort((a, b) => (b.title || "").localeCompare(a.title || ""));
-    case "completionSoon": return items.sort((a, b) => { const x = getCompletionTimestamp(a); const y = getCompletionTimestamp(b); if (x !== null && y !== null) return x - y; if (x !== null) return -1; if (y !== null) return 1; return (a.title || "").localeCompare(b.title || ""); });
-    default: return items.sort((a, b) => { const x = a._createdAt ? new Date(a._createdAt).getTime() : 0; const y = b._createdAt ? new Date(b._createdAt).getTime() : 0; return y - x; });
+    case "priceAsc": return pushSoldOutLast(items.sort((a, b) => getNumericPrice(a) - getNumericPrice(b)));
+    case "priceDesc": return pushSoldOutLast(items.sort((a, b) => getNumericPrice(b) - getNumericPrice(a)));
+    case "titleAsc": return pushSoldOutLast(items.sort((a, b) => (a.title || "").localeCompare(b.title || "")));
+    case "titleDesc": return pushSoldOutLast(items.sort((a, b) => (b.title || "").localeCompare(a.title || "")));
+    case "completionSoon": return pushSoldOutLast(items.sort((a, b) => { const x = getCompletionTimestamp(a); const y = getCompletionTimestamp(b); if (x !== null && y !== null) return x - y; if (x !== null) return -1; if (y !== null) return 1; return (a.title || "").localeCompare(b.title || ""); }));
+    default: return pushSoldOutLast(items.sort((a, b) => { const x = a._createdAt ? new Date(a._createdAt).getTime() : 0; const y = b._createdAt ? new Date(b._createdAt).getTime() : 0; return y - x; }));
   }
 }
 
@@ -857,7 +870,13 @@ export async function getFilteredProjectsCount(lang: string, filters: ProjectFil
 }
 
 export async function getFilteredProjectLocationsByLang(lang: string, filters: ProjectFilters) {
-  const rows = (await queryFilteredRows(lang, { ...filters })).filter((p) => p.latitude != null && p.longitude != null);
+  const rows = (await queryFilteredRows(lang, { ...filters }))
+    .filter((p) => p.latitude != null && p.longitude != null)
+    // Sold-out Developments get no map pin at all (Part 2a) — excluded at the
+    // source so every consumer of this query is automatically covered, not
+    // just the current map component. Legacy Project rows have no unit data
+    // (_source !== "development") and are unaffected.
+    .filter((p) => p._source !== "development" || !soldOutFromCounts((p as any).unitsAvailable ?? 0, (p as any).unitsTotal ?? 0));
   return rows.map((p) => ({
     _id: p.sanityId, title: p.title, slug: p.slug,
     location: { lat: p.latitude as number, lng: p.longitude as number },

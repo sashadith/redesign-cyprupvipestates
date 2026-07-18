@@ -296,6 +296,16 @@
 .prj:hover .prj__img, .prj.is-active .prj__img { transform: scale(1.05); }
 .prj__ph { background: linear-gradient(135deg, var(--sea), var(--sea-deep)); }
 
+/* Sold-out: clearly secondary without hiding it — reduced opacity, desaturated
+   image, no gold hover sheen (that's reserved for active/desirable cards).
+   The .prj__badge--sold pill still renders normally (muted, not hidden). */
+.prj.is-sold { opacity: 0.55; transition: opacity 0.3s var(--ease); }
+.prj.is-sold:hover { opacity: 0.75; }
+.prj.is-sold .prj__img { filter: grayscale(0.6); }
+.prj.is-sold:hover, .prj.is-sold.is-active { border-color: var(--hairline); box-shadow: none; }
+.prj.is-sold:hover::after, .prj.is-sold.is-active::after { opacity: 0; animation: none; }
+.prj.is-sold:hover .prj__img, .prj.is-sold.is-active .prj__img { transform: none; }
+
 /* readability scrim: opaque where the text sits, clearing toward the top */
 .prj__shade {
   position: absolute; inset: 0; z-index: 1; pointer-events: none;
@@ -311,17 +321,25 @@
   padding: 4px 10px; border-radius: 999px; border: 1px solid var(--hairline-strong);
 }
 .prj__badge--new { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
+/* Muted sold-out treatment — replaces the scarcity banner entirely when a
+   development has zero available units (computed live, see
+   src/lib/developmentAvailability.ts). Deliberately desaturated: this is a
+   dead-end state, not an urgency cue like .scarcity-badge, so it gets no
+   glow/animation. */
+.prj__badge--sold { color: var(--text-faint); background: rgba(8, 21, 18, 0.55); border-color: var(--hairline); }
 /* Scarcity indicator (src/app/components/ScarcityBanner) — shares the
    top-left .prj__badges flex row so it never overlaps .prj__type (top-right).
-   Carmine pill + a slow, continuous glowing ring: this banner IS the attention
-   mechanism (urgency is the point), so unlike .prj's hover sheen the ring runs
-   at all times, not just on hover. Same shared component renders on the client
-   presentation cards (presentation.css loads alongside this file there — see
+   Deep green pill (was carmine #8C2F2F — recolored to match the brand sea/
+   green family rather than read as an error/danger state) + a slow, continuous
+   glowing champagne ring: this banner IS the attention mechanism (urgency is
+   the point), so unlike .prj's hover sheen the ring runs at all times, not
+   just on hover. Same shared component renders on the client presentation
+   cards (presentation.css loads alongside this file there — see
    src/app/c/layout.tsx — so this one rule already covers both surfaces). */
 .scarcity-badge {
   position: relative;
   font-family: var(--font-body), sans-serif; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.04em;
-  color: var(--ivory); background: #8C2F2F;
+  color: var(--ivory); background: var(--scarcity-green);
   padding: 4px 10px; border-radius: 999px; white-space: nowrap;
 }
 /* Houdini angle driving the travelling glow — same conic-gradient/mask ring

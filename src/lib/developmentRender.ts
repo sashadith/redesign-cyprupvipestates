@@ -61,7 +61,7 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
     id: d.feedProjectId, dev: d.dev, publicName: ov?.alias || d.publicName, developerName: d.developerName, developer: d.developer ?? "",
     location: resolveDevelopmentLocation(district, town, area), district, town, area,
     status: d.status ?? "", category: d.category ?? undefined,
-    stage: d.stage ?? undefined, completion: ov?.completion || d.completion || "", energy: ov?.energy || d.energy || "",
+    stage: ov?.stage || d.stage || undefined, completion: ov?.completion || d.completion || "", energy: ov?.energy || d.energy || "",
     priceFrom, priceTo, currency: d.currency ?? "EUR",
     description: ({ en: ov?.descriptionEN, de: ov?.descriptionDE, pl: ov?.descriptionPL, ru: ov?.descriptionRU } as Record<string, string | null | undefined>)[lang] || ov?.descriptionEN || d.description || "",
     gallery: finalGallery, plans: arr<string>(d.plans), renders: [], amenities,

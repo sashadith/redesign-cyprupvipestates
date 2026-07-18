@@ -17,6 +17,7 @@ import type { ProjectVM } from "@/app/preview-project/feeds";
 import { splitDescriptionParagraphs } from "@/lib/text";
 import { resolveDevelopmentType } from "@/lib/developmentCard";
 import DistancesStrip from "@/app/components/DistancesStrip/DistancesStrip";
+import { computeAvailability, resolveAvailabilityLabel } from "@/lib/developmentAvailability";
 
 // Shared render body for both the SEO-facing slug route (the Development
 // branch of src/app/[lang]/projects/[slug]/page.tsx) and the admin-only
@@ -69,7 +70,10 @@ export default async function ProjectPageBody({
   ].filter(Boolean) as { name: string; tag: string }[])
     // drop levels that repeat the same place (normalise ph→f so "Paphos" === "Pafos")
     .filter((c) => { const k = c.name.toLowerCase().replace(/ph/g, "f").replace(/[^a-z]/g, ""); return locSeen.has(k) ? false : (locSeen.add(k), true); });
-  const isSold = (p.stage || p.status || "").toLowerCase().includes("sold");
+  // Sold-out is computed from live unit data ONLY — never from stage/status
+  // text (see src/lib/developmentAvailability.ts for why).
+  const { soldOut: isSold } = computeAvailability(p.units);
+  const statusLabel = resolveAvailabilityLabel(p.stage, p.status, isSold);
 
   // Plot / build-area ranges, computed from the currently AVAILABLE units (not
   // sold/reserved) — values aren't always suffixed "m²" at the source, so extract
@@ -89,7 +93,7 @@ export default async function ProjectPageBody({
     { label: "Location", value: p.location },
     types.length ? { label: "Property type", value: types.join(", ") } : null,
     p.units.length ? { label: "Units", value: `${p.units.length}${avail.length !== p.units.length ? ` (${avail.length} available)` : ""}` } : null,
-    p.stage ? { label: "Status", value: p.stage } : { label: "Status", value: p.status },
+    { label: "Status", value: statusLabel },
     plotRange ? { label: "Plot", value: plotRange } : null,
     builtRange ? { label: "Build area", value: builtRange } : null,
     p.completion ? { label: "Completion", value: p.completion } : null,
@@ -113,7 +117,7 @@ export default async function ProjectPageBody({
           <div className="pp-hero__overlay">
             <div className="pp-wrap">
               <div className="pp-eyebrow">
-                <span className={`pp-badge pp-badge--${isSold ? "sold" : "ok"}`}>{isSold ? "SOLD OUT" : (p.stage || p.status)}</span>
+                <span className={`pp-badge pp-badge--${isSold ? "sold" : "ok"}`}>{statusLabel}</span>
                 <span className="pp-loc">{p.location}</span>
               </div>
               <h1 className="pp-title">{p.publicName}</h1>

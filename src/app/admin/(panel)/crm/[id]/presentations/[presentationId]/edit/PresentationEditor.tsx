@@ -292,6 +292,11 @@ export default function PresentationEditor({
                       {it.isNew && <span className="text-[10px] font-semibold text-[#92400E] bg-[#FEF3C7] rounded-full px-2 py-0.5">NEW</span>}
                       <span className="text-xs text-[#9CA3AF] ml-auto">{[it.district || it.town, it.area].filter(Boolean).join(" · ")} · {fmtPrice(it.priceFrom)}</span>
                     </div>
+                    {it.units.length > 0 && allAvailableIds.length === 0 && (
+                      <p className="text-xs text-[#92400E] bg-[#FFFBEB] border border-[#FCD34D] rounded px-2 py-1">
+                        ⚠ This development is sold out — consider removing it.
+                      </p>
+                    )}
                     <input
                       value={it.aliasName}
                       onChange={(e) => updateItem(it.developmentId, { aliasName: e.target.value })}

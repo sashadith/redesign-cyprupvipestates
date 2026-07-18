@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { computePublishGate, areaSlugOf, type PublishGateCheck } from "@/lib/developmentPublishGate";
 import { findLegacyCounterpart } from "@/lib/legacyCounterpart";
+import { computeAvailability, availabilityContradiction } from "@/lib/developmentAvailability";
 import BatchDeactivateControl from "./BatchDeactivateControl";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,7 @@ type Row = {
   gate: PublishGateCheck[];
   passCount: number;
   ready: boolean;
+  availabilityWarning: string | null;
   counterpart: { title: string; score: number } | null;
 };
 
@@ -35,7 +37,7 @@ export default async function PublishingQueuePage({
   const [nonPublished, totalCount, publishedCount, approvedAreas, legacyTitleRows, confirmedPairs] = await Promise.all([
     prisma.development.findMany({
       where: { publishStatus: { not: "published" } },
-      include: { override: true, _count: { select: { units: true } } },
+      include: { override: true, _count: { select: { units: true } }, units: { select: { status: true } } },
     }),
     prisma.development.count(),
     prisma.development.count({ where: { publishStatus: "published" } }),
@@ -62,12 +64,15 @@ export default async function PublishingQueuePage({
     const gallery = arr(ov?.gallery).length ? arr(ov?.gallery) : arr(d.gallery);
     const name = ov?.alias || d.publicName;
 
+    // Override wins — see DevelopmentOverride.stage's schema comment.
+    const resolvedStage = ov?.stage || d.stage;
     const gate = computePublishGate({
-      description, area, district, lat, lng, stage: d.stage,
+      description, area, district, lat, lng, stage: resolvedStage,
       hasAreaDescription: area ? approvedSlugs.has(areaSlugOf(area)) : false,
       gallery, mainImage: ov?.mainImage,
     });
     const passCount = gate.filter((g) => g.ok).length;
+    const { soldOut, available } = computeAvailability(d.units);
 
     return {
       id: d.id,
@@ -75,6 +80,7 @@ export default async function PublishingQueuePage({
       developer: d.developer || d.dev,
       units: d._count.units,
       gate,
+      availabilityWarning: availabilityContradiction(resolvedStage, d.status, soldOut, available),
       passCount,
       ready: passCount === gate.length,
       counterpart: findLegacyCounterpart(name, legacyTitles),
@@ -158,17 +164,22 @@ export default async function PublishingQueuePage({
                 <td className="px-4 py-2.5 text-[#6B7280]">{r.developer}</td>
                 <td className="px-4 py-2.5 text-[#6B7280]">{r.units}</td>
                 <td className="px-4 py-2.5">
-                  {r.ready ? (
-                    <span className="text-emerald-700 font-medium">Ready</span>
-                  ) : (
-                    <div className="flex flex-wrap gap-1">
-                      {r.gate.filter((g) => !g.ok).map((g) => (
+                  <div className="flex flex-wrap gap-1">
+                    {r.availabilityWarning && (
+                      <span title={r.availabilityWarning} className="inline-block rounded px-1.5 py-0.5 text-xs font-medium bg-amber-50 text-amber-800">
+                        ⚠ availability
+                      </span>
+                    )}
+                    {r.ready ? (
+                      <span className="text-emerald-700 font-medium">Ready</span>
+                    ) : (
+                      r.gate.filter((g) => !g.ok).map((g) => (
                         <span key={g.key} className="inline-block rounded px-1.5 py-0.5 text-xs font-medium bg-red-50 text-red-700">
                           {g.chip}
                         </span>
-                      ))}
-                    </div>
-                  )}
+                      ))
+                    )}
+                  </div>
                 </td>
                 <td className="px-4 py-2.5">
                   {r.counterpart ? (

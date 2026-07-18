@@ -45,7 +45,7 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
       data: { leadId: presentation.leadId, type: "PRESENTATION_FAVORITE", content: `Favorited: ${publicName}` },
     }).catch(() => {});
     try {
-      await sendTelegramMessage(`❤️ ${escapeHtml(presentation.greetingName)} hat ${escapeHtml(publicName)} favorisiert`);
+      await sendTelegramMessage(`❤️ ${escapeHtml(presentation.greetingName)} favorited ${escapeHtml(publicName)}`);
     } catch (e) { console.error("Favorite Telegram alert failed:", e); }
   }
 

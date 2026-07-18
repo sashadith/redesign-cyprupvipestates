@@ -6,13 +6,14 @@ import Script from "next/script";
 import { abs } from "@/lib/seo";
 import { localizedHref } from "@/lib/locale";
 import type { ProjectVM } from "@/app/preview-project/feeds";
+import { computeAvailability } from "@/lib/developmentAvailability";
 
 export default function DevelopmentSchema({ p, lang, canonical }: { p: ProjectVM; lang: string; canonical: string }) {
   // Same guard the legacy component uses: no point emitting a listing schema
   // without at least a location fix and a photo to point at.
   if (!p.center || !p.gallery.length) return null;
 
-  const avail = p.units.filter((u) => u.status === "available");
+  const { soldOut } = computeAvailability(p.units);
   // p.priceFrom/priceTo are already fully resolved by resolveDevelopmentPrice()
   // in mapRowToVM (src/lib/developmentCard.ts) — the single source of truth
   // every surface (this schema, the page itself, the merged /projects card) uses.
@@ -39,7 +40,7 @@ export default function DevelopmentSchema({ p, lang, canonical }: { p: ProjectVM
             "@type": "Offer",
             priceCurrency: p.currency || "EUR",
             ...(priceTo != null && priceTo !== priceFrom ? { priceSpecification: { "@type": "PriceSpecification", minPrice: priceFrom, maxPrice: priceTo, priceCurrency: p.currency || "EUR" } } : { price: priceFrom }),
-            availability: avail.length > 0 ? "https://schema.org/InStock" : "https://schema.org/SoldOut",
+            availability: soldOut ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
             ...(p.developer ? { seller: { "@type": "Organization", name: p.developer } } : {}),
           },
         }

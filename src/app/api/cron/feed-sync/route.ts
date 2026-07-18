@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncAll } from "@/lib/feedSync";
 import { prisma } from "@/lib/prisma";
+import { withCronLog, logCronRun } from "@/lib/cronLog";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 const TRASH_RETENTION_DAYS = 90;
+const CRON_LOG_RETENTION_DAYS = 90;
 
 // Hard-delete leads that have sat in the trash (soft-deleted, see
 // admin/actions.ts's softDeleteLeadAction) for over 90 days. Piggybacks on
@@ -18,6 +20,20 @@ async function purgeOldTrash() {
     return { purged: count };
   } catch (e) {
     console.error("Trash purge failed:", e);
+    return { purged: 0, error: String(e) };
+  }
+}
+
+// Same piggyback pattern as purgeOldTrash above, for CronRunLog itself (Action
+// Center's sync-health data, see src/lib/actionCenter/rules/system.ts) — no
+// point keeping this forever.
+async function purgeOldCronLogs() {
+  try {
+    const cutoff = new Date(Date.now() - CRON_LOG_RETENTION_DAYS * 86_400_000);
+    const { count } = await prisma.cronRunLog.deleteMany({ where: { ranAt: { lt: cutoff } } });
+    return { purged: count };
+  } catch (e) {
+    console.error("CronRunLog purge failed:", e);
     return { purged: 0, error: String(e) };
   }
 }
@@ -36,7 +52,19 @@ export async function GET(req: NextRequest) {
   if (!process.env.CRON_SECRET || key !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const results = await syncAll({ mirror: true });
-  const trash = await purgeOldTrash();
-  return NextResponse.json({ ok: true, at: new Date().toISOString(), results, trash });
+  try {
+    const results = await withCronLog(
+      "feed-sync",
+      () => syncAll({ mirror: true }),
+      (r) => `${r.reduce((a, x) => a + x.created + x.updated, 0)} updated, ${r.reduce((a, x) => a + x.failed, 0)} failed across ${r.length} developer(s)`,
+    );
+    // Per-developer rows — Action Center rule (e) ("Medousa feed failed last
+    // sync") needs per-developer status, not just the whole job's outcome.
+    for (const r of results) await logCronRun(`feed-sync:${r.dev}`, r.failed === 0, r.failed === 0 ? undefined : `${r.failed}/${r.found} project(s) failed`);
+    const trash = await purgeOldTrash();
+    const cronLogCleanup = await purgeOldCronLogs();
+    return NextResponse.json({ ok: true, at: new Date().toISOString(), results, trash, cronLogCleanup });
+  } catch (e) {
+    return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
+  }
 }

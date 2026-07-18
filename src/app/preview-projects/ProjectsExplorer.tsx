@@ -6,6 +6,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import PxSelect from "./PxSelect";
 import { projectsStrings, type ProjectsStrings } from "@/app/[lang]/projects/projectsI18n";
 import ScarcityBanner from "@/app/components/ScarcityBanner/ScarcityBanner";
+import { soldOutFromCounts } from "@/lib/developmentAvailability";
 
 export type Distances = {
   beach?: string;
@@ -102,9 +103,10 @@ const fmtPrice = (p: number | null, s: ProjectsStrings) =>
   p == null ? s.priceOnRequest : `€${p.toLocaleString(s.numLocale)}`;
 
 function Card({ c, active, onHover, s, locale }: { c: ProjectCardData; active: boolean; onHover: (id: string | null) => void; s: ProjectsStrings; locale: string }) {
+  const soldOut = c.unitsTotal != null && soldOutFromCounts(c.unitsAvailable ?? 0, c.unitsTotal);
   return (
     <a
-      className={`prj${active ? " is-active" : ""}`}
+      className={`prj${active ? " is-active" : ""}${soldOut ? " is-sold" : ""}`}
       href={c.href}
       onMouseEnter={() => onHover(c.id)}
       onMouseLeave={() => onHover(null)}
@@ -115,7 +117,11 @@ function Card({ c, active, onHover, s, locale }: { c: ProjectCardData; active: b
         <div className="prj__badges">
           {c.isNew && <span className="prj__badge prj__badge--new">{s.badgeNew}</span>}
           {c.isFeatured && <span className="prj__badge">{s.badgeFeatured}</span>}
-          {c.unitsTotal != null && <ScarcityBanner available={c.unitsAvailable ?? 0} total={c.unitsTotal} locale={locale} seedKey={c.id} />}
+          {c.unitsTotal != null && (
+            soldOut
+              ? <span className="prj__badge prj__badge--sold">{s.badgeSoldOut}</span>
+              : <ScarcityBanner available={c.unitsAvailable ?? 0} total={c.unitsTotal} locale={locale} seedKey={c.id} />
+          )}
         </div>
         {c.type && <span className="prj__type">{c.type}</span>}
         <div className="prj__info">

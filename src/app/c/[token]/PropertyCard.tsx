@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { PLocale } from "./copy";
 import { COPY, formatUnitsCount } from "./copy";
 import ScarcityBanner from "@/app/components/ScarcityBanner/ScarcityBanner";
+import { soldOutFromCounts } from "@/lib/developmentAvailability";
 
 export type PresentationItemVM = {
   developmentId: string;
@@ -57,6 +58,7 @@ export default function PropertyCard({
     }
   }
 
+  const soldOut = soldOutFromCounts(item.unitsAvailable, item.unitsTotal);
   const price = fmtPrice(item.priceFrom, item.currency, priceFromLabel);
   // "Paphos · Paphos" when the area override happens to equal the district —
   // show the value once instead of repeating it.
@@ -70,7 +72,9 @@ export default function PropertyCard({
         {item.mainImage ? <img src={item.mainImage} alt={item.publicName} className="cp-card__img" data-fx="cardimg" loading="lazy" /> : <div className="cp-card__img cp-card__img--empty" />}
         <div className="cp-card__badges">
           {item.isNew && <span className="cp-card__newbadge">{newForYouLabel}</span>}
-          <ScarcityBanner available={item.unitsAvailable} total={item.unitsTotal} locale={locale} seedKey={item.developmentId} />
+          {soldOut
+            ? <span className="cp-card__soldbadge">{COPY[locale].soldOut}</span>
+            : <ScarcityBanner available={item.unitsAvailable} total={item.unitsTotal} locale={locale} seedKey={item.developmentId} />}
         </div>
         <button type="button" className={`cp-card__heart${favorited ? " is-on" : ""}`} onClick={toggleFavorite} disabled={busy} aria-pressed={favorited} aria-label="Favorite">
           <svg viewBox="0 0 24 24" width="18" height="18" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth={favorited ? "0" : "1.8"}>
@@ -85,7 +89,7 @@ export default function PropertyCard({
         <p className="cp-card__meta">
           <span className="cp-card__vat">{COPY[locale].vatLabel}</span>
           <span aria-hidden="true">·</span>
-          <span>{formatUnitsCount(locale, item.unitsAvailable)}</span>
+          <span>{soldOut ? COPY[locale].soldOut : formatUnitsCount(locale, item.unitsAvailable)}</span>
         </p>
         {item.advisorComment && <p className="cp-card__note">{item.advisorComment}</p>}
         <button type="button" className="cp-card__cta" onClick={onViewDetails}>{viewDetailsLabel}</button>

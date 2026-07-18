@@ -1,13 +1,33 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { getActionCenterGrouped } from "@/lib/actionCenter";
+import ActionCenterPanel, { type ActionCenterGroupVM } from "./ActionCenterPanel";
 
 export const dynamic = "force-dynamic";
 
 const PIPELINE = ["NEW", "QUALIFIED", "CONTACTED", "VIEWING_SCHEDULED", "OFFER", "CLOSED", "LOST"];
 
+// "since 3d" / "since 5h" — formatted server-side (not in the client component)
+// so relative time never depends on the client's clock or causes a hydration
+// mismatch against the server-rendered string.
+function sinceLabel(date: Date): string {
+  const hours = Math.floor((Date.now() - date.getTime()) / 3_600_000);
+  if (hours < 1) return "just now";
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d`;
+  return `${Math.floor(days / 30)}mo`;
+}
+
 export default async function Dashboard() {
   const since7 = new Date(); since7.setDate(since7.getDate() - 7);
   const since30 = new Date(); since30.setDate(since30.getDate() - 30);
+
+  const actionCenterGrouped = await getActionCenterGrouped();
+  const actionCenterVM: ActionCenterGroupVM[] = actionCenterGrouped.map((g) => ({
+    category: g.category,
+    items: g.items.map((i) => ({ id: i.id, severity: i.severity, title: i.title, description: i.description, deepLink: i.deepLink, sinceLabel: sinceLabel(i.since) })),
+  }));
 
   const [leadsTotal, leads7d, leads30d, projects, blogs, pages, recent, byStatus, bySource, supersededActive] = await Promise.all([
     prisma.lead.count({ where: { deletedAt: null } }),
@@ -49,6 +69,7 @@ export default async function Dashboard() {
   return (
     <div>
       <h1 className="text-2xl font-semibold mb-6">Dashboard</h1>
+      <ActionCenterPanel groups={actionCenterVM} />
       {supersededActive > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6 flex items-center justify-between">
           <span className="text-sm text-amber-800">

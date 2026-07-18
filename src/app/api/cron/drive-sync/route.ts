@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncAllDrives } from "@/lib/driveAvailabilitySync";
+import { withCronLog, logCronRun } from "@/lib/cronLog";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -13,6 +14,17 @@ export async function GET(req: NextRequest) {
   }
   const content = req.nextUrl.searchParams.get("content") === "1";
   const force = req.nextUrl.searchParams.get("force") === "1";
-  const results = await syncAllDrives(force, content);
-  return NextResponse.json({ ok: true, at: new Date().toISOString(), content, force, results });
+  try {
+    const results = await withCronLog(
+      "drive-sync",
+      () => syncAllDrives(force, content),
+      (r) => `${r.length} developer(s), ${r.filter((x) => !x.result.ok).length} failed`,
+    );
+    // Per-developer rows too — Action Center rule (e) needs "which developer
+    // failed", not just "the drive-sync job as a whole had a bad run".
+    for (const r of results) await logCronRun(`drive-sync:${r.developer}`, r.result.ok, r.result.ok ? undefined : r.result.message);
+    return NextResponse.json({ ok: true, at: new Date().toISOString(), content, force, results });
+  } catch (e) {
+    return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
+  }
 }

@@ -78,11 +78,11 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   // break the page for the client.
   try {
     if (isFirstViewEver) {
-      await sendTelegramMessage(`👀 ${name} hat die persönliche Seite geöffnet — <a href="${crmLink}">CRM</a>`);
+      await sendTelegramMessage(`👀 ${name} opened their personal page — <a href="${crmLink}">CRM</a>`);
     } else if (isFirstViewToday && distinctEarlierDays >= 2) {
       // Guarded to at most one per presentation per day by isFirstViewToday itself.
       const visitNumber = distinctEarlierDays + 1;
-      await sendTelegramMessage(`🔥 ${name} ist zurück auf der Seite (Besuch Nr. ${visitNumber})`);
+      await sendTelegramMessage(`🔥 ${name} is back on their page (visit #${visitNumber})`);
     }
   } catch (e) { console.error("Presentation view Telegram alert failed:", e); }
 

@@ -17,6 +17,7 @@ import MapLocationField from "./MapLocationField";
 import { getDbProject } from "@/lib/developmentRender";
 import { autoMetaTitle, autoMetaDescription, developmentSlug, TITLE_MAX, DESC_MAX } from "@/lib/developmentSeo";
 import { computePublishGate, areaSlugOf } from "@/lib/developmentPublishGate";
+import { computeAvailability, availabilityContradiction } from "@/lib/developmentAvailability";
 import { getSeoPromptTemplate } from "@/lib/ai/seoMeta";
 import SeoMetaFields from "./SeoMetaFields";
 
@@ -54,11 +55,16 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
   const areaDesc = area ? await prisma.areaDescription.findFirst({ where: { areaSlug: areaSlugOf(area), status: "approved" } }) : null;
   const description = ov?.descriptionEN || d.description || "";
 
+  // Override wins — see DevelopmentOverride.stage's schema comment for why this
+  // moved off Development.stage (feedSync.ts silently reverted admin choices).
+  const resolvedStage = ov?.stage || d.stage;
   const gate = computePublishGate({
-    description, area, district, lat, lng, stage: d.stage,
+    description, area, district, lat, lng, stage: resolvedStage,
     hasAreaDescription: !!areaDesc, gallery, mainImage: ov?.mainImage,
   });
   const canPublish = gate.every((g) => g.ok);
+  const { soldOut, available } = computeAvailability(d.units);
+  const availabilityWarning = availabilityContradiction(resolvedStage, d.status, soldOut, available);
 
   // Reconstruct the id from the feedKey (minus the "dev:" prefix) so getDbProject
   // rebuilds the EXACT stored key. Drive feedKeys are 3-part (drive:<accountId>:<slug>),
@@ -114,6 +120,12 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
         </div>
       </div>
 
+      {availabilityWarning && (
+        <div className="rounded-md border border-[#FCD34D] bg-[#FFFBEB] text-[#92400E] text-sm px-4 py-2.5">
+          ⚠ {availabilityWarning}
+        </div>
+      )}
+
       {aiConfigured() && <PdfImport id={d.id} />}
 
       <div className="grid md:grid-cols-3 gap-5">
@@ -129,9 +141,9 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
 
           <div>
             <label className={label}>Status <span className="font-normal text-[#9CA3AF]">— shown as a badge on the public page</span></label>
-            <select name="stage" defaultValue={d.stage ?? ""} className={field}>
+            <select name="stage" defaultValue={ov?.stage ?? ""} className={field}>
               <option value="">—</option>
-              {d.stage && !["Available", "Under Construction", "Key-Ready", "Sold"].includes(d.stage) && <option value={d.stage}>{d.stage}</option>}
+              {resolvedStage && !["Available", "Under Construction", "Key-Ready", "Sold"].includes(resolvedStage) && <option value={resolvedStage}>{resolvedStage}</option>}
               <option value="Available">Available</option>
               <option value="Under Construction">Under Construction</option>
               <option value="Key-Ready">Key-Ready</option>
@@ -239,7 +251,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
             <h2 className="text-sm font-semibold text-[#111827] mb-2">Feed data (reference)</h2>
             <div className="flex justify-between"><span className="text-[#6B7280]">Location</span><span>{[d.district, d.town, d.area].filter(Boolean).join(" · ") || "—"}</span></div>
             <div className="flex justify-between"><span className="text-[#6B7280]">Price from</span><span>{d.priceFrom ? "€" + d.priceFrom.toLocaleString("en-US") : "—"}</span></div>
-            <div className="flex justify-between"><span className="text-[#6B7280]">Stage</span><span>{d.stage || "—"}</span></div>
+            <div className="flex justify-between"><span className="text-[#6B7280]">Stage</span><span>{resolvedStage || "—"}</span></div>
             <div className="flex justify-between"><span className="text-[#6B7280]">Completion</span><span>{d.completion || "—"}</span></div>
             <div className="flex justify-between"><span className="text-[#6B7280]">Category</span><span>{d.category || "—"}</span></div>
             <div className="flex justify-between"><span className="text-[#6B7280]">Units</span><span>{d._count.units}</span></div>

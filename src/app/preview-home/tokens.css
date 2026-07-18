@@ -16,6 +16,7 @@
   --ivory:    #EFE9DB;
   --champagne:#C29A5E;
   --bronze:   #8E6B3D;
+  --scarcity-green: #1F5B4E; /* scarcity banner bg — deep elegant green, distinct from --sea/--sea-deep (too dark/desaturated to read as an urgency accent) */
 
   /* spacing — 8px */
   --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px;

@@ -85,7 +85,7 @@ export async function generateDescription(developmentId: string, words: number, 
       area,
       areaText: areaRow?.textEN || undefined,
       category: d.category || undefined,
-      stage: d.stage || undefined,
+      stage: ov?.stage || d.stage || undefined,
       completion: ov?.completion || d.completion || undefined,
       priceFrom: d.priceFrom,
       projectAmenities: asArr(ov?.amenities).length ? asArr(ov?.amenities) : asArr(d.amenities),
@@ -389,6 +389,15 @@ export async function saveOverride(formData: FormData) {
     descriptionRU: clean(formData, "descriptionRU"),
     completion: clean(formData, "completion"),
     energy: clean(formData, "energy"),
+    // Construction-stage override (Available / Under Construction / Key-Ready /
+    // Sold) — lives in DevelopmentOverride, not on Development itself. It used
+    // to be written straight to Development.stage on the assumption sync never
+    // touches it ("drive sync never writes stage") — true for drive-synced
+    // developers, but feedSync.ts DOES write Development.stage on every run for
+    // feed-based ones, silently reverting an admin's choice the next sync
+    // (Celestia, 2026-07-17/18). Same protection every other field here already
+    // has: sync never writes to this table at all.
+    stage: clean(formData, "stage"),
     amenities,
     seo: seo as any,
   };
@@ -397,10 +406,6 @@ export async function saveOverride(formData: FormData) {
     update: data,
     create: { developmentId: id, ...data },
   });
-  // Variant A: the development-level status (Available / Under Construction / Key-Ready /
-  // Sold) is stored directly on the Development — the drive sync never writes `stage`,
-  // so it is never overwritten.
-  await prisma.development.update({ where: { id }, data: { stage: clean(formData, "stage") } });
   // Manual slug edit — only touched when the admin actually typed something (an
   // empty field means "keep whatever's there / let publish auto-assign one
   // later"). Deduped against every OTHER row so two projects can never collide.
