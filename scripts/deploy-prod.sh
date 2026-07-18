@@ -106,7 +106,7 @@ echo "   ✓ $DIR identifies as cyprusvipestates"
 echo "→ previewing deletions (dry run) before any real sync"
 preview_opts=(-rlptDz --delete --dry-run -v
   --exclude node_modules --exclude .next --exclude .git --exclude .local-db
-  --exclude '.env' --exclude '.env.local' --exclude 'scripts/images' --exclude 'public/uploads')
+  --exclude '.env' --exclude '.env.local' --exclude 'scripts/images' --exclude 'public/uploads' --exclude secrets)
 deletions="$(rsync "${preview_opts[@]}" -e "ssh -i $KEY" "$STAGE/" "$HOST:$DIR/" 2>&1 | grep '^deleting ' || true)"
 if [ -n "$deletions" ]; then
   echo "⚠️  This deploy would DELETE the following on $HOST:$DIR (not in $REF):"
@@ -134,9 +134,14 @@ fi
 #    Omitting -o/-g leaves synced files owned by whoever rsync runs as on the
 #    remote (root here) — always correct. Belt-and-suspenders: step 3 also
 #    force-fixes $DIR's own ownership/permissions before every build.
+#
+#    `secrets` excluded 2026-07-18: $DIR/secrets/gsc-service-account.json
+#    (root-only, 600) lives outside the repo entirely, same reasoning as
+#    .env/.env.local — without this exclude, --delete would have wiped it on
+#    the very next deploy since it doesn't exist in the local source tree.
 RSYNC_OPTS=(-rlptDz --delete
   --exclude node_modules --exclude .next --exclude .git --exclude .local-db
-  --exclude '.env' --exclude '.env.local' --exclude 'scripts/images' --exclude 'public/uploads')
+  --exclude '.env' --exclude '.env.local' --exclude 'scripts/images' --exclude 'public/uploads' --exclude secrets)
 [ "$DRY" = 1 ] && RSYNC_OPTS+=(--dry-run -v)
 
 echo "→ rsync clean $REF tree to $HOST:$DIR"
