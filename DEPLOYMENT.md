@@ -258,6 +258,38 @@ push to it.
 - Old `main` tip (superseded): `86649d2`
 - New `main` tip (= `redesign/home` HEAD at rename time): `6253a49`
 
+**2026-07-18 — `wip/content-imports` audited and deleted.** This branch held
+one commit (`d12f06d`) of unrelated concurrent WIP snapshotted off to the side
+during the 2026-07-16 staging→production merge, explicitly marked "not
+reviewed/finished." Fully dispositioned before deletion:
+
+- Blog/Insights listing migration — **discarded**; `main`'s own version had
+  already evolved past this snapshot independently.
+- DE/PL/RU landing-page import scripts + 21 markdown content files — the
+  import had already run against the shared production database before this
+  branch's code was ever committed to `main` (all 21 pages verified live).
+  **Archived** to `legacy-scripts/landing-imports/`.
+- `OffPlanSnapshotBlockComponent` (stats grid + district table, unwired to
+  any page) — live-checked https://cyprusvipestates.com/off-plan-properties-cyprus,
+  confirmed no equivalent block renders there. **Extracted** to its own
+  branch, `feature/offplan-snapshot` (not merged — unreviewed, unwired),
+  for later evaluation.
+- Small SEO/ops hardening (`robots.ts` `/c/` disallow, `next.config.mjs`
+  X-Robots-Tag header + `serverActions.bodySizeLimit`, Telegram
+  lead-notification emoji cleanup) — verified none of it existed in `main`
+  yet, **cherry-picked** in.
+- "Top property matches" in the lead Telegram notification — the WIP code
+  called `matchDevelopmentsForLead()` with a signature that predated the
+  current `src/lib/crm/matching.ts` API (built later, in the Action Center
+  work). **Re-implemented fresh** against the current API rather than merged.
+- Two planning docs (`SEO-GROWTH-ROADMAP-2026.md`, `DATA-INSIGHTS-LAYER-
+  SPEC.md`) — pure documentation, no code impact. **Merged** into `docs/`,
+  each flagged with a note that their "Development/Project are two separate
+  systems" framing predates the routing-layer unification (2026-07-17).
+
+Branch deleted (both local and `origin`) once every slice above was resolved
+and deployed to production.
+
 ## Lessons learned
 
 **`.env` as a stale bootstrap credential, not a source of truth.**
