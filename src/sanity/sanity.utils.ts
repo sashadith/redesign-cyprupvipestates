@@ -157,7 +157,29 @@ async function resolveProjectRefs(refs: any[], lang: string) {
   const byId = new Map(rows.map((r) => [r.sanityId, r as AnyRow]));
   const ordered = ids.map((id) => byId.get(id)).filter(Boolean) as AnyRow[];
   const mapped = await mapProjectRowsToLang(ordered, lang);
-  return mapped.map((p) => projectCardString(p));
+
+  // A ref can still point at an ARCHIVED legacy project (superseded by a
+  // Development) — its own detail page 308-redirects to the canonical
+  // /projects/{devSlug}, so a card built from the stale slug sends every
+  // visitor/crawler through an avoidable extra hop. Confirmed live via a
+  // full-site link crawl (2026-07-18): 21 legacy slugs × 4 locales appeared
+  // this way across "similar/featured projects" widgets on ~1/3 of all
+  // crawled pages. Batch-resolve the real target here, once, at the shared
+  // resolution point every one of those widgets reads from.
+  const redirects = await prisma.legacyProjectRedirect.findMany({
+    where: { projectId: { in: mapped.map((p) => p.id) } },
+    select: { projectId: true, targetPath: true },
+  });
+  const targetSlugById = new Map(
+    redirects
+      .map((r) => [r.projectId, r.targetPath.match(/\/projects\/([^/?#]+)/)?.[1]] as const)
+      .filter((entry): entry is [string, string] => !!entry[1])
+  );
+
+  return mapped.map((p) => {
+    const canonicalSlug = targetSlugById.get(p.id);
+    return projectCardString(canonicalSlug ? { ...p, slug: canonicalSlug } : p);
+  });
 }
 
 // Compute filteredProjects for projectsSection/landingProjects blocks.
@@ -670,10 +692,29 @@ export async function getProjectsByDeveloper(lang: string, developerId: string):
     where: { language: lang as any, developerId: dev.id, isSold: false },
     orderBy: { createdAt: "desc" },
   });
-  return rows.filter((p) => p.previewImage).map((p) => D({
-    _id: p.sanityId, title: p.title, slug: slugObj(p), previewImage: D(p.previewImage),
-    keyFeatures: p.keyFeatures, language: p.language, isSold: p.isSold,
-  })) as unknown as Project[];
+
+  // Same fix as resolveProjectRefs above: no `status` filter here means an
+  // ARCHIVED (superseded-by-Development) row still shows on its developer's
+  // page — use its LegacyProjectRedirect target slug instead of its own
+  // stale one, so the card doesn't send visitors through a 308 hop.
+  const redirects = await prisma.legacyProjectRedirect.findMany({
+    where: { projectId: { in: rows.map((r) => r.id) } },
+    select: { projectId: true, targetPath: true },
+  });
+  const targetSlugById = new Map(
+    redirects
+      .map((r) => [r.projectId, r.targetPath.match(/\/projects\/([^/?#]+)/)?.[1]] as const)
+      .filter((entry): entry is [string, string] => !!entry[1])
+  );
+
+  return rows.filter((p) => p.previewImage).map((p) => {
+    const canonicalSlug = targetSlugById.get(p.id);
+    const row = canonicalSlug ? { ...p, slug: canonicalSlug } : p;
+    return D({
+      _id: p.sanityId, title: p.title, slug: slugObj(row), previewImage: D(p.previewImage),
+      keyFeatures: p.keyFeatures, language: p.language, isSold: p.isSold,
+    });
+  }) as unknown as Project[];
 }
 
 export async function getThreeProjectsBySameCity(lang: string, city: string, excludeProjectId?: string): Promise<any[]> {
@@ -685,9 +726,27 @@ export async function getThreeProjectsBySameCity(lang: string, city: string, exc
     },
     orderBy: { createdAt: "desc" },
   });
-  const list = rows.filter((p) => p.previewImage).map((p) => D({
-    _id: p.sanityId, title: p.title, slug: { current: p.slug }, previewImage: D(p.previewImage), keyFeatures: p.keyFeatures,
-  }));
+
+  // Same fix as resolveProjectRefs/getProjectsByDeveloper above: no `status`
+  // filter here means an ARCHIVED (superseded-by-Development) row can still
+  // surface in this "same city" widget, sending its card link through a 308
+  // to the Development's page. Use the redirect target slug instead.
+  const redirects = await prisma.legacyProjectRedirect.findMany({
+    where: { projectId: { in: rows.map((r) => r.id) } },
+    select: { projectId: true, targetPath: true },
+  });
+  const targetSlugById = new Map(
+    redirects
+      .map((r) => [r.projectId, r.targetPath.match(/\/projects\/([^/?#]+)/)?.[1]] as const)
+      .filter((entry): entry is [string, string] => !!entry[1])
+  );
+
+  const list = rows.filter((p) => p.previewImage).map((p) => {
+    const canonicalSlug = targetSlugById.get(p.id) ?? p.slug;
+    return D({
+      _id: p.sanityId, title: p.title, slug: { current: canonicalSlug }, previewImage: D(p.previewImage), keyFeatures: p.keyFeatures,
+    });
+  });
   return list.sort(() => Math.random() - 0.5).slice(0, 3);
 }
 

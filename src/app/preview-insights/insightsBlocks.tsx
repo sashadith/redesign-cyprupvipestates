@@ -203,7 +203,12 @@ function detectRelatedArticleParagraph(value: any): null | { label: string; titl
   const blog = raw.match(/\/blog\/([^/?#]+)/);
   if (blog) {
     const slug = blog[1];
-    return { label: "Related Article", title, href: `/preview-insights/${slug}`, canonical: `${SITE_URL}${localizedHref("en", ["blog", slug])}`, schemaType: "BlogPosting" };
+    // Was `/preview-insights/${slug}` — a route that 500s in production (the
+    // live blog page at src/app/[lang]/blog/[slug]/page.tsx uses this same
+    // function, despite the file header's "preview only" assumption). Use the
+    // real localized blog path instead, matching `canonical` just below.
+    const href = localizedHref("en", ["blog", slug]);
+    return { label: "Related Article", title, href, canonical: `${SITE_URL}${href}`, schemaType: "BlogPosting" };
   }
   // non-blog target (e.g. a case study) — keep the original destination
   const abs = /^https?:\/\//i.test(raw) ? raw : `${SITE_URL}${raw.startsWith("/") ? "" : "/"}${raw}`;
