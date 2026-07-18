@@ -4,7 +4,12 @@ import React from "react";
 import { Metadata } from "next";
 import { i18n } from "@/i18n.config";
 import { localizedHref } from "@/lib/locale";
-import { staticAlternates, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import {
+  staticAlternates,
+  DEFAULT_OG_IMAGE,
+  DEFAULT_OG_IMAGE_WIDTH,
+  DEFAULT_OG_IMAGE_HEIGHT,
+} from "@/lib/seo";
 
 import {
   getCaseStudiesPageByLang,
@@ -50,6 +55,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "Cyprus VIP Estates",
       locale: params.lang,
       type: "website",
+      images: [{ url: DEFAULT_OG_IMAGE, width: DEFAULT_OG_IMAGE_WIDTH, height: DEFAULT_OG_IMAGE_HEIGHT }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: data?.metaTitle,
+      description: data?.metaDescription,
       images: [DEFAULT_OG_IMAGE],
     },
   };

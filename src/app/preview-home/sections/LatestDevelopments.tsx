@@ -1,21 +1,13 @@
 import React from "react";
-import { getLastFiveProjectsByLang } from "@/sanity/sanity.utils";
-import { urlFor } from "@/sanity/sanity.client";
-import type { Project } from "@/types/project";
+import { getLatestDevelopmentsByLang } from "@/sanity/sanity.utils";
 import { localePrefix } from "@/lib/locale";
 import { homeStrings } from "./homeI18n";
 
-/* New Listings — light "gallery" section: a deep-green title tile sits in the
-   grid alongside the latest 5 project cards (reusing the Featured .pcard look).
-   Reuses the original data source (getLastFiveProjectsByLang) + routing. */
-
-const safeUrl = (img: unknown) => {
-  try {
-    return urlFor(img as never).url();
-  } catch {
-    return undefined;
-  }
-};
+/* Latest Developments — light "gallery" section: a deep-green title tile sits
+   in the grid alongside the most recently published Developments (reusing the
+   Featured .pcard look). Sourced from the Development system (getLatestDevelopmentsByLang),
+   excluding sold-out and capped at 6 — replaces the old static-Project "New
+   Listings" block, which never surfaced new-system projects or sold-out state. */
 
 const fmtPrice = (p?: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(p || 0);
@@ -26,8 +18,8 @@ const ArrowRight = () => (
   </svg>
 );
 
-export default async function NewListings({ lang = "en" }: { lang?: string }) {
-  const projects: Project[] = await getLastFiveProjectsByLang(lang);
+export default async function LatestDevelopments({ lang = "en" }: { lang?: string }) {
+  const developments = await getLatestDevelopmentsByLang(6);
   const t = homeStrings(lang);
   const px = localePrefix(lang);
 
@@ -46,18 +38,17 @@ export default async function NewListings({ lang = "en" }: { lang?: string }) {
             </a>
           </div>
 
-          {projects?.map((p) => {
-            const img = safeUrl(p.previewImage);
-            const slug = (p.slug as Record<string, { current: string }> | undefined)?.[lang]?.current;
-            const price = p.keyFeatures?.price;
+          {developments?.map((d) => {
+            const price = d.keyFeatures?.price;
             return (
-              <a key={p._id} className="pcard" href={slug ? `${px}/projects/${slug}` : "#"}>
+              <a key={d._id} className="pcard" href={`${px}/projects/${d.slug}`}>
                 <div className="pcard__media">
-                  {img && <img src={img} alt={p.previewImage?.alt || p.title} />}
+                  {d.previewImage && <img src={d.previewImage} alt={d.title} />}
+                  {d.isSold && <span className="pcard__sold">{t.sold}</span>}
                   <div className="pcard__shade" />
                 </div>
                 <div className="pcard__body">
-                  <h3 className="pcard__title">{p.title}</h3>
+                  <h3 className="pcard__title">{d.title}</h3>
                   <p className="pcard__price">
                     {price && price > 0 ? (
                       <>

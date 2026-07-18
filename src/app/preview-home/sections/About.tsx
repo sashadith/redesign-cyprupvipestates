@@ -1,9 +1,15 @@
 import React, { FC } from "react";
 import type { AboutBlock as AboutBlockType } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client";
+import { localePrefix } from "@/lib/locale";
+import { homeStrings } from "./homeI18n";
 
-/* "This is Cyprus" — light ivory section. The brand icons sit inside gold
-   medallions; "Cyprus" in the title gets the gold-italic ("quietly") accent. */
+/* "This is Cyprus" — light ivory section, trimmed to a compact single row of
+   3 value props (one line each); the full description + all bullets live at
+   /about-us (see src/app/[lang]/about-us/page.tsx), which keeps this content's
+   SEO home without lengthening the homepage. */
+
+const MAX_HOME_BULLETS = 3;
 
 const safeUrl = (img: unknown) => {
   try {
@@ -23,10 +29,12 @@ const renderTitle = (title: string) =>
     )
   );
 
-type Props = { aboutBlock: AboutBlockType };
+type Props = { aboutBlock: AboutBlockType; lang?: string };
 
-const About: FC<Props> = ({ aboutBlock }) => {
-  const { title, description, bullets } = aboutBlock;
+const About: FC<Props> = ({ aboutBlock, lang = "en" }) => {
+  const { title, bullets } = aboutBlock;
+  const t = homeStrings(lang);
+  const compactBullets = bullets?.slice(0, MAX_HOME_BULLETS);
 
   return (
     <section className="section is-light about">
@@ -34,11 +42,9 @@ const About: FC<Props> = ({ aboutBlock }) => {
         {title && <h2 className="about__title">{renderTitle(title.replace(/This is Cyprus/i, "There is Only One Cyprus"))}</h2>}
         <hr className="shimmer about__stripe" />
 
-        {description && <p className="about__desc">{description}</p>}
-
-        {bullets?.length > 0 && (
-          <ul className="about__bullets">
-            {bullets.map((b) => {
+        {compactBullets && compactBullets.length > 0 && (
+          <ul className="about__bullets about__bullets--compact">
+            {compactBullets.map((b) => {
               const icon = safeUrl(b.image);
               return (
                 <li className="about__bullet" key={b._key}>
@@ -51,6 +57,10 @@ const About: FC<Props> = ({ aboutBlock }) => {
             })}
           </ul>
         )}
+
+        <a className="btn btn--ghost about__more" href={`${localePrefix(lang)}/about-us`}>
+          {t.aboutMoreLabel}
+        </a>
       </div>
     </section>
   );

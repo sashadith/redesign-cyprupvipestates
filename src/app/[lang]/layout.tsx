@@ -18,7 +18,7 @@ import SkipLink from "../components/SkipLink/SkipLink";
 import NavHeroFlag from "../components/Header/NavHeroFlag";
 import { MotionConfig } from "framer-motion";
 import Script from "next/script";
-import { DEFAULT_OG_IMAGE } from "@/lib/seo";
+import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_WIDTH, DEFAULT_OG_IMAGE_HEIGHT } from "@/lib/seo";
 
 // Localized label for the "skip to main content" accessibility link.
 const SKIP_LINK_LABELS: Record<string, string> = {
@@ -71,7 +71,11 @@ export const metadata: Metadata = {
     siteName: "Cyprus VIP Estates",
     type: "website",
     url: "https://cyprusvipestates.com",
-    images: [{ url: DEFAULT_OG_IMAGE }],
+    images: [{ url: DEFAULT_OG_IMAGE, width: DEFAULT_OG_IMAGE_WIDTH, height: DEFAULT_OG_IMAGE_HEIGHT }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [DEFAULT_OG_IMAGE],
   },
   // Facebook domain-verification meta — suppressed while tracking is disabled.
   other: DISABLE_TRACKING

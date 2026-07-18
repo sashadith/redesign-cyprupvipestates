@@ -4,7 +4,9 @@ import HeroVideoSection from "@/app/components/HeroVideoSection/HeroVideoSection
 import { homeStrings } from "./homeI18n";
 
 /* Restyled homepage hero (preview). Same data + media as the live hero; only the
-   presentation changes. Structure preserved: one <h1> with the brand line + title.
+   presentation changes. The brand name renders above the <h1> as a non-heading
+   caption; the <h1> itself contains only the page's actual heading text (the
+   tagline) — one H1 per page, no brand-name concatenation.
    Hero stays dark in both themes. `consultCta` lets production inject the brochure
    modal button; the preview falls back to a plain link. */
 
@@ -38,8 +40,8 @@ const Hero: FC<Props> = ({ heroBlock, lang = "en", consultCta }) => {
       <div className="hero__scrim" aria-hidden />
 
       <div className="hero__inner wrap">
+        <span className="hero__brand">Cyprus VIP Estates</span>
         <h1 className="hero__title">
-          <span className="hero__brand">Cyprus VIP Estates</span>
           <span className="hero__headline">{t.heroLine1}<span className="it">{t.heroAccent}</span>{t.heroLine2}</span>
         </h1>
 

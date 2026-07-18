@@ -104,10 +104,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const data = await getProjectByLang(lang, slug);
 
-  let previewImageUrl: string | undefined = undefined;
-  if (data?.previewImage) {
-    previewImageUrl = urlFor(data.previewImage).width(1200).url();
-  }
+  const previewImageUrl = data?.previewImage
+    ? urlFor(data.previewImage).width(1200).height(630).url()
+    : DEFAULT_OG_IMAGE;
 
   const { canonical, languages } = languageAlternates({
     lang,
@@ -130,22 +129,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "Cyprus VIP Estates",
       locale: lang,
       type: "website",
-      images: previewImageUrl
-        ? [
-            {
-              url: previewImageUrl,
-              width: 1200,
-              height: 630,
-              alt: data?.title,
-            },
-          ]
-        : [],
+      images: [
+        {
+          url: previewImageUrl,
+          width: 1200,
+          height: 630,
+          alt: data?.title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: data?.seo.metaTitle,
       description: data?.seo.metaDescription,
-      images: previewImageUrl ? [previewImageUrl] : [],
+      images: [previewImageUrl],
     },
   };
 }

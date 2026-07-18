@@ -26,7 +26,7 @@ const ContactFullBlockComponent: FC<Props> = ({ block, lang }) => {
 
     switch (contact.type) {
       case "Email":
-        return `mailto:${cleanedLabel}`;
+        return `mailto:${contact.label.trim()}`;
 
       case "Phone":
         // Если это телефон, возвращаем ссылку для звонка

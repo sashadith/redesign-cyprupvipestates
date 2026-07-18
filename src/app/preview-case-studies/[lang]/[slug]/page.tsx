@@ -13,7 +13,7 @@ import CaseStudyMotion from "./CaseStudyMotion";
 import { urlFor } from "@/sanity/sanity.client";
 import { getCaseStudyByLang } from "@/sanity/sanity.utils";
 import { CASE_CATEGORY_LABELS } from "../../../preview-home/sections/homeI18n";
-import { abs, languageAlternates, pathBuilders, SITE_URL } from "@/lib/seo";
+import { abs, languageAlternates, pathBuilders, SITE_URL, DEFAULT_OG_IMAGE } from "@/lib/seo";
 import { localizedHref } from "@/lib/locale";
 import type { Translation } from "@/types/homepage";
 import { caseStudiesCopy } from "../copy";
@@ -80,16 +80,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
   const title = cs.seo?.metaTitle || cs.title;
   const description = cs.seo?.metaDescription || cs.excerpt;
-  const ogImage = cs.previewImage ? safeUrl(cs.previewImage) : undefined;
+  const ogImage = cs.previewImage
+    ? urlFor(cs.previewImage).width(1200).height(630).url()
+    : DEFAULT_OG_IMAGE;
   return {
     title,
     description,
     alternates: { canonical, languages },
     openGraph: {
       title, description, url: canonical, siteName: "Cyprus VIP Estates", locale: params.lang, type: "article",
-      images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: cs.title }] : undefined,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: cs.title }],
     },
-    twitter: { card: "summary_large_image", title, description, images: ogImage ? [ogImage] : undefined },
+    twitter: { card: "summary_large_image", title, description, images: [ogImage] },
   };
 }
 

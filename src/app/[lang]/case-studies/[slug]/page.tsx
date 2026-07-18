@@ -70,7 +70,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const ogTitle = caseStudy.seo?.metaTitle || caseStudy.title;
   const ogDesc = caseStudy.seo?.metaDescription || caseStudy.excerpt;
-  const ogImage = caseStudy.previewImage ? urlFor(caseStudy.previewImage).url() : DEFAULT_OG_IMAGE;
+  const ogImage = caseStudy.previewImage
+    ? urlFor(caseStudy.previewImage).width(1200).height(630).url()
+    : DEFAULT_OG_IMAGE;
 
   return {
     title: ogTitle,

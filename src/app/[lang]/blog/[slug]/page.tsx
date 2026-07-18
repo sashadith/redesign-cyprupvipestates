@@ -18,7 +18,14 @@ import {
   ALL_LOCALES,
 } from "@/sanity/sanity.utils";
 import { urlFor } from "@/sanity/sanity.client";
-import { abs, localizedPath, SITE_URL, languageAlternates, pathBuilders } from "@/lib/seo";
+import {
+  abs,
+  localizedPath,
+  SITE_URL,
+  languageAlternates,
+  pathBuilders,
+  DEFAULT_OG_IMAGE,
+} from "@/lib/seo";
 import { i18n } from "@/i18n.config";
 import { localizedHref } from "@/lib/locale";
 import { Translation } from "@/types/homepage";
@@ -60,7 +67,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const previewImageUrl = data?.previewImage
     ? urlFor(data.previewImage).width(1200).height(630).url()
-    : undefined;
+    : DEFAULT_OG_IMAGE;
 
   const { canonical: url, languages } = languageAlternates({
     lang,
@@ -80,15 +87,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "Cyprus VIP Estates",
       locale: lang,
       type: "article",
-      images: previewImageUrl
-        ? [{ url: previewImageUrl, width: 1200, height: 630, alt: data?.title }]
-        : [],
+      images: [{ url: previewImageUrl, width: 1200, height: 630, alt: data?.title }],
     },
     twitter: {
       card: "summary_large_image",
       title: data?.seo.metaTitle,
       description: data?.seo.metaDescription,
-      images: previewImageUrl ? [previewImageUrl] : [],
+      images: [previewImageUrl],
     },
   };
 }

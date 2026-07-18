@@ -6,7 +6,7 @@ import About from "./sections/About";
 import FeaturedProjects from "./sections/FeaturedProjects";
 import Cities from "./sections/Cities";
 import Description from "./sections/Description";
-import NewListings from "./sections/NewListings";
+import LatestDevelopments from "./sections/LatestDevelopments";
 import Benefits from "./sections/Benefits";
 import HowWeWork from "./sections/HowWeWork";
 import CaseStudies from "./sections/CaseStudies";
@@ -33,11 +33,11 @@ export default async function PreviewHome() {
       <main>
         <Hero heroBlock={homePage.heroBlock} />
         <Brochure brochure={homePage.brochureBlock} />
-        <About aboutBlock={homePage.aboutBlock} />
+        <About aboutBlock={homePage.aboutBlock} lang="en" />
         <FeaturedProjects block={homePage.featuredProjectsBlock} lang="en" />
         {homePage.citiesBlock && <Cities block={homePage.citiesBlock} />}
         {homePage.descriptionBlock && <Description block={homePage.descriptionBlock} />}
-        <NewListings lang="en" />
+        <LatestDevelopments lang="en" />
         {homePage.benefitsBlock && <Benefits block={homePage.benefitsBlock} />}
         {homePage.howWeWorkBlock && <HowWeWork block={homePage.howWeWorkBlock} />}
         {homePage.featuredCaseStudiesBlock && (

@@ -117,7 +117,12 @@ export const config = {
   // /en/preview-assets/*, a path with no matching static file or route, 404ing
   // in production. Confirmed live (2026-07-17): both preview-home's hero video
   // and the FAQ hero illustration were silently broken by this gap.
+  //
+  // "og" (public/og/*, the branded OG/social-preview images) hit the identical
+  // gap (2026-07-18): /og/home-1200x630.jpg rewritten to /en/og/home-1200x630.jpg
+  // and 404ing, which would have made every og:image/twitter:image tag point at
+  // a broken URL in production.
   matcher: [
-    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|sandbox|preview-assets|preview-case-studies|preview-faq|preview-home|preview-insights|preview-partners|preview-projects|style|c/).*)",
+    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|sandbox|og|preview-assets|preview-case-studies|preview-faq|preview-home|preview-insights|preview-partners|preview-projects|style|c/).*)",
   ],
 };

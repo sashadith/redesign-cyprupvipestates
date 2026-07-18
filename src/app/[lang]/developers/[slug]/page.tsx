@@ -38,7 +38,7 @@ import ProjectLink from "@/app/components/ProjectLink/ProjectLink";
 import DeveloperSchemaMarkup from "@/app/components/DeveloperSchemaMarkup/DeveloperSchemaMarkup";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 import NotFoundPageComponent from "@/app/components/NotFoundPageComponent/NotFoundPageComponent";
-import { abs, localizedPath, languageAlternates } from "@/lib/seo";
+import { abs, localizedPath, languageAlternates, DEFAULT_OG_IMAGE } from "@/lib/seo";
 
 type Props = {
   params: { lang: string; slug: string };
@@ -48,10 +48,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang, slug } = params;
   const data = await getDeveloperByLang(lang, slug);
 
-  let previewImageUrl: string | undefined = undefined;
-  if (data?.logo?.asset?._ref) {
-    previewImageUrl = urlFor(data.logo).width(1200).url();
-  }
+  const ogImage = data?.logo?.asset?._ref
+    ? urlFor(data.logo).width(1200).height(630).url()
+    : DEFAULT_OG_IMAGE;
 
   const { canonical, languages } = languageAlternates({
     lang,
@@ -71,7 +70,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: data?.seo.metaTitle,
       description: data?.seo.metaDescription,
       url: canonical,
-      images: previewImageUrl ? [{ url: previewImageUrl }] : [],
+      siteName: "Cyprus VIP Estates",
+      locale: lang,
+      type: "website",
+      images: [{ url: ogImage, width: 1200, height: 630, alt: data?.seo.metaTitle }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: data?.seo.metaTitle,
+      description: data?.seo.metaDescription,
+      images: [ogImage],
     },
   };
 }

@@ -701,6 +701,50 @@ export async function getLastFiveProjectsByLang(lang: string): Promise<Project[]
   })) as unknown as Project[];
 }
 
+export type LatestDevelopmentCard = {
+  _id: string;
+  title: string;
+  slug: string;
+  previewImage: string | null;
+  keyFeatures: { price: number };
+  isSold: boolean;
+};
+
+// Homepage "Latest Developments" block — most recently published Developments,
+// excluding fully sold-out ones, newest first. Development rows are language-
+// agnostic (one slug for all locales — see developmentSeo.ts), so `lang` isn't a
+// filter here, only unused by callers building the localized href.
+export async function getLatestDevelopmentsByLang(limit = 6): Promise<LatestDevelopmentCard[]> {
+  const devs = await prisma.development.findMany({
+    where: { publishStatus: "published", supersedesProjects: { none: { status: "PUBLISHED" } } },
+    include: { override: true, units: { select: { status: true, price: true } } },
+    orderBy: { publishedAt: { sort: "desc", nulls: "last" } },
+  });
+
+  return devs
+    .filter((d) => !!d.slug)
+    .map((d) => {
+      const ov = d.override;
+      const gallery: string[] = Array.isArray(ov?.gallery) && (ov!.gallery as string[]).length
+        ? (ov!.gallery as string[])
+        : Array.isArray(d.gallery) ? (d.gallery as string[]) : [];
+      const previewImage = ov?.mainImage || gallery[0] || null;
+      const { priceFrom } = resolveDevelopmentPrice(d.priceFrom, d.priceTo, d.units);
+      const unitsAvailable = d.units.filter((u) => u.status === "available").length;
+      return {
+        _id: d.id,
+        title: ov?.alias || d.publicName,
+        slug: d.slug as string,
+        previewImage,
+        keyFeatures: { price: priceFrom ?? 0 },
+        isSold: soldOutFromCounts(unitsAvailable, d.units.length),
+      };
+    })
+    .filter((d) => !d.isSold)
+    .filter((d) => !!d.previewImage)
+    .slice(0, limit);
+}
+
 export async function getAllProjectsByLang(lang: string): Promise<Project[]> {
   const rows = await prisma.project.findMany({ where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED" }, orderBy: { createdAt: "desc" } });
   return rows.map((p) => D({

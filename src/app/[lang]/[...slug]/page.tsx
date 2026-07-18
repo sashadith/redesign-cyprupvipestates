@@ -168,7 +168,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // landing page's own previewImage; fall back to the logo only when the page has none.
   const ogTitle = page?.seo?.metaTitle || page?.title;
   const ogDesc = page?.seo?.metaDescription || page?.excerpt;
-  const ogImage = (page as any)?.previewImage ? urlFor((page as any).previewImage).url() : DEFAULT_OG_IMAGE;
+  const ogImage = (page as any)?.previewImage
+    ? urlFor((page as any).previewImage).width(1200).height(630).url()
+    : DEFAULT_OG_IMAGE;
 
   return {
     title: ogTitle,

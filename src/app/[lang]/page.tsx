@@ -12,7 +12,13 @@ import {
   ALL_LOCALES,
 } from "../../sanity/sanity.utils";
 import { i18n } from "@/i18n.config";
-import { abs, localizedPath, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import {
+  abs,
+  localizedPath,
+  DEFAULT_OG_IMAGE,
+  DEFAULT_OG_IMAGE_WIDTH,
+  DEFAULT_OG_IMAGE_HEIGHT,
+} from "@/lib/seo";
 import { Translation } from "@/types/homepage";
 import { FormStandardDocument } from "@/types/formStandardDocument";
 import type { TextContent, DoubleTextBlock } from "@/types/blog";
@@ -31,7 +37,7 @@ import About from "@/app/preview-home/sections/About";
 import FeaturedProjects from "@/app/preview-home/sections/FeaturedProjects";
 import Cities from "@/app/preview-home/sections/Cities";
 import Description from "@/app/preview-home/sections/Description";
-import NewListings from "@/app/preview-home/sections/NewListings";
+import LatestDevelopments from "@/app/preview-home/sections/LatestDevelopments";
 import Benefits from "@/app/preview-home/sections/Benefits";
 import HowWeWork from "@/app/preview-home/sections/HowWeWork";
 import CaseStudies from "@/app/preview-home/sections/CaseStudies";
@@ -70,6 +76,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       siteName: "Cyprus VIP Estates",
       locale: lang,
       type: "website",
+      images: [
+        {
+          url: DEFAULT_OG_IMAGE,
+          width: DEFAULT_OG_IMAGE_WIDTH,
+          height: DEFAULT_OG_IMAGE_HEIGHT,
+          alt: "Cyprus VIP Estates — Luxury Real Estate in Cyprus",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: homePage?.seo?.metaTitle,
+      description: homePage?.seo?.metaDescription,
       images: [DEFAULT_OG_IMAGE],
     },
   };
@@ -118,11 +137,11 @@ export default async function Home({ params }: Props) {
             ) : undefined
           }
         />
-        <About aboutBlock={homePage.aboutBlock} />
+        <About aboutBlock={homePage.aboutBlock} lang={lang} />
         <FeaturedProjects block={homePage.featuredProjectsBlock} lang={lang} />
         {homePage.citiesBlock && <Cities block={homePage.citiesBlock} lang={lang} />}
         {homePage.descriptionBlock && <Description block={homePage.descriptionBlock} />}
-        <NewListings lang={lang} />
+        <LatestDevelopments lang={lang} />
         {homePage.benefitsBlock && <Benefits block={homePage.benefitsBlock} />}
         {homePage.howWeWorkBlock && <HowWeWork block={homePage.howWeWorkBlock} />}
         {homePage.featuredCaseStudiesBlock && (

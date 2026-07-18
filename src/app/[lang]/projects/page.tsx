@@ -22,7 +22,12 @@ import {
 import { urlFor } from "@/sanity/sanity.client";
 import { i18n } from "@/i18n.config";
 import { localizedHref } from "@/lib/locale";
-import { staticAlternates, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import {
+  staticAlternates,
+  DEFAULT_OG_IMAGE,
+  DEFAULT_OG_IMAGE_WIDTH,
+  DEFAULT_OG_IMAGE_HEIGHT,
+} from "@/lib/seo";
 import { Translation } from "@/types/homepage";
 
 import Header from "@/app/components/Header/Header";
@@ -85,6 +90,12 @@ export async function generateMetadata({ params }: { params: { lang: string } })
       siteName: "Cyprus VIP Estates",
       locale: params.lang,
       type: "website",
+      images: [{ url: DEFAULT_OG_IMAGE, width: DEFAULT_OG_IMAGE_WIDTH, height: DEFAULT_OG_IMAGE_HEIGHT }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: data?.seo.metaTitle,
+      description: data?.seo.metaDescription,
       images: [DEFAULT_OG_IMAGE],
     },
   };

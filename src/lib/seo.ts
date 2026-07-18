@@ -8,10 +8,11 @@ import { localizedHref, LOCALES } from "./locale";
 
 export const SITE_URL = "https://cyprusvipestates.com";
 
-// Site-wide fallback Open Graph image (brand mark). Used for pages that don't have
-// their own preview image (homepage, listings, static pages). TODO(owner): replace
-// with a dedicated 1200×630 branded OG banner for richer social previews.
-export const DEFAULT_OG_IMAGE = `${SITE_URL}/uploads/images/862e62ebddfc232ff9838efb63eb28685b515eb4-400x208.png`;
+// Site-wide fallback Open Graph image (branded 1200×630 banner). Used for pages
+// that don't have their own preview image (homepage, listings, static pages).
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/og/home-1200x630.jpg`;
+export const DEFAULT_OG_IMAGE_WIDTH = 1200;
+export const DEFAULT_OG_IMAGE_HEIGHT = 630;
 
 /** Turn a site-relative path (or asset path) into an absolute URL. */
 export function abs(path?: string | null): string {

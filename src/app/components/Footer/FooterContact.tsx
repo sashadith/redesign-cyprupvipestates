@@ -11,8 +11,8 @@ import { urlFor } from "@/sanity/sanity.client";
 const clean = (s: string) => s.replace(/[^a-zA-Z0-9@+]/g, "");
 
 const getHref = (c: Contact) => {
+  if (c.type === "Email") return `mailto:${c.label.trim()}`;
   const l = clean(c.label);
-  if (c.type === "Email") return `mailto:${l}`;
   if (c.type === "Phone") return `tel:${l}`;
   if (c.type === "Link") {
     if (l.match(/^\+?\d+$/)) return `https://wa.me/${l.replace("+", "")}`;

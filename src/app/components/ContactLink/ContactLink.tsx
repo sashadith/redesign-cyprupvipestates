@@ -20,7 +20,7 @@ export default function ContactLink({ contact }: Props) {
 
     switch (contact.type) {
       case "Email":
-        return `mailto:${cleanedLabel}`;
+        return `mailto:${contact.label.trim()}`;
       case "Phone":
         return `tel:${cleanedLabel}`;
       case "Link":

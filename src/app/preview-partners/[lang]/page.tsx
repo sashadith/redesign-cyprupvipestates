@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { i18n } from "@/i18n.config";
 import { localizedHref } from "@/lib/locale";
-import { staticAlternates } from "@/lib/seo";
+import { abs, staticAlternates } from "@/lib/seo";
 import type { Translation } from "@/types/homepage";
 import type { BenefitsBlock } from "@/types/homepage";
 import Nav from "../../preview-home/sections/Nav";
@@ -53,10 +53,26 @@ const CONSULTANT_IMAGE = "/uploads/files/50b0d355d8507f9aadbe785a65e8a7233dd8f2e
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = partnersCopy(params.lang);
   const { canonical, languages } = staticAlternates(params.lang, "partners");
+  const ogImage = abs(HERO_IMAGE);
   return {
     title: t.metaTitle,
     description: t.metaDescription,
     alternates: { canonical, languages },
+    openGraph: {
+      title: t.metaTitle,
+      description: t.metaDescription,
+      url: canonical,
+      siteName: "Cyprus VIP Estates",
+      locale: params.lang,
+      type: "website",
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t.metaTitle,
+      description: t.metaDescription,
+      images: [ogImage],
+    },
   };
 }
 
