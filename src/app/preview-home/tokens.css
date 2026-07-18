@@ -732,11 +732,16 @@ img { max-width: 100%; display: block; }
 .cscard__cat {
   position: absolute; top: var(--s-4); left: var(--s-4); z-index: 2;
   font-family: var(--font-body), sans-serif; font-size: var(--text-caption); letter-spacing: 0.08em; text-transform: uppercase;
-  color: #fff; padding: 6px 13px; border-radius: var(--r-ui);
-  /* darker-gold fill with a golden glass contour, no shadow */
-  background: rgba(88, 64, 28, 0.9);
-  border: 1px solid var(--accent);
-  -webkit-backdrop-filter: blur(12px) saturate(150%); backdrop-filter: blur(12px) saturate(150%);
+  /* Same glass-chip treatment as the project card's type badge
+     (src/app/preview-projects/projects.css .prj__type) — reused verbatim
+     rather than duplicated with slightly different values, so every "glass
+     pill over a card image" in the redesign stays visually identical.
+     Was previously a solid bronze/gold fill; typography (size/spacing/case)
+     is untouched, only the container (background/border/shape) changed. */
+  color: var(--ivory); padding: 4px 10px; border-radius: 999px;
+  background: rgba(8, 21, 18, 0.62);
+  border: 1px solid var(--hairline-strong);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
 }
 .cscard__body { padding: clamp(20px, 2.4vw, 32px); display: flex; flex-direction: column; gap: var(--s-3); flex: 1; }
 .cscard__title { margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: clamp(1.3rem, 1.1rem + 0.8vw, 1.7rem); line-height: 1.2; color: var(--ivory); text-wrap: balance; }
