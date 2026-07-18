@@ -1,8 +1,11 @@
 # Cyprus VIP Estates — Website
 
 Next.js 14 (App Router) + Prisma/PostgreSQL. Multilingual (EN canonical, DE/PL/RU).
-Production runs on a Hostinger VPS; this repo is also the home of the **homepage
-redesign** (branch `redesign/home`).
+Production runs on a Hostinger VPS. `main` is the live branch — what's on
+`main` is what production runs (see `DEPLOYMENT.md` for the full deploy
+workflow). The former `redesign/home` branch (the homepage redesign) was
+merged into `main` on 2026-07-18 and is kept around temporarily for reference
+only — do not branch off it or push to it.
 
 ---
 
@@ -21,9 +24,8 @@ redesign** (branch `redesign/home`).
 ## 1. Install
 
 ```bash
-git clone https://github.com/sashadith/cve.git
-cd cve
-git checkout redesign/home          # design work lives here
+git clone git@github.com:sashadith/redesign-cyprupvipestates.git cve
+cd cve                              # main checks out by default
 npm install --legacy-peer-deps      # legacy flag is required (peer-dep conflicts)
 ```
 
@@ -76,39 +78,41 @@ npm run lint
 
 ## Where the redesign lives
 
+The homepage redesign shipped to production on 2026-07-18 — `src/app/[lang]/page.tsx`
+and its `src/app/preview-home/` section components ARE the live homepage now,
+despite the folder name. A few other still-in-progress redesigns keep their
+own isolated `preview-*` route trees (rewritten from their public URL by
+`src/middleware.ts` — see that file for which ones):
+
 | Route | What |
 |-------|------|
-| `/preview-home` | The restyled homepage (in progress) |
-| `/sandbox`, `/sandbox-v2…v5` | Design-system explorations (V5 = chosen direction) |
+| `/preview-case-studies`, `/preview-faq`, `/preview-partners` | Isolated redesign previews, live at their public URL via a middleware rewrite |
+| `/sandbox`, `/sandbox-v2…v5` | Design-system explorations (V5 = the direction the shipped redesign is based on) |
 
-All preview routes are `noindex` and bypass the i18n middleware. The live
-homepage (`src/app/[lang]/page.tsx`) and its components are **untouched** — the
-redesign uses preview-scoped copies under `src/app/preview-home/`.
+All `/preview-*` routes are `noindex`.
 
 ---
 
 ## Collaboration workflow
 
-- **`main`** — stable / what production runs. Never commit WIP directly here.
-- **`redesign/home`** — the homepage redesign (current working branch).
-- **Feature branches** — branch off `redesign/home` (e.g. `redesign/home-faq`),
-  open a PR back into it.
+- **`main`** — the live branch. What's on `main` is what `deploy-prod.sh`
+  ships to production. Never commit WIP directly here.
+- **Feature branches** — branch off `main` for any new work, open a PR back
+  into it.
 
 Every session:
 
 ```bash
-git checkout redesign/home
-git pull --ff-only        # get your colleague's latest work BEFORE you start
+git checkout -b feat/my-change main
+git pull --ff-only origin main   # get the latest before you start
 # …work…
-git add -p && git commit -m "feat(redesign): …"
-git push                  # push to GitHub
+git add -p && git commit -m "feat: …"
+git push -u origin feat/my-change
 ```
 
-Then preview online on **staging** (see `STAGING.md`). Open a PR for review
-before anything merges toward `main`.
-
-**Do not** deploy the redesign branch to production — production is the live
-site. Staging is the safe preview.
+Then preview on **staging** (see `DEPLOYMENT.md`) by checking out your feature
+branch and running `./scripts/deploy-staging.sh`. Open a PR for review before
+merging to `main`; `main` is what `deploy-prod.sh` deploys by default.
 
 ---
 

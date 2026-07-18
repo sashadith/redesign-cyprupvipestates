@@ -146,9 +146,39 @@ if [ "$DRY" = 1 ]; then
 fi
 
 # 3) Build + (optional) install/migrate + reload on the VPS.
-echo "→ build + reload on the VPS"
-ssh -i "$KEY" "$HOST" bash -s <<REMOTE
+#
+#    Run as a BACKGROUNDED remote script, polled from here — not a single
+#    blocking `ssh host bash -s <<HEREDOC` trusted for its own exit code.
+#    That blocking-call pattern was observed THREE TIMES (2026-07-18) to
+#    return control to this script with exit code 0 while `next build` was
+#    still actively running on the VPS (confirmed immediately after via
+#    `pgrep`/`pm2 pid` on the server — the remote build/reload had NOT
+#    actually finished). The exact SSH-level cause wasn't conclusively
+#    isolated — no ServerAliveInterval/ServerAliveCountMax was set on this
+#    script's ssh calls, unlike deploy-staging's CI workflow, which is the
+#    leading suspect for a silently-dropped long-idle connection during a
+#    multi-minute build with long silent gaps — but regardless of cause,
+#    trusting a single blocking call's own completion signal for a
+#    multi-minute remote build proved unsafe. Fixed structurally instead:
+#    launch the work in the background, then independently POLL for its
+#    real completion (a written exit-status file, THEN a pm2-pid check
+#    confirming every instance was actually replaced) before ever printing
+#    success. A failed or timed-out build exits non-zero with the remote
+#    build log's tail — it never gets the chance to silently look fine.
+echo "→ starting build + reload on the VPS (backgrounded, polled — this can take several minutes)"
+
+# Baseline: every current instance's pid, so afterward we can confirm pm2
+# actually replaced ALL of them, not just the first one in a rolling reload.
+BEFORE_PIDS="$(ssh -i "$KEY" -o ServerAliveInterval=15 -o ServerAliveCountMax=8 "$HOST" "pm2 pid '$APP'" 2>/dev/null || true)"
+
+REMOTE_SCRIPT="$STAGE/.deploy-run.sh"
+cat > "$REMOTE_SCRIPT" <<REMOTE
+#!/usr/bin/env bash
 set -euo pipefail
+# Whatever happens (success or set -e aborting early), always record the
+# real exit status — this is the file the local script polls for.
+trap 'echo \$? > "$DIR/.deploy-status"' EXIT
+
 # Force-correct $DIR's own ownership/permissions before every build, regardless
 # of what rsync just did — see the RSYNC_OPTS comment above for the incident
 # this guards against. Cheap (one dir, not recursive) and idempotent.
@@ -195,6 +225,54 @@ bash "$DIR/scripts/verify-runtime-assets.sh" "$DIR"
 
 pm2 reload "$APP" --update-env
 REMOTE
+
+scp -i "$KEY" -o ServerAliveInterval=15 -o ServerAliveCountMax=8 "$REMOTE_SCRIPT" "$HOST:$DIR/.deploy-run.sh" >/dev/null
+ssh -i "$KEY" -o ServerAliveInterval=15 -o ServerAliveCountMax=8 "$HOST" \
+  "cd '$DIR' && rm -f .deploy-status .deploy-build.log && chmod +x .deploy-run.sh && (nohup ./.deploy-run.sh >.deploy-build.log 2>&1 &) && echo launched"
+
+# Poll for the status file the script's trap writes on exit (success or
+# failure alike) — this ssh call returning does NOT mean the build is done,
+# only that launching it succeeded; the polling loop below is what actually
+# waits for completion.
+POLL_INTERVAL=10
+MAX_WAIT=1200   # 20 minutes — generous headroom over the ~3-5 min observed build time
+elapsed=0
+status=""
+while [ "$elapsed" -lt "$MAX_WAIT" ]; do
+  status="$(ssh -i "$KEY" -o ServerAliveInterval=15 -o ServerAliveCountMax=8 "$HOST" "cat '$DIR/.deploy-status' 2>/dev/null" || true)"
+  [ -n "$status" ] && break
+  sleep "$POLL_INTERVAL"
+  elapsed=$((elapsed + POLL_INTERVAL))
+  echo "   ...still building (${elapsed}s elapsed)"
+done
+
+if [ -z "$status" ]; then
+  echo "✗ timed out after ${MAX_WAIT}s waiting for the remote build to finish. Log tail:"
+  ssh -i "$KEY" "$HOST" "tail -n 60 '$DIR/.deploy-build.log' 2>/dev/null" | sed 's/^/     /'
+  exit 1
+fi
+if [ "$status" != "0" ]; then
+  echo "✗ remote build/deploy FAILED (exit $status). Log tail:"
+  ssh -i "$KEY" "$HOST" "tail -n 60 '$DIR/.deploy-build.log' 2>/dev/null" | sed 's/^/     /'
+  exit 1
+fi
+echo "   ✓ remote build + verify-runtime-assets + pm2 reload reported success (exit 0)"
+
+# Belt-and-suspenders: the script's own exit code says pm2 reload ran, but
+# independently confirm every instance's pid actually changed — a partial
+# rolling reload (only some instances replaced) would still exit 0 above.
+echo "→ confirming pm2 replaced every instance"
+AFTER_PIDS="$(ssh -i "$KEY" -o ServerAliveInterval=15 -o ServerAliveCountMax=8 "$HOST" "pm2 pid '$APP'" 2>/dev/null || true)"
+if [ -z "$AFTER_PIDS" ]; then
+  echo "✗ pm2 reports no pids for $APP after reload — check pm2 status/logs on the VPS."
+  exit 1
+fi
+stale="$(comm -12 <(printf '%s\n' "$BEFORE_PIDS" | sort) <(printf '%s\n' "$AFTER_PIDS" | sort) 2>/dev/null || true)"
+if [ -n "$stale" ]; then
+  echo "✗ instance(s) with pid(s) [$stale] still have their PRE-deploy pid — not every instance was replaced."
+  exit 1
+fi
+echo "   ✓ every instance replaced (before: $(printf '%s ' $BEFORE_PIDS) → after: $(printf '%s ' $AFTER_PIDS))"
 
 # 4) Health check. Checks the HTML document AND one of its own referenced
 #    /_next/static/ assets — the document alone isn't enough (it's server-

@@ -10,13 +10,14 @@ of the 2026-07 staging→production merge.
 | | Staging | Production |
 |---|---|---|
 | URL | https://design.cyprusvipestates.com | https://cyprusvipestates.com |
-| PM2 app | `cve-staging` (fork mode) | `cyprusvipestates` (cluster, 2 instances) |
+| PM2 app | `cve-staging` (fork mode, 1 instance) | `cyprusvipestates` (cluster, 2 instances) |
 | Port | 3200 | 3000 |
 | App dir | `/var/www/cve-staging` | `/var/www/cyprusvipestates` |
-| Deploy script | `scripts/deploy-staging.sh` | `scripts/deploy-prod.sh` |
-| Indexing | `X-Robots-Tag: noindex, nofollow` (nginx, domain-wide) + `robots.txt: Disallow: /` | Indexed normally; per-page `<meta robots>` control only |
+| Deploy script | `scripts/deploy-staging.sh`, run from whatever **feature branch** you're testing (deploys the local working tree, uncommitted WIP included) | `scripts/deploy-prod.sh`, deploys a clean **committed ref — `main` only** by default (`CVP_PROD_REF` can override, but there should be no routine need to) |
+| Indexing | `X-Robots-Tag: noindex, nofollow` (nginx, domain-wide) + `robots.txt: Disallow: /` — enforced at the nginx layer, so no page-level metadata mistake can accidentally get staging indexed | Indexed normally; per-page `<meta robots>` control only |
 | Access | Public, no Basic Auth (removed 2026-07-01 on request) | Public |
-| Database | Same shared Postgres DB as production (read-mostly use) | `cyprusvipestates` on `localhost:5432` |
+| Database | **Same shared Postgres DB as production** (read-mostly use in practice, but nothing enforces that — see below) | `cyprusvipestates` on `localhost:5432` |
+| Crons | **None** — production's crons own the shared DB; staging's own `drive-sync`/`feed-sync` entries were disabled (commented out, not deleted) 2026-07-16 once production took over both jobs | All production-facing crons active — see "Cron topology" below for the full schedule |
 | `public/uploads` | Symlink → `/var/www/shared-uploads` | Symlink → `/var/www/shared-uploads` |
 
 Both apps point `public/uploads` at the same physical directory
@@ -24,9 +25,36 @@ Both apps point `public/uploads` at the same physical directory
 "Lessons learned" below). There is no upload isolation between the two
 environments: deleting or overwriting an upload on one destroys it on both.
 
-Staging uses the **production database** so it renders real content. Lead
-delivery is disabled there (`MONDAY_API_KEY`/`TELEGRAM_BOT_TOKEN` blanked in
-its `.env`) so form tests never reach the real CRM.
+**Staging shares the production database — content edits made there ARE live
+data, not a sandbox copy.** It renders real content specifically so
+stakeholders previewing a feature branch see the real site, but there is no
+technical isolation: creating, editing, or deleting a CMS row, project,
+development, or any other DB record while pointed at staging changes what
+production serves too, immediately. Lead delivery is the one thing
+deliberately disabled there (`MONDAY_API_KEY`/`TELEGRAM_BOT_TOKEN` blanked in
+its `.env`) so form tests never reach the real CRM — everything else reads
+and writes the one shared database.
+
+## Standard workflow
+
+```
+feature branch  →  deploy-staging.sh  →  verify on staging  →  merge to main  →  deploy-prod.sh
+```
+
+1. Branch off `main` for any change (`git checkout -b feat/my-change main`).
+2. Push it up, then `git checkout feat/my-change && ./scripts/deploy-staging.sh`
+   to preview it on https://design.cyprusvipestates.com. Repeat as you iterate
+   — deploy-staging.sh deploys whatever's currently checked out locally,
+   uncommitted WIP included, so there's no need to commit between iterations.
+3. Once verified, open a PR into `main` (or merge directly if working solo)
+   and push.
+4. `git checkout main && git pull --ff-only && ./scripts/deploy-prod.sh`
+   (no branch flag needed — it defaults to `main`) to ship it.
+
+Staging and production are deliberately decoupled deploy-wise (different
+scripts, different trigger points) but share the one database — see the
+warning above before using staging for anything beyond a visual/functional
+preview.
 
 ## Deploy scripts
 
@@ -38,14 +66,18 @@ design — see the script's own comment on why `--delete` was removed) to
 capped `DATABASE_URL`, runs the `verify-runtime-assets.sh` gate, and reloads.
 
 ```bash
-git checkout redesign/home && git pull --ff-only
+git checkout <your-feature-branch> && git pull --ff-only
 ./scripts/deploy-staging.sh
 ```
 
-There's also a GitHub Actions workflow (`.github/workflows/deploy-staging.yml`)
-that auto-deploys `redesign/home` on push — it checks out the **committed**
-tree only, so it can diverge from what the script just synced if you have
-uncommitted changes locally. Don't rely on both at once for the same change.
+There's also a GitHub Actions workflow (`.github/workflows/deploy-staging.yml`),
+manually triggered (`workflow_dispatch`) against whichever branch/ref you pick —
+it checks out the **committed** tree only, so it can diverge from what the
+script just synced if you have uncommitted changes locally. Don't rely on both
+at once for the same change. (Before 2026-07-18 this workflow auto-fired on
+every push to `redesign/home`; that branch was merged into `main` and retired
+as the active line of work — see "Branch history" below — so there's no
+single fixed branch left to auto-trigger from.)
 
 ### `scripts/deploy-prod.sh`
 
@@ -208,6 +240,24 @@ Staging's own `drive-sync`/`feed-sync` entries (previously hitting
 crontab on 2026-07-16 once production took over both jobs post-cutover —
 kept in place, commented, for the record.
 
+## Branch history
+
+**2026-07-18 — `redesign/home` renamed to `main`.** The entire homepage
+redesign had lived on `redesign/home` since the design work began; by this
+date it was what production actually ran, while `main` sat 139 commits stale
+(a live trap: a deploy invoked without an explicit branch flag would have
+silently shipped months-old code). Resolved by force-pushing `redesign/home`
+onto `main` (`git push origin redesign/home:main --force-with-lease`) —
+`main`'s prior state had zero commits not already present on `redesign/home`,
+so nothing of value was lost; its old history remains reachable via the
+commit shas below if ever needed. `main` was set as the repository's default
+branch on GitHub. `redesign/home` itself was kept (not deleted) for a grace
+period but is no longer the active line of work — do not branch off it or
+push to it.
+
+- Old `main` tip (superseded): `86649d2`
+- New `main` tip (= `redesign/home` HEAD at rename time): `6253a49`
+
 ## Lessons learned
 
 **`.env` as a stale bootstrap credential, not a source of truth.**
@@ -257,3 +307,40 @@ opening its own Prisma connection pool — enough to hit Postgres's
 builds. Fixed by capping the build-time-only `DATABASE_URL` with
 `connection_limit=5&pool_timeout=30`, baked into both deploy scripts and the
 CI workflow permanently.
+
+**Client-side animation bugs are invisible to curl/SSR verification.** A
+homepage stats-counter fix was verified after deploy by curling the page and
+confirming the server-rendered HTML showed real numbers (not `0`) — it did,
+and the deploy was reported verified. In the actual browser, the counters
+still rendered `0`: the count-up effect used React *state* in its own
+dependency array, so setting that state re-ran the effect (tearing down the
+`setInterval` it had just started) before the animation's first tick — a
+purely client-runtime bug that no amount of curling the HTML source could
+ever have revealed, since SSR output was correct throughout. **Any change to
+a client-side (`"use client"`) animation, transition, or interaction must be
+checked in an actual browser, not just via curl/view-source** — curl can
+confirm the initial/SSR state is correct but is structurally blind to what
+happens after hydration.
+
+**The deploy-wrapper premature-exit bug.** `deploy-prod.sh`'s remote
+build+reload used to be one blocking `ssh host bash -s <<HEREDOC` call,
+trusted for its own exit code to mean "the remote work finished." On
+2026-07-18 this was observed THREE TIMES returning control (exit code 0) to
+the local script while `next build` was still actively running on the VPS —
+confirmed each time via `pgrep`/`pm2 pid` on the server immediately after.
+Every one of those deploys was manually salvaged by polling the VPS directly
+until the build genuinely finished before trusting the result. The exact
+SSH-level cause wasn't conclusively isolated (no `ServerAliveInterval`/
+`ServerAliveCountMax` was set on these scripts' `ssh` calls, unlike
+deploy-staging's CI workflow — the leading suspect for a silently-dropped
+long-idle connection during a multi-minute build with long silent gaps), but
+the real fix doesn't depend on knowing the exact cause: both `deploy-prod.sh`
+and `deploy-staging.sh` now launch the remote build in the background and
+independently **poll** for its real completion — a written exit-status file
+first, then (for `deploy-prod.sh`) a `pm2 pid` comparison confirming every
+cluster instance was actually replaced, then the health check — before ever
+printing success. A failed or timed-out build now exits non-zero with the
+remote build log's tail, rather than silently looking fine. **Never trust a
+single blocking call's exit code for a multi-minute remote operation** —
+verify completion independently, from the outside, against the system's own
+state.

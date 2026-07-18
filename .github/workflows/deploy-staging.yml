@@ -1,15 +1,22 @@
 name: Deploy staging
 
-# Auto-deploy the redesign to https://design.cyprusvipestates.com on every push
-# to redesign/home (or run manually). Touches only the `cve-staging` PM2 app.
+# Deploy any branch to https://design.cyprusvipestates.com — manual trigger only.
+# Touches only the `cve-staging` PM2 app, never production.
+#
+# Staging is used per-feature-branch (feature branch -> deploy-staging -> verify
+# -> merge to main -> deploy-prod — see DEPLOYMENT.md), not tied to one fixed
+# branch name, so there's no single branch to auto-trigger from. Post-migration
+# (2026-07-18, redesign/home -> main rename) this used to auto-fire on every
+# push to redesign/home; that branch no longer exists as the active line of
+# work, so the auto-trigger is retired in favor of an explicit run against
+# whichever branch/ref you pick when dispatching (defaults to the branch this
+# workflow runs from if triggered via `gh workflow run` with no ref override).
 #
 # Required repo secret:
 #   VPS_SSH_KEY — the private SSH key that can log into the VPS as root
 #                 (the FULL contents of your ~/.ssh/cvp_vps, incl. BEGIN/END lines).
 
 on:
-  push:
-    branches: [redesign/home]
   workflow_dispatch:
 
 concurrency:
