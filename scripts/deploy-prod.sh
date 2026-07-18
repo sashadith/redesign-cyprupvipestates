@@ -235,6 +235,7 @@ if [ "\$NEW_BUILD_ID" = "none" ] || [ "\$NEW_BUILD_ID" = "\$PREV_BUILD_ID" ]; th
   echo "BUILD FAILED: .next/BUILD_ID missing or unchanged after npm run build (prev=\$PREV_BUILD_ID new=\$NEW_BUILD_ID) — aborting before pm2 reload"
   exit 1
 fi
+echo "✓ BUILD_ID check passed (prev=\$PREV_BUILD_ID new=\$NEW_BUILD_ID)"
 
 # Hard gate: verify every known runtime-only asset (files read via fs at
 # request time, invisible to the build above) exists in \$DIR BEFORE the
