@@ -3,6 +3,7 @@ import type { Locale } from "@prisma/client";
 import { pagesInSuppressionWindow } from "./titleSweepLog";
 import { REMEASURE_WINDOW_DAYS } from "./titleSweepRemeasure";
 import { templateClassOf, templateClassLabel, type TemplateClass } from "./templateClass";
+import { buildCanonicalMap, canonicalize } from "./urlCanonical";
 
 // Shared page-level (query=null) aggregation helpers + the CTR-watchlist and
 // week-over-week mover queries — single source of truth used by BOTH the
@@ -37,12 +38,14 @@ export async function getCtrWatchlist(): Promise<CtrWatchlistRow[]> {
     where: { query: null, date: { gte: since } },
     select: { page: true, locale: true, clicks: true, impressions: true, position: true },
   });
+  const canonicalMap = await buildCanonicalMap();
   const agg = new Map<string, MetricAgg>();
   const localeByKey = new Map<string, Locale>();
   for (const r of rows) {
-    const key = `${r.locale}::${r.page}`;
+    const { locale, page } = canonicalize(canonicalMap, r.locale, r.page);
+    const key = `${locale}::${page}`;
     accumulate(agg, key, r.impressions, r.clicks, r.position);
-    localeByKey.set(key, r.locale);
+    localeByKey.set(key, locale);
   }
 
   const suppressed = await pagesInSuppressionWindow(CTR_SUPPRESSION_WINDOW_DAYS);
@@ -73,12 +76,14 @@ export async function getWeekOverWeekMovers(minImpressions = 20): Promise<{ up: 
     where: { query: null, date: { gte: lastWeekStart } },
     select: { page: true, locale: true, date: true, clicks: true, impressions: true, position: true },
   });
+  const canonicalMap = await buildCanonicalMap();
   const thisWeek = new Map<string, MetricAgg>();
   const lastWeek = new Map<string, MetricAgg>();
   const localeByKey = new Map<string, Locale>();
   for (const r of rows) {
-    const key = `${r.locale}::${r.page}`;
-    localeByKey.set(key, r.locale);
+    const { locale, page } = canonicalize(canonicalMap, r.locale, r.page);
+    const key = `${locale}::${page}`;
+    localeByKey.set(key, locale);
     accumulate(r.date >= thisWeekStart ? thisWeek : lastWeek, key, r.impressions, r.clicks, r.position);
   }
 
@@ -104,16 +109,22 @@ export async function getPerLocaleTrend(days = 90): Promise<LocaleTrend[]> {
   const since = new Date(Date.now() - days * DAY);
   const rows = await prisma.searchMetric.findMany({
     where: { query: null, date: { gte: since } },
-    select: { date: true, locale: true, clicks: true, impressions: true },
+    select: { date: true, locale: true, page: true, clicks: true, impressions: true },
   });
+  const canonicalMap = await buildCanonicalMap();
   const locales: Locale[] = ["en", "de", "pl", "ru"] as Locale[];
   const dayKeys: string[] = [];
   for (let i = days - 1; i >= 0; i--) dayKeys.push(new Date(Date.now() - i * DAY).toISOString().slice(0, 10));
 
+  // Canonicalize once, up front — a redirect-source row's clicks/impressions
+  // must land in whichever locale bucket its canonical target belongs to,
+  // not the (possibly stale) locale its own un-redirected URL implies.
+  const canonicalRows = rows.map((r) => ({ ...r, locale: canonicalize(canonicalMap, r.locale, r.page).locale }));
+
   return locales.map((locale) => {
     const byDay = new Map<string, { clicks: number; impressions: number }>();
     for (const d of dayKeys) byDay.set(d, { clicks: 0, impressions: 0 });
-    for (const r of rows) {
+    for (const r of canonicalRows) {
       if (r.locale !== locale) continue;
       const k = r.date.toISOString().slice(0, 10);
       const bucket = byDay.get(k);
@@ -204,13 +215,15 @@ export async function getLocalePeriodComparison(days = ADVISOR_PERIOD_DAYS): Pro
   const prevStart = new Date(Date.now() - 2 * days * DAY);
   const rows = await prisma.searchMetric.findMany({
     where: { query: null, date: { gte: prevStart } },
-    select: { locale: true, date: true, clicks: true, impressions: true, position: true },
+    select: { locale: true, page: true, date: true, clicks: true, impressions: true, position: true },
   });
+  const canonicalMap = await buildCanonicalMap();
   const cur = new Map<Locale, MetricAgg>();
   const prev = new Map<Locale, MetricAgg>();
   for (const r of rows) {
+    const { locale } = canonicalize(canonicalMap, r.locale, r.page);
     const bucket = r.date >= periodStart ? cur : prev;
-    accumulate(bucket as any, r.locale, r.impressions, r.clicks, r.position);
+    accumulate(bucket as any, locale, r.impressions, r.clicks, r.position);
   }
   const locales: Locale[] = ["en", "de", "pl", "ru"] as Locale[];
   return locales.map((locale) => {
@@ -235,9 +248,12 @@ export async function getClickDeltaMovers(days = ADVISOR_PERIOD_DAYS, limit = 15
     where: { query: null, date: { gte: prevStart } },
     select: { page: true, locale: true, date: true, clicks: true },
   });
+  const canonicalMap = await buildCanonicalMap();
   const cur = new Map<string, { locale: Locale; clicks: number }>();
   const prev = new Map<string, number>();
-  for (const r of rows) {
+  for (const raw of rows) {
+    const { locale, page } = canonicalize(canonicalMap, raw.locale, raw.page);
+    const r = { ...raw, locale, page };
     const key = `${r.locale}::${r.page}`;
     if (r.date >= periodStart) {
       const e = cur.get(key) ?? { locale: r.locale, clicks: 0 };
@@ -270,9 +286,12 @@ export async function getStrikingDistance(days = ADVISOR_PERIOD_DAYS): Promise<S
     where: { query: null, date: { gte: prevStart } },
     select: { page: true, locale: true, date: true, impressions: true, position: true },
   });
+  const canonicalMap = await buildCanonicalMap();
   const cur = new Map<string, MetricAgg & { locale: Locale }>();
   const prevImpr = new Map<string, number>();
-  for (const r of rows) {
+  for (const raw of rows) {
+    const { locale, page } = canonicalize(canonicalMap, raw.locale, raw.page);
+    const r = { ...raw, locale, page };
     const key = `${r.locale}::${r.page}`;
     if (r.date >= periodStart) {
       const e = cur.get(key) ?? { locale: r.locale, impressions: 0, clicks: 0, posWeighted: 0 };

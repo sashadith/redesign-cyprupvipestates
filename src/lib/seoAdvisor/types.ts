@@ -14,5 +14,6 @@ export type StoredSuggestion = {
   category: string;
   status: SuggestionStatus;
   dismissedAt?: string;
+  dismissalReason?: string;
   preparedPrompt?: string;
 };

@@ -15,8 +15,12 @@ async function updateSuggestion(runId: string, suggestionId: string, patch: Part
   revalidatePath("/admin");
 }
 
-export async function dismissSuggestion(runId: string, suggestionId: string) {
-  await updateSuggestion(runId, suggestionId, { status: "dismissed", dismissedAt: new Date().toISOString() });
+export async function dismissSuggestion(runId: string, suggestionId: string, reason?: string) {
+  await updateSuggestion(runId, suggestionId, {
+    status: "dismissed",
+    dismissedAt: new Date().toISOString(),
+    ...(reason ? { dismissalReason: reason } : {}),
+  });
 }
 
 export async function approveSuggestion(runId: string, suggestionId: string) {

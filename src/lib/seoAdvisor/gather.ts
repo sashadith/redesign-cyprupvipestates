@@ -15,8 +15,10 @@ import {
 import { templateClassOf, templateClassLabel, type TemplateClass } from "@/lib/seo/templateClass";
 import { loadSweepEntries } from "@/lib/seo/titleSweepLog";
 import { computeTitleSweepComparison } from "@/lib/seo/titleSweepRemeasure";
+import { getRecentChangelogEntries, type ChangelogEntry } from "@/lib/seo/siteChangelog";
 
 const DAY = 86_400_000;
+const CHANGELOG_LOOKBACK_DAYS = 60;
 const asArr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
 
 // Compact, token-conscious payload for the weekly SEO Advisor analysis —
@@ -49,6 +51,11 @@ export type AdvisorPayload = {
     daysRemaining?: number;
     urlsInWindow?: number;
   } | null;
+  // Routing/content changes (last 60 days) that can shift GSC metrics for
+  // reasons unrelated to ranking quality — see docs/SITE-CHANGELOG.md. The
+  // ANALYZE step is instructed to attribute an overlapping metric shift to
+  // one of these FIRST, before reading it as a ranking problem.
+  siteChangelog: ChangelogEntry[];
 };
 
 async function gatherCwvSummary() {
@@ -163,5 +170,6 @@ export async function gatherAdvisorPayload(): Promise<AdvisorPayload> {
     },
     platform,
     titleSweep,
+    siteChangelog: getRecentChangelogEntries(CHANGELOG_LOOKBACK_DAYS),
   };
 }

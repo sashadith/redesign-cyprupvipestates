@@ -12,6 +12,7 @@ import { sendTelegramMessage } from "@/lib/telegram";
 import { withCronLog } from "@/lib/cronLog";
 import { prisma } from "@/lib/prisma";
 import type { StoredSuggestion } from "@/lib/seoAdvisor/types";
+import { mdInlineToTelegramHtml } from "@/lib/telegramFormat";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +41,10 @@ async function maybeAppendAdvisorSummary(): Promise<string[]> {
   return [
     "",
     `<b>🧭 SEO Advisor (${suggestions.length} suggestion${suggestions.length === 1 ? "" : "s"})</b>`,
-    ...suggestions.slice(0, 5).map((s) => `• ${escapeHtml(s.title)}`),
+    // Advisor titles are LLM-authored freeform text — unlike the
+    // code-templated item titles below, they might contain markdown
+    // emphasis the model wasn't told to avoid.
+    ...suggestions.slice(0, 5).map((s) => `• ${mdInlineToTelegramHtml(s.title)}`),
   ];
 }
 
