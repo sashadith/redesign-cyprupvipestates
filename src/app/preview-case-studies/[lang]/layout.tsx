@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
+import { SITE_URL } from "@/lib/seo";
 import "../../preview-home/tokens.css";
 import "../../preview-insights/insights.css";
 import "../case-studies.css";
@@ -46,6 +47,13 @@ const cyr = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  // Without this, any relative URL in this tree's generateMetadata (e.g. a
+  // bare /uploads/... og:image) resolves against Next.js's fallback base
+  // instead of the real domain — confirmed live (2026-07-18): the case study
+  // detail page's og:image pointed at http://localhost:3000/uploads/... in
+  // production because this isolated layout has its own root <html>/<body>
+  // and doesn't inherit metadataBase from src/app/[lang]/layout.tsx.
+  metadataBase: new URL(SITE_URL),
   title: "Case Studies — redesign preview",
   robots: { index: false, follow: false },
 };

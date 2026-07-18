@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
+import { SITE_URL } from "@/lib/seo";
 import "../../preview-home/tokens.css";
 import "../faq.css";
 import LenisProvider from "../../preview-home/anim/LenisProvider";
@@ -39,6 +40,11 @@ const cyr = Playfair_Display({
 });
 
 export const metadata: Metadata = {
+  // See the identical note in preview-case-studies/[lang]/layout.tsx — this
+  // isolated tree doesn't inherit metadataBase from src/app/[lang]/layout.tsx,
+  // so any relative image URL in generateMetadata would otherwise resolve
+  // against Next.js's localhost fallback instead of the real domain.
+  metadataBase: new URL(SITE_URL),
   title: "FAQ — redesign preview",
   robots: { index: false, follow: false },
 };

@@ -81,7 +81,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const title = cs.seo?.metaTitle || cs.title;
   const description = cs.seo?.metaDescription || cs.excerpt;
   const ogImage = cs.previewImage
-    ? urlFor(cs.previewImage).width(1200).height(630).url()
+    ? abs(urlFor(cs.previewImage).width(1200).height(630).url())
     : DEFAULT_OG_IMAGE;
   return {
     title,
