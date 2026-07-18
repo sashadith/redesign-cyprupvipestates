@@ -1,0 +1,110 @@
+.snapshot {
+  // Tighter than the standard landing-block padding (clamp 60px→100px) on
+  // purpose — this is a supporting block between the listings and the
+  // persuasive copy, not a full section; keep mobile height in check.
+  padding: clamp(2.25rem, 1.5rem + 4vw, 5rem) 0;
+  background-color: #fff;
+  text-align: center;
+}
+
+.heading {
+  font-size: clamp(1.5rem, 1.25rem + 1vw, 2rem);
+  font-weight: 300;
+  color: #1a1a1a;
+  margin: 0 0 12px;
+}
+
+.blurb {
+  font-size: clamp(0.9375rem, 0.875rem + 0.25vw, 1.0625rem);
+  font-weight: 300;
+  line-height: 1.5;
+  color: #333;
+  max-width: 720px;
+  margin: 0 auto 28px;
+
+  strong {
+    font-weight: 500;
+  }
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 12px;
+  max-width: 620px;
+  margin: 0 auto;
+
+  @media screen and (min-width: 980px) {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 100%;
+    gap: 0;
+  }
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 8px;
+  border-top: 1px solid #e5e5e5;
+
+  @media screen and (min-width: 980px) {
+    border-top: none;
+    border-left: 1px solid #e5e5e5;
+
+    &:first-child {
+      border-left: none;
+    }
+  }
+}
+
+.statValue {
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.625rem);
+  font-weight: 400;
+  color: #bd8948;
+}
+
+.statLabel {
+  font-size: 0.8125rem;
+  font-weight: 300;
+  color: #666;
+}
+
+.districtTable {
+  max-width: 480px;
+  margin: 24px auto 0;
+  border-top: 1px solid #e5e5e5;
+}
+
+.districtRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 4px;
+  border-bottom: 1px solid #e5e5e5;
+  font-size: 0.875rem;
+  font-weight: 300;
+  color: #333;
+}
+
+.districtName {
+  font-weight: 500;
+  text-align: left;
+  flex: 1;
+}
+
+.ctaRow {
+  margin: 28px 0 12px;
+}
+
+.ctaButton {
+  display: inline-block;
+}
+
+.footnote {
+  font-size: 0.75rem;
+  font-weight: 300;
+  color: #888;
+  max-width: 640px;
+  margin: 0 auto;
+}
