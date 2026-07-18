@@ -122,7 +122,16 @@ export const config = {
   // gap (2026-07-18): /og/home-1200x630.jpg rewritten to /en/og/home-1200x630.jpg
   // and 404ing, which would have made every og:image/twitter:image tag point at
   // a broken URL in production.
+  //
+  // Same gap again (2026-07-18), this time for the IndexNow protocol's key
+  // file, which MUST be servable at the literal site root
+  // (/<key>.txt — see src/lib/indexnow.ts) for search engines to verify
+  // domain ownership. Root-level static files in general have this same
+  // exposure (confirmed: /checkmark.png, /next.svg, /poi/cyprus.json all
+  // 404 the same way) — flagged separately as a pre-existing gap broader
+  // than this one file; not fixed wholesale here to avoid touching this
+  // matcher's blast radius beyond what's actually needed right now.
   matcher: [
-    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|sandbox|og|preview-assets|preview-case-studies|preview-faq|preview-home|preview-insights|preview-partners|preview-projects|style|c/).*)",
+    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|sandbox|og|preview-assets|preview-case-studies|preview-faq|preview-home|preview-insights|preview-partners|preview-projects|style|c/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
   ],
 };
