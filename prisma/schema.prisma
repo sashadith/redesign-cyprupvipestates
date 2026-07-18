@@ -899,6 +899,45 @@ model AreaDescription {
   @@map("area_descriptions")
 }
 
+// Google Search Console daily metrics — synced by /api/cron/gsc-sync (05:30
+// daily, backfills 90 days on first run, then upserts the last 3 days since
+// GSC's own data lags ~2 days). Two row shapes share this table:
+//   - page-level rows (query = null): one row per (date, page, locale), the
+//     GSC-reported aggregate for that page — this is what Action Center rules
+//     and the admin SEO view read (position/CTR here are GSC's own numbers,
+//     NOT derivable by summing query-level rows below).
+//   - query-level rows (query set): one row per (date, page, locale, query),
+//     the finer breakdown — stored for future use (query-level insight, the
+//     Advisor layer), not consumed by any rule/view built so far.
+// `page` is the raw URL path as GSC reports it (includes the locale prefix
+// for de/pl/ru, no prefix for en) — `locale` is derived from that path at
+// ingestion time, purely for filtering/segmentation.
+// Retention: purged after 16 months (matches GSC's own retention) by the same
+// cron, piggybacking the pattern used elsewhere (see feed-sync's purge*
+// functions) rather than a separate scheduled job.
+// Note: Postgres allows multiple rows with the same (date, page, locale, NULL)
+// combination since NULL != NULL in a unique index — uniqueness for
+// page-level rows is enforced by always going through upsert in application
+// code, not by the DB constraint alone.
+model SearchMetric {
+  id          String   @id @default(uuid())
+  date        DateTime @db.Date
+  page        String
+  locale      Locale
+  query       String? // null = page-level row; set = per-query breakdown row
+  clicks      Int
+  impressions Int
+  ctr         Float
+  position    Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([date, page, locale, query])
+  @@index([page, locale, date])
+  @@index([date])
+  @@map("search_metrics")
+}
+
 // Global, admin-editable AI prompt templates — shared across ALL projects (one
 // row per feature), editable from within any project's own page via "Adjust
 // prompt" rather than a separate settings screen. `key` namespaces features the

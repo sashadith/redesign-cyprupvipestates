@@ -6,7 +6,7 @@
 // snooze override layered on top (action_center_snoozes, see snooze.ts).
 
 export type Severity = "URGENT" | "ACTION" | "INFO";
-export type Category = "DEVELOPERS" | "CRM" | "SYSTEM";
+export type Category = "DEVELOPERS" | "CRM" | "SYSTEM" | "SEO";
 
 export type ActionItem = {
   // Stable, derived from the entity the item is about (e.g. `sold-out:<developmentId>`)

@@ -224,16 +224,16 @@ hardcoded in the crontab):
 | `0 4 * * *` | `feed-sync` | production, `?key=$CRON_SECRET` |
 | `30 3 * * *` | `cvp-db-backup.sh` | DB dump, not app-specific |
 | `0 5 * * 0` | `cvp-uploads-backup.sh` | shared uploads dir, weekly |
-| `0 5 * * *` | `action-digest` (Action Center Telegram digest) | production, `?key=$CRON_SECRET` — **not yet installed, see note below** |
+| `0 5 * * *` | `action-digest` (Action Center Telegram digest) | production, `?key=$CRON_SECRET` |
+| `30 5 * * *` | `gsc-sync` (Google Search Console daily sync — see src/lib/gsc/) | production, `?key=$CRON_SECRET` — installed 2026-07-18; a no-op ("skipped: not configured") until `GSC_SERVICE_ACCOUNT_KEY_PATH`/`GSC_SITE_PROPERTY` are set, see .env.example |
 
 VPS system clock is UTC (confirmed: `Development.syncedAt` rows written by
 `feed-sync`'s `0 4 * * *` entry land at `04:00:xx.xxxZ`) — crontab times above
 are plain UTC, not Cyprus-local. `action-digest` is specified as "daily 08:00
 Cyprus time"; Cyprus is EEST (UTC+3) in summer, so `0 5 * * *` UTC = 08:00
-Cyprus — **this entry has not been added to the production crontab yet**
-(a live infra change, done separately from this code change). Note it'll need
-revisiting to `0 6 * * *` when Cyprus switches to EET (UTC+2) in winter, since
-the VPS crontab has no timezone awareness of its own.
+Cyprus. Note it'll need revisiting to `0 6 * * *` when Cyprus switches to EET
+(UTC+2) in winter, since the VPS crontab has no timezone awareness of its own
+— `gsc-sync`'s `30 5 * * *` has the same seasonal drift.
 
 Staging's own `drive-sync`/`feed-sync` entries (previously hitting
 `127.0.0.1:3200`) were **disabled** (commented out, not deleted) in the
