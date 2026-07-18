@@ -16,14 +16,6 @@ const safeUrl = (img: unknown) => {
 
 const ACCENT_PHRASE = "Properties for Sale";
 
-/* Approved redesign city photos (4:3), keyed by city name — falls back to the
-   content-DB image if a city isn't listed. */
-const CITY_IMAGES: Record<string, string> = {
-  paphos: "https://cyprusvipestates.com/uploads/images/03055e3142095375bf3deaef548d7f8b5be4de71-800x600.jpg",
-  limassol: "https://cyprusvipestates.com/uploads/images/5bfd78a15570282b3617ff925479de7d0228f36d-800x600.jpg",
-  larnaca: "https://cyprusvipestates.com/uploads/images/f97d8e5f8c5b3ca4551393908d5e0df93b51f960-800x600.jpg",
-};
-
 /* Highlight the "Properties for Sale" phrase with the gold accent ("in Cyprus"
    stays in the normal text colour). Falls back to highlighting just "Cyprus"
    if the phrase isn't present (e.g. translated headings). */
@@ -69,7 +61,11 @@ const Cities: FC<Props> = ({ block, lang = "en" }) => {
         {cities?.length > 0 && (
           <div className="cities__grid">
             {cities.map((c) => {
-              const img = CITY_IMAGES[c.city?.trim().toLowerCase()] || safeUrl(c.image);
+              // c.image is always the EN asset regardless of the active locale —
+              // resolved in getHomePageByLang (src/sanity/sanity.utils.ts), not
+              // here. These 3 photos must stay identical across en/de/pl/ru; do
+              // not reintroduce a per-locale or city-name-keyed image override.
+              const img = safeUrl(c.image);
               return (
                 <a key={c._key} className="ccard" href={c.link || "#"}>
                   <div className="ccard__media">{img && <img src={img} alt={c.image?.alt || c.city} />}</div>

@@ -241,11 +241,33 @@ async function _getHomePageByLang(lang: string): Promise<Homepage> {
     }));
   }
 
+  // citiesBlock.cities[].image is intentionally language-INDEPENDENT — always
+  // sourced from the EN document, matched by array position (Paphos/Limassol/
+  // Larnaca are always in that order across every locale row). `city` (the
+  // displayed label) and `link` stay per-locale/localized as normal; only the
+  // image asset is borrowed. This is a structural fix, not just a data fix:
+  // previously each locale stored (and could independently edit) its own
+  // image reference, which drifted from EN's — DE/PL/RU showed a stale photo
+  // for any city whose translated name didn't match a hardcoded English-keyed
+  // lookup in Cities.tsx (see that file's own comment). Editing the image via
+  // /admin/content/featured for a non-EN locale still updates that locale's
+  // stored value (for data-consistency / a correct-looking preview there),
+  // but the public page always renders EN's — so the three photos genuinely
+  // cannot drift apart on the live site again.
+  const cb = d.citiesBlock ? { ...d.citiesBlock } : undefined;
+  if (cb?.cities?.length) {
+    const enCities: AnyRow[] = lang === "en"
+      ? cb.cities
+      : ((await prisma.siteDocument.findUnique({ where: { type_language: { type: "homepage", language: "en" as any } } }))?.data as AnyRow)?.citiesBlock?.cities ?? [];
+    cb.cities = cb.cities.map((c: AnyRow, i: number) => (enCities[i]?.image ? { ...c, image: { ...c.image, asset: enCities[i].image.asset } } : c));
+  }
+
   const out: AnyRow = {
     ...base(row, "homepage"),
     ...d,
     featuredProjectsBlock: fpb,
     featuredCaseStudiesBlock: fcb,
+    citiesBlock: cb,
     contentBlocks: await resolveBlocks(d.contentBlocks, lang),
     language: row.language,
     slug: d.slug,

@@ -143,6 +143,16 @@ export const HOMEPAGE_SCHEMA: HField[] = [
     { name: "description", title: "Description", kind: "text", rows: 5 },
     { name: "projects", title: "Projects", kind: "refArray", refType: "project" },
   ] },
+  // KEEP IDENTICAL ACROSS LOCALES: cities[].image is language-independent by
+  // design — the public homepage always renders the EN document's image for
+  // every locale (see getHomePageByLang in src/sanity/sanity.utils.ts), matched
+  // by array position. Editing "Image" here for de/pl/ru updates that locale's
+  // own stored value (so this admin form's preview looks consistent) but has
+  // NO effect on the live page — only editing it under the EN tab does. This
+  // was the root cause of a real bug (2026-07-18): DE/PL/RU showed stale
+  // photos because a since-removed component-level hack matched images by the
+  // literal English city name string, which silently broke for any translated
+  // city label. Don't reintroduce per-locale image control for this block.
   { name: "citiesBlock", title: "Cities Block", kind: "object", fields: [
     { name: "title", title: "Title", kind: "string" },
     { name: "cities", title: "Cities", kind: "objectArray", itemLabel: "City", fields: [
