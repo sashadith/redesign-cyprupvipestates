@@ -4,12 +4,13 @@ import { developerRules } from "./rules/developers";
 import { crmRules } from "./rules/crm";
 import { systemRules } from "./rules/system";
 import { seoRules } from "./rules/seo";
+import { seoAdvisorRules } from "./rules/seoAdvisor";
 import { filterSnoozed } from "./snooze";
 
 export type { ActionItem, Severity, Category } from "./types";
 export { snoozeItem } from "./snooze";
 
-const CATEGORY_ORDER: Record<Category, number> = { DEVELOPERS: 0, CRM: 1, SEO: 2, SYSTEM: 3 };
+const CATEGORY_ORDER: Record<Category, number> = { DEVELOPERS: 0, CRM: 1, SEO: 2, SEO_ADVISOR: 3, SYSTEM: 4 };
 
 function sortItems(items: ActionItem[]): ActionItem[] {
   return [...items].sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity] || a.since.getTime() - b.since.getTime());
@@ -19,8 +20,8 @@ function sortItems(items: ActionItem[]): ActionItem[] {
 // themselves (see types.ts header comment). Cheap: each rule module runs a
 // handful of already-indexed queries.
 export async function getActionCenterItems(): Promise<ActionItem[]> {
-  const [developers, crm, system, seo] = await Promise.all([developerRules(), crmRules(), systemRules(), seoRules()]);
-  const all = await filterSnoozed([...developers, ...crm, ...system, ...seo]);
+  const [developers, crm, system, seo, seoAdvisor] = await Promise.all([developerRules(), crmRules(), systemRules(), seoRules(), seoAdvisorRules()]);
+  const all = await filterSnoozed([...developers, ...crm, ...system, ...seo, ...seoAdvisor]);
   return sortItems(all);
 }
 

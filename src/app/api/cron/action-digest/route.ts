@@ -10,6 +10,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActionCenterItems } from "@/lib/actionCenter";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { withCronLog } from "@/lib/cronLog";
+import { prisma } from "@/lib/prisma";
+import type { StoredSuggestion } from "@/lib/seoAdvisor/types";
 
 export const dynamic = "force-dynamic";
 
@@ -20,9 +22,32 @@ function escapeHtml(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+// Piggybacks the weekly SEO Advisor's summary onto whichever daily digest
+// fires next after a run completes (Sunday 06:00 UTC run -> next digest is
+// Monday 08:00 Cyprus) — see docs: "Monday 08:00 digest" is simply "the next
+// daily digest", not a separate crontab entry. `telegramSentAt` makes this
+// idempotent: a run's summary goes out exactly once, on whichever digest
+// first sees it un-sent, however many days it stays open after that.
+async function maybeAppendAdvisorSummary(): Promise<string[]> {
+  const latest = await prisma.advisorRun.findFirst({ orderBy: { runDate: "desc" } });
+  if (!latest || latest.telegramSentAt) return [];
+  const suggestions = (latest.suggestions as unknown as StoredSuggestion[]) ?? [];
+  if (!suggestions.length) {
+    await prisma.advisorRun.update({ where: { id: latest.id }, data: { telegramSentAt: new Date() } });
+    return [];
+  }
+  await prisma.advisorRun.update({ where: { id: latest.id }, data: { telegramSentAt: new Date() } });
+  return [
+    "",
+    `<b>🧭 SEO Advisor (${suggestions.length} suggestion${suggestions.length === 1 ? "" : "s"})</b>`,
+    ...suggestions.slice(0, 5).map((s) => `• ${escapeHtml(s.title)}`),
+  ];
+}
+
 async function runDigest() {
   const items = (await getActionCenterItems()).filter((i) => i.severity === "URGENT" || i.severity === "ACTION");
-  if (!items.length) return { sent: false, count: 0 };
+  const advisorLines = await maybeAppendAdvisorSummary();
+  if (!items.length && !advisorLines.length) return { sent: false, count: 0 };
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
   const shown = items.slice(0, MAX_ITEMS);
@@ -32,14 +57,15 @@ async function runDigest() {
   const text = [
     "<b>📋 Daily Action Center Digest</b>",
     "",
-    ...lines,
+    ...(lines.length ? lines : ["No URGENT/ACTION items today."]),
     more > 0 ? `\n…and ${more} more.` : "",
+    ...advisorLines,
     "",
     `<a href="${siteUrl}/admin">Open Action Center</a>`,
   ].filter(Boolean).join("\n");
 
   await sendTelegramMessage(text);
-  return { sent: true, count: items.length };
+  return { sent: true, count: items.length + advisorLines.length };
 }
 
 export async function GET(req: NextRequest) {

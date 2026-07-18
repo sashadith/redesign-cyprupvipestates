@@ -185,3 +185,112 @@ export async function getCwvFailingByClass(): Promise<CwvClassSummary[]> {
     since: e.oldestDate,
   }));
 }
+
+// --- Period-over-period comparison + movers, for the SEO Advisor's gather step ---
+// (separate from CTR_WINDOW_DAYS/getWeekOverWeekMovers above — those serve the
+// Action Center's rolling rules; these serve the Advisor's fixed 28-day report).
+export const ADVISOR_PERIOD_DAYS = 28;
+
+export type LocalePeriodComparison = {
+  locale: Locale;
+  clicks: number; clicksPrev: number;
+  impressions: number; impressionsPrev: number;
+  ctr: number; ctrPrev: number;
+  position: number; positionPrev: number;
+};
+
+export async function getLocalePeriodComparison(days = ADVISOR_PERIOD_DAYS): Promise<LocalePeriodComparison[]> {
+  const periodStart = new Date(Date.now() - days * DAY);
+  const prevStart = new Date(Date.now() - 2 * days * DAY);
+  const rows = await prisma.searchMetric.findMany({
+    where: { query: null, date: { gte: prevStart } },
+    select: { locale: true, date: true, clicks: true, impressions: true, position: true },
+  });
+  const cur = new Map<Locale, MetricAgg>();
+  const prev = new Map<Locale, MetricAgg>();
+  for (const r of rows) {
+    const bucket = r.date >= periodStart ? cur : prev;
+    accumulate(bucket as any, r.locale, r.impressions, r.clicks, r.position);
+  }
+  const locales: Locale[] = ["en", "de", "pl", "ru"] as Locale[];
+  return locales.map((locale) => {
+    const c = cur.get(locale) ?? { impressions: 0, clicks: 0, posWeighted: 0 };
+    const p = prev.get(locale) ?? { impressions: 0, clicks: 0, posWeighted: 0 };
+    return {
+      locale,
+      clicks: c.clicks, clicksPrev: p.clicks,
+      impressions: c.impressions, impressionsPrev: p.impressions,
+      ctr: ctrPct(c), ctrPrev: ctrPct(p),
+      position: avgPosition(c), positionPrev: avgPosition(p),
+    };
+  });
+}
+
+export type ClickDeltaRow = { locale: Locale; page: string; clicks: number; clicksPrev: number; delta: number };
+
+export async function getClickDeltaMovers(days = ADVISOR_PERIOD_DAYS, limit = 15): Promise<{ winners: ClickDeltaRow[]; losers: ClickDeltaRow[] }> {
+  const periodStart = new Date(Date.now() - days * DAY);
+  const prevStart = new Date(Date.now() - 2 * days * DAY);
+  const rows = await prisma.searchMetric.findMany({
+    where: { query: null, date: { gte: prevStart } },
+    select: { page: true, locale: true, date: true, clicks: true },
+  });
+  const cur = new Map<string, { locale: Locale; clicks: number }>();
+  const prev = new Map<string, number>();
+  for (const r of rows) {
+    const key = `${r.locale}::${r.page}`;
+    if (r.date >= periodStart) {
+      const e = cur.get(key) ?? { locale: r.locale, clicks: 0 };
+      e.clicks += r.clicks;
+      cur.set(key, e);
+    } else {
+      prev.set(key, (prev.get(key) ?? 0) + r.clicks);
+    }
+  }
+  const rows2: ClickDeltaRow[] = Array.from(cur.entries()).map(([key, c]) => {
+    const [, page] = key.split("::");
+    const clicksPrev = prev.get(key) ?? 0;
+    return { locale: c.locale, page, clicks: c.clicks, clicksPrev, delta: c.clicks - clicksPrev };
+  });
+  const winners = rows2.filter((r) => r.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, limit);
+  const losers = rows2.filter((r) => r.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, limit);
+  return { winners, losers };
+}
+
+export type StrikingDistanceRow = { locale: Locale; page: string; position: number; impressions: number; impressionsPrev: number };
+
+// Pages currently ranking 15-30 (page 2-3 — visible enough to gain impressions,
+// not yet earning much CTR) whose impressions are GROWING vs the prior period —
+// a signal of rising relevance/demand where a modest push (internal links,
+// content depth, a title tweak) could plausibly cross into page 1.
+export async function getStrikingDistance(days = ADVISOR_PERIOD_DAYS): Promise<StrikingDistanceRow[]> {
+  const periodStart = new Date(Date.now() - days * DAY);
+  const prevStart = new Date(Date.now() - 2 * days * DAY);
+  const rows = await prisma.searchMetric.findMany({
+    where: { query: null, date: { gte: prevStart } },
+    select: { page: true, locale: true, date: true, impressions: true, position: true },
+  });
+  const cur = new Map<string, MetricAgg & { locale: Locale }>();
+  const prevImpr = new Map<string, number>();
+  for (const r of rows) {
+    const key = `${r.locale}::${r.page}`;
+    if (r.date >= periodStart) {
+      const e = cur.get(key) ?? { locale: r.locale, impressions: 0, clicks: 0, posWeighted: 0 };
+      e.impressions += r.impressions;
+      e.posWeighted += r.position * r.impressions;
+      cur.set(key, e);
+    } else {
+      prevImpr.set(key, (prevImpr.get(key) ?? 0) + r.impressions);
+    }
+  }
+  const out: StrikingDistanceRow[] = [];
+  for (const [key, c] of Array.from(cur)) {
+    const [, page] = key.split("::");
+    const position = avgPosition(c);
+    if (position < 15 || position > 30) continue;
+    const impressionsPrev = prevImpr.get(key) ?? 0;
+    if (c.impressions <= impressionsPrev) continue; // must be gaining
+    out.push({ locale: c.locale, page, position, impressions: c.impressions, impressionsPrev });
+  }
+  return out.sort((a, b) => b.impressions - a.impressions);
+}

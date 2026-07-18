@@ -10,7 +10,7 @@ export type ActionCenterItemVM = {
 export type ActionCenterGroupVM = { category: Category; items: ActionCenterItemVM[] };
 
 const DOT_COLOR: Record<Severity, string> = { URGENT: "bg-red-600", ACTION: "bg-amber-500", INFO: "bg-[#9CA3AF]" };
-const CATEGORY_LABEL: Record<Category, string> = { DEVELOPERS: "Developers", CRM: "CRM", SEO: "SEO", SYSTEM: "System" };
+const CATEGORY_LABEL: Record<Category, string> = { DEVELOPERS: "Developers", CRM: "CRM", SEO: "SEO", SEO_ADVISOR: "SEO Advisor", SYSTEM: "System" };
 const SNOOZE_OPTIONS: [string, number][] = [["1d", 1], ["7d", 7], ["30d", 30]];
 
 function SnoozeMenu({ itemId }: { itemId: string }) {
