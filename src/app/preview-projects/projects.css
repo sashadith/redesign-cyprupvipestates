@@ -298,7 +298,8 @@
 
 /* Sold-out: clearly secondary without hiding it — reduced opacity, desaturated
    image, no gold hover sheen (that's reserved for active/desirable cards).
-   The .prj__badge--sold pill still renders normally (muted, not hidden). */
+   The .prj__badge--sold pill stays red/legible on top of this (see below),
+   not muted — only the card body itself is dimmed. */
 .prj.is-sold { opacity: 0.55; transition: opacity 0.3s var(--ease); }
 .prj.is-sold:hover { opacity: 0.75; }
 .prj.is-sold .prj__img { filter: grayscale(0.6); }
@@ -321,12 +322,14 @@
   padding: 4px 10px; border-radius: 999px; border: 1px solid var(--hairline-strong);
 }
 .prj__badge--new { color: var(--accent-ink); background: var(--accent); border-color: var(--accent); }
-/* Muted sold-out treatment — replaces the scarcity banner entirely when a
-   development has zero available units (computed live, see
-   src/lib/developmentAvailability.ts). Deliberately desaturated: this is a
-   dead-end state, not an urgency cue like .scarcity-badge, so it gets no
-   glow/animation. */
-.prj__badge--sold { color: var(--text-faint); background: rgba(8, 21, 18, 0.55); border-color: var(--hairline); }
+/* Sold-out badge — replaces the scarcity banner entirely when a development
+   has zero available units (computed live, see
+   src/lib/developmentAvailability.ts). Deep carmine + ivory text — the same
+   red the scarcity banner itself used before its green recolor — so it stays
+   clearly legible on top of the card's own desaturated/dimmed (.prj.is-sold)
+   treatment. No glow/animation (that's reserved for the scarcity banner's
+   urgency cue); this badge is a plain, static, clearly-readable label. */
+.prj__badge--sold { color: var(--ivory); background: #8C2F2F; border-color: #8C2F2F; }
 /* Scarcity indicator (src/app/components/ScarcityBanner) — shares the
    top-left .prj__badges flex row so it never overlaps .prj__type (top-right).
    Deep green pill (was carmine #8C2F2F — recolored to match the brand sea/

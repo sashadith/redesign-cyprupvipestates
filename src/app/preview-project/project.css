@@ -163,7 +163,10 @@
 .pp-badge { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
   padding: 3px 10px; border-radius: 999px; }
 .pp-badge--ok { color: #0c2a20; background: #7fd0a8; }
-.pp-badge--sold { color: #fff; background: #c0392b; }
+/* Same carmine + ivory as the listing card (.prj__badge--sold) and
+   presentation card (.cp-card__soldbadge) — one consistent sold-out red
+   across all three surfaces that share this computed state. */
+.pp-badge--sold { color: var(--ivory); background: #8C2F2F; }
 
 /* gallery */
 .pp-gal { display: flex; flex-direction: column; gap: 10px; }
