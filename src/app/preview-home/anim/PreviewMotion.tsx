@@ -34,7 +34,15 @@ export default function PreviewMotion() {
         gsap
           .timeline()
           .from(".hero__brand", { autoAlpha: 0, y: 14, duration: 0.5, ease: "power2.out" }, 0)
-          .from(split.lines, { y: 80, autoAlpha: 0, duration: 0.9, stagger: 0.12, ease: "power3.out" }, 0.3)
+          // No autoAlpha here (unlike the other hero elements) — autoAlpha sets
+          // opacity:0 + visibility:hidden synchronously when the timeline is
+          // built, which hides the H1 (the page's LCP element) until this JS
+          // animation reveals it later. Under throttled mobile CPU that gate
+          // measured as a 20s+ LCP in PSI even though there's no real network/
+          // main-thread bottleneck (confirmed via lab trace, 2026-07-19) — the
+          // slide-up motion (y) is kept, only the opacity hide is dropped so
+          // the headline paints with the rest of the SSR'd HTML.
+          .from(split.lines, { y: 80, duration: 0.9, stagger: 0.12, ease: "power3.out" }, 0.3)
           .from(".hero__stripe", { scaleX: 0, transformOrigin: "left center", autoAlpha: 0, duration: 0.6, ease: "power3.out" }, 1.2)
           .from(".hero__desc", { autoAlpha: 0, y: 22, duration: 0.6, ease: "power2.out" }, 1.6)
           .from(".hero__cta", { autoAlpha: 0, y: 16, duration: 0.5, ease: "power2.out" }, 1.75);
