@@ -213,7 +213,28 @@ DB_URL_LINE="\$(grep '^DATABASE_URL=' .env | cut -d= -f2-)"
 DB_URL_LINE="\${DB_URL_LINE%\\"}"
 DB_URL_LINE="\${DB_URL_LINE#\\"}"
 BUILD_DB_URL="\${DB_URL_LINE}&connection_limit=5&pool_timeout=30"
-DATABASE_URL="\$BUILD_DB_URL" NODE_OPTIONS=--max_old_space_size=2048 npm run build
+# Heap cap raised 2048->5120 after a real OOM (2026-07-18): a cold build
+# following npm ci (new dep: googleapis) blew the old 2048MB V8 heap limit.
+# VPS has 7.8GB total RAM; 5120MB leaves headroom for the OS + the two
+# already-running app instances during the build.
+PREV_BUILD_ID="\$(cat "$DIR/.next/BUILD_ID" 2>/dev/null || echo none)"
+DATABASE_URL="\$BUILD_DB_URL" NODE_OPTIONS=--max_old_space_size=5120 npm run build
+
+# Belt-and-suspenders: 'set -e' should already abort this script on a failed
+# build, but the 2026-07-18 OOM incident showed an actual next-build crash
+# mid-way (V8's own "FATAL ERROR: ... out of memory" abort) still somehow let
+# this script report success and reload pm2 onto a missing/partial .next,
+# taking production down. Whatever the exact cause, verify a genuinely NEW,
+# complete build landed — BUILD_ID is written only at the very end of a
+# successful `next build`, so compare against the pre-build value (don't just
+# check existence: \$DIR is the LIVE in-place directory, no separate -next
+# tree, so a leftover BUILD_ID from the previous good deploy would otherwise
+# false-pass this check) — before trusting it enough to reload pm2.
+NEW_BUILD_ID="\$(cat "$DIR/.next/BUILD_ID" 2>/dev/null || echo none)"
+if [ "\$NEW_BUILD_ID" = "none" ] || [ "\$NEW_BUILD_ID" = "\$PREV_BUILD_ID" ]; then
+  echo "BUILD FAILED: .next/BUILD_ID missing or unchanged after npm run build (prev=\$PREV_BUILD_ID new=\$NEW_BUILD_ID) — aborting before pm2 reload"
+  exit 1
+fi
 
 # Hard gate: verify every known runtime-only asset (files read via fs at
 # request time, invisible to the build above) exists in \$DIR BEFORE the
