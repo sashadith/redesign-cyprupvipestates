@@ -15,6 +15,7 @@ export type StoredSuggestion = {
   status: SuggestionStatus;
   dismissedAt?: string;
   dismissalReason?: string;
+  approvedAt?: string;
   preparedPrompt?: string;
   // Free-text findings recorded after implementation — a follow-up lever
   // identified during the work but deliberately not executed (e.g. a

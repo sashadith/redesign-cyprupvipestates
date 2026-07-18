@@ -30,5 +30,5 @@ export async function approveSuggestion(runId: string, suggestionId: string) {
   const found = suggestions.find((s) => s.id === suggestionId);
   if (!found) throw new Error("Suggestion not found");
   const preparedPrompt = buildPreparedPrompt(found);
-  await updateSuggestion(runId, suggestionId, { status: "approved", preparedPrompt });
+  await updateSuggestion(runId, suggestionId, { status: "approved", preparedPrompt, approvedAt: new Date().toISOString() });
 }
