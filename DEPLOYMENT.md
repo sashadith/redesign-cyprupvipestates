@@ -226,6 +226,8 @@ hardcoded in the crontab):
 | `0 5 * * 0` | `cvp-uploads-backup.sh` | shared uploads dir, weekly |
 | `0 5 * * *` | `action-digest` (Action Center Telegram digest) | production, `?key=$CRON_SECRET` |
 | `30 5 * * *` | `gsc-sync` (Google Search Console daily sync — see src/lib/gsc/) | production, `?key=$CRON_SECRET` — installed 2026-07-18; a no-op ("skipped: not configured") until `GSC_SERVICE_ACCOUNT_KEY_PATH`/`GSC_SITE_PROPERTY` are set, see .env.example |
+| `0 2 * * *` | `psi-sync` (Core Web Vitals nightly sync — see src/lib/psi/) | production, `?key=$CRON_SECRET` — installed 2026-07-18; a no-op until `PSI_API_KEY` is set |
+| `0 6 * * 0` | `seo-advisor` (weekly Claude-analyzed SEO suggestions, Sundays — see src/lib/seoAdvisor/) | production, `?key=$CRON_SECRET` — installed 2026-07-18; a no-op until `ANTHROPIC_API_KEY` is set (it already is) |
 
 VPS system clock is UTC (confirmed: `Development.syncedAt` rows written by
 `feed-sync`'s `0 4 * * *` entry land at `04:00:xx.xxxZ`) — crontab times above
