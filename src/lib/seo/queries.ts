@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { Locale } from "@prisma/client";
 import { pagesInSuppressionWindow } from "./titleSweepLog";
 import { REMEASURE_WINDOW_DAYS } from "./titleSweepRemeasure";
+import { templateClassOf, templateClassLabel, type TemplateClass } from "./templateClass";
 
 // Shared page-level (query=null) aggregation helpers + the CTR-watchlist and
 // week-over-week mover queries — single source of truth used by BOTH the
@@ -120,4 +121,67 @@ export async function getPerLocaleTrend(days = 90): Promise<LocaleTrend[]> {
     }
     return { locale, series: dayKeys.map((d) => ({ date: d, ...byDay.get(d)! })) };
   });
+}
+
+// --- Core Web Vitals: per-template-class failure summary ---------------------
+// A URL "fails" only when its last CWV_SUSTAINED_COUNT consecutive nightly
+// readings ALL exceed at least one threshold — a single bad measurement
+// (transient load, PSI flakiness) shouldn't trigger an alert. Grouped by
+// template class since a Development-page layout issue affects every
+// Development page, not just the one or two we happened to sample that night.
+export const CWV_LCP_MAX_MS = 3500;
+export const CWV_CLS_MAX = 0.15;
+export const CWV_INP_MAX_MS = 350;
+export const CWV_SUSTAINED_COUNT = 3;
+const CWV_LOOKBACK_DAYS = 10; // generous window — plenty of headroom for 3 nightly reads even if a night or two is missed
+
+export type CwvFailingMetric = "LCP" | "CLS" | "INP";
+export type CwvClassSummary = {
+  templateClass: TemplateClass;
+  label: string;
+  failingUrls: string[];
+  failingMetrics: CwvFailingMetric[];
+  since: Date;
+};
+
+function failsThreshold(r: { lcp: number; cls: number; inp: number | null }): CwvFailingMetric[] {
+  const metrics: CwvFailingMetric[] = [];
+  if (r.lcp > CWV_LCP_MAX_MS) metrics.push("LCP");
+  if (r.cls > CWV_CLS_MAX) metrics.push("CLS");
+  if (r.inp != null && r.inp > CWV_INP_MAX_MS) metrics.push("INP");
+  return metrics;
+}
+
+export async function getCwvFailingByClass(): Promise<CwvClassSummary[]> {
+  const since = new Date(Date.now() - CWV_LOOKBACK_DAYS * DAY);
+  const rows = await prisma.cwvMetric.findMany({ where: { date: { gte: since } }, orderBy: { date: "desc" } });
+
+  const latestByUrl = new Map<string, typeof rows>();
+  for (const r of rows) {
+    const arr = latestByUrl.get(r.url) ?? [];
+    if (arr.length < CWV_SUSTAINED_COUNT) arr.push(r);
+    latestByUrl.set(r.url, arr);
+  }
+
+  const byClass = new Map<TemplateClass, { urls: string[]; metrics: Set<CwvFailingMetric>; oldestDate: Date }>();
+  for (const [url, readings] of Array.from(latestByUrl)) {
+    if (readings.length < CWV_SUSTAINED_COUNT) continue; // not enough history yet
+    const perReadingFailures = readings.map(failsThreshold);
+    if (perReadingFailures.some((f) => f.length === 0)) continue; // at least one clean reading — not sustained
+    const cls = templateClassOf(url);
+    const entry = byClass.get(cls) ?? { urls: [], metrics: new Set<CwvFailingMetric>(), oldestDate: readings[0].date };
+    entry.urls.push(url);
+    for (const f of perReadingFailures.flat()) entry.metrics.add(f);
+    const oldest = readings[readings.length - 1].date;
+    if (oldest < entry.oldestDate) entry.oldestDate = oldest;
+    byClass.set(cls, entry);
+  }
+
+  return Array.from(byClass.entries()).map(([templateClass, e]) => ({
+    templateClass,
+    label: templateClassLabel(templateClass),
+    failingUrls: e.urls,
+    failingMetrics: Array.from(e.metrics),
+    since: e.oldestDate,
+  }));
 }

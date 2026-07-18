@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import type { ActionItem } from "../types";
 import { computeTitleSweepComparison } from "@/lib/seo/titleSweepRemeasure";
-import { getCtrWatchlist, getWeekOverWeekMovers, CTR_WINDOW_DAYS } from "@/lib/seo/queries";
+import { getCtrWatchlist, getWeekOverWeekMovers, getCwvFailingByClass, CTR_WINDOW_DAYS } from "@/lib/seo/queries";
 
 const DAY = 86_400_000;
 const RANK_DROP_MIN_IMPRESSIONS = 100;
@@ -101,7 +101,24 @@ async function titleSweepDue(): Promise<ActionItem[]> {
   }];
 }
 
+// (e) Core Web Vitals degraded — one item per shared template class, not per
+// URL (a Development-page layout issue affects every Development page, not
+// just the sampled ones). See src/lib/seo/queries.ts's getCwvFailingByClass
+// for the "sustained 3 consecutive measurements" logic.
+async function cwvDegraded(): Promise<ActionItem[]> {
+  const classes = await getCwvFailingByClass();
+  return classes.map((c) => ({
+    id: `seo-cwv-degraded:${c.templateClass}`,
+    severity: "ACTION",
+    category: "SEO",
+    title: `Core Web Vitals degraded on ${c.label} (${c.failingUrls.length} page${c.failingUrls.length === 1 ? "" : "s"})`,
+    description: `Failing: ${c.failingMetrics.join(", ")} — sustained over the last 3 nightly checks. Example: ${c.failingUrls[0]}.`,
+    deepLink: "/admin/analytics/seo",
+    since: c.since,
+  }));
+}
+
 export async function seoRules(): Promise<ActionItem[]> {
-  const [a, b, c, d] = await Promise.all([ctrOutliers(), rankingDrops(), newPagesIndexed(), titleSweepDue()]);
-  return [...a, ...b, ...c, ...d];
+  const [a, b, c, d, e] = await Promise.all([ctrOutliers(), rankingDrops(), newPagesIndexed(), titleSweepDue(), cwvDegraded()]);
+  return [...a, ...b, ...c, ...d, ...e];
 }

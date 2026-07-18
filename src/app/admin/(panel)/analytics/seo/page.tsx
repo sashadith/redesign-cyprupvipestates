@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { isGscConfigured } from "@/lib/gsc/client";
-import { getPerLocaleTrend, getWeekOverWeekMovers, getCtrWatchlist, CTR_WINDOW_DAYS } from "@/lib/seo/queries";
+import { getPerLocaleTrend, getWeekOverWeekMovers, getCtrWatchlist, getCwvFailingByClass, CTR_WINDOW_DAYS } from "@/lib/seo/queries";
 import { computeTitleSweepComparison } from "@/lib/seo/titleSweepRemeasure";
 import SeoSparkline from "./SeoSparkline";
 
@@ -54,11 +54,12 @@ export default async function SeoAnalyticsPage() {
     );
   }
 
-  const [trends, movers, watchlist, sweep] = await Promise.all([
+  const [trends, movers, watchlist, sweep, cwvClasses] = await Promise.all([
     getPerLocaleTrend(90),
     getWeekOverWeekMovers(),
     getCtrWatchlist(),
     computeTitleSweepComparison(),
+    getCwvFailingByClass(),
   ]);
   const gscUrl = gscConsoleUrl();
 
@@ -161,6 +162,31 @@ export default async function SeoAnalyticsPage() {
               </tbody>
             </table>
           </div>
+        )}
+      </Card>
+
+      <Card className="mb-6">
+        <div className="flex items-baseline justify-between mb-3">
+          <h2 className="text-sm font-semibold">Core Web Vitals</h2>
+          <span className="text-xs text-[#6B7280]">LCP &gt;3.5s, CLS &gt;0.15, or INP &gt;350ms, sustained 3 consecutive nightly checks</span>
+        </div>
+        {cwvClasses.length === 0 ? (
+          <p className="text-sm text-[#6B7280]">No template class currently has sustained Core Web Vitals failures.</p>
+        ) : (
+          <ul className="divide-y divide-[#F3F4F6]">
+            {cwvClasses.map((c) => (
+              <li key={c.templateClass} className="py-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-[#111827] capitalize">{c.label}</span>
+                  <span className="text-[#B3261E] text-xs font-semibold uppercase tracking-wide">{c.failingMetrics.join(", ")}</span>
+                </div>
+                <p className="text-xs text-[#6B7280] mt-0.5">
+                  {c.failingUrls.length} page{c.failingUrls.length === 1 ? "" : "s"} affected — e.g.{" "}
+                  <a href={`${SITE_URL}${c.failingUrls[0]}`} target="_blank" rel="noreferrer" className="hover:text-[#1B4B43] hover:underline">{c.failingUrls[0]}</a>
+                </p>
+              </li>
+            ))}
+          </ul>
         )}
       </Card>
 

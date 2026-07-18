@@ -938,6 +938,55 @@ model SearchMetric {
   @@map("search_metrics")
 }
 
+// Core Web Vitals — synced nightly by /api/cron/psi-sync (02:00, before the
+// GSC sync window) from the free PageSpeed Insights API (mobile strategy).
+// `source` records whether this row is real CrUX field data (28-day rolling
+// user data, preferred) or a Lighthouse lab-run fallback (used when a URL
+// doesn't have enough real-user traffic for CrUX to report on it — common for
+// low-traffic Development pages). `url` is the full path queried (matches
+// SearchMetric's `page` convention: locale-prefixed for de/pl/ru, unprefixed
+// for en). Retention: 12 months, purged by the same cron.
+model CwvMetric {
+  id        String   @id @default(uuid())
+  date      DateTime @db.Date
+  url       String
+  lcp       Float // ms
+  cls       Float
+  inp       Float? // ms — not always available (older Lighthouse versions, or CrUX not yet reporting it)
+  perfScore Int // Lighthouse performance score, 0-100
+  source    String // "field" | "lab"
+  createdAt DateTime @default(now())
+
+  @@unique([date, url])
+  @@index([url, date])
+  @@map("cwv_metrics")
+}
+
+// One row per weekly SEO Advisor run (src/lib/seoAdvisor/run.ts, cron Sundays
+// 06:00 UTC). `suggestions` is the full array from the LLM's analysis, each
+// entry carrying its own lifecycle state — no separate suggestions table, per
+// spec: { id, fingerprint, title, rationale, action, impactEstimate, effort,
+// category, status: "open"|"approved"|"dismissed", dismissCount, preparedPrompt? }.
+// `fingerprint` (sha256 of category+normalized title) is computed AFTER the
+// LLM responds, not asked of the model — an LLM can't be trusted to emit a
+// stable id for "the same suggestion" across separate weekly runs, but a
+// deterministic hash of its own (category, title) can be compared across runs
+// for the 90-day dismiss-twice suppression rule (see seoAdvisor/suppression.ts).
+// `telegramSentAt` makes the Monday-digest piggyback (see action-digest cron)
+// idempotent — a run's summary is sent exactly once, whichever daily digest
+// fires next after this run completes.
+model AdvisorRun {
+  id             String    @id @default(uuid())
+  runDate        DateTime  @default(now())
+  payloadHash    String
+  suggestions    Json
+  telegramSentAt DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([runDate])
+  @@map("advisor_runs")
+}
+
 // Global, admin-editable AI prompt templates — shared across ALL projects (one
 // row per feature), editable from within any project's own page via "Adjust
 // prompt" rather than a separate settings screen. `key` namespaces features the
