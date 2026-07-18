@@ -714,7 +714,7 @@ export type LatestDevelopmentCard = {
 // excluding fully sold-out ones, newest first. Development rows are language-
 // agnostic (one slug for all locales — see developmentSeo.ts), so `lang` isn't a
 // filter here, only unused by callers building the localized href.
-export async function getLatestDevelopmentsByLang(limit = 6): Promise<LatestDevelopmentCard[]> {
+export async function getLatestDevelopmentsByLang(limit = 5): Promise<LatestDevelopmentCard[]> {
   const devs = await prisma.development.findMany({
     where: { publishStatus: "published", supersedesProjects: { none: { status: "PUBLISHED" } } },
     include: { override: true, units: { select: { status: true, price: true } } },

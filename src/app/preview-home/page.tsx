@@ -33,7 +33,7 @@ export default async function PreviewHome() {
       <main>
         <Hero heroBlock={homePage.heroBlock} />
         <Brochure brochure={homePage.brochureBlock} />
-        <About aboutBlock={homePage.aboutBlock} lang="en" />
+        <About aboutBlock={homePage.aboutBlock} />
         <FeaturedProjects block={homePage.featuredProjectsBlock} lang="en" />
         {homePage.citiesBlock && <Cities block={homePage.citiesBlock} />}
         {homePage.descriptionBlock && <Description block={homePage.descriptionBlock} />}

@@ -137,7 +137,7 @@ export default async function Home({ params }: Props) {
             ) : undefined
           }
         />
-        <About aboutBlock={homePage.aboutBlock} lang={lang} />
+        <About aboutBlock={homePage.aboutBlock} />
         <FeaturedProjects block={homePage.featuredProjectsBlock} lang={lang} />
         {homePage.citiesBlock && <Cities block={homePage.citiesBlock} lang={lang} />}
         {homePage.descriptionBlock && <Description block={homePage.descriptionBlock} />}

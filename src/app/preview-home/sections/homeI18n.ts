@@ -9,7 +9,6 @@ export type HomeStrings = {
   getConsultation: string;
   viewAllProjects: string;
   citiesLead: string;
-  aboutMoreLabel: string; // "Learn more about us" — links the trimmed homepage About section to /about-us
   newLead2: string; newAccent: string; newLead: string; showAllProjects: string; // Latest Developments
   priceFrom: string; priceOnRequest: string; onRequest: string; sold: string;
   contentTitle: string; contentLead: string;
@@ -23,7 +22,6 @@ const EN: HomeStrings = {
   viewAllProjects: "View All Projects",
   citiesLead:
     "From lively marinas to quiet old towns, each Cypriot city offers a different way to live by the sea. Whether you are drawn to the cosmopolitan energy of Limassol, the historic charm of Paphos, or the relaxed coastal pace of Larnaca — Cyprus rewards every lifestyle with world-class infrastructure, a stable legal framework, and over 340 days of sunshine each year.",
-  aboutMoreLabel: "Learn more about us",
   newLead2: "Latest ", newAccent: "Developments",
   newLead: "The newest additions to our real estate collection.",
   showAllProjects: "Show all projects",
@@ -43,7 +41,6 @@ export const HOME_STRINGS: Record<string, HomeStrings> = {
     viewAllProjects: "Alle Projekte ansehen",
     citiesLead:
       "Von lebhaften Yachthäfen bis zu ruhigen Altstädten – jede zypriotische Stadt bietet eine eigene Art, am Meer zu leben. Ob die kosmopolitische Energie von Limassol, der historische Charme von Paphos oder das entspannte Küstentempo von Larnaca – Zypern belohnt jeden Lebensstil mit erstklassiger Infrastruktur, einem stabilen Rechtsrahmen und über 340 Sonnentagen im Jahr.",
-    aboutMoreLabel: "Mehr über uns erfahren",
     newLead2: "Neueste ", newAccent: "Projekte",
     newLead: "Die neuesten Ergänzungen unserer Immobilienkollektion.",
     showAllProjects: "Alle Projekte anzeigen",
@@ -60,7 +57,6 @@ export const HOME_STRINGS: Record<string, HomeStrings> = {
     viewAllProjects: "Zobacz wszystkie projekty",
     citiesLead:
       "Od tętniących życiem marin po ciche stare miasta – każde cypryjskie miasto oferuje inny sposób na życie nad morzem. Niezależnie od tego, czy pociąga Cię kosmopolityczna energia Limassol, historyczny urok Pafos, czy spokojne nadmorskie tempo Larnaki – Cypr nagradza każdy styl życia światowej klasy infrastrukturą, stabilnym systemem prawnym i ponad 340 słonecznymi dniami w roku.",
-    aboutMoreLabel: "Dowiedz się więcej o nas",
     newLead2: "Najnowsze ", newAccent: "inwestycje",
     newLead: "Najnowsze pozycje w naszej kolekcji nieruchomości.",
     showAllProjects: "Pokaż wszystkie projekty",
@@ -77,7 +73,6 @@ export const HOME_STRINGS: Record<string, HomeStrings> = {
     viewAllProjects: "Все проекты",
     citiesLead:
       "От оживлённых марин до тихих старых городов — каждый город Кипра предлагает свой способ жить у моря. Космополитичная энергия Лимассола, историческое очарование Пафоса или спокойный прибрежный ритм Ларнаки — Кипр вознаграждает любой образ жизни первоклассной инфраструктурой, стабильной правовой системой и более чем 340 солнечными днями в году.",
-    aboutMoreLabel: "Узнать больше о нас",
     newLead2: "Новейшие ", newAccent: "проекты",
     newLead: "Самые свежие пополнения нашей коллекции недвижимости.",
     showAllProjects: "Показать все проекты",

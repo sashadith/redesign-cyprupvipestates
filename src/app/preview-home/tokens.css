@@ -479,11 +479,6 @@ img { max-width: 100%; display: block; }
 }
 @media (min-width: 768px) { .about__bullets { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 1024px) { .about__bullets { grid-template-columns: repeat(6, 1fr); } }
-/* Trimmed homepage variant (3 value props, single row at every size) — a scoped
-   modifier so it never affects the full /about-us grid or .howwork's own
-   6-column override, both of which keep the base rules above untouched. */
-.about__bullets.about__bullets--compact { grid-template-columns: repeat(3, 1fr); }
-.about__more { display: inline-block; margin-top: var(--s-6); }
 .about__bullet { display: flex; flex-direction: column; align-items: center; gap: 29px; text-align: center; } /* circle→label gap +80% */
 .about__medallion {
   width: 95px; height: 95px; border-radius: 999px; display: grid; place-items: center; flex: none;

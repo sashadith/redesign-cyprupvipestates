@@ -6,7 +6,7 @@ import { homeStrings } from "./homeI18n";
 /* Latest Developments — light "gallery" section: a deep-green title tile sits
    in the grid alongside the most recently published Developments (reusing the
    Featured .pcard look). Sourced from the Development system (getLatestDevelopmentsByLang),
-   excluding sold-out and capped at 6 — replaces the old static-Project "New
+   excluding sold-out and capped at 5 — replaces the old static-Project "New
    Listings" block, which never surfaced new-system projects or sold-out state. */
 
 const fmtPrice = (p?: number) =>
@@ -19,7 +19,7 @@ const ArrowRight = () => (
 );
 
 export default async function LatestDevelopments({ lang = "en" }: { lang?: string }) {
-  const developments = await getLatestDevelopmentsByLang(6);
+  const developments = await getLatestDevelopmentsByLang(5);
   const t = homeStrings(lang);
   const px = localePrefix(lang);
 
