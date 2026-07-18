@@ -12,6 +12,8 @@ import { syncDeveloperDrive, type DriveSyncResult } from "@/lib/driveAvailabilit
 import { uniqueDevelopmentSlug } from "@/lib/developmentSeo";
 import { generateSeoMeta, getSeoPromptTemplate, saveSeoPromptTemplate, type SeoMetaResult } from "@/lib/ai/seoMeta";
 import { getDbProject } from "@/lib/developmentRender";
+import { pingIndexNow, absUrl } from "@/lib/indexnow";
+import { localizedHref } from "@/lib/locale";
 
 const asArr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
 
@@ -416,6 +418,14 @@ export async function saveOverride(formData: FormData) {
   }
   revalidatePath(`/admin/developments/${id}`);
   revalidatePath("/admin/developments");
+
+  if (seo) {
+    const dev = await prisma.development.findUnique({ where: { id }, select: { publishStatus: true, slug: true } });
+    if (dev?.publishStatus === "published" && dev.slug) {
+      const urls = ["en", "de", "pl", "ru"].map((l) => absUrl(localizedHref(l, ["projects", dev.slug!])));
+      void pingIndexNow("development-meta-edited", urls);
+    }
+  }
 }
 
 // Bulk-save the unit list from the editor. All units become manually managed
@@ -492,10 +502,17 @@ export async function setStatus(formData: FormData) {
       if (!d.slug) slug = await uniqueDevelopmentSlug(d.override?.alias || d.publicName, d.id);
     }
   }
-  await prisma.development.update({
+  const updated = await prisma.development.update({
     where: { id },
     data: { publishStatus: status, publishedAt: status === "published" ? new Date() : null, ...(slug ? { slug } : {}) },
   });
   revalidatePath(`/admin/developments/${id}`);
   revalidatePath("/admin/developments");
+
+  // Fire-and-forget — never awaited, never blocks this action's response.
+  if ((status === "published" || status === "archived") && updated.slug) {
+    const urls = ["en", "de", "pl", "ru"].map((l) => absUrl(localizedHref(l, ["projects", updated.slug!])));
+    urls.push(absUrl("/projects"));
+    void pingIndexNow(`development-${status}`, urls);
+  }
 }

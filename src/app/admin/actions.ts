@@ -12,6 +12,7 @@ import { htmlToPortableText } from "@/lib/portableText/htmlToPt.mjs";
 import { isHtmlMarker } from "@/lib/portableText/richText";
 import { zonedInputToUtc } from "@/lib/tz";
 import { localizedHref } from "@/lib/locale";
+import { pingIndexNow, absUrl } from "@/lib/indexnow";
 import { deepSetString } from "@/lib/homepageFields";
 
 // Convert every `{__html}` rich-text marker (produced by the block editor) into
@@ -435,10 +436,12 @@ export async function deactivateProjectWithRedirect(id: string, redirectTarget: 
   const devId = rows.find((r) => r.id === id)?.supersededByDevelopmentId ?? null;
   const dev = devId ? await prisma.development.findUnique({ where: { id: devId }, select: { slug: true } }) : null;
 
+  const targets: string[] = [];
   const ops = rows.flatMap((row) => {
     const target = row.id === id
       ? (redirectTarget ?? "").trim()
       : (dev?.slug ? localizedHref(row.language, ["projects", dev.slug]) : "");
+    if (target) targets.push(target);
     return [
       prisma.project.update({ where: { id: row.id }, data: { status: "ARCHIVED" } }),
       target
@@ -453,12 +456,17 @@ export async function deactivateProjectWithRedirect(id: string, redirectTarget: 
     revalidateProjectPublic(row.language, row.slug);
   }
   revalidatePath("/admin/content/projects");
+
+  // Fire-and-forget — the redirect TARGET is what should be recrawled (the
+  // canonical page that now serves this traffic), not the deactivated page.
+  if (targets.length) void pingIndexNow("legacy-project-deactivated", targets.map(absUrl));
 }
 
 export async function updateBlogMeta(id: string, formData: FormData) {
   await requireSession();
   const status = String(formData.get("status") ?? "PUBLISHED");
   if (!CONTENT_STATUSES.includes(status)) throw new Error("Invalid status");
+  const before = await prisma.blog.findUnique({ where: { id }, select: { status: true } });
   // Editable publication date (Berlin wall-time → UTC). An explicit value wins;
   // otherwise keep the auto-set-on-first-publish behaviour.
   const explicitPublishedAt = zonedInputToUtc(String(formData.get("publishedAt") ?? ""));
@@ -486,6 +494,14 @@ export async function updateBlogMeta(id: string, formData: FormData) {
   revalidatePath(`/admin/content/blog/${id}`);
   revalidatePath("/admin/content/blog");
   revalidateBlogPublic(row.language, row.slug);
+
+  // Fire-and-forget. Same action covers both "just published" and "editing an
+  // already-published post's title/meta" — label the event by which actually
+  // happened so CronRunLog stays a useful audit trail either way.
+  if (row.status === "PUBLISHED") {
+    const event = before?.status !== "PUBLISHED" ? "blog-published" : "blog-meta-edited";
+    void pingIndexNow(event, [absUrl(localizedHref(row.language, ["blog", row.slug]))]);
+  }
 }
 
 export async function updateLeadStatus(id: string, status: string, reason?: string) {
@@ -884,6 +900,8 @@ export async function updateSinglepageMeta(id: string, formData: FormData) {
   revalidatePath(`/admin/content/pages/${id}`);
   revalidatePath("/admin/content/pages");
   revalidateSinglepagePublic(row.language, row.slug);
+
+  if (row.status === "PUBLISHED") void pingIndexNow("page-meta-edited", [absUrl(localizedHref(row.language, [row.slug]))]);
 }
 
 // Rich body editing — TipTap HTML → Portable Text on save.
