@@ -23,13 +23,36 @@ const dateKey = (d: Date) => d.toISOString().slice(0, 10);
 // the schema — a known Prisma limitation for nullable members of a composite
 // unique index. A plain `where` filter DOES accept null, so upsert manually
 // (find, then create/update) instead of the `.upsert()` shorthand.
+//
+// find-then-create has a real TOCTOU race under concurrency (UPSERT_CONCURRENCY
+// batches run in parallel): hit in production during the first live 90-day
+// backfill (2026-07-18) — GSC's paginated query-level response apparently
+// contained/produced a duplicate (date,page,locale,query) key, so two
+// concurrent upserts both found nothing and both tried to create, one hit the
+// unique constraint (P2002) and the whole run aborted after 47k rows already
+// landed. Catch P2002 specifically and retry as an update against the row
+// the other concurrent write just created — correct regardless of whether the
+// race came from duplicate source data or (in principle) an overlapping
+// concurrent cron trigger.
 async function upsertOne(r: PageLevelRow | QueryLevelRow) {
   const query: string | null = "query" in r ? r.query : null;
   const date = new Date(r.date);
   const data = { clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position };
-  const existing = await prisma.searchMetric.findFirst({ where: { date, page: r.page, locale: r.locale, query }, select: { id: true } });
-  if (existing) await prisma.searchMetric.update({ where: { id: existing.id }, data });
-  else await prisma.searchMetric.create({ data: { date, page: r.page, locale: r.locale, query, ...data } });
+  const where = { date, page: r.page, locale: r.locale, query };
+  const existing = await prisma.searchMetric.findFirst({ where, select: { id: true } });
+  if (existing) {
+    await prisma.searchMetric.update({ where: { id: existing.id }, data });
+    return;
+  }
+  try {
+    await prisma.searchMetric.create({ data: { date, page: r.page, locale: r.locale, query, ...data } });
+  } catch (e: any) {
+    if (e?.code === "P2002") {
+      const raced = await prisma.searchMetric.findFirst({ where, select: { id: true } });
+      if (raced) { await prisma.searchMetric.update({ where: { id: raced.id }, data }); return; }
+    }
+    throw e;
+  }
 }
 
 async function upsertInBatches(rows: (PageLevelRow | QueryLevelRow)[]) {
