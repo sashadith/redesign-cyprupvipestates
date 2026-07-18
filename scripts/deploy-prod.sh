@@ -36,7 +36,9 @@ HOST="${CVP_PROD_HOST:-root@72.60.89.239}"
 DIR="${CVP_PROD_DIR:-/var/www/cyprusvipestates}"   # TODO: confirm the LIVE app dir
 APP="${CVP_PROD_APP:-cyprusvipestates}"            # TODO: confirm the LIVE pm2 app name
 REF="${CVP_PROD_REF:-main}"                         # committed ref to deploy
-RUN_INSTALL="${CVP_RUN_INSTALL:-0}"                 # 1 = npm ci (only if deps changed)
+RUN_INSTALL="${CVP_RUN_INSTALL:-0}"                 # 1 = npm ci --legacy-peer-deps (only if deps changed;
+                                                     # flag required repo-wide, see README — legacy Sanity
+                                                     # peer conflicts. First hit 2026-07-18 deploying googleapis.)
 RUN_MIGRATE="${CVP_RUN_MIGRATE:-0}"                 # 1 = npx prisma migrate deploy
 HEALTH_URL="${CVP_HEALTH_URL:-https://cyprusvipestates.com/projects}"
 # ----------------------------------------------------------------------------
@@ -185,7 +187,7 @@ trap 'echo \$? > "$DIR/.deploy-status"' EXIT
 chown root:root "$DIR"
 chmod 755 "$DIR"
 cd "$DIR"
-$([ "$RUN_INSTALL" = 1 ] && echo 'npm ci' || echo 'echo "· skip npm ci (reusing existing node_modules)"')
+$([ "$RUN_INSTALL" = 1 ] && echo 'npm ci --legacy-peer-deps' || echo 'echo "· skip npm ci (reusing existing node_modules)"')
 $([ "$RUN_MIGRATE" = 1 ] && echo 'npx prisma migrate deploy' || echo 'echo "· skip prisma migrate"')
 
 # Always regenerate the Prisma Client, unconditionally — schema.prisma is
