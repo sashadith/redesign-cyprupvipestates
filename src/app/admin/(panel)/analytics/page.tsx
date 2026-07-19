@@ -1,8 +1,34 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
-const DAYS = 30;
+type RangeKey = "today" | "7d" | "14d" | "30d" | "90d" | "1y" | "all";
+
+const RANGE_OPTIONS: { key: RangeKey; label: string }[] = [
+  { key: "today", label: "Today" },
+  { key: "7d", label: "7 days" },
+  { key: "14d", label: "14 days" },
+  { key: "30d", label: "30 days" },
+  { key: "90d", label: "90 days" },
+  { key: "1y", label: "1 year" },
+  { key: "all", label: "All time" },
+];
+const RANGE_DAYS: Record<string, number> = { "7d": 7, "14d": 14, "30d": 30, "90d": 90, "1y": 365 };
+
+function parseRange(v: string | undefined): RangeKey {
+  return RANGE_OPTIONS.some((o) => o.key === v) ? (v as RangeKey) : "30d";
+}
+
+function rangeCutoff(range: RangeKey): Date | null {
+  if (range === "all") return null;
+  if (range === "today") {
+    const d = new Date();
+    d.setUTCHours(0, 0, 0, 0);
+    return d;
+  }
+  return new Date(Date.now() - RANGE_DAYS[range] * 86_400_000);
+}
 
 type Row = {
   path: string;
@@ -16,10 +42,13 @@ function dayKey(d: Date) {
   return d.toISOString().slice(0, 10);
 }
 
-export default async function AnalyticsPage() {
-  const cutoff = new Date(Date.now() - DAYS * 86_400_000);
+export default async function AnalyticsPage({ searchParams }: { searchParams: { range?: string } }) {
+  const range = parseRange(searchParams.range);
+  const rangeLabel = RANGE_OPTIONS.find((o) => o.key === range)!.label;
+  const cutoff = rangeCutoff(range);
+
   const rows = (await prisma.pageView.findMany({
-    where: { createdAt: { gte: cutoff } },
+    where: cutoff ? { createdAt: { gte: cutoff } } : {},
     select: { path: true, locale: true, referrer: true, visitorHash: true, createdAt: true },
   })) as Row[];
 
@@ -27,22 +56,42 @@ export default async function AnalyticsPage() {
   const totalViews = rows.length;
   const totalUniques = uniq(rows);
 
-  const today = dayKey(new Date());
-  const todayRows = rows.filter((r) => dayKey(r.createdAt) === today);
+  const todayKey = dayKey(new Date());
+  const todayRows = rows.filter((r) => dayKey(r.createdAt) === todayKey);
 
-  // Per-day series for the last 30 days
-  const days: string[] = [];
-  for (let i = DAYS - 1; i >= 0; i--) days.push(dayKey(new Date(Date.now() - i * 86_400_000)));
-  const bucket: Record<string, { views: number; uni: Set<string> }> = {};
-  for (const d of days) bucket[d] = { views: 0, uni: new Set() };
-  for (const r of rows) {
-    const k = dayKey(r.createdAt);
-    if (bucket[k]) {
-      bucket[k].views++;
-      if (r.visitorHash) bucket[k].uni.add(r.visitorHash);
+  // Per-bucket series: hourly for "today", daily otherwise.
+  let series: { day: string; views: number; uniques: number }[];
+  if (range === "today") {
+    const nowHour = new Date().getUTCHours();
+    const hours = Array.from({ length: nowHour + 1 }, (_, i) => i);
+    const bucket: Record<number, { views: number; uni: Set<string> }> = {};
+    for (const h of hours) bucket[h] = { views: 0, uni: new Set() };
+    for (const r of rows) {
+      const h = r.createdAt.getUTCHours();
+      if (bucket[h]) {
+        bucket[h].views++;
+        if (r.visitorHash) bucket[h].uni.add(r.visitorHash);
+      }
     }
+    series = hours.map((h) => ({ day: `${String(h).padStart(2, "0")}:00`, views: bucket[h].views, uniques: bucket[h].uni.size }));
+  } else {
+    const startDay = range === "all"
+      ? rows.reduce((min, r) => (r.createdAt < min ? r.createdAt : min), rows[0]?.createdAt ?? new Date())
+      : cutoff!;
+    const dayCount = Math.max(1, Math.ceil((Date.now() - startDay.getTime()) / 86_400_000) + 1);
+    const days: string[] = [];
+    for (let i = dayCount - 1; i >= 0; i--) days.push(dayKey(new Date(Date.now() - i * 86_400_000)));
+    const bucket: Record<string, { views: number; uni: Set<string> }> = {};
+    for (const d of days) bucket[d] = { views: 0, uni: new Set() };
+    for (const r of rows) {
+      const k = dayKey(r.createdAt);
+      if (bucket[k]) {
+        bucket[k].views++;
+        if (r.visitorHash) bucket[k].uni.add(r.visitorHash);
+      }
+    }
+    series = days.map((d) => ({ day: d, views: bucket[d].views, uniques: bucket[d].uni.size }));
   }
-  const series = days.map((d) => ({ day: d, views: bucket[d].views, uniques: bucket[d].uni.size }));
   const maxViews = Math.max(1, ...series.map((s) => s.views));
 
   const countBy = (key: "path" | "referrer" | "locale") => {
@@ -86,20 +135,34 @@ export default async function AnalyticsPage() {
 
   return (
     <div>
-      <div className="flex items-baseline justify-between mb-6">
+      <div className="flex items-baseline justify-between mb-4">
         <h1 className="text-2xl font-semibold">Analytics</h1>
-        <span className="text-sm text-[#6B7280]">Last {DAYS} days · first-party, cookieless</span>
+        <span className="text-sm text-[#6B7280]">First-party, cookieless</span>
+      </div>
+
+      <div className="flex flex-wrap gap-1 mb-6 bg-white border border-[#E5E7EB] rounded-lg p-1 w-fit">
+        {RANGE_OPTIONS.map((o) => (
+          <Link
+            key={o.key}
+            href={o.key === "30d" ? "/admin/analytics" : `/admin/analytics?range=${o.key}`}
+            className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
+              o.key === range ? "bg-[#1B4B43] text-white font-medium" : "text-[#374151] hover:bg-[#F3F4F6]"
+            }`}
+          >
+            {o.label}
+          </Link>
+        ))}
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Stat label="Pageviews (30d)" value={totalViews} />
-        <Stat label="Unique visitors (30d)" value={totalUniques} />
+        <Stat label={`Pageviews (${rangeLabel})`} value={totalViews} />
+        <Stat label={`Unique visitors (${rangeLabel})`} value={totalUniques} />
         <Stat label="Pageviews today" value={todayRows.length} />
         <Stat label="Unique today" value={uniq(todayRows)} />
       </div>
 
       <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 mb-6">
-        <h2 className="text-sm font-semibold mb-4">Pageviews per day</h2>
+        <h2 className="text-sm font-semibold mb-4">{range === "today" ? "Pageviews per hour" : "Pageviews per day"}</h2>
         {totalViews === 0 ? (
           <p className="text-sm text-[#6B7280]">No pageviews recorded yet. Data appears as visitors browse the public site.</p>
         ) : (
