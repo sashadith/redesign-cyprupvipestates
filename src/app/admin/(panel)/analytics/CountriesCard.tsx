@@ -3,12 +3,13 @@ import { useState } from "react";
 
 const VISIBLE_CAP = 6;
 
+export type CountryRow = { code: string; label: string; count: number };
+
 export default function CountriesCard({
-  rows, total, labelFor, note,
+  rows, total, note,
 }: {
-  rows: [string, number][];
+  rows: CountryRow[];
   total: number;
-  labelFor: (key: string) => string;
   note?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -22,12 +23,12 @@ export default function CountriesCard({
         <p className="text-sm text-[#6B7280]">No data yet.</p>
       ) : (
         <ul className="space-y-2.5">
-          {visible.map(([k, n]) => {
+          {visible.map(({ code, label, count: n }) => {
             const pct = total > 0 ? Math.round((n / total) * 100) : 0;
             return (
-              <li key={k}>
+              <li key={code}>
                 <div className="flex justify-between gap-3 text-sm mb-1">
-                  <span className="text-[#374151]">{labelFor(k)}</span>
+                  <span className="text-[#374151]">{label}</span>
                   <span className="text-[#6B7280] tabular-nums shrink-0">{n.toLocaleString("en-GB")} · {pct}%</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-[#F3F4F6] overflow-hidden">

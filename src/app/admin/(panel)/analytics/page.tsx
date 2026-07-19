@@ -2,7 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { detectDeviceType } from "@/lib/deviceType";
 import { countryName } from "@/lib/geoCountry";
-import CountriesCard from "./CountriesCard";
+import CountriesCard, { type CountryRow } from "./CountriesCard";
 
 export const dynamic = "force-dynamic";
 
@@ -132,7 +132,13 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
     deviceCounts.set(d, (deviceCounts.get(d) ?? 0) + 1);
   }
   const byDevice = Array.from(deviceCounts.entries()).sort((a, b) => b[1] - a[1]);
-  const topCountries = countBy("country").slice(0, 16);
+  // Resolved to plain data (code/label/count) here, server-side — a function
+  // like countryName can't cross into the client CountriesCard as a prop
+  // (React Server Components can only pass serializable values to Client
+  // Components; this crashed the whole page on every range before).
+  const topCountries: CountryRow[] = countBy("country")
+    .slice(0, 16)
+    .map(([code, count]) => ({ code, label: countryName(code), count }));
   const knownCountryViews = rows.filter((r) => r.country).length;
   const countryNote = earliestCountryRow
     ? `Country data collected since ${earliestCountryRow.createdAt.toISOString().slice(0, 10)}.`
@@ -256,7 +262,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
       </div>
 
       <div className="max-w-md">
-        <CountriesCard rows={topCountries} total={knownCountryViews} labelFor={countryName} note={countryNote} />
+        <CountriesCard rows={topCountries} total={knownCountryViews} note={countryNote} />
       </div>
     </div>
   );
