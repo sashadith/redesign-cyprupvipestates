@@ -11,6 +11,8 @@ export default async function UsersPage() {
   const session = await auth();
   if ((session?.user as any)?.role !== "ADMIN") redirect("/admin");
   const users = await prisma.user.findMany({ orderBy: { createdAt: "asc" } });
+  const viewerId = (session?.user as any)?.id;
+  const viewerIsOwner = users.find((u) => u.id === viewerId)?.isOwner ?? false;
 
   return (
     <div className="space-y-6">
@@ -28,26 +30,42 @@ export default async function UsersPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E5E7EB]">
-            {users.map((u) => (
-              <tr key={u.id}>
-                <td className="px-4 py-2.5">{u.name}</td>
-                <td className="px-4 py-2.5 text-[#6B7280]">{u.email}</td>
-                <td className="px-4 py-2.5">{u.role}</td>
-                <td className="px-4 py-2.5">{u.isActive ? "✓" : "—"}</td>
-                <td className="px-4 py-2.5 text-[#6B7280]">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString("en-GB") : "—"}</td>
-                <td className="px-4 py-2.5 text-right">
-                  <div className="flex items-center justify-end gap-3">
-                    <Link href={`/admin/users/${u.id}/edit`} className="text-xs text-[#1B4B43] hover:underline">Edit</Link>
-                    <UserRowActions
-                      userId={u.id}
-                      email={u.email}
-                      isActive={u.isActive}
-                      isSelf={(session?.user as any)?.id === u.id}
-                    />
-                  </div>
-                </td>
-              </tr>
-            ))}
+            {users.map((u) => {
+              const controlsHidden = u.isOwner && !viewerIsOwner;
+              return (
+                <tr key={u.id}>
+                  <td className="px-4 py-2.5">
+                    <span className="flex items-center gap-2">
+                      {u.name}
+                      {u.isOwner && (
+                        <span className="rounded-full bg-[#C29A5E]/15 text-[#8E6B3D] text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5">
+                          Owner
+                        </span>
+                      )}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5 text-[#6B7280]">{u.email}</td>
+                  <td className="px-4 py-2.5">{u.role}</td>
+                  <td className="px-4 py-2.5">{u.isActive ? "✓" : "—"}</td>
+                  <td className="px-4 py-2.5 text-[#6B7280]">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString("en-GB") : "—"}</td>
+                  <td className="px-4 py-2.5 text-right">
+                    {controlsHidden ? (
+                      <span className="text-xs text-[#9CA3AF]">Protected</span>
+                    ) : (
+                      <div className="flex items-center justify-end gap-3">
+                        <Link href={`/admin/users/${u.id}/edit`} className="text-xs text-[#1B4B43] hover:underline">Edit</Link>
+                        <UserRowActions
+                          userId={u.id}
+                          email={u.email}
+                          isActive={u.isActive}
+                          isSelf={viewerId === u.id}
+                        />
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

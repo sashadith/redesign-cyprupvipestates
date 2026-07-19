@@ -10,6 +10,17 @@ export default async function EditUserPage({ params }: { params: { id: string } 
   if ((session?.user as any)?.role !== "ADMIN") redirect("/admin");
   const user = await prisma.user.findUnique({ where: { id: params.id } });
   if (!user) notFound();
+  const viewerId = (session?.user as any)?.id;
+  if (user.isOwner && viewerId !== user.id) {
+    return (
+      <div className="max-w-lg">
+        <h1 className="text-2xl font-semibold mb-4">Edit user</h1>
+        <p className="bg-white rounded-lg border border-[#E5E7EB] p-6 text-sm text-[#6B7280]">
+          This is the protected owner account — it can only be edited by the owner themselves, via My account.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-lg">

@@ -134,6 +134,28 @@ async function requireAdmin() {
   return session;
 }
 
+// Protected super-admin account guard. The owner (isOwner=true, DB-level flag,
+// no UI to set it) can never be edited, deactivated, or deleted by anyone but
+// themselves — and even the owner can't deactivate/delete their own account
+// (allowSelf: false for those paths). Every blocked attempt is audit-logged.
+async function assertOwnerUnprotected(session: any, targetId: string, action: string, opts?: { allowSelf?: boolean }) {
+  const target = await prisma.user.findUnique({ where: { id: targetId }, select: { isOwner: true } });
+  if (!target) return target;
+  const actor = session.user as any;
+  const isSelf = actor.id === targetId;
+  if (target.isOwner && !(opts?.allowSelf && isSelf)) {
+    await prisma.adminAuditLog.create({
+      data: {
+        actorId: actor.id, actorName: actor.name, actorEmail: actor.email,
+        action: "owner_mutation_blocked", targetType: "User", targetId,
+        detail: { attemptedAction: action },
+      },
+    });
+    throw new Error("The owner account cannot be modified.");
+  }
+  return target;
+}
+
 // ── Account: change own password ──
 export async function changePassword(_prev: any, formData: FormData) {
   const session = await requireSession();
@@ -173,6 +195,7 @@ export async function createUser(_prev: any, formData: FormData) {
 export async function toggleUserActive(id: string) {
   const session = await requireAdmin();
   if ((session.user as any).id === id) throw new Error("You cannot deactivate yourself.");
+  await assertOwnerUnprotected(session, id, "deactivate");
   const u = await prisma.user.findUnique({ where: { id } });
   if (!u) throw new Error("Not found");
   await prisma.user.update({ where: { id }, data: { isActive: !u.isActive } });
@@ -184,6 +207,7 @@ export async function toggleUserActive(id: string) {
 export async function deleteUser(id: string) {
   const session = await requireAdmin();
   if ((session.user as any).id === id) throw new Error("You cannot remove your own account.");
+  await assertOwnerUnprotected(session, id, "delete");
   const u = await prisma.user.findUnique({ where: { id } });
   if (!u) throw new Error("Not found");
   if (u.role === "ADMIN") {
@@ -200,12 +224,24 @@ export async function deleteUser(id: string) {
 
 // Admin sets/resets another user's password directly (no email round-trip).
 export async function adminSetPassword(id: string, _prev: any, formData: FormData): Promise<{ ok?: string; error?: string }> {
-  await requireAdmin();
+  const session = await requireAdmin();
   const next = String(formData.get("password") ?? "");
   if (next.length < 12) return { error: "Password must be at least 12 characters." };
+  try {
+    await assertOwnerUnprotected(session, id, "password_change", { allowSelf: true });
+  } catch (e: any) {
+    return { error: e.message };
+  }
   const u = await prisma.user.findUnique({ where: { id } });
   if (!u) return { error: "User not found." };
   await prisma.user.update({ where: { id }, data: { password: await bcrypt.hash(next, 10) } });
+  await prisma.adminAuditLog.create({
+    data: {
+      actorId: (session.user as any).id, actorName: (session.user as any).name, actorEmail: (session.user as any).email,
+      action: "password_changed", targetType: "User", targetId: id,
+      detail: { self: (session.user as any).id === id, targetEmail: u.email },
+    },
+  });
   revalidatePath("/admin/users");
   return { ok: `Password updated for ${u.email}.` };
 }
@@ -232,6 +268,11 @@ export async function updateUserAction(id: string, _prev: any, formData: FormDat
 
   const existing = await prisma.user.findUnique({ where: { id } });
   if (!existing) return { error: "User not found." };
+  try {
+    await assertOwnerUnprotected(session, id, "edit", { allowSelf: true });
+  } catch (e: any) {
+    return { error: e.message };
+  }
   if (email !== existing.email && (await prisma.user.findUnique({ where: { email } }))) {
     return { error: "Email already in use." };
   }

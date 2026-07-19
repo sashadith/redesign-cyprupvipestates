@@ -512,6 +512,7 @@ model User {
   password      String
   name          String
   role          UserRole             @default(EDITOR)
+  isOwner       Boolean              @default(false) // protected super-admin account — no UI to set this; DB-level only, see actions.ts guards
   avatar        String?
   photoPng      String? // transparent-background cutout PNG, used free-floating (no frame) in the Client Presentation closing section — distinct from the small square `avatar`
   phone         String? // advisor's own contact number, shown large/clickable in the Client Presentation closing section (distinct from the company WhatsApp number used by the contact buttons there)
