@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "node:crypto";
 import { detectDeviceType } from "@/lib/deviceType";
+import { lookupCountry } from "@/lib/geoCountry";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,16 +43,21 @@ export async function POST(req: NextRequest) {
       if (referrer && host && referrer.includes(host)) referrer = null;
     }
 
+    const ip = clientIp(req);
     const salt = process.env.ANALYTICS_SALT ?? "cvp";
     const day = new Date().toISOString().slice(0, 10); // UTC day → hash rotates daily
     const visitorHash = crypto
       .createHash("sha256")
-      .update(`${salt}|${day}|${clientIp(req)}|${ua}`)
+      .update(`${salt}|${day}|${ip}|${ua}`)
       .digest("hex")
       .slice(0, 32);
 
     await prisma.pageView.create({
-      data: { path, locale, referrer, userAgent: ua.slice(0, 512), visitorHash, deviceType: detectDeviceType(ua) },
+      data: {
+        path, locale, referrer, userAgent: ua.slice(0, 512), visitorHash,
+        deviceType: detectDeviceType(ua),
+        country: lookupCountry(ip),
+      },
     });
     return new NextResponse(null, { status: 204 });
   } catch {

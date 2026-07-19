@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { detectDeviceType } from "@/lib/deviceType";
+import { countryName } from "@/lib/geoCountry";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,7 @@ type Row = {
   visitorHash: string | null;
   userAgent: string | null;
   deviceType: string | null;
+  country: string | null;
   createdAt: Date;
 };
 
@@ -54,8 +56,16 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
 
   const rows = (await prisma.pageView.findMany({
     where: cutoff ? { createdAt: { gte: cutoff } } : {},
-    select: { path: true, locale: true, referrer: true, visitorHash: true, userAgent: true, deviceType: true, createdAt: true },
+    select: { path: true, locale: true, referrer: true, visitorHash: true, userAgent: true, deviceType: true, country: true, createdAt: true },
   })) as Row[];
+
+  // Country was only ever derived at track time (never backfillable — the IP
+  // itself was never stored), so note the coverage start for the card below.
+  const earliestCountryRow = await prisma.pageView.findFirst({
+    where: { country: { not: null } },
+    orderBy: { createdAt: "asc" },
+    select: { createdAt: true },
+  });
 
   const uniq = (rs: Row[]) => new Set(rs.map((r) => r.visitorHash).filter(Boolean)).size;
   const totalViews = rows.length;
@@ -99,7 +109,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
   }
   const maxViews = Math.max(1, ...series.map((s) => s.views));
 
-  const countBy = (key: "path" | "referrer" | "locale") => {
+  const countBy = (key: "path" | "referrer" | "locale" | "country") => {
     const m = new Map<string, number>();
     for (const r of rows) {
       const v = r[key];
@@ -121,6 +131,11 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
     deviceCounts.set(d, (deviceCounts.get(d) ?? 0) + 1);
   }
   const byDevice = Array.from(deviceCounts.entries()).sort((a, b) => b[1] - a[1]);
+  const topCountries = countBy("country").slice(0, 10);
+  const knownCountryViews = rows.filter((r) => r.country).length;
+  const countryNote = earliestCountryRow
+    ? `Country data collected since ${earliestCountryRow.createdAt.toISOString().slice(0, 10)}.`
+    : "Country data not yet available.";
 
   const Stat = ({ label, value }: { label: string; value: number }) => (
     <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
@@ -235,9 +250,19 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
         <ListCard title="Top referrers" rows={topReferrers} label="referrer → views" />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-2 gap-6 mb-6">
         <ListCard title="By language" rows={byLocale} label="locale → views" />
         <BarListCard title="By device" rows={byDevice} total={totalViews} labelFor={(k) => DEVICE_LABEL[k] ?? k} />
+      </div>
+
+      <div className="max-w-md">
+        <BarListCard
+          title="Top countries"
+          rows={topCountries}
+          total={knownCountryViews}
+          labelFor={countryName}
+          note={countryNote}
+        />
       </div>
     </div>
   );
