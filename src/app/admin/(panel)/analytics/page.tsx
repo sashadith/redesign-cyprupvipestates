@@ -252,17 +252,16 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 mb-6 items-start">
-        <ListCard title="Top pages" rows={topPages} label="path → views" />
+      <div className="grid md:grid-cols-2 gap-6 items-start">
+        <div className="flex flex-col gap-6">
+          <ListCard title="Top pages" rows={topPages} label="path → views" />
+          <CountriesCard rows={topCountries} total={knownCountryViews} note={countryNote} />
+        </div>
         <div className="flex flex-col gap-6">
           <ListCard title="Top referrers" rows={topReferrers} label="referrer → views" />
           <ListCard title="By language" rows={byLocale} label="locale → views" />
           <BarListCard title="By device" rows={byDevice} total={totalViews} labelFor={(k) => DEVICE_LABEL[k] ?? k} />
         </div>
-      </div>
-
-      <div className="max-w-md">
-        <CountriesCard rows={topCountries} total={knownCountryViews} note={countryNote} />
       </div>
     </div>
   );
