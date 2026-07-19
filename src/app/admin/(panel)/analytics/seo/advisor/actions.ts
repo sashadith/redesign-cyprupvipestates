@@ -32,3 +32,12 @@ export async function approveSuggestion(runId: string, suggestionId: string) {
   const preparedPrompt = buildPreparedPrompt(found);
   await updateSuggestion(runId, suggestionId, { status: "approved", preparedPrompt, approvedAt: new Date().toISOString() });
 }
+
+// Approving/dismissing through the plain buttons above never asks for a
+// note — the only way one landed here before was a Claude Code session
+// running a one-off DB script. This lets anyone (agent or admin) attach one
+// afterwards through the UI itself, on any closed suggestion, so a note
+// never depends on someone remembering to script it in.
+export async function setImplementationNote(runId: string, suggestionId: string, note: string) {
+  await updateSuggestion(runId, suggestionId, { implementationNotes: note });
+}
