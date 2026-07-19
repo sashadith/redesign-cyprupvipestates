@@ -62,13 +62,13 @@ function CategoryGroup({ group }: { group: ActionCenterGroupVM }) {
   return (
     <div>
       <div className="px-5 py-3 flex items-center justify-between" style={{ background: "var(--champagne, #C29A5E)" }}>
-        <span className="flex items-center gap-2.5 text-sm font-semibold uppercase tracking-wide" style={{ color: "var(--sea-deep-text, #142E2D)" }}>
+        <span className="flex items-center gap-2.5 text-sm font-semibold uppercase tracking-wide" style={{ color: "var(--paper, #F5F1E8)" }}>
           <NavIcon k={CATEGORY_ICON[group.category]} size={17} />
           {CATEGORY_LABEL[group.category]}
         </span>
         <span
           className="rounded-full text-xs font-medium px-2.5 py-1 normal-case tracking-normal"
-          style={{ background: "var(--sea-deep-text, #142E2D)", color: "var(--ivory, #EFE9DB)" }}
+          style={{ background: "var(--sea-deep-text, #142E2D)", color: "var(--paper, #F5F1E8)" }}
         >
           {group.items.length}
         </span>
