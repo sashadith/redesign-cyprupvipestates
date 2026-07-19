@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import "../preview-home/tokens.css";
+import "../preview-projects/projects.css";
+import "../preview-project/project.css";
 import "./style.css";
 
 /* /style — the Cyprus VIP Estates design system / CI reference. Reuses the exact

@@ -45,6 +45,12 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: "50mb",
     },
+    // geoip-lite (src/lib/geoCountry.ts) locates its bundled .dat files via a
+    // path relative to its own package directory at runtime — webpack
+    // bundling this into the route chunk breaks that lookup (ENOENT at build
+    // time collecting /api/analytics/track). Keeping it external makes Next
+    // require() it from node_modules as-is instead.
+    serverComponentsExternalPackages: ["geoip-lite"],
   },
 };
 

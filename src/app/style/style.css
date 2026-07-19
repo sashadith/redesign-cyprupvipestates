@@ -85,3 +85,53 @@
   background: linear-gradient(90deg, var(--champagne), transparent); box-shadow: 0 0 10px var(--glow); }
 
 .sg__foot { margin-top: clamp(64px, 9vw, 120px); padding-top: var(--s-6); border-top: 1px solid var(--hairline); color: var(--text-faint); font-size: var(--text-sm); }
+
+/* =====================================================================
+   Section additions below — design elements shipped since this page was
+   first built. Sections 1–5 reuse the real production classes (imported
+   from projects.css / project.css in layout.tsx) so this reference can
+   never drift from what actually ships. Sections 6–7 (Action Center,
+   Suggestion Card) belong to the ADMIN PANEL, which is Tailwind-utility
+   based and uses its own, deliberately separate colour system — not this
+   page's --champagne/--scarcity-green tokens. Those two are reproduced
+   here as static visual references (hardcoded to the exact hex values
+   the admin components use), wrapped in a light panel since the admin
+   canvas itself is light, not dark like this page.
+   ===================================================================== */
+
+.sg__note { font-size: 0.82rem; color: var(--text-faint); margin: var(--s-4) 0 0; max-width: 62ch; }
+
+/* ---- scarcity banner demo backdrop (needs a card-like dark surface, not the page bg) ---- */
+.sg__demo--card { position: relative; background: var(--sea-deep); min-width: 220px; }
+
+/* ---- price typography sample ---- */
+.sg__price-row { display: flex; align-items: baseline; gap: 6px; }
+
+/* ---- Admin / Internal Tools reference panel (light canvas, matches admin UI) ---- */
+.sg__admin-panel { background: #F8F9FA; border-radius: var(--r-ui); padding: var(--s-6); margin-top: var(--s-5); border: 1px solid var(--hairline); }
+.sg__admin-label { font-family: ui-monospace, monospace; font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: #6B7280; margin: 0 0 var(--s-5); }
+
+.sg__ac-row { display: flex; align-items: center; gap: 10px; font-family: var(--font-body), sans-serif; }
+.sg__ac-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.sg__ac-dot--urgent { background: #DC2626; }
+.sg__ac-dot--action { background: #F59E0B; }
+.sg__ac-dot--info { background: #9CA3AF; }
+.sg__ac-label { font-size: 0.85rem; color: #111827; }
+
+.sg__sc-row {
+  display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 8px; border: 1px solid #E5E7EB;
+  padding: 10px 16px; font-family: var(--font-body), sans-serif;
+}
+.sg__sc-icon { font-weight: 600; font-size: 0.9rem; flex: none; }
+.sg__sc-icon--done { color: #1B4B43; }
+.sg__sc-icon--dismissed { color: #9CA3AF; }
+.sg__sc-title { font-weight: 500; color: #111827; font-size: 0.85rem; flex: none; }
+.sg__sc-outcome { color: #6B7280; font-size: 0.78rem; flex: 1; }
+
+.sg__sc-card { background: #fff; border-radius: 8px; border: 1px solid #E5E7EB; padding: 20px; font-family: var(--font-body), sans-serif; margin-top: var(--s-4); }
+.sg__sc-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 8px; }
+.sg__sc-card h3 { margin: 0; font-size: 0.85rem; font-weight: 600; color: #111827; }
+.sg__sc-chip { display: inline-block; font-size: 0.62rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px; }
+.sg__sc-chip--high { color: #1B4B43; background: #E2F0E8; }
+.sg__sc-chip--med { color: #8A6D1D; background: #FBF0D9; }
+.sg__sc-chip--low { color: #6B7280; background: #F3F4F6; }
