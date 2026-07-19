@@ -50,6 +50,56 @@ function SnoozeMenu({ itemId }: { itemId: string }) {
   );
 }
 
+const VISIBLE_CAP = 5;
+
+function CategoryGroup({ group }: { group: ActionCenterGroupVM }) {
+  const [expanded, setExpanded] = useState(false);
+  const items = expanded ? group.items : group.items.slice(0, VISIBLE_CAP);
+  const hidden = group.items.length - items.length;
+  return (
+    <div>
+      <div className="px-5 py-2 bg-[#FAFAFA] border-b border-[#E5E7EB] text-[11px] font-semibold uppercase tracking-wide text-[#6B7280] flex items-center justify-between">
+        <span>{CATEGORY_LABEL[group.category]}</span>
+        <span className="rounded-full bg-[#E5E7EB] text-[#374151] px-2 py-0.5 normal-case tracking-normal">{group.items.length}</span>
+      </div>
+      <ul className="divide-y divide-[#F3F4F6]">
+        {items.map((item) => (
+          <li key={item.id} className="flex items-start gap-3 px-5 py-3">
+            <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${DOT_COLOR[item.severity]}`} aria-hidden />
+            <div className="flex-1 min-w-0">
+              <Link href={item.deepLink} className="text-sm font-medium text-[#111827] hover:text-[#1B4B43] hover:underline">
+                {item.title}
+              </Link>
+              <p className="text-xs text-[#6B7280] mt-0.5">{item.description}</p>
+            </div>
+            <span className="text-xs text-[#9CA3AF] whitespace-nowrap mt-0.5">since {item.sinceLabel}</span>
+            <Link href={item.deepLink} className="text-[#9CA3AF] hover:text-[#1B4B43] mt-0.5" aria-label="Open">→</Link>
+            <SnoozeMenu itemId={item.id} />
+          </li>
+        ))}
+      </ul>
+      {hidden > 0 && (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="w-full text-left px-5 py-2 text-xs font-medium text-[#1B4B43] hover:bg-[#F8F9FA] border-t border-[#F3F4F6]"
+        >
+          Show {hidden} more
+        </button>
+      )}
+      {expanded && group.items.length > VISIBLE_CAP && (
+        <button
+          type="button"
+          onClick={() => setExpanded(false)}
+          className="w-full text-left px-5 py-2 text-xs font-medium text-[#6B7280] hover:bg-[#F8F9FA] border-t border-[#F3F4F6]"
+        >
+          Show less
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function ActionCenterPanel({ groups }: { groups: ActionCenterGroupVM[] }) {
   const totalCount = groups.reduce((n, g) => n + g.items.length, 0);
   return (
@@ -64,28 +114,7 @@ export default function ActionCenterPanel({ groups }: { groups: ActionCenterGrou
       ) : (
         <div className="divide-y divide-[#E5E7EB]">
           {groups.map((g) => (
-            <div key={g.category}>
-              <div className="px-5 py-2 bg-[#FAFAFA] text-xs font-semibold text-[#6B7280] flex items-center justify-between">
-                <span>{CATEGORY_LABEL[g.category]}</span>
-                <span className="rounded-full bg-[#E5E7EB] text-[#374151] px-2 py-0.5">{g.items.length}</span>
-              </div>
-              <ul className="divide-y divide-[#F3F4F6]">
-                {g.items.map((item) => (
-                  <li key={item.id} className="flex items-start gap-3 px-5 py-3">
-                    <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${DOT_COLOR[item.severity]}`} aria-hidden />
-                    <div className="flex-1 min-w-0">
-                      <Link href={item.deepLink} className="text-sm font-medium text-[#111827] hover:text-[#1B4B43] hover:underline">
-                        {item.title}
-                      </Link>
-                      <p className="text-xs text-[#6B7280] mt-0.5">{item.description}</p>
-                    </div>
-                    <span className="text-xs text-[#9CA3AF] whitespace-nowrap mt-0.5">since {item.sinceLabel}</span>
-                    <Link href={item.deepLink} className="text-[#9CA3AF] hover:text-[#1B4B43] mt-0.5" aria-label="Open">→</Link>
-                    <SnoozeMenu itemId={item.id} />
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <CategoryGroup key={g.category} group={g} />
           ))}
         </div>
       )}
