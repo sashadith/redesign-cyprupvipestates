@@ -17,7 +17,7 @@ type Props = {
   modules: NavModule[];
   developersNav?: DeveloperNavItem[];
   devTotals?: DevTotals;
-  user: { email?: string | null; role?: string | null };
+  user: { email?: string | null; role?: string | null; name?: string | null; avatar?: string | null };
   logoSrc: string;
   signOut: () => void | Promise<void>;
 };
@@ -185,12 +185,36 @@ export default function Sidebar({ modules, developersNav, devTotals, user, logoS
     </Link>
   );
 
+  const displayName = user?.name?.trim() || user?.email || "";
+  const initials = (user?.name?.trim() || user?.email || "?")
+    .split(/[\s@.]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase())
+    .join("") || "?";
+
   const userFooter = (
     <div className="p-3 border-t border-[#E5E7EB]">
-      <div className="px-1 py-1 text-[11px] text-[#6B7280] truncate">{user?.email}</div>
-      <div className="px-1 text-[11px] text-[#9CA3AF]">{user?.role}</div>
+      <div className="flex items-center gap-2">
+        {user?.avatar ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={user.avatar} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
+        ) : (
+          <span className="w-8 h-8 rounded-full bg-[#1B4B43]/10 text-[#1B4B43] text-xs font-semibold flex items-center justify-center shrink-0">
+            {initials}
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="text-xs font-medium text-[#111827] truncate">{displayName}</div>
+          {user?.role && (
+            <span className="inline-block mt-0.5 rounded-full bg-[#1B4B43]/10 text-[#1B4B43] text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5">
+              {user.role}
+            </span>
+          )}
+        </div>
+      </div>
       <form action={signOut}>
-        <button className="mt-1 w-full text-left rounded-md px-2 py-1.5 text-xs text-[#C0392B] hover:bg-[#C0392B]/8">
+        <button className="mt-2 w-full rounded-md border border-[#E5E7EB] px-2 py-1.5 text-xs text-[#6B7280] hover:bg-[#C0392B]/8 hover:text-[#C0392B] hover:border-[#C0392B]/30">
           Sign out
         </button>
       </form>

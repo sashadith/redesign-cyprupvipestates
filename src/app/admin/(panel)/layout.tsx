@@ -67,7 +67,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   if (!session || !uid) redirect("/admin/login");
   // Re-validate against the DB so a deactivated user loses access immediately,
   // not only when their JWT expires (audit M3).
-  const dbUser = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true } });
+  const dbUser = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true, name: true, avatar: true } });
   if (!dbUser || !dbUser.isActive) redirect("/admin/login");
   const user = session.user as any;
   const trashCount = await prisma.lead.count({ where: { deletedAt: { not: null } } });
@@ -103,7 +103,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         modules={modules}
         developersNav={developersNav}
         devTotals={devTotals}
-        user={{ email: user?.email, role: user?.role }}
+        user={{ email: user?.email, role: user?.role, name: dbUser.name, avatar: dbUser.avatar }}
         logoSrc={LOGO_SRC}
         signOut={logout}
       />
