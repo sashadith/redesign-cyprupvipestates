@@ -40,6 +40,7 @@ const seoComponents = {
     h2: ({ children }: any) => <h3 className="ins__guide-h">{children}</h3>,
     h3: ({ children }: any) => <h4 className="ins__guide-h4">{children}</h4>,
     h4: ({ children }: any) => <h4 className="ins__guide-h4">{children}</h4>,
+    h5: ({ children }: any) => <h5 className="ins__guide-h4">{children}</h5>,
   },
   list: {
     bullet: ({ children }: any) => <ul className="ins__guide-ul">{children}</ul>,

@@ -94,6 +94,14 @@
   line-height: 25px; /* 160% */
 }
 
+.h5 {
+  color: inherit;
+  font-size: clamp(1rem, 0.906rem + 0.375vw, 1.25rem);
+  font-style: normal;
+  font-weight: 600;
+  line-height: 22px;
+}
+
 .blogImage {
   position: relative;
   // aspect-ratio: 276/180;

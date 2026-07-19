@@ -1,6 +1,6 @@
 // Portable Text → HTML (pure, client+server safe). Used to load content into the TipTap editor
 // and is the inverse of htmlToPt.mjs. Handles the standard block content the body fields use:
-// paragraphs, h2/h3/h4, blockquote, bullet/number lists, strong/em, links, and images.
+// paragraphs, h2/h3/h4/h5, blockquote, bullet/number lists, strong/em, links, and images.
 
 const IMAGE_RE = /^image-([a-f0-9]+)-(\d+)x(\d+)-(\w+)$/;
 const FILE_RE = /^file-([a-f0-9]+)-(\w+)$/;
@@ -63,7 +63,7 @@ export function portableTextToHtml(blocks) {
     }
     flush();
     const style = b.style ?? "normal";
-    const tag = style === "h2" ? "h2" : style === "h3" ? "h3" : style === "h4" ? "h4" : style === "blockquote" ? "blockquote" : "p";
+    const tag = style === "h2" ? "h2" : style === "h3" ? "h3" : style === "h4" ? "h4" : style === "h5" ? "h5" : style === "blockquote" ? "blockquote" : "p";
     html += `<${tag}>${children || ""}</${tag}>`;
   }
   flush();

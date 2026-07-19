@@ -64,7 +64,8 @@ export function htmlToPortableText(html) {
     if (tag === "p" || tag === "blockquote") blocks.push(inlineBlock(el, tag === "p" ? "normal" : "blockquote"));
     else if (tag === "h1" || tag === "h2") blocks.push(inlineBlock(el, "h2"));
     else if (tag === "h3") blocks.push(inlineBlock(el, "h3"));
-    else if (tag === "h4" || tag === "h5" || tag === "h6") blocks.push(inlineBlock(el, "h4"));
+    else if (tag === "h4") blocks.push(inlineBlock(el, "h4"));
+    else if (tag === "h5" || tag === "h6") blocks.push(inlineBlock(el, "h5"));
     else if (tag === "ul" || tag === "ol") {
       const lt = tag === "ol" ? "number" : "bullet";
       for (const li of el.childNodes ?? []) {

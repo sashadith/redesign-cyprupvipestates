@@ -77,6 +77,7 @@ export const insightsComponents = {
     h2: ({ children, value }: any) => <h2 id={slugify(blockText(value))} className="iart__h2">{children}</h2>,
     h3: ({ children }: any) => <h3 className="iart__h3">{children}</h3>,
     h4: ({ children }: any) => <h4 className="iart__h4">{children}</h4>,
+    h5: ({ children }: any) => <h5 className="iart__h4">{children}</h5>,
     blockquote: ({ children }: any) => (
       <blockquote className="iart__quote"><p>{children}</p></blockquote>
     ),
