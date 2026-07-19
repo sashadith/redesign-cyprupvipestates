@@ -144,6 +144,13 @@ export async function changePassword(_prev: any, formData: FormData) {
   if (!user) return { error: "User not found." };
   if (!(await bcrypt.compare(current, user.password))) return { error: "Current password is incorrect." };
   await prisma.user.update({ where: { id: user.id }, data: { password: await bcrypt.hash(next, 10) } });
+  await prisma.adminAuditLog.create({
+    data: {
+      actorId: user.id, actorName: user.name, actorEmail: user.email,
+      action: "password_changed", targetType: "User", targetId: user.id,
+      detail: { self: true },
+    },
+  });
   return { ok: "Password updated." };
 }
 
@@ -246,6 +253,16 @@ export async function updateUserAction(id: string, _prev: any, formData: FormDat
       ...(newPassword ? { password: await bcrypt.hash(newPassword, 10) } : {}),
     },
   });
+  if (newPassword) {
+    const actor = session.user as any;
+    await prisma.adminAuditLog.create({
+      data: {
+        actorId: actor.id, actorName: actor.name, actorEmail: actor.email,
+        action: "password_changed", targetType: "User", targetId: id,
+        detail: { self: isSelf, targetEmail: email },
+      },
+    });
+  }
   revalidatePath("/admin/users");
   revalidatePath(`/admin/users/${id}/edit`);
   return { ok: "User updated." };
