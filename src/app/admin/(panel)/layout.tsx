@@ -54,7 +54,6 @@ function buildModules(isAdmin: boolean, trashCount: number, activeLeadCount: num
     },
     { key: "analytics", label: "Analytics", pages: [{ href: "/admin/analytics", label: "Analytics" }, { href: "/admin/analytics/seo", label: "SEO" }, { href: "/admin/analytics/seo/advisor", label: "SEO Advisor" }] },
     { key: "website", label: "Website", pages: websitePages },
-    { key: "settings", label: "Settings", pages: [{ href: "/admin/account", label: "My Account" }] },
     ...(isAdmin
       ? [{ key: "users", label: "Users", pages: [{ href: "/admin/users", label: "Users" }] }]
       : []),

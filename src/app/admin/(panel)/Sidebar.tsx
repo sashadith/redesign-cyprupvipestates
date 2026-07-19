@@ -171,27 +171,25 @@ export default function Sidebar({ modules, developersNav, devTotals, user, logoS
     .join("") || "?";
 
   const userFooter = (
-    <div className="p-3 border-t border-[#E5E7EB]">
-      <div className="flex items-center gap-2">
+    <div className="p-3 border-t border-[#E5E7EB] flex flex-col items-center gap-1.5">
+      <Link href="/admin/account" onClick={() => setOpen(false)} className="group flex flex-col items-center gap-1.5 max-w-full cursor-pointer">
         {user?.avatar ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={user.avatar} alt="" className="w-8 h-8 rounded-full object-cover shrink-0" />
+          <img src={user.avatar} alt="" className="w-10 h-10 rounded-full object-cover shrink-0 transition-opacity group-hover:opacity-80" />
         ) : (
-          <span className="w-8 h-8 rounded-full bg-[#1B4B43]/10 text-[#1B4B43] text-xs font-semibold flex items-center justify-center shrink-0">
+          <span className="w-10 h-10 rounded-full bg-[#1B4B43]/10 text-[#1B4B43] text-sm font-semibold flex items-center justify-center shrink-0 transition-colors group-hover:bg-[#1B4B43]/20">
             {initials}
           </span>
         )}
-        <div className="min-w-0 flex-1">
-          <div className="text-xs font-medium text-[#111827] truncate">{displayName}</div>
-          {user?.role && (
-            <span className="inline-block mt-0.5 rounded-full bg-[#1B4B43]/10 text-[#1B4B43] text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5">
-              {user.role}
-            </span>
-          )}
-        </div>
-      </div>
-      <form action={signOut}>
-        <button className="mt-2 w-full rounded-md border border-[#E5E7EB] px-2 py-1.5 text-xs text-[#6B7280] hover:bg-[#C0392B]/8 hover:text-[#C0392B] hover:border-[#C0392B]/30">
+        <span className="text-xs font-medium text-[#111827] truncate max-w-full transition-colors group-hover:text-[#1B4B43]">{displayName}</span>
+      </Link>
+      {user?.role && (
+        <span className="rounded-full bg-[#1B4B43]/10 text-[#1B4B43] text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5">
+          {user.role}
+        </span>
+      )}
+      <form action={signOut} className="w-full">
+        <button className="mt-1 w-full rounded-md border border-[#E5E7EB] px-2 py-1.5 text-xs text-[#6B7280] hover:bg-[#C0392B]/8 hover:text-[#C0392B] hover:border-[#C0392B]/30">
           Sign out
         </button>
       </form>
