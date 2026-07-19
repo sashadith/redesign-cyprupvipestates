@@ -1,9 +1,8 @@
 "use client";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import RichTextField from "./RichTextField";
 import BlockFieldEditor from "./block-editors/BlockFieldEditor";
 import { portableTextToHtml } from "@/lib/portableText/ptToHtml.mjs";
-import { saveBlogContentBlocks, saveSinglepageContentBlocks, saveCaseStudyContentBlocks } from "./actions";
 
 type Item = { key: string; type: string; block?: any; html?: string };
 
@@ -16,7 +15,12 @@ function summarize(b: any): string {
   return b.title || b.doubleTextBlockTitle || b.faqTitle || b.buttonLabel || "";
 }
 
-export default function BlockEditor({ targetId, kind, initialBlocks }: { targetId: string; kind: "blog" | "singlepage" | "caseStudy"; initialBlocks: any[] }) {
+// Field name of the hidden input this renders — the parent page's single Save
+// form reads it directly (any content type using BlockEditor inside its form
+// gets content-block persistence "for free", no per-page wiring needed).
+export const CONTENT_BLOCKS_FIELD = "contentBlocksJson";
+
+export default function BlockEditor({ kind, initialBlocks }: { kind: "blog" | "singlepage" | "caseStudy"; initialBlocks: any[] }) {
   const [items, setItems] = useState<Item[]>(() =>
     (Array.isArray(initialBlocks) ? initialBlocks : []).map((b, i) => ({
       key: b?._key || `b${i}`,
@@ -25,8 +29,13 @@ export default function BlockEditor({ targetId, kind, initialBlocks }: { targetI
       html: b?._type === "textContent" ? portableTextToHtml(b.content || []) : undefined,
     })),
   );
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "err">("idle");
   const [dragIndex, setDragIndex] = useState<number | null>(null);
+  // Same shape saveBlogContentBlocks/saveSinglepageContentBlocks/saveCaseStudyContentBlocks
+  // used to receive directly — now serialized into the enclosing form instead.
+  const serialized = useMemo(
+    () => JSON.stringify(items.map((it) => (it.type === "textContent" ? { type: "textContent", key: it.key, html: it.html ?? "" } : { type: it.type, key: it.key, block: it.block }))),
+    [items],
+  );
 
   const setHtml = useCallback((key: string, html: string) => {
     setItems((prev) => prev.map((it) => (it.key === key ? { ...it, html } : it)));
@@ -92,41 +101,13 @@ export default function BlockEditor({ targetId, kind, initialBlocks }: { targetI
       } }];
     });
 
-  async function save() {
-    setStatus("saving");
-    try {
-      const action =
-        kind === "singlepage" ? saveSinglepageContentBlocks
-        : kind === "caseStudy" ? saveCaseStudyContentBlocks
-        : saveBlogContentBlocks;
-      await action(
-        targetId,
-        items.map((it) =>
-          it.type === "textContent"
-            ? { type: "textContent", key: it.key, html: it.html ?? "" }
-            : { type: it.type, key: it.key, block: it.block },
-        ),
-      );
-      setStatus("saved");
-    } catch {
-      setStatus("err");
-    }
-  }
-
   return (
     <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
+      <input type="hidden" name={CONTENT_BLOCKS_FIELD} value={serialized} />
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-sm font-semibold">Content blocks <span className="text-[#9CA3AF] font-normal">({items.length})</span></h2>
-        <div className="flex items-center gap-2">
-          {status === "saved" && <span className="text-xs text-[#2D6E62]">Saved ✓</span>}
-          {status === "err" && <span className="text-xs text-[#C0392B]">Save failed</span>}
-          <button type="button" onClick={save} disabled={status === "saving"}
-            className="rounded-md bg-[#1B4B43] text-white text-sm px-4 py-1.5 hover:bg-[#142E2D] disabled:opacity-60">
-            {status === "saving" ? "Saving…" : "Save content blocks"}
-          </button>
-        </div>
       </div>
-      <p className="text-xs text-[#9CA3AF] mb-4">Drag the ⠿ handle to reorder, or use ↑↓.</p>
+      <p className="text-xs text-[#9CA3AF] mb-4">Drag the ⠿ handle to reorder, or use ↑↓. Part of the page&apos;s single Save button below.</p>
 
       <div className="space-y-3">
         {items.map((it, i) => (

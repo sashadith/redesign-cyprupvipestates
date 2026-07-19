@@ -11,12 +11,10 @@ export default function RelatedPagesEditor({
   initialIds,
   options,
   enSuggestion,
-  action,
 }: {
   initialIds: string[];
   options: Opt[];
   enSuggestion: Opt[];
-  action: (formData: FormData) => void | Promise<void>;
 }) {
   const byId = new Map(options.map((o) => [o.id, o.title]));
   const [ids, setIds] = useState<string[]>(initialIds.filter((x) => byId.has(x)));
@@ -38,7 +36,7 @@ export default function RelatedPagesEditor({
   };
 
   return (
-    <form action={action} className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-4">
+    <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-sm font-semibold">Related Landing Pages</h2>
         {enSuggestion.length > 0 && (
@@ -82,10 +80,7 @@ export default function RelatedPagesEditor({
         ))}
       </select>
 
-      <input type="hidden" name="ids" value={ids.join(",")} />
-      <button className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-5 py-2.5 hover:bg-[#142E2D]">
-        Save related pages
-      </button>
-    </form>
+      <input type="hidden" name="relatedLandingPageIds" value={ids.join(",")} />
+    </div>
   );
 }

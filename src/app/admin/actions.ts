@@ -397,40 +397,51 @@ export async function resetPasswordWithToken(_prev: any, formData: FormData): Pr
 }
 
 // ── Content meta editing (slug intentionally NOT editable — URL preservation) ──
-export async function updateProjectMeta(id: string, formData: FormData) {
-  await requireSession();
-  const status = String(formData.get("status") ?? "PUBLISHED");
-  if (!CONTENT_STATUSES.includes(status)) throw new Error("Invalid status");
-  const num = (k: string) => { const v = String(formData.get(k) ?? "").trim(); return v === "" ? null : Math.round(Number(v)); };
-  const patch = { ...(await slugFromForm(prisma.project, id, formData)), ...(await publishedAtOnPublish(prisma.project, id, status)) };
-  const row = await prisma.project.update({
-    where: { id },
-    data: {
-      ...patch,
-      title: String(formData.get("title") ?? "").trim(),
-      excerpt: String(formData.get("excerpt") ?? "").trim() || null,
-      status: status as any,
-      scheduledAt: scheduledAtFromForm(formData, status),
-      isFeatured: formData.get("isFeatured") === "on",
-      isNew: formData.get("isNew") === "on",
-      isSold: formData.get("isSold") === "on",
-      listingPriority: num("listingPriority") ?? 0,
-      price: num("price"),
-      city: String(formData.get("city") ?? "").trim() || null,
-      propertyType: String(formData.get("propertyType") ?? "").trim() || null,
-      previewImage: jsonOrDbNull(parseJsonField(formData.get("previewImage"))),
-      images: jsonOrDbNull(parseJsonField(formData.get("images"))),
-      latitude: floatOrNull(formData.get("latitude")),
-      longitude: floatOrNull(formData.get("longitude")),
-      seo: {
-        metaTitle: String(formData.get("seoTitle") ?? "").trim(),
-        metaDescription: String(formData.get("seoDescription") ?? "").trim(),
+// Single Save for the whole legacy-project editor — title/slug/excerpt/status/
+// scheduling/flags/media/location/SEO AND the two rich description fields, one
+// form, one Prisma update. Replaces the former separate updateProjectMeta +
+// saveProjectField (x2) pair.
+export async function saveProjectAll(id: string, _prev: any, formData: FormData): Promise<{ ok?: string; error?: string }> {
+  try {
+    await requireSession();
+    const status = String(formData.get("status") ?? "PUBLISHED");
+    if (!CONTENT_STATUSES.includes(status)) return { error: "Invalid status." };
+    const num = (k: string) => { const v = String(formData.get(k) ?? "").trim(); return v === "" ? null : Math.round(Number(v)); };
+    const patch = { ...(await slugFromForm(prisma.project, id, formData)), ...(await publishedAtOnPublish(prisma.project, id, status)) };
+    const row = await prisma.project.update({
+      where: { id },
+      data: {
+        ...patch,
+        title: String(formData.get("title") ?? "").trim(),
+        excerpt: String(formData.get("excerpt") ?? "").trim() || null,
+        status: status as any,
+        scheduledAt: scheduledAtFromForm(formData, status),
+        isFeatured: formData.get("isFeatured") === "on",
+        isNew: formData.get("isNew") === "on",
+        isSold: formData.get("isSold") === "on",
+        listingPriority: num("listingPriority") ?? 0,
+        price: num("price"),
+        city: String(formData.get("city") ?? "").trim() || null,
+        propertyType: String(formData.get("propertyType") ?? "").trim() || null,
+        previewImage: jsonOrDbNull(parseJsonField(formData.get("previewImage"))),
+        images: jsonOrDbNull(parseJsonField(formData.get("images"))),
+        latitude: floatOrNull(formData.get("latitude")),
+        longitude: floatOrNull(formData.get("longitude")),
+        seo: {
+          metaTitle: String(formData.get("seoTitle") ?? "").trim(),
+          metaDescription: String(formData.get("seoDescription") ?? "").trim(),
+        },
+        description: htmlToPortableText(String(formData.get("description") ?? "")) as any,
+        fullDescription: htmlToPortableText(String(formData.get("fullDescription") ?? "")) as any,
       },
-    },
-  });
-  revalidatePath(`/admin/content/projects/${id}`);
-  revalidatePath("/admin/content/projects");
-  revalidateProjectPublic(row.language, row.slug);
+    });
+    revalidatePath(`/admin/content/projects/${id}`);
+    revalidatePath("/admin/content/projects");
+    revalidateProjectPublic(row.language, row.slug);
+    return { ok: "Updated successfully." };
+  } catch (e: any) {
+    return { error: e?.message || "Something went wrong." };
+  }
 }
 
 // Phase 5.3: dedicated ACTIVATE/DEACTIVATE control for legacy projects —
@@ -517,45 +528,74 @@ export async function deactivateProjectWithRedirect(id: string, redirectTarget: 
   if (targets.length) void pingIndexNow("legacy-project-deactivated", targets.map(absUrl));
 }
 
-export async function updateBlogMeta(id: string, formData: FormData) {
-  await requireSession();
-  const status = String(formData.get("status") ?? "PUBLISHED");
-  if (!CONTENT_STATUSES.includes(status)) throw new Error("Invalid status");
-  const before = await prisma.blog.findUnique({ where: { id }, select: { status: true } });
-  // Editable publication date (Berlin wall-time → UTC). An explicit value wins;
-  // otherwise keep the auto-set-on-first-publish behaviour.
-  const explicitPublishedAt = zonedInputToUtc(String(formData.get("publishedAt") ?? ""));
-  const patch = {
-    ...(await slugFromForm(prisma.blog, id, formData)),
-    ...(explicitPublishedAt ? { publishedAt: explicitPublishedAt } : await publishedAtOnPublish(prisma.blog, id, status)),
-  };
-  const row = await prisma.blog.update({
-    where: { id },
-    data: {
-      ...patch,
-      title: String(formData.get("title") ?? "").trim(),
-      excerpt: String(formData.get("excerpt") ?? "").trim() || null,
-      status: status as any,
-      scheduledAt: scheduledAtFromForm(formData, status),
-      previewImage: jsonOrDbNull(parseJsonField(formData.get("previewImage"))),
-      authorId: String(formData.get("authorId") ?? "").trim() || null,
-      categoryId: String(formData.get("categoryId") ?? "").trim() || null,
-      seo: {
-        metaTitle: String(formData.get("seoTitle") ?? "").trim(),
-        metaDescription: String(formData.get("seoDescription") ?? "").trim(),
-      },
-    },
-  });
-  revalidatePath(`/admin/content/blog/${id}`);
-  revalidatePath("/admin/content/blog");
-  revalidateBlogPublic(row.language, row.slug);
+// Converts BlockEditor's serialized item list (see CONTENT_BLOCKS_FIELD in
+// BlockEditor.tsx) into stored Portable Text blocks — textContent items get
+// their HTML converted, everything else is preserved verbatim. Shared by
+// every unified "save whole page" action below.
+function blocksFromItemsJson(json: string): any[] {
+  let items: BlockItem[];
+  try { items = JSON.parse(json || "[]"); } catch { throw new Error("Content blocks were corrupted — please reload and retry."); }
+  if (!Array.isArray(items)) throw new Error("Content blocks were corrupted — please reload and retry.");
+  return items
+    .map((it) => {
+      if (it.type === "textContent") {
+        const orig = (it.block && typeof it.block === "object") ? it.block : {};
+        return { ...orig, _type: "textContent", _key: it.key, content: htmlToPortableText(it.html ?? "") };
+      }
+      return it.block ? convertHtmlMarkers(it.block) : null;
+    })
+    .filter(Boolean);
+}
 
-  // Fire-and-forget. Same action covers both "just published" and "editing an
-  // already-published post's title/meta" — label the event by which actually
-  // happened so CronRunLog stays a useful audit trail either way.
-  if (row.status === "PUBLISHED") {
-    const event = before?.status !== "PUBLISHED" ? "blog-published" : "blog-meta-edited";
-    void pingIndexNow(event, [absUrl(localizedHref(row.language, ["blog", row.slug]))]);
+// Single Save for the whole blog editor page — title/slug/excerpt/status/
+// dates/media/taxonomy/SEO AND content blocks, one form, one Prisma update.
+// Replaces the former separate updateBlogMeta + saveBlogContentBlocks pair.
+export async function saveBlogAll(id: string, _prev: any, formData: FormData): Promise<{ ok?: string; error?: string }> {
+  try {
+    await requireSession();
+    const status = String(formData.get("status") ?? "PUBLISHED");
+    if (!CONTENT_STATUSES.includes(status)) return { error: "Invalid status." };
+    const before = await prisma.blog.findUnique({ where: { id }, select: { status: true } });
+    // Editable publication date (Berlin wall-time → UTC). An explicit value wins;
+    // otherwise keep the auto-set-on-first-publish behaviour.
+    const explicitPublishedAt = zonedInputToUtc(String(formData.get("publishedAt") ?? ""));
+    const patch = {
+      ...(await slugFromForm(prisma.blog, id, formData)),
+      ...(explicitPublishedAt ? { publishedAt: explicitPublishedAt } : await publishedAtOnPublish(prisma.blog, id, status)),
+    };
+    const blocks = blocksFromItemsJson(String(formData.get("contentBlocksJson") ?? "[]"));
+    const row = await prisma.blog.update({
+      where: { id },
+      data: {
+        ...patch,
+        title: String(formData.get("title") ?? "").trim(),
+        excerpt: String(formData.get("excerpt") ?? "").trim() || null,
+        status: status as any,
+        scheduledAt: scheduledAtFromForm(formData, status),
+        previewImage: jsonOrDbNull(parseJsonField(formData.get("previewImage"))),
+        authorId: String(formData.get("authorId") ?? "").trim() || null,
+        categoryId: String(formData.get("categoryId") ?? "").trim() || null,
+        seo: {
+          metaTitle: String(formData.get("seoTitle") ?? "").trim(),
+          metaDescription: String(formData.get("seoDescription") ?? "").trim(),
+        },
+        contentBlocks: blocks as any,
+      },
+    });
+    revalidatePath(`/admin/content/blog/${id}`);
+    revalidatePath("/admin/content/blog");
+    revalidateBlogPublic(row.language, row.slug);
+
+    // Fire-and-forget. Same action covers both "just published" and "editing an
+    // already-published post's title/meta" — label the event by which actually
+    // happened so CronRunLog stays a useful audit trail either way.
+    if (row.status === "PUBLISHED") {
+      const event = before?.status !== "PUBLISHED" ? "blog-published" : "blog-meta-edited";
+      void pingIndexNow(event, [absUrl(localizedHref(row.language, ["blog", row.slug]))]);
+    }
+    return { ok: "Updated successfully." };
+  } catch (e: any) {
+    return { error: e?.message || "Something went wrong." };
   }
 }
 
@@ -838,28 +878,6 @@ export async function updateHomepageFeaturedCaseStudies(lang: string, formData: 
   revalidatePath("/admin/content/featured");
 }
 
-// Phase 2 — curated "Related Landing Pages" on a singlepage. Stores refs to OTHER
-// same-language PUBLISHED singlepages (enforced here, not just in the picker): cross-language,
-// unpublished, empty-slug, and self refs are dropped. Order is preserved; duplicates removed.
-export async function saveRelatedLandingPages(id: string, formData: FormData) {
-  await requireSession();
-  const page = await prisma.singlepage.findUnique({ where: { id }, select: { language: true, slug: true, sanityId: true } });
-  if (!page) throw new Error("Page not found");
-  const ids = String(formData.get("ids") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-  // Keep only real, PUBLISHED singlepages in THIS language (never cross-language), excluding self.
-  const valid = await prisma.singlepage.findMany({
-    where: { language: page.language, status: "PUBLISHED", slug: { not: "" }, sanityId: { in: ids } },
-    select: { sanityId: true },
-  });
-  const validSet = new Set(valid.map((v) => v.sanityId));
-  const seen = new Set<string>();
-  const ordered = ids.filter((x) => x !== page.sanityId && validSet.has(x) && !seen.has(x) && (seen.add(x), true));
-  const refs = ordered.map((x) => ({ _key: crypto.randomUUID().replace(/-/g, "").slice(0, 12), _ref: x, _type: "singlepageRef" }));
-  await prisma.singlepage.update({ where: { id }, data: { relatedLandingPages: refs as any } });
-  revalidateSinglepagePublic(page.language, page.slug);
-  revalidatePath(`/admin/content/pages/${id}`);
-}
-
 // Homepage text fields — generic string-leaf editor (SEO, hero, all block titles/descriptions/
 // labels/slide texts). Only overwrites existing string leaves; structure/media/rich-text preserved.
 export async function updateHomepageFields(lang: string, formData: FormData) {
@@ -954,58 +972,62 @@ export async function updateFooterSettings(lang: string, formData: FormData) {
   revalidatePath("/", "layout");
 }
 
-export async function updateSinglepageMeta(id: string, formData: FormData) {
-  await requireSession();
-  const status = String(formData.get("status") ?? "PUBLISHED");
-  if (!CONTENT_STATUSES.includes(status)) throw new Error("Invalid status");
-  const patch = { ...(await slugFromForm(prisma.singlepage, id, formData)), ...(await publishedAtOnPublish(prisma.singlepage, id, status)) };
-  const row = await prisma.singlepage.update({
-    where: { id },
-    data: {
-      ...patch,
-      title: String(formData.get("title") ?? "").trim(),
-      excerpt: String(formData.get("excerpt") ?? "").trim() || null,
-      status: status as any,
-      scheduledAt: scheduledAtFromForm(formData, status),
-      seo: {
-        metaTitle: String(formData.get("seoTitle") ?? "").trim(),
-        metaDescription: String(formData.get("seoDescription") ?? "").trim(),
-      },
-    },
-  });
-  revalidatePath(`/admin/content/pages/${id}`);
-  revalidatePath("/admin/content/pages");
-  revalidateSinglepagePublic(row.language, row.slug);
+// Single Save for the whole Static/Landing page editor — title/slug/excerpt/
+// status/scheduling/SEO, related-landing-pages picks, AND content blocks, one
+// form, one Prisma update. Replaces the former separate updateSinglepageMeta +
+// saveRelatedLandingPages + saveSinglepageContentBlocks trio.
+export async function saveSinglepageAll(id: string, _prev: any, formData: FormData): Promise<{ ok?: string; error?: string }> {
+  try {
+    await requireSession();
+    const status = String(formData.get("status") ?? "PUBLISHED");
+    if (!CONTENT_STATUSES.includes(status)) return { error: "Invalid status." };
+    const patch = { ...(await slugFromForm(prisma.singlepage, id, formData)), ...(await publishedAtOnPublish(prisma.singlepage, id, status)) };
+    const blocks = blocksFromItemsJson(String(formData.get("contentBlocksJson") ?? "[]"));
 
-  if (row.status === "PUBLISHED") void pingIndexNow("page-meta-edited", [absUrl(localizedHref(row.language, [row.slug]))]);
+    // Related Landing Pages — same validation rule as before: only real,
+    // PUBLISHED singlepages in this same language, excluding self.
+    const page = await prisma.singlepage.findUnique({ where: { id }, select: { language: true, sanityId: true } });
+    if (!page) return { error: "Page not found." };
+    const relatedIds = String(formData.get("relatedLandingPageIds") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+    const validRelated = await prisma.singlepage.findMany({
+      where: { language: page.language, status: "PUBLISHED", slug: { not: "" }, sanityId: { in: relatedIds } },
+      select: { sanityId: true },
+    });
+    const validSet = new Set(validRelated.map((v) => v.sanityId));
+    const seen = new Set<string>();
+    const orderedRelated = relatedIds.filter((x) => x !== page.sanityId && validSet.has(x) && !seen.has(x) && (seen.add(x), true));
+    const relatedRefs = orderedRelated.map((x) => ({ _key: crypto.randomUUID().replace(/-/g, "").slice(0, 12), _ref: x, _type: "singlepageRef" }));
+
+    const row = await prisma.singlepage.update({
+      where: { id },
+      data: {
+        ...patch,
+        title: String(formData.get("title") ?? "").trim(),
+        excerpt: String(formData.get("excerpt") ?? "").trim() || null,
+        status: status as any,
+        scheduledAt: scheduledAtFromForm(formData, status),
+        seo: {
+          metaTitle: String(formData.get("seoTitle") ?? "").trim(),
+          metaDescription: String(formData.get("seoDescription") ?? "").trim(),
+        },
+        relatedLandingPages: relatedRefs as any,
+        contentBlocks: blocks as any,
+      },
+    });
+    revalidatePath(`/admin/content/pages/${id}`);
+    revalidatePath("/admin/content/pages");
+    revalidateSinglepagePublic(row.language, row.slug);
+
+    if (row.status === "PUBLISHED") void pingIndexNow("page-meta-edited", [absUrl(localizedHref(row.language, [row.slug]))]);
+    return { ok: "Updated successfully." };
+  } catch (e: any) {
+    return { error: e?.message || "Something went wrong." };
+  }
 }
 
 // Rich body editing — TipTap HTML → Portable Text on save.
-const PROJECT_PT_FIELDS = ["description", "fullDescription"];
-export async function saveProjectField(id: string, field: string, html: string) {
-  await requireSession();
-  if (!PROJECT_PT_FIELDS.includes(field)) throw new Error("Invalid field");
-  const pt = htmlToPortableText(html);
-  const row = await prisma.project.update({ where: { id }, data: { [field]: pt as any } });
-  revalidatePath(`/admin/content/projects/${id}`);
-  revalidateProjectPublic(row.language, row.slug);
-  return { ok: true };
-}
-
 // Case study rich sections — stored as Portable Text inside the caseDetails JSON.
 const CASE_STUDY_DETAIL_FIELDS = ["clientSituation", "requirements", "solution", "result", "selectedProperty"];
-export async function saveCaseStudyDetail(id: string, field: string, html: string) {
-  await requireSession();
-  if (!CASE_STUDY_DETAIL_FIELDS.includes(field)) throw new Error("Invalid field");
-  const row = await prisma.caseStudy.findUnique({ where: { id }, select: { caseDetails: true, language: true, slug: true } });
-  if (!row) throw new Error("Case study not found");
-  const cd = { ...((row.caseDetails as any) ?? {}) };
-  cd[field] = htmlToPortableText(html);
-  await prisma.caseStudy.update({ where: { id }, data: { caseDetails: cd as any } });
-  revalidatePath(`/admin/content/case-studies/${id}`);
-  revalidatePath(localizedHref(row.language, ["case-studies", row.slug]));
-  return { ok: true };
-}
 
 // ── New content creation (starts as DRAFT) ──
 export async function createBlogPost(_prev: any, formData: FormData) {
@@ -1076,27 +1098,10 @@ export async function createProject(_prev: any, formData: FormData) {
   redirect(`/admin/content/projects/${created.id}`);
 }
 
-// Page-builder block editing (blog). Rebuilds contentBlocks from the editor's item list:
-// textContent blocks get their HTML converted to Portable Text; all other block types are
-// preserved verbatim (round-trip-safe). Order follows the items array.
+// Page-builder block editing. Item shape from BlockEditor.tsx's serialized
+// hidden input — textContent blocks carry HTML (converted to Portable Text
+// on save), all other block types are preserved verbatim (round-trip-safe).
 type BlockItem = { type: string; key: string; html?: string; block?: any };
-export async function saveBlogContentBlocks(id: string, items: BlockItem[]) {
-  await requireSession();
-  if (!Array.isArray(items)) throw new Error("Invalid blocks");
-  const blocks = items
-    .map((it) => {
-      if (it.type === "textContent") {
-        const orig = (it.block && typeof it.block === "object") ? it.block : {};
-        return { ...orig, _type: "textContent", _key: it.key, content: htmlToPortableText(it.html ?? "") };
-      }
-      return it.block ? convertHtmlMarkers(it.block) : null;
-    })
-    .filter(Boolean);
-  const row = await prisma.blog.update({ where: { id }, data: { contentBlocks: blocks as any } });
-  revalidatePath(`/admin/content/blog/${id}`);
-  revalidateBlogPublic(row.language, row.slug);
-  return { ok: true };
-}
 
 // Internal blog articles for the Inline Related Article picker (ref + label).
 export async function listBlogArticlesForPicker(): Promise<{ ref: string; title: string; language: string }[]> {
@@ -1108,24 +1113,6 @@ export async function listBlogArticlesForPicker(): Promise<{ ref: string; title:
   return rows
     .filter((r) => r.sanityId)
     .map((r) => ({ ref: r.sanityId as string, title: (r.title || r.slug || "Untitled") as string, language: r.language as string }));
-}
-
-export async function saveSinglepageContentBlocks(id: string, items: BlockItem[]) {
-  await requireSession();
-  if (!Array.isArray(items)) throw new Error("Invalid blocks");
-  const blocks = items
-    .map((it) => {
-      if (it.type === "textContent") {
-        const orig = (it.block && typeof it.block === "object") ? it.block : {};
-        return { ...orig, _type: "textContent", _key: it.key, content: htmlToPortableText(it.html ?? "") };
-      }
-      return it.block ? convertHtmlMarkers(it.block) : null;
-    })
-    .filter(Boolean);
-  const row = await prisma.singlepage.update({ where: { id }, data: { contentBlocks: blocks as any } });
-  revalidatePath(`/admin/content/pages/${id}`);
-  revalidateSinglepagePublic(row.language, row.slug);
-  return { ok: true };
 }
 
 // ── Media: organise assets into folders ──
@@ -1225,43 +1212,43 @@ export async function updateFormDoc(id: string, formData: FormData) {
 const SITE_PAGE_TYPES = ["blogPage", "caseStudiesPage", "projectsPage", "notFoundPage"];
 const SITE_PAGE_EXCLUDE = new Set(["title", "metaTitle", "metaDescription", "slug", "_type", "content", "seo"]);
 
-export async function updateSitePage(id: string, formData: FormData) {
-  await requireSession();
-  const row = await prisma.siteDocument.findUnique({ where: { id } });
-  if (!row || !SITE_PAGE_TYPES.includes(row.type)) throw new Error("Page not found");
-  const prev = row.data as Record<string, any>;
-  const data: Record<string, any> = { ...prev };
+// Single Save for the whole Landing Page editor — title/SEO/extra string
+// fields AND the rich content field (when present), one form, one update.
+// Replaces the former separate updateSitePage + saveSitePageContent pair.
+export async function saveSitePageAll(id: string, _prev: any, formData: FormData): Promise<{ ok?: string; error?: string }> {
+  try {
+    await requireSession();
+    const row = await prisma.siteDocument.findUnique({ where: { id } });
+    if (!row || !SITE_PAGE_TYPES.includes(row.type)) return { error: "Page not found." };
+    const prev = row.data as Record<string, any>;
+    const data: Record<string, any> = { ...prev };
 
-  data.title = String(formData.get("title") ?? "").trim();
-  const seoTitle = String(formData.get("seoTitle") ?? "").trim();
-  const seoDescription = String(formData.get("seoDescription") ?? "").trim();
-  if (prev.seo && typeof prev.seo === "object") {
-    data.seo = { ...prev.seo, metaTitle: seoTitle, metaDescription: seoDescription };
-  } else {
-    data.metaTitle = seoTitle;
-    data.metaDescription = seoDescription;
-  }
-  // Other top-level string fields (e.g. 404 page's textStart/textEnd/buttonText/description).
-  for (const [k, v] of Object.entries(prev)) {
-    if (typeof v === "string" && !SITE_PAGE_EXCLUDE.has(k)) {
-      const next = formData.get(`x_${k}`);
-      if (next !== null) data[k] = String(next);
+    data.title = String(formData.get("title") ?? "").trim();
+    const seoTitle = String(formData.get("seoTitle") ?? "").trim();
+    const seoDescription = String(formData.get("seoDescription") ?? "").trim();
+    if (prev.seo && typeof prev.seo === "object") {
+      data.seo = { ...prev.seo, metaTitle: seoTitle, metaDescription: seoDescription };
+    } else {
+      data.metaTitle = seoTitle;
+      data.metaDescription = seoDescription;
     }
+    // Other top-level string fields (e.g. 404 page's textStart/textEnd/buttonText/description).
+    for (const [k, v] of Object.entries(prev)) {
+      if (typeof v === "string" && !SITE_PAGE_EXCLUDE.has(k)) {
+        const next = formData.get(`x_${k}`);
+        if (next !== null) data[k] = String(next);
+      }
+    }
+    if (Array.isArray(prev.content)) {
+      data.content = htmlToPortableText(String(formData.get("content") ?? ""));
+    }
+    await prisma.siteDocument.update({ where: { id }, data: { data } });
+    revalidatePath("/admin/content/landing");
+    revalidatePath("/", "layout"); // listing/404 pages render the layout
+    return { ok: "Updated successfully." };
+  } catch (e: any) {
+    return { error: e?.message || "Something went wrong." };
   }
-  await prisma.siteDocument.update({ where: { id }, data: { data } });
-  revalidatePath("/admin/content/landing");
-  revalidatePath("/", "layout"); // listing/404 pages render the layout
-}
-
-export async function saveSitePageContent(id: string, html: string) {
-  await requireSession();
-  const row = await prisma.siteDocument.findUnique({ where: { id } });
-  if (!row || !SITE_PAGE_TYPES.includes(row.type)) throw new Error("Page not found");
-  const data = { ...(row.data as any), content: htmlToPortableText(html) };
-  await prisma.siteDocument.update({ where: { id }, data: { data } });
-  revalidatePath("/admin/content/landing");
-  revalidatePath("/", "layout");
-  return { ok: true };
 }
 
 // ── FAQ page (categories + Q&A items) — a SiteDocument like the pages above,
@@ -1385,33 +1372,35 @@ function revalidateDeveloperPublic(language: string, slug: string) {
   revalPublic(language, ["developers", slug]);
   revalPublic(language, ["developers"]);
 }
-export async function updateDeveloperMeta(id: string, formData: FormData) {
-  await requireSession();
-  const patch = await slugFromForm(prisma.developer, id, formData);
-  const row = await prisma.developer.update({
-    where: { id },
-    data: {
-      ...patch,
-      title: String(formData.get("title") ?? "").trim(),
-      titleFull: String(formData.get("titleFull") ?? "").trim() || null,
-      excerpt: String(formData.get("excerpt") ?? "").trim() || null,
-      logo: jsonOrDbNull(parseJsonField(formData.get("logo"))),
-      seo: {
-        metaTitle: String(formData.get("seoTitle") ?? "").trim(),
-        metaDescription: String(formData.get("seoDescription") ?? "").trim(),
+// Single Save for the whole developer (content type) editor — title/slug/
+// excerpt/logo/SEO AND the rich description field, one form, one update.
+// Replaces the former separate updateDeveloperMeta + saveDeveloperDescription.
+export async function saveDeveloperAll(id: string, _prev: any, formData: FormData): Promise<{ ok?: string; error?: string }> {
+  try {
+    await requireSession();
+    const patch = await slugFromForm(prisma.developer, id, formData);
+    const row = await prisma.developer.update({
+      where: { id },
+      data: {
+        ...patch,
+        title: String(formData.get("title") ?? "").trim(),
+        titleFull: String(formData.get("titleFull") ?? "").trim() || null,
+        excerpt: String(formData.get("excerpt") ?? "").trim() || null,
+        logo: jsonOrDbNull(parseJsonField(formData.get("logo"))),
+        seo: {
+          metaTitle: String(formData.get("seoTitle") ?? "").trim(),
+          metaDescription: String(formData.get("seoDescription") ?? "").trim(),
+        },
+        description: htmlToPortableText(String(formData.get("description") ?? "")) as any,
       },
-    },
-  });
-  revalidatePath(`/admin/content/developers/${id}`);
-  revalidatePath("/admin/content/developers");
-  revalidateDeveloperPublic(row.language, row.slug);
-}
-export async function saveDeveloperDescription(id: string, html: string) {
-  await requireSession();
-  const row = await prisma.developer.update({ where: { id }, data: { description: htmlToPortableText(html) as any } });
-  revalidatePath(`/admin/content/developers/${id}`);
-  revalidateDeveloperPublic(row.language, row.slug);
-  return { ok: true };
+    });
+    revalidatePath(`/admin/content/developers/${id}`);
+    revalidatePath("/admin/content/developers");
+    revalidateDeveloperPublic(row.language, row.slug);
+    return { ok: "Updated successfully." };
+  } catch (e: any) {
+    return { error: e?.message || "Something went wrong." };
+  }
 }
 
 // ── Authors (reference entity — appears on blog posts; bio is plain text) ──
@@ -1437,55 +1426,52 @@ export async function updateAuthorMeta(id: string, formData: FormData) {
 // ── Case studies ──
 // Edits the safe fields (rich `caseDetails` Portable Text is preserved untouched —
 // a dedicated rich editor for those is a follow-up; main body is edited as blocks).
-export async function updateCaseStudyMeta(id: string, formData: FormData) {
-  await requireSession();
-  const status = String(formData.get("status") ?? "PUBLISHED");
-  if (!CONTENT_STATUSES.includes(status)) throw new Error("Invalid status");
-  const patch = { ...(await slugFromForm(prisma.caseStudy, id, formData)), ...(await publishedAtOnPublish(prisma.caseStudy, id, status)) };
-  const row = await prisma.caseStudy.update({
-    where: { id },
-    data: {
-      ...patch,
-      title: String(formData.get("title") ?? "").trim(),
-      fullTitle: String(formData.get("fullTitle") ?? "").trim() || null,
-      excerpt: String(formData.get("excerpt") ?? "").trim() || null,
-      category: String(formData.get("category") ?? "").trim() || null,
-      status: status as any,
-      scheduledAt: scheduledAtFromForm(formData, status),
-      previewImage: jsonOrDbNull(parseJsonField(formData.get("previewImage"))),
-      seo: {
-        metaTitle: String(formData.get("seoTitle") ?? "").trim(),
-        metaDescription: String(formData.get("seoDescription") ?? "").trim(),
+// Single Save for the whole case-study editor — title/slug/excerpt/status/
+// scheduling/SEO/client-overview, the 5 rich caseDetails sections, AND the
+// main-body content blocks, one form, one Prisma update. Replaces the former
+// separate updateCaseStudyMeta + saveCaseStudyDetail (x5) + saveCaseStudyContentBlocks.
+export async function saveCaseStudyAll(id: string, _prev: any, formData: FormData): Promise<{ ok?: string; error?: string }> {
+  try {
+    await requireSession();
+    const status = String(formData.get("status") ?? "PUBLISHED");
+    if (!CONTENT_STATUSES.includes(status)) return { error: "Invalid status." };
+    const patch = { ...(await slugFromForm(prisma.caseStudy, id, formData)), ...(await publishedAtOnPublish(prisma.caseStudy, id, status)) };
+    const blocks = blocksFromItemsJson(String(formData.get("contentBlocksJson") ?? "[]"));
+    const caseDetails = Object.fromEntries(
+      CASE_STUDY_DETAIL_FIELDS.map((f) => [f, htmlToPortableText(String(formData.get(`caseDetail_${f}`) ?? ""))]),
+    );
+    const row = await prisma.caseStudy.update({
+      where: { id },
+      data: {
+        ...patch,
+        title: String(formData.get("title") ?? "").trim(),
+        fullTitle: String(formData.get("fullTitle") ?? "").trim() || null,
+        excerpt: String(formData.get("excerpt") ?? "").trim() || null,
+        category: String(formData.get("category") ?? "").trim() || null,
+        status: status as any,
+        scheduledAt: scheduledAtFromForm(formData, status),
+        previewImage: jsonOrDbNull(parseJsonField(formData.get("previewImage"))),
+        seo: {
+          metaTitle: String(formData.get("seoTitle") ?? "").trim(),
+          metaDescription: String(formData.get("seoDescription") ?? "").trim(),
+        },
+        clientOverview: {
+          budget: String(formData.get("co_budget") ?? "").trim(),
+          location: String(formData.get("co_location") ?? "").trim(),
+          propertyType: String(formData.get("co_propertyType") ?? "").trim(),
+          purchaseTimeline: String(formData.get("co_purchaseTimeline") ?? "").trim(),
+        },
+        caseDetails: caseDetails as any,
+        mainContent: blocks as any,
       },
-      clientOverview: {
-        budget: String(formData.get("co_budget") ?? "").trim(),
-        location: String(formData.get("co_location") ?? "").trim(),
-        propertyType: String(formData.get("co_propertyType") ?? "").trim(),
-        purchaseTimeline: String(formData.get("co_purchaseTimeline") ?? "").trim(),
-      },
-    },
-  });
-  revalidatePath(`/admin/content/case-studies/${id}`);
-  revalidatePath("/admin/content/case-studies");
-  revalidateCaseStudyPublic(row.language, row.slug);
-}
-
-export async function saveCaseStudyContentBlocks(id: string, items: BlockItem[]) {
-  await requireSession();
-  if (!Array.isArray(items)) throw new Error("Invalid blocks");
-  const blocks = items
-    .map((it) => {
-      if (it.type === "textContent") {
-        const orig = (it.block && typeof it.block === "object") ? it.block : {};
-        return { ...orig, _type: "textContent", _key: it.key, content: htmlToPortableText(it.html ?? "") };
-      }
-      return it.block ? convertHtmlMarkers(it.block) : null;
-    })
-    .filter(Boolean);
-  const row = await prisma.caseStudy.update({ where: { id }, data: { mainContent: blocks as any } });
-  revalidatePath(`/admin/content/case-studies/${id}`);
-  revalidateCaseStudyPublic(row.language, row.slug);
-  return { ok: true };
+    });
+    revalidatePath(`/admin/content/case-studies/${id}`);
+    revalidatePath("/admin/content/case-studies");
+    revalidateCaseStudyPublic(row.language, row.slug);
+    return { ok: "Updated successfully." };
+  } catch (e: any) {
+    return { error: e?.message || "Something went wrong." };
+  }
 }
 
 export async function logout() {

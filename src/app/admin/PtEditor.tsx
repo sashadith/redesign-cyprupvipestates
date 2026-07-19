@@ -1,30 +1,28 @@
 "use client";
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import LinkExt from "@tiptap/extension-link";
 import ImageExt from "@tiptap/extension-image";
 import { portableTextToHtml } from "@/lib/portableText/ptToHtml.mjs";
-import { saveProjectField } from "./actions";
 
 const btn = (active: boolean) =>
   `px-2.5 py-1 text-sm rounded ${active ? "bg-[#1B4B43] text-white" : "bg-white border border-[#E5E7EB] text-[#111827] hover:bg-[#F8F9FA]"}`;
 
+// Portable-Text rich editor. Emits its current HTML as a hidden input inside
+// whatever <form> it's rendered in (name={name}) — part of that form's single
+// Save button, not a save action of its own.
 export default function PtEditor({
-  projectId,
-  field = "description",
+  name,
   label = "Description (rich text)",
   initial,
-  saveAction,
 }: {
-  projectId?: string;
-  field?: string;
+  name: string;
   label?: string;
   initial: unknown;
-  // When provided, used instead of the default project-field save (e.g. case-study sections).
-  saveAction?: (html: string) => Promise<any>;
 }) {
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "err">("idle");
+  const initialHtml = portableTextToHtml(Array.isArray(initial) ? initial : []);
+  const [html, setHtml] = useState(initialHtml);
   const fileRef = useRef<HTMLInputElement>(null);
   const editor = useEditor({
     immediatelyRender: false,
@@ -33,13 +31,14 @@ export default function PtEditor({
       LinkExt.configure({ openOnClick: false, autolink: false }),
       ImageExt,
     ],
-    content: portableTextToHtml(Array.isArray(initial) ? initial : []),
+    content: initialHtml,
     editorProps: {
       attributes: {
         class:
           "ProseMirror min-h-[240px] outline-none text-[#1A1A1A] [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-3 [&_h3]:text-lg [&_h3]:font-semibold [&_h4]:text-base [&_h4]:font-semibold [&_h5]:text-sm [&_h5]:font-semibold [&_h5]:uppercase [&_h5]:tracking-wide [&_p]:my-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:border-l-2 [&_blockquote]:border-[#C29A5E] [&_blockquote]:pl-3 [&_blockquote]:italic [&_a]:text-[#1B4B43] [&_a]:underline",
       },
     },
+    onUpdate: ({ editor }) => setHtml(editor.getHTML()),
   });
 
   if (!editor) return <div className="text-sm text-[#6B7280]">Loading editor…</div>;
@@ -66,30 +65,11 @@ export default function PtEditor({
     }
   }
 
-  async function save() {
-    if (!editor) return;
-    setStatus("saving");
-    try {
-      if (saveAction) await saveAction(editor.getHTML());
-      else await saveProjectField(projectId as string, field, editor.getHTML());
-      setStatus("saved");
-    } catch {
-      setStatus("err");
-    }
-  }
-
   return (
     <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
+      <input type="hidden" name={name} value={html} />
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold">{label}</h2>
-        <div className="flex items-center gap-2">
-          {status === "saved" && <span className="text-xs text-[#2D6E62]">Saved ✓</span>}
-          {status === "err" && <span className="text-xs text-[#C0392B]">Save failed</span>}
-          <button type="button" onClick={save} disabled={status === "saving"}
-            className="rounded-md bg-[#1B4B43] text-white text-sm px-4 py-1.5 hover:bg-[#142E2D] disabled:opacity-60">
-            {status === "saving" ? "Saving…" : "Save"}
-          </button>
-        </div>
       </div>
       <div className="flex flex-wrap gap-1.5 mb-2 pb-2 border-b border-[#E5E7EB]">
         <button type="button" className={btn(editor.isActive("bold"))} onClick={() => editor.chain().focus().toggleBold().run()}><b>B</b></button>
