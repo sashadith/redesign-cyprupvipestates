@@ -35,6 +35,37 @@ deliberately disabled there (`MONDAY_API_KEY`/`TELEGRAM_BOT_TOKEN` blanked in
 its `.env`) so form tests never reach the real CRM — everything else reads
 and writes the one shared database.
 
+## The nginx layer (routing decisions made OUTSIDE this repo)
+
+Production's nginx vhost (`/etc/nginx/sites-enabled/cyprusvipestates` on the
+VPS) makes real routing/redirect decisions **before a request ever reaches
+the Next.js app** — most importantly, a blanket rule that 301-redirects any
+`/en` or `/en/{path}` to the prefixless equivalent:
+
+```nginx
+location = /en { return 301 /; }
+location ^~ /en/ { rewrite ^/en/(.*)$ /$1 permanent; }
+```
+
+**This is not visible from the app code.** `src/middleware.ts` has its own
+next-intl-based default-locale handling (and, since 2026-07-19, its own
+explicit `/en/` 301 logic — see `EN_REDIRECT_TITLE_SWEEP_EXCLUDE`) that looks
+complete and tests correctly in local dev — but in production, nginx's rule
+above wins every time (`^~` prefix match, evaluated before the request is
+ever proxied to the app) and the app-level logic never runs. This was
+discovered the hard way: an EN-migration redirect fix was built, tested
+locally, and deployed at the app level on 2026-07-19, then found to have
+zero effect in production for exactly this reason — nginx had already been
+doing its own (subtly different, exclude-list-unaware) `/en/` redirect the
+whole time, silently, with no trace of it in this repo or any doc.
+
+**A tracked mirror of the live config now lives at `ops/nginx/`** (see
+`ops/nginx/README.md` for how to keep it in sync — there's no automation
+enforcing this yet, it's a manual copy-back-after-editing discipline).
+Before treating `src/middleware.ts` as the authority on any `/en/`,
+locale-prefix, or path-rewrite behavior, check `ops/nginx/cyprusvipestates.conf`
+too — nginx and the app both make routing decisions, and nginx's run first.
+
 ## Standard workflow
 
 ```
