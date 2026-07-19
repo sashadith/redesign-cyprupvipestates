@@ -732,6 +732,27 @@ export async function permanentlyDeleteLeadAction(id: string) {
   revalidatePath("/admin");
 }
 
+// Bulk hard-delete of everything currently in the trash — same cascade as
+// permanentlyDeleteLeadAction, batched in one transaction, with a single
+// audit-log row recording the count (not the individual leads).
+export async function emptyTrashAction(): Promise<{ ok?: string; error?: string }> {
+  const session = await requireAdmin();
+  const trashed = await prisma.lead.findMany({ where: { deletedAt: { not: null } }, select: { id: true } });
+  if (trashed.length === 0) return { error: "Trash is already empty." };
+  await prisma.$transaction(trashed.map((l) => prisma.lead.delete({ where: { id: l.id } })));
+  const actor = session.user as any;
+  await prisma.adminAuditLog.create({
+    data: {
+      actorId: actor.id, actorName: actor.name, actorEmail: actor.email,
+      action: "empty_trash", targetType: "Lead", targetId: "bulk",
+      detail: { count: trashed.length },
+    },
+  });
+  revalidatePath("/admin/crm/trash");
+  revalidatePath("/admin");
+  return { ok: `${trashed.length} lead${trashed.length === 1 ? "" : "s"} permanently deleted.` };
+}
+
 // Homepage "Featured Projects" slider — per-language curated list stored on the homepage
 // siteDocument as featuredProjectsBlock.projects[] ({_key,_ref,_type:"projectRef"}). The
 // front end reads this exact shape via resolveProjectRefs (matches _ref → project.sanityId,

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import TrashRowActions from "./TrashRowActions";
+import EmptyTrashButton from "./EmptyTrashButton";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,10 @@ export default async function CrmTrash() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-semibold">Trash <span className="text-base font-normal text-[#6B7280]">({leads.length})</span></h1>
-        <Link href="/admin/crm" className="text-sm text-[#1B4B43] hover:underline">← Back to leads</Link>
+        <div className="flex items-center gap-3">
+          {isAdmin && <EmptyTrashButton count={leads.length} />}
+          <Link href="/admin/crm" className="text-sm text-[#1B4B43] hover:underline">← Back to leads</Link>
+        </div>
       </div>
       <p className="text-sm text-[#6B7280] mb-4">Deleted leads are kept here for 90 days, then purged automatically.</p>
 
