@@ -13,7 +13,7 @@ const LOGO_SRC = "/uploads/images/05ff9b6142e3a98fa0ef44ae36b302a20bba2e60-2048x
 // The admin is organised into application MODULES. The primary rail shows the
 // modules; multi-page modules (CRM, Website) open a secondary sidebar with their
 // pages. `isAdmin` gates ADMIN-only pages (Footer/site settings, Users module).
-function buildModules(isAdmin: boolean, trashCount: number, actionCenterCount: number): NavModule[] {
+function buildModules(isAdmin: boolean, trashCount: number, activeLeadCount: number, actionCenterCount: number): NavModule[] {
   const websitePages = [
     { href: "/admin/content/featured", label: "Homepage" },
     { href: "/admin/content/projects", label: "Projects" },
@@ -38,9 +38,9 @@ function buildModules(isAdmin: boolean, trashCount: number, actionCenterCount: n
       key: "crm",
       label: "CRM",
       pages: [
-        { href: "/admin/crm", label: "Leads" },
+        { href: "/admin/crm", label: "Leads", count: activeLeadCount, countVariant: "neutral" },
         { href: "/admin/crm/board", label: "Pipeline" },
-        { href: "/admin/crm/trash", label: "Trash", count: trashCount },
+        { href: "/admin/crm/trash", label: "Trash", count: trashCount, countVariant: "neutral" },
       ],
     },
     {
@@ -71,8 +71,9 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   if (!dbUser || !dbUser.isActive) redirect("/admin/login");
   const user = session.user as any;
   const trashCount = await prisma.lead.count({ where: { deletedAt: { not: null } } });
+  const activeLeadCount = await prisma.lead.count({ where: { deletedAt: null } });
   const actionCenterCount = (await getActionCenterItems()).length;
-  const modules = buildModules(user?.role === "ADMIN", trashCount, actionCenterCount);
+  const modules = buildModules(user?.role === "ADMIN", trashCount, activeLeadCount, actionCenterCount);
 
   // Developer-grouped nav for the Developments module: WITH FEED vs NO FEED, A-Z.
   // "With feed" = the developer has at least one live (URL/API) feed analysis.

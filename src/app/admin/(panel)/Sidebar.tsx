@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
 
-export type NavPage = { href: string; label: string; count?: number };
+export type NavPage = { href: string; label: string; count?: number; countVariant?: "alert" | "neutral" };
 // A module is one application section. Single-page modules (Dashboard, Analytics)
 // link straight to their page; multi-page modules open a secondary sidebar.
 export type NavModule = { key: string; label: string; pages: NavPage[] };
@@ -174,7 +174,13 @@ export default function Sidebar({ modules, developersNav, devTotals, user, logoS
     >
       <span>{p.label}</span>
       {!!p.count && (
-        <span className="rounded-full bg-[#DC2626] text-white text-[11px] leading-none font-medium px-1.5 py-1">{p.count}</span>
+        <span
+          className={`rounded-full text-[11px] leading-none font-medium px-1.5 py-1 ${
+            p.countVariant === "neutral" ? "bg-[#E5E7EB] text-[#374151]" : "bg-[#DC2626] text-white"
+          }`}
+        >
+          {p.count}
+        </span>
       )}
     </Link>
   );
