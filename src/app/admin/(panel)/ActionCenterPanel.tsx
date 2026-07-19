@@ -2,6 +2,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { snoozeActionItemAction } from "./actionCenterActions";
+import { NavIcon } from "./NavIcons";
 import type { Severity, Category } from "@/lib/actionCenter";
 
 export type ActionCenterItemVM = {
@@ -11,6 +12,8 @@ export type ActionCenterGroupVM = { category: Category; items: ActionCenterItemV
 
 const DOT_COLOR: Record<Severity, string> = { URGENT: "bg-red-600", ACTION: "bg-amber-500", INFO: "bg-[#9CA3AF]" };
 const CATEGORY_LABEL: Record<Category, string> = { DEVELOPERS: "Developers", CRM: "CRM", SEO: "SEO", SEO_ADVISOR: "SEO Advisor", SYSTEM: "System" };
+// Echoes the sidebar rail's own module icon per category, for visual continuity.
+const CATEGORY_ICON: Record<Category, string> = { DEVELOPERS: "developments", CRM: "crm", SEO: "analytics", SEO_ADVISOR: "analytics", SYSTEM: "settings" };
 const SNOOZE_OPTIONS: [string, number][] = [["1d", 1], ["7d", 7], ["30d", 30]];
 
 function SnoozeMenu({ itemId }: { itemId: string }) {
@@ -58,9 +61,12 @@ function CategoryGroup({ group }: { group: ActionCenterGroupVM }) {
   const hidden = group.items.length - items.length;
   return (
     <div>
-      <div className="px-5 py-2 bg-[#FAFAFA] border-b border-[#E5E7EB] text-[11px] font-semibold uppercase tracking-wide text-[#6B7280] flex items-center justify-between">
-        <span>{CATEGORY_LABEL[group.category]}</span>
-        <span className="rounded-full bg-[#E5E7EB] text-[#374151] px-2 py-0.5 normal-case tracking-normal">{group.items.length}</span>
+      <div className="px-5 py-3 bg-[#081512] flex items-center justify-between">
+        <span className="flex items-center gap-2.5 text-sm font-semibold uppercase tracking-wide text-[#EFE9DB]">
+          <NavIcon k={CATEGORY_ICON[group.category]} size={17} />
+          {CATEGORY_LABEL[group.category]}
+        </span>
+        <span className="rounded-full bg-white/10 text-[#EFE9DB] text-xs font-medium px-2.5 py-1 normal-case tracking-normal">{group.items.length}</span>
       </div>
       <ul className="divide-y divide-[#F3F4F6]">
         {items.map((item) => (
