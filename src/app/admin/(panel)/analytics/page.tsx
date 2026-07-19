@@ -103,7 +103,7 @@ export default async function AnalyticsPage() {
         {totalViews === 0 ? (
           <p className="text-sm text-[#6B7280]">No pageviews recorded yet. Data appears as visitors browse the public site.</p>
         ) : (
-          <div className="flex items-end gap-[3px] h-40">
+          <div className="flex gap-[3px] h-40">
             {series.map((s) => (
               <div key={s.day} className="flex-1 flex flex-col justify-end group relative" title={`${s.day}: ${s.views} views · ${s.uniques} unique`}>
                 <div className="bg-[#1B4B43] rounded-t" style={{ height: `${Math.round((s.views / maxViews) * 100)}%` }} />
