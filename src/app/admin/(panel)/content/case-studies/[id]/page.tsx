@@ -6,6 +6,7 @@ import ImagePicker from "@/app/admin/ImagePicker";
 import BlockEditor from "@/app/admin/BlockEditor";
 import PtEditor from "@/app/admin/PtEditor";
 import TranslationsPanel from "@/app/admin/TranslationsPanel";
+import SlugField from "@/app/admin/SlugField";
 import { utcToZonedInput } from "@/lib/tz";
 import { localizedHref } from "@/lib/locale";
 
@@ -34,10 +35,7 @@ export default async function EditCaseStudy({ params }: { params: { id: string }
             <label className="block text-sm mb-1">Title</label>
             <input name="title" defaultValue={c.title} className={input} />
           </div>
-          <div>
-            <label className="block text-sm mb-1">Slug <span className="text-[#9CA3AF]">(URL path — changing it changes the live URL)</span></label>
-            <input name="slug" defaultValue={c.slug} className={input} />
-          </div>
+          <SlugField initialValue={c.slug} />
           <div>
             <label className="block text-sm mb-1">Full title</label>
             <input name="fullTitle" defaultValue={c.fullTitle ?? ""} className={input} />

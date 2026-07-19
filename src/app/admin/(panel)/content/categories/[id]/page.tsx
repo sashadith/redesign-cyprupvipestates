@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { updateCategory } from "../../../../actions";
 import TranslationsPanel from "@/app/admin/TranslationsPanel";
+import SlugField from "@/app/admin/SlugField";
 
 export const dynamic = "force-dynamic";
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
@@ -23,10 +24,7 @@ export default async function EditCategory({ params }: { params: { id: string } 
           <label className="block text-sm mb-1">Title</label>
           <input name="title" defaultValue={c.title} className={input} />
         </div>
-        <div>
-          <label className="block text-sm mb-1">Slug <span className="text-[#9CA3AF]">(URL path — changing it changes the live URL)</span></label>
-          <input name="slug" defaultValue={c.slug} className={input} />
-        </div>
+        <SlugField initialValue={c.slug} />
         <button className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-5 py-2.5 hover:bg-[#142E2D]">Save category</button>
       </form>
     </div>

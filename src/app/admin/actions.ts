@@ -14,6 +14,7 @@ import { zonedInputToUtc } from "@/lib/tz";
 import { localizedHref } from "@/lib/locale";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
 import { deepSetString } from "@/lib/homepageFields";
+import { slugify } from "@/lib/slugify";
 
 // Convert every `{__html}` rich-text marker (produced by the block editor) into
 // Portable Text via the shared converter — so all blocks store consistent PT and
@@ -40,10 +41,6 @@ function scheduledAtFromForm(formData: FormData, status: string): Date | null {
   if (!when) throw new Error("A publish date/time is required when status is Scheduled.");
   return when;
 }
-function slugify(s: string) {
-  return s.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, "").replace(/[\s_-]+/g, "-").replace(/^-+|-+$/g, "");
-}
-
 // Resolve the slug from the editor form. The slug is editable for every document
 // (the admin manages localized slugs for translations); the submitted value is
 // slugified and made unique per language (excluding self). An empty submission

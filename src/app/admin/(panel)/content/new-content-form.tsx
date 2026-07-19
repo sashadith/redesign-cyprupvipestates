@@ -1,5 +1,6 @@
 "use client";
 import { useFormState, useFormStatus } from "react-dom";
+import SlugField from "@/app/admin/SlugField";
 
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#1B4B43]";
 
@@ -40,10 +41,7 @@ export default function NewContentForm({
         <input name="title" required className={input} />
       </div>
       {hasSlug && (
-        <div>
-          <label className="block text-sm mb-1">Slug (leave blank to derive from title)</label>
-          <input name="slug" placeholder="my-page-slug" className={input} />
-        </div>
+        <SlugField initialValue="" label="Slug" helpText="(leave blank to derive from title on save)" />
       )}
       {hasExcerpt && (
         <div>

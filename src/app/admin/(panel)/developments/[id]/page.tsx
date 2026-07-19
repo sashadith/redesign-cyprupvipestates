@@ -14,6 +14,7 @@ import FloorPlansManager from "./FloorPlansManager";
 import SyncWithDriveButton from "./SyncWithDriveButton";
 import ArchiveButton from "./ArchiveButton";
 import MapLocationField from "./MapLocationField";
+import SlugField from "@/app/admin/SlugField";
 import { getDbProject } from "@/lib/developmentRender";
 import { autoMetaTitle, autoMetaDescription, developmentSlug, TITLE_MAX, DESC_MAX } from "@/lib/developmentSeo";
 import { computePublishGate, areaSlugOf } from "@/lib/developmentPublishGate";
@@ -205,12 +206,18 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
             </summary>
             <div className="mt-3 space-y-3">
               <div>
-                <label className={label}>URL slug</label>
-                <input name="slug" defaultValue={d.slug ?? ""} placeholder={d.slug ? undefined : `auto: ${slugPlaceholder}`} className={field} />
+                <SlugField
+                  name="slug"
+                  titleFieldName="alias"
+                  fallbackTitle={d.publicName}
+                  initialValue={d.slug ?? ""}
+                  label="URL slug"
+                  helpText={null}
+                />
                 <p className="text-xs text-[#9CA3AF] mt-1">
                   {d.slug
                     ? <>Live at <code>/projects/{d.slug}</code>. Assigned automatically on first publish — changing it moves the public URL, so only do this deliberately.</>
-                    : "Assigned automatically the first time this project is published. Set one now to reserve a specific URL."}
+                    : `Assigned automatically the first time this project is published (auto: ${slugPlaceholder}). Set one now to reserve a specific URL, or use Generate.`}
                 </p>
               </div>
               <SeoMetaFields

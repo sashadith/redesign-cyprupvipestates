@@ -1,6 +1,7 @@
 "use client";
 import { useFormState, useFormStatus } from "react-dom";
 import { createDeveloperAccount } from "@/app/admin/actions";
+import SlugField from "@/app/admin/SlugField";
 
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#1B4B43]";
 
@@ -36,7 +37,7 @@ export default function NewDeveloperForm() {
         {field("Website", "website", "url", "https://…")}
         {field("Developer Cloud link", "developerCloudUrl", "url", "https://…")}
         {field("Drive folder link", "driveFolderUrl", "url", "https://drive.google.com/…")}
-        {field("Slug (optional)", "slug", "text", "auto from name")}
+        <SlugField initialValue="" titleFieldName="name" label="Slug (optional)" helpText="(auto from name)" />
       </div>
       <div>
         <label className="block text-xs text-[#6B7280] mb-1">Notes</label>

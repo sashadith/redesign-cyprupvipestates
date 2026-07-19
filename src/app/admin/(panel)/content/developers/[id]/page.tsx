@@ -5,6 +5,7 @@ import { updateDeveloperMeta, saveDeveloperDescription } from "../../../../actio
 import ImagePicker from "@/app/admin/ImagePicker";
 import RichFieldEditor from "@/app/admin/RichFieldEditor";
 import TranslationsPanel from "@/app/admin/TranslationsPanel";
+import SlugField from "@/app/admin/SlugField";
 
 export const dynamic = "force-dynamic";
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
@@ -29,10 +30,7 @@ export default async function EditDeveloper({ params }: { params: { id: string }
             <label className="block text-sm mb-1">Title</label>
             <input name="title" defaultValue={d.title} className={input} />
           </div>
-          <div>
-            <label className="block text-sm mb-1">Slug <span className="text-[#9CA3AF]">(URL path — changing it changes the live URL)</span></label>
-            <input name="slug" defaultValue={d.slug} className={input} />
-          </div>
+          <SlugField initialValue={d.slug} />
           <div>
             <label className="block text-sm mb-1">Full title</label>
             <input name="titleFull" defaultValue={d.titleFull ?? ""} className={input} />

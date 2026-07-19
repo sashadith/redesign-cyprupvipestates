@@ -6,6 +6,7 @@ import PtEditor from "@/app/admin/PtEditor";
 import ImagePicker from "@/app/admin/ImagePicker";
 import GalleryPicker from "@/app/admin/GalleryPicker";
 import TranslationsPanel from "@/app/admin/TranslationsPanel";
+import SlugField from "@/app/admin/SlugField";
 import DeactivateControl from "../DeactivateControl";
 import { utcToZonedInput } from "@/lib/tz";
 import { localizedHref } from "@/lib/locale";
@@ -63,10 +64,7 @@ export default async function EditProject({ params }: { params: { id: string } }
             <label className="block text-sm mb-1">Title</label>
             <input name="title" defaultValue={p.title} className={input} />
           </div>
-          <div>
-            <label className="block text-sm mb-1">Slug <span className="text-[#9CA3AF]">(URL path — changing it changes the live URL)</span></label>
-            <input name="slug" defaultValue={p.slug} className={input} />
-          </div>
+          <SlugField initialValue={p.slug} />
           <div>
             <label className="block text-sm mb-1">Excerpt</label>
             <textarea name="excerpt" rows={2} defaultValue={p.excerpt ?? ""} className={input} />

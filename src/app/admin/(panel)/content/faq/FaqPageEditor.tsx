@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import type { FaqCategory, FaqItem } from "@/types/faq";
+import { slugify } from "@/lib/slugify";
 
 /* Bespoke repeatable-list editor for the FAQ page's structured content
    (categories -> Q&A items) — the generic Landing Pages editor only handles
@@ -73,7 +74,13 @@ export default function FaqPageEditor({
           <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="block text-xs text-[#6B7280] mb-1">Slug</label>
-              <input className={input} value={cat.slug} onChange={(e) => patchCategory(ci, { slug: e.target.value })} />
+              <div className="flex gap-1.5">
+                <input className={input} value={cat.slug} onChange={(e) => patchCategory(ci, { slug: e.target.value })} />
+                <button type="button" onClick={() => patchCategory(ci, { slug: slugify(cat.label) })} title="Generate from label"
+                  className="shrink-0 rounded-md border border-[#E5E7EB] px-2 text-xs text-[#1B4B43] hover:bg-[#F8F9FA]">
+                  Generate
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-xs text-[#6B7280] mb-1">Label</label>
