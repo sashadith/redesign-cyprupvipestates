@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { detectDeviceType } from "@/lib/deviceType";
 import { countryName } from "@/lib/geoCountry";
+import CountriesCard from "./CountriesCard";
 
 export const dynamic = "force-dynamic";
 
@@ -131,7 +132,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
     deviceCounts.set(d, (deviceCounts.get(d) ?? 0) + 1);
   }
   const byDevice = Array.from(deviceCounts.entries()).sort((a, b) => b[1] - a[1]);
-  const topCountries = countBy("country").slice(0, 10);
+  const topCountries = countBy("country").slice(0, 16);
   const knownCountryViews = rows.filter((r) => r.country).length;
   const countryNote = earliestCountryRow
     ? `Country data collected since ${earliestCountryRow.createdAt.toISOString().slice(0, 10)}.`
@@ -245,24 +246,17 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 mb-6">
+      <div className="grid md:grid-cols-2 gap-6 mb-6 items-start">
         <ListCard title="Top pages" rows={topPages} label="path → views" />
-        <ListCard title="Top referrers" rows={topReferrers} label="referrer → views" />
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6 mb-6">
-        <ListCard title="By language" rows={byLocale} label="locale → views" />
-        <BarListCard title="By device" rows={byDevice} total={totalViews} labelFor={(k) => DEVICE_LABEL[k] ?? k} />
+        <div className="flex flex-col gap-6">
+          <ListCard title="Top referrers" rows={topReferrers} label="referrer → views" />
+          <ListCard title="By language" rows={byLocale} label="locale → views" />
+          <BarListCard title="By device" rows={byDevice} total={totalViews} labelFor={(k) => DEVICE_LABEL[k] ?? k} />
+        </div>
       </div>
 
       <div className="max-w-md">
-        <BarListCard
-          title="Top countries"
-          rows={topCountries}
-          total={knownCountryViews}
-          labelFor={countryName}
-          note={countryNote}
-        />
+        <CountriesCard rows={topCountries} total={knownCountryViews} labelFor={countryName} note={countryNote} />
       </div>
     </div>
   );
