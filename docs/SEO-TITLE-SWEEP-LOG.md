@@ -79,3 +79,35 @@ using this as a template for future developer onboarding.
   `{metaTitle, metaDescription}`) — no code changes, no migration.
 - Deployed via `./scripts/deploy-prod.sh --yes` to force an app restart and bust the Next.js ISR
   cache (`blog/[slug]` and `developers/[slug]` both cache for 1h; catch-all landing pages for 60s).
+
+### 2026-07-19 — `/en/` redirect-status diagnosis (no batch/measurement impact)
+
+While building the unrelated EN-migration `/en/{path}` → no-prefix 301 consolidation
+(`docs/SEO-GROWTH-ROADMAP-2026.md` P1 #1/#38), the plan was to exclude all 24 paths above
+(both tables) from the redirect-status upgrade — i.e. leave their `/en/` variant on whatever
+it was already getting — on the assumption that was a *temporary* 307, and that upgrading it
+to a *permanent* 301 mid-window could itself be a confounding signal change during the
+re-measurement period.
+
+**That assumption was wrong, checked against production nginx access logs (retained
+2026-07-05 onward, covering both batches above):** the `/en/` variant of every path in both
+tables — indeed every `/en/{path}` on the site — has been receiving a **permanent 301** from
+a pre-existing, undocumented nginx-level rule (`location ^~ /en/`, see `ops/nginx/`)
+continuously since before 2026-07-05, i.e. before either the 2026-07-07 or 2026-07-18 batch
+was deployed. It was never on a 307 in production; that was only true in local dev testing
+(no nginx in front there). So:
+
+- **No batch above is contaminated.** The canonical (no-prefix) URLs these tables actually
+  measure were never touched by this — their `/en/` variants' redirect status has been
+  constant (301, via nginx) across the entire pre-batch, batch, and post-batch period for
+  both 2026-07-07 and 2026-07-18.
+- **A real but brief self-inflicted regression did happen**, entirely separate from the
+  measured pages' own data: an attempt to explicitly "protect" these 24 `/en/` paths at the
+  nginx layer briefly flipped them from their actual long-standing 301 to a new 307, for
+  ~4 minutes (2026-07-19 17:03–17:06 UTC) before being caught and reverted. Verified via
+  access logs: only 12 requests hit any of the 24 paths during that window, all from the
+  same IP/user-agent (`curl/8.7.1`) running the verification itself — no real crawler or
+  visitor traffic was exposed. No further action needed.
+- The corresponding P2 roadmap item ("finish EN `/en/` 307→301 for the 24 title-sweep-excluded
+  paths, once all sweep windows close") has been **removed** — there is nothing to finish;
+  nginx already treats these exactly like every other `/en/` path and always has.

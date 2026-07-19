@@ -88,8 +88,21 @@ export default async function middleware(request: NextRequest) {
   // URL consolidation. next-intl's own default-locale handling below already
   // strips a literal /en prefix, but only with a 307 (temporary) redirect,
   // which doesn't reliably tell Google to consolidate ranking signals/drop
-  // the old URL from the index. This block replaces that with an explicit
-  // 301, resolved to the FINAL destination in one hop — never a chain:
+  // the old URL from the index.
+  //
+  // IMPORTANT: in PRODUCTION this block never runs. nginx has its own
+  // blanket "/en/" rule (see ops/nginx/cyprusvipestates.conf, documented in
+  // DEPLOYMENT.md's "The nginx layer" section) that intercepts every /en/
+  // request before it reaches this middleware at all — discovered
+  // 2026-07-19 when this block was deployed and had zero observable effect
+  // in production despite testing correctly in local dev (no nginx there).
+  // This block is kept because it's the only /en/ handling local dev has,
+  // and as a fallback if nginx's rule is ever simplified/removed — but
+  // nginx, not this file, is the actual production authority on /en/
+  // routing. Don't trust this comment block alone when reasoning about
+  // production behavior; check the nginx config too.
+  //
+  // This block resolves the FINAL destination in one hop — never a chain:
   //   - /en/properties(/*) collapses straight to /projects, matching what a
   //     bare /properties(/*) request already collapses to (via the propMatch
   //     block above) two hops later. Redirecting to /properties first and
@@ -102,9 +115,10 @@ export default async function middleware(request: NextRequest) {
   //     any other locale and returns before execution ever reaches here, so
   //     a plain strip is safe for whatever's left.
   // Pages still inside their title-sweep 42-day re-measurement window (see
-  // docs/SEO-TITLE-SWEEP-LOG.md) are deliberately excluded — left on the
-  // pre-existing 307 until their window closes, so this status-code change
-  // can't confound the re-measurement (P2 follow-up: docs/SEO-GROWTH-ROADMAP-2026.md).
+  // docs/SEO-TITLE-SWEEP-LOG.md) are excluded here for LOCAL DEV consistency
+  // only — production's real behavior for them is unaffected either way
+  // (nginx already permanently redirects them and always has; see the
+  // 2026-07-19 diagnosis note in SEO-TITLE-SWEEP-LOG.md).
   const enMatch = request.nextUrl.pathname.match(/^\/en(\/.*)?$/);
   if (enMatch) {
     const rest = (enMatch[1] || "").replace(/^\//, "");
