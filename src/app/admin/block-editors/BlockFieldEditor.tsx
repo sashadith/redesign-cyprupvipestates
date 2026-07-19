@@ -139,12 +139,24 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
     const rows: any[] = block.rows ?? [];
     const setCols = (c: string[]) => set({ columns: c });
     const setRows = (r: any[]) => set({ rows: r });
+    const deleteColumn = (ci: number) => {
+      if (!window.confirm("Delete this column?")) return;
+      setCols(columns.filter((_, j) => j !== ci));
+      setRows(rows.map((r) => ({ ...r, cells: (r.cells || []).filter((_: string, j: number) => j !== ci) })));
+    };
+    const deleteRow = (ri: number) => {
+      if (!window.confirm("Delete this row?")) return;
+      setRows(rows.filter((_, j) => j !== ri));
+    };
     return (
       <div className="space-y-2 overflow-x-auto">
         <div className="flex gap-1">
           {columns.map((c, ci) => (
-            <input key={ci} className={`${input} min-w-28`} value={c} placeholder={`Col ${ci + 1}`}
-              onChange={(e) => setCols(columns.map((x, j) => (j === ci ? e.target.value : x)))} />
+            <div key={ci} className="flex items-center gap-0.5 min-w-28">
+              <input className={`${input} min-w-0`} value={c} placeholder={`Col ${ci + 1}`}
+                onChange={(e) => setCols(columns.map((x, j) => (j === ci ? e.target.value : x)))} />
+              <button type="button" onClick={() => deleteColumn(ci)} title="Delete column" className="text-xs text-[#C0392B] px-1 shrink-0">✕</button>
+            </div>
           ))}
           <button type="button" onClick={() => { setCols([...columns, ""]); setRows(rows.map((r) => ({ ...r, cells: [...(r.cells || []), ""] }))); }}
             className="text-xs text-[#1B4B43] px-2 shrink-0">+col</button>
@@ -155,7 +167,7 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
               <input key={ci} className={`${input} min-w-28`} value={cell}
                 onChange={(e) => setRows(rows.map((x, j) => (j === ri ? { ...x, cells: x.cells.map((cc: string, k2: number) => (k2 === ci ? e.target.value : cc)) } : x)))} />
             ))}
-            <button type="button" onClick={() => setRows(rows.filter((_, j) => j !== ri))} className="text-xs text-[#C0392B] px-2 shrink-0">✕</button>
+            <button type="button" onClick={() => deleteRow(ri)} title="Delete row" className="text-xs text-[#C0392B] px-2 shrink-0">✕</button>
           </div>
         ))}
         <button type="button" onClick={() => setRows([...rows, { _key: k(), _type: "tableRow", cells: columns.map(() => "") }])}
