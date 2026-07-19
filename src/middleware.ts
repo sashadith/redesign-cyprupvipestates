@@ -3,6 +3,7 @@ import createIntlMiddleware from "next-intl/middleware";
 
 import { defaultLocale, locales } from "@/i18n.config";
 import nestedPageRedirects from "@/lib/nestedPageRedirects.json";
+import { EN_REDIRECT_TITLE_SWEEP_EXCLUDE } from "@/lib/seo/enRedirectTitleSweepExclude";
 
 // Reserved first segments that are their own route, not singlepages — never canonicalised here.
 const RESERVED = new Set(["projects", "blog", "developers", "case-studies", "files", "partners"]);
@@ -83,11 +84,45 @@ export default async function middleware(request: NextRequest) {
     }
   }
 
+  // EN migration equity (SEO Growth Roadmap P1 #1/#38) — /en/{path} duplicate-
+  // URL consolidation. next-intl's own default-locale handling below already
+  // strips a literal /en prefix, but only with a 307 (temporary) redirect,
+  // which doesn't reliably tell Google to consolidate ranking signals/drop
+  // the old URL from the index. This block replaces that with an explicit
+  // 301, resolved to the FINAL destination in one hop — never a chain:
+  //   - /en/properties(/*) collapses straight to /projects, matching what a
+  //     bare /properties(/*) request already collapses to (via the propMatch
+  //     block above) two hops later. Redirecting to /properties first and
+  //     letting IT redirect again would be a real, visible two-hop chain —
+  //     confirmed live before this fix: /en/properties → 307 → /properties
+  //     → 308 → /projects.
+  //   - Every other /en/{path} resolves directly to /{path}: the singlepage
+  //     canonicalization block above already handles the handful of nested-
+  //     leaf conflicts (nestedPageRedirects.json) for lang="en" exactly like
+  //     any other locale and returns before execution ever reaches here, so
+  //     a plain strip is safe for whatever's left.
+  // Pages still inside their title-sweep 42-day re-measurement window (see
+  // docs/SEO-TITLE-SWEEP-LOG.md) are deliberately excluded — left on the
+  // pre-existing 307 until their window closes, so this status-code change
+  // can't confound the re-measurement (P2 follow-up: docs/SEO-GROWTH-ROADMAP-2026.md).
+  const enMatch = request.nextUrl.pathname.match(/^\/en(\/.*)?$/);
+  if (enMatch) {
+    const rest = (enMatch[1] || "").replace(/^\//, "");
+    const target = /^properties(\/|$)/.test(rest) ? "/projects" : rest ? `/${rest}` : "/";
+    if (!EN_REDIRECT_TITLE_SWEEP_EXCLUDE.has(target)) {
+      const url = request.nextUrl.clone();
+      url.pathname = target;
+      return NextResponse.redirect(url, 301);
+    }
+  }
+
   const handleI18nRouting = createIntlMiddleware({
     locales,
     defaultLocale,
     // Default locale (English) is served without a URL prefix; de/pl/ru keep
-    // their prefix. next-intl also redirects `/en/...` → `/...` automatically.
+    // their prefix. next-intl also redirects `/en/...` → `/...` automatically
+    // (307) — the block above intercepts most cases with a 301 first; this
+    // remains the fallback for excluded (title-sweep) paths.
     localePrefix: "as-needed",
     localeDetection: false,
   });

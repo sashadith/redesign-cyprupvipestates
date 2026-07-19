@@ -533,6 +533,7 @@ All are content/data/link-only, reversible, and require no new pages.
 | P2 | Testimonials/reviews + Review schema | L | H | L | 1d | M | W16 |
 | P2 | Comparison cluster upgrade + snippets | M | M | L | 2d | M | W8 |
 | P2 | Duplicate FAQ/CTA audit (older EN/DE) | M | L | M | 3d | M | W8 |
+| P2 | Finish EN `/en/` 307→301 for the 24 title-sweep-excluded paths, once all sweep windows close (last: 2026-08-29) | M | L | L | 0.5d | M | W7 |
 | P2 | Schema coverage sweep | M | M | M | 3d | M | W17 |
 | P2 | Image SEO + Image sitemap | M | M | M | ongoing | M | W18 |
 | P2 | Core Web Vitals (measure → fix) | M | M | M | 2d | M | W19 |
