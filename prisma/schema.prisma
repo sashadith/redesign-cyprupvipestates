@@ -625,6 +625,7 @@ model PageView {
   referrer    String?
   userAgent   String?
   visitorHash String? // cookieless daily-rotating hash (no IP/PII); for unique-visitor counts
+  deviceType  String? // "mobile" | "tablet" | "desktop", derived from userAgent at track time
   createdAt   DateTime @default(now())
 
   @@index([path])

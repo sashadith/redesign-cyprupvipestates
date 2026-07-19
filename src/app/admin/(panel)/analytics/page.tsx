@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { detectDeviceType } from "@/lib/deviceType";
 
 export const dynamic = "force-dynamic";
 
@@ -35,8 +36,12 @@ type Row = {
   locale: string | null;
   referrer: string | null;
   visitorHash: string | null;
+  userAgent: string | null;
+  deviceType: string | null;
   createdAt: Date;
 };
+
+const DEVICE_LABEL: Record<string, string> = { mobile: "Mobile", tablet: "Tablet", desktop: "Desktop" };
 
 function dayKey(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -49,7 +54,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
 
   const rows = (await prisma.pageView.findMany({
     where: cutoff ? { createdAt: { gte: cutoff } } : {},
-    select: { path: true, locale: true, referrer: true, visitorHash: true, createdAt: true },
+    select: { path: true, locale: true, referrer: true, visitorHash: true, userAgent: true, deviceType: true, createdAt: true },
   })) as Row[];
 
   const uniq = (rs: Row[]) => new Set(rs.map((r) => r.visitorHash).filter(Boolean)).size;
@@ -107,6 +112,16 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
   const topReferrers = countBy("referrer").slice(0, 10);
   const byLocale = countBy("locale");
 
+  // deviceType is stored at track time; older rows fall back to parsing their
+  // already-stored userAgent, so device stats cover full history (unlike
+  // country, whose source IP was never persisted).
+  const deviceCounts = new Map<string, number>();
+  for (const r of rows) {
+    const d = r.deviceType || detectDeviceType(r.userAgent);
+    deviceCounts.set(d, (deviceCounts.get(d) ?? 0) + 1);
+  }
+  const byDevice = Array.from(deviceCounts.entries()).sort((a, b) => b[1] - a[1]);
+
   const Stat = ({ label, value }: { label: string; value: number }) => (
     <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
       <div className="text-xs text-[#6B7280]">{label}</div>
@@ -130,6 +145,41 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
         </ul>
       )}
       <div className="sr-only">{label}</div>
+    </div>
+  );
+
+  const BarListCard = ({
+    title, rows: list, total, labelFor, note,
+  }: {
+    title: string;
+    rows: [string, number][];
+    total: number;
+    labelFor?: (key: string) => string;
+    note?: string;
+  }) => (
+    <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
+      <h2 className="text-sm font-semibold mb-3">{title}</h2>
+      {list.length === 0 ? (
+        <p className="text-sm text-[#6B7280]">No data yet.</p>
+      ) : (
+        <ul className="space-y-2.5">
+          {list.map(([k, n]) => {
+            const pct = total > 0 ? Math.round((n / total) * 100) : 0;
+            return (
+              <li key={k}>
+                <div className="flex justify-between gap-3 text-sm mb-1">
+                  <span className="text-[#374151]">{labelFor ? labelFor(k) : k}</span>
+                  <span className="text-[#6B7280] tabular-nums shrink-0">{n.toLocaleString("en-GB")} · {pct}%</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-[#F3F4F6] overflow-hidden">
+                  <div className="h-full bg-[#1B4B43] rounded-full" style={{ width: `${pct}%` }} />
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {note && <p className="text-xs text-[#9CA3AF] mt-3">{note}</p>}
     </div>
   );
 
@@ -185,8 +235,9 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
         <ListCard title="Top referrers" rows={topReferrers} label="referrer → views" />
       </div>
 
-      <div className="max-w-md">
+      <div className="grid md:grid-cols-2 gap-6">
         <ListCard title="By language" rows={byLocale} label="locale → views" />
+        <BarListCard title="By device" rows={byDevice} total={totalViews} labelFor={(k) => DEVICE_LABEL[k] ?? k} />
       </div>
     </div>
   );

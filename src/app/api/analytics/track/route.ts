@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import crypto from "node:crypto";
+import { detectDeviceType } from "@/lib/deviceType";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
       .slice(0, 32);
 
     await prisma.pageView.create({
-      data: { path, locale, referrer, userAgent: ua.slice(0, 512), visitorHash },
+      data: { path, locale, referrer, userAgent: ua.slice(0, 512), visitorHash, deviceType: detectDeviceType(ua) },
     });
     return new NextResponse(null, { status: 204 });
   } catch {
