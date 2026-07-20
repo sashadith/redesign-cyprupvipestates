@@ -18,8 +18,17 @@ const marginValues: Record<string, string> = {
   large: "clamp(1.25rem, 5vw, 3.75rem)",
 };
 
+// Sold units stay visible (dimmed + sold badge, per ProjectLink's existing
+// treatment) but sink to the end — Array.sort is stable in this engine, so
+// the curated manual order is preserved within each group. Applies to every
+// consumer of this component (landing pages via the [...slug] catch-all,
+// and blog/case-study inline blocks) — same sort everywhere it renders.
+const bySoldLast = (projects: ProjectsSectionBlock["projects"]) =>
+  [...projects].sort((a: any, b: any) => (a.isSold === b.isSold ? 0 : a.isSold ? 1 : -1));
+
 const ProjectsSectionBlockComponent: FC<Props> = ({ block, lang }) => {
   const { title, projects, marginTop, marginBottom } = block;
+  const orderedProjects = bySoldLast(projects);
 
   const computedMarginTop =
     marginTop && marginValues[marginTop] ? marginValues[marginTop] : "0";
@@ -40,7 +49,7 @@ const ProjectsSectionBlockComponent: FC<Props> = ({ block, lang }) => {
       <div className="container">
         <h2 className={styles.title}>{title}</h2>
         <div className={styles.projects}>
-          {projects.map((project: any) => {
+          {orderedProjects.map((project: any) => {
             const projectUrl = `${localePrefix(lang)}/projects/${project.slug}`;
             return (
               <ProjectLink
