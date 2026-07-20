@@ -63,3 +63,47 @@ via a live 301 (nginx-level for the `/de/` cases, next-intl-level for the
 merges these pairs before the Advisor computes any delta, so this ongoing
 consolidation can't masquerade as a fresh ranking collapse. See that file's
 header comment for the full source list.
+
+## Known lab-data caveat for the CWV rule (2026-07-20, not a changelog entry)
+
+The Advisor's "100% of tracked templates fail LCP" alarm (approved suggestion
+`edc0e699`, 2026-07-19) is built entirely on PSI's default Lantern-simulated
+lab data (`src/lib/psi/client.ts` falls back to `lighthouseResult` lab numbers
+whenever CrUX field data is unavailable for a URL). A same-page comparison
+found Lantern's simulated LCP running ~3x higher than a real devtools-throttled
+run (9.7-11.5s simulated vs 3.7s real, on the same production URL), with
+Lantern's own phase breakdown failing to sum to its own total — an internal
+inconsistency, not just a stricter estimate.
+
+Worse: **there is no CrUX field data for this origin at all** — checked via
+PSI's `loadingExperience`/`originLoadingExperience` at both URL and origin
+level, both empty. cyprusvipestates.com doesn't have enough real Chrome-user
+traffic to clear Google's CrUX reporting threshold, so `fetchCwv()` has never
+returned `source: "field"` for any URL (confirmed: zero rows in `cwv_metrics`
+with `source = 'field'`). The rule is not "leaning lab over field" — lab is the
+*only* signal it has ever had. Re-weighting toward field data (the obvious
+fix) isn't available here; the rule needs a different corrective (e.g. treating
+Lantern's absolute LCP less literally, or spot-checking with devtools-method
+throttling) before it raises another site-wide emergency. See the CWV
+investigation thread (approved suggestion `edc0e699`) for the full profiling.
+
+## Already-resolved Advisor findings (2026-07-20, not changelog entries — standing caveats)
+
+The Advisor has re-raised both of these as if new. Both are closed; don't re-suggest.
+
+- **`/de/blog/wo-leben-die-meisten-deutschen-auf-zypern` (-95 clicks):** verified healthy
+  migration artifact, not decay. Single clean 308 from the pre-migration root URL, correct
+  canonical, position stable-to-improving (3.3→3.7). It is also item #8 of the active
+  17-page title-sweep batch (`docs/SEO-TITLE-SWEEP-LOG.md`, due 2026-08-15 to 2026-08-29) —
+  doubly protected from any rewrite. Do not touch until the sweep window closes, and don't
+  attribute the click dip to decay even then.
+- **`/projects` impression collapse (455→90, -80%):** the collapse is dated to **2026-06-22**
+  via day-by-day SearchMetric history — roughly four weeks before the 07-16/07-17
+  legacy-project-to-Development cutover and sitemap changes (`afb6a24`, `4472ac5`, both
+  2026-07-17). Do not attribute this to that merge or to the sitemap work; the timeline
+  rules both out. Indexability is fully healthy: not in `robots.txt` disallow, no
+  `noindex` meta, correct self-referencing canonical, present in the live
+  `sitemaps/projects.xml` with correct hreflang alternates. Clicks were already ~0/day
+  before and after (noise, not signal). No confirmed cause — likely ordinary SERP
+  volatility on a thin filter/listing page, not a redirect or migration defect. Low
+  commercial value; not worth further investigation unless it starts mattering.
