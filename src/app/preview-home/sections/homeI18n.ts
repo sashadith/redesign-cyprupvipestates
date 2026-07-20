@@ -9,7 +9,7 @@ export type HomeStrings = {
   getConsultation: string;
   viewAllProjects: string;
   citiesLead: string;
-  newLead2: string; newAccent: string; newLead: string; showAllProjects: string; // Latest Developments
+  newLead2: string; newAccent: string; newLead: string; showAllProjects: string; top100Cta: string; // Latest Developments
   priceFrom: string; priceOnRequest: string; onRequest: string; sold: string;
   contentTitle: string; contentLead: string;
   faqLead: string;
@@ -25,6 +25,7 @@ const EN: HomeStrings = {
   newLead2: "Latest ", newAccent: "Developments",
   newLead: "The newest additions to our real estate collection.",
   showAllProjects: "Show all projects",
+  top100Cta: "See our curated Top 100",
   priceFrom: "from", priceOnRequest: "Price on request", onRequest: "On request", sold: "Sold",
   contentTitle: "Your Guide to Property in Cyprus",
   contentLead:
@@ -44,6 +45,7 @@ export const HOME_STRINGS: Record<string, HomeStrings> = {
     newLead2: "Neueste ", newAccent: "Projekte",
     newLead: "Die neuesten Ergänzungen unserer Immobilienkollektion.",
     showAllProjects: "Alle Projekte anzeigen",
+    top100Cta: "Unsere Top 100 ansehen",
     priceFrom: "ab", priceOnRequest: "Preis auf Anfrage", onRequest: "Auf Anfrage", sold: "Verkauft",
     contentTitle: "Ihr Leitfaden für Immobilien auf Zypern",
     contentLead:
@@ -60,6 +62,7 @@ export const HOME_STRINGS: Record<string, HomeStrings> = {
     newLead2: "Najnowsze ", newAccent: "inwestycje",
     newLead: "Najnowsze pozycje w naszej kolekcji nieruchomości.",
     showAllProjects: "Pokaż wszystkie projekty",
+    top100Cta: "Zobacz nasze Top 100",
     priceFrom: "od", priceOnRequest: "Cena na życzenie", onRequest: "Na życzenie", sold: "Sprzedane",
     contentTitle: "Twój przewodnik po nieruchomościach na Cyprze",
     contentLead:
@@ -76,6 +79,7 @@ export const HOME_STRINGS: Record<string, HomeStrings> = {
     newLead2: "Новейшие ", newAccent: "проекты",
     newLead: "Самые свежие пополнения нашей коллекции недвижимости.",
     showAllProjects: "Показать все проекты",
+    top100Cta: "Смотреть наш Топ-100",
     priceFrom: "от", priceOnRequest: "Цена по запросу", onRequest: "По запросу", sold: "Продано",
     contentTitle: "Ваш гид по недвижимости на Кипре",
     contentLead:

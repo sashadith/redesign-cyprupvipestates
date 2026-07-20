@@ -646,6 +646,14 @@ img { max-width: 100%; display: block; }
 .newlist__head { display: flex; flex-direction: column; gap: var(--s-3); }
 .newlist__lead { margin: 0; max-width: 32ch; font-family: var(--font-body), sans-serif; font-size: clamp(1rem, 0.97rem + 0.18vw, 1.0625rem); line-height: 1.75; color: var(--text-soft); }
 .newlist__cta { align-self: flex-start; }
+.newlist__subcta {
+  display: inline-flex; align-items: center; gap: var(--s-2); align-self: flex-start;
+  font-family: var(--font-body), sans-serif; font-size: 0.875rem; color: var(--champagne);
+  text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px;
+  transition: color var(--dur-sm) var(--ease);
+}
+.newlist__subcta:hover { color: var(--ivory); }
+.newlist__subcta svg { width: 13px; height: 13px; }
 /* project cards reuse the Featured .pcard styles (image-fill + legibility gradient) */
 
 /* ===================== BENEFITS (dark stats band, animated counters) ===================== */

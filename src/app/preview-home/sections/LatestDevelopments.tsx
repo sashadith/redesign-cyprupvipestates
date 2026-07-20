@@ -1,7 +1,21 @@
 import React from "react";
-import { getLatestDevelopmentsByLang } from "@/sanity/sanity.utils";
+import { getLatestDevelopmentsByLang, getSinglePageByLang } from "@/sanity/sanity.utils";
 import { localePrefix } from "@/lib/locale";
+import { pathBuilders } from "@/lib/seo";
 import { homeStrings } from "./homeI18n";
+
+// Top 100 is a CMS Singlepage with a fully-translated slug per locale (unlike
+// Development/project slugs, which are locale-invariant) — resolve it from the
+// EN row's _translations rather than hardcoding four slugs that would drift
+// silently if the CMS copy ever changes.
+const TOP_100_EN_SLUG = "top-100-properties-in-cyprus";
+async function top100Href(lang: string): Promise<string | null> {
+  const page = await getSinglePageByLang("en", TOP_100_EN_SLUG);
+  if (!page) return null;
+  if (lang === "en") return pathBuilders.topLevel("en", TOP_100_EN_SLUG);
+  const sibling = (page as any)._translations?.find((t: any) => t.slug?.[lang])?.slug?.[lang]?.current;
+  return sibling ? pathBuilders.topLevel(lang, sibling) : null;
+}
 
 /* Latest Developments — light "gallery" section: a deep-green title tile sits
    in the grid alongside the most recently published Developments (reusing the
@@ -19,7 +33,7 @@ const ArrowRight = () => (
 );
 
 export default async function LatestDevelopments({ lang = "en" }: { lang?: string }) {
-  const developments = await getLatestDevelopmentsByLang(5);
+  const [developments, top100] = await Promise.all([getLatestDevelopmentsByLang(5), top100Href(lang)]);
   const t = homeStrings(lang);
   const px = localePrefix(lang);
 
@@ -31,6 +45,12 @@ export default async function LatestDevelopments({ lang = "en" }: { lang?: strin
             <div className="newlist__head">
               <h2 className="newlist__title">{t.newLead2}<span className="it">{t.newAccent}</span></h2>
               <p className="newlist__lead">{t.newLead}</p>
+              {top100 && (
+                <a className="newlist__subcta" href={top100}>
+                  {t.top100Cta}
+                  <ArrowRight />
+                </a>
+              )}
             </div>
             <a className="btn btn--ghost newlist__cta" href={`${px}/projects`}>
               {t.showAllProjects}
