@@ -109,7 +109,18 @@ const HeroVideoSection: FC<Props> = ({ video, posterImage, heroTitle }) => {
           muted
           loop
           playsInline
-          preload="auto"
+          // Was "auto": the browser started eagerly downloading the ENTIRE
+          // hero video (10.5MB, confirmed via a live PSI run 2026-07-20) at
+          // high priority from parse time, competing for bandwidth with the
+          // poster image (this page's actual LCP element, already `priority`
+          // via next/image below) and every other above-the-fold asset —
+          // under Lighthouse's throttled mobile network simulation this
+          // showed up as the dominant contributor to a ~10-20s LCP. "none"
+          // means the browser doesn't fetch until the `el.play()` call in
+          // the effect below actually runs, at normal (not elevated) request
+          // priority — no visual change: the poster overlay already covers
+          // the video until `isVideoReady` flips, exactly as before.
+          preload="none"
           // poster можно оставить как фоллбек, но главный контроль у overlay:
           poster={posterUrl}
         >
