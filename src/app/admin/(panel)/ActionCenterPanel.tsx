@@ -68,7 +68,7 @@ function CategoryGroup({ group }: { group: ActionCenterGroupVM }) {
         </span>
         <span
           className="rounded-full text-xs font-medium px-2.5 py-1 normal-case tracking-normal"
-          style={{ background: "var(--sea-deep-text, #142E2D)", color: "var(--paper, #F5F1E8)" }}
+          style={{ background: "#8E6B3D", color: "var(--paper, #F5F1E8)" }}
         >
           {group.items.length}
         </span>
