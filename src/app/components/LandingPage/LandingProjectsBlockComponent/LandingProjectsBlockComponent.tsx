@@ -13,8 +13,15 @@ type Props = {
   lang: string;
 };
 
+// Sold units stay visible (dimmed + sold badge, per the existing ProjectLink
+// treatment) but sink to the end — Array.sort is stable in this engine, so
+// the curated manual order is preserved within each group.
+const bySoldLast = (projects: LandingProjectsBlock["projects"]) =>
+  [...projects].sort((a: any, b: any) => (a.isSold === b.isSold ? 0 : a.isSold ? 1 : -1));
+
 const LandingProjectsBlockComponent: FC<Props> = ({ block, lang }) => {
   const { title, projects } = block;
+  const orderedProjects = bySoldLast(projects);
 
   return (
     <>
@@ -22,7 +29,7 @@ const LandingProjectsBlockComponent: FC<Props> = ({ block, lang }) => {
         <div className="container">
           <h2 className={styles.title}>{title}</h2>
           <div className={styles.projects}>
-            {projects.map((project: any) => {
+            {orderedProjects.map((project: any) => {
               const projectUrl = `${localePrefix(lang)}/projects/${project.slug}`;
               return (
                 <ProjectLink
