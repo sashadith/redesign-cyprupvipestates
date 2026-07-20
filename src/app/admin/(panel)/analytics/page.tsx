@@ -55,18 +55,35 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
   const rangeLabel = RANGE_OPTIONS.find((o) => o.key === range)!.label;
   const cutoff = rangeCutoff(range);
 
+  // isBot/isPrefetch/isTest rows are recorded (not silently dropped at ingestion —
+  // see src/app/api/analytics/track/route.ts) so they can be counted below, but
+  // excluded from every real card/chart on this page.
+  const NOT_EXCLUDED = { isBot: false, isPrefetch: false, isTest: false } as const;
+
   const rows = (await prisma.pageView.findMany({
-    where: cutoff ? { createdAt: { gte: cutoff } } : {},
+    where: cutoff ? { createdAt: { gte: cutoff }, ...NOT_EXCLUDED } : NOT_EXCLUDED,
     select: { path: true, locale: true, referrer: true, visitorHash: true, userAgent: true, deviceType: true, country: true, createdAt: true },
   })) as Row[];
 
   // Country was only ever derived at track time (never backfillable — the IP
   // itself was never stored), so note the coverage start for the card below.
   const earliestCountryRow = await prisma.pageView.findFirst({
-    where: { country: { not: null } },
+    where: { country: { not: null }, ...NOT_EXCLUDED },
     orderBy: { createdAt: "asc" },
     select: { createdAt: true },
   });
+
+  // "Bot traffic" sanity-check line (footer) — counts, not filtered rows, so this
+  // stays cheap even on "All time". Todays's midnight boundary matches `todayKey`
+  // below (UTC day).
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+  const [botToday, prefetchToday, testToday] = await Promise.all([
+    prisma.pageView.count({ where: { createdAt: { gte: todayStart }, isBot: true } }),
+    prisma.pageView.count({ where: { createdAt: { gte: todayStart }, isPrefetch: true } }),
+    prisma.pageView.count({ where: { createdAt: { gte: todayStart }, isTest: true } }),
+  ]);
+  const excludedToday = botToday + prefetchToday + testToday;
 
   const uniq = (rs: Row[]) => new Set(rs.map((r) => r.visitorHash).filter(Boolean)).size;
   const totalViews = rows.length;
@@ -263,6 +280,12 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: { 
           <BarListCard title="By device" rows={byDevice} total={totalViews} labelFor={(k) => DEVICE_LABEL[k] ?? k} />
         </div>
       </div>
+
+      <p className="text-xs text-[#9CA3AF] mt-6">
+        {excludedToday > 0
+          ? `${excludedToday.toLocaleString("en-GB")} bot/prefetch views excluded today (${botToday} bot · ${prefetchToday} prefetch · ${testToday} test) — not counted above.`
+          : "No bot/prefetch views excluded today."}
+      </p>
     </div>
   );
 }

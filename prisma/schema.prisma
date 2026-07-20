@@ -630,6 +630,13 @@ model PageView {
   country     String? // ISO 3166-1 alpha-2, derived from IP via GeoIP at track time; IP itself is never stored
   createdAt   DateTime @default(now())
 
+  // Non-human/non-confirmed-view classification, all default false and all excluded from
+  // analytics queries — kept distinct (rather than one flag) so the "excluded" footer count
+  // and future debugging can tell them apart:
+  isBot      Boolean @default(false) // matched isbot() or an explicit crawler/PSI-Lighthouse pattern at ingestion, or backfilled from stored userAgent
+  isPrefetch Boolean @default(false) // Sec-Purpose/Purpose: prefetch header at ingestion (Chrome/Google Search speculative prerender that never activated for a real user), or backfilled from the dominant prefetch UA+referrer profile (see migration note)
+  isTest     Boolean @default(false) // our own synthetic verification beacons (?test=1 / X-Analytics-Test header)
+
   @@index([path])
   @@index([createdAt])
   @@index([visitorHash])
