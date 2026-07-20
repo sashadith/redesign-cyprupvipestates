@@ -8,7 +8,9 @@ import styles from "./ProjectLink.module.scss";
 
 type Props = {
   url: string;
-  previewImage: ImageAlt;
+  // Development-sourced cards carry an already-resolved plain URL string
+  // (no Sanity asset ref to dereference) instead of the ImageAlt shape.
+  previewImage: ImageAlt | string;
   title: string;
   price: number;
   bedrooms: number;
@@ -37,14 +39,26 @@ const ProjectLink: FC<Props> = ({
     <Link href={url} className={styles.project}>
       <div className={styles.projectImage}>
         <div className={styles.overlay}></div>
-        <Image
-          src={urlFor(previewImage).url()}
-          alt={previewImage.alt || title}
-          className={styles.image}
-          fill={true}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
-          {...blurProps(previewImage)}
-        />
+        {typeof previewImage === "string" ? (
+          // Plain resolved URL (Development card, possibly an external host not
+          // allowlisted for next/image) — same escape hatch already used by the
+          // homepage's Latest Developments card for the identical constraint.
+          <img
+            src={previewImage}
+            alt={title}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+            loading="lazy"
+          />
+        ) : (
+          <Image
+            src={urlFor(previewImage).url()}
+            alt={previewImage.alt || title}
+            className={styles.image}
+            fill={true}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
+            {...blurProps(previewImage)}
+          />
+        )}
         <div className={styles.projectInfo}>
           {isSold && (
             <div className={styles.soldBadge}>

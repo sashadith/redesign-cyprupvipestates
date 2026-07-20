@@ -183,25 +183,53 @@ async function resolveProjectRefs(refs: any[], lang: string) {
 }
 
 // Compute filteredProjects for projectsSection/landingProjects blocks.
+// Bugs fixed here (2026-07-20, apartments-in-paphos Phase 2 migration): this
+// never filtered to PUBLISHED (could surface DRAFT/ARCHIVED rows), never
+// returned `isSold` (ProjectLink's sold badge and the bySoldLast sort in
+// ProjectsSectionBlockComponent both silently no-op without it), and used a
+// plain price-ascending order instead of the same "recommended" sort the
+// /projects catalog uses by default — reusing sortProjectsRecommended
+// (already defined above in this file) rather than inventing a second,
+// possibly-diverging order.
+//
+// Pagination follow-up (same day): the caller now paginates client-side over
+// the FULL set, so this no longer caps to 16 — and Developments are merged in
+// via queryFilteredDevelopmentRows (same resolver the /projects catalog uses),
+// since the catalog's own universe for a city+type combo includes both. The
+// catalog's underlying query excludes sold legacy Projects entirely
+// (isSold: false), so they're queried here separately and appended after the
+// recommended-sorted available set — sortProjectsRecommended's own
+// pushSoldOutLast only recognizes Development unit-count sold-outs, not
+// legacy Project.isSold, so this is the only place that pushes sold legacy
+// rows to the true end. ProjectsSectionBlockComponent's bySoldLast is a no-op
+// safety net on top of this (kept for the manual-array/non-filtered path).
 async function computeFilteredProjects(lang: string, filterCity?: string, filterPropertyType?: string) {
   const rows = await prisma.project.findMany({
     where: {
       language: lang as any,
+      status: "PUBLISHED",
       ...(filterCity ? { city: filterCity } : {}),
       ...(filterPropertyType ? { propertyType: filterPropertyType } : {}),
       sanityId: { notIn: HIDDEN_PROJECT_IDS },
     },
-    orderBy: { price: "asc" },
   });
-  return rows
-    .filter((p) => p.previewImage)
-    .map((p) => ({
-      _id: p.sanityId,
-      title: p.title,
-      slug: p.slug,
-      previewImage: D(p.previewImage),
-      keyFeatures: p.keyFeatures,
-    }));
+  const withImage = rows.filter((p: any) => p.previewImage);
+  const available = withImage.filter((p: any) => !p.isSold);
+  const sold = withImage.filter((p: any) => p.isSold);
+
+  const devRows = await queryFilteredDevelopmentRows({ city: filterCity, propertyType: filterPropertyType });
+
+  const recommended = sortProjectsRecommended([...available, ...devRows] as any);
+  const full = [...recommended, ...sold];
+
+  return full.map((p: any) => ({
+    _id: p.sanityId,
+    title: p.title,
+    slug: p.slug,
+    previewImage: D(p.previewImage),
+    keyFeatures: p.keyFeatures,
+    isSold: !!p.isSold,
+  }));
 }
 
 // Walk a page-builder contentBlocks array, resolving form/project refs, then deref assets.
@@ -216,7 +244,12 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string): Pr
     }
     if (b._type === "projectsSectionBlock" || b._type === "landingProjectsBlock") {
       if (Array.isArray(b.projects)) b.projects = await resolveProjectRefs(b.projects, lang);
-      b.filteredProjects = await computeFilteredProjects(lang, b.filterCity, b.filterPropertyType);
+      // Only compute the live query when a page actually opts in — avoids an
+      // unbounded Project+Development query (now uncapped, for pagination) on
+      // every one of the other manual-array pages that never read this field.
+      if (b.filterCity || b.filterPropertyType) {
+        b.filteredProjects = await computeFilteredProjects(lang, b.filterCity, b.filterPropertyType);
+      }
     }
     // Inline Related Article: hydrate the referenced internal blog's title/excerpt/slug.
     if (b._type === "inlineRelatedArticleBlock" && b.article?._ref) {

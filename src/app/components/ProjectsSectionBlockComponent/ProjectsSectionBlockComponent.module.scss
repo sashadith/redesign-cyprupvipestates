@@ -16,4 +16,58 @@
   font-style: normal;
   // font-weight: 600;
   margin-bottom: 30px;
+  scroll-margin-top: 90px; // fixed-nav offset for the pager's scroll-to-heading
+}
+
+// Pager — visual reuse of the /projects catalog's .px__pager (see
+// preview-projects/projects.css), driven by local click state instead of
+// <a href="?page=N"> so paginating never changes the landing page's URL.
+// Uses the site-wide tokens from design-tokens.css (loaded globally in
+// [lang]/layout.tsx), not a duplicated palette.
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: clamp(28px, 4vw, 48px);
+  width: 100%;
+}
+
+.pagerLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  height: 42px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: var(--text-sm, 0.875rem);
+  color: var(--text-soft, rgba(239, 233, 219, 0.72));
+  background: var(--glass-bg, rgba(239, 233, 219, 0.06));
+  border: 1px solid var(--hairline-strong, rgba(239, 233, 219, 0.3));
+  cursor: pointer;
+  transition: color 0.4s var(--ease, ease), border-color 0.4s var(--ease, ease), background 0.4s var(--ease, ease);
+
+  &:hover {
+    color: var(--ivory, #efe9db);
+    border-color: var(--champagne, #c29a5e);
+  }
+}
+
+.pagerLinkActive {
+  color: var(--sea-deep, #081512);
+  background: var(--champagne, #c29a5e);
+  border-color: var(--champagne, #c29a5e);
+  cursor: default;
+}
+
+.pagerLinkDisabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.pagerGap {
+  color: var(--text-faint, rgba(239, 233, 219, 0.45));
+  padding: 0 2px;
 }

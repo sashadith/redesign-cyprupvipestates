@@ -240,6 +240,11 @@ export type ProjectsSectionBlock = {
     | "Shop";
   projects: Project[];
   filteredProjects?: Project[];
+  // Render-time only signal (set by the page.tsx dispatch, never stored in
+  // contentBlocks) — true when this render is actually using the live
+  // filterCity/filterPropertyType query result, so the component knows to
+  // paginate client-side instead of rendering the full list unpaginated.
+  paginate?: boolean;
   marginTop?: "small" | "medium" | "large";
   marginBottom?: "small" | "medium" | "large";
 };

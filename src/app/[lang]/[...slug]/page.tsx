@@ -418,12 +418,17 @@ const SinglePage = async ({ params }: Props) => {
         const b = block as ProjectsSectionBlock;
         // Если поле projects отсутствует или null — считаем его пустым массивом
         const manual = Array.isArray(b.projects) ? b.projects : [];
-        const projectsToShow =
-          manual.length > 0
-            ? manual
-            : Array.isArray(b.filteredProjects)
-              ? b.filteredProjects
-              : [];
+        const filtered = Array.isArray(b.filteredProjects) ? b.filteredProjects : [];
+        // Phase 2 (2026-07-20): once a page opts into filterCity/filterPropertyType,
+        // the live city+type query is authoritative and `projects` becomes a pure
+        // fallback for when the live result set is too thin to be worth showing
+        // (MIN_LIVE_RESULTS) — not a permanent override. Pages with no filter set
+        // keep the original manual-array-first behavior untouched.
+        const MIN_LIVE_RESULTS = 6;
+        const usingFiltered = !!(b.filterCity || b.filterPropertyType) && filtered.length >= MIN_LIVE_RESULTS;
+        const projectsToShow = (b.filterCity || b.filterPropertyType)
+          ? (filtered.length >= MIN_LIVE_RESULTS ? filtered : manual)
+          : (manual.length > 0 ? manual : filtered);
 
         return (
           <ProjectsSectionBlockComponent
@@ -435,6 +440,7 @@ const SinglePage = async ({ params }: Props) => {
               projects: projectsToShow,
               marginTop: b.marginTop,
               marginBottom: b.marginBottom,
+              paginate: usingFiltered,
             }}
             lang={lang}
           />
