@@ -13,6 +13,21 @@ import { withCronLog } from "@/lib/cronLog";
 import { prisma } from "@/lib/prisma";
 import type { StoredSuggestion } from "@/lib/seoAdvisor/types";
 import { mdInlineToTelegramHtml } from "@/lib/telegramFormat";
+import { flagHyperactiveSessions } from "@/lib/analyticsBotDetect";
+
+// Piggybacks on this existing daily cron, same pattern as feed-sync's
+// purgeOldTrash/purgeOldCronLogs — best-effort, never blocks the digest.
+// Catches UA-spoofing crawlers the track-time isbot() check can't (2026-07-21,
+// found via a single visitorHash racking up 70+ pageviews/day on a generic
+// Chrome UA and skewing the Top Countries card).
+async function runBotCleanup() {
+  try {
+    return await flagHyperactiveSessions();
+  } catch (e) {
+    console.error("Bot session cleanup failed:", e);
+    return { hashDaysFlagged: 0, rowsFlagged: 0 };
+  }
+}
 
 export const dynamic = "force-dynamic";
 
@@ -79,7 +94,8 @@ export async function GET(req: NextRequest) {
   }
   try {
     const result = await withCronLog("action-digest", runDigest, (r) => (r.sent ? `sent, ${r.count} item(s)` : "nothing to send"));
-    return NextResponse.json({ ok: true, at: new Date().toISOString(), ...result });
+    const botCleanup = await runBotCleanup();
+    return NextResponse.json({ ok: true, at: new Date().toISOString(), ...result, botCleanup });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }
