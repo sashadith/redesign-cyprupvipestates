@@ -247,6 +247,30 @@ export type ProjectsSectionBlock = {
   paginate?: boolean;
   marginTop?: "small" | "medium" | "large";
   marginBottom?: "small" | "medium" | "large";
+  // ---- Added 2026-07-24 for the admin-insertable "Projects" block ----
+  // All optional and never set by any pre-existing block (Sanity-migrated
+  // content, landing pages) — their mere presence is what the blog/case-study
+  // renderers use to tell an old manual/slider block from a new
+  // criteria+pin/exclude one apart, see [lang]/blog/[slug]/page.tsx and
+  // [lang]/case-studies/[slug]/page.tsx.
+  priceMin?: number | null;
+  priceMax?: number | null;
+  // Rare override: true = show ONLY sold listings (e.g. a "sold out" proof
+  // showcase). Left unset/false = normal behavior, unchanged from every other
+  // consumer of computeFilteredProjects — sold items are never excluded, just
+  // always sorted after every available one (never "shown as available").
+  isSold?: boolean;
+  // Specific projects/developments to always include first, regardless of
+  // whether they satisfy filterCity/filterPropertyType/priceMin/priceMax —
+  // stores the same unified id space computeFilteredProjects's cards expose
+  // as `_id` (a legacy Project's sanityId, or a Development's own id).
+  pinnedRefs?: string[];
+  // Same id space as pinnedRefs — removed from the query result AND from the
+  // pinned list (exclude wins over pin if both are set for the same id).
+  excludeRefs?: string[];
+  // Client-side page size for this block's own pagination — defaults to 12
+  // (ProjectsSectionBlockComponent's existing constant) when unset.
+  pageSize?: number;
 };
 // === Конец типов для ProjectsSectionBlick ===
 

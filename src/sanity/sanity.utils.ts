@@ -203,13 +203,26 @@ async function resolveProjectRefs(refs: any[], lang: string) {
 // legacy Project.isSold, so this is the only place that pushes sold legacy
 // rows to the true end. ProjectsSectionBlockComponent's bySoldLast is a no-op
 // safety net on top of this (kept for the manual-array/non-filtered path).
-async function computeFilteredProjects(lang: string, filterCity?: string, filterPropertyType?: string) {
+type ComputeFilteredProjectsOpts = { priceMin?: number | null; priceMax?: number | null; isSold?: boolean };
+
+async function computeFilteredProjects(lang: string, filterCity?: string, filterPropertyType?: string, opts?: ComputeFilteredProjectsOpts) {
+  const priceMin = opts?.priceMin ?? null;
+  const priceMax = opts?.priceMax ?? null;
+  // Rare override (see ProjectsSectionBlock.isSold doc comment): true = only
+  // sold listings. Unset/false leaves the existing behavior untouched — sold
+  // rows are never excluded by default, just always appended after every
+  // available one, below.
+  const onlySold = opts?.isSold === true;
   const rows = await prisma.project.findMany({
     where: {
       language: lang as any,
       status: "PUBLISHED",
       ...(filterCity ? { city: filterCity } : {}),
       ...(filterPropertyType ? { propertyType: filterPropertyType } : {}),
+      ...(onlySold ? { isSold: true } : {}),
+      ...(priceMin != null || priceMax != null
+        ? { price: { ...(priceMin != null ? { gte: priceMin } : {}), ...(priceMax != null ? { lte: priceMax } : {}) } }
+        : {}),
       sanityId: { notIn: HIDDEN_PROJECT_IDS },
     },
   });
@@ -217,10 +230,12 @@ async function computeFilteredProjects(lang: string, filterCity?: string, filter
   const available = withImage.filter((p: any) => !p.isSold);
   const sold = withImage.filter((p: any) => p.isSold);
 
-  const devRows = await queryFilteredDevelopmentRows({ city: filterCity, propertyType: filterPropertyType });
+  const devRows = onlySold
+    ? [] // Developments never carry a per-row isSold flag (sold-out is unit-count-derived) — the "only sold" override only ever applies to legacy Projects.
+    : await queryFilteredDevelopmentRows({ city: filterCity, propertyType: filterPropertyType, priceFrom: priceMin, priceTo: priceMax });
 
   const recommended = sortProjectsRecommended([...available, ...devRows] as any);
-  const full = [...recommended, ...sold];
+  const full = onlySold ? sold : [...recommended, ...sold];
 
   return full.map((p: any) => ({
     _id: p.sanityId,
@@ -230,6 +245,83 @@ async function computeFilteredProjects(lang: string, filterCity?: string, filter
     keyFeatures: p.keyFeatures,
     isSold: !!p.isSold,
   }));
+}
+
+// ---- Admin-insertable "Projects" block (2026-07-24): pin/exclude layering ----
+// Pins can name a project/development that wouldn't otherwise satisfy the
+// block's own city/type/price criteria (that's the whole point of a manual
+// pin) — so they're resolved by direct id lookup against BOTH source tables,
+// never against the criteria-filtered result set.
+export async function resolvePinnedProjects(ids: string[], lang: string) {
+  const cleanIds = Array.from(new Set((ids || []).filter(Boolean)));
+  if (!cleanIds.length) return [];
+
+  const [projectRows, devRows] = await Promise.all([
+    prisma.project.findMany({ where: { sanityId: { in: cleanIds }, language: lang as any, status: "PUBLISHED" } }),
+    prisma.development.findMany({
+      where: { id: { in: cleanIds }, publishStatus: "published" },
+      include: { override: true, units: { select: { beds: true, status: true, price: true, type: true, areaBuilt: true } } },
+    }),
+  ]);
+
+  const mappedProjects = await mapProjectRowsToLang(projectRows as AnyRow[], lang);
+  const mappedDevs = devRows.filter((d) => !!d.slug).map(mapDevelopmentRowToCard);
+
+  const byId = new Map<string, any>();
+  for (const p of mappedProjects) byId.set(p.sanityId, { _id: p.sanityId, title: p.title, slug: p.slug, previewImage: D(p.previewImage), keyFeatures: p.keyFeatures, isSold: !!p.isSold });
+  for (const d of mappedDevs) byId.set(d.sanityId, { _id: d.sanityId, title: d.title, slug: d.slug, previewImage: D(d.previewImage), keyFeatures: d.keyFeatures, isSold: !!d.isSold });
+
+  // Preserve the admin's configured pin order (first pin shows first).
+  return cleanIds.map((id) => byId.get(id)).filter(Boolean);
+}
+
+// Pinned first (admin's chosen order), then the criteria query results with
+// pinned/excluded ids removed. Excludes win over pins for the same id (an
+// admin who both pins and excludes the same project gets it excluded — safer
+// default than silently ignoring the exclude). Sold-last is NOT re-applied
+// here: ProjectsSectionBlockComponent's own bySoldLast already re-sorts
+// whatever array it's given, so a pinned-but-sold item still sinks to the
+// true end exactly like "sold-last beats a pin" requires.
+export function layerPinsAndExcludes(criteriaResults: any[], pinned: any[], excludeRefs?: string[]) {
+  const excludeSet = new Set((excludeRefs || []).filter(Boolean));
+  const pinnedKept = pinned.filter((p) => !excludeSet.has(p._id));
+  const pinnedIds = new Set(pinnedKept.map((p) => p._id));
+  const rest = criteriaResults.filter((p) => !pinnedIds.has(p._id) && !excludeSet.has(p._id));
+  return [...pinnedKept, ...rest];
+}
+
+// Lightweight search list for the admin's project picker (pins/excludes) —
+// deliberately NOT the full computeFilteredProjects/queryFilteredDevelopmentRows
+// machinery (price ranges, distances, scarcity counts): the picker only needs
+// enough to search and disambiguate a list, not render a card.
+export async function listProjectsForPicker(lang: string) {
+  const [projectRows, devRows] = await Promise.all([
+    prisma.project.findMany({
+      where: { language: lang as any, status: "PUBLISHED", sanityId: { notIn: HIDDEN_PROJECT_IDS } },
+      select: { sanityId: true, title: true, city: true, propertyType: true, isSold: true },
+      orderBy: { title: "asc" },
+    }),
+    prisma.development.findMany({
+      where: { publishStatus: "published", supersedesProjects: { none: { status: "PUBLISHED" } }, slug: { not: null } },
+      include: { override: true, units: { select: { status: true, type: true } } },
+      orderBy: { publicName: "asc" },
+    }),
+  ]);
+
+  const fromProjects = projectRows.map((p) => ({
+    ref: p.sanityId as string, title: p.title, city: p.city ?? "", propertyType: p.propertyType ?? "", isSold: !!p.isSold,
+  }));
+  const fromDevs = devRows.map((d) => {
+    const ov = d.override;
+    const soldOut = d.units.length > 0 && d.units.every((u) => u.status !== "available");
+    return {
+      ref: d.id, title: ov?.alias || d.publicName,
+      city: resolveDevelopmentLocation(ov?.district || d.district || "", ov?.town || d.town || "", ov?.area || d.area || ""),
+      propertyType: resolveDevelopmentType(d.category, d.units as any), isSold: soldOut,
+    };
+  });
+
+  return [...fromProjects, ...fromDevs].sort((a, b) => a.title.localeCompare(b.title));
 }
 
 // Walk a page-builder contentBlocks array, resolving form/project refs, then deref assets.
@@ -244,10 +336,28 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string): Pr
     }
     if (b._type === "projectsSectionBlock" || b._type === "landingProjectsBlock") {
       if (Array.isArray(b.projects)) b.projects = await resolveProjectRefs(b.projects, lang);
-      // Only compute the live query when a page actually opts in — avoids an
-      // unbounded Project+Development query (now uncapped, for pagination) on
-      // every one of the other manual-array pages that never read this field.
-      if (b.filterCity || b.filterPropertyType) {
+      // Admin-insertable "Projects" block (2026-07-24): any of these fields
+      // present marks a block built via the new picker — pre-existing content
+      // (Sanity-migrated posts, landingProjectsBlock, landing pages) never has
+      // them, so this can never misfire on anything already published.
+      const isNewStyleBlock =
+        b._type === "projectsSectionBlock" &&
+        (Array.isArray(b.pinnedRefs) || Array.isArray(b.excludeRefs) || b.priceMin != null || b.priceMax != null || b.isSold != null || b.pageSize != null);
+      if (isNewStyleBlock) {
+        // Only run the criteria query when actual criteria are set — an admin
+        // who configures pins only (no city/type/price) gets exactly those
+        // pins, not "pins + every other published project" (same
+        // avoid-the-unbounded-query discipline as the branch below).
+        const hasCriteria = !!(b.filterCity || b.filterPropertyType || b.priceMin != null || b.priceMax != null);
+        const criteriaResults = hasCriteria
+          ? await computeFilteredProjects(lang, b.filterCity, b.filterPropertyType, { priceMin: b.priceMin, priceMax: b.priceMax, isSold: b.isSold })
+          : [];
+        const pinned = Array.isArray(b.pinnedRefs) && b.pinnedRefs.length ? await resolvePinnedProjects(b.pinnedRefs, lang) : [];
+        b.filteredProjects = layerPinsAndExcludes(criteriaResults, pinned, b.excludeRefs);
+      } else if (b.filterCity || b.filterPropertyType) {
+        // Only compute the live query when a page actually opts in — avoids an
+        // unbounded Project+Development query (now uncapped, for pagination) on
+        // every one of the other manual-array pages that never read this field.
         b.filteredProjects = await computeFilteredProjects(lang, b.filterCity, b.filterPropertyType);
       }
     }
@@ -932,6 +1042,44 @@ function bedroomsMatch(range: string | null | undefined, want: string): boolean 
 // drifted from the detail page: a Development showed "Price on request" and
 // "2-2 bed" on the card while its own detail page correctly showed a real price
 // and per-unit beds. Do not reintroduce inline derivation here.
+// Extracted from queryFilteredDevelopmentRows so a single by-id pin lookup
+// (resolvePinnedProjects, for the admin-insertable Projects block) can reuse
+// the exact same field derivation instead of re-deriving it — one source of
+// truth for what a Development's listing-card shape looks like.
+function mapDevelopmentRowToCard(d: any) {
+  const ov = d.override;
+  const town = ov?.town || d.town || "";
+  const district = ov?.district || d.district || "";
+  const area = ov?.area || d.area || "";
+  const gallery: string[] = (Array.isArray(ov?.gallery) && (ov!.gallery as string[]).length ? (ov!.gallery as string[]) : (Array.isArray(d.gallery) ? (d.gallery as string[]) : []));
+  const previewImage = ov?.mainImage || gallery[0] || null;
+  const bedRange = resolveBedRange(d.units);
+  const areaRange = resolveBuildAreaRange(d.units);
+  const { priceFrom: devPriceFrom, priceTo: devPriceTo } = resolveDevelopmentPrice(d.priceFrom, d.priceTo, d.units);
+  return {
+    sanityId: d.id, slug: d.slug as string, title: ov?.alias || d.publicName,
+    excerpt: null as string | null, previewImage, images: gallery,
+    keyFeatures: {
+      city: resolveDevelopmentLocation(district, town, area), propertyType: resolveDevelopmentType(d.category, d.units),
+      bedrooms: bedRange, coveredArea: areaRange, completionDate: ov?.completion || d.completion || "", energyEfficiency: ov?.energy || d.energy || "",
+      price: devPriceFrom, vatApplies: ov?.vatApplies ?? null,
+    },
+    isSold: false, videoId: null as string | null, isFeatured: false, listingPriority: 0, isNew: false,
+    createdAt: d.createdAt, latitude: ov?.latitude ?? d.latitude, longitude: ov?.longitude ?? d.longitude,
+    // For the scarcity banner (src/app/components/ScarcityBanner) — same unit
+    // rows already loaded above, no extra query.
+    unitsAvailable: d.units.filter((u: any) => u.status === "available").length,
+    unitsTotal: d.units.length,
+    // Compact-4 card footer (Beach/School/Golf/Airport) — reuses the
+    // legacy renderer as-is; see toCardDistances for the shape adapter.
+    distances: toCardDistances(d.distances as Record<string, number> | null),
+    _matchLocations: [town, district, area].map((v) => v.toLowerCase()),
+    _searchText: `${d.publicName} ${ov?.alias ?? ""}`.toLowerCase(),
+    _priceFrom: devPriceFrom, _priceTo: devPriceTo,
+    _source: "development" as const,
+  };
+}
+
 async function queryFilteredDevelopmentRows(f: ProjectFilters) {
   const { city = "", priceFrom = null, priceTo = null, propertyType = "", bedrooms = "", q = "", north = null, south = null, east = null, west = null } = f;
   const qActive = q && q.length >= 3 ? q.toLowerCase() : "";
@@ -943,39 +1091,7 @@ async function queryFilteredDevelopmentRows(f: ProjectFilters) {
 
   return devs
     .filter((d) => !!d.slug) // not yet SEO-slugged (see developmentSeo.ts) → not publicly linkable
-    .map((d) => {
-      const ov = d.override;
-      const town = ov?.town || d.town || "";
-      const district = ov?.district || d.district || "";
-      const area = ov?.area || d.area || "";
-      const gallery: string[] = (Array.isArray(ov?.gallery) && (ov!.gallery as string[]).length ? (ov!.gallery as string[]) : (Array.isArray(d.gallery) ? (d.gallery as string[]) : []));
-      const previewImage = ov?.mainImage || gallery[0] || null;
-      const bedRange = resolveBedRange(d.units);
-      const areaRange = resolveBuildAreaRange(d.units);
-      const { priceFrom: devPriceFrom, priceTo: devPriceTo } = resolveDevelopmentPrice(d.priceFrom, d.priceTo, d.units);
-      return {
-        sanityId: d.id, slug: d.slug as string, title: ov?.alias || d.publicName,
-        excerpt: null as string | null, previewImage, images: gallery,
-        keyFeatures: {
-          city: resolveDevelopmentLocation(district, town, area), propertyType: resolveDevelopmentType(d.category, d.units),
-          bedrooms: bedRange, coveredArea: areaRange, completionDate: ov?.completion || d.completion || "", energyEfficiency: ov?.energy || d.energy || "",
-          price: devPriceFrom, vatApplies: ov?.vatApplies ?? null,
-        },
-        isSold: false, videoId: null as string | null, isFeatured: false, listingPriority: 0, isNew: false,
-        createdAt: d.createdAt, latitude: ov?.latitude ?? d.latitude, longitude: ov?.longitude ?? d.longitude,
-        // For the scarcity banner (src/app/components/ScarcityBanner) — same unit
-        // rows already loaded above, no extra query.
-        unitsAvailable: d.units.filter((u) => u.status === "available").length,
-        unitsTotal: d.units.length,
-        // Compact-4 card footer (Beach/School/Golf/Airport) — reuses the
-        // legacy renderer as-is; see toCardDistances for the shape adapter.
-        distances: toCardDistances(d.distances as Record<string, number> | null),
-        _matchLocations: [town, district, area].map((v) => v.toLowerCase()),
-        _searchText: `${d.publicName} ${ov?.alias ?? ""}`.toLowerCase(),
-        _priceFrom: devPriceFrom, _priceTo: devPriceTo,
-        _source: "development" as const,
-      };
-    })
+    .map(mapDevelopmentRowToCard)
     .filter((d) => !city || d._matchLocations.includes(city.toLowerCase()))
     .filter((d) => !propertyType || d.keyFeatures.propertyType.toLowerCase().includes(propertyType.toLowerCase()))
     .filter((d) => !qActive || d._searchText.includes(qActive))

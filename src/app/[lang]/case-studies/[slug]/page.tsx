@@ -170,6 +170,27 @@ const CaseStudyPage = async ({ params }: Props) => {
           />
         );
 
+      // Admin-insertable "Projects" block (2026-07-24) — this switch had no
+      // case for it at all before (fell to default: null, silently dropping
+      // the block), so adding real rendering here is purely additive: no
+      // case-study content ever rendered a projectsSectionBlock previously.
+      case "projectsSectionBlock": {
+        const b = block as any;
+        const isNewStyle =
+          Array.isArray(b.pinnedRefs) || Array.isArray(b.excludeRefs) ||
+          b.priceMin != null || b.priceMax != null || b.isSold != null || b.pageSize != null;
+        if (isNewStyle) {
+          const results = Array.isArray(b.filteredProjects) ? b.filteredProjects : [];
+          const MIN_BLOCK_RESULTS = 3;
+          if (results.length < MIN_BLOCK_RESULTS) return null;
+          return <ProjectsSectionBlockComponent key={b._key} block={{ ...b, projects: results, paginate: true }} lang={lang} />;
+        }
+        const manual = Array.isArray(b.projects) ? b.projects : [];
+        const projectsToShow = manual.length ? manual : Array.isArray(b.filteredProjects) ? b.filteredProjects : [];
+        if (!projectsToShow.length) return null;
+        return <ProjectsSectionBlockComponent key={b._key} block={{ ...b, projects: projectsToShow, paginate: false }} lang={lang} />;
+      }
+
       default:
         return null;
     }

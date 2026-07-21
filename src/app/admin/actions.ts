@@ -15,6 +15,7 @@ import { localizedHref } from "@/lib/locale";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
 import { deepSetString } from "@/lib/homepageFields";
 import { slugify } from "@/lib/slugify";
+import { listProjectsForPicker as listProjectsForPickerQuery } from "@/sanity/sanity.utils";
 
 // Convert every `{__html}` rich-text marker (produced by the block editor) into
 // Portable Text via the shared converter — so all blocks store consistent PT and
@@ -1113,6 +1114,15 @@ export async function listBlogArticlesForPicker(): Promise<{ ref: string; title:
   return rows
     .filter((r) => r.sanityId)
     .map((r) => ({ ref: r.sanityId as string, title: (r.title || r.slug || "Untitled") as string, language: r.language as string }));
+}
+
+// Published projects+developments for the admin-insertable "Projects" block's
+// pin/exclude picker — the actual merge/mapping logic lives in sanity.utils.ts
+// (where every other Project/Development merge already lives), this just
+// gates it behind auth like every other admin picker action.
+export async function listProjectsForPicker(lang: string): Promise<{ ref: string; title: string; city: string; propertyType: string; isSold: boolean }[]> {
+  await requireSession();
+  return listProjectsForPickerQuery(lang);
 }
 
 // ── Media: organise assets into folders ──

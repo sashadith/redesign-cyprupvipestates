@@ -46,6 +46,7 @@ import SchemaBlogPost from "@/app/components/SchemaBlogPost/SchemaBlogPost";
 import SchemaBlogFaq from "@/app/components/SchemaBlogFaq/SchemaBlogFaq";
 import LinkedInConversionTracker from "@/app/components/LinkedInConversionTracker/LinkedInConversionTracker";
 import ProjectsSectionSlider from "@/app/components/ProjectsSectionSlider/ProjectsSectionSlider";
+import ProjectsSectionBlockComponent from "@/app/components/ProjectsSectionBlockComponent/ProjectsSectionBlockComponent";
 import FormMinimalBlockComponent from "@/app/components/FormMinimalBlockComponent/FormMinimalBlockComponent";
 import BlogVideo from "@/app/components/BlogVideo/BlogVideo";
 
@@ -184,6 +185,21 @@ const PagePost = async ({ params }: Props) => {
     switch (block?._type) {
       case "projectsSectionBlock": {
         const b = block;
+        // Admin-insertable "Projects" block (2026-07-24): any of these fields
+        // present marks a block built via the new criteria+pin/exclude picker
+        // — pre-existing Sanity-migrated posts never have them, so this can't
+        // change how any already-published article renders.
+        const isNewStyle =
+          Array.isArray(b.pinnedRefs) || Array.isArray(b.excludeRefs) ||
+          b.priceMin != null || b.priceMax != null || b.isSold != null || b.pageSize != null;
+        if (isNewStyle) {
+          const results = Array.isArray(b.filteredProjects) ? b.filteredProjects : [];
+          // Empty/thin guard — a 1-2 item "section" reads as broken; skip it
+          // rather than render a near-empty block.
+          const MIN_BLOCK_RESULTS = 3;
+          if (results.length < MIN_BLOCK_RESULTS) return null;
+          return <ProjectsSectionBlockComponent block={{ ...b, projects: results, paginate: true }} lang={lang} />;
+        }
         const manual = Array.isArray(b.projects) ? b.projects : [];
         const projectsToShow = manual.length ? manual : Array.isArray(b.filteredProjects) ? b.filteredProjects : [];
         return <ProjectsSectionSlider block={{ ...b, projects: projectsToShow }} lang={lang} />;

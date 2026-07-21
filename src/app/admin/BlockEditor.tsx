@@ -100,6 +100,19 @@ export default function BlockEditor({ kind, initialBlocks }: { kind: "blog" | "s
         justifyContent: "center", alignItems: "center",
       } }];
     });
+  // Projects block — live city/type/price query + optional pins/excludes,
+  // rendered as the paginated grid (ProjectsSectionBlockComponent), same as
+  // landing pages. pinnedRefs/excludeRefs present (even empty) is what marks
+  // this a "new-style" block for BlockFieldEditor's picker UI and the
+  // blog/case-study renderers — see src/types/blog.ts's ProjectsSectionBlock.
+  const addProjects = () =>
+    setItems((prev) => {
+      const key = newKey();
+      return [...prev, { key, type: "projectsSectionBlock", block: {
+        _type: "projectsSectionBlock", _key: key, title: "", projects: [],
+        pinnedRefs: [], excludeRefs: [], isSold: false, pageSize: 12,
+      } }];
+    });
 
   return (
     <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
@@ -164,6 +177,9 @@ export default function BlockEditor({ kind, initialBlocks }: { kind: "blog" | "s
             </button>
             <button type="button" onClick={addButton} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-1.5 hover:bg-[#1B4B43]/5">
               + Add button
+            </button>
+            <button type="button" onClick={addProjects} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-1.5 hover:bg-[#1B4B43]/5">
+              + Add projects
             </button>
           </>
         )}

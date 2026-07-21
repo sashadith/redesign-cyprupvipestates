@@ -31,7 +31,7 @@ const marginValues: Record<string, string> = {
 const bySoldLast = (projects: ProjectsSectionBlock["projects"]) =>
   [...projects].sort((a: any, b: any) => (a.isSold === b.isSold ? 0 : a.isSold ? 1 : -1));
 
-const PAGE_SIZE = 12;
+const DEFAULT_PAGE_SIZE = 12;
 
 // Windowed page numbers: 1 … current-1 current current+1 … last
 function pageWindow(current: number, total: number): Array<number | "…"> {
@@ -48,7 +48,10 @@ function pageWindow(current: number, total: number): Array<number | "…"> {
 }
 
 const ProjectsSectionBlockComponent: FC<Props> = ({ block, lang }) => {
-  const { title, projects, marginTop, marginBottom, paginate } = block;
+  const { title, projects, marginTop, marginBottom, paginate, pageSize } = block;
+  // Existing blocks never set pageSize — falls back to the original hardcoded
+  // 12, unchanged. The admin-insertable Projects block can override it.
+  const effectivePageSize = pageSize && pageSize > 0 ? pageSize : DEFAULT_PAGE_SIZE;
   const orderedProjects = useMemo(() => bySoldLast(projects), [projects]);
   const [page, setPage] = useState(1);
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -56,10 +59,10 @@ const ProjectsSectionBlockComponent: FC<Props> = ({ block, lang }) => {
   // Only the live filterCity/filterPropertyType render opts into pagination
   // (see page.tsx's `usingFiltered` dispatch) — every manual-array page keeps
   // rendering its full curated list unpaginated, exactly as before.
-  const isPaginated = !!paginate && orderedProjects.length > PAGE_SIZE;
-  const totalPages = isPaginated ? Math.ceil(orderedProjects.length / PAGE_SIZE) : 1;
+  const isPaginated = !!paginate && orderedProjects.length > effectivePageSize;
+  const totalPages = isPaginated ? Math.ceil(orderedProjects.length / effectivePageSize) : 1;
   const visibleProjects = isPaginated
-    ? orderedProjects.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+    ? orderedProjects.slice((page - 1) * effectivePageSize, page * effectivePageSize)
     : orderedProjects;
 
   // Client-side only — no ?page= param, no navigation. The full sorted set is
