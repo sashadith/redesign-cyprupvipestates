@@ -166,7 +166,11 @@ img { max-width: 100%; display: block; }
 }
 
 /* ===================== NAV (mobile-first, frosted, fixed) ===================== */
-.nav { position: fixed; inset: 0 0 auto 0; z-index: 40; }
+/* Kept in sync with the identical .nav rule in header-footer.css — both files
+   define this selector and load on overlapping routes, so a mismatch here
+   turns the menu-vs-map z-index fix into a load-order coin flip. See that
+   file's comment for why 2000 (Leaflet panes/controls run up to 1000). */
+.nav { position: fixed; inset: 0 0 auto 0; z-index: 2000; }
 /* frosted layer on a pseudo so .nav itself never becomes the containing block
    for the fixed mobile overlay (backdrop-filter on .nav would clip it after scroll) */
 .nav::before {
