@@ -139,10 +139,24 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
     const rows: any[] = block.rows ?? [];
     const setCols = (c: string[]) => set({ columns: c });
     const setRows = (r: any[]) => set({ rows: r });
+    // columns + rows must land in ONE onChange call: set() reads the outer `block`
+    // closure fresh each time, so two sequential set() calls each compute their
+    // patch from the SAME pre-click block — the second call's {...block, ...patch}
+    // has no idea about the first's change and clobbers it. That's why "+col" only
+    // ever appended a stray cell (from the rows call winning) without ever adding
+    // the column header (the columns call always lost).
+    const addColumn = () => {
+      set({
+        columns: [...columns, ""],
+        rows: rows.map((r) => ({ ...r, cells: [...(r.cells || []), ""] })),
+      });
+    };
     const deleteColumn = (ci: number) => {
       if (!window.confirm("Delete this column?")) return;
-      setCols(columns.filter((_, j) => j !== ci));
-      setRows(rows.map((r) => ({ ...r, cells: (r.cells || []).filter((_: string, j: number) => j !== ci) })));
+      set({
+        columns: columns.filter((_, j) => j !== ci),
+        rows: rows.map((r) => ({ ...r, cells: (r.cells || []).filter((_: string, j: number) => j !== ci) })),
+      });
     };
     const deleteRow = (ri: number) => {
       if (!window.confirm("Delete this row?")) return;
@@ -158,7 +172,7 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
               <button type="button" onClick={() => deleteColumn(ci)} title="Delete column" className="text-xs text-[#C0392B] px-1 shrink-0">✕</button>
             </div>
           ))}
-          <button type="button" onClick={() => { setCols([...columns, ""]); setRows(rows.map((r) => ({ ...r, cells: [...(r.cells || []), ""] }))); }}
+          <button type="button" onClick={addColumn}
             className="text-xs text-[#1B4B43] px-2 shrink-0">+col</button>
         </div>
         {rows.map((r, ri) => (
