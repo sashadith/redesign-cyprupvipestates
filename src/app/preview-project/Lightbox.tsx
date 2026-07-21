@@ -3,6 +3,7 @@
 import React, { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { atSize } from "./imageSize";
+import { developmentCopy } from "@/lib/developmentCopy";
 
 /* Shared fullscreen image viewer: prev/next, keyboard, counter, and a clickable
    thumbnail strip that keeps the active thumb centred (clamping at the ends).
@@ -10,10 +11,11 @@ import { atSize } from "./imageSize";
    transformed ancestor (unit cards), and it locks the page — including the
    Lenis smooth-scroll on window.lenis — so the background can't scroll. */
 export default function Lightbox({
-  images, index, onClose, onIndex, alt = "",
+  images, index, onClose, onIndex, alt = "", lang = "en",
 }: {
-  images: string[]; index: number | null; onClose: () => void; onIndex: (i: number) => void; alt?: string;
+  images: string[]; index: number | null; onClose: () => void; onIndex: (i: number) => void; alt?: string; lang?: string;
 }) {
+  const t = developmentCopy(lang);
   const n = images.length;
   const activeRef = useRef<HTMLButtonElement>(null);
   const lastWheel = useRef(0);
@@ -87,17 +89,17 @@ export default function Lightbox({
 
   return createPortal(
     <div className="pp-lb" role="dialog" aria-modal="true" onClick={closeSelf} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      <button className="pp-lb__close" type="button" aria-label="Close" onClick={closeSelf}>✕</button>
+      <button className="pp-lb__close" type="button" aria-label={t.close} onClick={closeSelf}>✕</button>
       <span className="pp-lb__count">{index + 1} / {n}</span>
       <div className="pp-lb__stage">
-        {n > 1 && <button className="pp-lb__nav pp-lb__nav--prev" type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label="Previous">‹</button>}
+        {n > 1 && <button className="pp-lb__nav pp-lb__nav--prev" type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label={t.previous}>‹</button>}
         <img className="pp-lb__img" src={atSize(images[index], "large")} alt={alt} onClick={(e) => e.stopPropagation()} />
-        {n > 1 && <button className="pp-lb__nav pp-lb__nav--next" type="button" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label="Next">›</button>}
+        {n > 1 && <button className="pp-lb__nav pp-lb__nav--next" type="button" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label={t.next}>›</button>}
       </div>
       {n > 1 && (
         <div className="pp-lb__thumbs" onClick={(e) => e.stopPropagation()}>
           {images.map((src, i) => (
-            <button key={i} ref={i === index ? activeRef : undefined} className={`pp-lb__thumb${i === index ? " is-on" : ""}`} type="button" onClick={() => onIndex(i)} aria-label={`Image ${i + 1}`}>
+            <button key={i} ref={i === index ? activeRef : undefined} className={`pp-lb__thumb${i === index ? " is-on" : ""}`} type="button" onClick={() => onIndex(i)} aria-label={t.imageN(i + 1)}>
               <img src={atSize(src, "small")} alt="" loading="lazy" />
             </button>
           ))}

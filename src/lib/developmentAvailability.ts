@@ -9,6 +9,8 @@
 // the badge trusted `stage || status` instead of counting units. See
 // resolveAvailabilityLabel/availabilityContradiction below for the fix.
 
+import { developmentCopy } from "@/lib/developmentCopy";
+
 export type UnitStatusLike = { status?: string | null };
 
 export type AvailabilityState = { total: number; available: number; soldOut: boolean };
@@ -34,10 +36,18 @@ export function resolveAvailabilityLabel(
   stage: string | null | undefined,
   status: string | null | undefined,
   soldOut: boolean,
+  lang: string = "en",
 ): string {
-  if (soldOut) return "SOLD OUT";
+  const t = developmentCopy(lang);
+  if (soldOut) return t.soldOut;
   const raw = stage || status || "";
-  return raw.toLowerCase().includes("sold") ? "Available" : raw || "Available";
+  if (!raw || raw.toLowerCase().includes("sold")) return t.unitStatus.available;
+  // Canonical stage/status values (the admin dropdown + feed adapters only ever
+  // produce these — see feeds.ts's STAGE_LABEL and the admin page's <select>)
+  // map to a localized label; anything else (a free-typed custom value) is
+  // shown as-is rather than guessed at.
+  const key = raw.toLowerCase() as keyof typeof t.stage;
+  return t.stage[key] ?? raw;
 }
 
 // Admin-facing warning: the stored stage/status claims sold-out, but live unit

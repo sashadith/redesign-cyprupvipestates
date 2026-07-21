@@ -1,4 +1,12 @@
 import "@/app/preview-home/tokens.css";
+// projects.css supplies the shared map/pin/POI-legend styles that PropertyMap.tsx
+// (reused by this page's PropertyMapBlock) depends on — without it the map's tiles,
+// pin sizing, and POI legend all render unstyled (2026-07-21 bug: this import was
+// missing here even though the identical map component works fine on both the
+// /projects listing and the client Presentation route, c/layout.tsx, which both
+// already import it). Must load before project.css so project.css's own
+// .pp-map-scoped overrides (narrower selectors, same specificity tier) still win.
+import "@/app/preview-projects/projects.css";
 import "@/app/preview-project/project.css";
 
 import React from "react";
@@ -81,7 +89,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   // Development wins on a slug collision when published — see the dispatch-order
   // comment above the route's `dynamic` export.
-  const dev = await getDbProjectBySlug(slug);
+  const dev = await getDbProjectBySlug(slug, lang);
   if (dev && dev.publishStatus === "published") {
     const title = resolveMetaTitle(dev, lang, dev.seoOverride);
     const description = resolveMetaDescription(dev, lang, dev.seoOverride);
@@ -149,7 +157,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const ProjectPage = async ({ params }: Props) => {
   const { lang, slug } = params;
 
-  const dev = await getDbProjectBySlug(slug);
+  const dev = await getDbProjectBySlug(slug, lang);
   if (dev && dev.publishStatus === "published") {
     const { canonical } = staticAlternates(lang, ["projects", slug]);
     const devTranslations: Translation[] = i18n.languages.map((l) => ({

@@ -18,6 +18,7 @@ import { splitDescriptionParagraphs } from "@/lib/text";
 import { resolveDevelopmentType } from "@/lib/developmentCard";
 import DistancesStrip from "@/app/components/DistancesStrip/DistancesStrip";
 import { computeAvailability, resolveAvailabilityLabel } from "@/lib/developmentAvailability";
+import { developmentCopy } from "@/lib/developmentCopy";
 
 // Shared render body for both the SEO-facing slug route (the Development
 // branch of src/app/[lang]/projects/[slug]/page.tsx) and the admin-only
@@ -26,8 +27,8 @@ import { computeAvailability, resolveAvailabilityLabel } from "@/lib/development
 // strip — the public slug route omits it entirely (no reason to expose
 // internal feed names or a "Preview" label on an indexable page).
 
-const fmtPrice = (n: number | null | undefined, cur = "EUR") =>
-  n == null ? "Price on request" : `${cur === "EUR" ? "€" : cur + " "}${n.toLocaleString("en-US")}`;
+const fmtPrice = (n: number | null | undefined, cur = "EUR", priceOnRequest = "Price on request") =>
+  n == null ? priceOnRequest : `${cur === "EUR" ? "€" : cur + " "}${n.toLocaleString("en-US")}`;
 
 const LocationPin = () => (
   <svg viewBox="0 0 24 24" fill="none">
@@ -45,6 +46,7 @@ export default async function ProjectPageBody({
   translations: Translation[];
   banner?: React.ReactNode;
 }) {
+  const t = developmentCopy(lang);
   const avail = p.units.filter((u) => u.status === "available");
   // p.priceFrom is already fully resolved (override -> Development.priceFrom ->
   // cheapest available unit) by resolveDevelopmentPrice() in mapRowToVM — see
@@ -64,16 +66,16 @@ export default async function ProjectPageBody({
     : (areaLibrary as Record<string, { title?: string; text: string }>)[p.area];
   const locSeen = new Set<string>();
   const locCols = ([
-    p.district && { name: p.district, tag: "District" },
-    p.town && { name: p.town, tag: "Locality" },
-    p.area && { name: p.area, tag: "Area" },
+    p.district && { name: p.district, tag: t.tagDistrict },
+    p.town && { name: p.town, tag: t.tagLocality },
+    p.area && { name: p.area, tag: t.tagArea },
   ].filter(Boolean) as { name: string; tag: string }[])
     // drop levels that repeat the same place (normalise ph→f so "Paphos" === "Pafos")
     .filter((c) => { const k = c.name.toLowerCase().replace(/ph/g, "f").replace(/[^a-z]/g, ""); return locSeen.has(k) ? false : (locSeen.add(k), true); });
   // Sold-out is computed from live unit data ONLY — never from stage/status
   // text (see src/lib/developmentAvailability.ts for why).
   const { soldOut: isSold } = computeAvailability(p.units);
-  const statusLabel = resolveAvailabilityLabel(p.stage, p.status, isSold);
+  const statusLabel = resolveAvailabilityLabel(p.stage, p.status, isSold, lang);
 
   // Plot / build-area ranges, computed from the currently AVAILABLE units (not
   // sold/reserved) — values aren't always suffixed "m²" at the source, so extract
@@ -90,15 +92,17 @@ export default async function ProjectPageBody({
 
   // facts panel — only rows that actually have data
   const facts = [
-    { label: "Location", value: p.location },
-    types.length ? { label: "Property type", value: types.join(", ") } : null,
-    p.units.length ? { label: "Units", value: `${p.units.length}${avail.length !== p.units.length ? ` (${avail.length} available)` : ""}` } : null,
-    { label: "Status", value: statusLabel },
-    plotRange ? { label: "Plot", value: plotRange } : null,
-    builtRange ? { label: "Build area", value: builtRange } : null,
-    p.completion ? { label: "Completion", value: p.completion } : null,
-    p.energy ? { label: "Energy rating", value: p.energy } : null,
+    { label: t.factLocation, value: p.location },
+    types.length ? { label: t.factPropertyType, value: types.join(", ") } : null,
+    p.units.length ? { label: t.factUnits, value: `${p.units.length}${avail.length !== p.units.length ? ` ${t.factUnitsAvailable(avail.length)}` : ""}` } : null,
+    { label: t.factStatus, value: statusLabel },
+    plotRange ? { label: t.factPlot, value: plotRange } : null,
+    builtRange ? { label: t.factBuildArea, value: builtRange } : null,
+    p.completion ? { label: t.factCompletion, value: p.completion } : null,
+    p.energy ? { label: t.factEnergyRating, value: p.energy } : null,
     // "Total units" from the feed is redundant with the "Units" fact above — drop it.
+    // Extra facts are free-text from the feed/admin (no fixed key set), so they
+    // can't be localized via a static dictionary — shown as authored.
     ...(p.extraFacts ?? []).filter((f) => !/^\s*total\s+units\s*$/i.test(f.label)),
   ].filter(Boolean) as { label: string; value: string }[];
 
@@ -112,7 +116,7 @@ export default async function ProjectPageBody({
 
         {/* ---------- FULL-WIDTH HERO (video loop if set, else image gallery) ---------- */}
         <header className="pp-hero">
-          <HeroMedia images={p.gallery} alt={p.publicName} galleryLabel="View {n} photos" videoUrl={p.heroVideo} />
+          <HeroMedia images={p.gallery} alt={p.publicName} galleryLabel={t.galleryLabel(p.gallery.filter(Boolean).length)} openGalleryLabel={t.openGallery} lang={lang} videoUrl={p.heroVideo} />
           <div className="pp-hero__scrim" aria-hidden />
           <div className="pp-hero__overlay">
             <div className="pp-wrap">
@@ -122,9 +126,9 @@ export default async function ProjectPageBody({
               </div>
               <h1 className="pp-title">{p.publicName}</h1>
               <div className="pp-hero__stats">
-                <div className="pp-hero__price"><b>{priceFrom != null ? fmtPrice(priceFrom, p.currency) : "—"}</b><span>{priceFrom != null ? `from${p.vatApplies !== false ? " · +VAT" : ""}` : "from"}</span></div>
-                <div><b>{types.join(" · ") || "—"}</b><span>type</span></div>
-                {p.units.length > 0 && <div><b>{avail.length}{avail.length !== p.units.length && <small>/{p.units.length}</small>}</b><span>available</span></div>}
+                <div className="pp-hero__price"><b>{priceFrom != null ? fmtPrice(priceFrom, p.currency, t.priceOnRequest) : "—"}</b><span>{priceFrom != null ? `${t.heroFrom}${p.vatApplies !== false ? ` · ${t.vatSuffix}` : ""}` : t.heroFrom}</span></div>
+                <div><b>{types.join(" · ") || "—"}</b><span>{t.heroType}</span></div>
+                {p.units.length > 0 && <div><b>{avail.length}{avail.length !== p.units.length && <small>/{p.units.length}</small>}</b><span>{t.heroAvailable}</span></div>}
               </div>
             </div>
           </div>
@@ -135,7 +139,7 @@ export default async function ProjectPageBody({
           <div className="pp-about__main">
             {p.description && (
               <>
-                <h2 className="pp-h2">About this development</h2>
+                <h2 className="pp-h2">{t.aboutHeading}</h2>
                 {splitDescriptionParagraphs(p.description).map((lines, i) => (
                   <p key={i} className="pp-desc">
                     {lines.map((line, j) => (
@@ -158,7 +162,7 @@ export default async function ProjectPageBody({
               </div>
               {benefits.length > 0 && (
                 <div className="pp-panel__amen">
-                  <div className="pp-panel__label">Features &amp; amenities</div>
+                  <div className="pp-panel__label">{t.amenitiesHeading}</div>
                   <Benefits items={benefits} />
                 </div>
               )}
@@ -171,8 +175,8 @@ export default async function ProjectPageBody({
         {/* ---------- PLANS & RENDERS ---------- */}
         {(p.plans.length > 0 || p.renders.length > 0) && (
           <section className="pp-wrap pp-section">
-            <h2 className="pp-h2">Development Plans <span className="pp-count">{p.plans.length + p.renders.length}</span></h2>
-            <PlanGrid images={[...p.renders, ...p.plans]} />
+            <h2 className="pp-h2">{t.plansHeading} <span className="pp-count">{p.plans.length + p.renders.length}</span></h2>
+            <PlanGrid images={[...p.renders, ...p.plans]} lang={lang} />
           </section>
         )}
 
@@ -198,7 +202,7 @@ export default async function ProjectPageBody({
         {/* ---------- DISTANCES ---------- */}
         {p.distances && (
           <section className="pp-wrap pp-section">
-            <h2 className="pp-h2">Distances</h2>
+            <h2 className="pp-h2">{t.distancesHeading}</h2>
             <DistancesStrip distances={p.distances} lang={lang} />
           </section>
         )}
@@ -214,10 +218,10 @@ export default async function ProjectPageBody({
         {p.units.length > 0 && (
           <section className="pp-wrap pp-section pp-units-sec">
             <div className="pp-units-head">
-              <h2 className="pp-h2">Available units</h2>
-              <p className="pp-hint" style={{ margin: 0 }}>{avail.length} available{p.units.length !== avail.length ? ` · ${p.units.length - avail.length} sold` : ""}</p>
+              <h2 className="pp-h2">{t.unitsHeading}</h2>
+              <p className="pp-hint" style={{ margin: 0 }}>{t.unitsSubAvailable(avail.length)}{p.units.length !== avail.length ? t.unitsSubSold(p.units.length - avail.length) : ""}</p>
             </div>
-            <UnitsView units={p.units} />
+            <UnitsView units={p.units} lang={lang} />
           </section>
         )}
 

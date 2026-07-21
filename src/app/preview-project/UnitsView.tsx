@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { atSize } from "./imageSize";
 import Lightbox from "./Lightbox";
+import { developmentCopy, type DevelopmentStrings } from "@/lib/developmentCopy";
 
 export type UnitVM = {
   id?: string; // DevelopmentUnit.id — only populated by the DB-backed path (developmentRender.ts); optional so the live-feed adapters (feeds.ts), which have no DB row yet, are unaffected
@@ -28,39 +29,38 @@ export type UnitVM = {
   description: string;
 };
 
-const fmtPrice = (n: number | null, cur = "EUR") =>
-  n == null ? "Price on request" : `${cur === "EUR" ? "€" : cur + " "}${n.toLocaleString("en-US")}`;
-
 const statusClass = (s: string) => (s === "sold" ? "sold" : s === "reserved" ? "warn" : "ok");
 const unitLabel = (u: UnitVM) => u.label || u.name || u.ref;
 // numeric value → "123 m²" — feed/price-list data isn't always suffixed consistently
 const sqm = (v: string) => v && !/m²|m2/i.test(v) ? `${v} m²` : v;
+const fmtPrice = (n: number | null, cur = "EUR", priceOnRequest = "Price on request") =>
+  n == null ? priceOnRequest : `${cur === "EUR" ? "€" : cur + " "}${n.toLocaleString("en-US")}`;
 // Sold → a muted dash (the status pill already says "Sold"). Reserved → the word
 // itself in the price slot, not "Price on request" or the actual figure.
-const priceCell = (u: UnitVM) =>
+const priceCell = (u: UnitVM, t: DevelopmentStrings) =>
   u.status === "sold" ? <span className="pp-price-na">—</span>
-  : u.status === "reserved" ? <span className="pp-price-na">Reserved</span>
-  : <>{fmtPrice(u.price, u.currency)}{u.price != null && <span className="pp-vat">+VAT</span>}</>;
+  : u.status === "reserved" ? <span className="pp-price-na">{t.unitStatus.reserved}</span>
+  : <>{fmtPrice(u.price, u.currency, t.priceOnRequest)}{u.price != null && <span className="pp-vat">{t.vatSuffix}</span>}</>;
 
 function StatusPill({ u }: { u: UnitVM }) {
   return <span className={`pp-pill pp-pill--${statusClass(u.status)}`}>{u.statusLabel || u.status}</span>;
 }
 
 // Branded factsheet download — generation is built in the backend phase.
-function PdfButton({ u }: { u: UnitVM }) {
+function PdfButton({ t }: { t: DevelopmentStrings }) {
   return (
     <button type="button" className="pp-pdf" title="Branded PDF factsheet (built in the backend phase)" onClick={(e) => e.stopPropagation()}>
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
-      Factsheet PDF <small>soon</small>
+      {t.factsheetPdf} <small>{t.soon}</small>
     </button>
   );
 }
 
 // Expanded detail — `withPhotos` for the card view; the table view shows every
 // other field but no images (per request).
-function UnitDetails({ u, withPhotos = true, withFeatures = false, onOpenPhoto }: { u: UnitVM; withPhotos?: boolean; withFeatures?: boolean; onOpenPhoto?: (i: number) => void }) {
+function UnitDetails({ u, t, withPhotos = true, withFeatures = false, onOpenPhoto }: { u: UnitVM; t: DevelopmentStrings; withPhotos?: boolean; withFeatures?: boolean; onOpenPhoto?: (i: number) => void }) {
   // strip shows up to 8 tiles; if there are more, the 8th becomes a "+N more" tile
   const stripCount = u.photos.length > 8 ? 7 : Math.min(u.photos.length, 8);
   const extra = u.photos.length - stripCount;
@@ -71,7 +71,7 @@ function UnitDetails({ u, withPhotos = true, withFeatures = false, onOpenPhoto }
           {u.attrs.map((a) => (
             <div key={a.name}>
               <dt>{a.name}</dt>
-              <dd>{/^https?:\/\//i.test(a.value) ? <a href={a.value} target="_blank" rel="noopener noreferrer">{/matterport/i.test(a.value) ? "View tour ↗" : "Watch ↗"}</a> : a.value || "—"}</dd>
+              <dd>{/^https?:\/\//i.test(a.value) ? <a href={a.value} target="_blank" rel="noopener noreferrer">{/matterport/i.test(a.value) ? t.viewTour : t.watch}</a> : a.value || "—"}</dd>
             </div>
           ))}
         </dl>
@@ -84,37 +84,37 @@ function UnitDetails({ u, withPhotos = true, withFeatures = false, onOpenPhoto }
       {withPhotos && u.photos.length > 1 && (
         <div className="pp-uc__strip">
           {u.photos.slice(0, stripCount).map((s, i) => (
-            <button key={i} type="button" className="pp-uc__thumb" onClick={() => onOpenPhoto?.(i)} aria-label={`Enlarge photo ${i + 1}`}>
+            <button key={i} type="button" className="pp-uc__thumb" onClick={() => onOpenPhoto?.(i)} aria-label={t.enlargePhotoN(i + 1)}>
               <img src={atSize(s, "small")} alt="" loading="lazy" />
             </button>
           ))}
           {extra > 0 && (
-            <button type="button" className="pp-uc__thumb pp-uc__thumb--more" onClick={() => onOpenPhoto?.(stripCount)} aria-label={`Show all ${u.photos.length} photos`}>
+            <button type="button" className="pp-uc__thumb pp-uc__thumb--more" onClick={() => onOpenPhoto?.(stripCount)} aria-label={t.showAllPhotos(u.photos.length)}>
               <img src={atSize(u.photos[stripCount], "small")} alt="" loading="lazy" />
-              <span>+{extra} more</span>
+              <span>+{extra}</span>
             </button>
           )}
         </div>
       )}
-      <PdfButton u={u} />
+      <PdfButton t={t} />
     </div>
   );
 }
 
-function UnitCard({ u, open, onToggle }: { u: UnitVM; open: boolean; onToggle: () => void }) {
+function UnitCard({ u, t, open, onToggle }: { u: UnitVM; t: DevelopmentStrings; open: boolean; onToggle: () => void }) {
   const [lb, setLb] = useState<number | null>(null);
   const facts = [
-    u.beds && { k: "Beds", v: u.beds },
-    u.baths && { k: "Baths", v: u.baths },
-    u.areaBuilt && { k: "Built", v: sqm(u.areaBuilt) },
-    u.areaVeranda && { k: "Veranda", v: sqm(u.areaVeranda) },
-    u.areaPlot && { k: "Plot", v: sqm(u.areaPlot) },
-    u.floor && { k: "Floor", v: u.floor },
+    u.beds && { k: t.factBeds, v: u.beds },
+    u.baths && { k: t.factBaths, v: u.baths },
+    u.areaBuilt && { k: t.factBuilt, v: sqm(u.areaBuilt) },
+    u.areaVeranda && { k: t.factVeranda, v: sqm(u.areaVeranda) },
+    u.areaPlot && { k: t.factPlot, v: sqm(u.areaPlot) },
+    u.floor && { k: t.factFloor, v: u.floor },
   ].filter(Boolean) as { k: string; v: string }[];
 
   return (
     <article className={`pp-uc pp-uc--${statusClass(u.status)}`}>
-      <button type="button" className={`pp-uc__media${u.photos.length ? " is-zoomable" : ""}`} onClick={() => u.photos.length > 0 && setLb(0)} aria-label={u.photos.length ? "Enlarge photos" : undefined}>
+      <button type="button" className={`pp-uc__media${u.photos.length ? " is-zoomable" : ""}`} onClick={() => u.photos.length > 0 && setLb(0)} aria-label={u.photos.length ? t.enlargePhotos : undefined}>
         {u.photos[0] ? <img src={atSize(u.photos[0], "medium")} alt={u.name} loading="lazy" /> : <span className="pp-uc__ph" />}
         <StatusPill u={u} />
         {u.type && <span className="pp-uc__type">{u.type}</span>}
@@ -123,7 +123,7 @@ function UnitCard({ u, open, onToggle }: { u: UnitVM; open: boolean; onToggle: (
       <div className="pp-uc__body">
         <div className="pp-uc__row">
           <h3 className="pp-uc__name">{unitLabel(u)}</h3>
-          <span className="pp-uc__price">{priceCell(u)}</span>
+          <span className="pp-uc__price">{priceCell(u, t)}</span>
         </div>
         {facts.length > 0 && (
           <div className="pp-uc__facts">
@@ -143,19 +143,19 @@ function UnitCard({ u, open, onToggle }: { u: UnitVM; open: boolean; onToggle: (
         <div className="pp-uc__actions">
           {(u.attrs.length > 0 || u.description || u.photos.length > 1) && (
             <button className="pp-uc__toggle" type="button" onClick={onToggle} aria-expanded={open}>
-              {open ? "Show less" : "All details"}
+              {open ? t.showLess : t.allDetails}
             </button>
           )}
-          {!open && <PdfButton u={u} />}
+          {!open && <PdfButton t={t} />}
         </div>
-        {open && <UnitDetails u={u} withPhotos withFeatures={false} onOpenPhoto={setLb} />}
+        {open && <UnitDetails u={u} t={t} withPhotos withFeatures={false} onOpenPhoto={setLb} />}
       </div>
       <Lightbox images={u.photos} index={lb} onIndex={setLb} onClose={() => setLb(null)} alt={u.name} />
     </article>
   );
 }
 
-function UnitsTable({ units }: { units: UnitVM[] }) {
+function UnitsTable({ units, t }: { units: UnitVM[]; t: DevelopmentStrings }) {
   const [open, setOpen] = useState<string | null>(null);
   const COLS = 8;
   return (
@@ -163,8 +163,8 @@ function UnitsTable({ units }: { units: UnitVM[] }) {
       <table className="pp-tbl">
         <thead>
           <tr>
-            <th>Unit</th><th>Type</th><th>Floor</th><th className="r">Beds</th><th className="r">Built</th>
-            <th className="r">Plot</th><th className="r">Price</th><th>Status</th>
+            <th>{t.colUnit}</th><th>{t.colType}</th><th>{t.colFloor}</th><th className="r">{t.colBeds}</th><th className="r">{t.colBuilt}</th>
+            <th className="r">{t.colPlot}</th><th className="r">{t.colPrice}</th><th>{t.colStatus}</th>
           </tr>
         </thead>
         <tbody>
@@ -184,12 +184,12 @@ function UnitsTable({ units }: { units: UnitVM[] }) {
                   <td className="r">{u.beds || "—"}</td>
                   <td className="r">{u.areaBuilt ? sqm(u.areaBuilt) : "—"}</td>
                   <td className="r">{u.areaPlot ? sqm(u.areaPlot) : "—"}</td>
-                  <td className="r pp-tbl__price">{priceCell(u)}</td>
+                  <td className="r pp-tbl__price">{priceCell(u, t)}</td>
                   <td><StatusPill u={u} /></td>
                 </tr>
                 {isOpen && (
                   <tr className="pp-tbl__detail">
-                    <td colSpan={COLS}><UnitDetails u={u} withPhotos={false} withFeatures /></td>
+                    <td colSpan={COLS}><UnitDetails u={u} t={t} withPhotos={false} withFeatures /></td>
                   </tr>
                 )}
               </React.Fragment>
@@ -201,7 +201,8 @@ function UnitsTable({ units }: { units: UnitVM[] }) {
   );
 }
 
-export default function UnitsView({ units }: { units: UnitVM[] }) {
+export default function UnitsView({ units, lang = "en" }: { units: UnitVM[]; lang?: string }) {
+  const t = developmentCopy(lang);
   const [view, setView] = useState<"cards" | "table">("cards");
   const [showSold, setShowSold] = useState(false);
   const [cols, setCols] = useState(0);
@@ -252,21 +253,21 @@ export default function UnitsView({ units }: { units: UnitVM[] }) {
 
   return (
     <div>
-      <div className="pp-viewtoggle" role="tablist" aria-label="Unit display">
-        <button role="tab" aria-selected={view === "cards"} className={view === "cards" ? "is-on" : ""} onClick={() => setView("cards")}>Cards</button>
-        <button role="tab" aria-selected={view === "table"} className={view === "table" ? "is-on" : ""} onClick={() => setView("table")}>Table</button>
+      <div className="pp-viewtoggle" role="tablist" aria-label={t.unitDisplayAria}>
+        <button role="tab" aria-selected={view === "cards"} className={view === "cards" ? "is-on" : ""} onClick={() => setView("cards")}>{t.viewCards}</button>
+        <button role="tab" aria-selected={view === "table"} className={view === "table" ? "is-on" : ""} onClick={() => setView("table")}>{t.viewTable}</button>
       </div>
       {view === "cards" ? (
         <>
-          <div className="pp-ugrid" ref={gridRef}>{cardsList.map((u, i) => <UnitCard key={u.ref || u.name} u={u} open={openRows.has(rowOf(i))} onToggle={() => toggleRow(i)} />)}</div>
+          <div className="pp-ugrid" ref={gridRef}>{cardsList.map((u, i) => <UnitCard key={u.ref || u.name} u={u} t={t} open={openRows.has(rowOf(i))} onToggle={() => toggleRow(i)} />)}</div>
           {!showSold && hiddenUnavailable > 0 && (
             <button className="pp-showmore" type="button" onClick={() => setShowSold(true)}>
-              Show {hiddenUnavailable} more {hiddenUnavailable === 1 ? "unit" : "units"}
+              {t.showMoreUnits(hiddenUnavailable)}
             </button>
           )}
         </>
       ) : (
-        <UnitsTable units={sorted} />
+        <UnitsTable units={sorted} t={t} />
       )}
     </div>
   );

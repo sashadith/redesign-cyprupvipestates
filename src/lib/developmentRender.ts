@@ -5,6 +5,7 @@ import type { ProjectVM } from "@/app/preview-project/feeds";
 import type { UnitVM } from "@/app/preview-project/UnitsView";
 import type { SeoOverride } from "@/lib/developmentSeo";
 import { resolveDevelopmentPrice, resolveDevelopmentLocation } from "@/lib/developmentCard";
+import { developmentCopy } from "@/lib/developmentCopy";
 
 /* Render a development straight from the DB (Phase 1, Increment 4). Reads the
    synced Development/Units + merges the admin DevelopmentOverride (alias, area,
@@ -13,7 +14,7 @@ import { resolveDevelopmentPrice, resolveDevelopmentLocation } from "@/lib/devel
    fallback for anything not yet synced. */
 
 const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
-const statusLabel = (s: string) => (s === "sold" ? "Sold" : s === "reserved" ? "Reserved" : "Available");
+const statusLabel = (s: string, lang: string) => developmentCopy(lang).unitStatus[(s === "sold" ? "sold" : s === "reserved" ? "reserved" : "available") as "available" | "sold" | "reserved"];
 
 type Row = Development & { units: DevelopmentUnit[]; override: DevelopmentOverride | null };
 
@@ -44,7 +45,7 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
   const units: UnitVM[] = d.units.map((u) => ({
     id: u.id,
     ref: u.ref ?? "", name: u.name ?? "", label: u.label ?? "", type: u.type ?? "",
-    status: (u.status as UnitVM["status"]) ?? "available", statusLabel: statusLabel(u.status ?? "available"),
+    status: (u.status as UnitVM["status"]) ?? "available", statusLabel: statusLabel(u.status ?? "available", lang),
     price: u.price ?? null, currency: u.currency ?? "EUR",
     beds: u.beds ?? "", baths: u.baths ?? "", areaBuilt: u.areaBuilt ?? "", areaPlot: u.areaPlot ?? "", areaVeranda: u.areaVeranda ?? "",
     floor: u.floor ?? "", attrs: arr(u.attrs), features: arr<string>(u.amenities),
@@ -91,14 +92,17 @@ export const getDbProject = cache(async (dev: string, id: string): Promise<DbPro
   return d ? mapRowToVM(d) : null;
 });
 
-/** Slug-based lookup for the SEO-facing route (src/app/[lang]/preview-project/[slug]/page.tsx). */
-export const getDbProjectBySlug = cache(async (slug: string): Promise<DbProjectVM | null> => {
+/** Slug-based lookup for the SEO-facing route (src/app/[lang]/projects/[slug]/page.tsx).
+ *  `lang` selects the override description field (descriptionEN/DE/PL/RU) and the
+ *  per-unit status label — defaults to "en" so any caller that (still) doesn't pass
+ *  it keeps the original EN-preferring behaviour. */
+export const getDbProjectBySlug = cache(async (slug: string, lang: string = "en"): Promise<DbProjectVM | null> => {
   if (!slug) return null;
   const d = await prisma.development.findUnique({
     where: { slug },
     include: { units: { orderBy: { sortIndex: "asc" } }, override: true },
   });
-  return d ? mapRowToVM(d) : null;
+  return d ? mapRowToVM(d, lang) : null;
 });
 
 /** Bulk by-id lookup, keyed by Development.id — for the Client Presentation

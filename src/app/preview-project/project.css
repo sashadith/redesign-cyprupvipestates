@@ -67,6 +67,15 @@
   color: var(--ivory); font-family: var(--font-body); font-size: 0.82rem; border: 1px solid var(--hairline-strong);
   background: rgba(8,21,18,0.55); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); transition: border-color var(--dur-sm) var(--ease); }
 .pp-hero__galbtn:hover { border-color: var(--accent); }
+/* Mobile: the bottom-right anchor collides with the hero text overlay once the
+   title/stats wrap onto more lines at narrow widths (2026-07-21 bug — "View N
+   photos" sitting on top of the stats row). The overlay content hugs the
+   BOTTOM of the hero (.pp-hero uses align-items: flex-end), so the top of the
+   hero image is empty on mobile — move the button there instead, clear of any
+   text. min-height keeps the tap target >=44px per WCAG. */
+@media (max-width: 640px) {
+  .pp-hero__galbtn { top: max(env(safe-area-inset-top), 16px); bottom: auto; right: var(--gutter); min-height: 44px; }
+}
 .pp-eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .pp-loc { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
   color: rgba(255,255,255,0.92); padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14);
