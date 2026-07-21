@@ -36,7 +36,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { name, surname, phone, email, message, preferredContact, currentPage, lang } = body;
+    const { name, surname, phone, email, message, question, preferredContact, currentPage, lang } = body;
 
     const page = String(currentPage ?? "").trim();
     const pageUrl = safeUrl(page);
@@ -54,7 +54,12 @@ export async function POST(request: Request) {
     const emailNorm = String(email ?? "").trim().toLowerCase();
     const phoneNorm = String(phone ?? "").trim();
     const preferred = String(preferredContact ?? "").trim().toLowerCase();
-    const messageNorm = String(message ?? "").trim();
+    // FAQ's Form (showQuestionField) submits the free-text field as "question",
+    // not "message" — every other form on the site (FormFull, FormMinimalBlock)
+    // uses "message". Neither is ever populated at the same time as the other,
+    // so accepting both here is safe; before this, a FAQ submission's question
+    // text was silently dropped (never reached the CRM record, Telegram, or email).
+    const messageNorm = String(message ?? question ?? "").trim();
     const langNorm = String(lang ?? "").toLowerCase();
 
     if (!firstName || !phoneNorm || !emailNorm) return blocked("missing_fields");

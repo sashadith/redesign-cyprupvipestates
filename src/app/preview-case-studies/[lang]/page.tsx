@@ -103,7 +103,7 @@ export default async function CaseStudiesPage({ params }: Props) {
             <div className="ins__hero-text">
               <p className="ins__eyebrow">{t.eyebrow}</p>
               <h1 className="ins__hero-title">
-                {t.heroTitlePlain}<span className="it">{t.heroTitleItalic}</span>
+                <span className="csp__hero-title-lock">{t.heroTitlePlain}<span className="it">{t.heroTitleItalic}</span></span>
               </h1>
               <p className="ins__hero-lead">{t.heroLead}</p>
               <p className="ins__hero-meta">{total === 1 ? `${total} ${t.heroMetaOne}` : t.heroMetaMany(total)}</p>

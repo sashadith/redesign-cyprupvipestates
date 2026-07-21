@@ -116,32 +116,45 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 .faqp__toggleall:hover { color: var(--ivory); }
 
 /* ------------------------------------------------------------ CATEGORY --- */
-.faqp__list { padding-bottom: clamp(40px, 5vw, 64px); }
-
-/* Soft golden "clouds" drifting behind the dark list below the hero — same
-   treatment (colors/keyframes) as .descblock/.casestudies (tokens.css),
-   reused verbatim rather than re-derived. Placed inside EACH section
-   (.faqp__cat), not once at the top of the whole list, so the clouds break
-   up the page visually as a reader scrolls through many categories — sized
-   down from the tokens.css original since nine instances stack down a long
-   page. z-index:-1 + pointer-events:none (same as the source pattern) keeps
-   them decorative only, never intercepting accordion clicks or reducing
-   question/answer text contrast. .faqp__cat is full-bleed (the .wrap max-width
-   container now sits INSIDE it, around faqp__cat-head/faqp__items only) so the
-   clip boundary is the viewport, not the 1360px content column — otherwise the
-   clouds never reach the edges they're drawn to reach. */
-.faqp__cat { position: relative; isolation: isolate; overflow: clip; padding-top: clamp(40px, 5vw, 64px); }
-.faqp__cat::before, .faqp__cat::after {
+/* Soft golden "clouds" drifting behind the ENTIRE list, on the main dark
+   background — one shared pair here instead of one per category (was
+   .faqp__cat::before/::after, nine repetitions down a long page, which read
+   as visual clutter). Same colors/keyframes as .descblock/.casestudies
+   (tokens.css). z-index:-1 + pointer-events:none keeps them decorative only,
+   never intercepting accordion clicks or reducing question/answer contrast.
+   Percentage top/left offsets so the pair still spreads across a short (one
+   category) or long (all nine) list without per-category repetition. */
+.faqp__list {
+  position: relative; isolation: isolate; overflow: clip;
+  padding-bottom: clamp(40px, 5vw, 64px);
+}
+.faqp__list::before, .faqp__list::after {
   content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; aspect-ratio: 1; will-change: transform;
   background: radial-gradient(circle, rgba(194, 154, 94, 0.14), rgba(194, 154, 94, 0) 66%);
 }
-.faqp__cat::before { width: min(36vw, 420px); top: -4%; left: -8%; animation: cloudDriftA 30s ease-in-out infinite alternate; }
-.faqp__cat::after {
-  width: min(30vw, 360px); right: -8%; bottom: 6%;
+.faqp__list::before { width: min(46vw, 560px); top: 4%; left: -12%; animation: cloudDriftA 34s ease-in-out infinite alternate; }
+.faqp__list::after {
+  width: min(40vw, 480px); right: -12%; top: 58%;
   background: radial-gradient(circle, rgba(194, 154, 94, 0.10), rgba(194, 154, 94, 0) 66%);
-  animation: cloudDriftB 36s ease-in-out infinite alternate;
+  animation: cloudDriftB 40s ease-in-out infinite alternate;
 }
-.faqp__cat-head { max-width: 62ch; margin-bottom: clamp(20px, 2.4vw, 28px); }
+
+.faqp__cat { position: relative; padding-top: clamp(40px, 5vw, 64px); }
+.faqp__cat-head { display: flex; align-items: flex-start; gap: clamp(14px, 1.6vw, 20px); max-width: 62ch; margin-bottom: clamp(20px, 2.4vw, 28px); }
+.faqp__cat-head-text { min-width: 0; }
+/* Topic icon — masked onto the same gold-shimmer gradient/animation as .it
+   (see tokens.css), the same masking technique already used for the
+   How-We-Work connector arrow. Shape supplied per category via the
+   --icon-mask custom property (FaqExplorer.tsx). */
+.faqp__cat-icon {
+  flex: none; width: clamp(30px, 2.6vw, 36px); height: clamp(30px, 2.6vw, 36px); margin-top: 3px;
+  background: linear-gradient(100deg, var(--accent) 0%, var(--accent) 38%, #F4DB9E 50%, var(--accent) 62%, var(--accent) 100%);
+  background-size: 230% 100%;
+  animation: goldShine 5s linear infinite;
+  -webkit-mask: var(--icon-mask) center / contain no-repeat;
+  mask: var(--icon-mask) center / contain no-repeat;
+}
+@media (prefers-reduced-motion: reduce) { .faqp__cat-icon { animation: none; } }
 .faqp__cat-title {
   margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
   font-size: clamp(1.5rem, 1.3rem + 0.9vw, 2rem); color: var(--text); letter-spacing: -0.01em;

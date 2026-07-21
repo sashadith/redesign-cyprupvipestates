@@ -678,7 +678,7 @@ img { max-width: 100%; display: block; }
   font-size: clamp(3rem, 2.3rem + 2.9vw, 4.35rem); letter-spacing: -0.02em;
 }
 .bstat__sign { font-size: 0.62em; margin-left: 0.04em; }
-.bstat__title { margin: var(--s-2) 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-lead); font-weight: 500; color: var(--ivory); }
+.bstat__title { margin: var(--s-2) 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-lead); font-weight: 500; color: var(--text); }
 .bstat__desc { margin: 0; max-width: 30ch; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.55; color: var(--text-soft); }
 
 /* ===================== HOW WE WORK (reuses the About layout) ===================== */

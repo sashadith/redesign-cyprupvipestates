@@ -45,7 +45,7 @@ import { partnersCopy } from "./copy";
 
 type Props = { params: { lang: string } };
 
-const HERO_IMAGE = "/uploads/files/e9d1c7cb6b6a454772c591756f35a3df695b6e40.jpg";
+const HERO_IMAGE = "/uploads/files/b2b577b92f5d66696f53125853d50ba3784f912d.webp";
 // Same consultant photo/name/title every other redesigned page's form uses
 // (src/app/preview-home/sections/Form.tsx) — reused verbatim, not a new asset.
 const CONSULTANT_IMAGE = "/uploads/files/50b0d355d8507f9aadbe785a65e8a7233dd8f2e6.png";
@@ -150,7 +150,7 @@ export default function PartnersPage({ params }: Props) {
         </section>
 
         {/* --------------------------------------------------------- STATS */}
-        <div className="pnr__stats-section">
+        <div className="pnr__stats-section is-light">
           <div className="wrap" style={{ paddingTop: "var(--section-y)" }}>
             <p className="pnr__eyebrow">{t.statsEyebrow}</p>
             <h2 className="pnr__title">
@@ -186,7 +186,7 @@ export default function PartnersPage({ params }: Props) {
         </section>
 
         {/* ---------------------------------------------------------- TYPES */}
-        <section className="section">
+        <section className="section is-light">
           <div className="wrap">
             <div className="pnr__section-head">
               <p className="pnr__eyebrow">{t.typesEyebrow}</p>

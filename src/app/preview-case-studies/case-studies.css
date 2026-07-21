@@ -7,6 +7,16 @@
 
 .csp { display: block; }
 
+/* Keeps the plain+italic hero title pair (e.g. DE "Erfolgs"+"geschichten",
+   RU "Истории "+"успеха") on one line/word instead of the two <span>s
+   wrapping apart — same problem FAQ's .faqp__hero-title-lock solves, same
+   fix, scoped here rather than touching the shared .ins__hero-title (also
+   used by /cyprus-insights) since only this page's title needs it. The vw
+   term only matters below ~640px where --text-display alone would still
+   overflow the compound German/Russian word; above that it resolves to the
+   exact same size as --text-display (i.e. no visible change on desktop). */
+.csp__hero-title-lock { display: inline-block; white-space: nowrap; font-size: clamp(1.7rem, 7.5vw, var(--text-display)); }
+
 /* ---------------------------------------------------------- STORY LIST ---
    Soft golden "clouds" drifting behind the dark list — same treatment as
    .descblock/.casestudies (tokens.css), reused verbatim, just re-scoped. */

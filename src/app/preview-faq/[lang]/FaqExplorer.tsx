@@ -22,6 +22,28 @@ const Chevron = () => (
   </svg>
 );
 
+// One simple line-icon per FAQ category, masked onto the shared gold-shimmer
+// fill (.faqp__cat-icon, same goldShine gradient/animation as .it — see
+// faq.css) rather than colored directly, so the icon reads as the same
+// "animated gold" accent used for text elsewhere on the site.
+const CAT_ICON_PATHS: Record<string, string> = {
+  foreigner: '<circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18"/>',
+  process: '<path d="M4 19c4-8 8 2 12-6"/><circle cx="4" cy="19" r="1.3" fill="#000"/><circle cx="20" cy="5" r="1.3" fill="#000"/>',
+  legal: '<path d="M12 3v18M5 7h14M5 7l-3 6a3 3 0 0 0 6 0zM19 7l-3 6a3 3 0 0 0 6 0zM8 21h8"/>',
+  costs: '<path d="M6 18 18 6"/><circle cx="7.5" cy="7.5" r="2"/><circle cx="16.5" cy="16.5" r="2"/>',
+  investment: '<path d="M3 17 9 11l4 4 8-9M15 8h6v6"/>',
+  residency: '<path d="M4 11 12 4l8 7M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/>',
+  location: '<path d="M12 21s7-7.2 7-12a7 7 0 1 0-14 0c0 4.8 7 12 7 12z"/><circle cx="12" cy="9" r="2.3"/>',
+  financing: '<path d="M3 10 12 4l9 6M4 10h16M5 10v8M9 10v8M15 10v8M19 10v8M3 20h18"/>',
+  offplan: '<path d="M5 21V6l6-3v18M11 8h8M17 8v6M14 14h6M3 21h18"/>',
+};
+const iconMaskUrl = (slug: string) => {
+  const inner = CAT_ICON_PATHS[slug];
+  if (!inner) return undefined;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+};
+
 export default function FaqExplorer({ categories, lang = "en" }: { categories: FaqCategory[]; lang?: string }) {
   const t = faqCopy(lang);
   const [activeCat, setActiveCat] = useState<string>("all");
@@ -140,8 +162,15 @@ export default function FaqExplorer({ categories, lang = "en" }: { categories: F
           <section className="faqp__cat" id={cat.slug} key={cat.slug}>
             <div className="wrap">
               <div className="faqp__cat-head">
-                <h2 className="faqp__cat-title">{cat.label}</h2>
-                <p className="faqp__cat-desc">{cat.description}</p>
+                <span
+                  className="faqp__cat-icon"
+                  aria-hidden="true"
+                  style={{ "--icon-mask": iconMaskUrl(cat.slug) } as React.CSSProperties}
+                />
+                <div className="faqp__cat-head-text">
+                  <h2 className="faqp__cat-title">{cat.label}</h2>
+                  <p className="faqp__cat-desc">{cat.description}</p>
+                </div>
               </div>
               <div className="faqp__items">
                 {cat.items.map((it) => {
