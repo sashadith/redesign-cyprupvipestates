@@ -87,11 +87,12 @@ const DICT: Record<string, Strings> = {
   },
 };
 
-// EN keeps its gold accent word; other locales render the plain localized title.
+// Every locale gets the animated gold-italic accent on its own natural phrase
+// (2026-07-23: de/pl/ru previously rendered plain — only en had it).
 const titleNode = (lang: string) => {
-  if (lang === "de") return "Lassen Sie sich noch heute von uns beraten!";
-  if (lang === "pl") return "Zostaw zapytanie, a my skontaktujemy się z Tobą wkrótce";
-  if (lang === "ru") return "Оставьте заявку и мы свяжемся с вами в ближайшее время";
+  if (lang === "de") return (<>Lassen Sie sich noch heute <span className="it">von uns beraten</span>!</>);
+  if (lang === "pl") return (<>Zostaw zapytanie, a my <span className="it">skontaktujemy się z Tobą</span> wkrótce</>);
+  if (lang === "ru") return (<>Оставьте заявку и <span className="it">мы свяжемся с вами</span> в ближайшее время</>);
   return (<>Leave <span className="it">your details</span> and we will contact you shortly</>);
 };
 

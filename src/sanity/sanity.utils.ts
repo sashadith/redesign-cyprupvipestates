@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
 import { localizedHref } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
-import { resolveDevelopmentPrice, resolveBedRange, resolveDevelopmentLocation, resolveDevelopmentType, toCardDistances } from "@/lib/developmentCard";
+import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, toCardDistances } from "@/lib/developmentCard";
 import { soldOutFromCounts } from "@/lib/developmentAvailability";
 import { Homepage } from "@/types/homepage";
 import { Header } from "@/types/header";
@@ -938,7 +938,7 @@ async function queryFilteredDevelopmentRows(f: ProjectFilters) {
 
   const devs = await prisma.development.findMany({
     where: { publishStatus: "published", supersedesProjects: { none: { status: "PUBLISHED" } } },
-    include: { override: true, units: { select: { beds: true, status: true, price: true, type: true } } },
+    include: { override: true, units: { select: { beds: true, status: true, price: true, type: true, areaBuilt: true } } },
   });
 
   return devs
@@ -951,13 +951,14 @@ async function queryFilteredDevelopmentRows(f: ProjectFilters) {
       const gallery: string[] = (Array.isArray(ov?.gallery) && (ov!.gallery as string[]).length ? (ov!.gallery as string[]) : (Array.isArray(d.gallery) ? (d.gallery as string[]) : []));
       const previewImage = ov?.mainImage || gallery[0] || null;
       const bedRange = resolveBedRange(d.units);
+      const areaRange = resolveBuildAreaRange(d.units);
       const { priceFrom: devPriceFrom, priceTo: devPriceTo } = resolveDevelopmentPrice(d.priceFrom, d.priceTo, d.units);
       return {
         sanityId: d.id, slug: d.slug as string, title: ov?.alias || d.publicName,
         excerpt: null as string | null, previewImage, images: gallery,
         keyFeatures: {
           city: resolveDevelopmentLocation(district, town, area), propertyType: resolveDevelopmentType(d.category, d.units),
-          bedrooms: bedRange, completionDate: ov?.completion || d.completion || "", energyEfficiency: ov?.energy || d.energy || "",
+          bedrooms: bedRange, coveredArea: areaRange, completionDate: ov?.completion || d.completion || "", energyEfficiency: ov?.energy || d.energy || "",
           price: devPriceFrom, vatApplies: ov?.vatApplies ?? null,
         },
         isSold: false, videoId: null as string | null, isFeatured: false, listingPriority: 0, isNew: false,

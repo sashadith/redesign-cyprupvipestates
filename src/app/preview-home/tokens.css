@@ -405,6 +405,14 @@ img { max-width: 100%; display: block; }
 .hero__cta { margin-top: var(--s-7); display: flex; flex-wrap: nowrap; gap: var(--s-3); }
 /* arrow-less hero buttons → tighter, single-line */
 .hero__cta .btn { padding: 13px 20px; white-space: nowrap; }
+/* Mobile: nowrap + flex-shrink squeezes both buttons to fit the row, clipping
+   the longer-label locales (RU "Смотреть все проекты" / "Получить консультацию")
+   via .btn's own overflow:hidden (2026-07-23 bug). Stack full-width instead of
+   trying to fit two variable-length CTAs side by side on a narrow screen. */
+@media (max-width: 640px) {
+  .hero__cta { flex-direction: column; align-items: stretch; }
+  .hero__cta .btn { justify-content: center; white-space: normal; }
+}
 /* nudge the whole hero block down a touch (desktop); left edge stays flush with the nav logo */
 @media (min-width: 768px) { .hero__inner { transform: translateY(28px); } }
 

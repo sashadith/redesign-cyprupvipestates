@@ -52,7 +52,15 @@
 .btn--glass:hover { border-color: var(--accent); box-shadow: 0 6px 46px -6px var(--glow-btn), inset 0 1px 0 var(--glass-highlight); }
 
 /* ===================== NAV (mobile-first, frosted, fixed) ===================== */
-.nav { position: fixed; inset: 0 0 auto 0; z-index: 40; }
+/* z-index 40 used to leave the full-screen mobile menu (.mmenu, a descendant
+   of .nav) UNDER any in-page Leaflet map: .nav's own z-index is what actually
+   caps the whole stacking context (position:fixed always creates one), so no
+   z-index on .mmenu itself could ever out-rank a Leaflet pane/control living
+   outside .nav — Leaflet's own panes/controls run up to z-index 1000, and our
+   POI legend bar sits at 500 (2026-07-23 bug: menu rendered under the map on
+   the project page). Raised well above every in-app z-index except the photo
+   lightbox (10000, an intentionally higher full-screen overlay). */
+.nav { position: fixed; inset: 0 0 auto 0; z-index: 2000; }
 /* frosted layer on a pseudo so .nav itself never becomes the containing block
    for the fixed mobile overlay (backdrop-filter on .nav would clip it after scroll) */
 .nav::before {

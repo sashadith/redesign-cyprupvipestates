@@ -9,7 +9,7 @@
 // Keep every one of these as the single source of truth; do not
 // re-implement any of this inline again on either surface.
 
-type UnitLike = { status?: string | null; price?: number | null; beds?: string | null; type?: string | null };
+type UnitLike = { status?: string | null; price?: number | null; beds?: string | null; type?: string | null; areaBuilt?: string | null };
 
 // Development.priceFrom/priceTo can be null even when real unit prices exist
 // (unit-driven feeds, and manually-created developments never get a
@@ -57,6 +57,31 @@ export function resolveBedRange(units: UnitLike[]): string {
   const hi = Math.max(...nums);
   if (lo === hi) return lo === 0 ? "Studio" : String(lo);
   return `${lo}-${hi}`;
+}
+
+// Built-area range shown on the /projects listing card ("58-105", or a single
+// "58" when every available unit is the same size) — same available-only
+// population as resolveBedRange/resolveDevelopmentPrice, so a sold-out
+// building's largest resale unit can't quietly widen the range a buyer would
+// actually be offered. "" when no available unit has a parseable area (the
+// card omits the row entirely, same as an empty bedrooms/price). Values
+// aren't always suffixed "m²" at the source (feed data) — extract the
+// leading number rather than trusting the raw string, and round for a
+// compact card figure (the detail page's own unit-by-unit facts keep full
+// precision; this is a summary).
+function unitAreaNumber(area: string | null | undefined): number | null {
+  const m = String(area ?? "").replace(",", ".").match(/[\d.]+/);
+  return m ? parseFloat(m[0]) : null;
+}
+export function resolveBuildAreaRange(units: UnitLike[]): string {
+  const nums = units
+    .filter((u) => u.status === "available")
+    .map((u) => unitAreaNumber(u.areaBuilt))
+    .filter((n): n is number => n != null && n > 0);
+  if (!nums.length) return "";
+  const lo = Math.round(Math.min(...nums));
+  const hi = Math.round(Math.max(...nums));
+  return lo === hi ? String(lo) : `${lo}-${hi}`;
 }
 
 // Dedupe + join district/town/area (whichever are set, in that display

@@ -544,16 +544,18 @@
 /* POI map pins (colored dots) */
 .px-poi-pin { background: transparent; border: 0; }
 /* each POI is a small light source glowing constantly in its own colour — a
-   bright core wrapped in a soft same-colour halo, like city lights from orbit */
+   bright core wrapped in a soft same-colour halo, like city lights from orbit.
+   Diameter + glow halved (2026-07-23): the previous 9px core with a 17px blur
+   radius read as an oversized glowing blob rather than a fine point of light. */
 .px-poi-pin span {
-  display: block; width: 9px; height: 9px; border-radius: 50%;
+  display: block; width: 4.5px; height: 4.5px; border-radius: 50%;
   background: var(--c);
-  box-shadow: 0 0 4px 1px var(--c), 0 0 10px 3px var(--c); /* fallback for no color-mix */
+  box-shadow: 0 0 2px 0.5px var(--c), 0 0 5px 1.5px var(--c); /* fallback for no color-mix */
   box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--c) 50%, #03161a),
-    0 0 4px 1px var(--c),
-    0 0 9px 3px color-mix(in srgb, var(--c) 60%, transparent),
-    0 0 17px 6px color-mix(in srgb, var(--c) 30%, transparent);
+    0 0 0 0.5px color-mix(in srgb, var(--c) 50%, #03161a),
+    0 0 2px 0.5px var(--c),
+    0 0 4.5px 1.5px color-mix(in srgb, var(--c) 60%, transparent),
+    0 0 8.5px 3px color-mix(in srgb, var(--c) 30%, transparent);
 }
 /* POI name tooltip */
 .leaflet-tooltip.px-poi-tip {

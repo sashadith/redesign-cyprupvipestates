@@ -205,7 +205,8 @@ const poiIcon = (color: string, cat: string) => {
   const key = svg ? cat : color;
   return (POI_ICON_CACHE[key] ??= svg
     ? L.divIcon({ className: "px-poi-ic", html: `<span style="--c:${color}">${svg}</span>`, iconSize: [40, 40], iconAnchor: [20, 20] })
-    : L.divIcon({ className: "px-poi-pin", html: `<span style="--c:${color}"></span>`, iconSize: [10, 10], iconAnchor: [5, 5] }));
+    // dot diameter halved to match the CSS (.px-poi-pin span) — see that rule
+    : L.divIcon({ className: "px-poi-pin", html: `<span style="--c:${color}"></span>`, iconSize: [5, 5], iconAnchor: [2.5, 2.5] }));
 };
 
 /* Renders POIs from the local dataset for the visible area (zoom ≥ 11). Data is
