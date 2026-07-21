@@ -11,7 +11,12 @@ import { blurProps } from "@/lib/imageBlur";
 type Props = {
   image: ImageAlt;
   title: string;
-  price: number;
+  // Development-sourced projects (resolveDevelopmentPrice) and legacy
+  // "price on request" listings can both legitimately have no price —
+  // null was always possible here, the type just didn't say so (2026-07-24
+  // fix: every blog article with such a project in its manual project list
+  // 500'd on price.toLocaleString()).
+  price: number | null;
   linkLabel?: string;
   linkDestination?: string;
   buttonLabel?: string;
@@ -57,17 +62,29 @@ const BlogSlide: FC<Props> = ({
         <div className={styles.contentWrapper}>
           <p className={styles.title}>{title}</p>
           <p className={styles.price}>
-            {lang === "en"
-              ? "Price from"
-              : lang === "de"
-                ? "Preis ab"
-                : lang === "pl"
-                  ? "Cena od"
-                  : lang === "ru"
-                    ? "Цена от"
-                    : "Price from"}
-            &nbsp;
-            {price.toLocaleString()} €
+            {price == null
+              ? (lang === "en"
+                  ? "Price on request"
+                  : lang === "de"
+                    ? "Preis auf Anfrage"
+                    : lang === "pl"
+                      ? "Cena na życzenie"
+                      : lang === "ru"
+                        ? "Цена по запросу"
+                        : "Price on request")
+              : (<>
+                  {lang === "en"
+                    ? "Price from"
+                    : lang === "de"
+                      ? "Preis ab"
+                      : lang === "pl"
+                        ? "Cena od"
+                        : lang === "ru"
+                          ? "Цена от"
+                          : "Price from"}
+                  &nbsp;
+                  {price.toLocaleString()} €
+                </>)}
           </p>
           {linkLabel && linkDestination && (
             <Link href={linkDestination} className={styles.link}>
