@@ -73,12 +73,18 @@
    the hero's top-right, clear of the text — but that put it directly under
    the fixed Header (z-index 1000), which always paints over hero content at
    the top of the viewport, hiding the button entirely (2026-07-22 regression).
-   Floating it mid-image instead — below the eyebrow badges, above the stats
-   row (.pp-hero__overlay hugs the bottom via align-items: flex-end, so this
-   band is clear of text in both single- and multi-line title cases across all
-   4 locales). min-height keeps the tap target >=44px per WCAG. */
+   A second fix floated it mid-image at bottom:150px — measured live (390px
+   width) that landed squarely on the eyebrow badges (badges sit ~154-182px
+   above the hero's bottom edge; 150px put the button's top at 194px, well
+   into that band). The eyebrow/title gaps are fixed px (14px/22px margins in
+   this file, not vw-scaled), and the stats row's own top edge sits a stable
+   ~76px above the hero's bottom regardless of title line count — so 88px
+   sits in the gap below the eyebrow and above the stats across 1- and
+   2-line titles alike, in all 4 locales (live-measured against the longest
+   label, RU "Смотреть 18 фото": ~24px clear of the badges, ~12px clear of
+   the stats row). min-height keeps the tap target >=44px per WCAG. */
 @media (max-width: 640px) {
-  .pp-hero__galbtn { top: auto; bottom: clamp(112px, 34vw, 150px); right: var(--gutter); min-height: 44px; }
+  .pp-hero__galbtn { top: auto; bottom: 88px; right: var(--gutter); min-height: 44px; }
 }
 .pp-eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .pp-loc { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
