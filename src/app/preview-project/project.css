@@ -67,14 +67,18 @@
   color: var(--ivory); font-family: var(--font-body); font-size: 0.82rem; border: 1px solid var(--hairline-strong);
   background: rgba(8,21,18,0.55); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); transition: border-color var(--dur-sm) var(--ease); }
 .pp-hero__galbtn:hover { border-color: var(--accent); }
-/* Mobile: the bottom-right anchor collides with the hero text overlay once the
-   title/stats wrap onto more lines at narrow widths (2026-07-21 bug — "View N
-   photos" sitting on top of the stats row). The overlay content hugs the
-   BOTTOM of the hero (.pp-hero uses align-items: flex-end), so the top of the
-   hero image is empty on mobile — move the button there instead, clear of any
-   text. min-height keeps the tap target >=44px per WCAG. */
+/* Mobile: the desktop bottom-right anchor collides with the hero text overlay
+   once title/stats wrap onto more lines at narrow widths (2026-07-21 bug —
+   "View N photos" sitting on top of the stats row). A first fix moved it to
+   the hero's top-right, clear of the text — but that put it directly under
+   the fixed Header (z-index 1000), which always paints over hero content at
+   the top of the viewport, hiding the button entirely (2026-07-22 regression).
+   Floating it mid-image instead — below the eyebrow badges, above the stats
+   row (.pp-hero__overlay hugs the bottom via align-items: flex-end, so this
+   band is clear of text in both single- and multi-line title cases across all
+   4 locales). min-height keeps the tap target >=44px per WCAG. */
 @media (max-width: 640px) {
-  .pp-hero__galbtn { top: max(env(safe-area-inset-top), 16px); bottom: auto; right: var(--gutter); min-height: 44px; }
+  .pp-hero__galbtn { top: auto; bottom: clamp(112px, 34vw, 150px); right: var(--gutter); min-height: 44px; }
 }
 .pp-eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .pp-loc { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
