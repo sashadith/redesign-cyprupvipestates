@@ -191,13 +191,17 @@ const PagePost = async ({ params }: Props) => {
         // change how any already-published article renders.
         const isNewStyle =
           Array.isArray(b.pinnedRefs) || Array.isArray(b.excludeRefs) ||
-          b.priceMin != null || b.priceMax != null || b.isSold != null || b.pageSize != null;
+          b.priceMin != null || b.priceMax != null || b.pageSize != null;
         if (isNewStyle) {
           const results = Array.isArray(b.filteredProjects) ? b.filteredProjects : [];
-          // Empty/thin guard — a 1-2 item "section" reads as broken; skip it
-          // rather than render a near-empty block.
+          if (!results.length) return null;
+          // Empty/thin guard only applies to a live city/type/price query — a
+          // hand-picked selection of 1-2 projects (no criteria) is a
+          // deliberate editorial choice and always renders (2026-07-22 bug:
+          // a real published article's hand-picked pins rendered nothing
+          // because this guard treated the pick like a weak auto-query).
           const MIN_BLOCK_RESULTS = 3;
-          if (results.length < MIN_BLOCK_RESULTS) return null;
+          if (b._hasLiveCriteria && results.length < MIN_BLOCK_RESULTS) return null;
           return <ProjectsSectionBlockComponent block={{ ...b, projects: results, paginate: true }} lang={lang} />;
         }
         const manual = Array.isArray(b.projects) ? b.projects : [];

@@ -275,14 +275,14 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
     // without losing its existing manual project list.
     const isNewStyle =
       Array.isArray(block.pinnedRefs) || Array.isArray(block.excludeRefs) ||
-      block.priceMin != null || block.priceMax != null || block.isSold != null || block.pageSize != null;
+      block.priceMin != null || block.priceMax != null || block.pageSize != null;
     if (!isNewStyle) {
       return (
         <div className="space-y-2">
           {titleRow}
           <p className="text-[11px] text-[#9CA3AF]">{Array.isArray(block.projects) ? `${block.projects.length} linked projects (preserved)` : "No linked projects"}</p>
           <button type="button" className="text-xs text-[#1B4B43] hover:underline"
-            onClick={() => set({ pinnedRefs: [], excludeRefs: [] })}>+ Enable filters (city / type / price / pins)</button>
+            onClick={() => set({ pinnedRefs: [], excludeRefs: [] })}>+ Choose projects to show</button>
           {marginRow}
         </div>
       );
@@ -439,11 +439,13 @@ function InlineRelatedArticleEditor({ block, set }: { block: any; set: (patch: a
   );
 }
 
-// Admin-insertable "Projects" block: criteria (city/type/price/isSold, all
-// optional) + a search-to-pin/exclude picker layered on top of the live
-// query — pins always show first (in the order added), sold-last still
-// wins over a pin. Picker list is fetched once in English (admin/internal
-// copy convention) — only used to search/label refs, not to render.
+// Admin-insertable "Projects" block. Choosing specific projects is the
+// PRIMARY, always-available way to build this block (search → add; works
+// with zero criteria set, any count including 1). The city/type/price
+// criteria below are an OPTIONAL way to auto-fill additional projects on top
+// of any hand-picked ones — never required. Picker list is fetched once in
+// English (admin/internal copy convention) — only used to search/label
+// refs, not to render.
 function ProjectsSectionEditor({ block, set, titleRow, marginRow }: { block: any; set: (patch: any) => void; titleRow: ReactNode; marginRow: ReactNode }) {
   const [list, setList] = useState<{ ref: string; title: string; city: string; propertyType: string; isSold: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -472,87 +474,89 @@ function ProjectsSectionEditor({ block, set, titleRow, marginRow }: { block: any
     : [];
 
   const num = (v: string) => (v === "" ? null : Number(v));
+  const hasCriteria = !!(block.filterCity || block.filterPropertyType || block.priceMin != null || block.priceMax != null);
 
   return (
     <div className="space-y-3">
       {titleRow}
-      <div className="grid grid-cols-2 gap-2">
-        <label className="text-xs text-[#6B7280] block">City
-          <select className={input} value={block.filterCity ?? ""} onChange={(e) => set({ filterCity: e.target.value || undefined })}>
-            <option value="">Any</option>
-            {["Paphos", "Limassol", "Larnaca"].map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
-        </label>
-        <label className="text-xs text-[#6B7280] block">Property type
-          <select className={input} value={block.filterPropertyType ?? ""} onChange={(e) => set({ filterPropertyType: e.target.value || undefined })}>
-            <option value="">Any</option>
-            {["Apartment", "Villa", "Townhouse", "Semi-detached villa", "Office", "Shop"].map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </label>
-        <label className="text-xs text-[#6B7280] block">Price min (€)
-          <input type="number" min={0} className={input} value={block.priceMin ?? ""} onChange={(e) => set({ priceMin: num(e.target.value) })} />
-        </label>
-        <label className="text-xs text-[#6B7280] block">Price max (€)
-          <input type="number" min={0} className={input} value={block.priceMax ?? ""} onChange={(e) => set({ priceMax: num(e.target.value) })} />
-        </label>
-        <label className="text-xs text-[#6B7280] block">Page size
-          <input type="number" min={1} max={60} className={input} value={block.pageSize ?? 12} onChange={(e) => set({ pageSize: num(e.target.value) || 12 })} />
-        </label>
-        <label className="text-xs text-[#6B7280] flex items-center gap-2 mt-4">
-          <input type="checkbox" checked={block.isSold === true} onChange={(e) => set({ isSold: e.target.checked ? true : undefined })} />
-          Show ONLY sold listings (rare — for a &quot;sold out&quot; showcase)
-        </label>
-      </div>
 
       <div>
-        <div className="text-xs font-medium text-[#6B7280] mb-1">Pin / exclude specific projects</div>
-        <input className={input} placeholder="Search projects to pin or exclude…" value={query} onChange={(e) => setQuery(e.target.value)} />
+        <div className="text-xs font-medium text-[#374151] mb-1">Projects to show</div>
+        <p className="text-[11px] text-[#9CA3AF] mb-1">Search and add the exact projects for this section — this works on its own, no criteria needed below.</p>
+        <input className={input} placeholder="Search projects by name…" value={query} onChange={(e) => setQuery(e.target.value)} />
         {loading && <p className="text-[11px] text-[#9CA3AF] mt-1">Loading projects…</p>}
+        {q.length > 0 && q.length < 2 && <p className="text-[11px] text-[#9CA3AF] mt-1">Keep typing (2+ letters)…</p>}
         {matches.length > 0 && (
           <div className="mt-1 border border-[#E5E7EB] rounded-md divide-y divide-[#E5E7EB]">
             {matches.map((p) => (
               <div key={p.ref} className="flex items-center justify-between px-2 py-1 text-xs">
                 <span>{p.title}{p.city ? ` — ${p.city}` : ""}{p.isSold ? " (sold)" : ""}</span>
                 <span className="flex gap-2">
-                  <button type="button" className="text-[#1B4B43] hover:underline" onClick={() => addPin(p.ref)}>+ Pin</button>
+                  <button type="button" className="text-[#1B4B43] hover:underline" onClick={() => addPin(p.ref)}>+ Add</button>
                   <button type="button" className="text-[#C0392B] hover:underline" onClick={() => addExclude(p.ref)}>+ Exclude</button>
                 </span>
               </div>
             ))}
           </div>
         )}
+        {pinnedRefs.length > 0 && (
+          <div className="mt-2">
+            <div className="text-[11px] font-medium text-[#6B7280] mb-1">Chosen (shown first, in this order)</div>
+            <div className="flex flex-wrap gap-1">
+              {pinnedRefs.map((ref) => (
+                <span key={ref} className="inline-flex items-center gap-1 text-xs bg-[#F3F4F6] rounded-full px-2 py-0.5">
+                  {byRef.get(ref)?.title ?? ref}
+                  <button type="button" onClick={() => removePin(ref)} className="text-[#C0392B]">✕</button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+        {excludeRefs.length > 0 && (
+          <div className="mt-2">
+            <div className="text-[11px] font-medium text-[#6B7280] mb-1">Excluded</div>
+            <div className="flex flex-wrap gap-1">
+              {excludeRefs.map((ref) => (
+                <span key={ref} className="inline-flex items-center gap-1 text-xs bg-[#FEE2E2] rounded-full px-2 py-0.5">
+                  {byRef.get(ref)?.title ?? ref}
+                  <button type="button" onClick={() => removeExclude(ref)} className="text-[#C0392B]">✕</button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      {pinnedRefs.length > 0 && (
-        <div>
-          <div className="text-[11px] font-medium text-[#6B7280] mb-1">Pinned (shown first, in this order)</div>
-          <div className="flex flex-wrap gap-1">
-            {pinnedRefs.map((ref) => (
-              <span key={ref} className="inline-flex items-center gap-1 text-xs bg-[#F3F4F6] rounded-full px-2 py-0.5">
-                {byRef.get(ref)?.title ?? ref}
-                <button type="button" onClick={() => removePin(ref)} className="text-[#C0392B]">✕</button>
-              </span>
-            ))}
-          </div>
+      <details className="border border-[#E5E7EB] rounded-md p-2" open={hasCriteria}>
+        <summary className="text-xs font-medium text-[#6B7280] cursor-pointer select-none">Optional: also auto-fill more by city / type / price</summary>
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          <label className="text-xs text-[#6B7280] block">City
+            <select className={input} value={block.filterCity ?? ""} onChange={(e) => set({ filterCity: e.target.value || undefined })}>
+              <option value="">Any</option>
+              {["Paphos", "Limassol", "Larnaca"].map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </label>
+          <label className="text-xs text-[#6B7280] block">Property type
+            <select className={input} value={block.filterPropertyType ?? ""} onChange={(e) => set({ filterPropertyType: e.target.value || undefined })}>
+              <option value="">Any</option>
+              {["Apartment", "Villa", "Townhouse", "Semi-detached villa", "Office", "Shop"].map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </label>
+          <label className="text-xs text-[#6B7280] block">Price min (€)
+            <input type="number" min={0} className={input} value={block.priceMin ?? ""} onChange={(e) => set({ priceMin: num(e.target.value) })} />
+          </label>
+          <label className="text-xs text-[#6B7280] block">Price max (€)
+            <input type="number" min={0} className={input} value={block.priceMax ?? ""} onChange={(e) => set({ priceMax: num(e.target.value) })} />
+          </label>
         </div>
-      )}
+      </details>
 
-      {excludeRefs.length > 0 && (
-        <div>
-          <div className="text-[11px] font-medium text-[#6B7280] mb-1">Excluded</div>
-          <div className="flex flex-wrap gap-1">
-            {excludeRefs.map((ref) => (
-              <span key={ref} className="inline-flex items-center gap-1 text-xs bg-[#FEE2E2] rounded-full px-2 py-0.5">
-                {byRef.get(ref)?.title ?? ref}
-                <button type="button" onClick={() => removeExclude(ref)} className="text-[#C0392B]">✕</button>
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+      <label className="text-xs text-[#6B7280] block">Results per page
+        <input type="number" min={1} max={60} className={input} value={block.pageSize ?? 12} onChange={(e) => set({ pageSize: num(e.target.value) || 12 })} />
+      </label>
 
       <p className="text-[11px] text-[#9CA3AF]">
-        Live query result (before pins/excludes) is resolved at render time from published projects &amp; developments — city/type/price filters are all optional. Sold listings always sort last, even if pinned.
+        Chosen projects always show first, in the order added above. Sold listings always sort last, even if chosen.
       </p>
       {marginRow}
     </div>

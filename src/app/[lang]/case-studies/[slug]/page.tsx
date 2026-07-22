@@ -178,11 +178,14 @@ const CaseStudyPage = async ({ params }: Props) => {
         const b = block as any;
         const isNewStyle =
           Array.isArray(b.pinnedRefs) || Array.isArray(b.excludeRefs) ||
-          b.priceMin != null || b.priceMax != null || b.isSold != null || b.pageSize != null;
+          b.priceMin != null || b.priceMax != null || b.pageSize != null;
         if (isNewStyle) {
           const results = Array.isArray(b.filteredProjects) ? b.filteredProjects : [];
+          if (!results.length) return null;
+          // See blog/[slug]/page.tsx's identical comment: the guard only
+          // applies to a live query, never to a hand-picked selection.
           const MIN_BLOCK_RESULTS = 3;
-          if (results.length < MIN_BLOCK_RESULTS) return null;
+          if (b._hasLiveCriteria && results.length < MIN_BLOCK_RESULTS) return null;
           return <ProjectsSectionBlockComponent key={b._key} block={{ ...b, projects: results, paginate: true }} lang={lang} />;
         }
         const manual = Array.isArray(b.projects) ? b.projects : [];

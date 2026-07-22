@@ -255,11 +255,6 @@ export type ProjectsSectionBlock = {
   // [lang]/case-studies/[slug]/page.tsx.
   priceMin?: number | null;
   priceMax?: number | null;
-  // Rare override: true = show ONLY sold listings (e.g. a "sold out" proof
-  // showcase). Left unset/false = normal behavior, unchanged from every other
-  // consumer of computeFilteredProjects — sold items are never excluded, just
-  // always sorted after every available one (never "shown as available").
-  isSold?: boolean;
   // Specific projects/developments to always include first, regardless of
   // whether they satisfy filterCity/filterPropertyType/priceMin/priceMax —
   // stores the same unified id space computeFilteredProjects's cards expose
@@ -271,6 +266,12 @@ export type ProjectsSectionBlock = {
   // Client-side page size for this block's own pagination — defaults to 12
   // (ProjectsSectionBlockComponent's existing constant) when unset.
   pageSize?: number;
+  // Render-time only signal (set by resolveBlocks, never persisted) — true
+  // when this block has a live filterCity/filterPropertyType/price query
+  // component. A pins-only block (hand-picked projects, no criteria) always
+  // renders regardless of count; a criteria-driven block still applies the
+  // empty/thin guard so a weak auto-query doesn't render a near-empty section.
+  _hasLiveCriteria?: boolean;
 };
 // === Конец типов для ProjectsSectionBlick ===
 

@@ -203,23 +203,17 @@ async function resolveProjectRefs(refs: any[], lang: string) {
 // legacy Project.isSold, so this is the only place that pushes sold legacy
 // rows to the true end. ProjectsSectionBlockComponent's bySoldLast is a no-op
 // safety net on top of this (kept for the manual-array/non-filtered path).
-type ComputeFilteredProjectsOpts = { priceMin?: number | null; priceMax?: number | null; isSold?: boolean };
+type ComputeFilteredProjectsOpts = { priceMin?: number | null; priceMax?: number | null };
 
 async function computeFilteredProjects(lang: string, filterCity?: string, filterPropertyType?: string, opts?: ComputeFilteredProjectsOpts) {
   const priceMin = opts?.priceMin ?? null;
   const priceMax = opts?.priceMax ?? null;
-  // Rare override (see ProjectsSectionBlock.isSold doc comment): true = only
-  // sold listings. Unset/false leaves the existing behavior untouched — sold
-  // rows are never excluded by default, just always appended after every
-  // available one, below.
-  const onlySold = opts?.isSold === true;
   const rows = await prisma.project.findMany({
     where: {
       language: lang as any,
       status: "PUBLISHED",
       ...(filterCity ? { city: filterCity } : {}),
       ...(filterPropertyType ? { propertyType: filterPropertyType } : {}),
-      ...(onlySold ? { isSold: true } : {}),
       ...(priceMin != null || priceMax != null
         ? { price: { ...(priceMin != null ? { gte: priceMin } : {}), ...(priceMax != null ? { lte: priceMax } : {}) } }
         : {}),
@@ -230,12 +224,10 @@ async function computeFilteredProjects(lang: string, filterCity?: string, filter
   const available = withImage.filter((p: any) => !p.isSold);
   const sold = withImage.filter((p: any) => p.isSold);
 
-  const devRows = onlySold
-    ? [] // Developments never carry a per-row isSold flag (sold-out is unit-count-derived) — the "only sold" override only ever applies to legacy Projects.
-    : await queryFilteredDevelopmentRows({ city: filterCity, propertyType: filterPropertyType, priceFrom: priceMin, priceTo: priceMax });
+  const devRows = await queryFilteredDevelopmentRows({ city: filterCity, propertyType: filterPropertyType, priceFrom: priceMin, priceTo: priceMax });
 
   const recommended = sortProjectsRecommended([...available, ...devRows] as any);
-  const full = onlySold ? sold : [...recommended, ...sold];
+  const full = [...recommended, ...sold];
 
   return full.map((p: any) => ({
     _id: p.sanityId,
@@ -342,7 +334,7 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string): Pr
       // them, so this can never misfire on anything already published.
       const isNewStyleBlock =
         b._type === "projectsSectionBlock" &&
-        (Array.isArray(b.pinnedRefs) || Array.isArray(b.excludeRefs) || b.priceMin != null || b.priceMax != null || b.isSold != null || b.pageSize != null);
+        (Array.isArray(b.pinnedRefs) || Array.isArray(b.excludeRefs) || b.priceMin != null || b.priceMax != null || b.pageSize != null);
       if (isNewStyleBlock) {
         // Only run the criteria query when actual criteria are set — an admin
         // who configures pins only (no city/type/price) gets exactly those
@@ -350,10 +342,18 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string): Pr
         // avoid-the-unbounded-query discipline as the branch below).
         const hasCriteria = !!(b.filterCity || b.filterPropertyType || b.priceMin != null || b.priceMax != null);
         const criteriaResults = hasCriteria
-          ? await computeFilteredProjects(lang, b.filterCity, b.filterPropertyType, { priceMin: b.priceMin, priceMax: b.priceMax, isSold: b.isSold })
+          ? await computeFilteredProjects(lang, b.filterCity, b.filterPropertyType, { priceMin: b.priceMin, priceMax: b.priceMax })
           : [];
         const pinned = Array.isArray(b.pinnedRefs) && b.pinnedRefs.length ? await resolvePinnedProjects(b.pinnedRefs, lang) : [];
         b.filteredProjects = layerPinsAndExcludes(criteriaResults, pinned, b.excludeRefs);
+        // Render-time signal (mirrors b.filterCity/filterPropertyType's own
+        // "paginate" dispatch below): whether this block has a live query
+        // component at all — the blog/case-study renderers use it to decide
+        // whether the empty/thin guard should apply (a manually hand-picked
+        // list of 1-2 projects is a deliberate choice, not a thin auto-query;
+        // 2026-07-22 bug — a real published article's hand-picked selection
+        // rendered nothing because the guard treated it like a weak query).
+        b._hasLiveCriteria = hasCriteria;
       } else if (b.filterCity || b.filterPropertyType) {
         // Only compute the live query when a page actually opts in — avoids an
         // unbounded Project+Development query (now uncapped, for pagination) on

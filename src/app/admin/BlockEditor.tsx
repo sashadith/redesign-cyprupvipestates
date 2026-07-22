@@ -110,7 +110,7 @@ export default function BlockEditor({ kind, initialBlocks }: { kind: "blog" | "s
       const key = newKey();
       return [...prev, { key, type: "projectsSectionBlock", block: {
         _type: "projectsSectionBlock", _key: key, title: "", projects: [],
-        pinnedRefs: [], excludeRefs: [], isSold: false, pageSize: 12,
+        pinnedRefs: [], excludeRefs: [], pageSize: 12,
       } }];
     });
 
