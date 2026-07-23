@@ -19,7 +19,7 @@ export default async function AccountPage() {
   if (!user) redirect("/admin/login");
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="space-y-6">
       <h1 className="text-2xl font-semibold">My account</h1>
       <ProfileForm name={user.name} avatar={user.avatar} photoPng={user.photoPng} phone={user.phone} />
       <PasswordForm />
