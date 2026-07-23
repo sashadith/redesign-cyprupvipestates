@@ -1,6 +1,81 @@
 "use client";
+import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { updateEmailSettings, sendTestEmail, type EmailSettingsView } from "./actions";
+import { looksLikeHtml } from "@/lib/emailSignature/looksLikeHtml";
+
+type SignatureValues = { en: string; de: string; pl: string; ru: string };
+
+const SIGNATURE_LOCALES = [
+  { key: "en" as const, label: "English", field: "signatureEn" },
+  { key: "de" as const, label: "German", field: "signatureDe" },
+  { key: "pl" as const, label: "Polish", field: "signaturePl" },
+  { key: "ru" as const, label: "Russian", field: "signatureRu" },
+];
+
+const escapeForPre = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// Sandboxed (sandbox="", the maximally restrictive value — no scripts, no
+// same-origin, no forms) so a pasted signature's own styles/markup can never
+// bleed into or interact with the admin UI around it.
+function buildPreviewDoc(value: string): string {
+  const trimmed = value.trim();
+  const body = !trimmed
+    ? ""
+    : looksLikeHtml(trimmed)
+      ? trimmed
+      : `<pre style="white-space:pre-wrap;font-family:inherit;margin:0;">${escapeForPre(trimmed)}</pre>`;
+  return `<!doctype html><html><head><meta charset="utf-8" /><style>body{font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#111;margin:12px;}</style></head><body>${body}</body></html>`;
+}
+
+function SignatureEditor({ initial }: { initial: SignatureValues }) {
+  const [tab, setTab] = useState<keyof SignatureValues>("en");
+  const [values, setValues] = useState<SignatureValues>(initial);
+
+  return (
+    <div>
+      <div className="flex gap-1 mb-2">
+        {SIGNATURE_LOCALES.map((l) => (
+          <button
+            key={l.key}
+            type="button"
+            onClick={() => setTab(l.key)}
+            className={`rounded-md px-2.5 py-1 text-xs font-medium ${tab === l.key ? "bg-[#1B4B43] text-white" : "bg-[#F3F4F6] text-[#374151] hover:bg-[#E5E7EB]"}`}
+          >
+            {l.label}
+          </button>
+        ))}
+      </div>
+
+      {/* All four locales submit every save, regardless of which tab is active. */}
+      {SIGNATURE_LOCALES.map((l) => (
+        <input key={l.key} type="hidden" name={l.field} value={values[l.key]} />
+      ))}
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[11px] text-[#9CA3AF] mb-1">HTML source</label>
+          <textarea
+            rows={12}
+            value={values[tab]}
+            onChange={(e) => setValues((v) => ({ ...v, [tab]: e.target.value }))}
+            placeholder="Paste your signature HTML here… (or plain text — existing plain-text signatures keep working as-is)"
+            className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-xs font-mono outline-none focus:border-[#1B4B43]"
+          />
+        </div>
+        <div>
+          <label className="block text-[11px] text-[#9CA3AF] mb-1">Preview</label>
+          <iframe
+            title={`signature-preview-${tab}`}
+            sandbox=""
+            srcDoc={buildPreviewDoc(values[tab])}
+            className="w-full h-[228px] rounded-md border border-[#E5E7EB] bg-white"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function SubmitBtn() {
   const { pending } = useFormStatus();
@@ -113,25 +188,8 @@ export default function EmailSettingsForm({ userId, settings }: { userId: string
         </div>
 
         <div>
-          <h3 className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide mb-2">Signature (plain text, per language)</h3>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div>
-              <label className={labelClass}>English</label>
-              <textarea name="signatureEn" rows={3} defaultValue={settings.signature.en} className={fieldClass} />
-            </div>
-            <div>
-              <label className={labelClass}>German</label>
-              <textarea name="signatureDe" rows={3} defaultValue={settings.signature.de} className={fieldClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Polish</label>
-              <textarea name="signaturePl" rows={3} defaultValue={settings.signature.pl} className={fieldClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Russian</label>
-              <textarea name="signatureRu" rows={3} defaultValue={settings.signature.ru} className={fieldClass} />
-            </div>
-          </div>
+          <h3 className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide mb-2">Signature (HTML, per language)</h3>
+          <SignatureEditor initial={settings.signature} />
         </div>
 
         <SubmitBtn />

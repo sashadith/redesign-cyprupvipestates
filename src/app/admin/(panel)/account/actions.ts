@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { encrypt, decrypt } from "@/lib/crypto/secretBox";
+import { sanitizeSignatureHtml, mirrorSignatureImages, looksLikeHtml, stripHtmlToText, getSignatureHtml } from "@/lib/emailSignature";
 
 // Self-contained session gate (same reasoning as presentationActions.ts's own
 // copy: exporting requireSession from the main admin/actions.ts "use server"
@@ -122,6 +123,23 @@ export async function updateEmailSettings(
     return { error: "Email credential storage isn't configured on this environment yet (missing SETTINGS_ENCRYPTION_KEY). Ask an admin to set it up first." };
   }
 
+  // HTML-like input gets sanitized (strip doc wrapper, drop scripts/handlers/
+  // javascript: URLs) and has its external images mirrored to our own
+  // storage; plain text (including all pre-upgrade signatures) passes
+  // through untouched — content-based, not a stored flag, so nothing needs
+  // re-entry. See src/lib/emailSignature/.
+  const processSignature = async (raw: string) => {
+    if (!raw || !looksLikeHtml(raw)) return raw;
+    const sanitized = sanitizeSignatureHtml(raw);
+    return mirrorSignatureImages(sanitized, targetUserId);
+  };
+  const [sigEn, sigDe, sigPl, sigRu] = await Promise.all([
+    processSignature(str("signatureEn")),
+    processSignature(str("signatureDe")),
+    processSignature(str("signaturePl")),
+    processSignature(str("signatureRu")),
+  ]);
+
   const data: any = {
     fromName: str("fromName") || null,
     fromAddress: str("fromAddress") || null,
@@ -131,12 +149,7 @@ export async function updateEmailSettings(
     imapHost: str("imapHost") || null,
     imapPort: port("imapPort"),
     imapUser: str("imapUser") || null,
-    signature: {
-      en: str("signatureEn"),
-      de: str("signatureDe"),
-      pl: str("signaturePl"),
-      ru: str("signatureRu"),
-    },
+    signature: { en: sigEn, de: sigDe, pl: sigPl, ru: sigRu },
   };
   // Replace-only: an empty password field means "leave whatever's already
   // stored" — never overwrite with an empty/decoy value.
@@ -176,11 +189,18 @@ export async function sendTestEmail(targetUserId: string): Promise<{ error?: str
       secure: (row.smtpPort ?? 465) === 465,
       auth: { user: row.smtpUser, pass: decrypt(row.smtpPasswordEnc) },
     });
+    // Multipart so the real rendering (table layout, images) can be checked
+    // in an actual mail client, not just the admin's own preview iframe.
+    const testBodyHtml = "<p>This confirms your email connection settings are working.</p>";
+    const signatureHtml = await getSignatureHtml(targetUserId, "en");
+    const html = signatureHtml ? `${testBodyHtml}${signatureHtml}` : testBodyHtml;
+    const text = stripHtmlToText(html);
     await transporter.sendMail({
       from: row.fromName ? `"${row.fromName}" <${row.fromAddress}>` : row.fromAddress,
       to: row.fromAddress,
       subject: "Cyprus VIP Estates — test email",
-      text: "This confirms your email connection settings are working.",
+      html,
+      text,
     });
     ok = true;
   } catch (e: any) {
