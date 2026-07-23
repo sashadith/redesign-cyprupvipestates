@@ -4,7 +4,6 @@ import { useMemo, useState, useTransition } from "react";
 import CollapsibleList from "../CollapsibleList";
 import ComposeEmailModal from "./ComposeEmailModal";
 import { isManualInteractionType } from "@/lib/crm/interactionHelpers";
-import { formatWaPhone } from "@/lib/crm/waFormat";
 
 export type TimelineRow = {
   id: string;
@@ -62,17 +61,12 @@ export default function UnifiedTimeline({
   addNoteAction: (formData: FormData) => void;
   addCallAction: (formData: FormData) => void;
   sendEmailAction: (opts: { subject: string; body: string; leadReacted?: boolean }) => Promise<{ ok?: string; error?: string }>;
-  logWhatsAppAction: (opts: { body: string; occurredAt?: Date; leadReacted?: boolean }) => Promise<{ ok?: string; error?: string }>;
+  logWhatsAppAction: (formData: FormData) => void;
   deleteAction: (interactionId: string) => Promise<void>;
 }) {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("all");
   const [quickAdd, setQuickAdd] = useState<"note" | "call" | "whatsapp" | null>(null);
   const [showCompose, setShowCompose] = useState(false);
-  const [waBody, setWaBody] = useState("");
-  const [waOccurredAt, setWaOccurredAt] = useState(nowForDatetimeLocal());
-  const [waReacted, setWaReacted] = useState(false);
-  const [waResult, setWaResult] = useState<{ ok?: string; error?: string } | null>(null);
-  const [waPending, startWaTransition] = useTransition();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [, startDeleteTransition] = useTransition();
 
@@ -80,24 +74,6 @@ export default function UnifiedTimeline({
     () => (filter === "all" ? interactions : interactions.filter((r) => (TYPE_META[r.type]?.group ?? "system") === filter)),
     [interactions, filter],
   );
-
-  const waLink = leadPhone ? `https://wa.me/${formatWaPhone(leadPhone)}` : null;
-
-  const submitWhatsApp = () => {
-    startWaTransition(async () => {
-      const res = await logWhatsAppAction({
-        body: waBody.trim(),
-        occurredAt: waOccurredAt ? new Date(waOccurredAt) : undefined,
-        leadReacted: waReacted,
-      });
-      setWaResult(res);
-      if (res.ok) {
-        setWaBody("");
-        setWaReacted(false);
-        setQuickAdd(null);
-      }
-    });
-  };
 
   const handleDelete = (id: string) => {
     if (!confirm("Delete this entry? This cannot be undone.")) return;
@@ -148,13 +124,10 @@ export default function UnifiedTimeline({
         >
           + Email
         </button>
-        {waLink && (
+        {leadPhone && (
           <button
             type="button"
-            onClick={() => {
-              window.open(waLink, "_blank", "noopener,noreferrer");
-              setQuickAdd(quickAdd === "whatsapp" ? null : "whatsapp");
-            }}
+            onClick={() => setQuickAdd(quickAdd === "whatsapp" ? null : "whatsapp")}
             className="rounded-md border border-[#E5E7EB] text-xs px-2.5 py-1.5 hover:bg-[#F8F9FA]"
           >
             + WhatsApp
@@ -162,14 +135,24 @@ export default function UnifiedTimeline({
         )}
       </div>
 
-      {(quickAdd === "note" || quickAdd === "call") && (
-        <form action={quickAdd === "note" ? addNoteAction : addCallAction} className="mb-4 space-y-2">
+      {/* Note/Call/WhatsApp all log the same way — a short body, a
+          backdatable occurredAt, and a "Lead reacted" flag for the
+          auto-follow-up cadence (src/lib/crm/followUpCadence.ts). WhatsApp
+          used to also open a wa.me tab here; removed per walkthrough-2
+          feedback — sending happens on the advisor's own phone regardless,
+          this is purely a log entry (the Client Presentation "Share via
+          WhatsApp" flow is unrelated and unchanged). */}
+      {(quickAdd === "note" || quickAdd === "call" || quickAdd === "whatsapp") && (
+        <form
+          action={quickAdd === "note" ? addNoteAction : quickAdd === "call" ? addCallAction : logWhatsAppAction}
+          className="mb-4 space-y-2"
+        >
           <textarea
             name="note"
             rows={2}
             required
             autoFocus
-            placeholder={quickAdd === "note" ? "Internal note…" : "What was discussed on the call…"}
+            placeholder={quickAdd === "note" ? "Internal note…" : quickAdd === "call" ? "What was discussed on the call…" : "What was sent via WhatsApp…"}
             className="w-full rounded-md border border-[#E5E7EB] px-2 py-1.5 text-sm"
           />
           <div className="flex flex-wrap items-center gap-3">
@@ -189,55 +172,13 @@ export default function UnifiedTimeline({
           </div>
           <div className="flex gap-2">
             <button className="rounded-md bg-[#1B4B43] text-white text-xs px-3 py-1.5 hover:bg-[#142E2D]">
-              Add {quickAdd === "note" ? "note" : "call log"}
+              Add {quickAdd === "note" ? "note" : quickAdd === "call" ? "call log" : "WhatsApp log"}
             </button>
             <button type="button" onClick={() => setQuickAdd(null)} className="text-xs text-[#6B7280] hover:underline">
               Cancel
             </button>
           </div>
         </form>
-      )}
-
-      {quickAdd === "whatsapp" && (
-        <div className="mb-4 space-y-2">
-          <textarea
-            value={waBody}
-            onChange={(e) => setWaBody(e.target.value)}
-            rows={2}
-            autoFocus
-            placeholder="What was the message… (the wa.me tab already opened for you to actually send it)"
-            className="w-full rounded-md border border-[#E5E7EB] px-2 py-1.5 text-sm"
-          />
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="flex items-center gap-1.5 text-xs text-[#6B7280]">
-              When
-              <input
-                type="datetime-local"
-                value={waOccurredAt}
-                onChange={(e) => setWaOccurredAt(e.target.value)}
-                className="rounded-md border border-[#E5E7EB] px-2 py-1 text-xs"
-              />
-            </label>
-            <label className="flex items-center gap-1.5 text-xs text-[#6B7280]">
-              <input type="checkbox" checked={waReacted} onChange={(e) => setWaReacted(e.target.checked)} />
-              Lead reacted (resets the auto-follow-up chain)
-            </label>
-          </div>
-          {waResult?.error && <p className="text-xs text-[#DC2626]">{waResult.error}</p>}
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={waPending || !waBody.trim()}
-              onClick={submitWhatsApp}
-              className="rounded-md bg-[#1B4B43] text-white text-xs px-3 py-1.5 hover:bg-[#142E2D] disabled:opacity-50"
-            >
-              {waPending ? "Logging…" : "Log as sent"}
-            </button>
-            <button type="button" onClick={() => setQuickAdd(null)} className="text-xs text-[#6B7280] hover:underline">
-              Cancel
-            </button>
-          </div>
-        </div>
       )}
 
       {showCompose && (

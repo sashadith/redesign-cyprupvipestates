@@ -40,18 +40,67 @@ export type PresentationSummary = {
 } | null;
 
 // Same "only render if there's a value" helper page.tsx's old <dl> used —
-// moved here since the detail groups now live in this component.
+// moved here since the detail groups now live in this component. No
+// per-row divider (walkthrough-2 feedback: these now sit in a grid, not a
+// single-column list, so a border-b would only underline individual cells
+// rather than a full "row").
 const field = (label: string, value: any) =>
   value ? (
-    <div className="py-1.5 border-b border-[#F3F4F6] last:border-0">
+    <div className="py-1">
       <dt className="text-xs text-[#6B7280]">{label}</dt>
       <dd className="text-sm mt-0.5 break-words">{Array.isArray(value) ? value.join(", ") : String(value)}</dd>
     </div>
   ) : null;
 
+// pageSource/referrer are populated from the public lead-intake form/API —
+// effectively attacker-controlled input, not something the browser is
+// guaranteed to have set safely (a direct POST to /api/leads can put
+// anything in these fields). Only ever render as a clickable link when the
+// value parses as a real http(s) URL; a `javascript:`/other-scheme value
+// (or plain garbage) is shown as inert text instead, closing off stored-XSS
+// via an admin clicking the link.
+function safeHttpUrl(value: string): string | null {
+  try {
+    const u = new URL(value);
+    return u.protocol === "http:" || u.protocol === "https:" ? u.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+// Long URL-shaped values (Page, Referrer) get a compact "Open ↗" link that
+// opens in a new tab instead of the raw URL text — a full URL was 3 lines
+// tall and broke the grid. Full URL still available on hover via title.
+const urlField = (label: string, url: string | null) => {
+  if (!url) return null;
+  const safe = safeHttpUrl(url);
+  return (
+    <div className="py-1">
+      <dt className="text-xs text-[#6B7280]">{label}</dt>
+      <dd className="text-sm mt-0.5">
+        {safe ? (
+          <a
+            href={safe}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={safe}
+            className="inline-flex items-center gap-1 text-[#1B4B43] hover:underline"
+          >
+            Open <span aria-hidden>↗</span>
+          </a>
+        ) : (
+          <span className="break-words text-[#6B7280]" title={url}>{url}</span>
+        )}
+      </dd>
+    </div>
+  );
+};
+
 const groupLabel = (text: string) => (
   <h3 className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mt-4 mb-1 first:mt-0">{text}</h3>
 );
+
+const groupGrid = "grid sm:grid-cols-2 lg:grid-cols-3 gap-x-4";
 
 export default function CockpitCard({
   lead,
@@ -229,27 +278,35 @@ export default function CockpitCard({
         </button>
       </div>
 
-      {/* Absorbed detail groups — was page.tsx's standalone "Lead details" <dl>. */}
+      {/* Absorbed detail groups — was page.tsx's standalone "Lead details" <dl>.
+          Each group is its own responsive grid (walkthrough-2 feedback: was a
+          long single-column list, now 2-3 columns depending on width). */}
       <dl className="mt-5 pt-4 border-t border-[#E5E7EB]">
         {groupLabel("Qualification")}
-        {field("Budget", lead.budgetMin || lead.budgetMax ? `€${lead.budgetMin ?? "?"} – €${lead.budgetMax ?? "?"}` : null)}
-        {field("Timeline", lead.timeline)}
-        {field("Financing", lead.financing)}
-        {field("Property interest", lead.propertyTypeInterest)}
-        {field("Project interest", lead.projectInterestTitle)}
+        <div className={groupGrid}>
+          {field("Budget", lead.budgetMin || lead.budgetMax ? `€${lead.budgetMin ?? "?"} – €${lead.budgetMax ?? "?"}` : null)}
+          {field("Timeline", lead.timeline)}
+          {field("Financing", lead.financing)}
+          {field("Property interest", lead.propertyTypeInterest)}
+          {field("Project interest", lead.projectInterestTitle)}
+        </div>
 
         {groupLabel("Message & notes")}
-        {field("Message", lead.message)}
-        {field("Internal note (intake)", lead.notes)}
+        <div className={groupGrid}>
+          {field("Message", lead.message)}
+          {field("Internal note (intake)", lead.notes)}
+        </div>
 
         {groupLabel("Acquisition")}
-        {field("Source", lead.source.replace(/_/g, " "))}
-        {field("Page", lead.pageSource)}
-        {field("UTM", lead.utm)}
-        {field("Click ID", lead.clickId)}
-        {field("Referrer", lead.referrer)}
-        {field("Received", new Date(lead.createdAt).toLocaleString("en-GB"))}
-        {field("Notified", `Telegram: ${lead.telegramNotified ? "✓" : "—"}  ·  Email: ${lead.emailNotified ? "✓" : "—"}`)}
+        <div className={groupGrid}>
+          {field("Source", lead.source.replace(/_/g, " "))}
+          {urlField("Page", lead.pageSource)}
+          {field("UTM", lead.utm)}
+          {field("Click ID", lead.clickId)}
+          {urlField("Referrer", lead.referrer)}
+          {field("Received", new Date(lead.createdAt).toLocaleString("en-GB"))}
+          {field("Notified", `Telegram: ${lead.telegramNotified ? "✓" : "—"}  ·  Email: ${lead.emailNotified ? "✓" : "—"}`)}
+        </div>
       </dl>
     </div>
   );

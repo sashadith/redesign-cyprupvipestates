@@ -163,9 +163,16 @@ export default async function LeadDetail({ params }: { params: { id: string } })
     "use server";
     return sendCrmEmailAction(id, { ...opts, skipCadence: true });
   }
-  async function logWhatsApp(opts: { body: string; occurredAt?: Date; leadReacted?: boolean }) {
+  // Walkthrough-2 feedback: +WhatsApp is now log-only, same shape as
+  // quickNote/quickCall (no more wa.me tab-opening — sending happens on the
+  // advisor's own phone regardless).
+  async function quickWhatsApp(formData: FormData) {
     "use server";
-    return logWhatsAppSentAction(id, opts);
+    await logWhatsAppSentAction(id, {
+      body: String(formData.get("note") ?? ""),
+      occurredAt: parseOccurredAt(formData),
+      leadReacted: formData.get("leadReacted") === "on",
+    });
   }
   async function deleteInteraction(interactionId: string) {
     "use server";
@@ -216,10 +223,6 @@ export default async function LeadDetail({ params }: { params: { id: string } })
           resetFollowUpAction={resetFollowUp}
           setStatusAction={setStatus}
         />
-        <div className="flex items-center gap-3 mt-2">
-          <p className="text-xs text-[#9CA3AF]">In {lead.status.replace(/_/g, " ")} for {stageDays} day{stageDays === 1 ? "" : "s"}</p>
-          <DeleteLeadButton id={id} redirectTo="/admin/crm" label="Delete lead" />
-        </div>
       </div>
 
       {duplicates.length > 0 && (
@@ -251,7 +254,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
           addNoteAction={quickNote}
           addCallAction={quickCall}
           sendEmailAction={sendEmail}
-          logWhatsAppAction={logWhatsApp}
+          logWhatsAppAction={quickWhatsApp}
           deleteAction={deleteInteraction}
         />
       </div>
@@ -266,6 +269,14 @@ export default async function LeadDetail({ params }: { params: { id: string } })
           users={users}
           sendPresentationEmailAction={sendPresentationEmail}
         />
+      </div>
+
+      {/* Walkthrough-2 feedback: moved from directly under the Cockpit card to
+          the very bottom of the page, below every section, so it's not next
+          to anything easy to misclick into. */}
+      <div className="flex items-center gap-3 pt-4 border-t border-[#E5E7EB]">
+        <p className="text-xs text-[#9CA3AF]">In {lead.status.replace(/_/g, " ")} for {stageDays} day{stageDays === 1 ? "" : "s"}</p>
+        <DeleteLeadButton id={id} redirectTo="/admin/crm" label="Delete lead" />
       </div>
     </div>
   );
