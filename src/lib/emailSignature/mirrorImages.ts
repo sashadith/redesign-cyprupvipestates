@@ -1,6 +1,8 @@
 import { createHash } from "crypto";
 import { mkdir, writeFile, access } from "fs/promises";
 import { join } from "path";
+import { lookup } from "dns/promises";
+import { isIP } from "net";
 import { SITE_URL } from "@/lib/seo";
 
 // Deliberately NOT src/lib/imageMirror.ts's mirrorImage() — that pipeline
@@ -10,14 +12,65 @@ import { SITE_URL } from "@/lib/seo";
 
 const OWN_HOSTS = new Set(["cyprusvipestates.com", "design.cyprusvipestates.com"]);
 
+// SVG deliberately excluded — an <img src> pointing at our own mirrored SVG
+// is safe (browsers sandbox script execution in an <img> context), but
+// anyone who later links directly to the raw file gets it served as a
+// navigable image/svg+xml document, and inline <script>/event handlers in
+// an SVG DO execute in that top-level-navigation context. Signature images
+// are logos/dividers/icons — raster formats cover every real case.
 const EXT_BY_CONTENT_TYPE: Record<string, string> = {
   "image/png": "png",
   "image/jpeg": "jpg",
   "image/gif": "gif",
   "image/webp": "webp",
-  "image/svg+xml": "svg",
   "image/bmp": "bmp",
 };
+
+// SSRF guard: this fetch is triggered by a server action reachable by any
+// authenticated admin pasting arbitrary signature HTML — without this, it's
+// an open fetch-and-serve-back proxy into whatever the VPS can reach
+// (loopback services, cloud metadata endpoints, internal-only hosts).
+// Resolves the hostname and rejects if ANY answer lands in a
+// private/loopback/link-local/reserved range — a string-only hostname check
+// wouldn't catch DNS rebinding to the same effect.
+function isReservedIp(ip: string): boolean {
+  const version = isIP(ip);
+  if (version === 4) {
+    const parts = ip.split(".").map(Number);
+    const [a, b] = parts;
+    if (a === 127) return true; // loopback
+    if (a === 10) return true; // RFC1918
+    if (a === 172 && b >= 16 && b <= 31) return true; // RFC1918
+    if (a === 192 && b === 168) return true; // RFC1918
+    if (a === 169 && b === 254) return true; // link-local incl. cloud metadata (169.254.169.254)
+    if (a === 100 && b >= 64 && b <= 127) return true; // carrier-grade NAT
+    if (a === 0) return true;
+    if (a >= 224) return true; // multicast + reserved
+    return false;
+  }
+  if (version === 6) {
+    const lower = ip.toLowerCase();
+    if (lower === "::1") return true; // loopback
+    if (lower.startsWith("fc") || lower.startsWith("fd")) return true; // unique local (fc00::/7)
+    if (lower.startsWith("fe8") || lower.startsWith("fe9") || lower.startsWith("fea") || lower.startsWith("feb")) return true; // link-local
+    if (lower.startsWith("::ffff:")) {
+      const mapped = lower.slice(7);
+      if (isIP(mapped) === 4) return isReservedIp(mapped);
+    }
+    return false;
+  }
+  return true; // couldn't classify — fail closed
+}
+
+async function assertSafeExternalUrl(src: string): Promise<void> {
+  const url = new URL(src); // throws on malformed input — caught by caller
+  if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error("unsupported protocol");
+  const addresses = await lookup(url.hostname, { all: true });
+  if (!addresses.length) throw new Error("hostname did not resolve");
+  for (const { address } of addresses) {
+    if (isReservedIp(address)) throw new Error("resolves to a private/reserved address");
+  }
+}
 
 function isAlreadyLocal(src: string): boolean {
   if (src.startsWith("/")) return true;
@@ -47,10 +100,15 @@ async function mirrorOne(src: string, userId: string): Promise<string | null> {
   const h = hash(src);
   const dir = dirFor(userId);
   try {
-    const res = await fetch(src, { signal: AbortSignal.timeout(20000) });
-    if (!res.ok) return null;
+    await assertSafeExternalUrl(src);
+    // No auto-follow: a redirect could point at an internal address even
+    // when the original URL looked external. A legitimate signature-image
+    // CDN that redirects just doesn't get mirrored — falls back to the
+    // original (external) src, same as any other failure here.
+    const res = await fetch(src, { signal: AbortSignal.timeout(20000), redirect: "manual" });
+    if (!res.ok || (res.status >= 300 && res.status < 400)) return null;
     const contentType = res.headers.get("content-type");
-    if (contentType && !/^image\//i.test(contentType)) return null;
+    if (!contentType || !/^image\//i.test(contentType) || /svg/i.test(contentType)) return null;
     const ext = extensionFor(src, contentType);
     const file = join(dir, `${h}.${ext}`);
     const publicPath = `/uploads/signatures/${userId}/${h}.${ext}`;
