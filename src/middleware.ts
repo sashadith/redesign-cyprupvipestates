@@ -50,13 +50,14 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  // Partners redesign — LOCAL PREVIEW ONLY, not deployed. Rewrites the real
-  // /partners, /de/partners, /pl/partners, /ru/partners to the new
-  // preview-partners/[lang] design so the page (and its lead-capture form,
-  // gated by /api/email's PARTNERS_PATH_RE on the exact /partners path) can
-  // be verified end-to-end at the real URL before any cutover decision. The
-  // live hardcoded /[lang]/partners/page.tsx is untouched on disk; remove
-  // this block to fall straight back to it.
+  // Partners redesign — now the permanent live implementation (cutover
+  // decided during the canonical/hreflang audit; see docs/SITE-CHANGELOG.md).
+  // Rewrites the real /partners, /de/partners, /pl/partners, /ru/partners to
+  // preview-partners/[lang] (indexable — see that tree's layout.tsx), whose
+  // lead-capture form is still gated by /api/email's PARTNERS_PATH_RE on the
+  // exact /partners path. The old hardcoded /[lang]/partners/page.tsx this
+  // used to sit alongside has been deleted — this rewrite is no longer
+  // provisional, it's the only implementation left.
   const partnersMatch = request.nextUrl.pathname.match(/^\/(?:(de|pl|ru)\/)?partners$/);
   if (partnersMatch) {
     const lang = partnersMatch[1] || "en";

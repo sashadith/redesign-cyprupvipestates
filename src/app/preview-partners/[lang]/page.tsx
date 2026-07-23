@@ -12,10 +12,15 @@ import PartnersMotion from "./PartnersMotion";
 import PartnersForm from "./PartnersForm";
 import { partnersCopy } from "./copy";
 
-/* Cyprus VIP Estates — Partners, redesigned. See ./layout.tsx for why this
-   lives outside src/app/[lang] despite having its own [lang] segment. The
-   live /[lang]/partners page (hardcoded PartnersHero/Benefits/Cta/Stars/
-   Count/Contact + FormPartners/ModalPartners) is untouched.
+/* Cyprus VIP Estates — Partners, redesigned. This is now the LIVE /partners
+   page (see ./layout.tsx for the indexability fix + why this lives outside
+   src/app/[lang] despite having its own [lang] segment). The old hardcoded
+   /[lang]/partners page (PartnersHero/Benefits/Cta/Stars/Count/Contact +
+   FormPartners/ModalPartners) has been deleted — it was unreachable dead
+   code once middleware.ts's rewrite shipped, and is fully superseded by
+   this page. generateMetadata below already builds canonical + hreflang via
+   staticAlternates() (fixed-path type — /partners is identical across all
+   4 locales), unchanged by this cutover.
 
    REUSED, not reinvented (see partners.css header for the full breakdown):
      - Hero: Home's OWN .hero/.hero__media/.hero__scrim/.hero__inner/

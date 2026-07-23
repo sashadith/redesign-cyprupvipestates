@@ -6,13 +6,19 @@ import "../../preview-insights/insights.css";
 import "../partners.css";
 import LenisProvider from "../../preview-home/anim/LenisProvider";
 
-/* Partners — redesigned. Isolated route tree, same as preview-case-studies/
-   preview-faq/preview-home — NOT nested under src/app/[lang]/layout.tsx (that
-   layout renders the live site's OWN header/footer chrome, a different design
-   system). The [lang] segment here is local to preview-partners only, purely
-   to carry the locale for data-fetching + <html lang>. The live /[lang]/partners
-   Sanity-free hardcoded page is untouched — this is a separate, local-only
-   preview pending review before any cutover. noindex/nofollow throughout. */
+/* Partners — redesigned, now the LIVE /partners page (cutover decided during
+   the canonical/hreflang audit, see docs/SITE-CHANGELOG.md). Isolated route
+   tree, same as preview-case-studies/preview-faq/preview-home — NOT nested
+   under src/app/[lang]/layout.tsx (that layout renders the OLD site's own
+   header/footer chrome, a different design system). The [lang] segment here
+   is local to preview-partners only, purely to carry the locale for
+   data-fetching + <html lang>; middleware.ts unconditionally rewrites the
+   public /partners, /de/partners, /pl/partners, /ru/partners to this tree, so
+   "preview-partners" itself is never a URL a visitor sees or types. The old
+   hardcoded /[lang]/partners/page.tsx (Sanity-free, dead code once this
+   rewrite shipped) has been deleted — this tree is now the only implementation.
+   Indexable: this page's own generateMetadata (see ./page.tsx) sets canonical
+   + hreflang via staticAlternates(), same as every other indexable route. */
 
 const display = Fraunces({
   subsets: ["latin", "latin-ext"],
@@ -41,7 +47,6 @@ export const metadata: Metadata = {
   // against Next.js's localhost fallback instead of the real domain.
   metadataBase: new URL(SITE_URL),
   title: "Partners — redesign preview",
-  robots: { index: false, follow: false },
 };
 
 export default function PartnersLayout({
@@ -53,9 +58,6 @@ export default function PartnersLayout({
 }) {
   return (
     <html lang={params.lang} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable}`}>
-      <head>
-        <meta name="robots" content="noindex, nofollow" />
-      </head>
       <body>
         <LenisProvider>{children}</LenisProvider>
       </body>
