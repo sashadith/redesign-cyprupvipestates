@@ -12,19 +12,14 @@ import { SITE_URL } from "@/lib/seo";
 
 const OWN_HOSTS = new Set(["cyprusvipestates.com", "design.cyprusvipestates.com"]);
 
-// SVG deliberately excluded — an <img src> pointing at our own mirrored SVG
-// is safe (browsers sandbox script execution in an <img> context), but
-// anyone who later links directly to the raw file gets it served as a
-// navigable image/svg+xml document, and inline <script>/event handlers in
-// an SVG DO execute in that top-level-navigation context. Signature images
-// are logos/dividers/icons — raster formats cover every real case.
-const EXT_BY_CONTENT_TYPE: Record<string, string> = {
-  "image/png": "png",
-  "image/jpeg": "jpg",
-  "image/gif": "gif",
-  "image/webp": "webp",
-  "image/bmp": "bmp",
-};
+// Generous for a signature logo/icon/divider; guards against an oversized
+// or malicious response being buffered fully in memory.
+const MAX_BYTES = 5 * 1024 * 1024;
+
+// Candidate extensions we ever write — used to probe for an already-mirrored
+// file before downloading (see mirrorOne), since the real extension is only
+// known after inspecting the downloaded bytes.
+const KNOWN_EXTENSIONS = ["png", "jpg", "gif", "webp"] as const;
 
 // SSRF guard: this fetch is triggered by a server action reachable by any
 // authenticated admin pasting arbitrary signature HTML — without this, it's
@@ -82,23 +77,51 @@ function isAlreadyLocal(src: string): boolean {
   }
 }
 
-function extensionFor(src: string, contentType: string | null): string {
-  if (contentType) {
-    const base = contentType.split(";")[0].trim().toLowerCase();
-    if (EXT_BY_CONTENT_TYPE[base]) return EXT_BY_CONTENT_TYPE[base];
+// Real-format detection via magic bytes on the downloaded buffer — never the
+// server's Content-Type header (gimm.io serves its social icons as
+// application/octet-stream, which silently rejected 6 of 7 images before
+// this fix) and never the URL's own extension. Deliberately allowlist-only:
+// anything that isn't recognized as PNG/JPEG/GIF/WEBP is rejected outright,
+// which is also what keeps SVG (script-capable when linked to directly,
+// see the comment history on this file) out — SVG's bytes never match any
+// of these four signatures, so it can't slip through regardless of what
+// content-type a server claims.
+function detectImageType(buf: Buffer): { ext: string; contentType: string } | null {
+  if (buf.length >= 8 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) {
+    return { ext: "png", contentType: "image/png" };
   }
-  const fromUrl = src.split("?")[0].split(".").pop();
-  if (fromUrl && /^[a-z0-9]{2,5}$/i.test(fromUrl)) return fromUrl.toLowerCase();
-  return "jpg";
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) {
+    return { ext: "jpg", contentType: "image/jpeg" };
+  }
+  if (buf.length >= 3 && buf.toString("latin1", 0, 3) === "GIF") {
+    return { ext: "gif", contentType: "image/gif" };
+  }
+  if (buf.length >= 12 && buf.toString("latin1", 0, 4) === "RIFF" && buf.toString("latin1", 8, 12) === "WEBP") {
+    return { ext: "webp", contentType: "image/webp" };
+  }
+  return null;
 }
 
 const dirFor = (userId: string) => join(process.cwd(), "public", "uploads", "signatures", userId);
 const hash = (s: string) => createHash("sha1").update(s).digest("hex").slice(0, 16);
 const exists = (p: string) => access(p).then(() => true).catch(() => false);
 
+function warn(src: string, reason: string) {
+  console.warn(`[emailSignature] rejected image (${reason}): ${src}`);
+}
+
 async function mirrorOne(src: string, userId: string): Promise<string | null> {
   const h = hash(src);
   const dir = dirFor(userId);
+
+  // Idempotent without knowing the extension up front: the real format is
+  // only known after inspecting the downloaded bytes, so probe every
+  // extension we ever write for an existing file before re-fetching.
+  for (const ext of KNOWN_EXTENSIONS) {
+    const candidate = join(dir, `${h}.${ext}`);
+    if (await exists(candidate)) return `${SITE_URL}/uploads/signatures/${userId}/${h}.${ext}`;
+  }
+
   try {
     await assertSafeExternalUrl(src);
     // No auto-follow: a redirect could point at an internal address even
@@ -106,18 +129,35 @@ async function mirrorOne(src: string, userId: string): Promise<string | null> {
     // CDN that redirects just doesn't get mirrored — falls back to the
     // original (external) src, same as any other failure here.
     const res = await fetch(src, { signal: AbortSignal.timeout(20000), redirect: "manual" });
-    if (!res.ok || (res.status >= 300 && res.status < 400)) return null;
-    const contentType = res.headers.get("content-type");
-    if (!contentType || !/^image\//i.test(contentType) || /svg/i.test(contentType)) return null;
-    const ext = extensionFor(src, contentType);
-    const file = join(dir, `${h}.${ext}`);
-    const publicPath = `/uploads/signatures/${userId}/${h}.${ext}`;
-    if (await exists(file)) return `${SITE_URL}${publicPath}`; // idempotent
+    if (!res.ok || (res.status >= 300 && res.status < 400)) {
+      warn(src, `HTTP ${res.status}`);
+      return null;
+    }
+    const declaredLength = Number(res.headers.get("content-length") ?? "0");
+    if (declaredLength > MAX_BYTES) {
+      warn(src, `declared size ${declaredLength} bytes exceeds ${MAX_BYTES}`);
+      return null;
+    }
+    // Content-Type is intentionally never consulted as an acceptance
+    // criterion — only used to decide download vs. reject, and it isn't
+    // even that anymore; real type comes from the bytes below.
     const buf = Buffer.from(await res.arrayBuffer());
+    if (buf.length > MAX_BYTES) {
+      warn(src, `actual size ${buf.length} bytes exceeds ${MAX_BYTES}`);
+      return null;
+    }
+    const detected = detectImageType(buf);
+    if (!detected) {
+      warn(src, "unrecognized format — not PNG/JPEG/GIF/WEBP by magic bytes");
+      return null;
+    }
+    const file = join(dir, `${h}.${detected.ext}`);
+    const publicPath = `/uploads/signatures/${userId}/${h}.${detected.ext}`;
     await mkdir(dir, { recursive: true });
     await writeFile(file, buf);
     return `${SITE_URL}${publicPath}`;
-  } catch {
+  } catch (e: any) {
+    warn(src, e?.message || "fetch error");
     return null;
   }
 }
@@ -146,14 +186,21 @@ async function replaceAsync(str: string, re: RegExp, fn: (...args: string[]) => 
 
 const IMG_SRC_RE = /(<img\b[^>]*\bsrc\s*=\s*")([^"]+)("[^>]*>)/gi;
 
+export type MirrorResult = { html: string; failedCount: number };
+
 // Rewrites every external <img src> in `html` to a locally-mirrored,
 // absolute URL. Already-local/relative/data: srcs pass through untouched.
-// Idempotent: a src already pointing at our own mirrored path is left as-is,
-// and re-mirroring the same remote URL skips the download on the 2nd+ save.
-export async function mirrorSignatureImages(html: string, userId: string): Promise<string> {
-  return replaceAsync(html, IMG_SRC_RE, async (_full: string, pre: string, src: string, post: string) => {
+// Idempotent: a src already mirrored on a previous save is detected and
+// reused without re-downloading. Every rejection is logged (see warn())
+// with the source URL and reason, and the total failure count is returned
+// so the caller can surface it to the admin instead of failing silently.
+export async function mirrorSignatureImages(html: string, userId: string): Promise<MirrorResult> {
+  let failedCount = 0;
+  const out = await replaceAsync(html, IMG_SRC_RE, async (_full: string, pre: string, src: string, post: string) => {
     if (isAlreadyLocal(src)) return `${pre}${src}${post}`;
     const mirrored = await mirrorOne(src, userId);
+    if (!mirrored) failedCount += 1;
     return `${pre}${mirrored ?? src}${post}`;
   });
+  return { html: out, failedCount };
 }

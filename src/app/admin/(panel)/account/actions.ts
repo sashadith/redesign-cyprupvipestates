@@ -127,9 +127,12 @@ export async function updateEmailSettings(
   // javascript: URLs) and has its external images mirrored to our own
   // storage; plain text (including all pre-upgrade signatures) passes
   // through untouched — content-based, not a stored flag, so nothing needs
-  // re-entry. See src/lib/emailSignature/.
-  const processSignature = async (raw: string) => {
-    if (!raw || !looksLikeHtml(raw)) return raw;
+  // re-entry. See src/lib/emailSignature/. Images that fail to mirror (bad
+  // format, SSRF-blocked, oversized, etc.) keep their original external URL
+  // — never silent: each is console.warn'd in mirrorSignatureImages, and the
+  // count surfaces in the save confirmation below.
+  const processSignature = async (raw: string): Promise<{ html: string; failedCount: number }> => {
+    if (!raw || !looksLikeHtml(raw)) return { html: raw, failedCount: 0 };
     const sanitized = sanitizeSignatureHtml(raw);
     return mirrorSignatureImages(sanitized, targetUserId);
   };
@@ -139,6 +142,7 @@ export async function updateEmailSettings(
     processSignature(str("signaturePl")),
     processSignature(str("signatureRu")),
   ]);
+  const failedImageCount = sigEn.failedCount + sigDe.failedCount + sigPl.failedCount + sigRu.failedCount;
 
   const data: any = {
     fromName: str("fromName") || null,
@@ -149,7 +153,7 @@ export async function updateEmailSettings(
     imapHost: str("imapHost") || null,
     imapPort: port("imapPort"),
     imapUser: str("imapUser") || null,
-    signature: { en: sigEn, de: sigDe, pl: sigPl, ru: sigRu },
+    signature: { en: sigEn.html, de: sigDe.html, pl: sigPl.html, ru: sigRu.html },
   };
   // Replace-only: an empty password field means "leave whatever's already
   // stored" — never overwrite with an empty/decoy value.
@@ -164,7 +168,10 @@ export async function updateEmailSettings(
 
   revalidatePath("/admin/account");
   revalidatePath(`/admin/users/${targetUserId}/edit`);
-  return { ok: "Email settings saved." };
+  const imageWarning = failedImageCount
+    ? ` (${failedImageCount} signature image${failedImageCount === 1 ? "" : "s"} could not be mirrored — kept as external link${failedImageCount === 1 ? "" : "s"}; see server logs.)`
+    : "";
+  return { ok: `Email settings saved.${imageWarning}` };
 }
 
 export async function sendTestEmail(targetUserId: string): Promise<{ error?: string; ok?: string }> {
