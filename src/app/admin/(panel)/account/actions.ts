@@ -38,6 +38,19 @@ async function assertOwnerUnprotected(session: any, targetId: string) {
   return target;
 }
 
+// Server actions are independently POST-able regardless of which page renders
+// their form — the /admin/users/[id]/edit page already redirects non-ADMINs,
+// but that page-level gate doesn't protect the action itself from a direct
+// call. Every cross-user path here must re-check ADMIN, not just the
+// owner-protection guard above (which only ever protects the *owner's* row,
+// never checks who the *actor* is allowed to touch).
+async function requireAdminForOtherUser(session: any, targetUserId: string) {
+  const actorId = (session.user as any).id as string;
+  if (actorId === targetUserId) return; // self-service always allowed
+  if ((session.user as any)?.role !== "ADMIN") throw new Error("Forbidden");
+  await assertOwnerUnprotected(session, targetUserId);
+}
+
 export type EmailSettingsView = {
   fromName: string;
   fromAddress: string;
@@ -66,6 +79,8 @@ const EMPTY_VIEW: EmailSettingsView = {
 // boolean per credential, matching the "configured ✓, replace-only input"
 // requirement.
 export async function getEmailSettings(userId: string): Promise<EmailSettingsView> {
+  const session = await requireSession();
+  await requireAdminForOtherUser(session, userId);
   const row = await prisma.userEmailSettings.findUnique({ where: { userId } });
   if (!row) return EMPTY_VIEW;
   const sig = (row.signature as any) ?? {};
@@ -92,13 +107,10 @@ export async function updateEmailSettings(
   formData: FormData,
 ): Promise<{ error?: string; ok?: string }> {
   const session = await requireSession();
-  const actorId = (session.user as any).id as string;
-  if (actorId !== targetUserId) {
-    try {
-      await assertOwnerUnprotected(session, targetUserId);
-    } catch (e: any) {
-      return { error: e.message };
-    }
+  try {
+    await requireAdminForOtherUser(session, targetUserId);
+  } catch (e: any) {
+    return { error: e.message };
   }
 
   const str = (k: string) => String(formData.get(k) ?? "").trim();
@@ -144,13 +156,10 @@ export async function updateEmailSettings(
 
 export async function sendTestEmail(targetUserId: string): Promise<{ error?: string; ok?: string }> {
   const session = await requireSession();
-  const actorId = (session.user as any).id as string;
-  if (actorId !== targetUserId) {
-    try {
-      await assertOwnerUnprotected(session, targetUserId);
-    } catch (e: any) {
-      return { error: e.message };
-    }
+  try {
+    await requireAdminForOtherUser(session, targetUserId);
+  } catch (e: any) {
+    return { error: e.message };
   }
 
   const row = await prisma.userEmailSettings.findUnique({ where: { userId: targetUserId } });
