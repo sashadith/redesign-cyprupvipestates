@@ -51,7 +51,7 @@ export default function ExistingPresentations({ presentations, leadId }: { prese
 
   return (
     <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
-      <h2 className="text-sm font-semibold text-[#111827] mb-3">Client Presentations</h2>
+      <h2 className="text-base font-semibold text-[#111827] mb-3">Client Presentations</h2>
       <div className="space-y-2">
         {presentations.map((p) => {
           const url = `${requestOrigin()}/c/${p.token}`;

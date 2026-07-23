@@ -1,11 +1,11 @@
 "use server";
 
-import nodemailer from "nodemailer";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
-import { encrypt, decrypt } from "@/lib/crypto/secretBox";
+import { encrypt } from "@/lib/crypto/secretBox";
 import { sanitizeSignatureHtml, mirrorSignatureImages, looksLikeHtml, stripHtmlToText, getSignatureHtml } from "@/lib/emailSignature";
+import { sendUserEmail, getUserEmailSettingsRow } from "@/lib/crm/sendCrmEmail";
 
 // Self-contained session gate (same reasoning as presentationActions.ts's own
 // copy: exporting requireSession from the main admin/actions.ts "use server"
@@ -182,33 +182,29 @@ export async function sendTestEmail(targetUserId: string): Promise<{ error?: str
     return { error: e.message };
   }
 
-  const row = await prisma.userEmailSettings.findUnique({ where: { userId: targetUserId } });
-  if (!row || !row.smtpHost || !row.smtpUser || !row.smtpPasswordEnc || !row.fromAddress) {
-    return { error: "Fill in and save SMTP host, user, password, and From address first." };
+  // Validate settings BEFORE touching the DB at all — matches the original
+  // behavior of returning early (no lastTestSentAt/lastTestOk write) when
+  // there's no row yet, since `update` below would 404 on a row that was
+  // never created.
+  let settingsRow;
+  try {
+    settingsRow = await getUserEmailSettingsRow(targetUserId);
+  } catch (e: any) {
+    return { error: e.message };
   }
 
   let ok = false;
   let errorMessage: string | undefined;
   try {
-    const transporter = nodemailer.createTransport({
-      host: row.smtpHost,
-      port: row.smtpPort ?? 465,
-      secure: (row.smtpPort ?? 465) === 465,
-      auth: { user: row.smtpUser, pass: decrypt(row.smtpPasswordEnc) },
-    });
     // Multipart so the real rendering (table layout, images) can be checked
     // in an actual mail client, not just the admin's own preview iframe.
     const testBodyHtml = "<p>This confirms your email connection settings are working.</p>";
     const signatureHtml = await getSignatureHtml(targetUserId, "en");
     const html = signatureHtml ? `${testBodyHtml}${signatureHtml}` : testBodyHtml;
     const text = stripHtmlToText(html);
-    await transporter.sendMail({
-      from: row.fromName ? `"${row.fromName}" <${row.fromAddress}>` : row.fromAddress,
-      to: row.fromAddress,
-      subject: "Cyprus VIP Estates — test email",
-      html,
-      text,
-    });
+    // Transporter-building + send now lives in src/lib/crm/sendCrmEmail.ts,
+    // shared with the CRM lead-email compose actions (crm/[id]/emailActions.ts).
+    await sendUserEmail(targetUserId, { to: settingsRow.fromAddress!, subject: "Cyprus VIP Estates — test email", html, text });
     ok = true;
   } catch (e: any) {
     errorMessage = e?.message || "Send failed.";
@@ -221,5 +217,5 @@ export async function sendTestEmail(targetUserId: string): Promise<{ error?: str
   revalidatePath("/admin/account");
   revalidatePath(`/admin/users/${targetUserId}/edit`);
 
-  return ok ? { ok: `Test email sent to ${row.fromAddress}.` } : { error: errorMessage };
+  return ok ? { ok: `Test email sent to ${settingsRow.fromAddress}.` } : { error: errorMessage };
 }

@@ -16,6 +16,8 @@ import { pingIndexNow, absUrl } from "@/lib/indexnow";
 import { deepSetString } from "@/lib/homepageFields";
 import { slugify } from "@/lib/slugify";
 import { listProjectsForPicker as listProjectsForPickerQuery } from "@/sanity/sanity.utils";
+import { applyFollowUpCadence, resetFollowUpCadence } from "@/lib/crm/followUpCadence";
+import { isManualInteractionType } from "@/lib/crm/interactionHelpers";
 
 // Convert every `{__html}` rich-text marker (produced by the block editor) into
 // Portable Text via the shared converter — so all blocks store consistent PT and
@@ -630,27 +632,38 @@ export async function updateLeadStatus(id: string, status: string, reason?: stri
   revalidatePath("/admin");
 }
 
-export async function addLeadNote(id: string, note: string) {
+// occurredAt/leadReacted are new (Lead Cockpit correction batch): the
+// timeline quick-add forms now let an admin backdate a manually-logged
+// entry (default = now) and flag it as the lead's own reaction, which
+// resets the auto-follow-up chain (src/lib/crm/followUpCadence.ts) instead
+// of just advancing it.
+export async function addLeadNote(id: string, note: string, occurredAt?: Date, leadReacted?: boolean) {
   const session = await requireSession();
   const content = note.trim();
   if (!content) return;
+  const when = occurredAt ?? new Date();
   await prisma.leadActivity.create({
-    data: { leadId: id, type: "NOTE", content, createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
+    data: { leadId: id, type: "NOTE", content, createdAt: when, createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
   });
   await prisma.leadInteraction.create({
     data: {
       leadId: id,
       type: "NOTE",
+      occurredAt: when,
       body: content,
       createdByUserId: (session.user as any)?.id ?? null,
       createdByName: session.user?.name ?? "admin",
+      ...(leadReacted ? { metadata: { leadReacted: true } } : {}),
     },
   });
+  await applyFollowUpCadence(id, "manual_contact", { leadReacted });
   revalidatePath(`/admin/crm/${id}`);
 }
 
 // Cockpit's inline "Next follow-up" editor — plain date, no timeline entry
-// (this is a scheduling field, not a logged interaction).
+// (this is a scheduling field, not a logged interaction). Deliberately does
+// NOT touch autoFollowUpCount — only resetLeadFollowUpCadenceAction below
+// (the Cockpit's dedicated "Reset" control) does that.
 export async function updateLeadFollowUp(id: string, dateStr: string) {
   await requireSession();
   const nextFollowUpAt = dateStr ? new Date(`${dateStr}T00:00:00.000Z`) : null;
@@ -658,24 +671,62 @@ export async function updateLeadFollowUp(id: string, dateStr: string) {
   revalidatePath(`/admin/crm/${id}`);
 }
 
+// Cockpit's "Reset" control next to the follow-up indicator — starts a
+// fresh auto-follow-up chain of 3 without touching nextFollowUpAt itself.
+export async function resetLeadFollowUpCadenceAction(id: string) {
+  await requireSession();
+  await resetFollowUpCadence(id);
+  revalidatePath(`/admin/crm/${id}`);
+}
+
 // Log a phone call against a lead — same shape as addLeadNote, distinct
 // interaction type so it shows with its own icon in the Unified Timeline.
-export async function addCallLog(id: string, note: string) {
+export async function addCallLog(id: string, note: string, occurredAt?: Date, leadReacted?: boolean) {
   const session = await requireSession();
   const content = note.trim();
   if (!content) return;
+  const when = occurredAt ?? new Date();
   await prisma.leadInteraction.create({
     data: {
       leadId: id,
       type: "CALL",
       direction: "OUTBOUND",
       channel: "PHONE",
+      occurredAt: when,
       body: content,
       createdByUserId: (session.user as any)?.id ?? null,
       createdByName: session.user?.name ?? "admin",
+      ...(leadReacted ? { metadata: { leadReacted: true } } : {}),
     },
   });
+  await applyFollowUpCadence(id, "manual_contact", { leadReacted });
   revalidatePath(`/admin/crm/${id}`);
+}
+
+// Delete a manually-logged timeline entry (Note/Call/Email/WhatsApp only —
+// see isManualInteractionType; system-generated rows like STATUS_CHANGE or
+// PRESENTATION_EVENT are never deletable). Audit-logged same as the CRM
+// trash cascade delete (emptyTrashAction).
+export async function deleteLeadInteraction(interactionId: string) {
+  const session = await requireSession();
+  const row = await prisma.leadInteraction.findUnique({
+    where: { id: interactionId },
+    select: { id: true, leadId: true, type: true, body: true, subject: true },
+  });
+  if (!row) return;
+  if (!isManualInteractionType(row.type)) {
+    throw new Error("This entry was system-generated and can't be deleted.");
+  }
+  await prisma.leadInteraction.delete({ where: { id: interactionId } });
+  const actor = session.user as any;
+  await prisma.adminAuditLog.create({
+    data: {
+      actorId: actor.id, actorName: actor.name, actorEmail: actor.email,
+      action: "delete_lead_interaction", targetType: "LeadInteraction", targetId: interactionId,
+      detail: { leadId: row.leadId, type: row.type, subject: row.subject, body: row.body },
+    },
+  });
+  revalidatePath(`/admin/crm/${row.leadId}`);
 }
 
 // Assign a lead to a team member (or unassign with an empty value).

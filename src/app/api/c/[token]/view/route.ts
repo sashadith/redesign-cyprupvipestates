@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { clientIpFromHeaders, dailyVisitorHash } from "@/lib/visitorHash";
 import { makeRateLimiter, clientIp, escapeHtml } from "@/lib/antispam";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { applyFollowUpCadence } from "@/lib/crm/followUpCadence";
 
 const ipLimiter = makeRateLimiter();
 
@@ -103,6 +104,11 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
           metadata: { legacyType: "PRESENTATION_VIEWED" },
         },
       }).catch(() => {});
+      // "Presentation opened, no reaction yet" cadence trigger — fires on
+      // both the first-ever view and any later day's first view (this
+      // whole block is already gated to isFirstViewToday). Best-effort, same
+      // as the writes above.
+      await applyFollowUpCadence(p.leadId, "presentation_viewed").catch(() => {});
     }
   }
 

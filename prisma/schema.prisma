@@ -661,6 +661,15 @@ model Lead {
   preferredChannel     LeadPreferredChannel?
   nextFollowUpAt       DateTime?
   interactions         LeadInteraction[]
+  // Lead Cockpit correction batch (2026-07-23) — auto-follow-up cadence.
+  // Counts automatic nextFollowUpAt writes (presentation sent/viewed, or a
+  // manual Call/Note/Email/WhatsApp log), shared across ALL trigger types,
+  // capped at 3 by src/lib/crm/followUpCadence.ts. Resets to 0 — starting a
+  // fresh chain — whenever an interaction is logged with metadata.leadReacted
+  // (or via the manual "Reset" control in the Cockpit), so a lead who
+  // responds and later goes quiet again gets a fresh chain of 3, rather than
+  // this being a lifetime cap.
+  autoFollowUpCount    Int                   @default(0)
 
   @@index([status])
   @@index([createdAt])

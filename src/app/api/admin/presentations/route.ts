@@ -3,6 +3,9 @@ import QRCode from "qrcode";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { uniquePresentationToken } from "@/lib/crm/presentationToken";
+import { WHATSAPP_MSG } from "@/lib/crm/presentationMessages";
+import { waLink } from "@/lib/crm/waFormat";
+import { applyFollowUpCadence } from "@/lib/crm/followUpCadence";
 
 // Deliberately NOT src/lib/seo.ts's SITE_URL — that constant is hardcoded to
 // the production domain, which would make every presentation generated on
@@ -25,13 +28,6 @@ async function requireSession() {
   if (!user || !user.isActive) return null;
   return session;
 }
-
-const WHATSAPP_MSG: Record<string, (name: string, url: string) => string> = {
-  en: (name, url) => `Hello ${name}, I have prepared your personal property selection: ${url}`,
-  de: (name, url) => `Hallo ${name}, ich habe Ihre persönliche Immobilienauswahl vorbereitet: ${url}`,
-  pl: (name, url) => `Dzień dobry ${name}, przygotowałem Państwa osobisty wybór nieruchomości: ${url}`,
-  ru: (name, url) => `Здравствуйте, ${name}. Я подготовил для вас персональную подборку объектов: ${url}`,
-};
 
 type ItemInput = { developmentId: string; unitRefs?: string[] | null; unitIds?: string[] | null; sortIndex?: number; advisorComment?: string | null };
 
@@ -101,11 +97,16 @@ export async function POST(req: NextRequest) {
       metadata: { legacyType: "PRESENTATION_CREATED" },
     },
   });
+  // A presentation being generated is the "sent" event for the auto-follow-up
+  // cadence (src/lib/crm/followUpCadence.ts) — fires once here, regardless of
+  // which channel(s) it's subsequently shared through (WhatsApp/email/copy
+  // link all just deliver this same already-counted event).
+  await applyFollowUpCadence(leadId, "presentation_sent");
 
   const url = `${requestOrigin(req)}/c/${token}`;
   const qrSvg = await QRCode.toString(url, { type: "svg", margin: 1, color: { dark: "#081512", light: "#F5F1E8" } });
   const whatsappUrl = lead.phone
-    ? `https://wa.me/${lead.phone.replace(/[^\d+]/g, "").replace(/^\+/, "")}?text=${encodeURIComponent((WHATSAPP_MSG[locale] ?? WHATSAPP_MSG.en)(greetingName, url))}`
+    ? waLink(lead.phone, (WHATSAPP_MSG[locale as keyof typeof WHATSAPP_MSG] ?? WHATSAPP_MSG.en)(greetingName, url))
     : null;
 
   return NextResponse.json({ ok: true, id: presentation.id, token, url, qrSvg, whatsappUrl });

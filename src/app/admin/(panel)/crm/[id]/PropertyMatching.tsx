@@ -4,6 +4,8 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { matchLeadAction, saveMatchFiltersAction, type LocationOptions } from "./presentationActions";
 import type { DevelopmentMatch, MatchFilters } from "@/lib/crm/matching";
 import { normalizeRef } from "@/lib/unitRef";
+import ComposeEmailModal from "./ComposeEmailModal";
+import { PRESENTATION_EMAIL_TEMPLATE } from "@/lib/crm/presentationMessages";
 
 type LeadBrief = {
   firstName: string;
@@ -12,6 +14,7 @@ type LeadBrief = {
   propertyTypeInterest: string[];
   languagePreference: string | null;
   phone: string | null;
+  email: string | null;
   lastMatchFilters: MatchFilters | null;
 };
 
@@ -36,13 +39,14 @@ const chip = (on: boolean) =>
   `rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${on ? "border-[#1B4B43] bg-[#1B4B43] text-white" : "border-[#E5E7EB] text-[#6B7280] hover:bg-[#F8F9FA]"}`;
 
 export default function PropertyMatching({
-  leadId, lead, locations, currentUser, users,
+  leadId, lead, locations, currentUser, users, sendPresentationEmailAction,
 }: {
   leadId: string;
   lead: LeadBrief;
   locations: LocationOptions;
   currentUser: { id: string; name: string } | null;
   users: { id: string; name: string }[];
+  sendPresentationEmailAction: (opts: { subject: string; body: string; leadReacted?: boolean; presentationToken?: string }) => Promise<{ ok?: string; error?: string }>;
 }) {
   const initialLocale: Locale = (LOCALES as readonly string[]).includes(lead.languagePreference ?? "") ? (lead.languagePreference as Locale) : "en";
 
@@ -89,7 +93,8 @@ export default function PropertyMatching({
   const [advisorId, setAdvisorId] = useState(currentUser?.id ?? "");
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState("");
-  const [generated, setGenerated] = useState<{ url: string; qrSvg: string; whatsappUrl: string | null } | null>(null);
+  const [generated, setGenerated] = useState<{ token: string; url: string; qrSvg: string; whatsappUrl: string | null } | null>(null);
+  const [showComposeEmail, setShowComposeEmail] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const runMatch = (f: MatchFilters) => {
@@ -235,7 +240,7 @@ export default function PropertyMatching({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to generate");
-      setGenerated({ url: data.url, qrSvg: data.qrSvg, whatsappUrl: data.whatsappUrl });
+      setGenerated({ token: data.token, url: data.url, qrSvg: data.qrSvg, whatsappUrl: data.whatsappUrl });
     } catch (e: any) {
       setGenError(e.message || "Failed to generate");
     } finally {
@@ -245,7 +250,7 @@ export default function PropertyMatching({
 
   return (
     <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-4">
-      <h2 className="text-sm font-semibold text-[#111827]">Property Matching</h2>
+      <h2 className="text-base font-semibold text-[#111827]">Property Matching</h2>
 
       {/* ---- FILTERS ---- */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-[#F8F9FA] rounded-md p-3 border border-[#E5E7EB]">
@@ -444,11 +449,31 @@ export default function PropertyMatching({
               {generated.whatsappUrl && (
                 <a href={generated.whatsappUrl} target="_blank" rel="noopener noreferrer" className="rounded-md bg-[#25D366] text-white text-sm px-3 py-1.5 hover:opacity-90">Share via WhatsApp</a>
               )}
+              {lead.email && (
+                <button type="button" onClick={() => setShowComposeEmail(true)} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-3 py-1.5 hover:bg-[#1B4B43]/5">
+                  Send by email
+                </button>
+              )}
               <button type="button" onClick={() => setGenerated(null)} className="ml-auto text-sm text-[#6B7280] hover:text-[#111827]">Close</button>
             </div>
           </div>
         </div>
       )}
+
+      {showComposeEmail && generated && lead.email && (() => {
+        const t = PRESENTATION_EMAIL_TEMPLATE[locale](greetingName, generated.url);
+        return (
+          <ComposeEmailModal
+            leadEmail={lead.email}
+            initialSubject={t.subject}
+            initialBody={t.body}
+            presentationToken={generated.token}
+            showLeadReacted={false}
+            sendAction={sendPresentationEmailAction}
+            onClose={() => setShowComposeEmail(false)}
+          />
+        );
+      })()}
     </div>
   );
 }

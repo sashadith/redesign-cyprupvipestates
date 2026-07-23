@@ -2,8 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { updateLeadStatus, addLeadNote, assignLead, mergeLeads, updateLeadFollowUp, addCallLog } from "../../../actions";
-import { StatusBadge } from "@/app/admin/status-badge";
+import {
+  updateLeadStatus, addLeadNote, assignLead, mergeLeads, updateLeadFollowUp, addCallLog,
+  resetLeadFollowUpCadenceAction, deleteLeadInteraction,
+} from "../../../actions";
+import { sendCrmEmailAction, logWhatsAppSentAction } from "./emailActions";
 import { listPresentationLocations } from "./presentationActions";
 import PropertyMatching from "./PropertyMatching";
 import ExistingPresentations, { type PresentationRow } from "./ExistingPresentations";
@@ -12,8 +15,6 @@ import CockpitCard, { type LastContact, type PresentationSummary } from "./Cockp
 import UnifiedTimeline, { type TimelineRow } from "./UnifiedTimeline";
 
 export const dynamic = "force-dynamic";
-
-const STATUSES = ["NEW", "QUALIFIED", "CONTACTED", "VIEWING_SCHEDULED", "OFFER", "CLOSED", "LOST"];
 
 export default async function LeadDetail({ params }: { params: { id: string } }) {
   const { id } = params;
@@ -113,6 +114,11 @@ export default async function LeadDetail({ params }: { params: { id: string } })
     createdByName: i.createdByName,
   }));
 
+  // Absorbed into CockpitCard's detail groups (see that component) — computed
+  // once here, same shape the old page.tsx <dl> built inline.
+  const utm = [lead.utmSource, lead.utmMedium, lead.utmCampaign, lead.utmTerm, lead.utmContent].filter(Boolean).join(" / ");
+  const clickId = [lead.gclid ? `gclid: ${lead.gclid}` : null, lead.fbclid ? `fbclid: ${lead.fbclid}` : null].filter(Boolean).join("  ·  ");
+
   async function setStatus(formData: FormData) {
     "use server";
     await updateLeadStatus(id, String(formData.get("status")), String(formData.get("reason") ?? ""));
@@ -129,22 +135,42 @@ export default async function LeadDetail({ params }: { params: { id: string } })
     "use server";
     await updateLeadFollowUp(id, String(formData.get("nextFollowUpAt") ?? ""));
   }
+  async function resetFollowUp() {
+    "use server";
+    await resetLeadFollowUpCadenceAction(id);
+  }
+  // datetime-local input value ("2026-07-23T14:30") -> Date, or undefined
+  // (defaults to now server-side) if left blank/invalid.
+  function parseOccurredAt(formData: FormData): Date | undefined {
+    const raw = String(formData.get("occurredAt") ?? "");
+    if (!raw) return undefined;
+    const d = new Date(raw);
+    return Number.isNaN(d.getTime()) ? undefined : d;
+  }
   async function quickNote(formData: FormData) {
     "use server";
-    await addLeadNote(id, String(formData.get("note") ?? ""));
+    await addLeadNote(id, String(formData.get("note") ?? ""), parseOccurredAt(formData), formData.get("leadReacted") === "on");
   }
   async function quickCall(formData: FormData) {
     "use server";
-    await addCallLog(id, String(formData.get("note") ?? ""));
+    await addCallLog(id, String(formData.get("note") ?? ""), parseOccurredAt(formData), formData.get("leadReacted") === "on");
   }
-
-  const field = (label: string, value: any) =>
-    value ? (
-      <div className="py-2 border-b border-[#E5E7EB] last:border-0">
-        <dt className="text-xs text-[#6B7280]">{label}</dt>
-        <dd className="text-sm mt-0.5 break-words">{Array.isArray(value) ? value.join(", ") : String(value)}</dd>
-      </div>
-    ) : null;
+  async function sendEmail(opts: { subject: string; body: string; occurredAt?: Date; leadReacted?: boolean }) {
+    "use server";
+    return sendCrmEmailAction(id, opts);
+  }
+  async function sendPresentationEmail(opts: { subject: string; body: string; leadReacted?: boolean; presentationToken?: string }) {
+    "use server";
+    return sendCrmEmailAction(id, { ...opts, skipCadence: true });
+  }
+  async function logWhatsApp(opts: { body: string; occurredAt?: Date; leadReacted?: boolean }) {
+    "use server";
+    return logWhatsAppSentAction(id, opts);
+  }
+  async function deleteInteraction(interactionId: string) {
+    "use server";
+    await deleteLeadInteraction(interactionId);
+  }
 
   return (
     <div className="max-w-4xl">
@@ -158,18 +184,37 @@ export default async function LeadDetail({ params }: { params: { id: string } })
             lastName: lead.lastName,
             status: lead.status,
             languagePreference: lead.languagePreference,
+            nationality: lead.nationality,
             source: lead.source,
             phone: lead.phone,
             email: lead.email,
             preferredChannel: lead.preferredChannel,
             nextFollowUpAt: lead.nextFollowUpAt,
+            autoFollowUpCount: lead.autoFollowUpCount,
             assignedTo: lead.assignedTo,
+            budgetMin: lead.budgetMin,
+            budgetMax: lead.budgetMax,
+            timeline: lead.timeline,
+            financing: lead.financing,
+            propertyTypeInterest: lead.propertyTypeInterest,
+            projectInterestTitle: lead.projectInterest?.title ?? null,
+            message: lead.message,
+            notes: lead.notes,
+            pageSource: lead.pageSource,
+            utm,
+            clickId,
+            referrer: lead.referrer,
+            createdAt: lead.createdAt,
+            telegramNotified: lead.telegramNotified,
+            emailNotified: lead.emailNotified,
           }}
           users={users}
           lastContact={lastContact}
           presentationSummary={presentationSummary}
           assignAction={assign}
           saveFollowUpAction={saveFollowUp}
+          resetFollowUpAction={resetFollowUp}
+          setStatusAction={setStatus}
         />
         <div className="flex items-center gap-3 mt-2">
           <p className="text-xs text-[#9CA3AF]">In {lead.status.replace(/_/g, " ")} for {stageDays} day{stageDays === 1 ? "" : "s"}</p>
@@ -199,60 +244,28 @@ export default async function LeadDetail({ params }: { params: { id: string } })
       )}
 
       <div className="mb-6">
-        <UnifiedTimeline interactions={timelineRows} addNoteAction={quickNote} addCallAction={quickCall} />
+        <UnifiedTimeline
+          interactions={timelineRows}
+          leadEmail={lead.email}
+          leadPhone={lead.phone}
+          addNoteAction={quickNote}
+          addCallAction={quickCall}
+          sendEmailAction={sendEmail}
+          logWhatsAppAction={logWhatsApp}
+          deleteAction={deleteInteraction}
+        />
       </div>
 
       <div className="space-y-6 mb-6">
         <ExistingPresentations presentations={presentationRows} leadId={id} />
         <PropertyMatching
           leadId={id}
-          lead={{ firstName: lead.firstName, budgetMin: lead.budgetMin, budgetMax: lead.budgetMax, propertyTypeInterest: lead.propertyTypeInterest, languagePreference: lead.languagePreference, phone: lead.phone, lastMatchFilters: lead.lastMatchFilters as any }}
+          lead={{ firstName: lead.firstName, budgetMin: lead.budgetMin, budgetMax: lead.budgetMax, propertyTypeInterest: lead.propertyTypeInterest, languagePreference: lead.languagePreference, phone: lead.phone, email: lead.email, lastMatchFilters: lead.lastMatchFilters as any }}
           locations={locations}
           currentUser={currentUser}
           users={users}
+          sendPresentationEmailAction={sendPresentationEmail}
         />
-      </div>
-
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="md:col-span-2 bg-white rounded-lg border border-[#E5E7EB] p-5">
-          <h2 className="text-sm font-semibold mb-2">Lead details</h2>
-          <dl>
-            {field("Email", lead.email)}
-            {field("Phone", lead.phone)}
-            {field("Nationality", lead.nationality)}
-            {field("Language", lead.languagePreference)}
-            {field("Budget", lead.budgetMin || lead.budgetMax ? `€${lead.budgetMin ?? "?"} – €${lead.budgetMax ?? "?"}` : null)}
-            {field("Timeline", lead.timeline)}
-            {field("Financing", lead.financing)}
-            {field("Property interest", lead.propertyTypeInterest)}
-            {field("Project interest", lead.projectInterest?.title)}
-            {field("Message", lead.message)}
-            {field("Internal note (intake)", lead.notes)}
-            {field("Source", lead.source.replace(/_/g, " "))}
-            {field("Page", lead.pageSource)}
-            {field("UTM", [lead.utmSource, lead.utmMedium, lead.utmCampaign, lead.utmTerm, lead.utmContent].filter(Boolean).join(" / "))}
-            {field("Click ID", [lead.gclid ? `gclid: ${lead.gclid}` : null, lead.fbclid ? `fbclid: ${lead.fbclid}` : null].filter(Boolean).join("  ·  "))}
-            {field("Referrer", lead.referrer)}
-            {field("Assigned to", lead.assignedTo?.name)}
-            {field("Received", new Date(lead.createdAt).toLocaleString("en-GB"))}
-            {field("Notified", `Telegram: ${lead.telegramNotified ? "✓" : "—"}  ·  Email: ${lead.emailNotified ? "✓" : "—"}`)}
-          </dl>
-        </div>
-
-        <div className="space-y-6">
-          <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
-            <h2 className="text-sm font-semibold mb-3">Status</h2>
-            <form action={setStatus} className="space-y-2">
-              <select name="status" defaultValue={lead.status}
-                className="w-full rounded-md border border-[#E5E7EB] px-2 py-1.5 text-sm">
-                {STATUSES.map((s) => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}
-              </select>
-              <input name="reason" placeholder="Reason / note (optional)"
-                className="w-full rounded-md border border-[#E5E7EB] px-2 py-1.5 text-sm" />
-              <button className="w-full rounded-md bg-[#1B4B43] text-white text-sm py-1.5 hover:bg-[#142E2D]">Save</button>
-            </form>
-          </div>
-        </div>
       </div>
     </div>
   );

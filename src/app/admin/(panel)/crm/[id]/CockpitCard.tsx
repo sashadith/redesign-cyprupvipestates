@@ -1,13 +1,19 @@
 import Link from "next/link";
 import { StatusBadge } from "@/app/admin/status-badge";
+import { formatWaPhone } from "@/lib/crm/waFormat";
 
-// The Lead Cockpit's hero card (Phase 1 of 4, 2026-07-23) — a single glance-able
-// summary that replaces the old bare name+badge header. Everything below this
-// card (presentations, matching, the detail <dl>) is unchanged in function.
+// The Lead Cockpit's hero card (Phase 1 of 4, 2026-07-23; consolidated in the
+// correction batch, 2026-07-23) — a single glance-able summary that now
+// absorbs everything the old page.tsx's separate "Lead details" <dl> and
+// "Status" box used to show. Email/Phone/Assigned-to are shown once, as the
+// contact row / assignee cluster below — not repeated in the detail groups.
 
 const LOCALE_LABEL: Record<string, string> = { en: "EN", de: "DE", pl: "PL", ru: "RU" };
 
 const CHANNEL_LABEL: Record<string, string> = { EMAIL: "Email", WHATSAPP: "WhatsApp", PHONE: "Phone" };
+
+const STATUSES = ["NEW", "QUALIFIED", "CONTACTED", "VIEWING_SCHEDULED", "OFFER", "CLOSED", "LOST"];
+const MAX_AUTO_FOLLOWUPS = 3;
 
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -33,6 +39,20 @@ export type PresentationSummary = {
   lastViewedAt: Date | null;
 } | null;
 
+// Same "only render if there's a value" helper page.tsx's old <dl> used —
+// moved here since the detail groups now live in this component.
+const field = (label: string, value: any) =>
+  value ? (
+    <div className="py-1.5 border-b border-[#F3F4F6] last:border-0">
+      <dt className="text-xs text-[#6B7280]">{label}</dt>
+      <dd className="text-sm mt-0.5 break-words">{Array.isArray(value) ? value.join(", ") : String(value)}</dd>
+    </div>
+  ) : null;
+
+const groupLabel = (text: string) => (
+  <h3 className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mt-4 mb-1 first:mt-0">{text}</h3>
+);
+
 export default function CockpitCard({
   lead,
   users,
@@ -40,6 +60,8 @@ export default function CockpitCard({
   presentationSummary,
   assignAction,
   saveFollowUpAction,
+  resetFollowUpAction,
+  setStatusAction,
 }: {
   lead: {
     id: string;
@@ -47,21 +69,39 @@ export default function CockpitCard({
     lastName: string;
     status: string;
     languagePreference: string | null;
+    nationality: string | null;
     source: string;
     phone: string | null;
     email: string;
     preferredChannel: string | null;
     nextFollowUpAt: Date | null;
+    autoFollowUpCount: number;
     assignedTo: { id: string; name: string } | null;
+    // Absorbed from the old "Lead details" block:
+    budgetMin: number | null;
+    budgetMax: number | null;
+    timeline: string | null;
+    financing: string | null;
+    propertyTypeInterest: string[];
+    projectInterestTitle: string | null;
+    message: string | null;
+    notes: string | null;
+    pageSource: string | null;
+    utm: string;
+    clickId: string;
+    referrer: string | null;
+    createdAt: Date;
+    telegramNotified: boolean;
+    emailNotified: boolean;
   };
   users: { id: string; name: string }[];
   lastContact: LastContact;
   presentationSummary: PresentationSummary;
   assignAction: (formData: FormData) => void;
   saveFollowUpAction: (formData: FormData) => void;
+  resetFollowUpAction: (formData: FormData) => void;
+  setStatusAction: (formData: FormData) => void;
 }) {
-  const waNumber = lead.phone?.replace(/[^\d+]/g, "");
-
   return (
     <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -73,16 +113,26 @@ export default function CockpitCard({
               {LOCALE_LABEL[lead.languagePreference] ?? lead.languagePreference.toUpperCase()}
             </span>
           )}
-          <span className="text-xs text-[#6B7280]">{lead.source.replace(/_/g, " ")}</span>
         </div>
         <div className="flex items-center gap-2">
           <Link href={`/admin/crm/${lead.id}/edit`} className="text-sm text-[#1B4B43] hover:underline">Edit details</Link>
         </div>
       </div>
 
+      {/* Status — prominent and editable right in the header, replacing the
+          old standalone "Status" box further down the page. */}
+      <form action={setStatusAction} className="flex flex-wrap items-center gap-2 mt-2">
+        <select name="status" defaultValue={lead.status} className="rounded-md border border-[#E5E7EB] px-2 py-1 text-sm">
+          {STATUSES.map((s) => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}
+        </select>
+        <input name="reason" placeholder="Reason / note (optional)" className="rounded-md border border-[#E5E7EB] px-2 py-1 text-sm flex-1 min-w-[160px]" />
+        <button className="rounded-md bg-[#1B4B43] text-white text-xs px-3 py-1.5 hover:bg-[#142E2D]">Save status</button>
+      </form>
+
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm">
         {lead.phone && <a href={`tel:${lead.phone}`} className="text-[#1B4B43] hover:underline">{lead.phone}</a>}
         <a href={`mailto:${lead.email}`} className="text-[#1B4B43] hover:underline">{lead.email}</a>
+        {lead.nationality && <span className="text-xs text-[#6B7280]">{lead.nationality}</span>}
         {lead.preferredChannel && (
           <span className="inline-flex items-center rounded-full bg-[#F3F4F6] px-2 py-0.5 text-xs font-medium text-[#374151]">
             Prefers {CHANNEL_LABEL[lead.preferredChannel] ?? lead.preferredChannel}
@@ -143,6 +193,12 @@ export default function CockpitCard({
             />
             <button className="rounded-md border border-[#E5E7EB] px-1.5 py-1 text-xs hover:bg-white">Save</button>
           </form>
+          <div className="flex items-center gap-1.5 mt-1">
+            <span className="text-[11px] text-[#9CA3AF]">Auto follow-up {lead.autoFollowUpCount}/{MAX_AUTO_FOLLOWUPS}</span>
+            <form action={resetFollowUpAction}>
+              <button className="text-[11px] text-[#1B4B43] hover:underline" title="Start a fresh chain of 3 automatic follow-ups">Reset</button>
+            </form>
+          </div>
         </div>
       </div>
 
@@ -153,9 +209,9 @@ export default function CockpitCard({
         >
           Email
         </a>
-        {waNumber && (
+        {lead.phone && (
           <a
-            href={`https://wa.me/${waNumber.replace(/^\+/, "")}`}
+            href={`https://wa.me/${formatWaPhone(lead.phone)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 sm:flex-none text-center rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-2 hover:bg-[#1B4B43]/5"
@@ -172,6 +228,29 @@ export default function CockpitCard({
           Generate reply
         </button>
       </div>
+
+      {/* Absorbed detail groups — was page.tsx's standalone "Lead details" <dl>. */}
+      <dl className="mt-5 pt-4 border-t border-[#E5E7EB]">
+        {groupLabel("Qualification")}
+        {field("Budget", lead.budgetMin || lead.budgetMax ? `€${lead.budgetMin ?? "?"} – €${lead.budgetMax ?? "?"}` : null)}
+        {field("Timeline", lead.timeline)}
+        {field("Financing", lead.financing)}
+        {field("Property interest", lead.propertyTypeInterest)}
+        {field("Project interest", lead.projectInterestTitle)}
+
+        {groupLabel("Message & notes")}
+        {field("Message", lead.message)}
+        {field("Internal note (intake)", lead.notes)}
+
+        {groupLabel("Acquisition")}
+        {field("Source", lead.source.replace(/_/g, " "))}
+        {field("Page", lead.pageSource)}
+        {field("UTM", lead.utm)}
+        {field("Click ID", lead.clickId)}
+        {field("Referrer", lead.referrer)}
+        {field("Received", new Date(lead.createdAt).toLocaleString("en-GB"))}
+        {field("Notified", `Telegram: ${lead.telegramNotified ? "✓" : "—"}  ·  Email: ${lead.emailNotified ? "✓" : "—"}`)}
+      </dl>
     </div>
   );
 }
