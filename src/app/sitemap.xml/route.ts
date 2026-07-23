@@ -7,12 +7,17 @@ const websiteUrl = "https://cyprusvipestates.com";
 // sub-sitemap generator returns zero pages anyway (see
 // src/app/sitemaps/[type]/route.ts), so there's no reason to advertise an
 // always-empty sitemap to crawlers in the meantime.
+//
+// "case-studies" is deliberately NOT listed: every live case-studies page
+// (src/app/preview-case-studies/[lang]/layout.tsx) is hardcoded
+// `robots: {index:false, follow:false}` — submitting noindexed URLs in a
+// sitemap produces "Submitted URL marked 'noindex'" errors in GSC and sends
+// a contradictory signal. Add it back once/if that noindex decision changes.
 const sitemaps = [
   "projects",
   "blog",
   "pages",
   "developers",
-  "case-studies",
   ...(NEW_PROJECTS_INDEXABLE ? ["developments"] : []),
 ];
 
