@@ -11,6 +11,19 @@ export const dynamic = "force-dynamic";
 
 const sel = "rounded-md border border-[#E5E7EB] px-2 py-1.5 text-sm bg-white";
 
+// "Contact" = an actual outreach/reply, not internal notes or system-generated
+// rows (status changes, presentation-view tracking). Presentation delivery by
+// email already lands as an EMAIL_OUT interaction (see PropertyMatching's
+// "Send by email"), so it's covered without a separate case here.
+const LAST_CONTACT_TYPES = ["CALL", "EMAIL_OUT", "EMAIL_IN", "WHATSAPP_OUT", "WHATSAPP_IN"] as const;
+const LAST_CONTACT_LABEL: Record<string, string> = {
+  CALL: "Call",
+  EMAIL_OUT: "Email",
+  EMAIL_IN: "Email",
+  WHATSAPP_OUT: "WhatsApp",
+  WHATSAPP_IN: "WhatsApp",
+};
+
 export default async function CrmList({ searchParams }: { searchParams: LeadSearchParams }) {
   const where = buildLeadWhere(searchParams);
   const orderBy = orderForSort(searchParams);
@@ -22,7 +35,15 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
     prisma.lead.findMany({
       where, orderBy,
       skip: (pageNum - 1) * LEAD_PAGE_SIZE, take: LEAD_PAGE_SIZE,
-      include: { assignedTo: { select: { name: true } } },
+      include: {
+        assignedTo: { select: { name: true } },
+        interactions: {
+          where: { type: { in: [...LAST_CONTACT_TYPES] } },
+          orderBy: { occurredAt: "desc" },
+          take: 1,
+          select: { occurredAt: true, type: true },
+        },
+      },
     }),
     prisma.user.findMany({ where: { isActive: true }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
@@ -57,7 +78,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
             <tr>
               <th className="text-left font-medium px-4 py-2.5">Name</th>
               <th className="text-left font-medium px-4 py-2.5">Contact</th>
-              <th className="text-left font-medium px-4 py-2.5">Source</th>
+              <th className="text-left font-medium px-4 py-2.5">Last contact</th>
               <th className="text-left font-medium px-4 py-2.5">Lang</th>
               <th className="text-left font-medium px-4 py-2.5">Status</th>
               <th className="text-left font-medium px-4 py-2.5">Assigned</th>
@@ -74,7 +95,17 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
                   <Link href={`/admin/crm/${l.id}`} className="text-[#1B4B43] font-medium hover:underline">{l.firstName} {l.lastName}</Link>
                 </td>
                 <td className="px-4 py-2.5 text-[#6B7280]">{l.email}<br />{l.phone}</td>
-                <td className="px-4 py-2.5 text-[#6B7280]">{l.source.replace(/_/g, " ")}</td>
+                <td className="px-4 py-2.5 text-[#6B7280]">
+                  {l.interactions[0] ? (
+                    <>
+                      {new Date(l.interactions[0].occurredAt).toLocaleDateString("en-GB")}
+                      <br />
+                      <span className="text-xs text-[#9CA3AF]">{LAST_CONTACT_LABEL[l.interactions[0].type]}</span>
+                    </>
+                  ) : (
+                    "—"
+                  )}
+                </td>
                 <td className="px-4 py-2.5 text-[#6B7280]">{l.languagePreference?.toUpperCase() ?? "—"}</td>
                 <td className="px-4 py-2.5"><StatusBadge status={l.status} /></td>
                 <td className="px-4 py-2.5 text-[#6B7280]">{l.assignedTo?.name ?? "—"}</td>

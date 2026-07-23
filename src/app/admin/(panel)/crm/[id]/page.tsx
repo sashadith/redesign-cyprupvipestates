@@ -197,6 +197,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
 
       <div className="mt-2 mb-6">
         <CockpitCard
+          stageDays={stageDays}
           lead={{
             id,
             firstName: lead.firstName,
@@ -285,9 +286,9 @@ export default async function LeadDetail({ params }: { params: { id: string } })
 
       {/* Walkthrough-2 feedback: moved from directly under the Cockpit card to
           the very bottom of the page, below every section, so it's not next
-          to anything easy to misclick into. */}
-      <div className="flex items-center gap-3 pt-4 border-t border-[#E5E7EB]">
-        <p className="text-xs text-[#9CA3AF]">In {lead.status.replace(/_/g, " ")} for {stageDays} day{stageDays === 1 ? "" : "s"}</p>
+          to anything easy to misclick into. Status duration moved back up
+          into the CockpitCard header (next to the locale badge). */}
+      <div className="pt-4 border-t border-[#E5E7EB]">
         <DeleteLeadButton id={id} redirectTo="/admin/crm" label="Delete lead" />
       </div>
     </div>

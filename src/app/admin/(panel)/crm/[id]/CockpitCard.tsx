@@ -131,6 +131,7 @@ const groupGrid = "grid sm:grid-cols-2 lg:grid-cols-3 gap-x-4";
 
 export default function CockpitCard({
   lead,
+  stageDays,
   users,
   lastContact,
   presentationSummary,
@@ -139,6 +140,7 @@ export default function CockpitCard({
   resetFollowUpAction,
   setStatusAction,
 }: {
+  stageDays: number;
   lead: {
     id: string;
     firstName: string;
@@ -189,6 +191,9 @@ export default function CockpitCard({
               {LOCALE_LABEL[lead.languagePreference] ?? lead.languagePreference.toUpperCase()}
             </span>
           )}
+          <span className="text-xs text-[#9CA3AF]" title={`In ${lead.status.replace(/_/g, " ")} for ${stageDays} day${stageDays === 1 ? "" : "s"}`}>
+            {stageDays}d
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <Link href={`/admin/crm/${lead.id}/edit`} className="text-sm text-[#1B4B43] hover:underline">Edit details</Link>
