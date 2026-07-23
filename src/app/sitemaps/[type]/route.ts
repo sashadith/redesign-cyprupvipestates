@@ -266,6 +266,17 @@ async function generatePagesSitemap(): Promise<SitemapPage[]> {
       alternates: listingAlts(""),
     });
 
+    // /partners: a single fixed page (preview-partners/[lang]/page.tsx), not
+    // Singlepage-backed, so it never comes from getAllPathsForLang below —
+    // added here explicitly now that it's indexable (see that route's
+    // layout.tsx for the noindex removal this pairs with).
+    pages.push({
+      route: localizedHref(lang, "partners"),
+      changefreq: "monthly",
+      priority: 0.6,
+      alternates: listingAlts("partners"),
+    });
+
     const allPaths = await getAllPathsForLang(lang);
 
     allPaths

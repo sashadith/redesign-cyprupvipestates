@@ -53,6 +53,23 @@ the intended effect being measured, not noise — but any OTHER page's traffic
 shift in this window could plausibly be downstream of the link-equity
 redistribution from `2bbd3f8`, not an independent event.
 
+## 2026-07-23 — `/partners` cutover to the redesigned page + newly indexable
+
+Found during a canonical/hreflang audit: `middleware.ts` already unconditionally
+rewrote `/partners`, `/de/partners`, `/pl/partners`, `/ru/partners` to the
+`preview-partners/[lang]` redesign, but that tree's layout hardcoded
+`noindex, nofollow` — so the live `/partners` page had been unindexable since
+that rewrite shipped. Fixed: removed the noindex, confirmed its existing
+`generateMetadata` already builds correct canonical + hreflang via
+`staticAlternates()`, added `/partners` to the `pages` sitemap
+(`sitemaps/[type]/route.ts`), and deleted the old hardcoded
+`src/app/[lang]/partners/page.tsx` (fully unreachable dead code since the
+rewrite always won).
+
+**Expect:** `/partners` (and its de/pl/ru variants) appearing in GSC for the
+first time / resuming impressions after being effectively de-indexed — this is
+the intended effect of becoming indexable, not a ranking signal.
+
 ## Known migration-era GSC artifact (not a changelog entry, a standing caveat)
 
 Beyond the above, an EARLIER locale-prefix migration (English made prefix-less,
