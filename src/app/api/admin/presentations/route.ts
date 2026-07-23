@@ -82,11 +82,23 @@ export async function POST(req: NextRequest) {
     },
   });
 
+  const presentationCreatedContent = `Presentation created (${items.length} propert${items.length === 1 ? "y" : "ies"})`;
   await prisma.leadActivity.create({
     data: {
       leadId, type: "PRESENTATION_CREATED",
-      content: `Presentation created (${items.length} propert${items.length === 1 ? "y" : "ies"})`,
+      content: presentationCreatedContent,
       createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null,
+    },
+  });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId,
+      type: "PRESENTATION_EVENT",
+      channel: "SYSTEM",
+      body: presentationCreatedContent,
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
+      metadata: { legacyType: "PRESENTATION_CREATED" },
     },
   });
 

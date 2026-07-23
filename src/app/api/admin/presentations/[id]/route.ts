@@ -115,11 +115,23 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   if (commentChangedCount) summaryParts.push(`${commentChangedCount} comment changed`);
   const summary = summaryParts.length ? summaryParts.join(", ") : "details updated";
 
+  const presentationEditedContent = `Presentation edited (${summary})`;
   await prisma.leadActivity.create({
     data: {
       leadId: existingPresentation.leadId, type: "PRESENTATION_EDITED",
-      content: `Presentation edited (${summary})`,
+      content: presentationEditedContent,
       createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null,
+    },
+  });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: existingPresentation.leadId,
+      type: "PRESENTATION_EVENT",
+      channel: "SYSTEM",
+      body: presentationEditedContent,
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
+      metadata: { legacyType: "PRESENTATION_EDITED" },
     },
   });
 

@@ -2,13 +2,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { updateLeadStatus, addLeadNote, assignLead, mergeLeads } from "../../../actions";
+import { updateLeadStatus, addLeadNote, assignLead, mergeLeads, updateLeadFollowUp, addCallLog } from "../../../actions";
 import { StatusBadge } from "@/app/admin/status-badge";
 import { listPresentationLocations } from "./presentationActions";
 import PropertyMatching from "./PropertyMatching";
 import ExistingPresentations, { type PresentationRow } from "./ExistingPresentations";
 import DeleteLeadButton from "../DeleteLeadButton";
-import CollapsibleList from "../CollapsibleList";
+import CockpitCard, { type LastContact, type PresentationSummary } from "./CockpitCard";
+import UnifiedTimeline, { type TimelineRow } from "./UnifiedTimeline";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
     prisma.lead.findFirst({
       where: { id, deletedAt: null },
       include: {
-        activities: { orderBy: { createdAt: "desc" } },
+        interactions: { orderBy: { occurredAt: "desc" } },
         projectInterest: true,
         assignedTo: { select: { id: true, name: true } },
       },
@@ -42,12 +43,19 @@ export default async function LeadDetail({ params }: { params: { id: string } })
   });
 
   // Time in current stage: since the most recent STATUS_CHANGE, else since creation (audit M2).
-  const lastChange = lead.activities.find((a) => a.type === "STATUS_CHANGE");
-  const stageSince = lastChange?.createdAt ?? lead.createdAt;
+  const lastChange = lead.interactions.find((i) => i.type === "STATUS_CHANGE");
+  const stageSince = lastChange?.occurredAt ?? lead.createdAt;
   const stageDays = Math.floor((Date.now() - new Date(stageSince).getTime()) / 86_400_000);
 
+  // Lead Cockpit "last contact" — newest interaction that actually represents
+  // contact with the lead (direction set), not internal/system bookkeeping.
+  const lastContactRow = lead.interactions.find((i) => i.direction != null);
+  const lastContact: LastContact = lastContactRow
+    ? { occurredAt: lastContactRow.occurredAt, direction: lastContactRow.direction, channel: lastContactRow.channel }
+    : null;
+
   // Client Presentation system: matching-panel data + existing presentations for this lead.
-  const [session, locations, presentationRows] = await Promise.all([
+  const [session, locations, rawPresentations] = await Promise.all([
     auth(),
     listPresentationLocations(),
     prisma.clientPresentation.findMany({
@@ -57,39 +65,57 @@ export default async function LeadDetail({ params }: { params: { id: string } })
         views: { select: { developmentId: true, durationSec: true, createdAt: true } },
         items: { select: { developmentId: true, isFavorited: true, development: { select: { publicName: true, override: { select: { alias: true } } } } } },
       },
-    }).then((rows) =>
-      rows.map((p): PresentationRow => {
-        const uniqueDays = new Set(p.views.map((v) => v.createdAt.toISOString().slice(0, 10))).size;
-        const perDev = new Map<string, { views: number; durationSec: number }>();
-        for (const v of p.views) {
-          if (!v.developmentId) continue;
-          const cur = perDev.get(v.developmentId) ?? { views: 0, durationSec: 0 };
-          cur.views += 1; cur.durationSec += v.durationSec ?? 0;
-          perDev.set(v.developmentId, cur);
-        }
-        const nameOf = (devId: string) => {
-          const it = p.items.find((i) => i.developmentId === devId);
-          return it?.development.override?.alias || it?.development.publicName || "—";
-        };
-        return {
-          id: p.id, token: p.token, status: p.status, createdAt: p.createdAt, expiresAt: p.expiresAt,
-          viewCount: p.views.length, favoritedCount: p.items.filter((i) => i.isFavorited).length,
-          uniqueDays,
-          perDevelopment: Array.from(perDev.entries()).map(([developmentId, v]) => ({ developmentId, name: nameOf(developmentId), views: v.views, durationSec: v.durationSec })),
-          favoritedNames: p.items.filter((i) => i.isFavorited).map((i) => i.development.override?.alias || i.development.publicName),
-        };
-      }),
-    ),
+    }),
   ]);
+  const presentationRows: PresentationRow[] = rawPresentations.map((p) => {
+    const uniqueDays = new Set(p.views.map((v) => v.createdAt.toISOString().slice(0, 10))).size;
+    const perDev = new Map<string, { views: number; durationSec: number }>();
+    for (const v of p.views) {
+      if (!v.developmentId) continue;
+      const cur = perDev.get(v.developmentId) ?? { views: 0, durationSec: 0 };
+      cur.views += 1; cur.durationSec += v.durationSec ?? 0;
+      perDev.set(v.developmentId, cur);
+    }
+    const nameOf = (devId: string) => {
+      const it = p.items.find((i) => i.developmentId === devId);
+      return it?.development.override?.alias || it?.development.publicName || "—";
+    };
+    return {
+      id: p.id, token: p.token, status: p.status, createdAt: p.createdAt, expiresAt: p.expiresAt,
+      viewCount: p.views.length, favoritedCount: p.items.filter((i) => i.isFavorited).length,
+      uniqueDays,
+      perDevelopment: Array.from(perDev.entries()).map(([developmentId, v]) => ({ developmentId, name: nameOf(developmentId), views: v.views, durationSec: v.durationSec })),
+      favoritedNames: p.items.filter((i) => i.isFavorited).map((i) => i.development.override?.alias || i.development.publicName),
+    };
+  });
+  // Cockpit's compact summary references the most recent presentation only
+  // (rawPresentations is already newest-first) — the full per-presentation
+  // breakdown, including older ones, stays in ExistingPresentations below.
+  const primary = rawPresentations[0];
+  const presentationSummary: PresentationSummary = primary
+    ? {
+        sentAt: primary.createdAt,
+        viewCount: primary.views.length,
+        favoritedCount: primary.items.filter((i) => i.isFavorited).length,
+        lastViewedAt: primary.views.length ? new Date(Math.max(...primary.views.map((v) => v.createdAt.getTime()))) : null,
+      }
+    : null;
   const currentUser = session?.user ? { id: (session.user as any).id as string, name: session.user.name ?? "Advisor" } : null;
+
+  const timelineRows: TimelineRow[] = lead.interactions.map((i) => ({
+    id: i.id,
+    type: i.type,
+    direction: i.direction,
+    channel: i.channel,
+    subject: i.subject,
+    body: i.body,
+    occurredAt: i.occurredAt.toISOString(),
+    createdByName: i.createdByName,
+  }));
 
   async function setStatus(formData: FormData) {
     "use server";
     await updateLeadStatus(id, String(formData.get("status")), String(formData.get("reason") ?? ""));
-  }
-  async function note(formData: FormData) {
-    "use server";
-    await addLeadNote(id, String(formData.get("note") ?? ""));
   }
   async function assign(formData: FormData) {
     "use server";
@@ -98,6 +124,18 @@ export default async function LeadDetail({ params }: { params: { id: string } })
   async function merge(formData: FormData) {
     "use server";
     await mergeLeads(id, String(formData.get("sourceId")));
+  }
+  async function saveFollowUp(formData: FormData) {
+    "use server";
+    await updateLeadFollowUp(id, String(formData.get("nextFollowUpAt") ?? ""));
+  }
+  async function quickNote(formData: FormData) {
+    "use server";
+    await addLeadNote(id, String(formData.get("note") ?? ""));
+  }
+  async function quickCall(formData: FormData) {
+    "use server";
+    await addCallLog(id, String(formData.get("note") ?? ""));
   }
 
   const field = (label: string, value: any) =>
@@ -111,13 +149,33 @@ export default async function LeadDetail({ params }: { params: { id: string } })
   return (
     <div className="max-w-4xl">
       <Link href="/admin/crm" className="text-sm text-[#1B4B43] hover:underline">← Back to leads</Link>
-      <div className="flex items-center gap-3 mt-2 mb-2">
-        <h1 className="text-2xl font-semibold">{lead.firstName} {lead.lastName}</h1>
-        <StatusBadge status={lead.status} />
-        <Link href={`/admin/crm/${id}/edit`} className="ml-auto text-sm text-[#1B4B43] hover:underline">Edit details</Link>
-        <DeleteLeadButton id={id} redirectTo="/admin/crm" label="Delete lead" />
+
+      <div className="mt-2 mb-6">
+        <CockpitCard
+          lead={{
+            id,
+            firstName: lead.firstName,
+            lastName: lead.lastName,
+            status: lead.status,
+            languagePreference: lead.languagePreference,
+            source: lead.source,
+            phone: lead.phone,
+            email: lead.email,
+            preferredChannel: lead.preferredChannel,
+            nextFollowUpAt: lead.nextFollowUpAt,
+            assignedTo: lead.assignedTo,
+          }}
+          users={users}
+          lastContact={lastContact}
+          presentationSummary={presentationSummary}
+          assignAction={assign}
+          saveFollowUpAction={saveFollowUp}
+        />
+        <div className="flex items-center gap-3 mt-2">
+          <p className="text-xs text-[#9CA3AF]">In {lead.status.replace(/_/g, " ")} for {stageDays} day{stageDays === 1 ? "" : "s"}</p>
+          <DeleteLeadButton id={id} redirectTo="/admin/crm" label="Delete lead" />
+        </div>
       </div>
-      <p className="text-xs text-[#9CA3AF] mb-6">In {lead.status.replace(/_/g, " ")} for {stageDays} day{stageDays === 1 ? "" : "s"}</p>
 
       {duplicates.length > 0 && (
         <div className="bg-[#FFF7ED] border border-[#FED7AA] rounded-lg p-4 mb-6">
@@ -139,6 +197,10 @@ export default async function LeadDetail({ params }: { params: { id: string } })
           <p className="text-[11px] text-[#9A3412]/70 mt-2">Merging moves the other lead’s activity here and deletes it.</p>
         </div>
       )}
+
+      <div className="mb-6">
+        <UnifiedTimeline interactions={timelineRows} addNoteAction={quickNote} addCallAction={quickCall} />
+      </div>
 
       <div className="space-y-6 mb-6">
         <ExistingPresentations presentations={presentationRows} leadId={id} />
@@ -179,18 +241,6 @@ export default async function LeadDetail({ params }: { params: { id: string } })
 
         <div className="space-y-6">
           <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
-            <h2 className="text-sm font-semibold mb-3">Assigned to</h2>
-            <form action={assign} className="flex gap-2">
-              <select name="assignedToId" defaultValue={lead.assignedToId ?? ""}
-                className="flex-1 rounded-md border border-[#E5E7EB] px-2 py-1.5 text-sm">
-                <option value="">Unassigned</option>
-                {users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
-              </select>
-              <button className="rounded-md bg-[#1B4B43] text-white text-sm px-3 hover:bg-[#142E2D]">Save</button>
-            </form>
-          </div>
-
-          <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
             <h2 className="text-sm font-semibold mb-3">Status</h2>
             <form action={setStatus} className="space-y-2">
               <select name="status" defaultValue={lead.status}
@@ -202,32 +252,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
               <button className="w-full rounded-md bg-[#1B4B43] text-white text-sm py-1.5 hover:bg-[#142E2D]">Save</button>
             </form>
           </div>
-
-          <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
-            <h2 className="text-sm font-semibold mb-3">Add note</h2>
-            <form action={note} className="space-y-2">
-              <textarea name="note" rows={3} required
-                className="w-full rounded-md border border-[#E5E7EB] px-2 py-1.5 text-sm" placeholder="Internal note…" />
-              <button className="w-full rounded-md bg-[#C29A5E] text-white text-sm py-1.5 hover:opacity-90">Add note</button>
-            </form>
-          </div>
         </div>
-      </div>
-
-      <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 mt-6 max-w-3xl">
-        <h2 className="text-sm font-semibold mb-3">Activity</h2>
-        {lead.activities.length === 0 ? (
-          <p className="text-sm text-[#6B7280]">No activity yet.</p>
-        ) : (
-          <CollapsibleList itemCount={lead.activities.length} previewCount={5}>
-            {lead.activities.map((a, i) => (
-              <div key={a.id} className={`text-sm ${i > 0 ? "mt-3" : ""}`}>
-                <span className="text-xs text-[#6B7280]">{new Date(a.createdAt).toLocaleString("en-GB")} · {a.type}{a.createdBy ? ` · ${a.createdBy}` : ""}</span>
-                <div>{a.content}</div>
-              </div>
-            ))}
-          </CollapsibleList>
-        )}
       </div>
     </div>
   );

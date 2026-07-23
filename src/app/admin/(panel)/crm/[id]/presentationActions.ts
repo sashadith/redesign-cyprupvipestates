@@ -68,6 +68,17 @@ export async function revokePresentationAction(id: string) {
   await prisma.leadActivity.create({
     data: { leadId: p.leadId, type: "PRESENTATION_REVOKED", content: "Presentation revoked", createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
   });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: p.leadId,
+      type: "PRESENTATION_EVENT",
+      channel: "SYSTEM",
+      body: "Presentation revoked",
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
+      metadata: { legacyType: "PRESENTATION_REVOKED" },
+    },
+  });
   revalidatePath(`/admin/crm/${p.leadId}`);
 }
 
@@ -80,6 +91,17 @@ export async function deletePresentationAction(id: string) {
   await prisma.leadActivity.create({
     data: { leadId: p.leadId, type: "PRESENTATION_DELETED", content: "Presentation deleted", createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
   });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: p.leadId,
+      type: "PRESENTATION_EVENT",
+      channel: "SYSTEM",
+      body: "Presentation deleted",
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
+      metadata: { legacyType: "PRESENTATION_DELETED" },
+    },
+  });
   revalidatePath(`/admin/crm/${p.leadId}`);
 }
 
@@ -90,8 +112,20 @@ export async function extendPresentationAction(id: string, days: number) {
   const base = current.expiresAt && current.expiresAt > new Date() ? current.expiresAt : new Date();
   const expiresAt = new Date(base.getTime() + days * 86_400_000);
   await prisma.clientPresentation.update({ where: { id }, data: { expiresAt, status: "active" } });
+  const extendContent = `Presentation extended by ${days} days`;
   await prisma.leadActivity.create({
-    data: { leadId: current.leadId, type: "PRESENTATION_EXTENDED", content: `Presentation extended by ${days} days`, createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
+    data: { leadId: current.leadId, type: "PRESENTATION_EXTENDED", content: extendContent, createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
+  });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: current.leadId,
+      type: "PRESENTATION_EVENT",
+      channel: "SYSTEM",
+      body: extendContent,
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
+      metadata: { legacyType: "PRESENTATION_EXTENDED" },
+    },
   });
   revalidatePath(`/admin/crm/${current.leadId}`);
 }

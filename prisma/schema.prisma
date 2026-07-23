@@ -76,6 +76,38 @@ enum LeadFinancing {
   UNDECIDED
 }
 
+enum LeadPreferredChannel {
+  EMAIL
+  WHATSAPP
+  PHONE
+}
+
+// Lead Cockpit unified timeline (Phase 1 of 4, 2026-07-23) — additive alongside
+// LeadActivity, which stays untouched. See LeadInteraction below.
+enum LeadInteractionType {
+  EMAIL_OUT
+  EMAIL_IN
+  WHATSAPP_OUT
+  WHATSAPP_IN
+  CALL
+  NOTE
+  STATUS_CHANGE
+  PRESENTATION_EVENT
+  SYSTEM
+}
+
+enum LeadInteractionDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum LeadInteractionChannel {
+  EMAIL
+  WHATSAPP
+  PHONE
+  SYSTEM
+}
+
 // NOTE: property types / purposes / cities are kept as String (Sanity uses free-form
 // string lists incl. values like "Semi-detached villa" that don't map cleanly to enums).
 
@@ -136,8 +168,8 @@ model Project {
   // `status` (ARCHIVED = hidden from listing/detail/sitemap, all three
   // already gate on status:"PUBLISHED"). This field only records the link,
   // for the admin banner/redirect-on-deactivate flow.
-  supersededByDevelopmentId String?
-  supersededByDevelopment   Development? @relation(fields: [supersededByDevelopmentId], references: [id])
+  supersededByDevelopmentId     String?
+  supersededByDevelopment       Development?           @relation(fields: [supersededByDevelopmentId], references: [id])
   // Development ids an admin has explicitly rejected as a match for this legacy
   // project, from the Phase 5.2 overlap-review UI (string[] of Development.id).
   // A legacy project can have more than one candidate in the heuristic table
@@ -507,26 +539,57 @@ model MediaFolder {
 
 // ─── ADMIN USERS / SESSIONS ──────────────────────────────────────────────────
 model User {
-  id            String               @id @default(uuid())
-  email         String               @unique
-  password      String
-  name          String
-  role          UserRole             @default(EDITOR)
-  isOwner       Boolean              @default(false) // protected super-admin account — no UI to set this; DB-level only, see actions.ts guards
-  avatar        String?
-  photoPng      String? // transparent-background cutout PNG, used free-floating (no frame) in the Client Presentation closing section — distinct from the small square `avatar`
-  phone         String? // advisor's own contact number, shown large/clickable in the Client Presentation closing section (distinct from the company WhatsApp number used by the contact buttons there)
-  isActive      Boolean              @default(true)
-  lastLoginAt   DateTime?
-  createdAt     DateTime             @default(now())
-  updatedAt     DateTime             @updatedAt
-  assignedLeads Lead[]               @relation("AssignedLeads")
-  uploadedMedia Media[]
-  sessions      Session[]
-  resetTokens   PasswordResetToken[]
+  id                     String               @id @default(uuid())
+  email                  String               @unique
+  password               String
+  name                   String
+  role                   UserRole             @default(EDITOR)
+  isOwner                Boolean              @default(false) // protected super-admin account — no UI to set this; DB-level only, see actions.ts guards
+  avatar                 String?
+  photoPng               String? // transparent-background cutout PNG, used free-floating (no frame) in the Client Presentation closing section — distinct from the small square `avatar`
+  phone                  String? // advisor's own contact number, shown large/clickable in the Client Presentation closing section (distinct from the company WhatsApp number used by the contact buttons there)
+  isActive               Boolean              @default(true)
+  lastLoginAt            DateTime?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  assignedLeads          Lead[]               @relation("AssignedLeads")
+  uploadedMedia          Media[]
+  sessions               Session[]
+  resetTokens            PasswordResetToken[]
   presentationsAsAdvisor ClientPresentation[]
+  // Lead Cockpit (Phase 1 of 4, 2026-07-23) — additive back-relations only.
+  emailSettings          UserEmailSettings?
+  interactions           LeadInteraction[]
 
   @@map("users")
+}
+
+// Per-user email connection settings for the Lead Cockpit (Phase 1 of 4,
+// 2026-07-23). SMTP is usable now (Part C); IMAP fields are stored now but
+// unused until Phase 3 (inbound email). Passwords are AES-256-GCM ciphertext
+// (see src/lib/crypto/secretBox.ts) — never plaintext, never returned to the
+// client; the settings UI only ever shows a "configured ✓" state.
+model UserEmailSettings {
+  id              String    @id @default(uuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fromName        String?
+  fromAddress     String?
+  smtpHost        String?
+  smtpPort        Int?
+  smtpUser        String?
+  smtpPasswordEnc String?
+  imapHost        String?
+  imapPort        Int?
+  imapUser        String?
+  imapPasswordEnc String?
+  signature       Json? // { en?, de?, pl?, ru? } plain multiline text, one per locale
+  lastTestSentAt  DateTime?
+  lastTestOk      Boolean?
+  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime  @default(now())
+
+  @@map("user_email_settings")
 }
 
 // Self-service password reset — one-time, hashed, short-lived tokens.
@@ -556,11 +619,11 @@ model Session {
 
 // ─── CRM / LEADS ─────────────────────────────────────────────────────────────
 model Lead {
-  id                   String         @id @default(uuid())
-  createdAt            DateTime       @default(now())
-  updatedAt            DateTime       @updatedAt
-  status               LeadStatus     @default(NEW)
-  source               LeadSource     @default(CONTACT_FORM)
+  id                   String                @id @default(uuid())
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  status               LeadStatus            @default(NEW)
+  source               LeadSource            @default(CONTACT_FORM)
   firstName            String
   lastName             String
   email                String
@@ -571,14 +634,14 @@ model Lead {
   budgetMax            Int?
   timeline             LeadTimeline?
   financing            LeadFinancing?
-  propertyTypeInterest String[]       @default([])
+  propertyTypeInterest String[]              @default([])
   lastMatchFilters     Json? // last-used Property Matching panel filters (bedrooms/locations/propertyTypes/etc.), auto-saved so the admin sees what the client is searching for on the next visit
   message              String?
   notes                String?
   assignedToId         String?
-  assignedTo           User?          @relation("AssignedLeads", fields: [assignedToId], references: [id])
+  assignedTo           User?                 @relation("AssignedLeads", fields: [assignedToId], references: [id])
   projectInterestId    String?
-  projectInterest      Project?       @relation(fields: [projectInterestId], references: [id])
+  projectInterest      Project?              @relation(fields: [projectInterestId], references: [id])
   presentations        ClientPresentation[]
   pageSource           String?
   utmSource            String?
@@ -589,11 +652,15 @@ model Lead {
   gclid                String?
   fbclid               String?
   referrer             String?
-  telegramNotified     Boolean        @default(false)
-  emailNotified        Boolean        @default(false)
+  telegramNotified     Boolean               @default(false)
+  emailNotified        Boolean               @default(false)
   activities           LeadActivity[]
   deletedAt            DateTime? // soft delete — set via /admin/crm trash flow; excluded from all normal queries
   deletedById          String?
+  // Lead Cockpit (Phase 1 of 4, 2026-07-23) — additive fields only.
+  preferredChannel     LeadPreferredChannel?
+  nextFollowUpAt       DateTime?
+  interactions         LeadInteraction[]
 
   @@index([status])
   @@index([createdAt])
@@ -616,6 +683,32 @@ model LeadActivity {
 
   @@index([leadId])
   @@map("lead_activities")
+}
+
+// Lead Cockpit unified timeline (Phase 1 of 4, 2026-07-23) — additive, sits
+// alongside LeadActivity (never altered/dropped). Populated by a one-time
+// copy-migration from LeadActivity (see scripts/migrate-lead-activity-to-
+// interactions.mjs, idempotent via legacyActivityId) plus, going forward, a
+// parallel write at every existing leadActivity.create() call site.
+model LeadInteraction {
+  id               String                    @id @default(uuid())
+  leadId           String
+  lead             Lead                      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  type             LeadInteractionType
+  direction        LeadInteractionDirection?
+  channel          LeadInteractionChannel?
+  subject          String?
+  body             String?
+  occurredAt       DateTime                  @default(now())
+  createdByUserId  String?
+  createdByUser    User?                     @relation(fields: [createdByUserId], references: [id])
+  createdByName    String? // display-name snapshot, same convention as LeadActivity.createdBy — survives user deletion
+  metadata         Json?
+  legacyActivityId String?                   @unique // set only on rows copy-migrated from LeadActivity; makes the migration script safe to re-run
+
+  @@index([leadId])
+  @@index([leadId, occurredAt])
+  @@map("lead_interactions")
 }
 
 // ─── ANALYTICS (self-hosted) ─────────────────────────────────────────────────
@@ -699,23 +792,23 @@ model AiGenerationQueue {
 // ─────────────────────────────────────────────────────────────────────────
 
 model DeveloperAccount {
-  id               String   @id @default(uuid())
-  name             String
-  slug             String   @unique
-  website          String?
-  contactInfo      String?
-  contactPerson    String? // Ansprechpartner
-  phone            String?
-  email            String?
+  id                String    @id @default(uuid())
+  name              String
+  slug              String    @unique
+  website           String?
+  contactInfo       String?
+  contactPerson     String? // Ansprechpartner
+  phone             String?
+  email             String?
   developerCloudUrl String? // login/cloud portal link
-  driveFolderUrl   String? // Google/OneDrive shared folder used as a no-feed source
-  driveFileId      String? // last price file synced (Drive file id)
+  driveFolderUrl    String? // Google/OneDrive shared folder used as a no-feed source
+  driveFileId       String? // last price file synced (Drive file id)
   driveFileModified String? // that file's modifiedTime — skip sync when unchanged
-  driveSyncedAt    DateTime? // last successful drive availability sync
-  driveSyncInterval String? @default("daily") // daily | 2day | weekly | off
-  notes            String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  driveSyncedAt     DateTime? // last successful drive availability sync
+  driveSyncInterval String?   @default("daily") // daily | 2day | weekly | off
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   analyses     DeveloperFeedAnalysis[]
   developments Development[]
@@ -751,11 +844,11 @@ model DeveloperFeedAnalysis {
 // mirrored to our object storage; only our URLs are stored here.
 // ─────────────────────────────────────────────────────────────────────────
 model Development {
-  id                 String @id @default(uuid())
+  id                 String  @id @default(uuid())
   developerAccountId String
   dev                String // adapter key: island-blue|inex|bbf|aristo|pafilia|domenica|medousa|agg
   feedProjectId      String // id/name within the feed
-  feedKey            String @unique // "<dev>:<feedProjectId>", e.g. "inex:1"
+  feedKey            String  @unique // "<dev>:<feedProjectId>", e.g. "inex:1"
   slug               String? @unique // SEO-facing URL slug (english, kebab-case), set on publish — see src/lib/developmentSeo.ts
 
   // feed-derived scalars (filter/sort)
@@ -793,18 +886,18 @@ model Development {
   distances   Json?
 
   // sync + publication lifecycle
-  syncedAt      DateTime?
-  driveFolderId    String? // Drive project subfolder (for image/plan import)
+  syncedAt            DateTime?
+  driveFolderId       String? // Drive project subfolder (for image/plan import)
   driveImagesModified String? // signature of the mirrored images — skip when unchanged
-  publishStatus String    @default("draft") // draft | ready | published | archived
-  publishedAt   DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  publishStatus       String    @default("draft") // draft | ready | published | archived
+  publishedAt         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  developerAccount DeveloperAccount     @relation(fields: [developerAccountId], references: [id], onDelete: Cascade)
-  units            DevelopmentUnit[]
-  override         DevelopmentOverride?
-  presentationItems ClientPresentationItem[]
+  developerAccount   DeveloperAccount         @relation(fields: [developerAccountId], references: [id], onDelete: Cascade)
+  units              DevelopmentUnit[]
+  override           DevelopmentOverride?
+  presentationItems  ClientPresentationItem[]
   supersedesProjects Project[]
 
   @@index([developerAccountId])
@@ -814,17 +907,17 @@ model Development {
 }
 
 model DevelopmentUnit {
-  id            String   @id @default(uuid())
-  developmentId String
-  ref           String?
-  name          String?
-  label         String? // display label, e.g. "Block C · Nr. 504"
-  type          String?
-  status        String?  @default("available") // available | reserved | sold
-  price         Int?
-  currency      String?  @default("EUR")
-  beds          String?
-  baths         String?
+  id              String   @id @default(uuid())
+  developmentId   String
+  ref             String?
+  name            String?
+  label           String? // display label, e.g. "Block C · Nr. 504"
+  type            String?
+  status          String?  @default("available") // available | reserved | sold
+  price           Int?
+  currency        String?  @default("EUR")
+  beds            String?
+  baths           String?
   areaBuilt       String? // total built area
   areaInternal    String? // covered internal area
   areaPlot        String?
@@ -840,11 +933,11 @@ model DevelopmentUnit {
   attrs           Json? // [{ name, value }] extra spec
   amenities       Json? // per-unit amenities (Sea View, VRV, corner …)
   photos          Json? // [{ small, medium, large }] mirrored
-  plans         Json?
-  sortIndex     Int      @default(0)
-  source        String   @default("feed") // feed | manual — sync only ever wipes/rewrites "feed" units
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  plans           Json?
+  sortIndex       Int      @default(0)
+  source          String   @default("feed") // feed | manual — sync only ever wipes/rewrites "feed" units
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   development Development @relation(fields: [developmentId], references: [id], onDelete: Cascade)
 
@@ -1019,21 +1112,21 @@ model AiPromptTemplate {
 // ─────────────────────────────────────────────────────────────────────────
 
 model ClientPresentation {
-  id           String    @id @default(uuid())
-  leadId       String
-  token        String    @unique // 12+ char URL-safe crypto-random, see src/lib/crm/presentationToken.ts
-  status       String    @default("active") // active | expired | revoked
-  locale       Locale    @default(en)
-  greetingName String // how the client is addressed, editable
-  personalNote String? // optional message from advisor, shown as a signed blockquote
-  filterBedrooms  Int[]    @default([]) // DEPRECATED — superseded by criteria.bedrooms; kept read-only, see backfill migration
-  filterLocations String[] @default([]) // DEPRECATED — superseded by criteria.districts/areas; kept read-only, see backfill migration
-  criteria     Json? // { districts, areas, bedrooms, budgetMin, budgetMax, propertyTypes } — the actual matching-panel filter state at generation time (or last edit-save). The public page's "your preferences" chips render EXCLUSIVELY from this, never from Lead fields directly — a lead's own profile (budget/type) can differ from what was actually searched for this specific presentation.
-  advisorId    String? // User relation — whose contact card shows in the closing section
-  advisor      User?     @relation(fields: [advisorId], references: [id])
-  expiresAt    DateTime? // default now + 30 days, extendable from the admin
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id              String    @id @default(uuid())
+  leadId          String
+  token           String    @unique // 12+ char URL-safe crypto-random, see src/lib/crm/presentationToken.ts
+  status          String    @default("active") // active | expired | revoked
+  locale          Locale    @default(en)
+  greetingName    String // how the client is addressed, editable
+  personalNote    String? // optional message from advisor, shown as a signed blockquote
+  filterBedrooms  Int[]     @default([]) // DEPRECATED — superseded by criteria.bedrooms; kept read-only, see backfill migration
+  filterLocations String[]  @default([]) // DEPRECATED — superseded by criteria.districts/areas; kept read-only, see backfill migration
+  criteria        Json? // { districts, areas, bedrooms, budgetMin, budgetMax, propertyTypes } — the actual matching-panel filter state at generation time (or last edit-save). The public page's "your preferences" chips render EXCLUSIVELY from this, never from Lead fields directly — a lead's own profile (budget/type) can differ from what was actually searched for this specific presentation.
+  advisorId       String? // User relation — whose contact card shows in the closing section
+  advisor         User?     @relation(fields: [advisorId], references: [id])
+  expiresAt       DateTime? // default now + 30 days, extendable from the admin
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   lead  Lead                     @relation(fields: [leadId], references: [id], onDelete: Cascade)
   items ClientPresentationItem[]

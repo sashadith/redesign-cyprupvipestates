@@ -90,8 +90,18 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   if (isFirstViewToday) {
     const p = await prisma.clientPresentation.findUnique({ where: { id: presentation.id }, select: { leadId: true } });
     if (p) {
+      const viewContent = isFirstViewEver ? "Presentation opened for the first time" : "Presentation viewed again";
       await prisma.leadActivity.create({
-        data: { leadId: p.leadId, type: "PRESENTATION_VIEWED", content: isFirstViewEver ? "Presentation opened for the first time" : "Presentation viewed again" },
+        data: { leadId: p.leadId, type: "PRESENTATION_VIEWED", content: viewContent },
+      }).catch(() => {});
+      await prisma.leadInteraction.create({
+        data: {
+          leadId: p.leadId,
+          type: "PRESENTATION_EVENT",
+          channel: "SYSTEM",
+          body: viewContent,
+          metadata: { legacyType: "PRESENTATION_VIEWED" },
+        },
       }).catch(() => {});
     }
   }

@@ -2,6 +2,8 @@ import { redirect, notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import EditUserForm from "./edit-user-form";
+import EmailSettingsForm from "../../../account/email-settings-form";
+import { getEmailSettings } from "../../../account/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -22,9 +24,11 @@ export default async function EditUserPage({ params }: { params: { id: string } 
     );
   }
 
+  const emailSettings = await getEmailSettings(user.id);
+
   return (
-    <div className="max-w-lg">
-      <h1 className="text-2xl font-semibold mb-6">Edit user</h1>
+    <div className="max-w-lg space-y-6">
+      <h1 className="text-2xl font-semibold">Edit user</h1>
       <EditUserForm
         user={{
           id: user.id, name: user.name, email: user.email, role: user.role,
@@ -32,6 +36,7 @@ export default async function EditUserPage({ params }: { params: { id: string } 
         }}
         isSelf={(session?.user as any)?.id === user.id}
       />
+      <EmailSettingsForm userId={user.id} settings={emailSettings} />
     </div>
   );
 }
