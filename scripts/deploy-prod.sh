@@ -203,15 +203,15 @@ cd "$DIR"
 # with content, that's a signal something upstream broke (rsync's exclude
 # should prevent this) — fail loud instead of silently discarding data.
 UPLOADS_TARGET="/var/www/shared-uploads"
-mkdir -p "$UPLOADS_TARGET"
-if [ -L "public/uploads" ] && [ "$(readlink -f "public/uploads")" = "$(readlink -f "$UPLOADS_TARGET")" ]; then
-  echo "· public/uploads symlink OK -> $UPLOADS_TARGET"
+mkdir -p "\$UPLOADS_TARGET"
+if [ -L "public/uploads" ] && [ "\$(readlink -f "public/uploads")" = "\$(readlink -f "\$UPLOADS_TARGET")" ]; then
+  echo "· public/uploads symlink OK -> \$UPLOADS_TARGET"
 elif [ -e "public/uploads" ] && [ ! -L "public/uploads" ]; then
   echo "✗ public/uploads exists as a REAL directory/file, not a symlink — refusing to touch it (would risk data loss). Investigate manually."
   exit 1
 else
-  echo "⚠️  public/uploads symlink missing/incorrect — (re)creating -> $UPLOADS_TARGET"
-  ln -sfn "$UPLOADS_TARGET" "public/uploads"
+  echo "⚠️  public/uploads symlink missing/incorrect — (re)creating -> \$UPLOADS_TARGET"
+  ln -sfn "\$UPLOADS_TARGET" "public/uploads"
 fi
 $([ "$RUN_INSTALL" = 1 ] && echo 'npm ci --legacy-peer-deps' || echo 'echo "· skip npm ci (reusing existing node_modules)"')
 $([ "$RUN_MIGRATE" = 1 ] && echo 'npx prisma migrate deploy' || echo 'echo "· skip prisma migrate"')
