@@ -52,11 +52,11 @@ function SignatureEditor({ initial }: { initial: SignatureValues }) {
         <input key={l.key} type="hidden" name={l.field} value={values[l.key]} />
       ))}
 
-      <div className="grid sm:grid-cols-2 gap-3">
+      <div className="grid lg:grid-cols-2 gap-3">
         <div>
           <label className="block text-[11px] text-[#9CA3AF] mb-1">HTML source</label>
           <textarea
-            rows={12}
+            rows={20}
             value={values[tab]}
             onChange={(e) => setValues((v) => ({ ...v, [tab]: e.target.value }))}
             placeholder="Paste your signature HTML here… (or plain text — existing plain-text signatures keep working as-is)"
@@ -69,7 +69,7 @@ function SignatureEditor({ initial }: { initial: SignatureValues }) {
             title={`signature-preview-${tab}`}
             sandbox=""
             srcDoc={buildPreviewDoc(values[tab])}
-            className="w-full h-[228px] rounded-md border border-[#E5E7EB] bg-white"
+            className="w-full h-[420px] rounded-md border border-[#E5E7EB] bg-white"
           />
         </div>
       </div>
@@ -135,54 +135,56 @@ export default function EmailSettingsForm({ userId, settings }: { userId: string
           </div>
         </div>
 
-        <div>
-          <h3 className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide mb-2">SMTP (sending)</h3>
-          <div className="grid sm:grid-cols-4 gap-3">
-            <div className="sm:col-span-2">
-              <label className={labelClass}>Host</label>
-              <input name="smtpHost" defaultValue={settings.smtpHost} placeholder="smtp.hostinger.com" className={fieldClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Port</label>
-              <input name="smtpPort" type="number" defaultValue={settings.smtpPort} placeholder="465" className={fieldClass} />
-            </div>
-            <div>
-              <label className={labelClass}>User</label>
-              <input name="smtpUser" defaultValue={settings.smtpUser} className={fieldClass} />
-            </div>
-            <div className="sm:col-span-4">
-              <label className={labelClass}>
-                Password {settings.smtpConfigured && <span className="text-[#2D6E62]">✓ configured</span>}
-              </label>
-              <input name="smtpPassword" type="password" autoComplete="new-password"
-                placeholder={settings.smtpConfigured ? "Leave blank to keep current password" : ""}
-                className={fieldClass} />
+        <div className="grid lg:grid-cols-2 gap-4">
+          <div>
+            <h3 className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide mb-2">SMTP (sending)</h3>
+            <div className="grid sm:grid-cols-4 gap-3">
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Host</label>
+                <input name="smtpHost" defaultValue={settings.smtpHost} placeholder="smtp.hostinger.com" className={fieldClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Port</label>
+                <input name="smtpPort" type="number" defaultValue={settings.smtpPort} placeholder="465" className={fieldClass} />
+              </div>
+              <div>
+                <label className={labelClass}>User</label>
+                <input name="smtpUser" defaultValue={settings.smtpUser} className={fieldClass} />
+              </div>
+              <div className="sm:col-span-4">
+                <label className={labelClass}>
+                  Password {settings.smtpConfigured && <span className="text-[#2D6E62]">✓ configured</span>}
+                </label>
+                <input name="smtpPassword" type="password" autoComplete="new-password"
+                  placeholder={settings.smtpConfigured ? "Leave blank to keep current password" : ""}
+                  className={fieldClass} />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div>
-          <h3 className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide mb-2">IMAP (reading — stored now, used in Phase 3)</h3>
-          <div className="grid sm:grid-cols-4 gap-3">
-            <div className="sm:col-span-2">
-              <label className={labelClass}>Host</label>
-              <input name="imapHost" defaultValue={settings.imapHost} placeholder="imap.hostinger.com" className={fieldClass} />
-            </div>
-            <div>
-              <label className={labelClass}>Port</label>
-              <input name="imapPort" type="number" defaultValue={settings.imapPort} placeholder="993" className={fieldClass} />
-            </div>
-            <div>
-              <label className={labelClass}>User</label>
-              <input name="imapUser" defaultValue={settings.imapUser} className={fieldClass} />
-            </div>
-            <div className="sm:col-span-4">
-              <label className={labelClass}>
-                Password {settings.imapConfigured && <span className="text-[#2D6E62]">✓ configured</span>}
-              </label>
-              <input name="imapPassword" type="password" autoComplete="new-password"
-                placeholder={settings.imapConfigured ? "Leave blank to keep current password" : ""}
-                className={fieldClass} />
+          <div>
+            <h3 className="text-xs font-semibold text-[#6B7280] uppercase tracking-wide mb-2">IMAP (reading — stored now, used in Phase 3)</h3>
+            <div className="grid sm:grid-cols-4 gap-3">
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Host</label>
+                <input name="imapHost" defaultValue={settings.imapHost} placeholder="imap.hostinger.com" className={fieldClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Port</label>
+                <input name="imapPort" type="number" defaultValue={settings.imapPort} placeholder="993" className={fieldClass} />
+              </div>
+              <div>
+                <label className={labelClass}>User</label>
+                <input name="imapUser" defaultValue={settings.imapUser} className={fieldClass} />
+              </div>
+              <div className="sm:col-span-4">
+                <label className={labelClass}>
+                  Password {settings.imapConfigured && <span className="text-[#2D6E62]">✓ configured</span>}
+                </label>
+                <input name="imapPassword" type="password" autoComplete="new-password"
+                  placeholder={settings.imapConfigured ? "Leave blank to keep current password" : ""}
+                  className={fieldClass} />
+              </div>
             </div>
           </div>
         </div>
