@@ -1,9 +1,25 @@
+import { Metadata } from "next";
 import { getFileBySlug } from "@/sanity/sanity.utils";
 import { SanityFile } from "@/types/sanityFile";
+import { staticAlternates } from "@/lib/seo";
 
 type Props = {
-  params: { slug: string };
+  params: { lang: string; slug: string };
 };
+
+// DocFile has a single, language-agnostic slug (no translationGroupId/language
+// column — see prisma/schema.prisma) — the same file is reachable at
+// /files/{slug}, /de/files/{slug}, /pl/files/{slug}, /ru/files/{slug}, so this
+// is a fixed-path type like the listing roots, not a per-language-slug one.
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { lang, slug } = params;
+  const file = await getFileBySlug(slug);
+  const { canonical, languages } = staticAlternates(lang, ["files", slug]);
+  return {
+    title: file?.title,
+    alternates: { canonical, languages },
+  };
+}
 
 const FilePage = async ({ params }: Props) => {
   const { slug } = params;
