@@ -1,11 +1,15 @@
 import Link from "next/link";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/app/admin/status-badge";
 import DeleteLeadButton from "./DeleteLeadButton";
+import LostLeadsPanel from "./LostLeadsPanel";
 import {
   buildLeadWhere, orderForSort, leadQueryString,
   LEAD_STATUSES, LEAD_SOURCES, LEAD_LOCALES, LEAD_PAGE_SIZE, type LeadSearchParams,
 } from "./filters";
+
+const LOST_CAP = 200;
 
 export const dynamic = "force-dynamic";
 
@@ -73,12 +77,87 @@ function computeUrgency(
   return { band: "GREEN", reason: `Follow-up due in ${Math.ceil(diff / DAY_MS)} days`, sortTime: lead.nextFollowUpAt.getTime() };
 }
 
+type LeadRowData = {
+  id: string; firstName: string; lastName: string; email: string; phone: string | null;
+  languagePreference: string | null; status: string; createdAt: Date;
+  assignedTo: { name: string } | null;
+  interactions: { occurredAt: Date; type: string }[];
+};
+
+// Shared row markup for both the active table and the (identical-column)
+// collapsed Lost section. `urgency` is only ever passed for active rows —
+// Lost leads are gray by definition, so the Lost table never shows a dot.
+function LeadRow({ lead: l, urgency, muted }: { lead: LeadRowData; urgency: { band: UrgencyBand; reason: string } | null; muted?: boolean }) {
+  return (
+    <tr className={`hover:bg-[#F8F9FA] ${muted ? "bg-[#FAFAFA] text-[#9CA3AF]" : ""}`}>
+      <td className={`pl-3 pr-4 py-2.5 border-l-4 ${urgency ? URGENCY_STYLE[urgency.band].border : "border-l-transparent"}`}>
+        <div className="flex items-center gap-2">
+          {urgency && (
+            <span className={`w-2 h-2 rounded-full shrink-0 ${URGENCY_STYLE[urgency.band].dot}`} title={urgency.reason} aria-label={urgency.reason} role="img" />
+          )}
+          <Link href={`/admin/crm/${l.id}`} className={`font-medium hover:underline ${muted ? "" : "text-[#1B4B43]"}`}>{l.firstName} {l.lastName}</Link>
+        </div>
+      </td>
+      <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{l.email}<br />{l.phone}</td>
+      <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>
+        {l.interactions[0] ? (
+          <>
+            {new Date(l.interactions[0].occurredAt).toLocaleDateString("en-GB")}
+            <br />
+            <span className="text-xs text-[#9CA3AF]">{LAST_CONTACT_LABEL[l.interactions[0].type]}</span>
+          </>
+        ) : (
+          "—"
+        )}
+      </td>
+      <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{l.languagePreference?.toUpperCase() ?? "—"}</td>
+      <td className="px-4 py-2.5"><StatusBadge status={l.status} /></td>
+      <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{l.assignedTo?.name ?? "—"}</td>
+      <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{new Date(l.createdAt).toLocaleDateString("en-GB")}</td>
+      <td className="px-4 py-2.5 text-right"><DeleteLeadButton id={l.id} /></td>
+    </tr>
+  );
+}
+
+const TABLE_HEAD = (
+  <thead className="bg-[#F8F9FA] text-[#6B7280]">
+    <tr>
+      <th className="text-left font-medium px-4 py-2.5">Name</th>
+      <th className="text-left font-medium px-4 py-2.5">Contact</th>
+      <th className="text-left font-medium px-4 py-2.5">Last contact</th>
+      <th className="text-left font-medium px-4 py-2.5">Lang</th>
+      <th className="text-left font-medium px-4 py-2.5">Status</th>
+      <th className="text-left font-medium px-4 py-2.5">Assigned</th>
+      <th className="text-left font-medium px-4 py-2.5">Received</th>
+      <th className="text-right font-medium px-4 py-2.5"></th>
+    </tr>
+  </thead>
+);
+
 export default async function CrmList({ searchParams }: { searchParams: LeadSearchParams }) {
-  const where = buildLeadWhere(searchParams);
   const orderBy = orderForSort(searchParams);
   const pageNum = Math.max(1, parseInt(String(searchParams.page ?? "1"), 10) || 1);
   const val = (k: string) => (Array.isArray(searchParams[k]) ? (searchParams[k] as string[])[0] : (searchParams[k] as string)) ?? "";
   const isUrgencySort = val("sort") === "urgency";
+  const statusParam = val("status");
+  const hasActiveFilter = !!(val("q") || val("status") || val("source") || val("lang") || val("assignee"));
+
+  // LOST leads live in their own collapsed section (never the main table),
+  // so the shared filters (q/source/lang/assignee) need to fan out into two
+  // status conditions instead of one. Whichever side the user's explicit
+  // status filter doesn't match is skipped entirely (query -> null -> []) —
+  // e.g. filtering status=LOST empties the active table on purpose (spec).
+  const baseWhere = buildLeadWhere(searchParams);
+  let activeWhere: Prisma.LeadWhereInput | null = null;
+  let lostWhere: Prisma.LeadWhereInput | null = null;
+  if (statusParam === "LOST") {
+    lostWhere = baseWhere;
+  } else if (statusParam) {
+    activeWhere = baseWhere; // an explicit non-LOST status already excludes LOST
+  } else {
+    activeWhere = { ...baseWhere, status: { not: "LOST" } };
+    lostWhere = { ...baseWhere, status: "LOST" };
+  }
 
   const leadInclude = {
     assignedTo: { select: { name: true } },
@@ -91,19 +170,24 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
   };
 
   // Urgency isn't a stored column, so it can't be pushed into the DB's
-  // ORDER BY/LIMIT — fetch every filtered row and sort/paginate in JS instead.
-  // Fine at this table's scale (low hundreds of leads); revisit if that changes.
-  const [total, rawLeads, users] = await Promise.all([
-    prisma.lead.count({ where }),
-    isUrgencySort
-      ? prisma.lead.findMany({ where, include: leadInclude })
-      : prisma.lead.findMany({ where, orderBy, skip: (pageNum - 1) * LEAD_PAGE_SIZE, take: LEAD_PAGE_SIZE, include: leadInclude }),
+  // ORDER BY/LIMIT — when sorting by it, fetch every filtered active row and
+  // sort/paginate in JS instead. Fine at this table's scale (low hundreds of
+  // leads); revisit if that changes.
+  const [activeTotal, rawActiveLeads, lostTotal, rawLostLeads, users] = await Promise.all([
+    activeWhere ? prisma.lead.count({ where: activeWhere }) : Promise.resolve(0),
+    !activeWhere
+      ? Promise.resolve([])
+      : isUrgencySort
+        ? prisma.lead.findMany({ where: activeWhere, include: leadInclude })
+        : prisma.lead.findMany({ where: activeWhere, orderBy, skip: (pageNum - 1) * LEAD_PAGE_SIZE, take: LEAD_PAGE_SIZE, include: leadInclude }),
+    lostWhere ? prisma.lead.count({ where: lostWhere }) : Promise.resolve(0),
+    lostWhere ? prisma.lead.findMany({ where: lostWhere, orderBy, take: LOST_CAP, include: leadInclude }) : Promise.resolve([]),
     prisma.user.findMany({ where: { isActive: true }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
-  const pages = Math.max(1, Math.ceil(total / LEAD_PAGE_SIZE));
+  const pages = Math.max(1, Math.ceil(activeTotal / LEAD_PAGE_SIZE));
 
   const now = Date.now();
-  const withUrgency = rawLeads.map((l) => ({ lead: l, urgency: computeUrgency(l, l.interactions.length > 0, now) }));
+  const withUrgency = rawActiveLeads.map((l) => ({ lead: l, urgency: computeUrgency(l, l.interactions.length > 0, now) }));
   if (isUrgencySort) {
     withUrgency.sort((a, b) => URGENCY_RANK[a.urgency.band] - URGENCY_RANK[b.urgency.band] || a.urgency.sortTime - b.urgency.sortTime);
   }
@@ -111,11 +195,13 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
     ? withUrgency.slice((pageNum - 1) * LEAD_PAGE_SIZE, (pageNum - 1) * LEAD_PAGE_SIZE + LEAD_PAGE_SIZE).map((x) => x.lead)
     : withUrgency.map((x) => x.lead);
   const urgencyById = new Map(withUrgency.map((x) => [x.lead.id, x.urgency]));
+  const lostDefaultOpen = hasActiveFilter && lostTotal > 0;
+  const activeEmptyText = lostTotal > 0 ? "No active leads match these filters." : "No leads match these filters.";
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-semibold">CRM / Leads <span className="text-base font-normal text-[#6B7280]">({total})</span></h1>
+        <h1 className="text-2xl font-semibold">CRM / Leads <span className="text-base font-normal text-[#6B7280]">({activeTotal})</span></h1>
         <div className="flex items-center gap-4">
           <Link href={`/admin/crm/export${leadQueryString(searchParams, { page: "" })}`} className="text-sm text-[#1B4B43] hover:underline">Export CSV ↓</Link>
           <Link href="/admin/crm/board" className="text-sm text-[#1B4B43] hover:underline">Pipeline view →</Link>
@@ -137,64 +223,44 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
 
       <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-[#F8F9FA] text-[#6B7280]">
-            <tr>
-              <th className="text-left font-medium px-4 py-2.5">Name</th>
-              <th className="text-left font-medium px-4 py-2.5">Contact</th>
-              <th className="text-left font-medium px-4 py-2.5">Last contact</th>
-              <th className="text-left font-medium px-4 py-2.5">Lang</th>
-              <th className="text-left font-medium px-4 py-2.5">Status</th>
-              <th className="text-left font-medium px-4 py-2.5">Assigned</th>
-              <th className="text-left font-medium px-4 py-2.5">Received</th>
-              <th className="text-right font-medium px-4 py-2.5"></th>
-            </tr>
-          </thead>
+          {TABLE_HEAD}
           <tbody className="divide-y divide-[#E5E7EB]">
             {leads.length === 0 ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-[#6B7280]">No leads match these filters.</td></tr>
-            ) : leads.map((l) => {
-              const urgency = urgencyById.get(l.id)!;
-              return (
-              <tr key={l.id} className="hover:bg-[#F8F9FA]">
-                <td className={`pl-3 pr-4 py-2.5 border-l-4 ${URGENCY_STYLE[urgency.band].border}`}>
-                  <div className="flex items-center gap-2">
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${URGENCY_STYLE[urgency.band].dot}`} title={urgency.reason} aria-label={urgency.reason} role="img" />
-                    <Link href={`/admin/crm/${l.id}`} className="text-[#1B4B43] font-medium hover:underline">{l.firstName} {l.lastName}</Link>
-                  </div>
-                </td>
-                <td className="px-4 py-2.5 text-[#6B7280]">{l.email}<br />{l.phone}</td>
-                <td className="px-4 py-2.5 text-[#6B7280]">
-                  {l.interactions[0] ? (
-                    <>
-                      {new Date(l.interactions[0].occurredAt).toLocaleDateString("en-GB")}
-                      <br />
-                      <span className="text-xs text-[#9CA3AF]">{LAST_CONTACT_LABEL[l.interactions[0].type]}</span>
-                    </>
-                  ) : (
-                    "—"
-                  )}
-                </td>
-                <td className="px-4 py-2.5 text-[#6B7280]">{l.languagePreference?.toUpperCase() ?? "—"}</td>
-                <td className="px-4 py-2.5"><StatusBadge status={l.status} /></td>
-                <td className="px-4 py-2.5 text-[#6B7280]">{l.assignedTo?.name ?? "—"}</td>
-                <td className="px-4 py-2.5 text-[#6B7280]">{new Date(l.createdAt).toLocaleDateString("en-GB")}</td>
-                <td className="px-4 py-2.5 text-right"><DeleteLeadButton id={l.id} /></td>
-              </tr>
-              );
-            })}
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-[#6B7280]">{activeEmptyText}</td></tr>
+            ) : leads.map((l) => (
+              <LeadRow key={l.id} lead={l} urgency={urgencyById.get(l.id)!} />
+            ))}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination */}
+      {/* Pagination (active table only — the Lost section is a flat, capped list) */}
       {pages > 1 && (
         <div className="flex items-center justify-between mt-4 text-sm text-[#6B7280]">
-          <span>Page {pageNum} of {pages} · {total} leads</span>
+          <span>Page {pageNum} of {pages} · {activeTotal} leads</span>
           <div className="flex gap-2">
             {pageNum > 1 && <Link href={`/admin/crm${leadQueryString(searchParams, { page: String(pageNum - 1) })}`} className="rounded-md border border-[#E5E7EB] px-3 py-1.5 hover:bg-[#F8F9FA]">← Prev</Link>}
             {pageNum < pages && <Link href={`/admin/crm${leadQueryString(searchParams, { page: String(pageNum + 1) })}`} className="rounded-md border border-[#E5E7EB] px-3 py-1.5 hover:bg-[#F8F9FA]">Next →</Link>}
           </div>
         </div>
+      )}
+
+      {lostTotal > 0 && (
+        <LostLeadsPanel key={leadQueryString(searchParams)} count={lostTotal} defaultOpen={lostDefaultOpen}>
+          <table className="w-full text-sm border-t border-[#E5E7EB]">
+            {TABLE_HEAD}
+            <tbody className="divide-y divide-[#E5E7EB]">
+              {rawLostLeads.map((l) => (
+                <LeadRow key={l.id} lead={l} urgency={null} muted />
+              ))}
+            </tbody>
+          </table>
+          {lostTotal > LOST_CAP && (
+            <p className="px-4 py-2 text-xs text-[#9CA3AF] border-t border-[#E5E7EB]">
+              Showing the first {LOST_CAP} of {lostTotal} lost leads.
+            </p>
+          )}
+        </LostLeadsPanel>
       )}
     </div>
   );
