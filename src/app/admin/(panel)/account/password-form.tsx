@@ -14,7 +14,7 @@ function SubmitBtn() {
 export default function PasswordForm() {
   const [state, action] = useFormState<{ error?: string; ok?: string } | null>(changePassword as any, null);
   return (
-    <form action={action} className="bg-white rounded-lg border border-[#E5E7EB] p-6 space-y-4">
+    <form action={action} className="max-w-md bg-white rounded-lg border border-[#E5E7EB] p-6 space-y-4">
       <h2 className="text-sm font-semibold">Change password</h2>
       {state?.error && <p className="text-sm text-[#C0392B] bg-[#C0392B]/10 rounded px-3 py-2">{state.error}</p>}
       {state?.ok && <p className="text-sm text-[#2D6E62] bg-[#2D6E62]/10 rounded px-3 py-2">{state.ok}</p>}

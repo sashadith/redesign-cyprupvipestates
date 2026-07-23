@@ -17,12 +17,20 @@ export async function recordInboundLead(opts: {
   notifyTelegram?: boolean; // default true; pass false for low-value/high-volume sources
 }) {
   // Timeline entry so every lead (not just manual ones) has a creation activity.
+  const inboundContent = `Lead received via ${opts.source.replace(/_/g, " ")}`;
   try {
     await prisma.leadActivity.create({
-      data: { leadId: opts.leadId, type: "INBOUND", content: `Lead received via ${opts.source.replace(/_/g, " ")}`, createdBy: "website" },
+      data: { leadId: opts.leadId, type: "INBOUND", content: inboundContent, createdBy: "website" },
     });
   } catch (e) {
     console.error("inbound activity error:", e);
+  }
+  try {
+    await prisma.leadInteraction.create({
+      data: { leadId: opts.leadId, type: "SYSTEM", direction: "INBOUND", channel: "SYSTEM", body: inboundContent, createdByName: "website" },
+    });
+  } catch (e) {
+    console.error("inbound interaction error:", e);
   }
 
   if (opts.notifyTelegram === false) return;

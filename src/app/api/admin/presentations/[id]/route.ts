@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { WHATSAPP_UPDATED_MSG } from "@/lib/crm/presentationMessages";
+import { waLink } from "@/lib/crm/waFormat";
 
 // Same reasoning as the create-flow route (src/app/api/admin/presentations/route.ts):
 // build the origin from the actual request, not a hardcoded production URL.
@@ -19,16 +21,6 @@ async function requireSession() {
   if (!user || !user.isActive) return null;
   return session;
 }
-
-// "I've updated your selection, take a look" — deliberately distinct from the
-// create-flow's WHATSAPP_MSG (which introduces a brand-new link) since this is
-// a nudge back to an EXISTING, already-shared link.
-const WHATSAPP_UPDATED_MSG: Record<string, (url: string) => string> = {
-  en: (url) => `I've updated your selection - take a look, there's something new: ${url}`,
-  de: (url) => `Ich habe Ihre Auswahl aktualisiert - werfen Sie einen Blick darauf, es gibt etwas Neues: ${url}`,
-  pl: (url) => `Zaktualizowałem Państwa wybór - proszę spojrzeć, pojawiło się coś nowego: ${url}`,
-  ru: (url) => `Я обновил вашу подборку — взгляните, там появилось кое-что новое: ${url}`,
-};
 
 type ItemInput = {
   developmentId: string;
@@ -115,11 +107,23 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   if (commentChangedCount) summaryParts.push(`${commentChangedCount} comment changed`);
   const summary = summaryParts.length ? summaryParts.join(", ") : "details updated";
 
+  const presentationEditedContent = `Presentation edited (${summary})`;
   await prisma.leadActivity.create({
     data: {
       leadId: existingPresentation.leadId, type: "PRESENTATION_EDITED",
-      content: `Presentation edited (${summary})`,
+      content: presentationEditedContent,
       createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null,
+    },
+  });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: existingPresentation.leadId,
+      type: "PRESENTATION_EVENT",
+      channel: "SYSTEM",
+      body: presentationEditedContent,
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
+      metadata: { legacyType: "PRESENTATION_EDITED" },
     },
   });
 
@@ -128,7 +132,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   const url = `${requestOrigin(req)}/c/${existingPresentation.token}`;
   const phone = existingPresentation.lead.phone;
   const whatsappUrl = phone
-    ? `https://wa.me/${phone.replace(/[^\d+]/g, "").replace(/^\+/, "")}?text=${encodeURIComponent((WHATSAPP_UPDATED_MSG[locale] ?? WHATSAPP_UPDATED_MSG.en)(url))}`
+    ? waLink(phone, (WHATSAPP_UPDATED_MSG[locale as keyof typeof WHATSAPP_UPDATED_MSG] ?? WHATSAPP_UPDATED_MSG.en)(url))
     : null;
 
   return NextResponse.json({ ok: true, url, whatsappUrl, summary });

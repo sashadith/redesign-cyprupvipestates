@@ -44,6 +44,15 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
     await prisma.leadActivity.create({
       data: { leadId: presentation.leadId, type: "PRESENTATION_FAVORITE", content: `Favorited: ${publicName}` },
     }).catch(() => {});
+    await prisma.leadInteraction.create({
+      data: {
+        leadId: presentation.leadId,
+        type: "PRESENTATION_EVENT",
+        channel: "SYSTEM",
+        body: `Favorited: ${publicName}`,
+        metadata: { legacyType: "PRESENTATION_FAVORITE" },
+      },
+    }).catch(() => {});
     try {
       await sendTelegramMessage(`❤️ ${escapeHtml(presentation.greetingName)} favorited ${escapeHtml(publicName)}`);
     } catch (e) { console.error("Favorite Telegram alert failed:", e); }

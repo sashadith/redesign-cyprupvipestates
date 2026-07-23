@@ -16,6 +16,8 @@ import { pingIndexNow, absUrl } from "@/lib/indexnow";
 import { deepSetString } from "@/lib/homepageFields";
 import { slugify } from "@/lib/slugify";
 import { listProjectsForPicker as listProjectsForPickerQuery } from "@/sanity/sanity.utils";
+import { applyFollowUpCadence, resetFollowUpCadence } from "@/lib/crm/followUpCadence";
+import { isManualInteractionType } from "@/lib/crm/interactionHelpers";
 
 // Convert every `{__html}` rich-text marker (produced by the block editor) into
 // Portable Text via the shared converter — so all blocks store consistent PT and
@@ -605,13 +607,24 @@ export async function updateLeadStatus(id: string, status: string, reason?: stri
   if (!STATUSES.includes(status)) throw new Error("Invalid status");
   const r = String(reason ?? "").trim().slice(0, 500);
   await prisma.lead.update({ where: { id }, data: { status: status as any } });
+  const statusContent = `Status changed to ${status.replace(/_/g, " ")}${r ? ` — ${r}` : ""}`;
   await prisma.leadActivity.create({
     data: {
       leadId: id,
       type: "STATUS_CHANGE",
-      content: `Status changed to ${status.replace(/_/g, " ")}${r ? ` — ${r}` : ""}`,
+      content: statusContent,
       createdBy: session.user?.name ?? "admin",
       createdById: (session.user as any)?.id ?? null,
+    },
+  });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: id,
+      type: "STATUS_CHANGE",
+      channel: "SYSTEM",
+      body: statusContent,
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
     },
   });
   revalidatePath(`/admin/crm/${id}`);
@@ -619,14 +632,101 @@ export async function updateLeadStatus(id: string, status: string, reason?: stri
   revalidatePath("/admin");
 }
 
-export async function addLeadNote(id: string, note: string) {
+// occurredAt/leadReacted are new (Lead Cockpit correction batch): the
+// timeline quick-add forms now let an admin backdate a manually-logged
+// entry (default = now) and flag it as the lead's own reaction, which
+// resets the auto-follow-up chain (src/lib/crm/followUpCadence.ts) instead
+// of just advancing it.
+export async function addLeadNote(id: string, note: string, occurredAt?: Date, leadReacted?: boolean) {
   const session = await requireSession();
   const content = note.trim();
   if (!content) return;
+  const when = occurredAt ?? new Date();
   await prisma.leadActivity.create({
-    data: { leadId: id, type: "NOTE", content, createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
+    data: { leadId: id, type: "NOTE", content, createdAt: when, createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
   });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: id,
+      type: "NOTE",
+      occurredAt: when,
+      body: content,
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
+      ...(leadReacted ? { metadata: { leadReacted: true } } : {}),
+    },
+  });
+  await applyFollowUpCadence(id, "manual_contact", { leadReacted });
   revalidatePath(`/admin/crm/${id}`);
+}
+
+// Cockpit's inline "Next follow-up" editor — plain date, no timeline entry
+// (this is a scheduling field, not a logged interaction). Deliberately does
+// NOT touch autoFollowUpCount — only resetLeadFollowUpCadenceAction below
+// (the Cockpit's dedicated "Reset" control) does that.
+export async function updateLeadFollowUp(id: string, dateStr: string) {
+  await requireSession();
+  const nextFollowUpAt = dateStr ? new Date(`${dateStr}T00:00:00.000Z`) : null;
+  await prisma.lead.update({ where: { id }, data: { nextFollowUpAt } });
+  revalidatePath(`/admin/crm/${id}`);
+}
+
+// Cockpit's "Reset" control next to the follow-up indicator — starts a
+// fresh auto-follow-up chain of 3 without touching nextFollowUpAt itself.
+export async function resetLeadFollowUpCadenceAction(id: string) {
+  await requireSession();
+  await resetFollowUpCadence(id);
+  revalidatePath(`/admin/crm/${id}`);
+}
+
+// Log a phone call against a lead — same shape as addLeadNote, distinct
+// interaction type so it shows with its own icon in the Unified Timeline.
+export async function addCallLog(id: string, note: string, occurredAt?: Date, leadReacted?: boolean) {
+  const session = await requireSession();
+  const content = note.trim();
+  if (!content) return;
+  const when = occurredAt ?? new Date();
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: id,
+      type: "CALL",
+      direction: "OUTBOUND",
+      channel: "PHONE",
+      occurredAt: when,
+      body: content,
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
+      ...(leadReacted ? { metadata: { leadReacted: true } } : {}),
+    },
+  });
+  await applyFollowUpCadence(id, "manual_contact", { leadReacted });
+  revalidatePath(`/admin/crm/${id}`);
+}
+
+// Delete a manually-logged timeline entry (Note/Call/Email/WhatsApp only —
+// see isManualInteractionType; system-generated rows like STATUS_CHANGE or
+// PRESENTATION_EVENT are never deletable). Audit-logged same as the CRM
+// trash cascade delete (emptyTrashAction).
+export async function deleteLeadInteraction(interactionId: string) {
+  const session = await requireSession();
+  const row = await prisma.leadInteraction.findUnique({
+    where: { id: interactionId },
+    select: { id: true, leadId: true, type: true, body: true, subject: true },
+  });
+  if (!row) return;
+  if (!isManualInteractionType(row.type)) {
+    throw new Error("This entry was system-generated and can't be deleted.");
+  }
+  await prisma.leadInteraction.delete({ where: { id: interactionId } });
+  const actor = session.user as any;
+  await prisma.adminAuditLog.create({
+    data: {
+      actorId: actor.id, actorName: actor.name, actorEmail: actor.email,
+      action: "delete_lead_interaction", targetType: "LeadInteraction", targetId: interactionId,
+      detail: { leadId: row.leadId, type: row.type, subject: row.subject, body: row.body },
+    },
+  });
+  revalidatePath(`/admin/crm/${row.leadId}`);
 }
 
 // Assign a lead to a team member (or unassign with an empty value).
@@ -643,13 +743,24 @@ export async function assignLead(id: string, userId: string) {
     label = u.name;
   }
   await prisma.lead.update({ where: { id }, data: { assignedToId } });
+  const assignmentContent = assignedToId ? `Assigned to ${label}` : "Unassigned";
   await prisma.leadActivity.create({
     data: {
       leadId: id,
       type: "ASSIGNMENT",
-      content: assignedToId ? `Assigned to ${label}` : "Unassigned",
+      content: assignmentContent,
       createdBy: session.user?.name ?? "admin",
       createdById: (session.user as any)?.id ?? null,
+    },
+  });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: id,
+      type: "SYSTEM",
+      channel: "SYSTEM",
+      body: assignmentContent,
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
     },
   });
   revalidatePath(`/admin/crm/${id}`);
@@ -703,6 +814,16 @@ export async function createLead(_prev: any, formData: FormData): Promise<{ erro
   await prisma.leadActivity.create({
     data: { leadId: lead.id, type: "CREATED", content: "Lead created manually", createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
   });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: lead.id,
+      type: "SYSTEM",
+      channel: "SYSTEM",
+      body: "Lead created manually",
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
+    },
+  });
   revalidatePath("/admin/crm");
   revalidatePath("/admin");
   redirect(`/admin/crm/${lead.id}`);
@@ -746,6 +867,16 @@ export async function updateLead(id: string, _prev: any, formData: FormData): Pr
   await prisma.leadActivity.create({
     data: { leadId: id, type: "EDIT", content: "Lead details edited", createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
   });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: id,
+      type: "SYSTEM",
+      channel: "SYSTEM",
+      body: "Lead details edited",
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
+    },
+  });
   revalidatePath(`/admin/crm/${id}`);
   revalidatePath("/admin/crm");
   redirect(`/admin/crm/${id}`);
@@ -764,8 +895,19 @@ export async function mergeLeads(targetId: string, sourceId: string) {
   const summary = `Merged duplicate: ${source.firstName} ${source.lastName} <${source.email}> · ${source.source.replace(/_/g, " ")} · ${source.createdAt.toISOString().slice(0, 10)}`;
   await prisma.$transaction([
     prisma.leadActivity.updateMany({ where: { leadId: sourceId }, data: { leadId: targetId } }),
+    prisma.leadInteraction.updateMany({ where: { leadId: sourceId }, data: { leadId: targetId } }),
     prisma.leadActivity.create({
       data: { leadId: targetId, type: "MERGE", content: summary, createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
+    }),
+    prisma.leadInteraction.create({
+      data: {
+        leadId: targetId,
+        type: "SYSTEM",
+        channel: "SYSTEM",
+        body: summary,
+        createdByUserId: (session.user as any)?.id ?? null,
+        createdByName: session.user?.name ?? "admin",
+      },
     }),
     prisma.lead.delete({ where: { id: sourceId } }),
   ]);
@@ -783,6 +925,16 @@ export async function softDeleteLeadAction(id: string, redirectTo?: string) {
   await prisma.leadActivity.create({
     data: { leadId: id, type: "DELETED", content: "Lead moved to trash", createdBy: session.user?.name ?? "admin", createdById: uid },
   });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: id,
+      type: "SYSTEM",
+      channel: "SYSTEM",
+      body: "Lead moved to trash",
+      createdByUserId: uid,
+      createdByName: session.user?.name ?? "admin",
+    },
+  });
   revalidatePath("/admin/crm");
   revalidatePath("/admin/crm/trash");
   revalidatePath("/admin");
@@ -794,6 +946,16 @@ export async function restoreLeadAction(id: string) {
   await prisma.lead.update({ where: { id }, data: { deletedAt: null, deletedById: null } });
   await prisma.leadActivity.create({
     data: { leadId: id, type: "RESTORED", content: "Lead restored from trash", createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
+  });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: id,
+      type: "SYSTEM",
+      channel: "SYSTEM",
+      body: "Lead restored from trash",
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
+    },
   });
   revalidatePath("/admin/crm");
   revalidatePath("/admin/crm/trash");

@@ -72,7 +72,7 @@ DB_URL_LINE="\$(grep '^DATABASE_URL=' .env | cut -d= -f2-)"
 DB_URL_LINE="\${DB_URL_LINE%\\"}"
 DB_URL_LINE="\${DB_URL_LINE#\\"}"
 BUILD_DB_URL="\${DB_URL_LINE}&connection_limit=5&pool_timeout=30"
-DATABASE_URL="\$BUILD_DB_URL" NODE_OPTIONS=--max_old_space_size=2048 npm run build
+DATABASE_URL="\$BUILD_DB_URL" NODE_OPTIONS=--max_old_space_size=4096 npm run build
 
 # Hard gate: verify every known runtime-only asset (files read via fs at
 # request time, invisible to the build itself) exists in \$DIR BEFORE the
