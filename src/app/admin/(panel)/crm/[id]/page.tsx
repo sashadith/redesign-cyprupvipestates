@@ -16,6 +16,26 @@ import UnifiedTimeline, { type TimelineRow } from "./UnifiedTimeline";
 
 export const dynamic = "force-dynamic";
 
+// Module-level, NOT nested inside the component — a plain helper referenced
+// by multiple sibling inline "use server" closures (quickNote/quickCall/
+// quickWhatsApp below) must live outside the async Server Component itself.
+// Next's per-action compiler extracts each "use server" function into its
+// own independent compiled module; when the helper was defined inside the
+// component body, quickWhatsApp's compiled action came out missing it
+// entirely ("ReferenceError: parseOccurredAt is not defined" in production,
+// confirmed via pm2 logs on staging) even though quickNote/quickCall's
+// bundles happened to include it — a real, reproduced Next.js App Router
+// closure-bundling fragility, not something to route around per-action.
+//
+// datetime-local input value ("2026-07-23T14:30") -> Date, or undefined
+// (defaults to now server-side) if left blank/invalid.
+function parseOccurredAt(formData: FormData): Date | undefined {
+  const raw = String(formData.get("occurredAt") ?? "");
+  if (!raw) return undefined;
+  const d = new Date(raw);
+  return Number.isNaN(d.getTime()) ? undefined : d;
+}
+
 export default async function LeadDetail({ params }: { params: { id: string } }) {
   const { id } = params;
   const [lead, users] = await Promise.all([
@@ -138,14 +158,6 @@ export default async function LeadDetail({ params }: { params: { id: string } })
   async function resetFollowUp() {
     "use server";
     await resetLeadFollowUpCadenceAction(id);
-  }
-  // datetime-local input value ("2026-07-23T14:30") -> Date, or undefined
-  // (defaults to now server-side) if left blank/invalid.
-  function parseOccurredAt(formData: FormData): Date | undefined {
-    const raw = String(formData.get("occurredAt") ?? "");
-    if (!raw) return undefined;
-    const d = new Date(raw);
-    return Number.isNaN(d.getTime()) ? undefined : d;
   }
   async function quickNote(formData: FormData) {
     "use server";
