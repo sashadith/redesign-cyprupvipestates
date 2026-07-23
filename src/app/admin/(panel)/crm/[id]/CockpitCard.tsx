@@ -68,9 +68,9 @@ function safeHttpUrl(value: string): string | null {
   }
 }
 
-// Long URL-shaped values (Page, Referrer) get a compact "Open ↗" link that
-// opens in a new tab instead of the raw URL text — a full URL was 3 lines
-// tall and broke the grid. Full URL still available on hover via title.
+// "Page" (the visited page URL) gets a compact "Open ↗" link — the full URL
+// is usually long/uninformative as text (typically already the site itself),
+// so a button-style action reads better than the raw path.
 const urlField = (label: string, url: string | null) => {
   if (!url) return null;
   const safe = safeHttpUrl(url);
@@ -91,6 +91,33 @@ const urlField = (label: string, url: string | null) => {
         ) : (
           <span className="break-words text-[#6B7280]" title={url}>{url}</span>
         )}
+      </dd>
+    </div>
+  );
+};
+
+// "Referrer" instead shows the hostname as clickable text (e.g. "www.google.com")
+// — the domain itself is the useful signal here, unlike Page's own URL. Same
+// safeHttpUrl gate as urlField: a non-http(s) value never becomes a link.
+const hostLinkField = (label: string, url: string | null) => {
+  if (!url) return null;
+  const safe = safeHttpUrl(url);
+  if (!safe) {
+    return (
+      <div className="py-1">
+        <dt className="text-xs text-[#6B7280]">{label}</dt>
+        <dd className="text-sm mt-0.5 break-words text-[#6B7280]" title={url}>{url}</dd>
+      </div>
+    );
+  }
+  const hostname = new URL(safe).hostname;
+  return (
+    <div className="py-1">
+      <dt className="text-xs text-[#6B7280]">{label}</dt>
+      <dd className="text-sm mt-0.5">
+        <a href={safe} target="_blank" rel="noopener noreferrer" title={safe} className="text-[#1B4B43] hover:underline break-words">
+          {hostname}
+        </a>
       </dd>
     </div>
   );
@@ -288,13 +315,9 @@ export default function CockpitCard({
           {field("Timeline", lead.timeline)}
           {field("Financing", lead.financing)}
           {field("Property interest", lead.propertyTypeInterest)}
-          {field("Project interest", lead.projectInterestTitle)}
-        </div>
-
-        {groupLabel("Message & notes")}
-        <div className={groupGrid}>
-          {field("Message", lead.message)}
           {field("Internal note (intake)", lead.notes)}
+          {field("Project interest", lead.projectInterestTitle)}
+          {field("Message", lead.message)}
         </div>
 
         {groupLabel("Acquisition")}
@@ -303,7 +326,7 @@ export default function CockpitCard({
           {urlField("Page", lead.pageSource)}
           {field("UTM", lead.utm)}
           {field("Click ID", lead.clickId)}
-          {urlField("Referrer", lead.referrer)}
+          {hostLinkField("Referrer", lead.referrer)}
           {field("Received", new Date(lead.createdAt).toLocaleString("en-GB"))}
           {field("Notified", `Telegram: ${lead.telegramNotified ? "✓" : "—"}  ·  Email: ${lead.emailNotified ? "✓" : "—"}`)}
         </div>
