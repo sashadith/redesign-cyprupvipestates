@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { StatusBadge } from "@/app/admin/status-badge";
 import { formatWaPhone } from "@/lib/crm/waFormat";
+import GenerateReplyButton from "./GenerateReplyButton";
 
 // The Lead Cockpit's hero card (Phase 1 of 4, 2026-07-23; consolidated in the
 // correction batch, 2026-07-23) — a single glance-able summary that now
@@ -300,14 +301,12 @@ export default function CockpitCard({
             WhatsApp
           </a>
         )}
-        <button
-          type="button"
-          disabled
-          title="Coming in Phase 2"
-          className="flex-1 sm:flex-none rounded-md border border-[#E5E7EB] text-[#9CA3AF] text-sm px-4 py-2 cursor-not-allowed"
-        >
-          Generate reply
-        </button>
+        <GenerateReplyButton
+          leadId={lead.id}
+          leadEmail={lead.email}
+          hasPhone={!!lead.phone}
+          preferredChannel={lead.preferredChannel}
+        />
       </div>
 
       {/* Absorbed detail groups — was page.tsx's standalone "Lead details" <dl>.

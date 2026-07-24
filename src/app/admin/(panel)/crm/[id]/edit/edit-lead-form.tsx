@@ -34,6 +34,14 @@ export default function EditLeadForm({ action, lead }: { action: any; lead: any 
           <div><label className="block text-sm mb-1">Language</label>
             <select name="languagePreference" className={input} defaultValue={lead.languagePreference ?? ""}><option value="">—</option>{["en", "de", "pl", "ru"].map((l) => <option key={l} value={l}>{l.toUpperCase()}</option>)}</select>
           </div>
+          <div>
+            <label className="block text-sm mb-1">Salutation (DE/PL formal address)</label>
+            <select name="salutation" className={input} defaultValue={lead.salutation ?? "UNKNOWN"}>
+              <option value="UNKNOWN">Unknown — use neutral greeting</option>
+              <option value="MR">Herr / Pan</option>
+              <option value="MS">Frau / Pani</option>
+            </select>
+          </div>
         </div>
       </div>
 

@@ -773,6 +773,7 @@ export async function assignLead(id: string, userId: string) {
 const LEAD_TIMELINES = ["IMMEDIATE", "THREE_MONTHS", "SIX_MONTHS", "ONE_YEAR", "JUST_LOOKING"];
 const LEAD_FINANCING = ["CASH", "MORTGAGE", "UNDECIDED"];
 const LEAD_PROP_TYPES = ["Apartment", "Villa", "Townhouse", "Penthouse"];
+const LEAD_SALUTATIONS = ["UNKNOWN", "MR", "MS"];
 
 export async function createLead(_prev: any, formData: FormData): Promise<{ error?: string }> {
   const session = await requireSession();
@@ -855,6 +856,7 @@ export async function updateLead(id: string, _prev: any, formData: FormData): Pr
       phone: phone || null,
       nationality: String(formData.get("nationality") ?? "").trim() || null,
       languagePreference: oneOf("languagePreference", LOCALES) as any,
+      salutation: (oneOf("salutation", LEAD_SALUTATIONS) as any) ?? "UNKNOWN",
       budgetMin: num("budgetMin"),
       budgetMax: num("budgetMax"),
       timeline: oneOf("timeline", LEAD_TIMELINES) as any,

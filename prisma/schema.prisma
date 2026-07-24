@@ -82,6 +82,15 @@ enum LeadPreferredChannel {
   PHONE
 }
 
+// Title form for formal-address languages (DE "Herr"/"Frau", PL "Pan"/"Pani").
+// UNKNOWN is the default and safe fallback — Compose uses a gender-neutral
+// greeting when this isn't set rather than guessing.
+enum LeadSalutation {
+  UNKNOWN
+  MR
+  MS
+}
+
 // Lead Cockpit unified timeline (Phase 1 of 4, 2026-07-23) — additive alongside
 // LeadActivity, which stays untouched. See LeadInteraction below.
 enum LeadInteractionType {
@@ -670,6 +679,11 @@ model Lead {
   // responds and later goes quiet again gets a fresh chain of 3, rather than
   // this being a lifetime cap.
   autoFollowUpCount    Int                   @default(0)
+  // Compose batch (2026-07-24) — title form for the DE/PL formal first-contact
+  // salutation ("Sehr geehrter Herr [Nachname]" / "Szanowny Panie [Nachname]").
+  // Manually maintained (no reliable data source); UNKNOWN falls back to a
+  // gender-neutral greeting instead of guessing. Not used for EN/RU.
+  salutation           LeadSalutation        @default(UNKNOWN)
 
   @@index([status])
   @@index([createdAt])

@@ -14,6 +14,7 @@ export type TimelineRow = {
   body: string | null;
   occurredAt: string; // ISO — passed as a string across the server/client boundary
   createdByName: string | null;
+  metadata: { aiGenerated?: boolean; leadReacted?: boolean; presentationToken?: string } | null;
 };
 
 const TYPE_META: Record<string, { label: string; className: string; group: "messages" | "presentation" | "system" }> = {
@@ -202,6 +203,11 @@ export default function UnifiedTimeline({
                   <span className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-medium ${meta.className}`}>
                     {meta.label}
                   </span>
+                  {r.metadata?.aiGenerated && (
+                    <span className="inline-block rounded-full px-2 py-0.5 text-[11px] font-medium bg-[#F3F4F6] text-[#6B7280]" title="Drafted by Claude, reviewed and sent by a human">
+                      AI draft
+                    </span>
+                  )}
                   {r.direction && <span className="text-xs text-[#9CA3AF]">{DIRECTION_ARROW[r.direction] ?? ""}</span>}
                   <span className="text-xs text-[#6B7280]">
                     {new Date(r.occurredAt).toLocaleString("en-GB")}

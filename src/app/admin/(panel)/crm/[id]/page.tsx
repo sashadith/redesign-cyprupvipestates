@@ -143,6 +143,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
     body: i.body,
     occurredAt: i.occurredAt.toISOString(),
     createdByName: i.createdByName,
+    metadata: i.metadata as TimelineRow["metadata"],
   }));
 
   // Absorbed into CockpitCard's detail groups (see that component) — computed

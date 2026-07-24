@@ -33,7 +33,7 @@ const bodyToHtml = (body: string) =>
 // advances the auto-follow-up chain.
 export async function sendCrmEmailAction(
   leadId: string,
-  opts: { subject: string; body: string; occurredAt?: Date; leadReacted?: boolean; presentationToken?: string; skipCadence?: boolean },
+  opts: { subject: string; body: string; occurredAt?: Date; leadReacted?: boolean; presentationToken?: string; skipCadence?: boolean; aiGenerated?: boolean },
 ): Promise<{ ok?: string; error?: string }> {
   const session = await requireSession();
   const userId = (session.user as any).id as string;
@@ -50,7 +50,11 @@ export async function sendCrmEmailAction(
 
   const locale = lead.languagePreference ?? "en";
   const signatureHtml = await getSignatureHtml(userId, locale);
-  const html = `${bodyToHtml(body)}${signatureHtml}`;
+  // Explicit spacer (not a trailing newline in `body` — trim() above would
+  // strip that) so there's always a visible blank line before the signature
+  // block, regardless of email client support for CSS margins.
+  const spacer = `<div style="height:16px;line-height:16px;font-size:1px;">&nbsp;</div>`;
+  const html = `${bodyToHtml(body)}${spacer}${signatureHtml}`;
   const text = stripHtmlToText(html);
 
   try {
@@ -77,6 +81,7 @@ export async function sendCrmEmailAction(
       metadata: {
         ...(opts.presentationToken ? { presentationToken: opts.presentationToken } : {}),
         ...(opts.leadReacted ? { leadReacted: true } : {}),
+        ...(opts.aiGenerated ? { aiGenerated: true } : {}),
       },
     },
   });
@@ -95,13 +100,17 @@ export async function sendCrmEmailAction(
 // send would.
 export async function logWhatsAppSentAction(
   leadId: string,
-  opts: { body: string; occurredAt?: Date; leadReacted?: boolean },
+  opts: { body: string; occurredAt?: Date; leadReacted?: boolean; aiGenerated?: boolean },
 ): Promise<{ ok?: string; error?: string }> {
   const session = await requireSession();
   const content = opts.body.trim();
   if (!content) return { error: "Message is required." };
 
   const when = opts.occurredAt ?? new Date();
+  const metadata = {
+    ...(opts.leadReacted ? { leadReacted: true } : {}),
+    ...(opts.aiGenerated ? { aiGenerated: true } : {}),
+  };
   await prisma.leadInteraction.create({
     data: {
       leadId,
@@ -112,7 +121,7 @@ export async function logWhatsAppSentAction(
       occurredAt: when,
       createdByUserId: (session.user as any)?.id ?? null,
       createdByName: session.user?.name ?? "admin",
-      ...(opts.leadReacted ? { metadata: { leadReacted: true } } : {}),
+      ...(Object.keys(metadata).length ? { metadata } : {}),
     },
   });
 
