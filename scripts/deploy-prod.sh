@@ -110,7 +110,11 @@ if [ "$ASSUME_YES" != 1 ] && [ "$DRY" != 1 ]; then
 fi
 
 # 1) Export a CLEAN tree of the ref (committed files only — no untracked WIP).
-STAGE="$(mktemp -d)"; trap 'rm -rf "$STAGE"' EXIT
+#    chmod the STAGE dir itself to 755: `mktemp -d` defaults to 700, and
+#    rsync's -p (preserve permissions, below) copies THIS directory's mode
+#    onto $RELEASE — a 700 $STAGE silently re-700's $RELEASE even after we
+#    explicitly chmod it, exactly what broke the 2026-07-24 deploy attempt.
+STAGE="$(mktemp -d)"; chmod 755 "$STAGE"; trap 'rm -rf "$STAGE"' EXIT
 echo "→ exporting clean $REF → $STAGE"
 git archive "$REF" | tar -x -C "$STAGE"
 
@@ -146,6 +150,13 @@ echo "→ creating release dir + rsyncing clean $REF tree"
 # don't just rely on umask having been inherited correctly.
 ssh -i "$KEY" "$HOST" "mkdir -p '$RELEASE' && chmod 755 '$RELEASE'"
 rsync "${RSYNC_OPTS[@]}" -e "ssh -i $KEY" "$STAGE/" "$HOST:$RELEASE/"
+# `-p` above (preserve permissions) copies $STAGE's own mode onto $RELEASE —
+# even with $STAGE now chmod'd to 755, re-assert $RELEASE's permissions here
+# too. Two independent layers (source-side + post-sync) since one alone
+# (either the earlier chmod above, or relying on $STAGE being 755) already
+# proved insufficient once: the 2026-07-24 retry deploy re-broke this via
+# rsync -p overwriting the pre-rsync chmod with $STAGE's then-700 mode.
+ssh -i "$KEY" "$HOST" "chmod 755 '$RELEASE'"
 
 if [ "$DRY" = 1 ]; then
   echo "✓ dry run complete — no build, migrate, or reload performed."
