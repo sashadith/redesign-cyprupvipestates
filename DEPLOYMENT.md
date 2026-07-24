@@ -12,7 +12,7 @@ of the 2026-07 staging→production merge.
 | URL | https://design.cyprusvipestates.com | https://cyprusvipestates.com |
 | PM2 app | `cve-staging` (fork mode, 1 instance) | `cyprusvipestates` (cluster, 2 instances) |
 | Port | 3200 | 3000 |
-| App dir | `/var/www/cve-staging` | `/var/www/cyprusvipestates` |
+| App dir | `/var/www/cve-staging` (plain directory, unchanged) | `/var/www/cyprusvipestates` — **symlink** into `/var/www/releases/` since 2026-07-24, see "Production release structure" below |
 | Deploy script | `scripts/deploy-staging.sh`, run from whatever **feature branch** you're testing (deploys the local working tree, uncommitted WIP included) | `scripts/deploy-prod.sh`, deploys a clean **committed ref — `main` only** by default (`CVP_PROD_REF` can override, but there should be no routine need to) |
 | Indexing | `X-Robots-Tag: noindex, nofollow` (nginx, domain-wide) + `robots.txt: Disallow: /` — enforced at the nginx layer, so no page-level metadata mistake can accidentally get staging indexed | Indexed normally; per-page `<meta robots>` control only |
 | Access | Public, no Basic Auth (removed 2026-07-01 on request) | Public |
@@ -113,10 +113,13 @@ single fixed branch left to auto-trigger from.)
 ### `scripts/deploy-prod.sh`
 
 Deploys a clean, **committed git ref** (default `main`) to production —
-never the working tree. Requires a typed confirmation (or `--yes`), verifies
-the target directory actually is the production app before touching it,
-previews every file an update would delete, and runs a post-deploy health
-check against the homepage and one of its own static assets.
+never the working tree. Builds happen entirely in an isolated release
+directory (`/var/www/releases/cve-<timestamp>/`); the live site is never
+touched during the build itself, only at one atomic symlink swap once every
+gate has passed — see "Production release structure" below for the full
+mechanism. Requires a typed confirmation (or `--yes`) and verifies the
+current live symlink actually resolves to the production app before doing
+anything.
 
 ```bash
 ./scripts/deploy-prod.sh --dry-run          # preview only, no changes
@@ -126,7 +129,10 @@ CVP_PROD_REF=main CVP_RUN_MIGRATE=1 ./scripts/deploy-prod.sh   # opt-in DB migra
 
 `npm ci` and `prisma migrate deploy` are both opt-in (`CVP_RUN_INSTALL=1`,
 `CVP_RUN_MIGRATE=1`) since they touch shared state — leave them off for a
-pure code deploy.
+pure code deploy. `node_modules` and `.next/cache` are always copied forward
+from the currently-live release regardless, so a routine deploy without
+`CVP_RUN_INSTALL=1` still gets a fast, incremental build — only skip `npm ci`
+when `package.json` hasn't changed since the last deploy.
 
 Both scripts require VPS SSH access (`~/.ssh/cvp_vps`, or `CVP_SSH_KEY`), and
 both cap the build-time `DATABASE_URL` with `connection_limit=5&pool_timeout=30`
@@ -135,6 +141,66 @@ and building on a higher-core machine than the VPS can otherwise stack more
 connections than Postgres's `max_connections` allows. Only the one-off build
 invocation is capped; the real `.env` on disk, and pm2's serving processes,
 are never touched.
+
+## Production release structure
+
+Rewritten 2026-07-24 from an in-place build (which ran `npm run build`
+directly inside the live app directory while the 2 pm2 cluster instances
+kept serving out of it — Next.js deletes and rewrites chunks/manifests
+mid-build, so the site was effectively broken for the entire build window,
+240–340s measured) to a release-directory + symlink-swap model. The build
+now happens completely outside the live path; the live site only changes at
+one atomic symlink swap, after every gate below has passed.
+
+```
+/var/www/releases/cve-<UTC-timestamp>/   one directory per deploy
+/var/www/cyprusvipestates                symlink -> current release (the NAME
+                                          is unchanged from before the rewrite —
+                                          nginx, crontab, and ecosystem.config.js
+                                          all still reference this exact path,
+                                          untouched by the rewrite)
+/var/www/shared/.env                     real file, symlinked into every release
+/var/www/shared/secrets/                 real dir,  symlinked into every release
+/var/www/shared-uploads/                 real dir,  symlinked into every release's
+                                          public/uploads (pre-existing, unchanged)
+/var/www/deploy-logs/                    .deploy-status / .deploy-build.log —
+                                          NOT part of any release
+```
+
+`.env` and `secrets/` are gitignored/rsync-excluded (so they never land inside
+a freshly-checked-out release on their own) — instead the real files live once
+in `/var/www/shared/`, and every release gets a fresh `ln -sfn` symlink to them.
+
+### The three gates
+
+All three run **after the build, before the symlink swap** — a failure at
+any of them means the live site was never touched; the old release just
+keeps serving.
+
+1. **BUILD_ID gate** — `$RELEASE/.next/BUILD_ID` must exist and be
+   non-empty. Protects against a build that crashed partway through (e.g.
+   an OOM) without the script's `set -e` catching it.
+2. **`verify-runtime-assets.sh`** — every file read via `fs.readFile`/
+   `readFileSync` at request time (invisible to `next build`'s static
+   import-graph check) must actually exist in the new release. Protects
+   against the `DejaVuSans.ttf` class of bug (see "Lessons learned").
+3. **`verify-www-data-access.sh`** — nginx's worker user (`www-data`) must
+   be able to traverse the full directory chain and read a real
+   `.next/static/*.css` file, checked with `sudo -u www-data`, not just
+   root's own view of the permission bits. Protects against the
+   release-directory-permissions class of bug (see "Lessons learned") — a
+   release can build cleanly and pass gates 1–2 while still being unreadable
+   by nginx if the directory itself isn't traversable by `www-data`.
+
+### If a deploy fails
+
+This is the main behavior change from before the rewrite: **a failed deploy
+never affects the live site.** The symlink still points at the previous
+(working) release; pm2 is still serving it; nothing was reloaded. The only
+cleanup needed is deleting the failed release directory
+(`/var/www/releases/cve-<timestamp>/`) — the script's own retention logic
+(keep newest 3 + the live one) does this automatically on the next
+successful deploy anyway, so manual cleanup is optional, not urgent.
 
 ## Post-deploy smoke test
 
@@ -191,19 +257,39 @@ covers it.
 
 ## Rollback
 
-### Routine rollback (regular `deploy-prod.sh` use)
+### Fast rollback (switch to an already-built release)
 
-Every production deploy is a named, committed git ref — rollback is
-redeploying the previous good ref:
+The last 3 releases are kept on disk (`/var/www/releases/cve-<timestamp>/`,
+see "Production release structure" above) specifically so a rollback
+doesn't need a rebuild:
+
+```bash
+ls -1dt /var/www/releases/cve-*   # find the previous good timestamp
+ln -sfn /var/www/releases/cve-<previous-good-timestamp> /var/www/cyprusvipestates.new
+mv -T /var/www/cyprusvipestates.new /var/www/cyprusvipestates
+pm2 reload cyprusvipestates --update-env
+```
+
+Under 5 seconds, DB untouched (schema is additive-only). This never touches
+`.env` or `secrets/` — every release already has its own `ln -sfn` symlink
+to the same stable `/var/www/shared/.env` and `/var/www/shared/secrets/`,
+regardless of which release is currently live, so switching which release
+`/var/www/cyprusvipestates` points at doesn't require touching them at all.
+
+### Routine rollback (rebuild an older ref)
+
+Still valid, and the only option once the release you want is no longer on
+disk (older than the retained 3): every production deploy is a named,
+committed git ref.
 
 ```bash
 CVP_PROD_REF=<previous-good-sha-or-tag> ./scripts/deploy-prod.sh
 ```
 
-No directory surgery needed; the script's own safety checks (identity
-verification, deletion preview) apply exactly the same as a forward deploy.
+This builds a brand-new release from that ref like any forward deploy — same
+three gates, same symlink swap — it just happens to check out older code.
 
-### Full-tree atomic swap (historic — used only for the 2026-07-16 repo cutover)
+### Full-tree atomic swap (historic — superseded 2026-07-24 by the release-directory + symlink-swap model above, kept for institutional memory only)
 
 Production used to be served from a different, separately-tracked git repo
 than staging. Retiring that repo and moving production onto this repo's
@@ -272,6 +358,15 @@ Staging's own `drive-sync`/`feed-sync` entries (previously hitting
 `127.0.0.1:3200`) were **disabled** (commented out, not deleted) in the
 crontab on 2026-07-16 once production took over both jobs post-cutover —
 kept in place, commented, for the record.
+
+**One-time migration window (2026-07-24).** The `*/5 * * * * publish-scheduled`
+cron (or any cron reading `/var/www/cyprusvipestates/.env`) can fail exactly
+once if it happens to fire during the sub-second window of a one-time
+`mv`+`ln -s` infrastructure migration, when the path briefly doesn't exist.
+Not a concern for routine deploys — those use `ln -sfn` + `mv -T` to replace
+an already-existing symlink name, with no such gap — only for one-time
+migrations like the 2026-07-24 release-structure cutover. A failed run just
+retries at the next 5-minute tick; no action needed.
 
 ## Branch history
 
@@ -409,3 +504,26 @@ remote build log's tail, rather than silently looking fine. **Never trust a
 single blocking call's exit code for a multi-minute remote operation** —
 verify completion independently, from the outside, against the system's own
 state.
+
+**The `.env`/`secrets` symlink self-reference trap (2026-07-24).** During the
+release-structure migration, an ad-hoc rollback attempt (run from a second
+terminal, not through any script) tried to reverse the `.env`/`secrets`
+extraction directly — moving the real files in `/var/www/shared/` back onto
+the paths that were, by that point, already symlinks pointing at those exact
+same real files. `mv` correctly refused: "cannot move to a subdirectory of
+itself." No damage was done (the command just failed), but it cost real
+debugging time before the actual cause (an unrelated, correctly-working
+migration, not a bug) was found. **If the shared-state extraction ever needs
+reversing by hand, the symlinks must be removed FIRST, then the real files
+moved back — never the other way around:**
+
+```bash
+set -e
+rm /var/www/cyprusvipestates/.env /var/www/cyprusvipestates/secrets
+mv /var/www/shared/.env    /var/www/cyprusvipestates/.env
+mv /var/www/shared/secrets /var/www/cyprusvipestates/secrets
+```
+
+This is not a routine operation — it only applies if the release-directory
+model itself is ever being fully decommissioned, not to a normal rollback
+(see "Fast rollback" above, which never touches `.env`/`secrets` at all).
