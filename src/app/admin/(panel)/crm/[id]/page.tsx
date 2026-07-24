@@ -52,16 +52,27 @@ export default async function LeadDetail({ params }: { params: { id: string } })
   if (!lead) notFound();
 
   // Possible duplicates: same email or phone, different record (audit H2).
-  const duplicates = await prisma.lead.findMany({
-    where: {
-      id: { not: id },
-      deletedAt: null,
-      OR: [{ email: lead.email }, ...(lead.phone ? [{ phone: lead.phone }] : [])],
-    },
-    orderBy: { createdAt: "desc" },
-    take: 20,
-    select: { id: true, firstName: true, lastName: true, email: true, phone: true, source: true, status: true, createdAt: true },
-  });
+  // Matches must be non-empty on BOTH sides — a bare `{ email: lead.email }`
+  // silently matched every other empty-email lead against each other once
+  // bulk imports started leaving `email: ""` on contact-less rows (2026-07-24
+  // monday.com import: 63 leads with no email, each showing ~20 false
+  // "duplicates" of unrelated people). Phone is also normalized (digits
+  // only) so formatting differences ("+971 56 342 8755" vs "+971563428755")
+  // don't cause false negatives — compared in JS since Postgres can't
+  // normalize on the fly; the lead table is small enough (low hundreds) for
+  // this to be cheap, same tradeoff already made elsewhere in this file.
+  const normalizeEmail = (e: string | null | undefined) => (e ?? "").trim().toLowerCase();
+  const normalizePhone = (p: string | null | undefined) => (p ?? "").replace(/[^\d]/g, "");
+  const myEmail = normalizeEmail(lead.email);
+  const myPhone = normalizePhone(lead.phone);
+  const duplicates = !myEmail && !myPhone ? [] : (
+    await prisma.lead.findMany({
+      where: { id: { not: id }, deletedAt: null },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, firstName: true, lastName: true, email: true, phone: true, source: true, status: true, createdAt: true },
+    })
+  ).filter((d) => (myEmail && normalizeEmail(d.email) === myEmail) || (myPhone && normalizePhone(d.phone) === myPhone))
+    .slice(0, 20);
 
   // Time in current stage: since the most recent STATUS_CHANGE, else since creation (audit M2).
   const lastChange = lead.interactions.find((i) => i.type === "STATUS_CHANGE");
