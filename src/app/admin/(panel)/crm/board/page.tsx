@@ -4,7 +4,13 @@ import { updateLeadStatus } from "../../../actions";
 
 export const dynamic = "force-dynamic";
 
+// All statuses a lead can hold — drives the per-card move dropdown and the
+// byStatus bucketing, so CLOSED/LOST stay selectable even though they no
+// longer get their own board column (those live as collapsed sections on
+// the list view instead — see /admin/crm).
 const PIPELINE = ["NEW", "QUALIFIED", "CONTACTED", "VIEWING_SCHEDULED", "OFFER", "CLOSED", "LOST"];
+// Board columns actually rendered — CLOSED/LOST intentionally excluded.
+const VISIBLE_COLUMNS = PIPELINE.filter((s) => s !== "CLOSED" && s !== "LOST");
 const COL_ACCENT: Record<string, string> = {
   NEW: "border-t-blue-400", QUALIFIED: "border-t-purple-400", CONTACTED: "border-t-yellow-400",
   VIEWING_SCHEDULED: "border-t-orange-400", OFFER: "border-t-indigo-400", CLOSED: "border-t-green-500", LOST: "border-t-red-400",
@@ -31,7 +37,7 @@ export default async function CrmBoard() {
       </div>
       {capped && <p className="text-xs text-[#9CA3AF] mb-4">Showing the {BOARD_CAP} most recently-updated leads. Use the <Link href="/admin/crm" className="underline">list view</Link> to search/filter the rest.</p>}
       <div className="flex gap-4 overflow-x-auto pb-4">
-        {PIPELINE.map((status) => (
+        {VISIBLE_COLUMNS.map((status) => (
           <div key={status} className="w-64 shrink-0">
             <div className={`bg-white rounded-t-lg border-t-2 ${COL_ACCENT[status]} border-x border-[#E5E7EB] px-3 py-2 flex items-center justify-between`}>
               <span className="text-xs font-semibold">{status.replace(/_/g, " ")}</span>

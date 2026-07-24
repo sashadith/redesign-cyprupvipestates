@@ -5,20 +5,17 @@ import { PortableText } from "@portabletext/react";
 import { urlFor } from "@/sanity/sanity.client";
 import { localizedHref } from "@/lib/locale";
 import { SITE_URL } from "@/lib/seo";
+import { slugify } from "@/lib/slugify";
 import FaqAccordion from "./FaqAccordion";
 
 /* Cyprus Insights — article content rendering with the redesigned editorial
    typography. PortableText component map for textContent + renderers for the
-   other content blocks. Heading IDs power the sticky table of contents. */
-
-export const slugify = (s: string) =>
-  (s || "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .slice(0, 80);
+   other content blocks. Heading IDs power the sticky table of contents.
+   Anchor IDs use the shared, transliterating slugify (src/lib/slugify.ts) —
+   a former local copy here only stripped non-ASCII characters instead of
+   transliterating them, so Cyrillic headings collapsed to duplicate/empty
+   ids ("-" or "") and the TOC's active-state/click-to-scroll broke for
+   every RU article (2026-07-24 bug report). */
 
 const blockText = (value: any) =>
   (value?.children ?? []).map((c: any) => c?.text ?? "").join("").trim();

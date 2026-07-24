@@ -61,14 +61,14 @@ function CategoryGroup({ group }: { group: ActionCenterGroupVM }) {
   const hidden = group.items.length - items.length;
   return (
     <div>
-      <div className="px-5 py-3 flex items-center justify-between" style={{ background: "#BC9C67" }}>
+      <div className="px-5 py-2 flex items-center justify-between" style={{ background: "#BC9C67" }}>
         <span className="flex items-center gap-2.5 text-sm font-semibold uppercase tracking-wide" style={{ color: "var(--paper, #F5F1E8)" }}>
           <NavIcon k={CATEGORY_ICON[group.category]} size={17} />
           {CATEGORY_LABEL[group.category]}
         </span>
         <span
           className="rounded-full text-xs font-medium px-2.5 py-1 normal-case tracking-normal"
-          style={{ background: "#8E6B3D", color: "var(--paper, #F5F1E8)" }}
+          style={{ background: "#FFFFFF", color: "#000000" }}
         >
           {group.items.length}
         </span>
