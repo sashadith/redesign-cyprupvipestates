@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 
-// Collapsible wrapper around a server-rendered lost-leads table. State isn't
-// persisted (default-collapsed is enough per spec) — `defaultOpen` only
-// needs to react to filter changes, which the parent handles by keying this
-// component on the query string so it remounts (and re-picks defaultOpen)
-// whenever the search/filters change.
-export default function LostLeadsPanel({
-  count, defaultOpen, children,
+// Collapsible wrapper around a server-rendered secondary-status leads table
+// (Lost, Closed, ...). State isn't persisted (default-collapsed is enough
+// per spec) — `defaultOpen` only needs to react to filter changes, which the
+// parent handles by keying this component on the query string so it remounts
+// (and re-picks defaultOpen) whenever the search/filters change.
+export default function CollapsibleLeadsPanel({
+  label, count, defaultOpen, children,
 }: {
+  label: string;
   count: number;
   defaultOpen: boolean;
   children: React.ReactNode;
@@ -23,7 +24,7 @@ export default function LostLeadsPanel({
         className="w-full flex items-center justify-between px-4 py-2.5 text-sm font-medium text-[#374151] hover:bg-[#F8F9FA]"
         aria-expanded={open}
       >
-        <span>Lost leads ({count})</span>
+        <span>{label} ({count})</span>
         <span className={`text-[#9CA3AF] transition-transform ${open ? "rotate-180" : ""}`} aria-hidden>⌄</span>
       </button>
       {open && children}

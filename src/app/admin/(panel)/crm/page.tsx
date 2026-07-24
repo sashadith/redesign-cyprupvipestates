@@ -3,13 +3,14 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/app/admin/status-badge";
 import DeleteLeadButton from "./DeleteLeadButton";
-import LostLeadsPanel from "./LostLeadsPanel";
+import CollapsibleLeadsPanel from "./CollapsibleLeadsPanel";
 import {
   buildLeadWhere, orderForSort, leadQueryString,
   LEAD_STATUSES, LEAD_SOURCES, LEAD_LOCALES, LEAD_PAGE_SIZE, type LeadSearchParams,
 } from "./filters";
 
 const LOST_CAP = 200;
+const CLOSED_CAP = 200;
 
 export const dynamic = "force-dynamic";
 
@@ -142,21 +143,26 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
   const statusParam = val("status");
   const hasActiveFilter = !!(val("q") || val("status") || val("source") || val("lang") || val("assignee"));
 
-  // LOST leads live in their own collapsed section (never the main table),
-  // so the shared filters (q/source/lang/assignee) need to fan out into two
-  // status conditions instead of one. Whichever side the user's explicit
-  // status filter doesn't match is skipped entirely (query -> null -> []) —
-  // e.g. filtering status=LOST empties the active table on purpose (spec).
+  // LOST and CLOSED leads each live in their own collapsed section (never
+  // the main table), so the shared filters (q/source/lang/assignee) need to
+  // fan out into three status conditions instead of one. Whichever side the
+  // user's explicit status filter doesn't match is skipped entirely (query
+  // -> null -> []) — e.g. filtering status=LOST empties the active table
+  // and the Closed section on purpose (spec).
   const baseWhere = buildLeadWhere(searchParams);
   let activeWhere: Prisma.LeadWhereInput | null = null;
   let lostWhere: Prisma.LeadWhereInput | null = null;
+  let closedWhere: Prisma.LeadWhereInput | null = null;
   if (statusParam === "LOST") {
     lostWhere = baseWhere;
+  } else if (statusParam === "CLOSED") {
+    closedWhere = baseWhere;
   } else if (statusParam) {
-    activeWhere = baseWhere; // an explicit non-LOST status already excludes LOST
+    activeWhere = baseWhere; // an explicit other status already excludes LOST/CLOSED
   } else {
-    activeWhere = { ...baseWhere, status: { not: "LOST" } };
+    activeWhere = { ...baseWhere, status: { notIn: ["LOST", "CLOSED"] } };
     lostWhere = { ...baseWhere, status: "LOST" };
+    closedWhere = { ...baseWhere, status: "CLOSED" };
   }
 
   const leadInclude = {
@@ -173,7 +179,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
   // ORDER BY/LIMIT — when sorting by it, fetch every filtered active row and
   // sort/paginate in JS instead. Fine at this table's scale (low hundreds of
   // leads); revisit if that changes.
-  const [activeTotal, rawActiveLeads, lostTotal, rawLostLeads, users] = await Promise.all([
+  const [activeTotal, rawActiveLeads, lostTotal, rawLostLeads, closedTotal, rawClosedLeads, users] = await Promise.all([
     activeWhere ? prisma.lead.count({ where: activeWhere }) : Promise.resolve(0),
     !activeWhere
       ? Promise.resolve([])
@@ -182,6 +188,8 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
         : prisma.lead.findMany({ where: activeWhere, orderBy, skip: (pageNum - 1) * LEAD_PAGE_SIZE, take: LEAD_PAGE_SIZE, include: leadInclude }),
     lostWhere ? prisma.lead.count({ where: lostWhere }) : Promise.resolve(0),
     lostWhere ? prisma.lead.findMany({ where: lostWhere, orderBy, take: LOST_CAP, include: leadInclude }) : Promise.resolve([]),
+    closedWhere ? prisma.lead.count({ where: closedWhere }) : Promise.resolve(0),
+    closedWhere ? prisma.lead.findMany({ where: closedWhere, orderBy, take: CLOSED_CAP, include: leadInclude }) : Promise.resolve([]),
     prisma.user.findMany({ where: { isActive: true }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
   const pages = Math.max(1, Math.ceil(activeTotal / LEAD_PAGE_SIZE));
@@ -196,7 +204,8 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
     : withUrgency.map((x) => x.lead);
   const urgencyById = new Map(withUrgency.map((x) => [x.lead.id, x.urgency]));
   const lostDefaultOpen = hasActiveFilter && lostTotal > 0;
-  const activeEmptyText = lostTotal > 0 ? "No active leads match these filters." : "No leads match these filters.";
+  const closedDefaultOpen = hasActiveFilter && closedTotal > 0;
+  const activeEmptyText = lostTotal > 0 || closedTotal > 0 ? "No active leads match these filters." : "No leads match these filters.";
 
   return (
     <div>
@@ -246,7 +255,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
       )}
 
       {lostTotal > 0 && (
-        <LostLeadsPanel key={leadQueryString(searchParams)} count={lostTotal} defaultOpen={lostDefaultOpen}>
+        <CollapsibleLeadsPanel key={`lost-${leadQueryString(searchParams)}`} label="Lost leads" count={lostTotal} defaultOpen={lostDefaultOpen}>
           <table className="w-full text-sm border-t border-[#E5E7EB]">
             {TABLE_HEAD}
             <tbody className="divide-y divide-[#E5E7EB]">
@@ -260,7 +269,25 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
               Showing the first {LOST_CAP} of {lostTotal} lost leads.
             </p>
           )}
-        </LostLeadsPanel>
+        </CollapsibleLeadsPanel>
+      )}
+
+      {closedTotal > 0 && (
+        <CollapsibleLeadsPanel key={`closed-${leadQueryString(searchParams)}`} label="Closed leads" count={closedTotal} defaultOpen={closedDefaultOpen}>
+          <table className="w-full text-sm border-t border-[#E5E7EB]">
+            {TABLE_HEAD}
+            <tbody className="divide-y divide-[#E5E7EB]">
+              {rawClosedLeads.map((l) => (
+                <LeadRow key={l.id} lead={l} urgency={null} muted />
+              ))}
+            </tbody>
+          </table>
+          {closedTotal > CLOSED_CAP && (
+            <p className="px-4 py-2 text-xs text-[#9CA3AF] border-t border-[#E5E7EB]">
+              Showing the first {CLOSED_CAP} of {closedTotal} closed leads.
+            </p>
+          )}
+        </CollapsibleLeadsPanel>
       )}
     </div>
   );

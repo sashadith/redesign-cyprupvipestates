@@ -70,7 +70,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   if (!dbUser || !dbUser.isActive) redirect("/admin/login");
   const user = session.user as any;
   const trashCount = await prisma.lead.count({ where: { deletedAt: { not: null } } });
-  const activeLeadCount = await prisma.lead.count({ where: { deletedAt: null, status: { not: "LOST" } } });
+  const activeLeadCount = await prisma.lead.count({ where: { deletedAt: null, status: { notIn: ["LOST", "CLOSED"] } } });
   const actionCenterCount = (await getActionCenterItems()).length;
   const modules = buildModules(user?.role === "ADMIN", trashCount, activeLeadCount, actionCenterCount);
 
