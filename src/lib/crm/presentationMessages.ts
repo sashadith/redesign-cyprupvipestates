@@ -3,6 +3,7 @@
 // used to be duplicated between api/admin/presentations/route.ts and [id]/route.ts;
 // PRESENTATION_EMAIL_TEMPLATE is new, for the "Send by email" option added
 // alongside the existing "Share via WhatsApp"/"Copy link").
+import { buildEmailClosing } from "./compose/closing";
 
 export type Locale = "en" | "de" | "pl" | "ru";
 
@@ -28,21 +29,28 @@ export const WHATSAPP_UPDATED_MSG: Record<Locale, (url: string) => string> = {
 // "Send by email" option on the generated-presentation modal. Subject +
 // body, personalized with the lead's greeting name; body is prefilled into
 // ComposeEmailModal and stays editable before sending.
+//
+// Closing reuses buildEmailClosing (src/lib/crm/compose/closing.ts) — the
+// exact same deterministic valediction/name/role-line Compose uses, not a
+// second copy, so the two can never drift apart. The blank line before the
+// signature block itself still comes from sendCrmEmailAction's own
+// SIGNATURE_SPACER (appended after this body, same as Compose) — that part
+// needed no change here, only the missing closing line in the body text.
 export const PRESENTATION_EMAIL_TEMPLATE: Record<Locale, (name: string, url: string) => { subject: string; body: string }> = {
   en: (name, url) => ({
     subject: "Your personal property selection — Cyprus VIP Estates",
-    body: `Hello ${name},\n\nI have prepared your personal property selection. You can view it here:\n${url}\n\nLet me know if you have any questions.`,
+    body: `Hello ${name},\n\nI have prepared your personal property selection. You can view it here:\n${url}\n\nLet me know if you have any questions.\n\n${buildEmailClosing("en")}`,
   }),
   de: (name, url) => ({
     subject: "Ihre persönliche Immobilienauswahl — Cyprus VIP Estates",
-    body: `Hallo ${name},\n\nich habe Ihre persönliche Immobilienauswahl vorbereitet. Sie können sie hier ansehen:\n${url}\n\nBei Fragen stehe ich Ihnen gerne zur Verfügung.`,
+    body: `Hallo ${name},\n\nich habe Ihre persönliche Immobilienauswahl vorbereitet. Sie können sie hier ansehen:\n${url}\n\nBei Fragen stehe ich Ihnen gerne zur Verfügung.\n\n${buildEmailClosing("de")}`,
   }),
   pl: (name, url) => ({
     subject: "Państwa osobisty wybór nieruchomości — Cyprus VIP Estates",
-    body: `Dzień dobry ${name},\n\nprzygotowałem Państwa osobisty wybór nieruchomości. Można go zobaczyć tutaj:\n${url}\n\nW razie pytań jestem do dyspozycji.`,
+    body: `Dzień dobry ${name},\n\nprzygotowałem Państwa osobisty wybór nieruchomości. Można go zobaczyć tutaj:\n${url}\n\nW razie pytań jestem do dyspozycji.\n\n${buildEmailClosing("pl")}`,
   }),
   ru: (name, url) => ({
     subject: "Ваша персональная подборка объектов — Cyprus VIP Estates",
-    body: `Здравствуйте, ${name}.\n\nЯ подготовил для вас персональную подборку объектов. Вы можете посмотреть её здесь:\n${url}\n\nЕсли у вас появятся вопросы, буду рад помочь.`,
+    body: `Здравствуйте, ${name}.\n\nЯ подготовил для вас персональную подборку объектов. Вы можете посмотреть её здесь:\n${url}\n\nЕсли у вас появятся вопросы, буду рад помочь.\n\n${buildEmailClosing("ru")}`,
   }),
 };
