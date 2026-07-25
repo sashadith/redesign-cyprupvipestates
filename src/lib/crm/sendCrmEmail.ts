@@ -39,7 +39,19 @@ function buildTransport(row: SettingsRow) {
 // fromAddress, so a BCC there would just duplicate the same address).
 export async function sendUserEmail(
   userId: string,
-  opts: { to: string; bcc?: string; subject: string; html: string; text: string },
+  opts: {
+    to: string;
+    bcc?: string;
+    subject: string;
+    html: string;
+    text: string;
+    // Plain attachments (e.g. the booking .ics) — not the fancier
+    // multipart/alternative text/calendar;method=REQUEST mechanism some
+    // calendar invites use for auto-RSVP handling. This isn't a real
+    // meeting-invite/RSVP system, just a confirmation the recipient imports
+    // manually, so a normal attachment is the simpler, equally-compatible fit.
+    attachments?: { filename: string; content: string; contentType?: string }[];
+  },
 ): Promise<SettingsRow> {
   const row = await getUserEmailSettingsRow(userId);
   const transporter = buildTransport(row);
@@ -50,6 +62,7 @@ export async function sendUserEmail(
     subject: opts.subject,
     html: opts.html,
     text: opts.text,
+    ...(opts.attachments ? { attachments: opts.attachments } : {}),
   });
   return row;
 }

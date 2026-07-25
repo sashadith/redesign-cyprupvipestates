@@ -2,6 +2,7 @@ import Link from "next/link";
 import { StatusBadge } from "@/app/admin/status-badge";
 import { formatWaPhone } from "@/lib/crm/waFormat";
 import GenerateReplyButton from "./GenerateReplyButton";
+import BookingButton from "./BookingButton";
 
 // The Lead Cockpit's hero card (Phase 1 of 4, 2026-07-23; consolidated in the
 // correction batch, 2026-07-23) — a single glance-able summary that now
@@ -307,6 +308,7 @@ export default function CockpitCard({
           hasPhone={!!lead.phone}
           preferredChannel={lead.preferredChannel}
         />
+        <BookingButton leadId={lead.id} />
       </div>
 
       {/* Absorbed detail groups — was page.tsx's standalone "Lead details" <dl>.
