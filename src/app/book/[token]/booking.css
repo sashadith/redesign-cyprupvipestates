@@ -1,0 +1,87 @@
+/* Booking page (Phase 3) — same visual language as the Client Presentation
+   page (src/app/c/[token]/presentation.css): sea-deep/champagne dark
+   palette, Fraunces display + Mulish body. Bespoke, smaller markup — no
+   property showcase here, just a personal greeting and a slot picker. */
+
+.bk-page {
+  background: var(--sea-deep);
+  color: var(--ivory);
+  font-family: var(--font-body), sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(2rem, 6vw, 5rem) clamp(1.25rem, 5vw, 3rem);
+}
+
+.bk-logo { height: clamp(6rem, 14vw, 9rem); width: auto; margin: 0 auto 2rem; }
+
+.bk-hero { max-width: 40rem; text-align: center; margin-bottom: clamp(2rem, 5vw, 3.5rem); }
+.bk-hero__eyebrow {
+  font-family: var(--font-body), sans-serif; font-size: var(--text-caption); font-weight: 600;
+  letter-spacing: 0.18em; text-transform: uppercase; color: rgba(239, 233, 219, 0.5); margin: 0 0 0.75rem;
+}
+.bk-hero__title {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-size: var(--text-h2); font-weight: 400; margin: 0 0 0.75rem;
+}
+.bk-hero__intro { font-size: clamp(1.05rem, 2vw, 1.2rem); color: rgba(239, 233, 219, 0.75); margin: 0; }
+
+.bk-card {
+  width: 100%; max-width: 42rem;
+  background: var(--surface-raised, rgba(239,233,219,0.045));
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-ui);
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.bk-days { display: flex; flex-direction: column; gap: 1.25rem; }
+.bk-day__label {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-size: 1.05rem; color: var(--champagne); margin: 0 0 0.6rem;
+}
+.bk-day__slots { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+
+.bk-slot {
+  font-family: var(--font-body), sans-serif; font-size: 0.9rem; color: var(--ivory);
+  background: transparent; border: 1px solid rgba(239, 233, 219, 0.3);
+  border-radius: 999px; padding: 0.5rem 1.1rem; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+.bk-slot:hover { border-color: var(--champagne); }
+.bk-slot[aria-pressed="true"] {
+  background: var(--champagne); border-color: var(--champagne); color: var(--sea-deep); font-weight: 600;
+}
+.bk-slot:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.bk-selected { margin-top: 1.75rem; padding-top: 1.25rem; border-top: 1px solid var(--hairline); }
+.bk-selected__title { font-size: var(--text-caption); letter-spacing: 0.12em; text-transform: uppercase; color: rgba(239, 233, 219, 0.5); margin: 0 0 0.6rem; }
+.bk-selected__row { display: flex; justify-content: space-between; gap: 1rem; font-size: 0.92rem; padding: 0.35rem 0; }
+.bk-selected__row + .bk-selected__row { border-top: 1px solid rgba(239, 233, 219, 0.08); }
+.bk-selected__your { color: var(--ivory); font-weight: 600; }
+.bk-selected__cyprus { color: rgba(239, 233, 219, 0.55); }
+
+.bk-submit {
+  margin-top: 1.5rem; width: 100%; border: none; border-radius: 999px;
+  background: var(--champagne); color: var(--sea-deep); font-weight: 600; font-size: 1rem;
+  padding: 0.85rem 1.5rem; cursor: pointer; transition: opacity 0.2s;
+}
+.bk-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+.bk-hint { font-size: 0.82rem; color: rgba(239, 233, 219, 0.5); margin-top: 0.75rem; text-align: center; }
+.bk-error { font-size: 0.88rem; color: #E88; margin-top: 0.75rem; text-align: center; }
+
+/* ---------- terminal states: submitted / already-proposed / confirmed / gone ---------- */
+.bk-gone {
+  min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1rem; text-align: center; padding: 2rem;
+  background: var(--sea-deep); color: var(--ivory);
+  font-family: var(--font-body), sans-serif;
+}
+.bk-gone__logo { height: clamp(6rem, 14vw, 9rem); width: auto; }
+.bk-gone h1 { font-family: var(--font-display), var(--font-display-cyr), Georgia, serif; font-weight: 400; font-size: 1.5rem; margin: 0; }
+.bk-gone p { max-width: 28rem; color: rgba(239, 233, 219, 0.7); margin: 0; }
+.bk-gone__meta { color: var(--champagne); font-weight: 600; }
+.bk-gone__btn {
+  margin-top: 1rem; border: 1px solid var(--champagne); color: var(--champagne); text-decoration: none;
+  border-radius: 999px; padding: 0.6rem 1.5rem; font-size: 0.9rem;
+}

@@ -103,6 +103,21 @@ enum LeadInteractionType {
   STATUS_CHANGE
   PRESENTATION_EVENT
   SYSTEM
+  BOOKING_EVENT // Phase 3 (2026-07-25) — mirrors PRESENTATION_EVENT's pattern exactly (channel:"SYSTEM", metadata.legacyType distinguishes proposed/confirmed)
+}
+
+// Phase 3 (2026-07-25) — the booking page. The lead proposes times, Sascha
+// confirms one; never the reverse. See BookingRequest below.
+enum BookingRequestStatus {
+  PENDING // link created, lead hasn't proposed times yet
+  PROPOSED // lead has submitted 2-3 candidate times
+  CONFIRMED // Sascha has confirmed one
+  CANCELLED // manually cancelled/revoked
+}
+
+enum MeetingType {
+  ZOOM
+  PHONE
 }
 
 enum LeadInteractionDirection {
@@ -652,6 +667,7 @@ model Lead {
   projectInterestId    String?
   projectInterest      Project?              @relation(fields: [projectInterestId], references: [id])
   presentations        ClientPresentation[]
+  bookingRequests      BookingRequest[]
   pageSource           String?
   utmSource            String?
   utmMedium            String?
@@ -1193,4 +1209,38 @@ model PresentationView {
   @@index([presentationId])
   @@index([createdAt])
   @@map("presentation_views")
+}
+
+// Phase 3 (2026-07-25) — the lead proposes 2-3 candidate times on a personal
+// token page (/book/[token]), Sascha confirms exactly one from the admin.
+// Never the reverse: nothing here ever writes to an external calendar, and no
+// availability/free-busy logic exists — see docs discussion for why.
+model BookingRequest {
+  id          String               @id @default(uuid())
+  leadId      String
+  token       String               @unique // same random-token pattern as ClientPresentation, see src/lib/crm/presentationToken.ts
+  status      BookingRequestStatus @default(PENDING)
+  meetingType MeetingType          @default(ZOOM) // set by Sascha at creation, not chosen by the lead — one less decision for them
+  // The lead's 2-3 picks: [{ utc: ISOString }, ...] — absolute instants, so
+  // displaying them in Cyprus time and the lead's own time is a plain,
+  // well-established conversion, never custom calendar-math.
+  proposedSlots Json?
+  // IANA tz name (e.g. "Europe/Berlin"), detected client-side when the lead
+  // submits — display only. Never used to compute availability.
+  leadTimezone     String?
+  confirmedSlotUtc DateTime? // the one Sascha picked, if any
+  // Set only for ZOOM meetings once Sascha has manually sent the meeting
+  // link (there's no static room — see the 2026-07-25 decision). Drives a
+  // persistent "send the Zoom link" reminder on the Lead Cockpit until this
+  // is set, since a confirmed-but-linkless meeting must never go unnoticed.
+  zoomLinkSentAt DateTime?
+  expiresAt      DateTime? // default now + 30 days, same convention as ClientPresentation
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  confirmedAt    DateTime?
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@map("booking_requests")
 }

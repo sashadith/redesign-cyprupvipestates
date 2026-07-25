@@ -13,6 +13,7 @@ import ExistingPresentations, { type PresentationRow } from "./ExistingPresentat
 import DeleteLeadButton from "../DeleteLeadButton";
 import CockpitCard, { type LastContact, type PresentationSummary } from "./CockpitCard";
 import UnifiedTimeline, { type TimelineRow } from "./UnifiedTimeline";
+import BookingPanel, { type BookingRow } from "./BookingPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -87,7 +88,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
     : null;
 
   // Client Presentation system: matching-panel data + existing presentations for this lead.
-  const [session, locations, rawPresentations] = await Promise.all([
+  const [session, locations, rawPresentations, bookingRequests] = await Promise.all([
     auth(),
     listPresentationLocations(),
     prisma.clientPresentation.findMany({
@@ -98,7 +99,17 @@ export default async function LeadDetail({ params }: { params: { id: string } })
         items: { select: { developmentId: true, isFavorited: true, development: { select: { publicName: true, override: { select: { alias: true } } } } } },
       },
     }),
+    prisma.bookingRequest.findMany({ where: { leadId: id }, orderBy: { createdAt: "desc" } }),
   ]);
+  const bookingRows: BookingRow[] = bookingRequests.map((b) => ({
+    id: b.id,
+    status: b.status,
+    meetingType: b.meetingType,
+    proposedSlots: b.proposedSlots as { utc: string }[] | null,
+    leadTimezone: b.leadTimezone,
+    confirmedSlotUtc: b.confirmedSlotUtc,
+    zoomLinkSentAt: b.zoomLinkSentAt,
+  }));
   const presentationRows: PresentationRow[] = rawPresentations.map((p) => {
     const uniqueDays = new Set(p.views.map((v) => v.createdAt.toISOString().slice(0, 10))).size;
     const perDev = new Map<string, { views: number; durationSec: number }>();
@@ -249,6 +260,8 @@ export default async function LeadDetail({ params }: { params: { id: string } })
           setStatusAction={setStatus}
         />
       </div>
+
+      <BookingPanel bookings={bookingRows} />
 
       {duplicates.length > 0 && (
         <div className="bg-[#FFF7ED] border border-[#FED7AA] rounded-lg p-4 mb-6">

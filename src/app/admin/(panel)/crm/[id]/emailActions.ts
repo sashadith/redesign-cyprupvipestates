@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { getSignatureHtml, stripHtmlToText } from "@/lib/emailSignature";
 import { sendUserEmail, getUserEmailSettingsRow } from "@/lib/crm/sendCrmEmail";
 import { applyFollowUpCadence } from "@/lib/crm/followUpCadence";
+import { bodyToHtml } from "@/lib/crm/emailBodyHtml";
 
 // Local, self-contained (mirrors src/app/admin/actions.ts's requireSession —
 // not imported from there since exporting it from that "use server" file
@@ -18,22 +19,6 @@ async function requireSession() {
   if (!user || !user.isActive) throw new Error("Unauthorized");
   return session;
 }
-
-// Inline font styles (not a <style> block or CSS class) — mail clients strip
-// or ignore external/head-level CSS unreliably, inline is the only style that
-// reliably survives. Matches the signature block's own font-size/family
-// exactly (2026-07-25 fix — body was rendering at the client's unstyled
-// default, ~12px, next to the signature's 14px) so both read as one piece.
-// Everything (paragraphs and the "* " pseudo-bullet lines alike) lives inside
-// this single div — there's no separate <li> markup to lose the size — so
-// setting it once here covers all body content.
-const BODY_FONT_STYLE = "font-family:Helvetica,Arial,sans-serif;font-size:14px;line-height:1.5;";
-
-const bodyToHtml = (body: string) =>
-  `<div style="${BODY_FONT_STYLE}white-space:pre-wrap;">${body
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")}</div>`;
 
 // Compose-and-send a real email to a lead, via the sending user's own SMTP
 // connection (src/lib/crm/sendCrmEmail.ts). Appends that user's HTML

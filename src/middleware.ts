@@ -152,6 +152,12 @@ export const config = {
   // /c/<token> to /en/c/<token>, which doesn't exist → 404 on every
   // presentation link.
   //
+  // "book/" = the booking page (src/app/book/[token], Phase 3, 2026-07-25),
+  // outside the [lang] tree for the exact same reason as "c/" above —
+  // confirmed live during staging verification: without this exclusion every
+  // /book/<token> request was rewritten to /en/book/<token> (see
+  // x-middleware-rewrite response header) and 404'd.
+  //
   // The preview-* exclusions must be the exact top-level route names, NOT a
   // bare "preview" prefix: src/app/[lang]/preview-project/[slug] IS under the
   // [lang] tree and NEEDS the i18n middleware to inject the locale segment.
@@ -182,6 +188,6 @@ export const config = {
   // than this one file; not fixed wholesale here to avoid touching this
   // matcher's blast radius beyond what's actually needed right now.
   matcher: [
-    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|sandbox|og|preview-assets|preview-case-studies|preview-faq|preview-home|preview-insights|preview-partners|preview-projects|style|c/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
+    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|sandbox|og|preview-assets|preview-case-studies|preview-faq|preview-home|preview-insights|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
   ],
 };
