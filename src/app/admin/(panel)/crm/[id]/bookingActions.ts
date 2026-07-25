@@ -145,9 +145,10 @@ export async function confirmBookingSlotAction(bookingRequestId: string, confirm
   const html = `${bodyToHtml(fullBody)}${SIGNATURE_SPACER}${signatureHtml}`;
   const text = stripHtmlToText(html);
 
+  let messageId: string;
   try {
     const settingsRow = await getUserEmailSettingsRow(userId);
-    await sendUserEmail(userId, {
+    const sent = await sendUserEmail(userId, {
       to: booking.lead.email,
       bcc: settingsRow.fromAddress ?? undefined,
       subject,
@@ -155,6 +156,7 @@ export async function confirmBookingSlotAction(bookingRequestId: string, confirm
       text,
       attachments: [{ filename: "appointment.ics", content: ics, contentType: "text/calendar; charset=utf-8" }],
     });
+    messageId = sent.messageId;
   } catch (e: any) {
     return { error: e?.message || "Send failed." };
   }
@@ -176,6 +178,9 @@ export async function confirmBookingSlotAction(bookingRequestId: string, confirm
       body: confirmedContent,
       createdByUserId: userId,
       createdByName: session.user?.name ?? "admin",
+      // Phase 4 (email inbound) — lets a lead's reply thread back to this
+      // row via In-Reply-To/References.
+      messageId,
       metadata: { legacyType: "BOOKING_CONFIRMED" },
     },
   });

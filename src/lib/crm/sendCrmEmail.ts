@@ -52,10 +52,16 @@ export async function sendUserEmail(
     // manually, so a normal attachment is the simpler, equally-compatible fit.
     attachments?: { filename: string; content: string; contentType?: string }[];
   },
-): Promise<SettingsRow> {
+): Promise<SettingsRow & { messageId: string }> {
   const row = await getUserEmailSettingsRow(userId);
   const transporter = buildTransport(row);
-  await transporter.sendMail({
+  // messageId (RFC 5322 Message-ID, angle brackets included) is what Phase 4
+  // (email inbound) threads a lead's reply back to this send via
+  // In-Reply-To/References — see LeadInteraction.messageId. Nodemailer
+  // generates one automatically if we don't set one ourselves; either way,
+  // the caller needs to persist whatever it actually sent as, so we return it
+  // rather than discarding it like this function used to.
+  const info = await transporter.sendMail({
     from: row.fromName ? `"${row.fromName}" <${row.fromAddress}>` : row.fromAddress!,
     to: opts.to,
     ...(opts.bcc ? { bcc: opts.bcc } : {}),
@@ -64,5 +70,5 @@ export async function sendUserEmail(
     text: opts.text,
     ...(opts.attachments ? { attachments: opts.attachments } : {}),
   });
-  return row;
+  return { ...row, messageId: info.messageId };
 }
