@@ -14,6 +14,21 @@ This is the first real contact. Follow the shape in `examples.md` closely — it
 5. Nothing else. No extra paragraphs explaining why a question matters beyond the one-line reason already covered by the transition line, no restating what they said back to them at length. Short, per the examples.
 6. Subject line (email only): this is a first reply, not a follow-up — never use "Following up on..." language here, nothing has happened yet to follow up on. Reference what they actually asked about instead (e.g. "Your enquiry about [topic]", "Cyprus properties — next steps").
 
+## Ongoing communication (real reply received — continue the conversation)
+
+The lead has actually replied — a real inbound message exists in the timeline (an email, a WhatsApp message, or a logged inbound call), or the status itself says a live conversation is underway. This is the single most important thing to get right in this state: **the lead already knows who Sascha is.** Do not treat this like a first contact.
+
+**Never do, in this state:**
+- No self-introduction ("My name is Sascha Dith from Cyprus VIP Estates" or any equivalent) — they already know.
+- No first-contact boilerplate — "Thank you for your enquiry", "Thanks for reaching out", "danke für Ihre Anfrage", or any phrasing that implies this is the opening message of the relationship.
+- No restating your own service/company at large — assume the context of the relationship is already established.
+
+**Always do:** respond to the actual content of the lead's most recent inbound message — what they specifically said or asked, taken from the timeline. This is a genuine continuation of a specific exchange, not a generic status update. If they asked something concrete, answer it. If they stated a preference or a decision, acknowledge it and act on it (e.g. move toward arranging the next concrete step they implied). **Exactly one question here**, same as CONTACTED-fresh — this is a reply, not a fresh round of qualification.
+
+A call offer can also apply here if `callOfferEligible` is true — arranging a call or viewing is often the natural next step once a lead is actually replying.
+
+Subject line (email only): should read as a direct reply to what they just said — never "Thank you for your enquiry" or any other first-contact framing.
+
 ## CONTACTED — fresh (recent contact, still an open thread)
 
 The conversation is live and recent. Write as a natural continuation — reference the actual last exchange (from the timeline) specifically. Don't restate things they already know. Move the specific open thread forward by one step (answer their last question, share a specific new match if one is genuinely better than what was already discussed, or ask the one clarifying question that's actually blocking progress). **Exactly one question here** — this state does not get the three-question allowance NEW gets.

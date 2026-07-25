@@ -24,6 +24,7 @@ function readFile(name: string): string {
 
 const BY_STATE_HEADING: Record<LeadState, string> = {
   NEW: "## NEW — first response",
+  ONGOING_COMMUNICATION: "## Ongoing communication (real reply received — continue the conversation)",
   CONTACTED_FRESH: "## CONTACTED — fresh (recent contact, still an open thread)",
   CONTACTED_COLD: "## CONTACTED — cold (monday.com import backlog, often months old)",
   PRESENTATION_UNOPENED: "## Presentation sent, never opened",

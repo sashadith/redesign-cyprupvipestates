@@ -211,11 +211,22 @@ export async function generateReplyDraft(leadId: string, channel: ComposeChannel
     : null;
 
   const lastDirected = lead.interactions.find((i) => i.direction != null);
+  // Batch B (2026-07-25) — the "real reply received" trigger. Deliberately
+  // NOT the looser `direction === "INBOUND"` check: the automatic SYSTEM row
+  // logged on initial lead intake also has direction INBOUND set (same
+  // gotcha as the Action Center's noFollowUp rule), which would make every
+  // single lead look like it already replied. EMAIL_IN/WHATSAPP_IN are
+  // inherently inbound by type; CALL needs the direction check since it can
+  // be either way.
+  const hasRealInboundMessage = lead.interactions.some(
+    (i) => i.type === "EMAIL_IN" || i.type === "WHATSAPP_IN" || (i.type === "CALL" && i.direction === "INBOUND"),
+  );
   const state = determineLeadState({
     status: lead.status,
     createdAt: lead.createdAt,
     lastDirectedInteractionAt: lastDirected?.occurredAt ?? null,
     presentation,
+    hasRealInboundMessage,
   });
 
   const language = lead.languagePreference ?? "en";
@@ -245,7 +256,7 @@ export async function generateReplyDraft(leadId: string, channel: ComposeChannel
   // a prose-only "only in NEW/CONTACTED-fresh" rule in call-offer.md isn't
   // reliably self-enforced (caught 2026-07-24: a PRESENTATION_UNOPENED draft
   // included a call offer). The state gate is now a hard precondition here.
-  const callOfferStateGate = state === "NEW" || state === "CONTACTED_FRESH";
+  const callOfferStateGate = state === "NEW" || state === "CONTACTED_FRESH" || state === "ONGOING_COMMUNICATION";
   const callOfferEligible =
     callOfferStateGate &&
     (lead.propertyTypeInterest.length > 0 ||
