@@ -209,6 +209,9 @@ After every production deploy, check:
 - Homepage (`/`) — 200
 - One project detail page (`/projects/<slug>`) — 200
 - One `/c/<token>` client-presentation link — 200
+- One `/book/<token>` booking link — 200 (see docs/BOOKING-PAGE.md; sits
+  outside `[lang]` same as `/c/<token>`, so it needs the same middleware
+  matcher exclusion — missing it silently 404s every booking link)
 - `/sitemap.xml` — 200
 - Lead form (`/api/leads`) — a request with valid required fields returns
   `{"ok":true,"created":true}`; a request missing them returns `{"ok":false}`
