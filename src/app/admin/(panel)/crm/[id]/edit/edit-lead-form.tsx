@@ -1,5 +1,6 @@
 "use client";
 import { useFormState, useFormStatus } from "react-dom";
+import { COUNTRIES } from "@/lib/countries";
 
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
 const TIMELINES = ["", "IMMEDIATE", "THREE_MONTHS", "SIX_MONTHS", "ONE_YEAR", "JUST_LOOKING"];
@@ -31,6 +32,13 @@ export default function EditLeadForm({ action, lead }: { action: any; lead: any 
           <div><label className="block text-sm mb-1">Email</label><input name="email" type="email" defaultValue={lead.email ?? ""} className={input} /></div>
           <div><label className="block text-sm mb-1">Phone</label><input name="phone" defaultValue={lead.phone ?? ""} className={input} /></div>
           <div><label className="block text-sm mb-1">Nationality</label><input name="nationality" defaultValue={lead.nationality ?? ""} className={input} /></div>
+          <div>
+            <label className="block text-sm mb-1">Country of residence</label>
+            <select name="countryOfResidence" className={input} defaultValue={lead.countryOfResidence ?? ""}>
+              <option value="">—</option>
+              {COUNTRIES.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
+            </select>
+          </div>
           <div><label className="block text-sm mb-1">Language</label>
             <select name="languagePreference" className={input} defaultValue={lead.languagePreference ?? ""}><option value="">—</option>{["en", "de", "pl", "ru"].map((l) => <option key={l} value={l}>{l.toUpperCase()}</option>)}</select>
           </div>

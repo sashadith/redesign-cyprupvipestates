@@ -39,10 +39,25 @@ function timeLabel(date: Date, timeZone: string, locale: string): string {
   return new Intl.DateTimeFormat(locale, { timeZone, hour: "2-digit", minute: "2-digit", hour12: false }).format(date);
 }
 
+// Golden-cloud background atmosphere — same recipe used site-wide (see
+// preview-project/project.css's .pp-atmos, header-footer.css's .pf, etc.):
+// 3 soft radial-gradient discs drifting via the already-imported
+// cloudDriftA/B keyframes (preview-home/tokens.css). Reused here, not
+// rebuilt, per spec.
+function CloudAtmosphere() {
+  return (
+    <div className="bk-atmos" aria-hidden="true">
+      <span />
+      <span />
+      <span />
+    </div>
+  );
+}
+
 export default async function BookingPage({ params }: { params: { token: string } }) {
   const booking = await prisma.bookingRequest.findUnique({
     where: { token: params.token },
-    include: { lead: { select: { firstName: true, languagePreference: true } } },
+    include: { lead: { select: { firstName: true, lastName: true, languagePreference: true, salutation: true } } },
   });
 
   const locale = asBLocale(booking?.lead.languagePreference);
@@ -54,11 +69,20 @@ export default async function BookingPage({ params }: { params: { token: string 
   }
 
   const name = booking.lead.firstName;
+  // Formal DE/PL address ("Herr/Frau [Nachname]", "Panie/Pani [Nachname]")
+  // when Salutation is set — EN/RU and UNKNOWN always get the informal,
+  // first-name greeting.
+  const salutation = booking.lead.salutation;
+  const greeting =
+    c.formalGreeting && booking.lead.lastName && (salutation === "MR" || salutation === "MS")
+      ? c.formalGreeting(salutation, booking.lead.lastName)
+      : { prefix: c.titlePrefix, name };
 
   if (booking.status === "CONFIRMED" && booking.confirmedSlotUtc) {
     const dt = formatInZone(booking.confirmedSlotUtc, booking.leadTimezone || CYPRUS_TZ, localeToIntl(locale));
     return (
       <main className="bk-page">
+        <CloudAtmosphere />
         <img src="/uploads/images/862e62ebddfc232ff9838efb63eb28685b515eb4-400x208.png" alt="Cyprus VIP Estates" className="bk-logo" />
         <div className="bk-hero">
           <p className="bk-hero__eyebrow">{c.eyebrow}</p>
@@ -75,6 +99,7 @@ export default async function BookingPage({ params }: { params: { token: string 
   if (booking.status === "PROPOSED") {
     return (
       <main className="bk-page">
+        <CloudAtmosphere />
         <img src="/uploads/images/862e62ebddfc232ff9838efb63eb28685b515eb4-400x208.png" alt="Cyprus VIP Estates" className="bk-logo" />
         <div className="bk-hero">
           <p className="bk-hero__eyebrow">{c.eyebrow}</p>
@@ -97,10 +122,11 @@ export default async function BookingPage({ params }: { params: { token: string 
 
   return (
     <main className="bk-page">
+      <CloudAtmosphere />
       <img src="/uploads/images/862e62ebddfc232ff9838efb63eb28685b515eb4-400x208.png" alt="Cyprus VIP Estates" className="bk-logo" />
       <div className="bk-hero">
         <p className="bk-hero__eyebrow">{c.eyebrow}</p>
-        <h1 className="bk-hero__title">{c.title(name)}</h1>
+        <h1 className="bk-hero__title">{greeting.prefix}<span className="it">{greeting.name}</span>{c.titleSuffix}</h1>
         <p className="bk-hero__intro">{c.intro}</p>
       </div>
       <SlotPicker token={params.token} groups={Array.from(groups.values())} locale={locale} />

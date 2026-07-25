@@ -4,6 +4,7 @@
    property showcase here, just a personal greeting and a slot picker. */
 
 .bk-page {
+  position: relative;
   background: var(--sea-deep);
   color: var(--ivory);
   font-family: var(--font-body), sans-serif;
@@ -14,6 +15,19 @@
   padding: clamp(2rem, 6vw, 5rem) clamp(1.25rem, 5vw, 3rem);
 }
 
+/* Golden-cloud atmosphere (Batch A, 2026-07-25) — same recipe as
+   preview-project/project.css's .pp-atmos: 3 soft radial-gradient discs,
+   fixed behind ALL content (z-index -1, never clipping a section), drifting
+   via the already-imported cloudDriftA/B keyframes. Deliberately subtle
+   (low opacity gold) so it never competes with slot-picker legibility. */
+.bk-atmos { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.bk-atmos span { position: absolute; display: block; border-radius: 50%; aspect-ratio: 1;
+  background: radial-gradient(circle, rgba(194,154,94,0.14), rgba(194,154,94,0) 66%); will-change: transform; }
+.bk-atmos span:nth-child(1) { width: min(60vw, 700px); top: -14%; left: -12%; animation: cloudDriftA 26s ease-in-out infinite alternate; }
+.bk-atmos span:nth-child(2) { width: min(50vw, 580px); top: 38%; right: -14%; opacity: 0.8; animation: cloudDriftB 32s ease-in-out infinite alternate; }
+.bk-atmos span:nth-child(3) { width: min(52vw, 600px); bottom: -16%; left: 20%; opacity: 0.85; animation: cloudDriftA 29s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) { .bk-atmos span { animation: none; } }
+
 .bk-logo { height: clamp(6rem, 14vw, 9rem); width: auto; margin: 0 auto 2rem; }
 
 .bk-hero { max-width: 40rem; text-align: center; margin-bottom: clamp(2rem, 5vw, 3.5rem); }
@@ -23,7 +37,10 @@
 }
 .bk-hero__title {
   font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
-  font-size: var(--text-h2); font-weight: 400; margin: 0 0 0.75rem;
+  /* One step smaller than the previous --text-h2 (2026-07-25 tuning — the
+     greeting line read as oversized/H1-like at that size for a single-line
+     phrase). */
+  font-size: var(--text-h3); font-weight: 400; margin: 0 0 0.75rem;
 }
 .bk-hero__intro { font-size: clamp(1.05rem, 2vw, 1.2rem); color: rgba(239, 233, 219, 0.75); margin: 0; }
 

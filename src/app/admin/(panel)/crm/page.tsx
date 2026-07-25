@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/app/admin/status-badge";
 import DeleteLeadButton from "./DeleteLeadButton";
 import CollapsibleLeadsPanel from "./CollapsibleLeadsPanel";
+import LeadFilterBar from "./LeadFilterBar";
+import { COUNTRY_NAME_BY_CODE, countryCodeToFlagEmoji } from "@/lib/countries";
 import {
   buildLeadWhere, orderForSort, leadQueryString,
   LEAD_STATUSES, LEAD_SOURCES, LEAD_LOCALES, LEAD_PAGE_SIZE, type LeadSearchParams,
@@ -13,8 +15,6 @@ const LOST_CAP = 200;
 const CLOSED_CAP = 200;
 
 export const dynamic = "force-dynamic";
-
-const sel = "rounded-md border border-[#E5E7EB] px-2 py-1.5 text-sm bg-white";
 
 // "Contact" = an actual outreach/reply, not internal notes or system-generated
 // rows (status changes, presentation-view tracking). Presentation delivery by
@@ -80,7 +80,7 @@ function computeUrgency(
 
 type LeadRowData = {
   id: string; firstName: string; lastName: string; email: string | null; phone: string | null;
-  languagePreference: string | null; status: string; createdAt: Date;
+  languagePreference: string | null; countryOfResidence: string | null; status: string; createdAt: Date;
   assignedTo: { name: string } | null;
   interactions: { occurredAt: Date; type: string }[];
 };
@@ -112,6 +112,9 @@ function LeadRow({ lead: l, urgency, muted }: { lead: LeadRowData; urgency: { ba
         )}
       </td>
       <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{l.languagePreference?.toUpperCase() ?? "—"}</td>
+      <td className="px-4 py-2.5 text-center text-base" title={l.countryOfResidence ? COUNTRY_NAME_BY_CODE[l.countryOfResidence] ?? l.countryOfResidence : undefined}>
+        {l.countryOfResidence ? countryCodeToFlagEmoji(l.countryOfResidence) : ""}
+      </td>
       <td className="px-4 py-2.5"><StatusBadge status={l.status} /></td>
       <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{l.assignedTo?.name ?? "—"}</td>
       <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{new Date(l.createdAt).toLocaleDateString("en-GB")}</td>
@@ -127,6 +130,7 @@ const TABLE_HEAD = (
       <th className="text-left font-medium px-4 py-2.5">Contact</th>
       <th className="text-left font-medium px-4 py-2.5">Last contact</th>
       <th className="text-left font-medium px-4 py-2.5">Lang</th>
+      <th className="text-left font-medium px-4 py-2.5">Country</th>
       <th className="text-left font-medium px-4 py-2.5">Status</th>
       <th className="text-left font-medium px-4 py-2.5">Assigned</th>
       <th className="text-left font-medium px-4 py-2.5">Received</th>
@@ -218,24 +222,14 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
         </div>
       </div>
 
-      {/* Filters (GET form) */}
-      <form method="get" className="flex flex-wrap items-end gap-2 mb-4 bg-white border border-[#E5E7EB] rounded-lg p-3">
-        <input name="q" defaultValue={val("q")} placeholder="Search name / email / phone" className={`${sel} min-w-[220px]`} />
-        <select name="status" defaultValue={val("status")} className={sel}><option value="">All statuses</option>{LEAD_STATUSES.map((s) => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}</select>
-        <select name="source" defaultValue={val("source")} className={sel}><option value="">All sources</option>{LEAD_SOURCES.map((s) => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}</select>
-        <select name="lang" defaultValue={val("lang")} className={sel}><option value="">All langs</option>{LEAD_LOCALES.map((l) => <option key={l} value={l}>{l.toUpperCase()}</option>)}</select>
-        <select name="assignee" defaultValue={val("assignee")} className={sel}><option value="">Any assignee</option><option value="unassigned">Unassigned</option>{users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select>
-        <select name="sort" defaultValue={val("sort")} className={sel}><option value="">Newest</option><option value="oldest">Oldest</option><option value="updated">Recently updated</option><option value="name">Name A–Z</option><option value="urgency">Urgency</option></select>
-        <button className="rounded-md bg-[#1B4B43] text-white text-sm px-4 py-1.5 hover:bg-[#142E2D]">Apply</button>
-        <Link href="/admin/crm" className="text-sm text-[#6B7280] hover:underline px-2 py-1.5">Reset</Link>
-      </form>
+      <LeadFilterBar statuses={LEAD_STATUSES} sources={LEAD_SOURCES} locales={LEAD_LOCALES} users={users} />
 
       <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-hidden">
         <table className="w-full text-sm">
           {TABLE_HEAD}
           <tbody className="divide-y divide-[#E5E7EB]">
             {leads.length === 0 ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-[#6B7280]">{activeEmptyText}</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-[#6B7280]">{activeEmptyText}</td></tr>
             ) : leads.map((l) => (
               <LeadRow key={l.id} lead={l} urgency={urgencyById.get(l.id)!} />
             ))}

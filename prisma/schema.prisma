@@ -676,11 +676,9 @@ model Lead {
   // Free-text NATIONALITY (e.g. "Germany") — distinct from countryOfResidence
   // below, which is where the lead actually lives, not where they're from.
   nationality          String?
-  // ISO 3166-1 alpha-2 country of RESIDENCE (Batch A, 2026-07-25). No UI
-  // reads/writes this yet — the flag-column feature is still pending its own
-  // review — but the column already exists on the shared DB (added by the
-  // same migration that made email optional), so the field must be declared
-  // here for schema/DB parity.
+  // ISO 3166-1 alpha-2 country of RESIDENCE (Batch A, 2026-07-25) — drives the
+  // flag column in the leads list. Deliberately separate from the free-text
+  // `nationality` field above (nationality != residence).
   countryOfResidence   String?
   languagePreference   Locale?
   budgetMin            Int?

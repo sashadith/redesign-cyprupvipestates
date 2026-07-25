@@ -7,7 +7,17 @@ export const asBLocale = (v: string | null | undefined): BLocale => (B_LOCALES.i
 
 export const COPY: Record<BLocale, {
   eyebrow: string;
-  title: (name: string) => string;
+  // Split around the name (rather than a single `title(name)` string) so the
+  // name/formal-address segment can be wrapped in its own gold-shimmer span
+  // (Batch A, 2026-07-25 — reuses the Client Presentation page's ".it" style,
+  // not a new component). `titleSuffix` is shared by the informal and the
+  // formal (DE/PL) address forms below — only the greeting + name differs.
+  titlePrefix: string;
+  titleSuffix: string;
+  // DE/PL only: formal address ("Herr/Frau [Nachname]", "Panie/Pani
+  // [Nachname]") when the lead's Salutation is set to MR/MS. EN/RU never use
+  // this — informal titlePrefix + first name always, regardless of salutation.
+  formalGreeting?: (salutation: "MR" | "MS", lastName: string) => { prefix: string; name: string };
   intro: string;
   yourTime: string;
   cyprusTime: string;
@@ -31,8 +41,9 @@ export const COPY: Record<BLocale, {
   contactUs: string;
 }> = {
   en: {
-    eyebrow: "Cyprus VIP Estates",
-    title: (name) => `Hello ${name}, let's find a time`,
+    eyebrow: "Schedule a meeting",
+    titlePrefix: "Hello ",
+    titleSuffix: ", let's find a time",
     intro: "Pick 2-3 times that work for you and I'll confirm one shortly.",
     yourTime: "Your time",
     cyprusTime: "Cyprus time",
@@ -56,8 +67,10 @@ export const COPY: Record<BLocale, {
     contactUs: "Contact us",
   },
   de: {
-    eyebrow: "Cyprus VIP Estates",
-    title: (name) => `Hallo ${name}, lassen Sie uns einen Termin finden`,
+    eyebrow: "Terminvereinbarung",
+    titlePrefix: "Hallo ",
+    titleSuffix: ", lassen Sie uns einen Termin finden",
+    formalGreeting: (salutation, lastName) => ({ prefix: "Hallo ", name: `${salutation === "MR" ? "Herr" : "Frau"} ${lastName}` }),
     intro: "Wählen Sie 2-3 Zeiten, die Ihnen passen — ich bestätige in Kürze eine davon.",
     yourTime: "Ihre Zeit",
     cyprusTime: "Zypern-Zeit",
@@ -81,8 +94,12 @@ export const COPY: Record<BLocale, {
     contactUs: "Kontakt aufnehmen",
   },
   pl: {
-    eyebrow: "Cyprus VIP Estates",
-    title: (name) => `Dzień dobry ${name}, znajdźmy dogodny termin`,
+    eyebrow: "Umów spotkanie",
+    titlePrefix: "Dzień dobry ",
+    titleSuffix: ", znajdźmy dogodny termin",
+    // Formal address adds the comma the informal form doesn't have ("Dzień
+    // dobry, Panie ..." vs "Dzień dobry {imię}, ...") — per the exact wording specified.
+    formalGreeting: (salutation, lastName) => ({ prefix: "Dzień dobry, ", name: `${salutation === "MR" ? "Panie" : "Pani"} ${lastName}` }),
     intro: "Proszę wybrać 2-3 godziny, które Państwu odpowiadają — wkrótce potwierdzę jedną z nich.",
     yourTime: "Państwa czas",
     cyprusTime: "Czas cypryjski",
@@ -106,8 +123,9 @@ export const COPY: Record<BLocale, {
     contactUs: "Skontaktuj się z nami",
   },
   ru: {
-    eyebrow: "Cyprus VIP Estates",
-    title: (name) => `Здравствуйте, ${name}, давайте подберём время`,
+    eyebrow: "Запись на встречу",
+    titlePrefix: "Здравствуйте, ",
+    titleSuffix: ", давайте подберём время",
     intro: "Выберите 2-3 удобных для вас времени — я скоро подтвержу одно из них.",
     yourTime: "Ваше время",
     cyprusTime: "Время Кипра",

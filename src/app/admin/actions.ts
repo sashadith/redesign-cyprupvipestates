@@ -902,6 +902,7 @@ export async function updateLead(id: string, _prev: any, formData: FormData): Pr
       email: email || null,
       phone: phone || null,
       nationality: String(formData.get("nationality") ?? "").trim() || null,
+      countryOfResidence: String(formData.get("countryOfResidence") ?? "").trim() || null,
       languagePreference: oneOf("languagePreference", LOCALES) as any,
       salutation: (oneOf("salutation", LEAD_SALUTATIONS) as any) ?? "UNKNOWN",
       budgetMin: num("budgetMin"),
