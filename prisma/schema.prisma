@@ -607,6 +607,17 @@ model UserEmailSettings {
   imapPort        Int?
   imapUser        String?
   imapPasswordEnc String?
+  // Phase 4 (2026-07-25, email inbound) — the UID-based "what have we
+  // already processed" cursor. We can't rely on the \Seen flag (the mailbox
+  // must stay untouched — see src/lib/emailInbound/imapClient.ts), so we
+  // track the last IMAP UID processed and only fetch strictly-higher UIDs
+  // next poll. imapUidValidity must be checked alongside it: if the server
+  // ever changes UIDVALIDITY, every existing UID's meaning is reset and
+  // imapLastUid must be rebuilt from scratch (treated as if never polled)
+  // or messages get skipped or reprocessed. BigInt because IMAP UIDs are
+  // unsigned 32-bit (up to ~4.29 billion) — a signed Int32 could overflow.
+  imapLastUid       BigInt?
+  imapUidValidity   BigInt?
   signature       Json? // { en?, de?, pl?, ru? } plain multiline text, one per locale
   lastTestSentAt  DateTime?
   lastTestOk      Boolean?
@@ -744,6 +755,16 @@ model LeadInteraction {
   createdByName    String? // display-name snapshot, same convention as LeadActivity.createdBy — survives user deletion
   metadata         Json?
   legacyActivityId String?                   @unique // set only on rows copy-migrated from LeadActivity; makes the migration script safe to re-run
+  // Phase 4 (2026-07-25, email inbound) — the RFC 5322 Message-ID, reused for
+  // both directions on purpose: on an EMAIL_OUT/BOOKING_EVENT row, the ID of
+  // the email WE sent (so a later reply's In-Reply-To/References can find
+  // this row and thus the lead); on an EMAIL_IN row, the ID of the email WE
+  // RECEIVED (gives idempotent inbound processing for free via the same
+  // unique column — the same Message-ID can never create two rows). Nullable
+  // since older rows and non-email interaction types have none; Postgres
+  // allows unlimited NULLs under a unique constraint, so this is safe to add
+  // on top of the existing all-NULL history.
+  messageId        String?                   @unique
 
   @@index([leadId])
   @@index([leadId, occurredAt])

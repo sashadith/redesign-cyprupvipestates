@@ -52,11 +52,13 @@ export async function sendCrmEmailAction(
   const html = `${bodyToHtml(body)}${spacer}${signatureHtml}`;
   const text = stripHtmlToText(html);
 
+  let messageId: string;
   try {
     // BCC the sender on every lead email — "BCC an Bearbeiter" — using
     // their own configured fromAddress.
     const settingsRow = await getUserEmailSettingsRow(userId);
-    await sendUserEmail(userId, { to: lead.email, bcc: settingsRow.fromAddress ?? undefined, subject, html, text });
+    const sent = await sendUserEmail(userId, { to: lead.email, bcc: settingsRow.fromAddress ?? undefined, subject, html, text });
+    messageId = sent.messageId;
   } catch (e: any) {
     return { error: e?.message || "Send failed." };
   }
@@ -73,6 +75,9 @@ export async function sendCrmEmailAction(
       occurredAt: when,
       createdByUserId: userId,
       createdByName: session.user?.name ?? "admin",
+      // Phase 4 (email inbound) — lets a lead's reply thread back to this
+      // row via In-Reply-To/References, see docs/EMAIL-INBOUND.md.
+      messageId,
       metadata: {
         ...(opts.presentationToken ? { presentationToken: opts.presentationToken } : {}),
         ...(opts.leadReacted ? { leadReacted: true } : {}),
