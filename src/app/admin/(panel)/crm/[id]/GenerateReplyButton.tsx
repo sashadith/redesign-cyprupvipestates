@@ -18,7 +18,7 @@ export default function GenerateReplyButton({
   preferredChannel,
 }: {
   leadId: string;
-  leadEmail: string;
+  leadEmail: string | null;
   hasPhone: boolean;
   preferredChannel: string | null;
 }) {
@@ -29,8 +29,9 @@ export default function GenerateReplyButton({
   const [genKey, setGenKey] = useState(0); // forces ComposeEmailModal to remount with fresh initial values per generation
   const [, startTransition] = useTransition();
 
+  const hasEmail = !!leadEmail;
   const inferredChannel: ComposeChannel | null =
-    preferredChannel === "EMAIL" ? "EMAIL" : preferredChannel === "WHATSAPP" && hasPhone ? "WHATSAPP" : null;
+    preferredChannel === "EMAIL" && hasEmail ? "EMAIL" : preferredChannel === "WHATSAPP" && hasPhone ? "WHATSAPP" : null;
 
   const runGenerate = (ch: ComposeChannel) => {
     setChannel(ch);
@@ -60,8 +61,10 @@ export default function GenerateReplyButton({
     <>
       <button
         type="button"
+        disabled={!hasEmail && !hasPhone}
         onClick={start}
-        className="flex-1 sm:flex-none rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-2 hover:bg-[#1B4B43]/5"
+        title={!hasEmail && !hasPhone ? "No email or phone on file for this lead" : undefined}
+        className="flex-1 sm:flex-none rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-2 hover:bg-[#1B4B43]/5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
       >
         Generate reply
       </button>
@@ -71,13 +74,15 @@ export default function GenerateReplyButton({
           <div className="bg-white rounded-lg p-6 max-w-sm w-full space-y-3" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-base font-semibold text-[#111827]">Generate reply for which channel?</h3>
             <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => runGenerate("EMAIL")}
-                className="flex-1 rounded-md bg-[#1B4B43] text-white text-sm px-4 py-2 hover:bg-[#142E2D]"
-              >
-                Email
-              </button>
+              {hasEmail && (
+                <button
+                  type="button"
+                  onClick={() => runGenerate("EMAIL")}
+                  className="flex-1 rounded-md bg-[#1B4B43] text-white text-sm px-4 py-2 hover:bg-[#142E2D]"
+                >
+                  Email
+                </button>
+              )}
               {hasPhone && (
                 <button
                   type="button"
@@ -118,7 +123,7 @@ export default function GenerateReplyButton({
         </div>
       )}
 
-      {phase === "review" && draft?.ok && draft.channel === "EMAIL" && (
+      {phase === "review" && draft?.ok && draft.channel === "EMAIL" && leadEmail && (
         <ComposeEmailModal
           key={genKey}
           leadEmail={leadEmail}

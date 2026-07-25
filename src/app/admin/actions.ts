@@ -825,7 +825,9 @@ export async function createLead(_prev: any, formData: FormData): Promise<{ erro
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const phone = String(formData.get("phone") ?? "").trim();
   if (!firstName) return { error: "First name is required." };
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "A valid email is required." };
+  // Email is optional (Batch A, 2026-07-25 — WhatsApp-only leads often have
+  // none) but must be a valid address IF one is provided.
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Please enter a valid email address." };
 
   const num = (k: string) => { const v = String(formData.get(k) ?? "").trim(); return v === "" ? null : Math.round(Number(v)); };
   const oneOf = (k: string, allowed: string[]) => { const v = String(formData.get(k) ?? "").trim(); return allowed.includes(v) ? v : null; };
@@ -839,7 +841,7 @@ export async function createLead(_prev: any, formData: FormData): Promise<{ erro
     data: {
       firstName,
       lastName: lastName || "",
-      email,
+      email: email || null,
       phone: phone || null,
       nationality: String(formData.get("nationality") ?? "").trim() || null,
       languagePreference: oneOf("languagePreference", LOCALES) as any,
@@ -885,7 +887,9 @@ export async function updateLead(id: string, _prev: any, formData: FormData): Pr
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const phone = String(formData.get("phone") ?? "").trim();
   if (!firstName) return { error: "First name is required." };
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "A valid email is required." };
+  // Email is optional (Batch A, 2026-07-25 — WhatsApp-only leads often have
+  // none) but must be a valid address IF one is provided.
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Please enter a valid email address." };
 
   const num = (k: string) => { const v = String(formData.get(k) ?? "").trim(); return v === "" ? null : Math.round(Number(v)); };
   const oneOf = (k: string, allowed: string[]) => { const v = String(formData.get(k) ?? "").trim(); return allowed.includes(v) ? v : null; };
@@ -895,7 +899,7 @@ export async function updateLead(id: string, _prev: any, formData: FormData): Pr
     data: {
       firstName,
       lastName: lastName || "",
-      email,
+      email: email || null,
       phone: phone || null,
       nationality: String(formData.get("nationality") ?? "").trim() || null,
       languagePreference: oneOf("languagePreference", LOCALES) as any,

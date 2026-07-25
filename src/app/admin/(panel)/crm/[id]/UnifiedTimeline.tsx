@@ -58,7 +58,7 @@ export default function UnifiedTimeline({
   deleteAction,
 }: {
   interactions: TimelineRow[];
-  leadEmail: string;
+  leadEmail: string | null;
   leadPhone: string | null;
   addNoteAction: (formData: FormData) => void;
   addCallAction: (formData: FormData) => void;
@@ -122,8 +122,10 @@ export default function UnifiedTimeline({
         </button>
         <button
           type="button"
+          disabled={!leadEmail}
           onClick={() => setShowCompose(true)}
-          className="rounded-md border border-[#E5E7EB] text-xs px-2.5 py-1.5 hover:bg-[#F8F9FA]"
+          title={!leadEmail ? "No email on file for this lead" : undefined}
+          className="rounded-md border border-[#E5E7EB] text-xs px-2.5 py-1.5 hover:bg-[#F8F9FA] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
         >
           + Email
         </button>
@@ -253,7 +255,7 @@ export default function UnifiedTimeline({
         </form>
       )}
 
-      {showCompose && (
+      {showCompose && leadEmail && (
         <ComposeEmailModal
           leadEmail={leadEmail}
           sendAction={sendEmailAction}

@@ -29,7 +29,7 @@ export default function CreateLeadForm({ users }: { users: { id: string; name: s
         <div className="grid grid-cols-2 gap-3">
           <div><label className="block text-sm mb-1">First name *</label><input name="firstName" required className={input} /></div>
           <div><label className="block text-sm mb-1">Last name</label><input name="lastName" className={input} /></div>
-          <div><label className="block text-sm mb-1">Email *</label><input name="email" type="email" required className={input} /></div>
+          <div><label className="block text-sm mb-1">Email</label><input name="email" type="email" className={input} /></div>
           <div><label className="block text-sm mb-1">Phone</label><input name="phone" className={input} /></div>
           <div><label className="block text-sm mb-1">Nationality</label><input name="nationality" className={input} /></div>
           <div><label className="block text-sm mb-1">Language</label>

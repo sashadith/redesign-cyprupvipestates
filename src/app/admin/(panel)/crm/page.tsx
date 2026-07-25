@@ -79,7 +79,7 @@ function computeUrgency(
 }
 
 type LeadRowData = {
-  id: string; firstName: string; lastName: string; email: string; phone: string | null;
+  id: string; firstName: string; lastName: string; email: string | null; phone: string | null;
   languagePreference: string | null; status: string; createdAt: Date;
   assignedTo: { name: string } | null;
   interactions: { occurredAt: Date; type: string }[];
@@ -99,7 +99,7 @@ function LeadRow({ lead: l, urgency, muted }: { lead: LeadRowData; urgency: { ba
           <Link href={`/admin/crm/${l.id}`} className={`font-medium hover:underline ${muted ? "" : "text-[#1B4B43]"}`}>{l.firstName} {l.lastName}</Link>
         </div>
       </td>
-      <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{l.email}<br />{l.phone}</td>
+      <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{l.email ?? "—"}<br />{l.phone}</td>
       <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>
         {l.interactions[0] ? (
           <>

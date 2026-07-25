@@ -28,7 +28,7 @@ export default function EditLeadForm({ action, lead }: { action: any; lead: any 
         <div className="grid grid-cols-2 gap-3">
           <div><label className="block text-sm mb-1">First name *</label><input name="firstName" required defaultValue={lead.firstName ?? ""} className={input} /></div>
           <div><label className="block text-sm mb-1">Last name</label><input name="lastName" defaultValue={lead.lastName ?? ""} className={input} /></div>
-          <div><label className="block text-sm mb-1">Email *</label><input name="email" type="email" required defaultValue={lead.email ?? ""} className={input} /></div>
+          <div><label className="block text-sm mb-1">Email</label><input name="email" type="email" defaultValue={lead.email ?? ""} className={input} /></div>
           <div><label className="block text-sm mb-1">Phone</label><input name="phone" defaultValue={lead.phone ?? ""} className={input} /></div>
           <div><label className="block text-sm mb-1">Nationality</label><input name="nationality" defaultValue={lead.nationality ?? ""} className={input} /></div>
           <div><label className="block text-sm mb-1">Language</label>

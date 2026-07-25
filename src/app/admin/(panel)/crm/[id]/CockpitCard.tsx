@@ -152,7 +152,7 @@ export default function CockpitCard({
     nationality: string | null;
     source: string;
     phone: string | null;
-    email: string;
+    email: string | null;
     preferredChannel: string | null;
     nextFollowUpAt: Date | null;
     autoFollowUpCount: number;
@@ -214,7 +214,7 @@ export default function CockpitCard({
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm">
         {lead.phone && <a href={`tel:${lead.phone}`} className="text-[#1B4B43] hover:underline">{lead.phone}</a>}
-        <a href={`mailto:${lead.email}`} className="text-[#1B4B43] hover:underline">{lead.email}</a>
+        {lead.email && <a href={`mailto:${lead.email}`} className="text-[#1B4B43] hover:underline">{lead.email}</a>}
         {lead.nationality && <span className="text-xs text-[#6B7280]">{lead.nationality}</span>}
         {lead.preferredChannel && (
           <span className="inline-flex items-center rounded-full bg-[#F3F4F6] px-2 py-0.5 text-xs font-medium text-[#374151]">
@@ -286,12 +286,21 @@ export default function CockpitCard({
       </div>
 
       <div className="flex flex-wrap sm:flex-nowrap gap-2 mt-4">
-        <a
-          href={`mailto:${lead.email}`}
-          className="flex-1 sm:flex-none text-center rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-2 hover:bg-[#1B4B43]/5"
-        >
-          Email
-        </a>
+        {lead.email ? (
+          <a
+            href={`mailto:${lead.email}`}
+            className="flex-1 sm:flex-none text-center rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-2 hover:bg-[#1B4B43]/5"
+          >
+            Email
+          </a>
+        ) : (
+          <span
+            className="flex-1 sm:flex-none text-center rounded-md border border-[#E5E7EB] text-[#9CA3AF] text-sm px-4 py-2 cursor-not-allowed"
+            title="No email on file for this lead"
+          >
+            Email
+          </span>
+        )}
         {lead.phone && (
           <a
             href={`https://wa.me/${formatWaPhone(lead.phone)}`}

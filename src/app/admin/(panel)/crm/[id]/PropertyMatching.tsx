@@ -449,11 +449,15 @@ export default function PropertyMatching({
               {generated.whatsappUrl && (
                 <a href={generated.whatsappUrl} target="_blank" rel="noopener noreferrer" className="rounded-md bg-[#25D366] text-white text-sm px-3 py-1.5 hover:opacity-90">Share via WhatsApp</a>
               )}
-              {lead.email && (
-                <button type="button" onClick={() => setShowComposeEmail(true)} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-3 py-1.5 hover:bg-[#1B4B43]/5">
-                  Send by email
-                </button>
-              )}
+              <button
+                type="button"
+                disabled={!lead.email}
+                onClick={() => setShowComposeEmail(true)}
+                title={!lead.email ? "This lead has no email address on file" : undefined}
+                className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-3 py-1.5 hover:bg-[#1B4B43]/5 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+              >
+                Send by email
+              </button>
               <button type="button" onClick={() => setGenerated(null)} className="ml-auto text-sm text-[#6B7280] hover:text-[#111827]">Close</button>
             </div>
           </div>
