@@ -4,8 +4,34 @@ import { getImapCredentials, withReadOnlyInbox, fetchNewMessages, ImapNotConfigu
 import { matchLeadForInboundEmail } from "./matchLead";
 import { stripHtmlBlockquotes, stripQuotedReply, stripSignatureBlock } from "./quoteStrip";
 import { stripHtmlToText } from "@/lib/emailSignature";
+import { sendTelegramMessage } from "@/lib/telegram";
 
 const MAX_BODY_LENGTH = 10_000; // defensive cap — a reply this long is not the common case, and this is a timeline entry, not an archive
+const TELEGRAM_EXCERPT_LENGTH = 200;
+
+const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// Best-effort — a Telegram outage must never block filing the reply itself
+// or advancing the IMAP cursor. Idempotency piggybacks entirely on the
+// caller's existing Message-ID guard (see the "already" check above this
+// call site): a retried poll finds the interaction already exists and skips
+// before ever reaching here, so this never fires twice for the same reply.
+async function notifyInboundReply(leadId: string, subject: string | null, body: string) {
+  try {
+    const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { firstName: true, lastName: true } });
+    const leadName = lead ? `${lead.firstName} ${lead.lastName}`.trim() : "Unknown lead";
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
+    const excerpt = body.slice(0, TELEGRAM_EXCERPT_LENGTH);
+    const msg =
+      `<b>📧 New reply from ${esc(leadName)}</b>\n` +
+      `${esc(subject || "(no subject)")}\n\n` +
+      `${esc(excerpt)}${body.length > TELEGRAM_EXCERPT_LENGTH ? "…" : ""}\n\n` +
+      `<a href="${siteUrl}/admin/crm/${leadId}">Open in CRM</a>`;
+    await sendTelegramMessage(msg);
+  } catch (e) {
+    console.error("email-inbound: Telegram notify failed:", e);
+  }
+}
 
 export type PollResult = { fetched: number; matched: number; ambiguous: number; skipped: number; reset: boolean; stoppedEarlyOnError?: string };
 
@@ -84,6 +110,7 @@ export async function pollInboundEmailForUser(userId: string): Promise<PollResul
         await prisma.userEmailSettings.update({ where: { userId }, data: { imapLastUid: BigInt(msg.uid), imapUidValidity: result.uidValidity } });
         matched++;
         if (match.ambiguous) ambiguous++;
+        await notifyInboundReply(match.leadId, parsed.subject ?? null, body);
       } catch (e) {
         // A single malformed/unparseable message must not silently swallow
         // or reprocess forever — stop this run here (cursor stays at the

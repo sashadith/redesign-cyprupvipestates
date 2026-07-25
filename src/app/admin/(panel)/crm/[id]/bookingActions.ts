@@ -14,6 +14,9 @@ import { formatInZone, CYPRUS_TZ } from "@/lib/booking/timezone";
 import { BOOKING_CONFIRMATION_EMAIL, INTL_LOCALE } from "@/lib/crm/bookingMessages";
 import type { Locale } from "@/lib/crm/presentationMessages";
 import type { MeetingType } from "@prisma/client";
+import { sendTelegramMessage } from "@/lib/telegram";
+
+const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 // Local, self-contained (mirrors every other CRM "use server" file's
 // requireSession — not imported from admin/actions.ts since exporting it
@@ -78,7 +81,10 @@ export async function createOrGetBookingRequestAction(leadId: string, meetingTyp
 // Called from the public, unauthenticated /book/[token] page — deliberately
 // no requireSession(). Validates 2-3 slots and flips PENDING -> PROPOSED.
 export async function proposeSlotAction(token: string, selectedUtcSlots: string[], leadTimezone: string): Promise<{ ok?: true; error?: string }> {
-  const booking = await prisma.bookingRequest.findUnique({ where: { token } });
+  const booking = await prisma.bookingRequest.findUnique({
+    where: { token },
+    include: { lead: { select: { firstName: true, lastName: true } } },
+  });
   if (!booking) return { error: "not_found" };
   if (booking.expiresAt && booking.expiresAt < new Date()) return { error: "expired" };
   if (booking.status !== "PENDING") return { error: "already_proposed" };
@@ -87,9 +93,10 @@ export async function proposeSlotAction(token: string, selectedUtcSlots: string[
   if (slots.length < 1 || slots.length > 3) return { error: "invalid_slot_count" };
   if (slots.some((s) => new Date(s).getTime() < Date.now())) return { error: "invalid_slot_time" };
 
+  const cleanLeadTimezone = leadTimezone.slice(0, 100);
   await prisma.bookingRequest.update({
     where: { token },
-    data: { status: "PROPOSED", proposedSlots: slots.map((utc) => ({ utc })), leadTimezone: leadTimezone.slice(0, 100) },
+    data: { status: "PROPOSED", proposedSlots: slots.map((utc) => ({ utc })), leadTimezone: cleanLeadTimezone },
   });
 
   const proposedContent = `Lead proposed ${slots.length} time${slots.length === 1 ? "" : "s"} for a meeting`;
@@ -104,8 +111,53 @@ export async function proposeSlotAction(token: string, selectedUtcSlots: string[
     },
   });
 
+  await notifyBookingProposed(booking.leadId, `${booking.lead.firstName} ${booking.lead.lastName}`.trim(), slots, cleanLeadTimezone, booking.meetingType);
+
   revalidatePath(`/admin/crm/${booking.leadId}`);
   return { ok: true };
+}
+
+// Best-effort — a Telegram outage must never block the lead's proposal from
+// being recorded. Fires exactly once per proposeSlotAction call (guarded
+// upstream by booking.status !== "PENDING", so a resubmit can't re-trigger
+// this — see the "already_proposed" early return above).
+async function notifyBookingProposed(leadId: string, leadName: string, slotsUtc: string[], leadTimezone: string, meetingType: MeetingType) {
+  try {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
+    // leadTimezone is detected client-side by the lead's own browser at the
+    // exact moment of submission (Intl.DateTimeFormat().resolvedOptions().timeZone)
+    // — more accurate than deriving a "representative" zone from
+    // countryOfResidence, and never guessed: if the browser couldn't supply
+    // it, only Cyprus time is shown, flagged as such.
+    const hasLeadTz = cleanLeadTzIsUsable(leadTimezone);
+    const lines = slotsUtc.map((iso, i) => {
+      const d = new Date(iso);
+      const cyprus = formatInZone(d, CYPRUS_TZ);
+      const leadSide = hasLeadTz ? ` · ${esc(leadTimezone)}: ${formatInZone(d, leadTimezone)}` : " · lead's timezone unknown";
+      return `${i + 1}. Cyprus: ${cyprus}${leadSide}`;
+    });
+    const msg =
+      `<b>📅 ${esc(leadName)} proposed meeting times</b>\n` +
+      `Meeting type: ${meetingType === "ZOOM" ? "Zoom" : "Phone"}\n\n` +
+      `${lines.join("\n")}\n\n` +
+      `<a href="${siteUrl}/admin/crm/${leadId}">Open in CRM to confirm</a>`;
+    await sendTelegramMessage(msg);
+  } catch (e) {
+    console.error("booking proposed: Telegram notify failed:", e);
+  }
+}
+
+// A malformed/empty timezone string must never reach Intl.DateTimeFormat
+// (throws RangeError on an invalid IANA name) — treated the same as "not
+// supplied": show Cyprus time only, never guess a replacement.
+function cleanLeadTzIsUsable(tz: string): boolean {
+  if (!tz) return false;
+  try {
+    new Intl.DateTimeFormat("en-GB", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // Sascha's one-click confirm: picks one of the lead's proposed slots, emails
