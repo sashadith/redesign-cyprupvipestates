@@ -53,6 +53,7 @@ export default function UnifiedTimeline({
   addNoteAction,
   addCallAction,
   sendEmailAction,
+  addEmailLogAction,
   logWhatsAppAction,
   deleteAction,
 }: {
@@ -62,11 +63,12 @@ export default function UnifiedTimeline({
   addNoteAction: (formData: FormData) => void;
   addCallAction: (formData: FormData) => void;
   sendEmailAction: (opts: { subject: string; body: string; leadReacted?: boolean }) => Promise<{ ok?: string; error?: string }>;
+  addEmailLogAction: (formData: FormData) => void;
   logWhatsAppAction: (formData: FormData) => void;
   deleteAction: (interactionId: string) => Promise<void>;
 }) {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("all");
-  const [quickAdd, setQuickAdd] = useState<"note" | "call" | "whatsapp" | null>(null);
+  const [quickAdd, setQuickAdd] = useState<"note" | "call" | "whatsapp" | "email-log" | null>(null);
   const [showCompose, setShowCompose] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [, startDeleteTransition] = useTransition();
@@ -125,6 +127,14 @@ export default function UnifiedTimeline({
         >
           + Email
         </button>
+        <button
+          type="button"
+          onClick={() => setQuickAdd(quickAdd === "email-log" ? null : "email-log")}
+          className="rounded-md border border-[#E5E7EB] text-xs px-2.5 py-1.5 hover:bg-[#F8F9FA]"
+          title="Record an email that was actually sent/received outside this system (e.g. Apple Mail) — logs it as a real contact, sends nothing"
+        >
+          + Email log
+        </button>
         {leadPhone && (
           <button
             type="button"
@@ -136,13 +146,17 @@ export default function UnifiedTimeline({
         )}
       </div>
 
-      {/* Note/Call/WhatsApp all log the same way — a short body, a
-          backdatable occurredAt, and a "Lead reacted" flag for the
-          auto-follow-up cadence (src/lib/crm/followUpCadence.ts). WhatsApp
-          used to also open a wa.me tab here; removed per walkthrough-2
-          feedback — sending happens on the advisor's own phone regardless,
-          this is purely a log entry (the Client Presentation "Share via
-          WhatsApp" flow is unrelated and unchanged). */}
+      {/* Call/WhatsApp log the same way — a short body, a backdatable
+          occurredAt, and a "Lead reacted" flag for the auto-follow-up
+          cadence (src/lib/crm/followUpCadence.ts). Note shares this form
+          but deliberately has NO "Lead reacted" checkbox and never calls
+          the cadence (2026-07-25 decision — see addLeadNote's comment: a
+          Note is purely informational, it must not move nextFollowUpAt or
+          the urgency traffic light). WhatsApp used to also open a wa.me tab
+          here; removed per walkthrough-2 feedback — sending happens on the
+          advisor's own phone regardless, this is purely a log entry (the
+          Client Presentation "Share via WhatsApp" flow is unrelated and
+          unchanged). */}
       {(quickAdd === "note" || quickAdd === "call" || quickAdd === "whatsapp") && (
         <form
           action={quickAdd === "note" ? addNoteAction : quickAdd === "call" ? addCallAction : logWhatsAppAction}
@@ -166,14 +180,71 @@ export default function UnifiedTimeline({
                 className="rounded-md border border-[#E5E7EB] px-2 py-1 text-xs"
               />
             </label>
-            <label className="flex items-center gap-1.5 text-xs text-[#6B7280]">
-              <input type="checkbox" name="leadReacted" />
-              Lead reacted (resets the auto-follow-up chain)
-            </label>
+            {quickAdd !== "note" && (
+              <label className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+                <input type="checkbox" name="leadReacted" />
+                Lead reacted (resets the auto-follow-up chain)
+              </label>
+            )}
           </div>
           <div className="flex gap-2">
             <button className="rounded-md bg-[#1B4B43] text-white text-xs px-3 py-1.5 hover:bg-[#142E2D]">
               Add {quickAdd === "note" ? "note" : quickAdd === "call" ? "call log" : "WhatsApp log"}
+            </button>
+            <button type="button" onClick={() => setQuickAdd(null)} className="text-xs text-[#6B7280] hover:underline">
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Distinct from the Note/Call/WhatsApp form above: direction is
+          selectable (backfilling an email the LEAD sent counts too) and
+          subject/body are both optional — this is a record of something
+          that already happened elsewhere, not a message being composed
+          here. Sends nothing; see addEmailLog in admin/actions.ts for why
+          this exists (an "EMAIL:"-prefixed Note doesn't count as a real
+          contact anywhere else in the system — no direction, so it's
+          invisible to "last contact" and the urgency cadence). */}
+      {quickAdd === "email-log" && (
+        <form action={addEmailLogAction} className="mb-4 space-y-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+              Direction
+              <select name="direction" defaultValue="OUTBOUND" className="rounded-md border border-[#E5E7EB] px-2 py-1 text-xs">
+                <option value="OUTBOUND">Sent by me</option>
+                <option value="INBOUND">Received from lead</option>
+              </select>
+            </label>
+            <label className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+              When
+              <input
+                type="datetime-local"
+                name="occurredAt"
+                defaultValue={nowForDatetimeLocal()}
+                className="rounded-md border border-[#E5E7EB] px-2 py-1 text-xs"
+              />
+            </label>
+          </div>
+          <input
+            type="text"
+            name="subject"
+            placeholder="Subject (optional)"
+            className="w-full rounded-md border border-[#E5E7EB] px-2 py-1.5 text-sm"
+          />
+          <textarea
+            name="body"
+            rows={2}
+            placeholder="What the email said (optional)…"
+            className="w-full rounded-md border border-[#E5E7EB] px-2 py-1.5 text-sm"
+          />
+          <label className="flex items-center gap-1.5 text-xs text-[#6B7280]">
+            <input type="checkbox" name="leadReacted" />
+            Lead reacted (resets the auto-follow-up chain)
+          </label>
+          <div className="flex gap-2">
+            <button className="rounded-md bg-[#1B4B43] text-white text-xs px-3 py-1.5 hover:bg-[#142E2D]">
+              Add email log
             </button>
             <button type="button" onClick={() => setQuickAdd(null)} className="text-xs text-[#6B7280] hover:underline">
               Cancel

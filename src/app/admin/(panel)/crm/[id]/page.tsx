@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import {
-  updateLeadStatus, addLeadNote, assignLead, mergeLeads, updateLeadFollowUp, addCallLog,
+  updateLeadStatus, addLeadNote, assignLead, mergeLeads, updateLeadFollowUp, addCallLog, addEmailLog,
   resetLeadFollowUpCadenceAction, deleteLeadInteraction,
 } from "../../../actions";
 import { sendCrmEmailAction, logWhatsAppSentAction } from "./emailActions";
@@ -184,11 +184,22 @@ export default async function LeadDetail({ params }: { params: { id: string } })
   }
   async function quickNote(formData: FormData) {
     "use server";
-    await addLeadNote(id, String(formData.get("note") ?? ""), parseOccurredAt(formData), formData.get("leadReacted") === "on");
+    await addLeadNote(id, String(formData.get("note") ?? ""), parseOccurredAt(formData));
   }
   async function quickCall(formData: FormData) {
     "use server";
     await addCallLog(id, String(formData.get("note") ?? ""), parseOccurredAt(formData), formData.get("leadReacted") === "on");
+  }
+  async function quickEmailLog(formData: FormData) {
+    "use server";
+    const direction = formData.get("direction") === "INBOUND" ? "INBOUND" : "OUTBOUND";
+    await addEmailLog(id, {
+      direction,
+      subject: String(formData.get("subject") ?? ""),
+      body: String(formData.get("body") ?? ""),
+      occurredAt: parseOccurredAt(formData),
+      leadReacted: formData.get("leadReacted") === "on",
+    });
   }
   async function sendEmail(opts: { subject: string; body: string; occurredAt?: Date; leadReacted?: boolean }) {
     "use server";
@@ -291,6 +302,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
           leadPhone={lead.phone}
           addNoteAction={quickNote}
           addCallAction={quickCall}
+          addEmailLogAction={quickEmailLog}
           sendEmailAction={sendEmail}
           logWhatsAppAction={quickWhatsApp}
           deleteAction={deleteInteraction}

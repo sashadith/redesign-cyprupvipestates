@@ -632,12 +632,21 @@ export async function updateLeadStatus(id: string, status: string, reason?: stri
   revalidatePath("/admin");
 }
 
-// occurredAt/leadReacted are new (Lead Cockpit correction batch): the
-// timeline quick-add forms now let an admin backdate a manually-logged
-// entry (default = now) and flag it as the lead's own reaction, which
-// resets the auto-follow-up chain (src/lib/crm/followUpCadence.ts) instead
-// of just advancing it.
-export async function addLeadNote(id: string, note: string, occurredAt?: Date, leadReacted?: boolean) {
+// occurredAt is new (Lead Cockpit correction batch): the timeline quick-add
+// forms let an admin backdate a manually-logged entry (default = now).
+//
+// Deliberately does NOT call applyFollowUpCadence (2026-07-25 decision) — a
+// Note is purely informational and must never move nextFollowUpAt or
+// autoFollowUpCount, only Call log / Email log / WhatsApp / real sent
+// emails do. This was flagged after Notes were found to silently affect the
+// urgency traffic light in exactly the same way as those real-contact
+// types, which is how an "EMAIL:"-prefixed Note (used to fake-log an
+// externally-sent email — see addEmailLog below, built to replace that
+// workaround) ended up quietly pushing a lead's follow-up date out by 14
+// days. Forward-only fix — pre-existing autoFollowUpCount/nextFollowUpAt
+// values from Notes logged before this change are not retroactively
+// corrected.
+export async function addLeadNote(id: string, note: string, occurredAt?: Date) {
   const session = await requireSession();
   const content = note.trim();
   if (!content) return;
@@ -653,10 +662,44 @@ export async function addLeadNote(id: string, note: string, occurredAt?: Date, l
       body: content,
       createdByUserId: (session.user as any)?.id ?? null,
       createdByName: session.user?.name ?? "admin",
-      ...(leadReacted ? { metadata: { leadReacted: true } } : {}),
     },
   });
-  await applyFollowUpCadence(id, "manual_contact", { leadReacted });
+  revalidatePath(`/admin/crm/${id}`);
+}
+
+// Backfills an email that was actually sent/received OUTSIDE this system
+// (e.g. from Apple Mail directly) as a real, correctly-typed timeline entry
+// — EMAIL_OUT/EMAIL_IN per the chosen direction, not a NOTE. This is the
+// distinction that matters: a NOTE has no `direction`, so it's silently
+// excluded from "last contact" (page.tsx's lastContactRow lookup filters on
+// `direction != null`) and from the urgency cadence's idea of a real
+// contact — logging an already-sent email as a NOTE (even with an "EMAIL:"
+// prefix in the text) looks identical to an internal note to every other
+// part of this system. No send happens here, same as addCallLog — this is
+// a log-only entry.
+export async function addEmailLog(
+  id: string,
+  opts: { direction: "OUTBOUND" | "INBOUND"; subject?: string; body?: string; occurredAt?: Date; leadReacted?: boolean },
+) {
+  const session = await requireSession();
+  const when = opts.occurredAt ?? new Date();
+  const subject = opts.subject?.trim() || null;
+  const content = opts.body?.trim() || null;
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: id,
+      type: opts.direction === "INBOUND" ? "EMAIL_IN" : "EMAIL_OUT",
+      direction: opts.direction,
+      channel: "EMAIL",
+      subject,
+      body: content,
+      occurredAt: when,
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
+      ...(opts.leadReacted ? { metadata: { leadReacted: true } } : {}),
+    },
+  });
+  await applyFollowUpCadence(id, "manual_contact", { leadReacted: opts.leadReacted });
   revalidatePath(`/admin/crm/${id}`);
 }
 
