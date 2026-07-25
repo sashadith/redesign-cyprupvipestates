@@ -5,7 +5,10 @@
 
 .bk-page {
   position: relative;
-  background: var(--sea-deep);
+  /* Background comes from .bk-atmos below (same split as .pp/.pp-atmos) —
+     .bk-page itself must stay transparent, or its own opaque background
+     paints in front of the negative-z-index atmos layer and hides it. */
+  background: transparent;
   color: var(--ivory);
   font-family: var(--font-body), sans-serif;
   min-height: 100vh;
@@ -19,8 +22,10 @@
    preview-project/project.css's .pp-atmos: 3 soft radial-gradient discs,
    fixed behind ALL content (z-index -1, never clipping a section), drifting
    via the already-imported cloudDriftA/B keyframes. Deliberately subtle
-   (low opacity gold) so it never competes with slot-picker legibility. */
-.bk-atmos { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+   (low opacity gold) so it never competes with slot-picker legibility.
+   Carries the actual solid page background itself (not .bk-page) — see the
+   .bk-page comment above. */
+.bk-atmos { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: var(--sea-deep); }
 .bk-atmos span { position: absolute; display: block; border-radius: 50%; aspect-ratio: 1;
   background: radial-gradient(circle, rgba(194,154,94,0.14), rgba(194,154,94,0) 66%); will-change: transform; }
 .bk-atmos span:nth-child(1) { width: min(60vw, 700px); top: -14%; left: -12%; animation: cloudDriftA 26s ease-in-out infinite alternate; }
