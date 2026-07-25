@@ -8,11 +8,11 @@ export const dynamic = "force-dynamic";
 // byStatus bucketing, so CLOSED/LOST stay selectable even though they no
 // longer get their own board column (those live as collapsed sections on
 // the list view instead — see /admin/crm).
-const PIPELINE = ["NEW", "QUALIFIED", "CONTACTED", "VIEWING_SCHEDULED", "OFFER", "CLOSED", "LOST"];
+const PIPELINE = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "CLOSED", "LOST"];
 // Board columns actually rendered — CLOSED/LOST intentionally excluded.
 const VISIBLE_COLUMNS = PIPELINE.filter((s) => s !== "CLOSED" && s !== "LOST");
 const COL_ACCENT: Record<string, string> = {
-  NEW: "border-t-blue-400", QUALIFIED: "border-t-purple-400", CONTACTED: "border-t-yellow-400",
+  NEW: "border-t-blue-400", CONTACTED: "border-t-yellow-400", COMMUNICATING: "border-t-teal-400",
   VIEWING_SCHEDULED: "border-t-orange-400", OFFER: "border-t-indigo-400", CLOSED: "border-t-green-500", LOST: "border-t-red-400",
 };
 

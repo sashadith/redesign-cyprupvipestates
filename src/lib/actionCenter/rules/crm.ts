@@ -19,8 +19,8 @@ const leadName = (l: { firstName: string; lastName: string }) => `${l.firstName}
 //   (g) staleFollowUp used LeadActivity for "last activity", but
 //       addCallLog/addEmailLog/logWhatsAppSentAction only ever write
 //       LeadInteraction, never LeadActivity — so even the leads (g) DID
-//       cover (CONTACTED/QUALIFIED) went stale-looking despite real logged
-//       contact, for the same underlying reason.
+//       cover went stale-looking despite real logged contact, for the
+//       same underlying reason.
 // Single source of truth now: LeadInteraction with a real human-contact
 // type (CALL/EMAIL_OUT/EMAIL_IN/WHATSAPP_OUT/WHATSAPP_IN). Deliberately NOT
 // the looser `direction != null` filter the Cockpit's "last contact"
@@ -38,11 +38,19 @@ const leadName = (l: { firstName: string; lastName: string }) => `${l.firstName}
 // (`lead-followup:`) regardless of which tier it's in, so a snooze
 // survives the lead moving between tiers; old `lead-new:`/`lead-stale:`
 // snooze rows just go inert, never wrong.
+//
+// Batch B (2026-07-25): status flow rework — QUALIFIED is gone, COMMUNICATING
+// is new. "Active" now means every non-terminal status (NEW/CONTACTED/
+// COMMUNICATING/VIEWING_SCHEDULED/OFFER), not just NEW/CONTACTED/QUALIFIED —
+// this closes a real pre-existing gap: a lead that reached VIEWING_SCHEDULED
+// or OFFER previously fell out of this rule entirely and could go stale
+// without ever triggering a follow-up nudge again.
 const REAL_CONTACT_TYPES = ["CALL", "EMAIL_OUT", "EMAIL_IN", "WHATSAPP_OUT", "WHATSAPP_IN"] as const;
+const ACTIVE_LEAD_STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER"] as const;
 
 async function noFollowUp(): Promise<ActionItem[]> {
   const leads = await prisma.lead.findMany({
-    where: { status: { in: ["NEW", "CONTACTED", "QUALIFIED"] }, deletedAt: null },
+    where: { status: { in: [...ACTIVE_LEAD_STATUSES] }, deletedAt: null },
     select: {
       id: true, firstName: true, lastName: true, createdAt: true,
       interactions: { where: { type: { in: [...REAL_CONTACT_TYPES] } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true } },

@@ -5,7 +5,7 @@ import ActionCenterPanel, { type ActionCenterGroupVM } from "./ActionCenterPanel
 
 export const dynamic = "force-dynamic";
 
-const PIPELINE = ["NEW", "QUALIFIED", "CONTACTED", "VIEWING_SCHEDULED", "OFFER", "CLOSED", "LOST"];
+const PIPELINE = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "CLOSED", "LOST"];
 
 // "since 3d" / "since 5h" — formatted server-side (not in the client component)
 // so relative time never depends on the client's clock or causes a hydration

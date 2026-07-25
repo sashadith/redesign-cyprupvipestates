@@ -115,7 +115,7 @@ function revalidateCaseStudyPublic(language: string, slug: string) {
   revalPublic(language, ["case-studies"]);
 }
 
-const STATUSES = ["NEW", "QUALIFIED", "CONTACTED", "VIEWING_SCHEDULED", "OFFER", "CLOSED", "LOST"];
+const STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "CLOSED", "LOST"];
 const CONTENT_STATUSES = ["DRAFT", "PUBLISHED", "SCHEDULED", "ARCHIVED"];
 
 async function requireSession() {

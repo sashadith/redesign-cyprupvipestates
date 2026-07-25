@@ -14,7 +14,7 @@ const LOCALE_LABEL: Record<string, string> = { en: "EN", de: "DE", pl: "PL", ru:
 
 const CHANNEL_LABEL: Record<string, string> = { EMAIL: "Email", WHATSAPP: "WhatsApp", PHONE: "Phone" };
 
-const STATUSES = ["NEW", "QUALIFIED", "CONTACTED", "VIEWING_SCHEDULED", "OFFER", "CLOSED", "LOST"];
+const STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "CLOSED", "LOST"];
 const MAX_AUTO_FOLLOWUPS = 3;
 
 function initials(name: string): string {

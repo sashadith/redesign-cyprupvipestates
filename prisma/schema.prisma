@@ -38,10 +38,17 @@ enum UserRole {
   EDITOR
 }
 
+// Batch B (2026-07-25): QUALIFIED removed (zero leads ever held it, confirmed
+// against the real DB before this change) — funnel order is now a straight
+// line NEW -> CONTACTED -> COMMUNICATING -> VIEWING_SCHEDULED -> OFFER ->
+// CLOSED/LOST. COMMUNICATING is new (between CONTACTED and
+// VIEWING_SCHEDULED). VIEWING_SCHEDULED itself is unchanged — it was never
+// called plain SCHEDULED in this codebase's history (confirmed via every
+// migration since 20260616080204_init).
 enum LeadStatus {
   NEW
-  QUALIFIED
   CONTACTED
+  COMMUNICATING
   VIEWING_SCHEDULED
   OFFER
   CLOSED
