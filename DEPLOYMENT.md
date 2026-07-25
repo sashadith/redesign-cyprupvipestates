@@ -531,3 +531,54 @@ mv /var/www/shared/secrets /var/www/cyprusvipestates/secrets
 This is not a routine operation — it only applies if the release-directory
 model itself is ever being fully decommissioned, not to a normal rollback
 (see "Fast rollback" above, which never touches `.env`/`secrets` at all).
+
+**Shared-database migration discipline (2026-07-25) — two incidents, same
+root cause.** There is only ONE Postgres database. `cve-staging` and
+`cyprusvipestates` (prod) both connect to the exact same `cyprusvipestates`
+DB on `localhost:5432` (see "Environments" above) — there is no separate
+staging database to rehearse a migration against in isolation. The closest
+thing to real isolation is a disposable `createdb` copy on the VPS restored
+from a real `pg_dump` backup, which proves the migration SQL itself is
+correct but says nothing about whether the code *currently running in prod*
+is compatible with the new schema.
+
+Both incidents that day had this exact shape: a LeadStatus enum rework
+(Batch B) and an email-optional/`countryOfResidence` migration (Batch A)
+were each applied to the shared DB during what felt like a "verify against
+staging" step — except staging IS prod's data, so that step wasn't a
+rehearsal, it was the production-affecting change itself, hours before the
+corresponding code was actually merged and deployed. The OLD code, still
+live in prod, immediately started throwing on real requests — `22P02`
+(Postgres rejecting the removed enum literal) for the first incident,
+`P2032` (Prisma refusing to deserialize a now-nullable column as
+non-nullable) for the second. Neither was caught by `prisma migrate status`,
+which only reports migrations known locally but not yet applied to the DB —
+never the reverse (a migration already applied to the DB but missing from
+the local `prisma/migrations/` folder, which is exactly this failure mode).
+The check that actually catches it:
+
+```bash
+# On the shared DB:
+psql "$DATABASE_URL" -tAc "SELECT migration_name FROM _prisma_migrations ORDER BY migration_name" > /tmp/db.txt
+# On the ref being checked (e.g. main):
+ls prisma/migrations/ | grep -v migration_lock | sort > /tmp/local.txt
+diff /tmp/db.txt /tmp/local.txt   # anything only in db.txt is undeployed drift
+```
+
+**The rule this enforces: a schema migration and the code that depends on
+it always land on `main` together, and the code is deployed to prod BEFORE
+— or in the exact same operation as — the migration is applied against the
+shared DB.** Never run `prisma migrate deploy` (or any raw DDL) against the
+shared DB while its corresponding code still lives only on a feature
+branch — the instant the migration lands, the DB is ahead of whatever code
+is actually running, and the next request that touches the changed
+column/enum/table fails immediately, in real time, not "before the next
+deploy." **`prisma migrate deploy` against the shared DB is therefore a
+point-of-no-return step, on the same footing as a `DROP` or a destructive
+rename — treat it as its own announced halt, separate from "deploy the
+code,"** even when both are part of the same feature and land minutes apart.
+Rehearsing the SQL on a disposable `createdb` copy first only proves the SQL
+is safe; it proves nothing about whether prod's currently-live code can
+survive the DB changing under it. Confirm the dependent code is already
+deployed, or about to be deployed in the same breath, before the migration
+ever touches the shared DB.
