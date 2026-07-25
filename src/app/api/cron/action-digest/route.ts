@@ -14,6 +14,7 @@ import { prisma } from "@/lib/prisma";
 import type { StoredSuggestion } from "@/lib/seoAdvisor/types";
 import { mdInlineToTelegramHtml } from "@/lib/telegramFormat";
 import { flagHyperactiveSessions } from "@/lib/analyticsBotDetect";
+import { formatInZone, cyprusWallTimeToUtc, CYPRUS_TZ } from "@/lib/booking/timezone";
 
 // Piggybacks on this existing daily cron, same pattern as feed-sync's
 // purgeOldTrash/purgeOldCronLogs — best-effort, never blocks the digest.
@@ -63,10 +64,45 @@ async function maybeAppendAdvisorSummary(): Promise<string[]> {
   ];
 }
 
+// Batch C part 3 (2026-07-25): today's confirmed meetings, folded into this
+// existing daily push rather than a second 08:00 message. "Today" is the
+// Cyprus calendar day the digest itself fires in, computed as a UTC range
+// (start-of-day inclusive, start-of-next-day exclusive) — the same
+// wall-clock<->UTC conversion the booking slot generator already uses, not
+// a new calculation.
+async function todaysAppointmentLines(): Promise<string[]> {
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: CYPRUS_TZ, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now);
+  const y = Number(parts.find((p) => p.type === "year")!.value);
+  const m = Number(parts.find((p) => p.type === "month")!.value);
+  const d = Number(parts.find((p) => p.type === "day")!.value);
+  const start = cyprusWallTimeToUtc(y, m, d, 0, 0);
+  const end = cyprusWallTimeToUtc(y, m, d + 1, 0, 0); // next Cyprus midnight — Date.UTC rolls month/year over correctly
+
+  const meetings = await prisma.bookingRequest.findMany({
+    where: { status: "CONFIRMED", confirmedSlotUtc: { gte: start, lt: end } },
+    orderBy: { confirmedSlotUtc: "asc" },
+    include: { lead: { select: { firstName: true, lastName: true } } },
+  });
+  if (!meetings.length) return [];
+
+  return [
+    "",
+    `<b>📅 Today's appointments (${meetings.length})</b>`,
+    ...meetings.map((b) => {
+      const time = formatInZone(b.confirmedSlotUtc!, CYPRUS_TZ);
+      const leadName = escapeHtml(`${b.lead.firstName} ${b.lead.lastName}`.trim());
+      const typeLabel = b.meetingType === "ZOOM" ? "Zoom" : "Phone";
+      return `• ${time} — ${leadName} (${typeLabel})`;
+    }),
+  ];
+}
+
 async function runDigest() {
   const items = (await getActionCenterItems()).filter((i) => i.severity === "URGENT" || i.severity === "ACTION");
   const advisorLines = await maybeAppendAdvisorSummary();
-  if (!items.length && !advisorLines.length) return { sent: false, count: 0 };
+  const appointmentLines = await todaysAppointmentLines();
+  if (!items.length && !advisorLines.length && !appointmentLines.length) return { sent: false, count: 0 };
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
   const shown = items.slice(0, MAX_ITEMS);
@@ -79,12 +115,13 @@ async function runDigest() {
     ...(lines.length ? lines : ["No URGENT/ACTION items today."]),
     more > 0 ? `\n…and ${more} more.` : "",
     ...advisorLines,
+    ...appointmentLines,
     "",
     `<a href="${siteUrl}/admin">Open Action Center</a>`,
   ].filter(Boolean).join("\n");
 
   await sendTelegramMessage(text);
-  return { sent: true, count: items.length + advisorLines.length };
+  return { sent: true, count: items.length + advisorLines.length + appointmentLines.length };
 }
 
 export async function GET(req: NextRequest) {

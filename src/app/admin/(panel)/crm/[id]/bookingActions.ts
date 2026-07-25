@@ -213,9 +213,17 @@ export async function confirmBookingSlotAction(bookingRequestId: string, confirm
     return { error: e?.message || "Send failed." };
   }
 
+  // A meeting confirmed less than 10 minutes before it starts never had a
+  // real "1 hour before" moment, and a 10-minute reminder for something
+  // already ~10 minutes away is pointless — pre-mark BOTH reminder flags as
+  // handled (without ever sending) so booking-reminders' cron never fires
+  // for this booking at all, rather than sending a late/nonsensical alert.
+  const minutesUntilStart = (confirmedSlotUtc.getTime() - Date.now()) / 60_000;
+  const reminderFlags = minutesUntilStart < 10 ? { reminder1hSentAt: new Date(), reminder10mSentAt: new Date() } : {};
+
   await prisma.bookingRequest.update({
     where: { id: bookingRequestId },
-    data: { status: "CONFIRMED", confirmedSlotUtc, confirmedAt: new Date() },
+    data: { status: "CONFIRMED", confirmedSlotUtc, confirmedAt: new Date(), ...reminderFlags },
   });
 
   const confirmedContent = `Meeting confirmed for ${formattedDateTime} (lead time)`;

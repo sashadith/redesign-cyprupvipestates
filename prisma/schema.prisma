@@ -1275,6 +1275,15 @@ model BookingRequest {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   confirmedAt    DateTime?
+  // Telegram meeting reminders (2026-07-25) — set once each reminder has
+  // either been sent OR deliberately skipped (see confirmBookingSlotAction:
+  // a meeting confirmed less than 10 minutes before it starts pre-sets BOTH
+  // to "now" without ever sending, since there was never a real "1 hour
+  // before" moment for it). The booking-reminders cron only ever scans rows
+  // where at least one of these is still null — this is the sole idempotency
+  // guard, so a re-run or a second concurrent cron tick can't double-send.
+  reminder1hSentAt  DateTime?
+  reminder10mSentAt DateTime?
 
   lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
