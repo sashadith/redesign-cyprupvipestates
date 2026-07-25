@@ -2,7 +2,7 @@ import { simpleParser } from "mailparser";
 import { prisma } from "@/lib/prisma";
 import { getImapCredentials, withReadOnlyInbox, fetchNewMessages, ImapNotConfiguredError } from "./imapClient";
 import { matchLeadForInboundEmail } from "./matchLead";
-import { stripHtmlBlockquotes, stripQuotedReply } from "./quoteStrip";
+import { stripHtmlBlockquotes, stripQuotedReply, stripSignatureBlock } from "./quoteStrip";
 import { stripHtmlToText } from "@/lib/emailSignature";
 
 const MAX_BODY_LENGTH = 10_000; // defensive cap — a reply this long is not the common case, and this is a timeline entry, not an archive
@@ -63,7 +63,7 @@ export async function pollInboundEmailForUser(userId: string): Promise<PollResul
 
         let rawText = parsed.text ?? "";
         if (!rawText && parsed.html) rawText = stripHtmlToText(stripHtmlBlockquotes(parsed.html));
-        const body = stripQuotedReply(rawText).slice(0, MAX_BODY_LENGTH);
+        const body = stripSignatureBlock(stripQuotedReply(rawText)).slice(0, MAX_BODY_LENGTH);
         const attachmentCount = parsed.attachments?.length ?? 0;
         const bodyWithAttachmentNote = attachmentCount > 0 ? `${body}\n\n[${attachmentCount} attachment${attachmentCount === 1 ? "" : "s"}]` : body;
 
