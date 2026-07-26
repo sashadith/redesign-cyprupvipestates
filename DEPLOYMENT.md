@@ -583,3 +583,45 @@ is safe; it proves nothing about whether prod's currently-live code can
 survive the DB changing under it. Confirm the dependent code is already
 deployed, or about to be deployed in the same breath, before the migration
 ever touches the shared DB.
+
+**`cp -a` on the live symlink silently writes into the running release
+(2026-07-26).** While building an isolated test copy to verify a fix against
+real feed data, `cp -a /var/www/cyprusvipestates /var/www/tmp-sync-test/xyz`
+was used, expecting a real, independent directory tree. It isn't one:
+`/var/www/cyprusvipestates` is itself a symlink to the current release, and
+`cp -a` (like plain `cp -r`) preserves symlinks by default rather than
+dereferencing them — the "copy" was just a second symlink pointing at the
+exact same live release directory. A subsequent `scp` meant for the isolated
+copy landed directly on `/var/www/releases/cve-<current>/src/...`, silently
+overwriting a file inside the release currently serving production traffic.
+No visible damage resulted only because Next.js in production serves the
+already-compiled `.next` output, not the raw `.ts` source tree — a
+coincidence of this stack, not a safety property to rely on. The mistake was
+caught immediately via `readlink -f` and reverted via checksum comparison
+against the deployed git commit, but it was a real near-miss: a write against
+the currently-running release, not a sandboxed copy.
+
+**The rule this enforces: never write to any path reached by resolving
+`/var/www/cyprusvipestates` (or a copy of it made without dereferencing
+symlinks) — that path is always the live release, whichever timestamp it
+currently points to.** Before writing into what's meant to be an isolated
+copy, resolve the real target first, then copy with symlinks NOT followed
+(`rsync -a --no-links`, excluding `node_modules`/`.next` which can be
+re-symlinked in separately) into a directory that does not itself live under
+`/var/www/releases/`:
+
+```bash
+LIVE_REAL=$(ssh "$HOST" "readlink -f /var/www/cyprusvipestates")
+echo "$LIVE_REAL"   # confirm this is the release you expect before copying anything
+ssh "$HOST" "rsync -a --no-links '$LIVE_REAL/' /var/www/tmp-sync-test/some-name/ --exclude node_modules --exclude .next"
+ssh "$HOST" "ln -s '$LIVE_REAL/node_modules' /var/www/tmp-sync-test/some-name/node_modules"
+# .env / secrets / public/uploads are themselves symlinks into /var/www/shared*
+# — recreate those specific symlinks explicitly, they won't come along via --no-links:
+ssh "$HOST" "ln -sf /var/www/shared/.env /var/www/tmp-sync-test/some-name/.env"
+```
+
+Test overlays (a fixed file copied in to verify a real-data sync before
+deploying) must only ever land inside such a verified, separately-rooted
+directory — never inside `/var/www/releases/` itself, and never inside
+anything reached by following `/var/www/cyprusvipestates` without first
+confirming, via `readlink -f`, exactly where it points.
