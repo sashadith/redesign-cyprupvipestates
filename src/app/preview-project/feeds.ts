@@ -343,6 +343,67 @@ const XML2U: Record<string, { url: string; developer: string; groupKey: (p: any)
   },
 };
 
+// xml2u ships two fields as nested objects instead of flat text — a shape
+// the generic txt()/clean()/toNum() helpers above don't unwrap (they only
+// handle xml2js's own attribute-object shape via _/#text/cdata). FloorSize/
+// PlotSize are { floorSize, floorSizeUnits } / { plotSize, plotSizeUnits };
+// passing the whole object to areaM2() silently evaluated to "" and the
+// area was lost entirely — fixed 2026-07-26 by reading the inner key.
+//
+// description is { en: "<p>...</p>" } (HTML, not plain text) — same
+// nested-object blindness plus a second problem: the renderer
+// (splitDescriptionParagraphs, src/lib/text.ts) expects plain text with
+// blank-line paragraph breaks, so raw markup must be converted, not passed
+// through (previously this field silently failed to parse too, and the
+// truncated shortDescription preview was used instead of the full text).
+const htmlToText = (html: string): string =>
+  html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<li[^>]*>/gi, "• ")
+    .replace(/<\/li>/gi, "\n")
+    .replace(/<\/(p|div|h[1-6]|ul|ol)>/gi, "\n\n")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&amp;/gi, "&").replace(/&nbsp;/gi, " ").replace(/&quot;/gi, '"').replace(/&#39;/g, "'").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">")
+    .replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+// { en: "..." } → the "en" text — the only locale ever seen in either feed
+// (checked against live Domenica + Pafilia data, 2026-07-26); falls back to
+// whichever locale IS present rather than dropping the field if that changes.
+const fullDescriptionText = (v: any): string => {
+  if (v == null) return "";
+  if (typeof v !== "object") return htmlToText(String(v));
+  const raw = v.en ?? Object.values(v)[0];
+  return raw ? htmlToText(String(raw)) : "";
+};
+// "A103Cirvis" -> "A103": Price.reference carries the project's own id as a
+// case-insensitive suffix for Domenica; Pafilia references (e.g.
+// "PA-232-6521") never carry this suffix, so they pass through unchanged —
+// confirmed against real data for both, this is deliberate, not a gap.
+// projectId is stripped of separators before matching — a multi-word
+// project's dataSource slug is hyphenated ("absolute-villas") but its
+// reference suffix concatenates the words with no separator at all
+// ("N03AbsoluteVillas") — found via real-data testing 2026-07-26, without
+// this the suffix would never match and "Villas N03AbsoluteVillas" would
+// survive instead of the intended "Villas N03".
+const stripProjectSuffix = (ref: string, projectId: string): string => {
+  const suffix = (projectId || "").replace(/[^a-z0-9]/gi, "");
+  if (!ref || !suffix) return ref;
+  return ref.toLowerCase().endsWith(suffix.toLowerCase()) ? ref.slice(0, ref.length - suffix.length).trim() : ref;
+};
+// Domenica's own Features list carries a per-unit "Status: Sold" / "Status:
+// Available For Sale" line; Pafilia's Feature1 is marketing copy, never a
+// status line, so this safely no-ops for Pafilia — it only ever matches a
+// Feature that literally starts with "Status:".
+const unitStatusFrom = (features: any): "available" | "sold" | "reserved" => {
+  const line = arr(Object.values(features ?? {})).map(txt).find((f: string) => /^status\s*:/i.test(f));
+  if (!line) return "available";
+  const v = line.slice(line.indexOf(":") + 1);
+  if (/sold/i.test(v)) return "sold";
+  if (/reserved/i.test(v)) return "reserved";
+  return "available";
+};
+const unitStatusLabel = (s: "available" | "sold" | "reserved") => (s === "sold" ? "Sold" : s === "reserved" ? "Reserved" : "Available");
+
 async function xml2u(dev: string, id: string): Promise<ProjectVM | null> {
   const cfg = XML2U[dev];
   if (!cfg) return null;
@@ -355,27 +416,31 @@ async function xml2u(dev: string, id: string): Promise<ProjectVM | null> {
     const d = p.Description ?? {};
     const beds = clean(d.bedrooms) !== "0" ? clean(d.bedrooms) : "";
     const baths = clean(d.fullBathrooms) !== "0" ? clean(d.fullBathrooms) : "";
+    const orientation = clean(d.orientation);
+    const status = unitStatusFrom(d.Features);
     const attrs = [
-      ["Floor area", areaM2(d.FloorSize)], ["Plot", areaM2(d.PlotSize)],
+      ["Floor area", areaM2(d.FloorSize?.floorSize)], ["Plot", areaM2(d.PlotSize?.plotSize)],
       ["Bedrooms", beds], ["Bathrooms", baths],
       ["En-suites", clean(d.ensuites) !== "0" ? clean(d.ensuites) : ""],
       ["Floors", clean(d.numberOfFloors) !== "0" ? clean(d.numberOfFloors) : ""],
-      ["Year built", clean(d.yearBuilt)], ["Orientation", clean(d.orientation)],
+      ["Year built", clean(d.yearBuilt)], ["Orientation", orientation],
       // Real YouTube/Matterport links exist for a good share of Pafilia's units —
       // previously never read at all. UnitsView renders a URL-shaped attrs value
       // as a clickable link rather than raw text.
       ["Video walkthrough", clean(p?.link?.video)], ["Virtual tour", clean(p?.link?.virtualTour)],
     ].filter(([, v]) => v).map(([name, value]) => ({ name: String(name), value: String(value) }));
+    const propertyType = txt(d.propertyType);
+    const refCode = stripProjectSuffix(txt(p?.Price?.reference), id);
     return {
-      ref: txt(p?.Price?.reference), name: clean(d.title) || txt(d.propertyType),
-      label: `${txt(d.propertyType)}${beds ? ` · ${beds} bed` : ""}`,
-      type: txt(d.propertyType), status: "available", statusLabel: "Available",
+      ref: txt(p?.Price?.reference), name: (propertyType && refCode ? `${propertyType} ${refCode}` : "") || clean(d.title) || propertyType,
+      label: `${propertyType}${beds ? ` · ${beds} bed` : ""}`,
+      type: propertyType, status, statusLabel: unitStatusLabel(status),
       price: toNum(p?.Price?.price), currency: txt(p?.Price?.currency) || "EUR",
-      beds, baths, areaBuilt: areaM2(d.FloorSize), areaPlot: areaM2(d.PlotSize), areaVeranda: "",
-      floor: clean(d.floorNumber), attrs, features: [],
+      beds, baths, areaBuilt: areaM2(d.FloorSize?.floorSize), areaPlot: areaM2(d.PlotSize?.plotSize), areaVeranda: "",
+      floor: clean(d.floorNumber), orientation, attrs, features: [],
       photos: sizedImages(arr(p?.images?.image).map((e: any) => aristoImg(e?.image)).filter(Boolean)),
       plans: arr(p?.Floorplans?.floorplan).map((e: any) => aristoImg(e?.floorplan)).filter(Boolean),
-      coords: null, description: clean(d.description) || clean(d.shortDescription),
+      coords: null, description: fullDescriptionText(d.description) || clean(d.shortDescription),
     };
   });
 
@@ -386,7 +451,13 @@ async function xml2u(dev: string, id: string): Promise<ProjectVM | null> {
   const area = ov.area ?? txt(first?.Address?.location);
   const district = districtFor(center?.lng) || districtFromText(area) || districtFromText(clean(first?.Address?.region)) || districtFromText(clean(first?.Address?.subRegion));
   const d0 = first.Description ?? {};
-  const descText = tidyDesc(clean(d0.description) || clean(d0.shortDescription));
+  const descText = tidyDesc(fullDescriptionText(d0.description) || clean(d0.shortDescription));
+  // EPC/GEC (energy performance / green energy cert) — both always empty
+  // across every property in either feed as of 2026-07-26, so this has no
+  // visible effect today; wired up so it starts working the moment either
+  // feed ever populates it, same "first unit wins" pattern as the rest of
+  // this project-level data.
+  const energy = clean(first?.EPC) || clean(first?.GEC) || "";
   // Domenica ships a structured "Key: Value" Features list; Pafilia's is a placeholder
   const featMap: Record<string, string> = {};
   arr(Object.values(d0.Features ?? {})).map(txt).forEach((f: string) => {
@@ -412,7 +483,7 @@ async function xml2u(dev: string, id: string): Promise<ProjectVM | null> {
     id, dev, publicName, developerName, developer: cfg.developer,
     area, district, town: "", location: joinLoc(district, area),
     status: stage || txt(first?.Price?.status) || "Available", stage, category: "Residential",
-    completion: (clean(d0.newBuild).toLowerCase() === "yes" || Number(clean(d0.yearBuilt)) >= 2025) && clean(d0.yearBuilt) ? String(clean(d0.yearBuilt)) : "", energy: "",
+    completion: (clean(d0.newBuild).toLowerCase() === "yes" || Number(clean(d0.yearBuilt)) >= 2025) && clean(d0.yearBuilt) ? String(clean(d0.yearBuilt)) : "", energy,
     description: anonymize(descText, developerName, publicName),
     gallery, plans, renders: [], amenities, extraFacts, heroVideo: ov.heroVideo, center, units,
     priceFrom: prices[0] ?? null, priceTo: prices[prices.length - 1] ?? null, currency: units[0]?.currency || "EUR",

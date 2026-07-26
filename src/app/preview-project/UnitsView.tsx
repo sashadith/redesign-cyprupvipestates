@@ -21,6 +21,7 @@ export type UnitVM = {
   areaPlot: string;
   areaVeranda: string;
   floor: string;
+  orientation?: string; // dedicated DevelopmentUnit.orientation column — not every adapter populates this yet
   attrs: { name: string; value: string }[];
   features: string[];
   photos: string[];

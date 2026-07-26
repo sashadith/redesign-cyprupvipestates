@@ -84,6 +84,7 @@ function unitRow(u: UnitVM, developmentId: string, i: number) {
     areaPlot: u.areaPlot || null,
     areaVeranda: u.areaVeranda || null,
     floor: u.floor || null,
+    orientation: u.orientation || null,
     latitude: u.coords?.lat ?? null,
     longitude: u.coords?.lng ?? null,
     attrs: (u.attrs ?? []) as any,
