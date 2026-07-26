@@ -272,7 +272,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
         />
       </div>
 
-      <BookingPanel bookings={bookingRows} />
+      <BookingPanel bookings={bookingRows} leadName={`${lead.firstName} ${lead.lastName}`.trim()} />
 
       {duplicates.length > 0 && (
         <div className="bg-[#FFF7ED] border border-[#FED7AA] rounded-lg p-4 mb-6">

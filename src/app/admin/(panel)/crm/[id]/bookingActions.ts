@@ -266,6 +266,74 @@ export async function confirmBookingSlotAction(bookingRequestId: string, confirm
   return { ok: `Confirmation sent to ${booking.lead.email}.` };
 }
 
+// Cancels a CONFIRMED meeting or declines a PROPOSED set of candidate
+// times — both just flip to CANCELLED (2026-07-26 decision: one dead-link
+// state, not a separate REJECTED value, so the enum stays small and the
+// public /book/[token] page needs no new case — it already treats
+// CANCELLED as "this link is dead, show Gone page" for expired links).
+// CANCELLED bookings are automatically excluded from getConfirmedBookings()
+// (status:"CONFIRMED" only) and from the calendar's status:{in:["CONFIRMED","PROPOSED"]}
+// query — the slot/entry disappears with no further code changes needed.
+// Deliberately final: if Sascha wants to meet this lead again later, he
+// creates a fresh booking link (createOrGetBookingRequestAction already
+// only reuses an existing PENDING/PROPOSED request, never a CANCELLED one,
+// so that's never blocked by this).
+export async function cancelBookingAction(bookingRequestId: string): Promise<{ ok?: string; error?: string }> {
+  const session = await requireSession();
+  const userId = (session.user as any).id as string;
+
+  const booking = await prisma.bookingRequest.findUnique({
+    where: { id: bookingRequestId },
+    include: { lead: { select: { firstName: true, lastName: true, languagePreference: true } } },
+  });
+  if (!booking) return { error: "Booking request not found." };
+  if (booking.status !== "CONFIRMED" && booking.status !== "PROPOSED") {
+    return { error: "Only a confirmed or proposed booking can be cancelled." };
+  }
+
+  const wasConfirmed = booking.status === "CONFIRMED";
+  const leadName = `${booking.lead.firstName} ${booking.lead.lastName}`.trim();
+  const displayTz = booking.leadTimezone || CYPRUS_TZ;
+  const confirmedTimeLabel = wasConfirmed ? formatInZone(booking.confirmedSlotUtc!, displayTz, INTL_LOCALE[toLocale(booking.lead.languagePreference)]) : null;
+
+  await prisma.bookingRequest.update({ where: { id: bookingRequestId }, data: { status: "CANCELLED" } });
+
+  const content = wasConfirmed ? `Meeting cancelled (was confirmed for ${confirmedTimeLabel})` : "Proposed meeting times declined — none of the candidate slots worked";
+  await prisma.leadActivity.create({
+    data: { leadId: booking.leadId, type: wasConfirmed ? "BOOKING_CANCELLED" : "BOOKING_DECLINED", content, createdBy: session.user?.name ?? "admin", createdById: userId },
+  });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: booking.leadId,
+      type: "BOOKING_EVENT",
+      channel: "SYSTEM",
+      body: content,
+      createdByUserId: userId,
+      createdByName: session.user?.name ?? "admin",
+      metadata: { legacyType: wasConfirmed ? "BOOKING_CANCELLED" : "BOOKING_DECLINED" },
+    },
+  });
+
+  // Only for an actual cancelled meeting — Sascha declining his own
+  // just-received proposal doesn't need a Telegram round-trip to himself.
+  if (wasConfirmed) {
+    try {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
+      const msg =
+        `<b>🚫 Meeting cancelled</b>\n` +
+        `${esc(leadName)} — was ${formatInZone(booking.confirmedSlotUtc!, CYPRUS_TZ)} Cyprus time\n\n` +
+        `<a href="${siteUrl}/admin/crm/${booking.leadId}">Open in CRM</a>`;
+      await sendTelegramMessage(msg);
+    } catch (e) {
+      console.error("booking cancel: Telegram notify failed:", e);
+    }
+  }
+
+  revalidatePath(`/admin/crm/${booking.leadId}`);
+  revalidatePath("/admin/crm/calendar");
+  return { ok: wasConfirmed ? "Meeting cancelled." : "Proposal declined." };
+}
+
 // Marks the "send the Zoom link separately" reminder as done — no static
 // Zoom room exists (2026-07-25 decision), so this is the one manual step
 // that must not be forgotten after confirming a ZOOM meeting.
