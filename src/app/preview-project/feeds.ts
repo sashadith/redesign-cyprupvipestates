@@ -158,7 +158,12 @@ async function islandBlue(id = "76"): Promise<ProjectVM | null> {
       status: st.includes("sold") ? "sold" : st.includes("reserv") ? "reserved" : "available",
       statusLabel: txt(u.Status), price: toNum(u?.Price?.Value), currency: txt(u?.Price?.Currency) || "EUR",
       beds: getAttr(/bedroom/), baths: getAttr(/bathroom/),
-      areaBuilt: getAttr(/total built|built area|covered internal|internal area/),
+      // "Total Built Area" is Covered Internal Area + Covered Veranda already
+      // summed (confirmed against live feed data, e.g. 147.9 = 132.94 + 14.96,
+      // true for all 220 units) — areaBuilt must be the pure interior figure
+      // so Covered Area (= areaBuilt + areaVeranda, computed at display time)
+      // doesn't double-count the veranda. 2026-07-26.
+      areaBuilt: getAttr(/covered internal|internal area/),
       areaPlot: getAttr(/plot area|plot size/), areaVeranda: getAttr(/covered veranda/), floor: getAttr(/floor|level/),
       attrs, features,
       photos: arr(u?.Photos?.Photo).map(txt).filter(Boolean).map(secure),
@@ -290,7 +295,15 @@ async function aristo(id: string): Promise<ProjectVM | null> {
       type: txt(u.Type), status: st.includes("sold") ? "sold" : st.includes("reserv") ? "reserved" : "available",
       statusLabel: txt(u.Status), price: toNum(u.Price), currency: "EUR",
       beds: naClean(u.Bedrooms), baths: naClean(u.Bathrooms),
-      areaBuilt: areaM2(u.Total_Covered_Areas), areaPlot: areaM2(u.Plot_Size), areaVeranda: areaM2(u.Covered_Verandas),
+      // Total_Covered_Areas already includes Covered_Verandas (confirmed
+      // against live feed data — equal in every sampled unit, e.g.
+      // 154.54 = 128.90 + Covered_Verandas + other covered extras) —
+      // areaBuilt needs the pure interior figure so Covered Area (computed
+      // at display time as areaBuilt + areaVeranda) doesn't double-count.
+      // 269/288 units carry Internal_Covered_Areas; the remaining 19 have
+      // neither field populated in either direction, so this is not a
+      // regression. 2026-07-26.
+      areaBuilt: areaM2(u.Internal_Covered_Areas), areaPlot: areaM2(u.Plot_Size), areaVeranda: areaM2(u.Covered_Verandas),
       floor: naClean(u.Apartment_Floor), attrs, features: [],
       photos: arr(u?.gallery?.image).map(aristoImg).filter(Boolean), plans: [],
       coords: Number.isFinite(lat) && Number.isFinite(lng) && lat ? { lat, lng } : null,
@@ -532,7 +545,15 @@ async function medousa(id: string): Promise<ProjectVM | null> {
       ref: txt(u.Id), name: txt(u.Title), label: `Nr. ${short || txt(u.Id)}`,
       type: txt(u.ProjectType) || clean(a.Type),
       status: "available", statusLabel: "Available", price: toNum(u.Price), currency: "EUR",
-      beds, baths, areaBuilt: areaM2(a.TotalCoveredArea), areaPlot: areaM2(a.Plot), areaVeranda: areaM2(a.CoveredVeranda),
+      // TotalCoveredArea already includes CoveredVeranda (confirmed against
+      // the live feed — equal in every sampled unit, e.g. 97.5 = 82 +
+      // 15.5) — areaBuilt needs the pure interior figure so Covered Area
+      // (computed at display time as areaBuilt + areaVeranda) doesn't
+      // double-count. InternalArea is populated on all 114 current units;
+      // TotalArea (Internal + Uncovered veranda, an imperfect but closer-
+      // than-nothing proxy) is kept only as a defensive fallback in case a
+      // future feed update ever leaves InternalArea blank. 2026-07-26.
+      beds, baths, areaBuilt: areaM2(a.InternalArea) || areaM2(a.TotalArea), areaPlot: areaM2(a.Plot), areaVeranda: areaM2(a.CoveredVeranda),
       floor: "", attrs, features: [], photos: [], plans: [], coords: null, description: "",
     };
   });

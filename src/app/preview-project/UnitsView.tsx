@@ -32,8 +32,28 @@ export type UnitVM = {
 
 const statusClass = (s: string) => (s === "sold" ? "sold" : s === "reserved" ? "warn" : "ok");
 const unitLabel = (u: UnitVM) => u.label || u.name || u.ref;
-// numeric value → "123 m²" — feed/price-list data isn't always suffixed consistently
-const sqm = (v: string) => v && !/m²|m2/i.test(v) ? `${v} m²` : v;
+// numeric value → "123 m²" — feed/price-list data isn't always suffixed
+// consistently (Island Blue's own raw attrs ship a bare ASCII "m2"; the
+// xml2u/aristo/medousa/qubehub adapters already format "m²" via areaM2() in
+// feeds.ts). Whatever unit symbol is already present gets normalized to the
+// locale's own (Cyrillic "м²" for ru, Latin "m²" elsewhere) rather than left
+// as-is, so the same page never mixes symbols. 2026-07-26.
+const sqm = (v: string, unit: string) => {
+  if (!v) return v;
+  // Anchored to end-of-string, not \b — the superscript "²" isn't a \w
+  // character, so a \b-based pattern silently failed to match "m²"/"м²"
+  // (only matched the ASCII-digit "m2" variant), leaving those strings
+  // un-normalized. Caught via simulation before deploy, 2026-07-26.
+  return /(m²|m2|м²)\s*$/i.test(v) ? v.replace(/\s*(m²|m2|м²)\s*$/i, ` ${unit}`) : `${v} ${unit}`;
+};
+// Extract the leading numeric value from an already-formatted area string
+// ("77 m²" -> 77) so Covered Area can be computed as areaBuilt +
+// areaVeranda at display time, never stored.
+const areaNum = (v: string): number | null => {
+  const m = (v || "").trim().match(/^[\d.]+/);
+  const n = m ? Number(m[0]) : NaN;
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
 const fmtPrice = (n: number | null, cur = "EUR", priceOnRequest = "Price on request") =>
   n == null ? priceOnRequest : `${cur === "EUR" ? "€" : cur + " "}${n.toLocaleString("en-US")}`;
 // Sold → a muted dash (the status pill already says "Sold"). Reserved → the word
@@ -104,12 +124,19 @@ function UnitDetails({ u, t, withPhotos = true, withFeatures = false, onOpenPhot
 
 function UnitCard({ u, t, open, onToggle }: { u: UnitVM; t: DevelopmentStrings; open: boolean; onToggle: () => void }) {
   const [lb, setLb] = useState<number | null>(null);
+  // Covered Area is never stored — computed here from areaBuilt + areaVeranda
+  // so it stays correct if a manual edit later adds/changes the veranda
+  // figure. Only shown when a veranda figure actually exists (Domenica/
+  // Pafilia/Square One have none) — no "+0 m²" line otherwise.
+  const builtNum = areaNum(u.areaBuilt), verandaNum = areaNum(u.areaVeranda);
+  const covered = builtNum != null && verandaNum != null ? builtNum + verandaNum : null;
   const facts = [
     u.beds && { k: t.factBeds, v: u.beds },
     u.baths && { k: t.factBaths, v: u.baths },
-    u.areaBuilt && { k: t.factBuilt, v: sqm(u.areaBuilt) },
-    u.areaVeranda && { k: t.factVeranda, v: sqm(u.areaVeranda) },
-    u.areaPlot && { k: t.factPlot, v: sqm(u.areaPlot) },
+    u.areaBuilt && { k: t.factBuilt, v: sqm(u.areaBuilt, t.unitM2) },
+    u.areaVeranda && { k: t.factVeranda, v: sqm(u.areaVeranda, t.unitM2) },
+    covered != null && { k: t.factCovered, v: `${covered} ${t.unitM2}` },
+    u.areaPlot && { k: t.factPlot, v: sqm(u.areaPlot, t.unitM2) },
     u.floor && { k: t.factFloor, v: u.floor },
   ].filter(Boolean) as { k: string; v: string }[];
 
@@ -183,8 +210,8 @@ function UnitsTable({ units, t }: { units: UnitVM[]; t: DevelopmentStrings }) {
                   <td>{u.type || "—"}</td>
                   <td>{u.floor || "—"}</td>
                   <td className="r">{u.beds || "—"}</td>
-                  <td className="r">{u.areaBuilt ? sqm(u.areaBuilt) : "—"}</td>
-                  <td className="r">{u.areaPlot ? sqm(u.areaPlot) : "—"}</td>
+                  <td className="r">{u.areaBuilt ? sqm(u.areaBuilt, t.unitM2) : "—"}</td>
+                  <td className="r">{u.areaPlot ? sqm(u.areaPlot, t.unitM2) : "—"}</td>
                   <td className="r pp-tbl__price">{priceCell(u, t)}</td>
                   <td><StatusPill u={u} /></td>
                 </tr>

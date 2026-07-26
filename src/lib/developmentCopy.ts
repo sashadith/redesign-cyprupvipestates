@@ -57,7 +57,8 @@ export type DevelopmentStrings = {
   viewTable: string;
   unitDisplayAria: string;
   colUnit: string; colType: string; colFloor: string; colBeds: string; colBuilt: string; colPlot: string; colPrice: string; colStatus: string;
-  factBeds: string; factBaths: string; factBuilt: string; factVeranda: string; factFloor: string;
+  factBeds: string; factBaths: string; factBuilt: string; factVeranda: string; factCovered: string; factFloor: string;
+  unitM2: string; // area unit symbol — Cyrillic "м²" for ru, Latin "m²" elsewhere; never mix within a locale
   viewTour: string;
   watch: string;
   showLess: string;
@@ -127,7 +128,8 @@ const EN: DevelopmentStrings = {
   viewTable: "Table",
   unitDisplayAria: "Unit display",
   colUnit: "Unit", colType: "Type", colFloor: "Floor", colBeds: "Beds", colBuilt: "Built", colPlot: "Plot", colPrice: "Price", colStatus: "Status",
-  factBeds: "Beds", factBaths: "Baths", factBuilt: "Built", factVeranda: "Veranda", factFloor: "Floor",
+  factBeds: "Beds", factBaths: "Baths", factBuilt: "Built", factVeranda: "Veranda", factCovered: "Covered", factFloor: "Floor",
+  unitM2: "m²",
   viewTour: "View tour ↗",
   watch: "Watch ↗",
   showLess: "Show less",
@@ -180,7 +182,8 @@ const DE: DevelopmentStrings = {
   viewTable: "Tabelle",
   unitDisplayAria: "Einheiten-Ansicht",
   colUnit: "Einheit", colType: "Typ", colFloor: "Etage", colBeds: "Schlafz.", colBuilt: "Wohnfl.", colPlot: "Grundst.", colPrice: "Preis", colStatus: "Status",
-  factBeds: "Schlafz.", factBaths: "Bäder", factBuilt: "Wohnfl.", factVeranda: "Veranda", factFloor: "Etage",
+  factBeds: "Schlafz.", factBaths: "Bäder", factBuilt: "Wohnfl.", factVeranda: "Veranda", factCovered: "Gesamtfl.", factFloor: "Etage",
+  unitM2: "m²",
   viewTour: "Tour ansehen ↗",
   watch: "Ansehen ↗",
   showLess: "Weniger anzeigen",
@@ -233,7 +236,8 @@ const PL: DevelopmentStrings = {
   viewTable: "Tabela",
   unitDisplayAria: "Widok lokali",
   colUnit: "Lokal", colType: "Typ", colFloor: "Piętro", colBeds: "Sypialnie", colBuilt: "Pow. użytk.", colPlot: "Działka", colPrice: "Cena", colStatus: "Status",
-  factBeds: "Sypialnie", factBaths: "Łazienki", factBuilt: "Pow. użytk.", factVeranda: "Weranda", factFloor: "Piętro",
+  factBeds: "Sypialnie", factBaths: "Łazienki", factBuilt: "Pow. użytk.", factVeranda: "Weranda", factCovered: "Łącznie", factFloor: "Piętro",
+  unitM2: "m²",
   viewTour: "Zobacz wirtualny spacer ↗",
   watch: "Obejrzyj ↗",
   showLess: "Pokaż mniej",
@@ -287,7 +291,8 @@ const RU: DevelopmentStrings = {
   viewTable: "Таблица",
   unitDisplayAria: "Вид объектов",
   colUnit: "Объект", colType: "Тип", colFloor: "Этаж", colBeds: "Спальни", colBuilt: "Площадь", colPlot: "Участок", colPrice: "Цена", colStatus: "Статус",
-  factBeds: "Спальни", factBaths: "Ванные", factBuilt: "Площадь", factVeranda: "Веранда", factFloor: "Этаж",
+  factBeds: "Спальни", factBaths: "Ванные", factBuilt: "Жилая", factVeranda: "Веранда", factCovered: "Итого", factFloor: "Этаж",
+  unitM2: "м²",
   viewTour: "Смотреть тур ↗",
   watch: "Смотреть ↗",
   showLess: "Скрыть",
