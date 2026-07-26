@@ -444,9 +444,13 @@ async function xml2u(dev: string, id: string): Promise<ProjectVM | null> {
     ].filter(([, v]) => v).map(([name, value]) => ({ name: String(name), value: String(value) }));
     const propertyType = txt(d.propertyType);
     const refCode = stripProjectSuffix(txt(p?.Price?.reference), id);
+    // label mirrors name — like every other adapter (islandBlue/qubehub/aristo),
+    // label is the short unique display string. The old "propertyType · X bed"
+    // formula gave every same-type unit in a project an identical label. 2026-07-26.
+    const unitName = (propertyType && refCode ? `${propertyType} ${refCode}` : "") || clean(d.title) || propertyType;
     return {
-      ref: txt(p?.Price?.reference), name: (propertyType && refCode ? `${propertyType} ${refCode}` : "") || clean(d.title) || propertyType,
-      label: `${propertyType}${beds ? ` · ${beds} bed` : ""}`,
+      ref: txt(p?.Price?.reference), name: unitName,
+      label: unitName,
       type: propertyType, status, statusLabel: unitStatusLabel(status),
       price: toNum(p?.Price?.price), currency: txt(p?.Price?.currency) || "EUR",
       beds, baths, areaBuilt: areaM2(d.FloorSize?.floorSize), areaPlot: areaM2(d.PlotSize?.plotSize), areaVeranda: "",
