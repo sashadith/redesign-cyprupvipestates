@@ -451,7 +451,12 @@ export async function saveUnits(developmentId: string, units: any[]) {
     return {
       developmentId,
       label,
-      ref: label,
+      // The feed's own reference code — comes from its OWN form field now,
+      // never derived from `label`. Previously this was `ref: label`, which
+      // clobbered the real feed reference on every save (e.g. Cirvis:
+      // "A103Cirvis" → whatever text was typed as the label), permanently
+      // breaking any future feed-based matching for that unit. Fixed 2026-07-26.
+      ref: String(u.ref ?? "").trim() || null,
       type: String(u.type ?? "").trim() || null,
       beds: String(u.beds ?? "").trim() || null,
       baths: String(u.baths ?? "").trim() || null,

@@ -10,6 +10,12 @@ import SyncWithDriveButton from "./SyncWithDriveButton";
 export type UnitRow = {
   id?: string;
   label: string;
+  // The feed's own reference code (e.g. "A103Cirvis") — deliberately separate
+  // from `label`. Auto-filled from the feed/PDF/Drive import and normally
+  // never touched by hand; saveUnits() must preserve it verbatim regardless
+  // of label edits, or the future feed-status auto-sync loses its matching
+  // key the moment someone edits a unit. Fixed 2026-07-26 (see actions.ts).
+  ref: string;
   type: string;
   beds: string;
   baths: string;
@@ -31,7 +37,7 @@ export type UnitRow = {
 };
 
 const blank = (): UnitRow => ({
-  label: "", type: "", beds: "", baths: "", areaBuilt: "", areaInternal: "", areaPlot: "", areaVeranda: "", areaVerandaOpen: "",
+  label: "", ref: "", type: "", beds: "", baths: "", areaBuilt: "", areaInternal: "", areaPlot: "", areaVeranda: "", areaVerandaOpen: "",
   floor: "", unitNumber: "", storage: "", guestWc: "", orientation: "", price: "", status: "available", amenities: [], photos: [], attrs: [],
 });
 

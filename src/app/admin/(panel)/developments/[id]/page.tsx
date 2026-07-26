@@ -289,6 +289,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
         initial={d.units.map((u) => ({
           id: u.id,
           label: u.label || u.ref || "",
+          ref: u.ref || "",
           type: u.type || "",
           beds: u.beds || "",
           baths: u.baths || "",
