@@ -40,6 +40,7 @@ function buildModules(isAdmin: boolean, trashCount: number, activeLeadCount: num
       pages: [
         { href: "/admin/crm", label: "Leads", count: activeLeadCount, countVariant: "neutral" },
         { href: "/admin/crm/board", label: "Pipeline" },
+        { href: "/admin/crm/calendar", label: "Calendar" },
         { href: "/admin/crm/trash", label: "Trash", count: trashCount, countVariant: "neutral" },
       ],
     },

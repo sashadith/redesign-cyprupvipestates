@@ -33,7 +33,10 @@ export default async function CrmBoard() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-semibold">Pipeline</h1>
-        <Link href="/admin/crm" className="text-sm text-[#1B4B43] hover:underline">List view →</Link>
+        <div className="flex items-center gap-4">
+          <Link href="/admin/crm" className="text-sm text-[#1B4B43] hover:underline">List view →</Link>
+          <Link href="/admin/crm/calendar" className="text-sm text-[#1B4B43] hover:underline">Calendar →</Link>
+        </div>
       </div>
       {capped && <p className="text-xs text-[#9CA3AF] mb-4">Showing the {BOARD_CAP} most recently-updated leads. Use the <Link href="/admin/crm" className="underline">list view</Link> to search/filter the rest.</p>}
       <div className="flex gap-4 overflow-x-auto pb-4">

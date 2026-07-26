@@ -20,11 +20,11 @@ export default function BookingConfirmCard({
   leadLabel: string;
 }) {
   const [pending, startTransition] = useTransition();
-  const [result, setResult] = useState<{ ok?: string; error?: string } | null>(null);
+  const [result, setResult] = useState<{ ok?: string; error?: string; conflict?: true } | null>(null);
 
-  const confirm = () => {
+  const confirm = (force = false) => {
     startTransition(async () => {
-      setResult(await confirmBookingSlotAction(bookingRequestId, slotUtc));
+      setResult(await confirmBookingSlotAction(bookingRequestId, slotUtc, force));
     });
   };
 
@@ -40,13 +40,27 @@ export default function BookingConfirmCard({
         <button
           type="button"
           disabled={pending}
-          onClick={confirm}
+          onClick={() => confirm(false)}
           className="rounded-md bg-[#1B4B43] text-white text-xs px-3 py-1.5 hover:bg-[#142E2D] disabled:opacity-50"
         >
           {pending ? "Confirming…" : "Confirm this time"}
         </button>
       )}
-      {result?.error && <span className="text-xs text-[#DC2626] w-full">{result.error}</span>}
+      {result?.error && (
+        <span className="text-xs text-[#DC2626] w-full flex flex-wrap items-center gap-2">
+          {result.error}
+          {result.conflict && (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => confirm(true)}
+              className="rounded-md border border-[#DC2626] text-[#DC2626] text-xs px-2 py-1 hover:bg-[#DC2626] hover:text-white disabled:opacity-50"
+            >
+              Confirm anyway
+            </button>
+          )}
+        </span>
+      )}
     </li>
   );
 }

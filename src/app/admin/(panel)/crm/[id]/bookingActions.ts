@@ -15,6 +15,7 @@ import { BOOKING_CONFIRMATION_EMAIL, INTL_LOCALE } from "@/lib/crm/bookingMessag
 import type { Locale } from "@/lib/crm/presentationMessages";
 import type { MeetingType } from "@prisma/client";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { getConfirmedBookings, findConflict } from "@/lib/booking/conflicts";
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -93,6 +94,13 @@ export async function proposeSlotAction(token: string, selectedUtcSlots: string[
   if (slots.length < 1 || slots.length > 3) return { error: "invalid_slot_count" };
   if (slots.some((s) => new Date(s).getTime() < Date.now())) return { error: "invalid_slot_time" };
 
+  // Defense in depth against a stale page: the picker already hides
+  // CONFIRMED slots, but if another lead confirmed one in the meantime
+  // (page left open, submitted late), reject it here rather than silently
+  // accepting a proposal for a time that's already taken.
+  const confirmedBookings = await getConfirmedBookings();
+  if (slots.some((s) => findConflict(new Date(s), confirmedBookings))) return { error: "slot_no_longer_available" };
+
   const cleanLeadTimezone = leadTimezone.slice(0, 100);
   await prisma.bookingRequest.update({
     where: { token },
@@ -163,7 +171,11 @@ function cleanLeadTzIsUsable(tz: string): boolean {
 // Sascha's one-click confirm: picks one of the lead's proposed slots, emails
 // a localized confirmation with an .ics attachment (reusing the exact same
 // signature/font/closing apparatus as Compose), and logs the timeline event.
-export async function confirmBookingSlotAction(bookingRequestId: string, confirmedSlotUtcIso: string): Promise<{ ok?: string; error?: string }> {
+// `force` lets the admin deliberately override a detected double-booking
+// conflict — the default (false) blocks the confirmation and surfaces the
+// conflicting lead's name instead of silently double-booking (see
+// findConflict/getConfirmedBookings in lib/booking/conflicts.ts).
+export async function confirmBookingSlotAction(bookingRequestId: string, confirmedSlotUtcIso: string, force = false): Promise<{ ok?: string; error?: string; conflict?: true }> {
   const session = await requireSession();
   const userId = (session.user as any).id as string;
 
@@ -176,6 +188,11 @@ export async function confirmBookingSlotAction(bookingRequestId: string, confirm
 
   const confirmedSlotUtc = new Date(confirmedSlotUtcIso);
   if (Number.isNaN(confirmedSlotUtc.getTime())) return { error: "Invalid slot." };
+
+  if (!force) {
+    const conflict = findConflict(confirmedSlotUtc, await getConfirmedBookings());
+    if (conflict) return { conflict: true, error: `A meeting with ${conflict.leadName} is already confirmed at this time.` };
+  }
 
   const locale = toLocale(booking.lead.languagePreference);
   const displayTz = booking.leadTimezone || CYPRUS_TZ;

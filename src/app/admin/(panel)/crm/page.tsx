@@ -218,6 +218,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
         <div className="flex items-center gap-4">
           <Link href={`/admin/crm/export${leadQueryString(searchParams, { page: "" })}`} className="text-sm text-[#1B4B43] hover:underline">Export CSV ↓</Link>
           <Link href="/admin/crm/board" className="text-sm text-[#1B4B43] hover:underline">Pipeline view →</Link>
+          <Link href="/admin/crm/calendar" className="text-sm text-[#1B4B43] hover:underline">Calendar →</Link>
           <Link href="/admin/crm/new" className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-4 py-2 hover:bg-[#142E2D]">+ New lead</Link>
         </div>
       </div>

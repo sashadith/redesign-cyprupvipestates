@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { generateAvailableSlots } from "@/lib/booking/slots";
 import { formatInZone, CYPRUS_TZ } from "@/lib/booking/timezone";
+import { getConfirmedBookings, findConflict } from "@/lib/booking/conflicts";
 import { asBLocale, COPY } from "./copy";
 import SlotPicker, { type SlotGroup } from "./SlotPicker";
 
@@ -110,8 +111,12 @@ export default async function BookingPage({ params }: { params: { token: string 
     );
   }
 
-  // status === "PENDING" — show the picker.
-  const slots = generateAvailableSlots(new Date());
+  // status === "PENDING" — show the picker. Slots already covered by a
+  // CONFIRMED meeting (any lead's, not just this one's) are dropped
+  // entirely rather than shown disabled — per spec, only CONFIRMED blocks;
+  // another lead's still-open PROPOSED candidates never do.
+  const confirmedBookings = await getConfirmedBookings();
+  const slots = generateAvailableSlots(new Date()).filter((s) => !findConflict(new Date(s.utc), confirmedBookings));
   const groups = new Map<string, SlotGroup>();
   for (const slot of slots) {
     const date = new Date(slot.utc);
