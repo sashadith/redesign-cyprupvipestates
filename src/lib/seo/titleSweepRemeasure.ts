@@ -34,13 +34,24 @@ export type SweepComparison = {
 // Shared by: Action Center rule (d), the admin SEO view's "title-sweep
 // measurement status" section, and the one-time Telegram push below — one
 // computation, three consumers.
-export async function computeTitleSweepComparison(): Promise<SweepComparison | null> {
+//
+// Returns one entry per distinct "## YYYY-MM-DD" batch section in the log,
+// each with its own dueDate/isDue/rows — batches must stay independent so a
+// second (or third) sweep doesn't inherit an earlier batch's due date or get
+// silently skipped by the Telegram push once the first batch has already
+// notified. (Previously this collapsed everything to `entries[0].batchDate`,
+// which only ever worked because there was exactly one batch in the log.)
+export async function computeTitleSweepComparison(): Promise<SweepComparison[]> {
   const entries = await loadSweepEntries();
-  if (!entries.length) return null;
-  const batchDate = entries[0].batchDate; // single batch so far; earliest wins once there are more
-  const dueDate = new Date(batchDate.getTime() + REMEASURE_WINDOW_DAYS * DAY);
-  const daysElapsed = Math.floor((Date.now() - batchDate.getTime()) / DAY);
-  const isDue = Date.now() >= dueDate.getTime();
+  if (!entries.length) return [];
+
+  const byBatch = new Map<number, SweepEntry[]>();
+  for (const e of entries) {
+    const key = e.batchDate.getTime();
+    const arr = byBatch.get(key) ?? [];
+    arr.push(e);
+    byBatch.set(key, arr);
+  }
 
   const since = new Date(Date.now() - METRIC_WINDOW_DAYS * DAY);
   const metricRows = await prisma.searchMetric.findMany({
@@ -57,53 +68,69 @@ export async function computeTitleSweepComparison(): Promise<SweepComparison | n
     agg.set(key, a);
   }
 
-  const rows: SweepComparisonRow[] = entries.map((e) => {
-    const a = agg.get(`${e.locale}::${e.page}`);
-    const hasCurrentData = !!a && a.impressions > 0;
-    return {
-      ...e,
-      hasBaseline: e.baselineCtr != null,
-      hasCurrentData,
-      currentCtr: hasCurrentData ? (a!.clicks / a!.impressions) * 100 : undefined,
-      currentPosition: hasCurrentData ? a!.posWeighted / a!.impressions : undefined,
-    };
+  const batches = Array.from(byBatch.entries()).sort(([a], [b]) => a - b);
+  return batches.map(([, batchEntries]) => {
+    const batchDate = batchEntries[0].batchDate;
+    const dueDate = new Date(batchDate.getTime() + REMEASURE_WINDOW_DAYS * DAY);
+    const daysElapsed = Math.floor((Date.now() - batchDate.getTime()) / DAY);
+    const isDue = Date.now() >= dueDate.getTime();
+
+    const rows: SweepComparisonRow[] = batchEntries.map((e) => {
+      const a = agg.get(`${e.locale}::${e.page}`);
+      const hasCurrentData = !!a && a.impressions > 0;
+      return {
+        ...e,
+        hasBaseline: e.baselineCtr != null,
+        hasCurrentData,
+        currentCtr: hasCurrentData ? (a!.clicks / a!.impressions) * 100 : undefined,
+        currentPosition: hasCurrentData ? a!.posWeighted / a!.impressions : undefined,
+      };
+    });
+
+    const measured = rows.filter((r) => r.hasBaseline && r.hasCurrentData);
+    const improvedCount = measured.filter((r) => (r.currentCtr as number) > (r.baselineCtr as number)).length;
+    const avgCtrDeltaPp = measured.length
+      ? measured.reduce((sum, r) => sum + ((r.currentCtr as number) - (r.baselineCtr as number)), 0) / measured.length
+      : null;
+
+    return { batchDate, dueDate, isDue, daysElapsed, rows, improvedCount, measuredCount: measured.length, avgCtrDeltaPp };
   });
-
-  const measured = rows.filter((r) => r.hasBaseline && r.hasCurrentData);
-  const improvedCount = measured.filter((r) => (r.currentCtr as number) > (r.baselineCtr as number)).length;
-  const avgCtrDeltaPp = measured.length
-    ? measured.reduce((sum, r) => sum + ((r.currentCtr as number) - (r.baselineCtr as number)), 0) / measured.length
-    : null;
-
-  return { batchDate, dueDate, isDue, daysElapsed, rows, improvedCount, measuredCount: measured.length, avgCtrDeltaPp };
 }
 
-// One-time push, guarded by a CronRunLog marker (job=TELEGRAM_JOB_KEY, ok=true)
-// so it fires exactly once when the window is first crossed, not every day
-// forever after — separate from the Action Center INFO item (rule d), which
-// keeps showing on the dashboard indefinitely once due, matching the "items
-// are live conditions" architecture (see actionCenter/types.ts).
-export async function maybeSendTitleSweepTelegram(): Promise<{ sent: boolean }> {
-  const already = await prisma.cronRunLog.findFirst({ where: { job: TELEGRAM_JOB_KEY, ok: true } });
-  if (already) return { sent: false };
-
-  const comparison = await computeTitleSweepComparison();
-  if (!comparison || !comparison.isDue) return { sent: false };
-
+// One-time-per-batch push, guarded by a CronRunLog marker keyed to that
+// batch's date (job=`${TELEGRAM_JOB_KEY}:${batchDateISO}`, ok=true) so each
+// batch notifies exactly once when its own window is first crossed, not
+// every day forever after and not just once globally — separate from the
+// Action Center INFO item (rule d), which keeps showing on the dashboard
+// indefinitely once due, matching the "items are live conditions"
+// architecture (see actionCenter/types.ts).
+export async function maybeSendTitleSweepTelegram(): Promise<{ sent: number }> {
+  const comparisons = await computeTitleSweepComparison();
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
-  const deltaLabel = comparison.avgCtrDeltaPp != null
-    ? ` (avg ${comparison.avgCtrDeltaPp >= 0 ? "+" : ""}${comparison.avgCtrDeltaPp.toFixed(2)}pp)`
-    : "";
-  const text = [
-    "<b>📈 Title-Sweep Re-Measurement Ready</b>",
-    "",
-    `Batch from ${comparison.batchDate.toISOString().slice(0, 10)}, measured ${comparison.daysElapsed} days later.`,
-    `${comparison.improvedCount}/${comparison.measuredCount} pages improved CTR${deltaLabel}.`,
-    "",
-    `<a href="${siteUrl}/admin/analytics/seo">View full comparison</a>`,
-  ].join("\n");
+  let sent = 0;
 
-  await sendTelegramMessage(text);
-  await logCronRun(TELEGRAM_JOB_KEY, true, `sent: ${comparison.improvedCount}/${comparison.measuredCount} improved`);
-  return { sent: true };
+  for (const comparison of comparisons) {
+    if (!comparison.isDue) continue;
+    const jobKey = `${TELEGRAM_JOB_KEY}:${comparison.batchDate.toISOString().slice(0, 10)}`;
+    const already = await prisma.cronRunLog.findFirst({ where: { job: jobKey, ok: true } });
+    if (already) continue;
+
+    const deltaLabel = comparison.avgCtrDeltaPp != null
+      ? ` (avg ${comparison.avgCtrDeltaPp >= 0 ? "+" : ""}${comparison.avgCtrDeltaPp.toFixed(2)}pp)`
+      : "";
+    const text = [
+      "<b>📈 Title-Sweep Re-Measurement Ready</b>",
+      "",
+      `Batch from ${comparison.batchDate.toISOString().slice(0, 10)}, measured ${comparison.daysElapsed} days later.`,
+      `${comparison.improvedCount}/${comparison.measuredCount} pages improved CTR${deltaLabel}.`,
+      "",
+      `<a href="${siteUrl}/admin/analytics/seo">View full comparison</a>`,
+    ].join("\n");
+
+    await sendTelegramMessage(text);
+    await logCronRun(jobKey, true, `sent: ${comparison.improvedCount}/${comparison.measuredCount} improved`);
+    sent++;
+  }
+
+  return { sent };
 }

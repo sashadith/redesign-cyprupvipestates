@@ -85,20 +85,22 @@ async function newPagesIndexed(): Promise<ActionItem[]> {
 // is up (see src/lib/seo/titleSweepRemeasure.ts; the one-time Telegram push
 // for this same milestone is triggered separately, from the gsc-sync cron).
 async function titleSweepDue(): Promise<ActionItem[]> {
-  const comparison = await computeTitleSweepComparison();
-  if (!comparison || !comparison.isDue) return [];
-  const deltaLabel = comparison.avgCtrDeltaPp != null
-    ? ` (avg ${comparison.avgCtrDeltaPp >= 0 ? "+" : ""}${comparison.avgCtrDeltaPp.toFixed(2)}pp)`
-    : "";
-  return [{
-    id: "seo-title-sweep-remeasure",
-    severity: "INFO",
-    category: "SEO",
-    title: `Title-sweep re-measurement ready: ${comparison.improvedCount}/${comparison.measuredCount} pages improved CTR`,
-    description: `Batch from ${comparison.batchDate.toISOString().slice(0, 10)}, measured ${comparison.daysElapsed} days later${deltaLabel}.`,
-    deepLink: "/admin/analytics/seo",
-    since: comparison.batchDate,
-  }];
+  const comparisons = await computeTitleSweepComparison();
+  return comparisons.filter((c) => c.isDue).map((comparison) => {
+    const deltaLabel = comparison.avgCtrDeltaPp != null
+      ? ` (avg ${comparison.avgCtrDeltaPp >= 0 ? "+" : ""}${comparison.avgCtrDeltaPp.toFixed(2)}pp)`
+      : "";
+    const batchDateStr = comparison.batchDate.toISOString().slice(0, 10);
+    return {
+      id: `seo-title-sweep-remeasure:${batchDateStr}`,
+      severity: "INFO",
+      category: "SEO",
+      title: `Title-sweep re-measurement ready: ${comparison.improvedCount}/${comparison.measuredCount} pages improved CTR`,
+      description: `Batch from ${batchDateStr}, measured ${comparison.daysElapsed} days later${deltaLabel}.`,
+      deepLink: "/admin/analytics/seo",
+      since: comparison.batchDate,
+    };
+  });
 }
 
 // (e) Core Web Vitals degraded — one item per shared template class, not per

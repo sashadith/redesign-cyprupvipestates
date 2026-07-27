@@ -45,12 +45,11 @@ export type AdvisorPayload = {
     soldOutCount: number;
     archivedThisWeek: number;
   };
-  titleSweep: {
-    hasActiveSweep: boolean;
-    batchDate?: string;
-    daysRemaining?: number;
-    urlsInWindow?: number;
-  } | null;
+  // One entry per still-active batch (a batch drops off once its window
+  // closes) — `urls` is the actual protected list, not just a count, so the
+  // Advisor can check a specific candidate URL against it directly instead
+  // of just knowing a number of pages are protected somewhere.
+  titleSweep: { batchDate: string; daysRemaining: number; urls: string[] }[];
   // Routing/content changes (last 60 days) that can shift GSC metrics for
   // reasons unrelated to ranking quality — see docs/SITE-CHANGELOG.md. The
   // ANALYZE step is instructed to attribute an overlapping metric shift to
@@ -137,17 +136,14 @@ async function gatherPlatformStats() {
 }
 
 async function gatherTitleSweepStatus(): Promise<AdvisorPayload["titleSweep"]> {
-  const entries = await loadSweepEntries();
-  if (!entries.length) return null;
-  const comparison = await computeTitleSweepComparison();
-  if (!comparison) return null;
-  const daysRemaining = Math.max(0, Math.ceil((comparison.dueDate.getTime() - Date.now()) / DAY));
-  return {
-    hasActiveSweep: !comparison.isDue,
-    batchDate: comparison.batchDate.toISOString().slice(0, 10),
-    daysRemaining,
-    urlsInWindow: entries.length,
-  };
+  const comparisons = await computeTitleSweepComparison();
+  return comparisons
+    .filter((c) => !c.isDue)
+    .map((c) => ({
+      batchDate: c.batchDate.toISOString().slice(0, 10),
+      daysRemaining: Math.max(0, Math.ceil((c.dueDate.getTime() - Date.now()) / DAY)),
+      urls: c.rows.map((r) => r.page),
+    }));
 }
 
 export async function gatherAdvisorPayload(): Promise<AdvisorPayload> {
