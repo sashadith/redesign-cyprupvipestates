@@ -109,10 +109,19 @@ export async function maybeSendTitleSweepTelegram(): Promise<{ sent: number }> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
   let sent = 0;
 
-  for (const comparison of comparisons) {
+  for (let i = 0; i < comparisons.length; i++) {
+    const comparison = comparisons[i];
     if (!comparison.isDue) continue;
     const jobKey = `${TELEGRAM_JOB_KEY}:${comparison.batchDate.toISOString().slice(0, 10)}`;
-    const already = await prisma.cronRunLog.findFirst({ where: { job: jobKey, ok: true } });
+    // comparisons is sorted earliest-first, so index 0 is the one batch that
+    // could have gone through the pre-multi-batch code path, which wrote its
+    // "sent" marker under the old un-suffixed TELEGRAM_JOB_KEY (no per-batch
+    // key existed yet). If this deploy lands after that batch's due date has
+    // already passed under the old code, the "already sent" row is under
+    // that legacy key, not this batch's new one — check both so a late
+    // deploy can never cause a duplicate send for a pre-existing batch.
+    const candidateKeys = i === 0 ? [jobKey, TELEGRAM_JOB_KEY] : [jobKey];
+    const already = await prisma.cronRunLog.findFirst({ where: { job: { in: candidateKeys }, ok: true } });
     if (already) continue;
 
     const deltaLabel = comparison.avgCtrDeltaPp != null
