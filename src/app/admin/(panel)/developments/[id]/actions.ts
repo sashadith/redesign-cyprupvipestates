@@ -9,6 +9,7 @@ import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleA
 import { resolveMapsUrlToGeo } from "@/lib/mapsGeo";
 import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
 import { syncDeveloperDrive, type DriveSyncResult } from "@/lib/driveAvailabilitySync";
+import { syncOneDevelopment, type SyncOneDevelopmentResult } from "@/lib/feedSync";
 import { uniqueDevelopmentSlug } from "@/lib/developmentSeo";
 import { generateSeoMeta, getSeoPromptTemplate, saveSeoPromptTemplate, type SeoMetaResult } from "@/lib/ai/seoMeta";
 import { getDbProject } from "@/lib/developmentRender";
@@ -443,13 +444,22 @@ export async function saveUnits(developmentId: string, units: any[]) {
   // ref=label incident it was built to prevent — feedRef is the future
   // status-sync's only match anchor and the form never surfaces it for
   // editing at all (see UnitDetail.tsx, read-only display only). 2026-07-27.
-  const prev = await prisma.developmentUnit.findMany({ where: { developmentId }, select: { ref: true, label: true, photos: true, attrs: true, feedRef: true } });
+  // source needs the same by-key preservation, for the opposite reason from
+  // feedRef: this used to be hardcoded to "manual" on every save, which is
+  // what silently locked a feed-managed Development out of all future syncs
+  // the moment anyone opened its editor and clicked Save — the root cause of
+  // the Cirvis incidents. A save must never change source either way now;
+  // "becoming manual" happens only through the explicit toggle
+  // (setDevelopmentSyncMode below). A brand-new unit (no prior row to match)
+  // defaults to "manual" — it demonstrably didn't come from a sync. 2026-07-27.
+  const prev = await prisma.developmentUnit.findMany({ where: { developmentId }, select: { ref: true, label: true, photos: true, attrs: true, feedRef: true, source: true } });
   const photoByKey = new Map<string, any>();
   const attrsByKey = new Map<string, any>();
   const feedRefByKey = new Map<string, string | null>();
+  const sourceByKey = new Map<string, string>();
   for (const u of prev) {
     const k = (u.label || u.ref || "").trim().toLowerCase();
-    if (k) { photoByKey.set(k, u.photos); attrsByKey.set(k, u.attrs); feedRefByKey.set(k, u.feedRef); }
+    if (k) { photoByKey.set(k, u.photos); attrsByKey.set(k, u.attrs); feedRefByKey.set(k, u.feedRef); sourceByKey.set(k, u.source); }
   }
   const rows = (units || []).map((u, i) => {
     const label = String(u.label ?? "").trim() || null;
@@ -489,12 +499,39 @@ export async function saveUnits(developmentId: string, units: any[]) {
       // photos/attrs above, or this delete+recreate would blank it.
       feedRef: feedRefByKey.get(key) ?? null,
       sortIndex: i,
-      source: "manual",
+      source: sourceByKey.get(key) ?? "manual",
     };
   });
   await prisma.developmentUnit.deleteMany({ where: { developmentId } });
   if (rows.length) await prisma.developmentUnit.createMany({ data: rows });
   revalidatePath(`/admin/developments/${developmentId}`);
+}
+
+// Teil 3 (sync control panel): the deliberate manual↔auto toggle — the ONLY
+// place source is allowed to change, now that saveUnits() above preserves it.
+// feed→manual is a pure protection upgrade (no data at risk, no confirm
+// needed server-side — the button's own client-side confirm is enough).
+// manual→feed is the dangerous direction: it doesn't delete anything itself,
+// but it re-exposes every unit to the next sync's deleteMany+createMany,
+// which for a curated project (real photos/attrs/amenities the feed can't
+// reproduce) is effectively unrecoverable data loss within 24h. The
+// data-loss numbers themselves are computed client-side from data already
+// on the page (SyncControlPanel.tsx) — this action only flips the flag.
+export async function setDevelopmentSyncMode(developmentId: string, mode: "manual" | "feed") {
+  await prisma.developmentUnit.updateMany({ where: { developmentId }, data: { source: mode } });
+  revalidatePath(`/admin/developments/${developmentId}`);
+}
+
+// Teil 2 (sync control panel): "Units aus Feed neu ziehen" — pulls this one
+// Development immediately instead of waiting for the 4am cron. Data-only
+// (mirror:false) by design, matching the existing "Sync now" button's
+// philosophy — mirroring needs an app restart afterward (see
+// syncOneDevelopment/scheduleAppRestart in feedSync.ts), which is more
+// disruption than a single admin click should trigger.
+export async function syncOneDevelopmentAction(developmentId: string): Promise<SyncOneDevelopmentResult> {
+  const result = await syncOneDevelopment(developmentId, { mirror: false });
+  revalidatePath(`/admin/developments/${developmentId}`);
+  return result;
 }
 
 // Publication lifecycle. Publishing requires the gate to pass (checked here too,

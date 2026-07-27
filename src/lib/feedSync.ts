@@ -101,6 +101,55 @@ function unitRow(u: UnitVM, developmentId: string, i: number) {
 
 export type SyncResult = { dev: string; found: number; created: number; updated: number; failed: number };
 
+// Every developer whose units are subject to the full deleteMany+createMany
+// sync (syncAll/the daily cron) — the read-only editor gate (Teil 1) and the
+// manual/auto toggle (Teil 3) apply to exactly this set. "drive" (its own
+// separate sync mechanism, SyncWithDriveButton) and "manual" (no feed at
+// all) are deliberately excluded — there is no automated process that would
+// ever silently overwrite their units, so there's nothing to guard against.
+export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "agg", "squareone"];
+// Subset with a real, individually-triggerable feed worth an on-demand pull
+// (the admin Force-Sync button, Teil 2). "agg" is excluded — hardcoded
+// fixture data, not a live feed; nothing to "pull fresh".
+export const FORCE_SYNC_DEVS = SYNCED_DEVS.filter((d) => d !== "agg");
+
+type ProjectSyncOutcome = { ok: boolean; created: boolean; unitsWritten: number; skippedManual: boolean };
+
+// Per-project sync body, shared by syncDeveloperCore's loop (all projects of
+// a developer) and syncOneDevelopment (exactly one project, admin Force-Sync
+// button) — one implementation, so both call sites get identical protections
+// (manual-lock gate, distance recompute, mirroring) with no risk of drift.
+async function syncOneProject(dev: string, id: string, accountId: string, opts: { mirror?: boolean } = {}): Promise<ProjectSyncOutcome> {
+  const vm = await getPreviewProject(dev, id);
+  if (!vm) return { ok: false, created: false, unitsWritten: 0, skippedManual: false };
+  const feedKey = `${dev}:${id}`;
+  if (opts.mirror) {
+    const dk = devKeyFor(feedKey);
+    vm.gallery = await mirrorAll(vm.gallery, dk);
+    for (const u of vm.units) u.photos = await mirrorAll(u.photos, dk);
+  }
+  const existing = await prisma.development.findUnique({ where: { feedKey }, select: { id: true } });
+  const data = developmentRow(vm, dev, id, accountId);
+  const development = existing
+    ? await prisma.development.update({ where: { feedKey }, data })
+    : await prisma.development.create({ data });
+  // Auto recompute (haversine, src/lib/developmentDistances.ts) — resolves
+  // override lat/lng first, so a deliberately-corrected admin pin is never
+  // clobbered by the feed's own (possibly wrong) coordinates.
+  await recomputeDevelopmentDistances(development.id);
+  // If a human imported the real unit list (manual units exist), the feed's
+  // partial list is ignored entirely — never re-add feed units on top. The
+  // Development row above is still refreshed regardless (name/description/
+  // gallery/price range/stage/etc.) — only DevelopmentUnit rows are protected.
+  const manualUnits = await prisma.developmentUnit.count({ where: { developmentId: development.id, source: "manual" } });
+  if (manualUnits > 0) {
+    return { ok: true, created: !existing, unitsWritten: 0, skippedManual: true };
+  }
+  await prisma.developmentUnit.deleteMany({ where: { developmentId: development.id, source: "feed" } });
+  if (vm.units.length) await prisma.developmentUnit.createMany({ data: vm.units.map((u, i) => unitRow(u, development.id, i)) });
+  return { ok: true, created: !existing, unitsWritten: vm.units.length, skippedManual: false };
+}
+
 // Core loop, no restart side-effect — syncAll() calls this per developer so a
 // full run schedules exactly ONE restart at the end, not one per developer.
 async function syncDeveloperCore(dev: string, opts: { mirror?: boolean } = {}): Promise<SyncResult> {
@@ -109,31 +158,9 @@ async function syncDeveloperCore(dev: string, opts: { mirror?: boolean } = {}): 
   let created = 0, updated = 0, failed = 0;
   for (const id of ids) {
     try {
-      const vm = await getPreviewProject(dev, id);
-      if (!vm) { failed++; continue; }
-      const feedKey = `${dev}:${id}`;
-      if (opts.mirror) {
-        const dk = devKeyFor(feedKey);
-        vm.gallery = await mirrorAll(vm.gallery, dk);
-        for (const u of vm.units) u.photos = await mirrorAll(u.photos, dk);
-      }
-      const existing = await prisma.development.findUnique({ where: { feedKey }, select: { id: true } });
-      const data = developmentRow(vm, dev, id, accountId);
-      const development = existing
-        ? await prisma.development.update({ where: { feedKey }, data })
-        : await prisma.development.create({ data });
-      // Auto recompute (haversine, src/lib/developmentDistances.ts) — resolves
-      // override lat/lng first, so a deliberately-corrected admin pin is never
-      // clobbered by the feed's own (possibly wrong) coordinates.
-      await recomputeDevelopmentDistances(development.id);
-      // If a human imported the real unit list (manual units exist), the feed's
-      // partial list is ignored entirely — never re-add feed units on top.
-      const manualUnits = await prisma.developmentUnit.count({ where: { developmentId: development.id, source: "manual" } });
-      if (manualUnits === 0) {
-        await prisma.developmentUnit.deleteMany({ where: { developmentId: development.id, source: "feed" } });
-        if (vm.units.length) await prisma.developmentUnit.createMany({ data: vm.units.map((u, i) => unitRow(u, development.id, i)) });
-      }
-      existing ? updated++ : created++;
+      const r = await syncOneProject(dev, id, accountId, opts);
+      if (!r.ok) { failed++; continue; }
+      r.created ? created++ : updated++;
     } catch {
       failed++;
     }
@@ -154,11 +181,34 @@ export async function syncDeveloper(dev: string, opts: { mirror?: boolean } = {}
 }
 
 export async function syncAll(opts: { mirror?: boolean } = {}): Promise<SyncResult[]> {
-  const devs = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "agg", "squareone"];
   const out: SyncResult[] = [];
-  for (const d of devs) out.push(await syncDeveloperCore(d, opts));
+  for (const d of SYNCED_DEVS) out.push(await syncDeveloperCore(d, opts));
   if (opts.mirror) scheduleAppRestart();
   return out;
+}
+
+// Admin "Units aus Feed neu ziehen" (Force-Sync, Teil 2) — syncs exactly one
+// Development immediately, instead of waiting for the 4am cron. Reuses
+// syncOneProject verbatim, so it has the exact same manual-lock protection
+// as the regular sync: a source:manual Development still gets its
+// project-level fields refreshed, but unitsWritten stays 0 (skippedManual
+// true) — the caller renders a message that says so explicitly, never a
+// silent no-op.
+export type SyncOneDevelopmentResult = { ok: boolean; unitsWritten: number; skippedManual: boolean; error?: string };
+export async function syncOneDevelopment(developmentId: string, opts: { mirror?: boolean } = {}): Promise<SyncOneDevelopmentResult> {
+  const development = await prisma.development.findUnique({ where: { id: developmentId }, select: { dev: true, feedProjectId: true } });
+  if (!development?.dev || !development?.feedProjectId) {
+    return { ok: false, unitsWritten: 0, skippedManual: false, error: "no feed configured for this development" };
+  }
+  try {
+    const accountId = await ensureAccount(development.dev);
+    const r = await syncOneProject(development.dev, development.feedProjectId, accountId, opts);
+    if (!r.ok) return { ok: false, unitsWritten: 0, skippedManual: false, error: "feed unavailable or project not found" };
+    if (opts.mirror) scheduleAppRestart();
+    return { ok: true, unitsWritten: r.unitsWritten, skippedManual: r.skippedManual };
+  } catch (e) {
+    return { ok: false, unitsWritten: 0, skippedManual: false, error: e instanceof Error ? e.message : String(e) };
+  }
 }
 
 // One-time transitional backfill for already-manual units whose feedRef was

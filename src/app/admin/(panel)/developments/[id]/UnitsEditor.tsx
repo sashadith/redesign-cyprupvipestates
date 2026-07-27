@@ -53,7 +53,7 @@ const blank = (): UnitRow => ({
 
 const cell = "w-full rounded-md border border-[#E5E7EB] bg-white hover:border-[#D1D5DB] focus:border-[#1B4B43] focus:ring-1 focus:ring-[#1B4B43]/20 focus:outline-none px-2 py-1.5 text-sm transition-colors";
 
-export default function UnitsEditor({ developmentId, initial, isDriveSynced }: { developmentId: string; initial: UnitRow[]; isDriveSynced?: boolean }) {
+export default function UnitsEditor({ developmentId, initial, isDriveSynced, isFeedManaged }: { developmentId: string; initial: UnitRow[]; isDriveSynced?: boolean; isFeedManaged?: boolean }) {
   const [units, setUnits] = useState<UnitRow[]>(initial);
   const [busy, setBusy] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -122,19 +122,28 @@ export default function UnitsEditor({ developmentId, initial, isDriveSynced }: {
         </div>
         <div className="flex items-center gap-2">
           {isDriveSynced && <SyncWithDriveButton developmentId={developmentId} mode="units" />}
-          <button onClick={add} className="rounded-md border border-[#E5E7EB] text-sm px-3 py-1.5 hover:bg-[#F8F9FA]">+ Add unit</button>
-          <button onClick={save} disabled={busy || !dirty} className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-4 py-1.5 hover:bg-[#142E2D] disabled:bg-[#D1D5DB] disabled:cursor-not-allowed">
-            {busy ? "Saving…" : "Save units"}
-          </button>
+          {!isFeedManaged && (
+            <>
+              <button onClick={add} className="rounded-md border border-[#E5E7EB] text-sm px-3 py-1.5 hover:bg-[#F8F9FA]">+ Add unit</button>
+              <button onClick={save} disabled={busy || !dirty} className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-4 py-1.5 hover:bg-[#142E2D] disabled:bg-[#D1D5DB] disabled:cursor-not-allowed">
+                {busy ? "Saving…" : "Save units"}
+              </button>
+            </>
+          )}
         </div>
       </div>
+      {isFeedManaged && (
+        <div className="px-5 py-2.5 border-b border-[#E5E7EB] bg-[#FFFBEB] text-sm text-[#92400E]">
+          These units are automatically managed by the feed sync and will be overwritten on the next run. To edit them by hand, switch to manual first (Sync control, above).
+        </div>
+      )}
       <div className="px-5 py-2.5 border-b border-[#E5E7EB] bg-[#F8F9FA] flex items-center flex-wrap gap-3 text-sm">
         <span className="text-xs font-medium text-[#9CA3AF] uppercase tracking-wide">Bulk</span>
-        <select value={bulkType} onChange={(e) => setBulkType(e.target.value)} className={cell + " w-auto"}>
+        <select value={bulkType} onChange={(e) => setBulkType(e.target.value)} disabled={isFeedManaged} className={cell + " w-auto"}>
           <option value="">Set type…</option>
           {PROPERTY_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
         </select>
-        <button type="button" onClick={applyTypeToAll} disabled={!bulkType} className="rounded-md border border-[#E5E7EB] px-3 py-1.5 text-sm hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed">
+        <button type="button" onClick={applyTypeToAll} disabled={!bulkType || isFeedManaged} className="rounded-md border border-[#E5E7EB] px-3 py-1.5 text-sm hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed">
           Apply to all units
         </button>
         <label className="flex items-center gap-1.5 ml-auto text-[#374151] cursor-pointer">
@@ -164,24 +173,32 @@ export default function UnitsEditor({ developmentId, initial, isDriveSynced }: {
               return (
               <Fragment key={i}>
               <tr className="hover:bg-[#F8F9FA]">
-                <td className="px-3 py-1.5"><input value={u.label} onChange={(e) => patch(i, "label", e.target.value)} placeholder="A101" className={cell} /></td>
+                <td className="px-3 py-1.5"><input value={u.label} onChange={(e) => patch(i, "label", e.target.value)} placeholder="A101" disabled={isFeedManaged} className={cell} /></td>
                 <td className="px-3 py-1.5">
-                  <select value={u.type} onChange={(e) => patch(i, "type", e.target.value)} className={cell}>
+                  <select value={u.type} onChange={(e) => patch(i, "type", e.target.value)} disabled={isFeedManaged} className={cell}>
                     <option value="">—</option>
                     {(u.type && !PROPERTY_TYPES.includes(u.type) ? [u.type, ...PROPERTY_TYPES] : PROPERTY_TYPES).map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </td>
-                <td className="px-3 py-1.5"><input value={u.beds} onChange={(e) => patch(i, "beds", e.target.value)} className={cell + " text-right"} /></td>
-                <td className="px-3 py-1.5"><input value={u.baths} onChange={(e) => patch(i, "baths", e.target.value)} className={cell + " text-right"} /></td>
-                <td className="px-3 py-1.5"><input value={u.areaBuilt} onChange={(e) => patch(i, "areaBuilt", e.target.value)} placeholder="95 m²" className={cell} /></td>
-                <td className="px-3 py-1.5"><input value={u.areaVeranda} onChange={(e) => patch(i, "areaVeranda", e.target.value)} placeholder="18 m²" className={cell} /></td>
-                <td className="px-3 py-1.5"><input value={u.price} onChange={(e) => patch(i, "price", e.target.value)} className={cell + " text-right tabular-nums"} /></td>
+                <td className="px-3 py-1.5"><input value={u.beds} onChange={(e) => patch(i, "beds", e.target.value)} disabled={isFeedManaged} className={cell + " text-right"} /></td>
+                <td className="px-3 py-1.5"><input value={u.baths} onChange={(e) => patch(i, "baths", e.target.value)} disabled={isFeedManaged} className={cell + " text-right"} /></td>
+                <td className="px-3 py-1.5"><input value={u.areaBuilt} onChange={(e) => patch(i, "areaBuilt", e.target.value)} placeholder="95 m²" disabled={isFeedManaged} className={cell} /></td>
+                <td className="px-3 py-1.5"><input value={u.areaVeranda} onChange={(e) => patch(i, "areaVeranda", e.target.value)} placeholder="18 m²" disabled={isFeedManaged} className={cell} /></td>
+                <td className="px-3 py-1.5"><input value={u.price} onChange={(e) => patch(i, "price", e.target.value)} disabled={isFeedManaged} className={cell + " text-right tabular-nums"} /></td>
                 <td className="px-3 py-1.5">
-                  <select value={u.status} onChange={(e) => patch(i, "status", e.target.value)} className={cell}>
+                  <select value={u.status} onChange={(e) => patch(i, "status", e.target.value)} disabled={isFeedManaged} className={cell}>
                     <option value="available">Available</option>
                     <option value="reserved">Reserved</option>
                     <option value="sold">Sold</option>
                   </select>
+                  {/* Status is exempt from manual protection — the feed always wins here,
+                      even on a manually-managed unit, via the daily statusOnlySync (matched
+                      by feedRef). Make that visible right at the point someone might edit it. */}
+                  {u.source === "manual" && (
+                    <div className="text-[10px] text-[#9CA3AF] mt-1">
+                      {u.feedRef ? "Auto-synced from feed" : "No feed match — set manually"}
+                    </div>
+                  )}
                 </td>
                 <td className="px-4 py-1 text-center">
                   <button
@@ -195,7 +212,7 @@ export default function UnitsEditor({ developmentId, initial, isDriveSynced }: {
                   </button>
                 </td>
                 <td className="px-4 py-1 text-center">
-                  <button onClick={() => remove(i)} title="Delete unit" className="text-[#DC2626] hover:text-[#991B1B] text-base leading-none">×</button>
+                  {!isFeedManaged && <button onClick={() => remove(i)} title="Delete unit" className="text-[#DC2626] hover:text-[#991B1B] text-base leading-none">×</button>}
                 </td>
               </tr>
               {openDetail === i && (
@@ -208,6 +225,7 @@ export default function UnitsEditor({ developmentId, initial, isDriveSynced }: {
                       saving={busy}
                       onClose={() => setOpenDetail(null)}
                       onApplyFeaturesToAll={() => applyFeaturesToAll(u.amenities)}
+                      readOnly={isFeedManaged}
                     />
                   </td>
                 </tr>
@@ -221,7 +239,11 @@ export default function UnitsEditor({ developmentId, initial, isDriveSynced }: {
           </tbody>
         </table>
       </div>
-      <div className="px-5 py-2.5 border-t border-[#E5E7EB] text-xs text-[#9CA3AF]">Saving marks all units as manually managed — the feed sync will no longer overwrite them.</div>
+      {manualUnits.length > 0 && (
+        <div className="px-5 py-2.5 border-t border-[#E5E7EB] text-xs text-[#9CA3AF]">
+          These units are manually managed — the feed sync won&apos;t overwrite them (status still auto-updates from the feed where a match exists).
+        </div>
+      )}
     </div>
   );
 }
