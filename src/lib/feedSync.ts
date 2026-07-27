@@ -193,9 +193,17 @@ export async function backfillFeedRefFromDigits(developmentId: string): Promise<
   const vm = await getPreviewProject(development.dev, development.feedProjectId);
   if (!vm) return { developmentId, feedKey, matched: [], skipped: [] };
 
+  // Island Blue's own ref ends in digits directly ("CLST-101") — fine as
+  // the match key. xml2u's (Domenica/Pafilia) raw ref instead ends in the
+  // project-name suffix ("A101ApartmentsInPaphosEnikoMare"), so it never
+  // carries a trailing digit run at all; name does, post suffix-stripping
+  // ("Apartment A101" — see feeds.ts). Fall back to name's digits ONLY when
+  // ref itself has none — the value stored is always the real ref either
+  // way, never name. Confirmed via the 2026-07-27 dry run (0/52 Domenica
+  // matches on ref alone; 9/33 on riverside once name supplies the key).
   const feedByDigits = new Map<string, string[]>();
   for (const u of vm.units) {
-    const d = trailingDigits(u.ref);
+    const d = trailingDigits(u.ref) || trailingDigits(u.name);
     if (!d || !u.ref) continue;
     if (!feedByDigits.has(d)) feedByDigits.set(d, []);
     feedByDigits.get(d)!.push(u.ref);
