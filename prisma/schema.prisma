@@ -985,7 +985,8 @@ model Development {
 model DevelopmentUnit {
   id              String   @id @default(uuid())
   developmentId   String
-  ref             String?
+  ref             String? // display/"online" reference — freely editable, shown on the public site
+  feedRef         String? // feed's own reference code — set only by sync/backfill, never by saveUnits(); the status-sync match anchor
   name            String?
   label           String? // display label, e.g. "Block C · Nr. 504"
   type            String?

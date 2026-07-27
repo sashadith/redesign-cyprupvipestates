@@ -16,6 +16,16 @@ function Field({ label, value, onChange, placeholder }: { label: string; value: 
   );
 }
 
+function ReadOnlyField({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div>
+      <label className={lbl}>{label}</label>
+      <div className={inp + " bg-[#F3F4F6] text-[#6B7280] cursor-not-allowed"}>{value || "—"}</div>
+      {hint && <p className="text-[10px] text-[#9CA3AF] mt-1">{hint}</p>}
+    </div>
+  );
+}
+
 function YesNo({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <div>
@@ -55,10 +65,12 @@ export default function UnitDetail({ unit, onPatch, onSave, saving, onClose, onA
           <Field label="Floor / Level" value={unit.floor} onChange={(v) => onPatch("floor", v)} placeholder="e.g. 1" />
           <Field label="Unit number" value={unit.unitNumber} onChange={(v) => onPatch("unitNumber", v)} placeholder="e.g. 102" />
           <Field label="Orientation" value={unit.orientation} onChange={(v) => onPatch("orientation", v)} placeholder="e.g. South-west" />
-          <div>
-            <Field label="Feed reference" value={unit.ref} onChange={(v) => onPatch("ref", v)} placeholder="e.g. A103Cirvis" />
-            <p className="text-[10px] text-[#9CA3AF] mt-1">Auto-filled from the feed — normally leave as is. Matches this unit to the feed for automatic sold/reserved status.</p>
-          </div>
+          <Field label="Display reference" value={unit.ref} onChange={(v) => onPatch("ref", v)} placeholder="e.g. A103" />
+          <ReadOnlyField
+            label="Feed reference"
+            value={unit.feedRef}
+            hint="Set automatically by the feed sync — read-only. Matches this unit to the feed for automatic sold/reserved status; editing the Display reference above never changes it."
+          />
           <Field label="Total built area" value={unit.areaBuilt} onChange={(v) => onPatch("areaBuilt", v)} placeholder="e.g. 66 m²" />
           <Field label="Covered internal" value={unit.areaInternal} onChange={(v) => onPatch("areaInternal", v)} placeholder="e.g. 52 m²" />
           <Field label="Plot" value={unit.areaPlot} onChange={(v) => onPatch("areaPlot", v)} placeholder="e.g. 450 m²" />

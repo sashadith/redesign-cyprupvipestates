@@ -290,6 +290,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
           id: u.id,
           label: u.label || u.ref || "",
           ref: u.ref || "",
+          feedRef: u.feedRef || "",
           type: u.type || "",
           beds: u.beds || "",
           baths: u.baths || "",

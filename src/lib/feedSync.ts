@@ -72,6 +72,10 @@ function unitRow(u: UnitVM, developmentId: string, i: number) {
   return {
     developmentId,
     ref: u.ref || null,
+    // feed's own reference code — always fresh from the adapter on every
+    // sync of a source:feed unit; the status-only sync's match anchor for
+    // source:manual units (see backfillFeedRef / statusOnlySync below).
+    feedRef: u.ref || null,
     name: u.name || null,
     label: u.label || null,
     type: u.type || null,
@@ -155,4 +159,83 @@ export async function syncAll(opts: { mirror?: boolean } = {}): Promise<SyncResu
   for (const d of devs) out.push(await syncDeveloperCore(d, opts));
   if (opts.mirror) scheduleAppRestart();
   return out;
+}
+
+// One-time transitional backfill for already-manual units whose feedRef was
+// never populated (the normal feed sync skips a Development entirely once
+// any of its units are source:manual, so feedRef only auto-populates for
+// units created fresh by a sync — see unitRow() above). Matches purely on
+// the trailing digit run of the unit's own ref/label against the same run
+// in the feed's ref, scoped to one Development at a time. Only ever writes
+// feedRef via a targeted update() per unit — never touches any other field,
+// never deletes/recreates. A unit is matched only if it resolves to EXACTLY
+// ONE feed unit AND that feed unit isn't also the best match for a
+// different manual unit in the same run; anything else is skipped and
+// reported, never guessed.
+const trailingDigits = (s: string | null | undefined): string | null => {
+  const m = String(s ?? "").trim().match(/(\d+)\s*$/);
+  return m ? m[1] : null;
+};
+
+export type BackfillFeedRefResult = {
+  developmentId: string;
+  feedKey: string | null;
+  matched: { unitId: string; ref: string | null; label: string | null; feedRef: string }[];
+  skipped: { unitId: string; ref: string | null; label: string | null; reason: string }[];
+};
+
+export async function backfillFeedRefFromDigits(developmentId: string): Promise<BackfillFeedRefResult> {
+  const development = await prisma.development.findUnique({ where: { id: developmentId }, select: { dev: true, feedProjectId: true } });
+  if (!development?.dev || !development?.feedProjectId) {
+    return { developmentId, feedKey: null, matched: [], skipped: [] };
+  }
+  const feedKey = `${development.dev}:${development.feedProjectId}`;
+  const vm = await getPreviewProject(development.dev, development.feedProjectId);
+  if (!vm) return { developmentId, feedKey, matched: [], skipped: [] };
+
+  const feedByDigits = new Map<string, string[]>();
+  for (const u of vm.units) {
+    const d = trailingDigits(u.ref);
+    if (!d || !u.ref) continue;
+    if (!feedByDigits.has(d)) feedByDigits.set(d, []);
+    feedByDigits.get(d)!.push(u.ref);
+  }
+
+  const units = await prisma.developmentUnit.findMany({
+    where: { developmentId, source: "manual", OR: [{ feedRef: null }, { feedRef: "" }] },
+    select: { id: true, ref: true, label: true },
+  });
+
+  type Candidate = { u: (typeof units)[number]; feedRef?: string; reason?: string };
+  const candidates: Candidate[] = units.map((u) => {
+    const d = trailingDigits(u.ref) || trailingDigits(u.label);
+    if (!d) return { u, reason: "no trailing digit run in ref/label" };
+    const feedMatches = feedByDigits.get(d) || [];
+    if (feedMatches.length === 0) return { u, reason: `no feed unit ends in "${d}"` };
+    if (feedMatches.length > 1) return { u, reason: `ambiguous — ${feedMatches.length} feed units end in "${d}" (${feedMatches.join(", ")})` };
+    return { u, feedRef: feedMatches[0] };
+  });
+
+  // Guard against two manual units independently resolving to the same feed
+  // unit (only possible if the feed itself has a duplicate trailing digit
+  // run across projects sharing a feedKey — belt-and-braces, not expected).
+  const feedRefCount = new Map<string, number>();
+  for (const c of candidates) if (c.feedRef) feedRefCount.set(c.feedRef, (feedRefCount.get(c.feedRef) ?? 0) + 1);
+
+  const matched: BackfillFeedRefResult["matched"] = [];
+  const skipped: BackfillFeedRefResult["skipped"] = [];
+  for (const c of candidates) {
+    if (!c.feedRef) { skipped.push({ unitId: c.u.id, ref: c.u.ref, label: c.u.label, reason: c.reason! }); continue; }
+    if ((feedRefCount.get(c.feedRef) ?? 0) > 1) {
+      skipped.push({ unitId: c.u.id, ref: c.u.ref, label: c.u.label, reason: `collision — multiple manual units matched feed ref "${c.feedRef}"` });
+      continue;
+    }
+    matched.push({ unitId: c.u.id, ref: c.u.ref, label: c.u.label, feedRef: c.feedRef });
+  }
+
+  for (const m of matched) {
+    await prisma.developmentUnit.update({ where: { id: m.unitId }, data: { feedRef: m.feedRef } });
+  }
+
+  return { developmentId, feedKey, matched, skipped };
 }

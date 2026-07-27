@@ -10,12 +10,18 @@ import SyncWithDriveButton from "./SyncWithDriveButton";
 export type UnitRow = {
   id?: string;
   label: string;
-  // The feed's own reference code (e.g. "A103Cirvis") — deliberately separate
-  // from `label`. Auto-filled from the feed/PDF/Drive import and normally
-  // never touched by hand; saveUnits() must preserve it verbatim regardless
-  // of label edits, or the future feed-status auto-sync loses its matching
-  // key the moment someone edits a unit. Fixed 2026-07-26 (see actions.ts).
+  // Display/"online" reference — freely editable, what's shown as the
+  // reference on the public site. Was the sole reference field until
+  // 2026-07-27, when feedRef split off as the dedicated, uneditable match
+  // anchor below; this field keeps its existing values as-is (no migration
+  // step needed — it already held the display-facing value for every unit).
   ref: string;
+  // The feed's own reference code (e.g. "CLST-101") — has no editable form
+  // field anywhere (see UnitDetail.tsx, read-only display only). Set only by
+  // feed sync (unitRow() in feedSync.ts) or the one-time digit-match backfill
+  // (backfillFeedRefFromDigits()); saveUnits() preserves it by key exactly
+  // like photos/attrs, since it never appears in the submitted form data.
+  feedRef: string;
   type: string;
   beds: string;
   baths: string;
@@ -37,7 +43,7 @@ export type UnitRow = {
 };
 
 const blank = (): UnitRow => ({
-  label: "", ref: "", type: "", beds: "", baths: "", areaBuilt: "", areaInternal: "", areaPlot: "", areaVeranda: "", areaVerandaOpen: "",
+  label: "", ref: "", feedRef: "", type: "", beds: "", baths: "", areaBuilt: "", areaInternal: "", areaPlot: "", areaVeranda: "", areaVerandaOpen: "",
   floor: "", unitNumber: "", storage: "", guestWc: "", orientation: "", price: "", status: "available", amenities: [], photos: [], attrs: [],
 });
 

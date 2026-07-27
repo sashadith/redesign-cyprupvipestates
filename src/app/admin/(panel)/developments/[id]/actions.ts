@@ -438,12 +438,18 @@ export async function saveUnits(developmentId: string, units: any[]) {
   // Preserve photos + sync-derived extra specs (attrs) across text edits by matching on label/ref —
   // the editor form doesn't surface `attrs` (plot/parking/pool/etc. from the price-list extraction),
   // so without this a manual save would silently wipe them.
-  const prev = await prisma.developmentUnit.findMany({ where: { developmentId }, select: { ref: true, label: true, photos: true, attrs: true } });
+  // feedRef needs the same by-key preservation: this delete+recreate would
+  // otherwise silently blank it on every manual save, exactly like the
+  // ref=label incident it was built to prevent — feedRef is the future
+  // status-sync's only match anchor and the form never surfaces it for
+  // editing at all (see UnitDetail.tsx, read-only display only). 2026-07-27.
+  const prev = await prisma.developmentUnit.findMany({ where: { developmentId }, select: { ref: true, label: true, photos: true, attrs: true, feedRef: true } });
   const photoByKey = new Map<string, any>();
   const attrsByKey = new Map<string, any>();
+  const feedRefByKey = new Map<string, string | null>();
   for (const u of prev) {
     const k = (u.label || u.ref || "").trim().toLowerCase();
-    if (k) { photoByKey.set(k, u.photos); attrsByKey.set(k, u.attrs); }
+    if (k) { photoByKey.set(k, u.photos); attrsByKey.set(k, u.attrs); feedRefByKey.set(k, u.feedRef); }
   }
   const rows = (units || []).map((u, i) => {
     const label = String(u.label ?? "").trim() || null;
@@ -478,6 +484,10 @@ export async function saveUnits(developmentId: string, units: any[]) {
       // stored value for any caller that doesn't send photos at all.
       photos: (Array.isArray(u.photos) ? u.photos.map((x: any) => String(x).trim()).filter(Boolean) : photoByKey.get(key)) as any,
       attrs: (attrsByKey.get(key) ?? null) as any,
+      // Never sourced from the form — feedRef has no editable field at all
+      // (UnitDetail.tsx shows it read-only). Preserved by key exactly like
+      // photos/attrs above, or this delete+recreate would blank it.
+      feedRef: feedRefByKey.get(key) ?? null,
       sortIndex: i,
       source: "manual",
     };
