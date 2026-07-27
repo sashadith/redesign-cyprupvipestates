@@ -625,3 +625,30 @@ deploying) must only ever land inside such a verified, separately-rooted
 directory — never inside `/var/www/releases/` itself, and never inside
 anything reached by following `/var/www/cyprusvipestates` without first
 confirming, via `readlink -f`, exactly where it points.
+
+**Any write path can leak through a symlink, not just the obvious ones
+(2026-07-27).** The `cp -a` incident above was about overwriting a *source*
+file. The same class of mistake resurfaced one incident later in a different
+shape: an isolated test copy's `node_modules` was itself set up as a symlink
+back to the live release's real `node_modules` (reasonable — packages
+themselves are read-only and identical, no need to duplicate hundreds of MB
+per test run). But `prisma generate` **writes** into
+`node_modules/.prisma/client` and `node_modules/@prisma/client` — so that one
+symlinked directory turned a read-only convenience into a write straight into
+the live release. It happened to be harmless this time only by accident (an
+unrelated `scp -r` nesting bug meant the regenerate ran against the old
+schema and reproduced equivalent output), not because the setup was safe.
+
+**The rule this enforces: before symlinking ANY directory from a live
+release into an isolated copy, ask what will *write* into it — not just what
+will be read from it.** `node_modules` as a whole is not safe to symlink
+wholesale if anything in the test run touches Prisma codegen; the
+`.prisma/`  and `@prisma/client` subpaths specifically must be real, separate
+copies (or a real `npm ci`), while every other package underneath can still
+be symlinked freely since nothing writes there. The same question applies to
+any other tool a future test might run — a linter with an auto-fix mode, a
+codegen step, anything with a `--write`/`--fix` flag — not just Prisma.
+`readlink -f` before copying tells you where a path resolves; it does not
+tell you which of the paths you're about to create are write targets. Check
+both, for every symlink a test setup creates, not only for the top-level
+release path.
