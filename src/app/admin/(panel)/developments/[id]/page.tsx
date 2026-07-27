@@ -291,6 +291,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
           label: u.label || u.ref || "",
           ref: u.ref || "",
           feedRef: u.feedRef || "",
+          source: u.source || "feed",
           type: u.type || "",
           beds: u.beds || "",
           baths: u.baths || "",

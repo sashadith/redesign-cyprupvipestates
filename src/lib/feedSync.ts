@@ -239,3 +239,65 @@ export async function backfillFeedRefFromDigits(developmentId: string): Promise<
 
   return { developmentId, feedKey, matched, skipped };
 }
+
+// Status-only sync: the auto-status half of "manual edits stay manual, but
+// availability still tracks the feed" — the normal full sync above skips a
+// Development entirely the moment any of its units are source:manual, so
+// this is the only path that ever refreshes their status again. Matches
+// purely on feedRef (never label/ref/name — those are exactly what a human
+// might have retyped) and writes ONLY status; every other field a human may
+// have edited is untouched. A unit with no feedRef, or whose feedRef isn't
+// present in the CURRENT feed response (unit sold-and-delisted, or the whole
+// project pulled), is skipped and counted — never guessed at.
+//
+// Scoped to feeds with a real per-unit status field: Island Blue and
+// Domenica confirmed live (see feeds.ts); Aristo's adapter already parses
+// its own Status field the same way, so it's included ready-to-go even
+// though no Aristo development currently has manual units — harmless no-op
+// until one does. Pafilia/Medousa/SquareOne have no status field in their
+// feeds at all (see the 2026-07-26 investigation), so they're excluded
+// rather than silently doing nothing every run. qubehub (inex/bbf) stays
+// out pending API access, same as everywhere else this session.
+export const STATUS_SYNC_DEVS = ["island-blue", "domenica", "aristo"];
+
+export type StatusOnlySyncResult = {
+  dev: string;
+  developmentsChecked: number;
+  developmentsSkipped: number; // whole project absent from the current feed response
+  matched: number; // manual units whose feedRef resolved in the current feed
+  updated: number; // of those, how many actually had a different status
+  skipped: number; // manual units with no feedRef, or no match in the current feed
+};
+
+export async function statusOnlySync(devs: string[] = STATUS_SYNC_DEVS): Promise<StatusOnlySyncResult[]> {
+  const results: StatusOnlySyncResult[] = [];
+  for (const dev of devs) {
+    const developments = await prisma.development.findMany({
+      where: { dev, units: { some: { source: "manual" } } },
+      select: { id: true, feedProjectId: true },
+    });
+    let developmentsSkipped = 0, matched = 0, updated = 0, skipped = 0;
+    for (const development of developments) {
+      const vm = await getPreviewProject(dev, development.feedProjectId!);
+      if (!vm || !vm.units.length) { developmentsSkipped++; continue; } // whole project gone from the feed — touch nothing
+      const feedStatusByRef = new Map<string, string>();
+      for (const u of vm.units) if (u.ref) feedStatusByRef.set(u.ref, u.status || "available");
+
+      const manualUnits = await prisma.developmentUnit.findMany({
+        where: { developmentId: development.id, source: "manual" },
+        select: { id: true, feedRef: true, status: true },
+      });
+      for (const unit of manualUnits) {
+        const feedStatus = unit.feedRef ? feedStatusByRef.get(unit.feedRef) : undefined;
+        if (feedStatus == null) { skipped++; continue; }
+        matched++;
+        if (feedStatus !== unit.status) {
+          await prisma.developmentUnit.update({ where: { id: unit.id }, data: { status: feedStatus } });
+          updated++;
+        }
+      }
+    }
+    results.push({ dev, developmentsChecked: developments.length, developmentsSkipped, matched, updated, skipped });
+  }
+  return results;
+}
