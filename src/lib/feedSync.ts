@@ -184,7 +184,7 @@ export type BackfillFeedRefResult = {
   skipped: { unitId: string; ref: string | null; label: string | null; reason: string }[];
 };
 
-export async function backfillFeedRefFromDigits(developmentId: string): Promise<BackfillFeedRefResult> {
+export async function backfillFeedRefFromDigits(developmentId: string, opts: { dryRun?: boolean } = {}): Promise<BackfillFeedRefResult> {
   const development = await prisma.development.findUnique({ where: { id: developmentId }, select: { dev: true, feedProjectId: true } });
   if (!development?.dev || !development?.feedProjectId) {
     return { developmentId, feedKey: null, matched: [], skipped: [] };
@@ -241,8 +241,10 @@ export async function backfillFeedRefFromDigits(developmentId: string): Promise<
     matched.push({ unitId: c.u.id, ref: c.u.ref, label: c.u.label, feedRef: c.feedRef });
   }
 
-  for (const m of matched) {
-    await prisma.developmentUnit.update({ where: { id: m.unitId }, data: { feedRef: m.feedRef } });
+  if (!opts.dryRun) {
+    for (const m of matched) {
+      await prisma.developmentUnit.update({ where: { id: m.unitId }, data: { feedRef: m.feedRef } });
+    }
   }
 
   return { developmentId, feedKey, matched, skipped };
