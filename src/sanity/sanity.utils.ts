@@ -1064,6 +1064,14 @@ function mapDevelopmentRowToCard(d: any) {
       bedrooms: bedRange, coveredArea: areaRange, completionDate: ov?.completion || d.completion || "", energyEfficiency: ov?.energy || d.energy || "",
       price: devPriceFrom, vatApplies: ov?.vatApplies ?? null,
     },
+    // KNOWN GAP (2026-07-27, found while diagnosing the ProjectLink null-price
+    // 500s): hardcoded rather than derived from unitsAvailable/unitsTotal
+    // below, so a fully sold-out Development never shows a sold badge on any
+    // card built from this function (ProjectLink's soldBadge, the {!isSold}
+    // price gate). unitsAvailable/unitsTotal ARE set correctly (used by
+    // pushSoldOutLast's isSoldOutItem check, so sold-out devs do at least
+    // sort last) — only this display-facing flag is wrong. Not a crash, just
+    // a missing sold badge; left as-is pending a separate decision.
     isSold: false, videoId: null as string | null, isFeatured: false, listingPriority: 0, isNew: false,
     createdAt: d.createdAt, latitude: ov?.latitude ?? d.latitude, longitude: ov?.longitude ?? d.longitude,
     // For the scarcity banner (src/app/components/ScarcityBanner) — same unit
