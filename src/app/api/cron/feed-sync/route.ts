@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { syncAll } from "@/lib/feedSync";
+import { syncAll, statusOnlySync } from "@/lib/feedSync";
 import { prisma } from "@/lib/prisma";
 import { withCronLog, logCronRun } from "@/lib/cronLog";
 
@@ -61,9 +61,18 @@ export async function GET(req: NextRequest) {
     // Per-developer rows — Action Center rule (e) ("Medousa feed failed last
     // sync") needs per-developer status, not just the whole job's outcome.
     for (const r of results) await logCronRun(`feed-sync:${r.dev}`, r.failed === 0, r.failed === 0 ? undefined : `${r.failed}/${r.found} project(s) failed`);
+    // Status-only sync for manual developments — the normal syncAll() above
+    // skips them entirely (any manual unit locks the whole Development out
+    // of the regular resync), so this is their only path back to a current
+    // sold/reserved/available status. Same piggyback pattern as
+    // purgeOldTrash/purgeOldCronLogs: reuses this cron's existing daily
+    // cadence instead of a new crontab entry. See feedSync.ts for scope
+    // (Island Blue/Domenica live, Aristo prepared, qubehub pending API access).
+    const statusResults = await statusOnlySync();
+    for (const r of statusResults) await logCronRun(`status-only-sync:${r.dev}`, true, `${r.updated} updated, ${r.matched} matched, ${r.skipped} skipped across ${r.developmentsChecked} development(s)`);
     const trash = await purgeOldTrash();
     const cronLogCleanup = await purgeOldCronLogs();
-    return NextResponse.json({ ok: true, at: new Date().toISOString(), results, trash, cronLogCleanup });
+    return NextResponse.json({ ok: true, at: new Date().toISOString(), results, statusResults, trash, cronLogCleanup });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }

@@ -10,12 +10,22 @@ import SyncWithDriveButton from "./SyncWithDriveButton";
 export type UnitRow = {
   id?: string;
   label: string;
-  // The feed's own reference code (e.g. "A103Cirvis") — deliberately separate
-  // from `label`. Auto-filled from the feed/PDF/Drive import and normally
-  // never touched by hand; saveUnits() must preserve it verbatim regardless
-  // of label edits, or the future feed-status auto-sync loses its matching
-  // key the moment someone edits a unit. Fixed 2026-07-26 (see actions.ts).
+  // Display/"online" reference — freely editable, what's shown as the
+  // reference on the public site. Was the sole reference field until
+  // 2026-07-27, when feedRef split off as the dedicated, uneditable match
+  // anchor below; this field keeps its existing values as-is (no migration
+  // step needed — it already held the display-facing value for every unit).
   ref: string;
+  // The feed's own reference code (e.g. "CLST-101") — has no editable form
+  // field anywhere (see UnitDetail.tsx, read-only display only). Set only by
+  // feed sync (unitRow() in feedSync.ts) or the one-time digit-match backfill
+  // (backfillFeedRefFromDigits()); saveUnits() preserves it by key exactly
+  // like photos/attrs, since it never appears in the submitted form data.
+  feedRef: string;
+  // "manual" | "feed" — drives the feed-status-match summary below; a unit
+  // added via "+ Add unit" defaults to manual (see blank()), matching what
+  // saveUnits() always sets on write regardless of what was passed in.
+  source: string;
   type: string;
   beds: string;
   baths: string;
@@ -37,7 +47,7 @@ export type UnitRow = {
 };
 
 const blank = (): UnitRow => ({
-  label: "", ref: "", type: "", beds: "", baths: "", areaBuilt: "", areaInternal: "", areaPlot: "", areaVeranda: "", areaVerandaOpen: "",
+  label: "", ref: "", feedRef: "", source: "manual", type: "", beds: "", baths: "", areaBuilt: "", areaInternal: "", areaPlot: "", areaVeranda: "", areaVerandaOpen: "",
   floor: "", unitNumber: "", storage: "", guestWc: "", orientation: "", price: "", status: "available", amenities: [], photos: [], attrs: [],
 });
 
@@ -86,6 +96,11 @@ export default function UnitsEditor({ developmentId, initial, isDriveSynced }: {
   }
 
   const available = units.filter((u) => u.status === "available").length;
+  // Feed-status-match visibility: for manual units specifically, how many
+  // carry a feedRef (so the status-only cron can auto-update them) vs. not.
+  // Feed-sourced units don't need this — the regular sync keeps them fresh.
+  const manualUnits = units.filter((u) => u.source === "manual");
+  const feedMatched = manualUnits.filter((u) => u.feedRef).length;
   // indices (not the rows themselves) so patch/remove/openDetail keep working on
   // the full `units` array while the table only shows a filtered subset
   const visibleIndices = units
@@ -98,6 +113,12 @@ export default function UnitsEditor({ developmentId, initial, isDriveSynced }: {
       <div className="px-5 py-3 border-b border-[#E5E7EB] flex items-center justify-between flex-wrap gap-2">
         <div className="text-sm font-semibold text-[#111827]">
           Units <span className="font-normal text-[#9CA3AF]">({units.length} · {available} available)</span>
+          {manualUnits.length > 0 && (
+            <span className="block text-xs font-normal text-[#9CA3AF] mt-0.5">
+              {feedMatched} of {manualUnits.length} manual unit{manualUnits.length === 1 ? "" : "s"} matched to the feed
+              {feedMatched < manualUnits.length && <> — {manualUnits.length - feedMatched} won&apos;t auto-update status</>}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {isDriveSynced && <SyncWithDriveButton developmentId={developmentId} mode="units" />}
