@@ -12,7 +12,7 @@ import {
   CWV_CLS_MAX,
   CWV_INP_MAX_MS,
 } from "@/lib/seo/queries";
-import { templateClassOf, templateClassLabel, type TemplateClass } from "@/lib/seo/templateClass";
+import type { TemplateClass } from "@/lib/seo/templateClass";
 import { loadSweepEntries } from "@/lib/seo/titleSweepLog";
 import { computeTitleSweepComparison } from "@/lib/seo/titleSweepRemeasure";
 import { getRecentChangelogEntries, type ChangelogEntry } from "@/lib/seo/siteChangelog";
@@ -58,37 +58,28 @@ export type AdvisorPayload = {
   siteChangelog: ChangelogEntry[];
 };
 
+// Delegates to the same lab-aware logic the Action Center rule uses (see
+// getCwvFailingByClass in src/lib/seo/queries.ts) instead of re-deriving
+// pass/fail here. A prior version of this function compared every reading's
+// raw LCP straight against CWV_LCP_MAX_MS regardless of source — since
+// fetchCwv() has never returned field (CrUX) data for this origin (no
+// real-user traffic clears Google's reporting threshold), every reading was
+// lab-only Lantern-simulated LCP, which commonly reads 9700-11500ms on this
+// site vs ~3700ms in a real devtools-throttled run. Comparing that straight
+// to a 3500ms absolute cutoff manufactured a "100% failing" result every
+// week regardless of real page health (see docs/SITE-CHANGELOG.md's "Known
+// lab-data caveat for the CWV rule", 2026-07-20). getCwvFailingByClass
+// already does the right thing: relative regression against each page's own
+// 14-day baseline for lab-sourced rows, absolute threshold only once field
+// data actually exists.
 async function gatherCwvSummary() {
-  const since = new Date(Date.now() - 4 * DAY); // last few nights of readings
-  const [rows, developments] = await Promise.all([
-    prisma.cwvMetric.findMany({ where: { date: { gte: since } }, orderBy: { date: "desc" } }),
-    // See src/lib/seo/queries.ts's getCwvFailingByClass for why this is needed —
-    // /projects/{slug} is shared by legacy Project pages and Development pages.
-    prisma.development.findMany({ where: { publishStatus: "published", slug: { not: null } }, select: { slug: true } }),
-  ]);
-  const developmentSlugs = new Set(developments.map((d) => d.slug!));
-  const latestByUrl = new Map<string, (typeof rows)[number]>();
-  for (const r of rows) if (!latestByUrl.has(r.url)) latestByUrl.set(r.url, r);
-
-  const byClass = new Map<TemplateClass, { total: number; failing: number; metrics: Set<string> }>();
-  for (const [url, r] of Array.from(latestByUrl)) {
-    const cls = templateClassOf(url, developmentSlugs);
-    const entry = byClass.get(cls) ?? { total: 0, failing: 0, metrics: new Set<string>() };
-    entry.total++;
-    const fails: string[] = [];
-    if (r.lcp > CWV_LCP_MAX_MS) fails.push("LCP");
-    if (r.cls > CWV_CLS_MAX) fails.push("CLS");
-    if (r.inp != null && r.inp > CWV_INP_MAX_MS) fails.push("INP");
-    if (fails.length) { entry.failing++; fails.forEach((f) => entry.metrics.add(f)); }
-    byClass.set(cls, entry);
-  }
-
-  return Array.from(byClass.entries()).map(([templateClass, e]) => ({
-    templateClass,
-    label: templateClassLabel(templateClass),
-    totalTracked: e.total,
-    failing: e.failing,
-    failingMetrics: Array.from(e.metrics),
+  const classes = await getCwvFailingByClass();
+  return classes.map((c) => ({
+    templateClass: c.templateClass,
+    label: c.label,
+    totalTracked: c.totalTracked,
+    failing: c.failingUrls.length,
+    failingMetrics: c.failingMetrics,
   }));
 }
 

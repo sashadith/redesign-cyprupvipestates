@@ -166,6 +166,7 @@ export type CwvFailingMetric = "LCP" | "CLS" | "INP";
 export type CwvClassSummary = {
   templateClass: TemplateClass;
   label: string;
+  totalTracked: number;
   failingUrls: string[];
   failingMetrics: CwvFailingMetric[];
   since: Date;
@@ -218,7 +219,7 @@ export async function getCwvFailingByClass(): Promise<CwvClassSummary[]> {
 
   const avg = (vals: number[]) => vals.reduce((a, b) => a + b, 0) / vals.length;
 
-  const byClass = new Map<TemplateClass, { urls: string[]; metrics: Set<CwvFailingMetric>; oldestDate: Date }>();
+  const byClass = new Map<TemplateClass, { total: number; urls: string[]; metrics: Set<CwvFailingMetric>; oldestDate: Date }>();
   for (const [url, readings] of Array.from(byUrl)) {
     if (readings.length < CWV_SUSTAINED_COUNT) continue; // not enough history yet
     const last3 = readings.slice(0, CWV_SUSTAINED_COUNT);
@@ -237,20 +238,26 @@ export async function getCwvFailingByClass(): Promise<CwvClassSummary[]> {
       const perReadingFailures = last3.map(fieldThresholdFailures);
       failingMetrics = perReadingFailures.every((f) => f.length > 0) ? Array.from(new Set(perReadingFailures.flat())) : [];
     }
-    if (!failingMetrics.length) continue;
 
+    // Count every URL with enough history toward totalTracked, whether or
+    // not it's currently failing — the Advisor's "N of M pages failing"
+    // reporting needs the denominator too, not just the failing set.
     const cls = templateClassOf(url, developmentSlugs);
-    const entry = byClass.get(cls) ?? { urls: [], metrics: new Set<CwvFailingMetric>(), oldestDate: last3[0].date };
-    entry.urls.push(url);
-    for (const f of failingMetrics) entry.metrics.add(f);
-    const oldest = last3[last3.length - 1].date;
-    if (oldest < entry.oldestDate) entry.oldestDate = oldest;
+    const entry = byClass.get(cls) ?? { total: 0, urls: [], metrics: new Set<CwvFailingMetric>(), oldestDate: last3[0].date };
+    entry.total++;
+    if (failingMetrics.length) {
+      entry.urls.push(url);
+      for (const f of failingMetrics) entry.metrics.add(f);
+      const oldest = last3[last3.length - 1].date;
+      if (oldest < entry.oldestDate) entry.oldestDate = oldest;
+    }
     byClass.set(cls, entry);
   }
 
   return Array.from(byClass.entries()).map(([templateClass, e]) => ({
     templateClass,
     label: templateClassLabel(templateClass),
+    totalTracked: e.total,
     failingUrls: e.urls,
     failingMetrics: Array.from(e.metrics),
     since: e.oldestDate,

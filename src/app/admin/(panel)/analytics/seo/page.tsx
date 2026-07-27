@@ -54,13 +54,17 @@ export default async function SeoAnalyticsPage() {
     );
   }
 
-  const [trends, movers, watchlist, sweep, cwvClasses] = await Promise.all([
+  const [trends, movers, watchlist, sweep, cwvClassesAll] = await Promise.all([
     getPerLocaleTrend(90),
     getWeekOverWeekMovers(),
     getCtrWatchlist(),
     computeTitleSweepComparison(),
     getCwvFailingByClass(),
   ]);
+  // getCwvFailingByClass now also reports classes with zero current
+  // failures (needed for the Advisor's total-tracked denominator) — this
+  // panel only ever showed classes that are actually failing.
+  const cwvClasses = cwvClassesAll.filter((c) => c.failingUrls.length > 0);
   const gscUrl = gscConsoleUrl();
 
   const MoverRow = ({ m, direction }: { m: (typeof movers.up)[number]; direction: "up" | "down" }) => (

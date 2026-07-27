@@ -104,6 +104,22 @@ Lantern's absolute LCP less literally, or spot-checking with devtools-method
 throttling) before it raises another site-wide emergency. See the CWV
 investigation thread (approved suggestion `edc0e699`) for the full profiling.
 
+**Update (2026-07-27):** the Advisor re-raised this exact alarm (same 14/14,
+22/22, 11/11, 1/1, 4/4 breakdown) a week later, because the real bug wasn't in
+`getCwvFailingByClass` (which already got the lab-aware relative-regression
+fix on 2026-07-18) but in `gatherCwvSummary` (`src/lib/seoAdvisor/gather.ts`)
+— a separate, never-updated copy of the pass/fail check that compared every
+lab-sourced reading's raw LCP straight against the absolute `CWV_LCP_MAX_MS`
+(3500ms) threshold. Since every reading is lab-sourced (see above) and
+Lantern's simulated LCP on this site runs 9.7-11.5s, that comparison failed
+on essentially every page, every week, regardless of real page health.
+`gatherCwvSummary` now delegates to `getCwvFailingByClass` instead of
+re-deriving the check, so the Advisor's payload and the Action Center's
+alerting rule can no longer disagree. No hero image/JS changes were made —
+the homepage/blog-post/Development-page hero fixes and the PropertyIntro
+investigation from 2026-07-18/19 already covered the one real anti-pattern
+(LCP element hidden behind JS) that existed.
+
 ## Already-resolved Advisor findings (2026-07-20, not changelog entries — standing caveats)
 
 The Advisor has re-raised both of these as if new. Both are closed; don't re-suggest.

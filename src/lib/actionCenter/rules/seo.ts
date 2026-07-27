@@ -107,7 +107,7 @@ async function titleSweepDue(): Promise<ActionItem[]> {
 // for the "sustained 3 consecutive measurements" logic.
 async function cwvDegraded(): Promise<ActionItem[]> {
   const classes = await getCwvFailingByClass();
-  return classes.map((c) => ({
+  return classes.filter((c) => c.failingUrls.length > 0).map((c) => ({
     id: `seo-cwv-degraded:${c.templateClass}`,
     severity: "ACTION",
     category: "SEO",
