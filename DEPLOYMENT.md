@@ -652,3 +652,75 @@ codegen step, anything with a `--write`/`--fix` flag — not just Prisma.
 tell you which of the paths you're about to create are write targets. Check
 both, for every symlink a test setup creates, not only for the top-level
 release path.
+
+## Isolated testbed (`/opt/cvp-testbed/`)
+
+After five incidents in this shape — a write meant for an isolated test copy
+leaking through a symlink into the live release or the shared DB — the fix
+is structural, not another rule to remember: a **persistent, dedicated
+testbed with zero symlinks back into `/var/www`**, for any verification that
+needs to run real code (`prisma generate`, a sync/backfill script, anything
+beyond a read-only query) before it's safe to run against production.
+
+**Location: `/opt/cvp-testbed/`** — deliberately outside `/var/www` entirely.
+No path or realistic relative symlink chain from here reaches
+`/var/www/releases/...`; there is no shared parent directory to traverse
+into by mistake.
+
+```
+/opt/cvp-testbed/
+  repo/                  a real `git clone` (never rsync from a release) —
+                         node_modules is a genuine `npm ci`, not linked to
+                         anything in /var/www; .prisma/@prisma are real,
+                         separate files on disk, so prisma generate can only
+                         ever write here
+  refresh.sh             pull a ref, npm ci --legacy-peer-deps, prisma generate
+  db-testbed-up.sh       build a disposable DB + role from the latest backup
+  db-testbed-down.sh     tear the disposable DB + role back down
+  .env.testbed           written by db-testbed-up.sh — DATABASE_URL only,
+                         never any other secret (see below)
+```
+
+**Footprint:** ~1.9G `node_modules` + a 66–81MB disposable DB, against 36G+
+free — comfortable. Deliberately **no `next build`/`.next` here** (which
+would add ~3.6G): everything this testbed exists to verify — sync logic,
+backfills, migrations — is backend code that runs directly via `tsx`, the
+same "use server" workaround used throughout this project's scripts; it
+never needs the compiled Next.js output.
+
+**Database isolation, not just by convention:** `db-testbed-up.sh` drops and
+rebuilds `cyprusvipestates_test` from the latest real backup on *every* run
+(cheap — the DB is under 100MB) — restoring the *code* to a known state but
+never inheriting stale test data. It also creates a **fresh, disposable
+Postgres role** (`cvp_testbed`, random password, regenerated every run) that
+owns only that one database and has no grants on the real `cyprusvipestates`
+DB. `.env.testbed` therefore can't be pointed at prod even by a coding
+mistake in whatever script runs against it — the credential itself doesn't
+work there. The backup file actually restored is always printed by the
+script, so any test run's data state is traceable after the fact.
+
+**Secrets stay out by policy, not just by what happens to be needed today.**
+`.env.testbed` contains `DATABASE_URL` and nothing else. If a future test
+genuinely needs another credential (an API key, SMTP/IMAP, a bot token),
+that's a deliberate decision to make explicitly — which variable, why, and
+whether it can be a dummy/sandbox value instead of the real one — not
+something a setup script copies in by default because the app's own `.env`
+happens to have it.
+
+**Usage:**
+```bash
+/opt/cvp-testbed/refresh.sh <branch-or-ref>   # default: main
+/opt/cvp-testbed/db-testbed-up.sh             # fresh disposable DB, prints backup used
+cd /opt/cvp-testbed/repo
+set -a && source /opt/cvp-testbed/.env.testbed && set +a
+npx prisma migrate deploy    # bring the disposable DB's schema current, if the branch adds one
+npx tsx <your-script>.mts    # run whatever needs verifying, against the disposable DB
+/opt/cvp-testbed/db-testbed-down.sh           # tear down when done
+```
+
+**When to use it:** any time a verification needs to *write* something —
+regenerate a Prisma client from a schema not yet on `main`, run a sync or
+backfill function against real-shaped data, rehearse a migration end to end.
+Read-only queries against the real DB (checking current state, sampling a
+feed) don't need this — the testbed exists for the write side specifically,
+where a mistake is otherwise hard to undo.
