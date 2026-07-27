@@ -12,7 +12,12 @@ type Props = {
   // (no Sanity asset ref to dereference) instead of the ImageAlt shape.
   previewImage: ImageAlt | string;
   title: string;
-  price: number;
+  // A Development's resolved price (keyFeatures.price, from
+  // resolveDevelopmentPrice) is null whenever it has no dev-level price set
+  // AND no "available" unit carries a price — a fully sold-out/reserved
+  // Development with no fallback data, not a data error. Real example: "Neon
+  // Homes" (5 units, all sold/reserved).
+  price: number | null;
   bedrooms: number;
   coveredArea: number;
   plotSize: number;
@@ -71,17 +76,31 @@ const ProjectLink: FC<Props> = ({
           <p className={styles.projectTitle}>{title}</p>
           {!isSold && (
             <p className={styles.projectPrice}>
-              {lang === "en"
-                ? "Price from"
-                : lang === "de"
-                  ? "Preis ab"
-                  : lang === "pl"
-                    ? "Cena od"
-                    : lang === "ru"
-                      ? "Цена от"
-                      : "Price from"}
-              &nbsp;
-              {price.toLocaleString()} €
+              {price == null ? (
+                lang === "en"
+                  ? "Price on request"
+                  : lang === "de"
+                    ? "Preis auf Anfrage"
+                    : lang === "pl"
+                      ? "Cena na życzenie"
+                      : lang === "ru"
+                        ? "Цена по запросу"
+                        : "Price on request"
+              ) : (
+                <>
+                  {lang === "en"
+                    ? "Price from"
+                    : lang === "de"
+                      ? "Preis ab"
+                      : lang === "pl"
+                        ? "Cena od"
+                        : lang === "ru"
+                          ? "Цена от"
+                          : "Price from"}
+                  &nbsp;
+                  {price.toLocaleString()} €
+                </>
+              )}
             </p>
           )}
         </div>
