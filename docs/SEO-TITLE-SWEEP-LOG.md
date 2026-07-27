@@ -111,3 +111,50 @@ was deployed. It was never on a 307 in production; that was only true in local d
 - The corresponding P2 roadmap item ("finish EN `/en/` 307→301 for the 24 title-sweep-excluded
   paths, once all sweep windows close") has been **removed** — there is nothing to finish;
   nginx already treats these exactly like every other `/en/` path and always has.
+
+## 2026-07-27 — Batch 2: 4 approved title/meta rewrites (Snippet Rewrite Pack — clean subset)
+
+**Source data:** GSC exports (last 3 months), via the "Snippet Rewrite Pack" analysis. That pack proposed
+10 pages as "Wave 1 — ship now, not in any sweep window," but 6 of the 10 were actually already inside
+Batch 1's (2026-07-18) or the 2026-07-07 batch's active re-measurement window — see "Excluded" below.
+Only the 4 genuinely clean pages are in this batch.
+
+**Re-measure after:** 2026-08-24 to 2026-09-07 (4–6 weeks from deploy) — deliberately independent of
+Batch 1's window (closes 2026-08-29): this batch's due date is computed from its own 2026-07-27 deploy
+date, not Batch 1's, so the two re-measurements can't be conflated. (Prior to this batch, the code that
+computes re-measurement due dates assumed a single sweep would ever be in flight at once — fixed
+alongside this entry so a second batch gets its own independent due date, Action Center item, and
+Telegram notification instead of inheriting Batch 1's.)
+
+| # | Locale | URL | Baseline pos | Baseline CTR |
+|---|--------|-----|--------------|--------------|
+| 1 | en | `/about-us` | 2.9 | 0.38% |
+| 2 | en | `/` | 3.9 | 1.59% |
+| 3 | en | `/projects` | 3.1 | 0.17% |
+| 4 | en | `/new-homes-in-cyprus-for-sale` | 5.3 | 0.37% |
+
+### Implementation notes
+
+- All changes are CMS content only — `Singlepage.seo` for `/about-us` and `/new-homes-in-cyprus-for-sale`,
+  `SiteDocument.data.seo` (type `homepage` / `projectsPage`) for `/` and `/projects` — no code changes,
+  no migration.
+- **Excluded from this batch** (already inside another batch's window — do not touch until that window
+  closes, see the sweep calendar below): `/off-plan-properties-in-limassol`, `/off-plan-properties-cyprus`,
+  `/blog/why-uk-citizens-invest-in-cyprus-real-estate-post-brexit`, `/blog/cyprus-property-vat-explained`,
+  `/de/blog/warum-wandern-so-viele-nach-zypern-aus`, `/de/blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern`.
+
+### Sweep calendar (all pages currently inside a re-measurement window, any batch)
+
+| Page | Batch | Deployed | Window closes |
+|---|---|---|---|
+| `/off-plan-properties-in-limassol` (en) | Batch 1 | 2026-07-18 | 2026-08-29 |
+| `/off-plan-properties-cyprus` (en) | Batch 1 | 2026-07-18 | 2026-08-29 |
+| `/blog/why-uk-citizens-invest-in-cyprus-real-estate-post-brexit` (en) | Batch 1 | 2026-07-18 | 2026-08-29 |
+| `/de/blog/warum-wandern-so-viele-nach-zypern-aus` | Batch 1 | 2026-07-18 | 2026-08-29 |
+| `/de/blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern` | Batch 1 | 2026-07-18 | 2026-08-29 |
+| `/blog/cyprus-property-vat-explained` (en) | 2026-07-07 batch (re-measured alongside Batch 1) | 2026-07-07 | 2026-08-29 |
+| `/about-us`, `/`, `/projects`, `/new-homes-in-cyprus-for-sale` (en) | Batch 2 | 2026-07-27 | 2026-09-07 |
+
+All other Batch-1 pages (the remaining 12 of the original 17 + the 13 developer-profile pages) also close
+2026-08-29 — omitted above since they weren't candidates in the Snippet Rewrite Pack; see Batch 1's own
+table for the full list. Nothing is currently protected past 2026-09-07.

@@ -54,7 +54,7 @@ export default async function SeoAnalyticsPage() {
     );
   }
 
-  const [trends, movers, watchlist, sweep, cwvClassesAll] = await Promise.all([
+  const [trends, movers, watchlist, sweeps, cwvClassesAll] = await Promise.all([
     getPerLocaleTrend(90),
     getWeekOverWeekMovers(),
     getCtrWatchlist(),
@@ -196,25 +196,33 @@ export default async function SeoAnalyticsPage() {
 
       <Card id="title-sweep">
         <h2 className="text-sm font-semibold mb-3">Title-sweep measurement status</h2>
-        {!sweep ? (
+        {sweeps.length === 0 ? (
           <p className="text-sm text-[#6B7280]">No sweep log found (docs/SEO-TITLE-SWEEP-LOG.md).</p>
-        ) : sweep.isDue ? (
-          <div className="text-sm text-[#374151]">
-            <p className="mb-1">
-              <span className="font-semibold text-[#1B4B43]">{sweep.improvedCount}/{sweep.measuredCount}</span> measured pages improved CTR
-              {sweep.avgCtrDeltaPp != null && (
-                <span className="text-[#6B7280]"> (avg {sweep.avgCtrDeltaPp >= 0 ? "+" : ""}{sweep.avgCtrDeltaPp.toFixed(2)}pp)</span>
-              )}
-            </p>
-            <p className="text-xs text-[#6B7280]">
-              Batch from {sweep.batchDate.toISOString().slice(0, 10)}, measured {sweep.daysElapsed} days later ·{" "}
-              {sweep.rows.length - sweep.measuredCount} of {sweep.rows.length} pages had no recorded baseline or no recent data — full detail in docs/SEO-TITLE-SWEEP-LOG.md.
-            </p>
-          </div>
         ) : (
-          <p className="text-sm text-[#6B7280]">
-            Batch from {sweep.batchDate.toISOString().slice(0, 10)} — re-measurement due {sweep.dueDate.toISOString().slice(0, 10)} ({Math.max(0, Math.ceil((sweep.dueDate.getTime() - Date.now()) / 86_400_000))} days remaining).
-          </p>
+          <div className="space-y-3 divide-y divide-[#F3F4F6]">
+            {sweeps.map((sweep) => (
+              <div key={sweep.batchDate.toISOString()} className={sweeps.length > 1 ? "pt-3 first:pt-0" : ""}>
+                {sweep.isDue ? (
+                  <div className="text-sm text-[#374151]">
+                    <p className="mb-1">
+                      <span className="font-semibold text-[#1B4B43]">{sweep.improvedCount}/{sweep.measuredCount}</span> measured pages improved CTR
+                      {sweep.avgCtrDeltaPp != null && (
+                        <span className="text-[#6B7280]"> (avg {sweep.avgCtrDeltaPp >= 0 ? "+" : ""}{sweep.avgCtrDeltaPp.toFixed(2)}pp)</span>
+                      )}
+                    </p>
+                    <p className="text-xs text-[#6B7280]">
+                      Batch from {sweep.batchDate.toISOString().slice(0, 10)}, measured {sweep.daysElapsed} days later ·{" "}
+                      {sweep.rows.length - sweep.measuredCount} of {sweep.rows.length} pages had no recorded baseline or no recent data — full detail in docs/SEO-TITLE-SWEEP-LOG.md.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-[#6B7280]">
+                    Batch from {sweep.batchDate.toISOString().slice(0, 10)} — re-measurement due {sweep.dueDate.toISOString().slice(0, 10)} ({Math.max(0, Math.ceil((sweep.dueDate.getTime() - Date.now()) / 86_400_000))} days remaining).
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
         )}
       </Card>
     </div>
