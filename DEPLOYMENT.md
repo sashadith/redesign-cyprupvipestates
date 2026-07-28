@@ -81,10 +81,16 @@ feature branch  →  deploy-staging.sh  →  verify on staging  →  merge to ma
    and push.
 4. `git checkout main && git pull --ff-only && ./scripts/deploy-prod.sh`
    (no branch flag needed — it defaults to `main`) to ship it.
-5. **If this deploy touched `DE_LANDING_MERGES` in `src/middleware.ts` or the
-   `ops/nginx/` exact-match locations it pairs with**, run
-   `./scripts/verify-landing-merges.sh` against production immediately after.
-   Not optional, not "when you remember" — see below for why.
+5. Run `./scripts/verify-landing-merges.sh` against production immediately
+   after **every** deploy — not just ones that appear to touch
+   `DE_LANDING_MERGES`. Not optional, not "when you remember" — see below
+   for why, but in short: the 2026-07-28 incident wasn't caused by a
+   redirect-focused deploy, it was caused by an *unrelated* deploy's clean
+   `main` export silently not containing another branch's still-unmerged
+   table entry. Any deploy can trigger that failure mode, so the check runs
+   after any deploy. It's cheap (a handful of curls) and the failure mode is
+   silent — exactly the combination that argues for always-on over
+   conditional.
 
 Staging and production are deliberately decoupled deploy-wise (different
 scripts, different trigger points) but share the one database — see the
@@ -115,8 +121,8 @@ check `git merge-base --is-ancestor <branch> origin/main` and — if false —
 `./scripts/verify-landing-merges.sh` against production to see what's
 actually live before assuming your starting point is current.
 
-After ANY deploy that touches this table (new entries, changed targets,
-merged-in entries from another branch), run:
+After **every** deploy — regardless of whether that deploy looks like it
+touched this table — run:
 
 ```bash
 ./scripts/verify-landing-merges.sh                                          # production
