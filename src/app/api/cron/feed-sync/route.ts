@@ -69,7 +69,15 @@ export async function GET(req: NextRequest) {
     // cadence instead of a new crontab entry. See feedSync.ts for scope
     // (Island Blue/Domenica live, Aristo prepared, qubehub pending API access).
     const statusResults = await statusOnlySync();
-    for (const r of statusResults) await logCronRun(`status-only-sync:${r.dev}`, true, `${r.updated} updated, ${r.matched} matched, ${r.skipped} skipped across ${r.developmentsChecked} development(s)`);
+    for (const r of statusResults) {
+      await logCronRun(`status-only-sync:${r.dev}`, true, `${r.updated} updated, ${r.matched} matched, ${r.skipped} skipped across ${r.developmentsChecked} development(s)`);
+      // Per-change detail lines — deliberately NOT for skips (63 skips/run
+      // would be pure noise; they stay a number in the aggregate row above).
+      // This is what the A302 investigation (2026-07-27) needed and didn't
+      // have: no way to tell a genuine correction from a report artifact
+      // without diffing a raw DB backup by hand.
+      for (const c of r.changes) await logCronRun(`status-only-sync-change:${r.dev}`, true, `${c.slug} / ${c.unitRef}: ${c.from} → ${c.to}`);
+    }
     const trash = await purgeOldTrash();
     const cronLogCleanup = await purgeOldCronLogs();
     return NextResponse.json({ ok: true, at: new Date().toISOString(), results, statusResults, trash, cronLogCleanup });
