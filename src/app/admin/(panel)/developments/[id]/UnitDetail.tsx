@@ -7,11 +7,11 @@ import type { UnitRow } from "./UnitsEditor";
 const inp = "w-full rounded-md border border-[#E5E7EB] px-2.5 py-1.5 text-sm focus:border-[#1B4B43] focus:outline-none";
 const lbl = "block text-xs font-medium text-[#6B7280] mb-1";
 
-function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
+function Field({ label, value, onChange, placeholder, disabled }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; disabled?: boolean }) {
   return (
     <div>
       <label className={lbl}>{label}</label>
-      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={inp} />
+      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} disabled={disabled} className={inp} />
     </div>
   );
 }
@@ -26,11 +26,11 @@ function ReadOnlyField({ label, value, hint }: { label: string; value: string; h
   );
 }
 
-function YesNo({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function YesNo({ label, value, onChange, disabled }: { label: string; value: string; onChange: (v: string) => void; disabled?: boolean }) {
   return (
     <div>
       <label className={lbl}>{label}</label>
-      <select value={value} onChange={(e) => onChange(e.target.value)} className={inp}>
+      <select value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled} className={inp}>
         <option value="">—</option>
         <option value="yes">Yes</option>
         <option value="no">No</option>
@@ -39,13 +39,14 @@ function YesNo({ label, value, onChange }: { label: string; value: string; onCha
   );
 }
 
-export default function UnitDetail({ unit, onPatch, onSave, saving, onClose, onApplyFeaturesToAll }: {
+export default function UnitDetail({ unit, onPatch, onSave, saving, onClose, onApplyFeaturesToAll, readOnly }: {
   unit: UnitRow;
   onPatch: (field: keyof UnitRow, val: any) => void;
   onSave: () => void | Promise<void>;
   saving: boolean;
   onClose: () => void;
   onApplyFeaturesToAll: () => void;
+  readOnly?: boolean;
 }) {
   const amenities = unit.amenities || [];
   // Prepend, don't append — a manually-checked feature should show ahead of the
@@ -62,22 +63,22 @@ export default function UnitDetail({ unit, onPatch, onSave, saving, onClose, onA
       <div>
         <div className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide mb-2">Details</div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Field label="Floor / Level" value={unit.floor} onChange={(v) => onPatch("floor", v)} placeholder="e.g. 1" />
-          <Field label="Unit number" value={unit.unitNumber} onChange={(v) => onPatch("unitNumber", v)} placeholder="e.g. 102" />
-          <Field label="Orientation" value={unit.orientation} onChange={(v) => onPatch("orientation", v)} placeholder="e.g. South-west" />
-          <Field label="Display reference" value={unit.ref} onChange={(v) => onPatch("ref", v)} placeholder="e.g. A103" />
+          <Field label="Floor / Level" value={unit.floor} onChange={(v) => onPatch("floor", v)} placeholder="e.g. 1" disabled={readOnly} />
+          <Field label="Unit number" value={unit.unitNumber} onChange={(v) => onPatch("unitNumber", v)} placeholder="e.g. 102" disabled={readOnly} />
+          <Field label="Orientation" value={unit.orientation} onChange={(v) => onPatch("orientation", v)} placeholder="e.g. South-west" disabled={readOnly} />
+          <Field label="Display reference" value={unit.ref} onChange={(v) => onPatch("ref", v)} placeholder="e.g. A103" disabled={readOnly} />
           <ReadOnlyField
             label="Feed reference"
             value={unit.feedRef}
             hint="Set automatically by the feed sync — read-only. Matches this unit to the feed for automatic sold/reserved status; editing the Display reference above never changes it."
           />
-          <Field label="Total built area" value={unit.areaBuilt} onChange={(v) => onPatch("areaBuilt", v)} placeholder="e.g. 66 m²" />
-          <Field label="Covered internal" value={unit.areaInternal} onChange={(v) => onPatch("areaInternal", v)} placeholder="e.g. 52 m²" />
-          <Field label="Plot" value={unit.areaPlot} onChange={(v) => onPatch("areaPlot", v)} placeholder="e.g. 450 m²" />
-          <Field label="Covered veranda" value={unit.areaVeranda} onChange={(v) => onPatch("areaVeranda", v)} placeholder="e.g. 14 m²" />
-          <Field label="Uncovered veranda" value={unit.areaVerandaOpen} onChange={(v) => onPatch("areaVerandaOpen", v)} placeholder="—" />
-          <YesNo label="Storage" value={unit.storage} onChange={(v) => onPatch("storage", v)} />
-          <YesNo label="Guest W/C" value={unit.guestWc} onChange={(v) => onPatch("guestWc", v)} />
+          <Field label="Total built area" value={unit.areaBuilt} onChange={(v) => onPatch("areaBuilt", v)} placeholder="e.g. 66 m²" disabled={readOnly} />
+          <Field label="Covered internal" value={unit.areaInternal} onChange={(v) => onPatch("areaInternal", v)} placeholder="e.g. 52 m²" disabled={readOnly} />
+          <Field label="Plot" value={unit.areaPlot} onChange={(v) => onPatch("areaPlot", v)} placeholder="e.g. 450 m²" disabled={readOnly} />
+          <Field label="Covered veranda" value={unit.areaVeranda} onChange={(v) => onPatch("areaVeranda", v)} placeholder="e.g. 14 m²" disabled={readOnly} />
+          <Field label="Uncovered veranda" value={unit.areaVerandaOpen} onChange={(v) => onPatch("areaVerandaOpen", v)} placeholder="—" disabled={readOnly} />
+          <YesNo label="Storage" value={unit.storage} onChange={(v) => onPatch("storage", v)} disabled={readOnly} />
+          <YesNo label="Guest W/C" value={unit.guestWc} onChange={(v) => onPatch("guestWc", v)} disabled={readOnly} />
         </div>
       </div>
 
@@ -98,10 +99,12 @@ export default function UnitDetail({ unit, onPatch, onSave, saving, onClose, onA
       <div>
         <div className="flex items-center justify-between mb-2">
           <div className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-wide">Unit features ({amenities.length})</div>
-          <button type="button" onClick={onApplyFeaturesToAll} disabled={!amenities.length}
-            className="text-xs text-[#1B4B43] hover:underline disabled:text-[#9CA3AF] disabled:no-underline disabled:cursor-not-allowed">
-            Apply to all units
-          </button>
+          {!readOnly && (
+            <button type="button" onClick={onApplyFeaturesToAll} disabled={!amenities.length}
+              className="text-xs text-[#1B4B43] hover:underline disabled:text-[#9CA3AF] disabled:no-underline disabled:cursor-not-allowed">
+              Apply to all units
+            </button>
+          )}
         </div>
         <div className="space-y-2">
           {UNIT_AMENITY_CATALOG.map((g) => (
@@ -109,8 +112,8 @@ export default function UnitDetail({ unit, onPatch, onSave, saving, onClose, onA
               <div className="text-[11px] text-[#9CA3AF] mb-1">{g.category}</div>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1">
                 {g.items.map((a) => (
-                  <label key={a} className="flex items-center gap-2 text-sm text-[#374151] cursor-pointer">
-                    <input type="checkbox" className="h-4 w-4 rounded border-[#D1D5DB] text-[#1B4B43] focus:ring-[#1B4B43]" checked={amenities.includes(a)} onChange={() => toggle(a)} />
+                  <label key={a} className={`flex items-center gap-2 text-sm text-[#374151] ${readOnly ? "" : "cursor-pointer"}`}>
+                    <input type="checkbox" disabled={readOnly} className="h-4 w-4 rounded border-[#D1D5DB] text-[#1B4B43] focus:ring-[#1B4B43]" checked={amenities.includes(a)} onChange={() => toggle(a)} />
                     <span>{a}</span>
                   </label>
                 ))}
@@ -118,17 +121,25 @@ export default function UnitDetail({ unit, onPatch, onSave, saving, onClose, onA
             </div>
           ))}
         </div>
-        <p className="text-[11px] text-[#9CA3AF] mt-1.5">Fields & features save with “Save units” / “Save unit” below.</p>
+        {!readOnly && <p className="text-[11px] text-[#9CA3AF] mt-1.5">Fields & features save with “Save units” / “Save unit” below.</p>}
       </div>
 
       {/* photos */}
-      {unit.id ? <div className="-mx-4"><UnitImages unitId={unit.id} photos={unit.photos} onChange={(photos) => onPatch("photos", photos)} /></div> : <p className="text-xs text-[#9CA3AF]">Save units first to add photos.</p>}
+      {readOnly ? (
+        <p className="text-xs text-[#9CA3AF]">{unit.photos.length} photo{unit.photos.length === 1 ? "" : "s"} — feed-managed, switch to manual to edit.</p>
+      ) : unit.id ? (
+        <div className="-mx-4"><UnitImages unitId={unit.id} photos={unit.photos} onChange={(photos) => onPatch("photos", photos)} /></div>
+      ) : (
+        <p className="text-xs text-[#9CA3AF]">Save units first to add photos.</p>
+      )}
 
-      <div className="flex justify-end">
-        <button type="button" onClick={saveAndClose} disabled={saving} className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-4 py-1.5 hover:bg-[#142E2D] disabled:bg-[#D1D5DB] disabled:cursor-not-allowed">
-          {saving ? "Saving…" : "Save unit"}
-        </button>
-      </div>
+      {!readOnly && (
+        <div className="flex justify-end">
+          <button type="button" onClick={saveAndClose} disabled={saving} className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-4 py-1.5 hover:bg-[#142E2D] disabled:bg-[#D1D5DB] disabled:cursor-not-allowed">
+            {saving ? "Saving…" : "Save unit"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -21,6 +21,8 @@ import { computePublishGate, areaSlugOf } from "@/lib/developmentPublishGate";
 import { computeAvailability, availabilityContradiction } from "@/lib/developmentAvailability";
 import { getSeoPromptTemplate } from "@/lib/ai/seoMeta";
 import SeoMetaFields from "./SeoMetaFields";
+import SyncControlPanel from "./SyncControlPanel";
+import { SYNCED_DEVS, FORCE_SYNC_DEVS } from "@/lib/feedSync";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +49,23 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
   });
   if (!d) notFound();
   const ov = d.override;
+
+  // Sync control panel (Teil 1-3): a Development is "feed-managed" (editor
+  // read-only, see UnitsEditor) only while it's a real synced dev AND none
+  // of its units have been frozen to manual yet — the exact same condition
+  // syncDeveloperCore checks before it wipes+recreates units. manualUnits
+  // summary feeds the manual→auto switch's data-loss warning (Teil 3) with
+  // real numbers, computed here from data already being fetched.
+  const isSyncedDev = SYNCED_DEVS.includes(d.dev);
+  const manualUnits = d.units.filter((u) => u.source === "manual");
+  const isFeedManaged = isSyncedDev && manualUnits.length === 0;
+  const jsonArrLen = (v: unknown) => (Array.isArray(v) ? v.length : 0);
+  const manualSummary = {
+    count: manualUnits.length,
+    photos: manualUnits.reduce((n, u) => n + jsonArrLen(u.photos), 0),
+    attrs: manualUnits.reduce((n, u) => n + jsonArrLen(u.attrs), 0),
+    amenities: manualUnits.reduce((n, u) => n + jsonArrLen(u.amenities), 0),
+  };
 
   const gallery = arr(ov?.gallery).length ? arr(ov?.gallery) : arr(d.gallery);
   const area = ov?.area || d.area || "";
@@ -283,9 +302,19 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
 
       <FloorPlansManager developmentId={d.id} initial={arr(d.plans)} isDriveSynced={d.dev === "drive"} />
 
+      <SyncControlPanel
+        developmentId={d.id}
+        dev={d.dev}
+        canForceSync={FORCE_SYNC_DEVS.includes(d.dev)}
+        canToggle={isSyncedDev}
+        isFeedManaged={isFeedManaged}
+        manualSummary={manualSummary}
+      />
+
       <UnitsEditor
         developmentId={d.id}
         isDriveSynced={d.dev === "drive"}
+        isFeedManaged={isFeedManaged}
         initial={d.units.map((u) => ({
           id: u.id,
           label: u.label || u.ref || "",
