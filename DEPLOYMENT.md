@@ -81,11 +81,52 @@ feature branch  →  deploy-staging.sh  →  verify on staging  →  merge to ma
    and push.
 4. `git checkout main && git pull --ff-only && ./scripts/deploy-prod.sh`
    (no branch flag needed — it defaults to `main`) to ship it.
+5. **If this deploy touched `DE_LANDING_MERGES` in `src/middleware.ts` or the
+   `ops/nginx/` exact-match locations it pairs with**, run
+   `./scripts/verify-landing-merges.sh` against production immediately after.
+   Not optional, not "when you remember" — see below for why.
 
 Staging and production are deliberately decoupled deploy-wise (different
 scripts, different trigger points) but share the one database — see the
 warning above before using staging for anything beyond a visual/functional
 preview.
+
+## Landing-page merge redirects — a deploy-ordering trap
+
+`DE_LANDING_MERGES` in `src/middleware.ts` (paired with exact-match
+`location` blocks in `ops/nginx/cyprusvipestates.conf`) is a plain object
+literal — every entry lives in the same file. **Two feature branches that
+both add entries to it, built independently off `main` rather than off each
+other, will silently overwrite each other's entries the moment both get
+deployed** — `deploy-prod.sh` exports and rsyncs a clean tree of whichever
+ref you give it; the second deploy's tree simply doesn't contain the first
+deploy's addition, and there's no merge step to catch that. This isn't
+theoretical: it happened on 2026-07-28 — a `grosse-villen-zypern` redirect
+that had verified clean minutes earlier came back 404 the moment a sibling
+branch adding `haeuser-auf-zypern` entries was deployed on top.
+
+**Rule for any run of landing-page consolidation batches (the ~94-page
+audit that motivated this section is ongoing as of 2026-07-28): each new
+batch branches from the tip of the previous batch's branch, not from `main`,
+until that branch is actually merged to `main`.** Once merged, branch from
+`main` again as normal. If you're not sure whether the branch you're
+starting from already contains every merge currently live in production,
+check `git merge-base --is-ancestor <branch> origin/main` and — if false —
+`./scripts/verify-landing-merges.sh` against production to see what's
+actually live before assuming your starting point is current.
+
+After ANY deploy that touches this table (new entries, changed targets,
+merged-in entries from another branch), run:
+
+```bash
+./scripts/verify-landing-merges.sh                                          # production
+CVP_VERIFY_HOST=https://design.cyprusvipestates.com ./scripts/verify-landing-merges.sh   # staging
+```
+
+It reads `DE_LANDING_MERGES` directly out of the checked-out `middleware.ts`
+(never a hardcoded URL list, so it can't go stale as the table grows) and
+confirms every entry single-hops to its target with a 200 landing. A ✗ row
+means this deploy is not verified — do not consider it done until it's ✓.
 
 ## Deploy scripts
 
