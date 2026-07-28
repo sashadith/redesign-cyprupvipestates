@@ -724,3 +724,45 @@ backfill function against real-shaped data, rehearse a migration end to end.
 Read-only queries against the real DB (checking current state, sampling a
 feed) don't need this — the testbed exists for the write side specifically,
 where a mistake is otherwise hard to undo.
+
+## Staging is not a write sandbox — shared DB (2026-07-27/28 incident)
+
+While reviewing the sync-control-panel feature (read-only editor, Force-Sync,
+manual/auto toggle) on staging before its production sign-off, one or more of
+those buttons got clicked to actual completion, not just viewed — staging
+shares the production database (see "Environments" above), so this flipped
+real `DevelopmentUnit.source` values and triggered real feed syncs on real
+projects. The next 4am cron then found several no-longer-manual projects and
+did what it's designed to do: `deleteMany` + `createMany` their units from
+the live feed. **Real curated data was destroyed** — `domenica/eniko-mare`
+lost 17 of its 18 hand-entered units outright, replaced by the single unit
+the live feed happens to still carry for that project. Three other projects
+were flipped/synced with less severe (in one case, no measurable) actual
+content loss, purely by chance — the feed's own data happened to closely
+match what was there. Full recovery required a forensic before/after backup
+diff and a manual restore of the lost rows; see the git history around
+2026-07-28 for the investigation and fix.
+
+**The rule this enforces: staging is for *looking*, not for *doing*.**
+Reviewing a feature's UI on staging — does the banner show, does the modal
+render, does a button appear where expected — is exactly what it's for.
+Actually completing a write action there (confirming a destructive modal,
+clicking a sync button through to the end, saving a form) is functionally
+identical to doing it directly against production, because it *is*
+production's data. Any destructive or data-mutating action needed to verify
+a feature belongs in the isolated testbed (`/opt/cvp-testbed/`, see above)
+against its disposable database — never on staging, no matter how
+convenient the already-deployed UI is sitting there. When asking someone
+(including a future instance of this assistant) to "check it on staging,"
+say explicitly whether that means look-only or whether a specific action is
+authorized to run for real — don't leave it implicit.
+
+**Outstanding cleanup (as of 2026-07-28): a forensic snapshot database,
+`cyprusvipestates_forensic_before`, is deliberately still sitting on the VPS**
+(restored from the 2026-07-27 05:31 backup, `cvp_post-feedref-backfill_
+20260727_053113.sql.gz` — the last clean state before this incident). Kept
+as a safety net for a few more days while the four affected projects
+(eniko-mare, celestia, agnades-village-1, trinity-residences) get checked
+in normal day-to-day use, in case anything else from this window surfaces
+later. Safe to `dropdb cyprusvipestates_forensic_before` (and drop role
+`cvp_forensic`) once that's confirmed — don't let it linger indefinitely.
