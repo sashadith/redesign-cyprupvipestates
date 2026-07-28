@@ -9,28 +9,27 @@ import { EN_REDIRECT_TITLE_SWEEP_EXCLUDE } from "@/lib/seo/enRedirectTitleSweepE
 const RESERVED = new Set(["projects", "blog", "developers", "case-studies", "files", "partners"]);
 const ALL_LOCALES = ["en", "de", "pl", "ru"];
 
-// German "Häuser" cluster consolidation (2026-07-28): haeuser-auf-zypern and
-// three of its children were confirmed duplicates — either an identical
-// filterPropertyType=Villa/no-city live query, or a direct (city,
-// propertyType) collision with an existing hub child (luxus-haeuser-zum-
-// verkauf-in-paphos duplicates villen-in-paphos's Paphos+Villa pair).
-// strandhaus-auf-zypern merges to strandvillen-zypern specifically — that's
-// where its overlapping "beachfront" content actually lives (36% of its
-// curated projects already appear there), not the villa hub.
-// haeuser-in-limassol-kaufen is deliberately NOT here — held out, its
-// untyped-Limassol duplication is a separate question. Keyed by the DE leaf
-// path (no /de/ prefix); the root-level legacy twin for each is handled by
-// the nginx cvp_de_only map/exact-match locations
+// German landing-page cluster consolidation (2026-07-28): thin-wrapper
+// landing pages merged into their canonical target, confirmed by identical
+// live-query config (filterCity/filterPropertyType) or a direct (city,
+// propertyType) collision with an existing hub child — not just similar
+// copy — see docs/SITE-CHANGELOG.md. Keyed by the DE leaf path (no /de/
+// prefix); this covers anyone hitting the /de/ URL directly (already
+// indexed/bookmarked/linked). The root-level legacy twin for each of these
+// is handled by the nginx cvp_de_only map/exact-match locations
 // (ops/nginx/cyprusvipestates.conf) — kept in sync so no path ever chains
 // through both hops.
 //
-// Each merged child's FLAT leaf slug is included too (in addition to its
-// nested path): nestedPageRedirects.json already 308s the flat form to the
-// nested "canonical" one for these exact leaves, and this check runs before
-// that logic — without the flat entry, a flat hit would chain through the
-// nested-canonicalisation 308 before ever reaching this 301, a two-hop
-// redirect for anyone who somehow reaches the page via its bare leaf slug.
+// haeuser-auf-zypern's merged children also need their FLAT leaf slug
+// (in addition to the nested path): nestedPageRedirects.json already 308s
+// the flat form to the nested "canonical" one for those exact leaves, and
+// this check runs before that logic — without the flat entry, a flat hit
+// would chain through the nested-canonicalisation 308 before ever reaching
+// this 301, a two-hop redirect for anyone who reaches the page via its bare
+// leaf slug. haeuser-in-limassol-kaufen is deliberately NOT here — held out,
+// its untyped-Limassol duplication is a separate question.
 const DE_LANDING_MERGES: Record<string, string> = {
+  "grosse-villen-zypern": "/de/luxusvillen-in-zypern",
   "haeuser-auf-zypern": "/de/luxusvillen-in-zypern",
   "haeuser-auf-zypern/haeuser-in-zypern-fuer-investoren": "/de/luxusvillen-in-zypern",
   "haeuser-in-zypern-fuer-investoren": "/de/luxusvillen-in-zypern",
