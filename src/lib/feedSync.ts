@@ -320,6 +320,8 @@ export async function backfillFeedRefFromDigits(developmentId: string, opts: { d
 // out pending API access, same as everywhere else this session.
 export const STATUS_SYNC_DEVS = ["island-blue", "domenica", "aristo"];
 
+export type StatusOnlySyncChange = { slug: string; unitRef: string; from: string; to: string };
+
 export type StatusOnlySyncResult = {
   dev: string;
   developmentsChecked: number;
@@ -327,6 +329,14 @@ export type StatusOnlySyncResult = {
   matched: number; // manual units whose feedRef resolved in the current feed
   updated: number; // of those, how many actually had a different status
   skipped: number; // manual units with no feedRef, or no match in the current feed
+  // One entry per actual write (a subset of `updated`, same count) — never
+  // for skips, which stay a pure aggregate number (a real run skips dozens
+  // of units with no feedRef; a log line each would be noise, not signal).
+  // This is what the A302 investigation (2026-07-27) needed and didn't
+  // have: statusOnlySync's aggregate counts alone couldn't tell "was this a
+  // genuine sold→available correction or a report artifact" without a raw
+  // DB backup diff — a real before/after line makes that a one-line answer.
+  changes: StatusOnlySyncChange[];
 };
 
 export async function statusOnlySync(devs: string[] = STATUS_SYNC_DEVS): Promise<StatusOnlySyncResult[]> {
@@ -334,9 +344,10 @@ export async function statusOnlySync(devs: string[] = STATUS_SYNC_DEVS): Promise
   for (const dev of devs) {
     const developments = await prisma.development.findMany({
       where: { dev, units: { some: { source: "manual" } } },
-      select: { id: true, feedProjectId: true },
+      select: { id: true, feedProjectId: true, slug: true, developerName: true },
     });
     let developmentsSkipped = 0, matched = 0, updated = 0, skipped = 0;
+    const changes: StatusOnlySyncChange[] = [];
     for (const development of developments) {
       const vm = await getPreviewProject(dev, development.feedProjectId!);
       if (!vm || !vm.units.length) { developmentsSkipped++; continue; } // whole project gone from the feed — touch nothing
@@ -345,7 +356,7 @@ export async function statusOnlySync(devs: string[] = STATUS_SYNC_DEVS): Promise
 
       const manualUnits = await prisma.developmentUnit.findMany({
         where: { developmentId: development.id, source: "manual" },
-        select: { id: true, feedRef: true, status: true },
+        select: { id: true, ref: true, feedRef: true, status: true },
       });
       for (const unit of manualUnits) {
         const feedStatus = unit.feedRef ? feedStatusByRef.get(unit.feedRef) : undefined;
@@ -354,10 +365,16 @@ export async function statusOnlySync(devs: string[] = STATUS_SYNC_DEVS): Promise
         if (feedStatus !== unit.status) {
           await prisma.developmentUnit.update({ where: { id: unit.id }, data: { status: feedStatus } });
           updated++;
+          changes.push({
+            slug: development.slug || development.developerName || development.id,
+            unitRef: unit.ref || unit.feedRef || unit.id,
+            from: unit.status || "(none)",
+            to: feedStatus,
+          });
         }
       }
     }
-    results.push({ dev, developmentsChecked: developments.length, developmentsSkipped, matched, updated, skipped });
+    results.push({ dev, developmentsChecked: developments.length, developmentsSkipped, matched, updated, skipped, changes });
   }
   return results;
 }
