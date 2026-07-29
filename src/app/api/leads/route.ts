@@ -156,7 +156,7 @@ export async function POST(request: Request) {
       matchLines +
       `\n<a href="${crmLink}">Open in CRM</a>`;
     let tgOk = false;
-    try { await sendTelegramMessage(tg); tgOk = true; await prisma.lead.update({ where: { id: lead.id }, data: { telegramNotified: true } }); }
+    try { const tgResult = await sendTelegramMessage(tg); if (tgResult) { tgOk = true; await prisma.lead.update({ where: { id: lead.id }, data: { telegramNotified: true } }); } }
     catch (e) { console.error("Telegram error:", e); }
 
     // Email notification to team (non-fatal)

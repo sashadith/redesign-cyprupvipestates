@@ -43,8 +43,10 @@ export async function recordInboundLead(opts: {
     (opts.page ? `Page: ${esc(opts.page)}\n` : "") +
     `\n<a href="${link}">Open in CRM</a>`;
   try {
-    await sendTelegramMessage(msg);
-    await prisma.lead.update({ where: { id: opts.leadId }, data: { telegramNotified: true } });
+    const tgResult = await sendTelegramMessage(msg);
+    if (tgResult) {
+      await prisma.lead.update({ where: { id: opts.leadId }, data: { telegramNotified: true } });
+    }
   } catch (e) {
     console.error("lead telegram error:", e);
   }

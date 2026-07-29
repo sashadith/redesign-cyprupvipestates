@@ -2,13 +2,10 @@ export async function sendTelegramMessage(text: string) {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
 
-  if (!token) {
-    throw new Error("TELEGRAM_BOT_TOKEN is missing");
-  }
-
-  if (!chatId) {
-    throw new Error("TELEGRAM_CHAT_ID is missing");
-  }
+  // Not configured (e.g. staging) is a legitimate environment state, not an
+  // error — skip silently rather than throw/log. Callers that need to know
+  // whether a message actually went out check the return value (null here).
+  if (!token || !chatId) return null;
 
   const response = await fetch(
     `https://api.telegram.org/bot${token}/sendMessage`,

@@ -120,8 +120,8 @@ async function runDigest() {
     `<a href="${siteUrl}/admin">Open Action Center</a>`,
   ].filter(Boolean).join("\n");
 
-  await sendTelegramMessage(text);
-  return { sent: true, count: items.length + advisorLines.length + appointmentLines.length };
+  const tgResult = await sendTelegramMessage(text);
+  return { sent: !!tgResult, count: items.length + advisorLines.length + appointmentLines.length };
 }
 
 export async function GET(req: NextRequest) {
