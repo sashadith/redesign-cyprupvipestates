@@ -237,7 +237,8 @@ export type ProjectsSectionBlock = {
     | "Townhouse"
     | "Semi-detached villa"
     | "Office"
-    | "Shop";
+    | "Shop"
+    | "Commercial";
   projects: Project[];
   filteredProjects?: Project[];
   // Render-time only signal (set by the page.tsx dispatch, never stored in
@@ -287,7 +288,8 @@ export type LandingProjectsBlock = {
     | "Townhouse"
     | "Semi-detached villa"
     | "Office"
-    | "Shop";
+    | "Shop"
+    | "Commercial";
   projects: Project[];
   filteredProjects?: Project[];
 };
