@@ -109,6 +109,23 @@ export function resolveDevelopmentType(category: string | null | undefined, unit
   return (category ?? "").trim();
 }
 
+// Catalogue/landing-page propertyType filter match. Every other filter value
+// still does a plain substring check against the resolveDevelopmentType()
+// output — unchanged, see the else branch. "Commercial" is the one
+// exception: no unit in this codebase is literally typed "Commercial" today
+// (they're typed "Office"/"Shop", the feed's own vocabulary — see the
+// Commercial-catalogue-tagging investigation, 2026-07-29), so a plain
+// substring match against "Commercial" would never match any of them.
+// Broadening ONLY this one filter value to also accept office/shop keeps the
+// change additive — every other filter value's matching behavior, and every
+// existing city+type landing page, is untouched.
+export function matchesPropertyTypeFilter(resolvedType: string, filterValue: string): boolean {
+  const resolved = resolvedType.toLowerCase();
+  const filter = filterValue.toLowerCase();
+  if (filter === "commercial") return resolved.includes("commercial") || resolved.includes("office") || resolved.includes("shop");
+  return resolved.includes(filter);
+}
+
 // The merged /projects listing card reuses the LEGACY compact-4-footer
 // renderer (cardDistances/CARD_DIST_ORDER in ProjectsExplorer.tsx — Beach ·
 // School · Golf · Airport) verbatim, so a Development's stored distances

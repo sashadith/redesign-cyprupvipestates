@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
 import { localizedHref } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
-import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, toCardDistances } from "@/lib/developmentCard";
+import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances } from "@/lib/developmentCard";
 import { soldOutFromCounts } from "@/lib/developmentAvailability";
 import { Homepage } from "@/types/homepage";
 import { Header } from "@/types/header";
@@ -1101,7 +1101,7 @@ async function queryFilteredDevelopmentRows(f: ProjectFilters) {
     .filter((d) => !!d.slug) // not yet SEO-slugged (see developmentSeo.ts) → not publicly linkable
     .map(mapDevelopmentRowToCard)
     .filter((d) => !city || d._matchLocations.includes(city.toLowerCase()))
-    .filter((d) => !propertyType || d.keyFeatures.propertyType.toLowerCase().includes(propertyType.toLowerCase()))
+    .filter((d) => !propertyType || matchesPropertyTypeFilter(d.keyFeatures.propertyType, propertyType))
     .filter((d) => !qActive || d._searchText.includes(qActive))
     .filter((d) => priceFrom == null || d._priceTo == null || d._priceTo >= priceFrom)
     .filter((d) => priceTo == null || d._priceFrom == null || d._priceFrom <= priceTo)

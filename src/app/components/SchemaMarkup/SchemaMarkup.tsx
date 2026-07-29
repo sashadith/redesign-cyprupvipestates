@@ -10,8 +10,14 @@ interface SchemaMarkupProps {
 const SchemaMarkup: React.FC<SchemaMarkupProps> = ({ project }) => {
   const kf = project.keyFeatures ?? {};
 
-  // Property entity type (schema.org Apartment / House are valid Accommodation types).
-  const schemaType = kf.propertyType === "Apartment" ? "Apartment" : "House";
+  // Property entity type (schema.org Apartment / House are valid Accommodation
+  // types, but Accommodation itself is residential-only — Office/Shop/Commercial
+  // listings have no honest fit there. "Place" is the actual common ancestor of
+  // Accommodation/Apartment/House: valid for any physical location, doesn't
+  // claim a false residential subtype. Villa/Townhouse still fall to "House"
+  // here, pre-existing and out of scope for the Commercial-tagging change.
+  const isCommercial = /commercial|office|shop/i.test(kf.propertyType ?? "");
+  const schemaType = kf.propertyType === "Apartment" ? "Apartment" : isCommercial ? "Place" : "House";
 
   const additionalProperty = [
     { name: "Bedrooms", value: kf.bedrooms },
