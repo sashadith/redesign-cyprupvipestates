@@ -206,9 +206,15 @@ async function qubehub(dev: string, id = "1"): Promise<ProjectVM | null> {
   const url = QUBE_URL[dev];
   const key = process.env[`DEV_FEED_KEY_${dev.toUpperCase()}`] ?? ""; // read at call time
   if (!url || !key) return null;
-  // Qubehub: <projects> repeats (each = a project); <units> repeats inside each
+  // Qubehub: <projects> repeats (each = a project); <units> repeats inside each.
+  // Must be a real id match — no projects[0] fallback: a requested id that's
+  // been delisted upstream (e.g. sold, removed from the feed) has to resolve
+  // to "not found", not silently substitute an unrelated project. Confirmed
+  // live 2026-07-29: BBF removed a sold project's id from its feed, and this
+  // fallback overwrote that development's category/price/units with
+  // whichever unrelated project happened to be first in the feed array.
   const projects = arr((await cachedParse(url, { "x-api-key": key }))?.["realty-feed"]?.projects);
-  const project = projects.find((p: any) => txt(p.id) === id) ?? projects[0];
+  const project = projects.find((p: any) => txt(p.id) === id);
   if (!project) return null;
 
   const units: UnitVM[] = arr(project?.units).map((u: any) => {
