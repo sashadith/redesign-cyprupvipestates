@@ -43,7 +43,11 @@
 .px__select:focus, .px__price input:focus { border-color: var(--accent); color: var(--ivory); }
 
 .px__price { display: inline-flex; align-items: center; gap: 6px; }
-.px__price input { flex: 1 1 78px; width: auto; min-width: 0; cursor: text; color: var(--ivory); padding: 0 12px; }
+/* ~30% narrower than the original 78px (78 × 0.7 ≈ 55) — the 23px freed per
+   input (46px total across Min+Max) is handed to .px__f-type below, not
+   absorbed by Search (the row's only flex-grow item), so the row's total
+   width is unchanged and only these two controls trade width. */
+.px__price input { flex: 1 1 55px; width: auto; min-width: 0; cursor: text; color: var(--ivory); padding: 0 12px; }
 .px__price input::placeholder { color: var(--text-faint); }
 .px__price-sep { flex: none; color: var(--text-faint); }
 
@@ -120,6 +124,14 @@
 /* ---- filter-row layout: City · Price · Type · Beds · [Search grows] · Map · Reset ---- */
 .px__filters-row > .pxsel,
 .px__filters-row > .px__price { flex: 0 1 auto; min-width: 0; }
+
+/* Any-type gets the 46px reclaimed from the price inputs above (23px × 2).
+   .px__f-type has no explicit width of its own (shrink-to-fit, like
+   City/Beds) — so instead of guessing its rendered size, this widens it by
+   an exact, deterministic +46px via padding on its own trigger only
+   (.px__f-type .px__select — 2-class specificity beats the shared 1-class
+   .px__select rule above), leaving City and Beds' padding/width untouched. */
+.px__f-type .px__select { padding-left: 39px; padding-right: 57px; } /* was 16px / 34px */
 /* small flex-basis on purpose: search grows to fill remaining space, so its
    rendered width is unchanged, but line-wrapping is decided by basis — a large
    basis made Reset wrap onto a 2nd line in Safari (which sizes the selects/number
@@ -133,7 +145,12 @@
 /* tablet: the four filters fill one row, Search + actions on the next */
 @media (max-width: 900px) {
   .px__filters-row > .pxsel { flex: 1 1 150px; }
-  .px__filters-row > .px__price { flex: 1 1 190px; }
+  /* ~30% narrower than the original 190px (190 × 0.7 ≈ 133) — same
+     price→type transfer as desktop, scaled to this tier's own basis values.
+     City/Beds stay on the shared 150px .pxsel rule above; only Type gets a
+     more specific override for the freed 57px (150 + 57 = 207). */
+  .px__filters-row > .px__price { flex: 1 1 133px; }
+  .px__filters-row > .px__f-type { flex: 1 1 207px; }
   .px__filters-row > .px__search { flex: 1 1 60%; }
   .px__filters-row > .px__mapbtn { flex: 1 1 auto; }
   .px__filters-row > .px__reset { flex: 0 1 auto; }
@@ -159,6 +176,12 @@
   .px__filters-row.is-more-open > .px__morebtn { display: none; }
   .px__filters-row.is-more-open > .px__f-type,
   .px__filters-row.is-more-open > .px__f-beds { display: block; flex: 1 1 calc(50% - 4px); order: 2; }
+  /* Undo the desktop/tablet extra padding here: Type shares an exact 50/50
+     split with Beds at this size (both calc(50% - 4px)), so the outer box
+     can't actually grow — the padding would just eat into the visible text
+     space instead, over-truncating the label. Reset to the same 16px/34px
+     Beds already uses, so both controls render identically at this width. */
+  .px__filters-row.is-more-open > .px__f-type .px__select { padding-left: 16px; padding-right: 34px; }
   .px__filters-row.is-more-open > .px__search { display: inline-flex; flex: 1 1 0; min-width: 0; order: 3; }
   .px__filters-row.is-more-open > .px__mapbtn,
   .px__filters-row.is-more-open > .px__reset { display: inline-flex; flex: 0 0 auto; order: 3; }
