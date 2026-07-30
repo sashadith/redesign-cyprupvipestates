@@ -133,7 +133,7 @@
   left: max(var(--gutter), calc(50% - 680px + var(--gutter)));
   right: auto;
   width: fit-content;
-  max-width: min(calc(100% - 32px), 600px);
+  max-width: min(calc(100% - 32px), 620px);
 }
 
 /* about + facts — two columns so the copy no longer leaves the right half empty */
