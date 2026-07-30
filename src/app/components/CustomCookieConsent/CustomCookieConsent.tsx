@@ -106,7 +106,24 @@ export default function CustomCookieConsent({ lang }: Props) {
   return (
     <div className={styles.cookieBanner}>
       <h3>{t.title}</h3>
-      <p>{t.description}</p>
+      <p>
+        {t.description}{" "}
+        <a
+          href={getNormalizedHref(
+            lang,
+            {
+              en: "privacy-policy",
+              de: "datenschutzrichtlinie",
+              pl: "polityka-prywatnosci",
+              ru: "politika-privatnosti",
+            }[lang]
+          )}
+          target="_blank"
+          className={styles.policyLink}
+        >
+          {t.privacy}
+        </a>
+      </p>
 
       <div className={styles.buttons}>
         <button
@@ -124,23 +141,6 @@ export default function CustomCookieConsent({ lang }: Props) {
           {t.rejectAll}
         </button>
       </div>
-
-      <p className={styles.policyLink}>
-        <a
-          href={getNormalizedHref(
-            lang,
-            {
-              en: "privacy-policy",
-              de: "datenschutzrichtlinie",
-              pl: "polityka-prywatnosci",
-              ru: "politika-privatnosti",
-            }[lang]
-          )}
-          target="_blank"
-        >
-          {t.privacy}
-        </a>
-      </p>
     </div>
   );
 }
