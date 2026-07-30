@@ -8,7 +8,7 @@ import { seoAdvisorRules } from "./rules/seoAdvisor";
 import { filterSnoozed } from "./snooze";
 
 export type { ActionItem, Severity, Category } from "./types";
-export { snoozeItem } from "./snooze";
+export { snoozeItem, dismissForeverItem } from "./snooze";
 
 const CATEGORY_ORDER: Record<Category, number> = { DEVELOPERS: 0, CRM: 1, SEO: 2, SEO_ADVISOR: 3, SYSTEM: 4 };
 

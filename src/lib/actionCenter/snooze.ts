@@ -18,3 +18,15 @@ export async function snoozeItem(itemId: string, days: number, userId?: string) 
   const snoozedUntil = new Date(Date.now() + days * 86_400_000);
   await prisma.actionCenterSnooze.create({ data: { itemId, snoozedUntil, userId } });
 }
+
+// "Don't remind me again" — no separate dismissedForever flag/migration:
+// snoozedUntil is a plain DateTime with no schema-enforced ceiling, so a
+// far-future date already satisfies filterSnoozed's `gt: new Date()` check
+// indefinitely, via the exact same table and query every other snooze uses.
+// The row is never deleted — same audit trail as a timed snooze, just one
+// that in practice never expires.
+export const DISMISS_FOREVER_DATE = new Date("2099-01-01T00:00:00Z");
+
+export async function dismissForeverItem(itemId: string, userId?: string) {
+  await prisma.actionCenterSnooze.create({ data: { itemId, snoozedUntil: DISMISS_FOREVER_DATE, userId } });
+}
