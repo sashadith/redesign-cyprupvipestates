@@ -107,12 +107,15 @@
 .pp-mapsection .pp-h2 { margin-bottom: 16px; }
 .pp-map.px-mapwrap { position: relative; width: 100%; height: min(51vh, 450px); border-radius: 0; }
 /* thin gold-gradient strip, top+bottom — shared by the property page map and the
-   Client Presentation map (PresentationMap.tsx), both of which carry this wrapper */
+   Client Presentation map (PresentationMap.tsx), both of which carry this wrapper.
+   z-index must clear Leaflet's own internal panes (tilePane/markerPane/popupPane
+   etc. run up to ~700 — see .px-poi and .cp-mapsection's isolation comment) or the
+   map tiles paint over it once they load. */
 .pp-map.px-mapwrap::before,
 .pp-map.px-mapwrap::after {
   content: ""; position: absolute; left: 0; right: 0; height: 2px;
   background: linear-gradient(90deg, transparent, #C29A5E, transparent);
-  z-index: 5; pointer-events: none;
+  z-index: 1000; pointer-events: none;
 }
 .pp-map.px-mapwrap::before { top: 0; }
 .pp-map.px-mapwrap::after { bottom: 0; }
