@@ -113,7 +113,7 @@
    map tiles paint over it once they load. */
 .pp-map.px-mapwrap::before,
 .pp-map.px-mapwrap::after {
-  content: ""; position: absolute; left: 0; right: 0; height: 2px;
+  content: ""; position: absolute; left: 0; right: 0; height: 1px;
   background: linear-gradient(90deg, transparent, #C29A5E, transparent);
   z-index: 1000; pointer-events: none;
 }
