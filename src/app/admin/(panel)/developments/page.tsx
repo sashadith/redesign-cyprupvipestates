@@ -17,14 +17,26 @@ const STATUS_STYLE: Record<string, string> = {
   archived: "bg-[#FEE2E2] text-[#991B1B]",
 };
 
+// "sold out" isn't a real publishStatus value — a sold-out development stays
+// published (for SEO) with zero available units. Same rule as
+// computeAvailability()/soldOutFromCounts() (src/lib/developmentAvailability.ts):
+// published + at least one unit + none of them "available". Prisma's `every`
+// is vacuously true on an empty relation, so `some: {}` guards against a
+// published development with zero synced units falsely counting as sold out.
+const SOLD_OUT_STATUS = "sold-out";
+const SOLD_OUT_WHERE = { publishStatus: "published", units: { some: {}, every: { status: { not: "available" } } } };
+
 export default async function DevelopmentsPage({ searchParams }: { searchParams?: { dev?: string; status?: string } }) {
   const dev = searchParams?.dev || "";
   const status = searchParams?.status || "";
   // "All statuses" (no explicit filter) excludes archived — archived projects only
   // show up via the dedicated Archived pill, never mixed into the default list/search.
-  const where = { ...(dev ? { dev } : {}), ...(status ? { publishStatus: status } : { publishStatus: { not: "archived" } }) };
+  const where = {
+    ...(dev ? { dev } : {}),
+    ...(status === SOLD_OUT_STATUS ? SOLD_OUT_WHERE : status ? { publishStatus: status } : { publishStatus: { not: "archived" } }),
+  };
 
-  const [rows, byDev, byStatus, total] = await Promise.all([
+  const [rows, byDev, byStatus, total, soldOutCount] = await Promise.all([
     prisma.development.findMany({
       where,
       orderBy: [{ dev: "asc" }, { publicName: "asc" }],
@@ -33,6 +45,7 @@ export default async function DevelopmentsPage({ searchParams }: { searchParams?
     prisma.development.groupBy({ by: ["dev"], _count: { _all: true }, orderBy: { dev: "asc" } }),
     prisma.development.groupBy({ by: ["publishStatus"], _count: { _all: true } }),
     prisma.development.count(),
+    prisma.development.count({ where: SOLD_OUT_WHERE }),
   ]);
 
   const statusCount = Object.fromEntries(byStatus.map((s) => [s.publishStatus, s._count._all]));
@@ -79,6 +92,14 @@ export default async function DevelopmentsPage({ searchParams }: { searchParams?
             {s} · {statusCount[s] ?? 0}
           </Link>
         ))}
+        {/* Derived, not a publishStatus value — see SOLD_OUT_WHERE above. Distinct
+            indigo (not reused from STATUS_STYLE) so it doesn't read as a 5th real status. */}
+        <Link
+          href={qp({ status: SOLD_OUT_STATUS })}
+          className={`rounded px-2.5 py-1 ${status === SOLD_OUT_STATUS ? "bg-[#111827] text-white" : "bg-[#E0E7FF] text-[#3730A3] hover:opacity-80"}`}
+        >
+          Sold out · {soldOutCount}
+        </Link>
       </div>
 
       <DevelopmentsTable
