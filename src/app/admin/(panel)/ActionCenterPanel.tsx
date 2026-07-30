@@ -1,7 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { snoozeActionItemAction } from "./actionCenterActions";
+import { snoozeActionItemAction, dismissForeverActionItemAction } from "./actionCenterActions";
 import { NavIcon } from "./NavIcons";
 import type { Severity, Category } from "@/lib/actionCenter";
 
@@ -25,6 +25,12 @@ function SnoozeMenu({ itemId }: { itemId: string }) {
       snoozeActionItemAction(itemId, days);
     });
   };
+  const dismissForever = () => {
+    setOpen(false);
+    startTransition(() => {
+      dismissForeverActionItemAction(itemId);
+    });
+  };
   return (
     <div className="relative">
       <button
@@ -37,7 +43,7 @@ function SnoozeMenu({ itemId }: { itemId: string }) {
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-[#E5E7EB] rounded-md shadow-md text-xs overflow-hidden min-w-[110px]">
+          <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-[#E5E7EB] rounded-md shadow-md text-xs overflow-hidden min-w-[150px]">
             {SNOOZE_OPTIONS.map(([label, days]) => (
               <button
                 key={label} type="button" onClick={() => snooze(days)}
@@ -46,6 +52,12 @@ function SnoozeMenu({ itemId }: { itemId: string }) {
                 Snooze {label}
               </button>
             ))}
+            <button
+              type="button" onClick={dismissForever}
+              className="block w-full text-left px-3 py-1.5 hover:bg-[#F8F9FA] text-[#374151] border-t border-[#F3F4F6]"
+            >
+              Don&apos;t remind me again
+            </button>
           </div>
         </>
       )}
