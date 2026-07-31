@@ -422,4 +422,39 @@
 .dist-strip--compact .dist-strip__item { padding: 10px 12px; gap: 8px; }
 .dist-strip--compact .dist-strip__ic svg { width: 16px; height: 16px; }
 .dist-strip--compact .dist-strip__label { font-size: 0.62rem; }
+
+/* =====================================================================
+   Sold-out hint + off-market CTA (Bündel 1, 2026-07-31). Reuses .pp-panel's
+   glass-and-gold-hairline language — dezent, not a banner. See ProjectPageBody
+   for placement: hint -> prominent alternatives -> CTA, all under the hero,
+   only when isSold (computeAvailability).
+   ===================================================================== */
+.pp-soldout__panel, .pp-offmarket__panel { padding: clamp(22px, 3.4vw, 36px); }
+.pp-soldout__panel .pp-h2 { margin-bottom: 0.5em; }
+.pp-soldout__panel .pp-desc { max-width: none; }
+
+.pp-offmarket__panel { display: block; text-decoration: none; transition: border-color var(--dur-sm) var(--ease); }
+.pp-offmarket__panel:hover { border-color: var(--accent); }
+.pp-offmarket__headline { font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  font-size: clamp(1.15rem, 1rem + 0.7vw, 1.5rem); color: var(--ivory); margin: 0 0 .5em; letter-spacing: -0.01em; }
+.pp-offmarket__panel .pp-desc { max-width: none; }
+
+/* Similar projects — prominent (under the sold-out hint) or quiet (further
+   down an available project's page); see AlternativesBlock.tsx. */
+.pp-alts--prominent { padding-top: 0; }
+.pp-alts__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: clamp(14px, 1.8vw, 22px); }
+.pp-alts__card { display: flex; flex-direction: column; background: var(--sea-deep); border: 1px solid var(--hairline);
+  border-radius: var(--r-ui); overflow: hidden; text-decoration: none; transition: border-color var(--dur-sm) var(--ease); }
+.pp-alts__card:hover { border-color: var(--accent); box-shadow: 0 14px 28px -10px rgba(0,0,0,0.6); }
+.pp-alts__media { position: relative; aspect-ratio: 4/3; background: linear-gradient(135deg, var(--sea), var(--sea-deep)); }
+.pp-alts__media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.6s var(--ease); }
+.pp-alts__card:hover .pp-alts__media img { transform: scale(1.04); }
+.pp-alts__ph { display: block; width: 100%; height: 100%; }
+.pp-alts__body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 4px; }
+.pp-alts__name { font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  font-size: 1.02rem; color: var(--ivory); margin: 0; letter-spacing: -0.01em; }
+.pp-alts__loc { font-size: 0.78rem; color: var(--text-faint); margin: 0; }
+.pp-alts__price { font-size: 0.86rem; color: var(--text-soft); margin: 4px 0 0; }
+.pp-alts__price b { color: var(--ivory); font-weight: 600; }
+.pp-alts__price span { color: var(--text-faint); font-size: 0.85em; }
 .dist-strip--compact .dist-strip__value { font-size: 0.85rem; }
