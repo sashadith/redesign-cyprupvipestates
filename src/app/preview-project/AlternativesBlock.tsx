@@ -1,3 +1,5 @@
+"use client";
+
 import { ProjectCard, type ProjectCardData } from "@/app/preview-projects/ProjectCard";
 import { projectsStrings } from "@/app/[lang]/projects/projectsI18n";
 
@@ -11,6 +13,13 @@ import { projectsStrings } from "@/app/[lang]/projects/projectsI18n";
 // have drifted from the listing card's look/hover behaviour over time). The
 // only deliberate deviation is distances, dropped upstream in
 // getAlternativeDevelopments — this component doesn't know or care why.
+//
+// "use client" itself, not just ProjectCard: projectsStrings(lang) returns
+// several function-valued fields (mapTileSub, sorts labels, …) which — like
+// event handlers — can't cross the server->client boundary as props from the
+// server-rendered ProjectPageBody. Computing it here instead avoids that
+// crossing entirely; `cards` (this component's only prop) is plain
+// serializable data, so the client boundary can start here cleanly.
 export default function AlternativesBlock({
   cards, lang, heading, prominent,
 }: {
