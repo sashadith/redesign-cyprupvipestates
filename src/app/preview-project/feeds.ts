@@ -53,7 +53,7 @@ const clean = (v: any): string => { const s = txt(v).trim(); return s && s.toLow
 // ":" (e.g. ":balance") — a pipeline artifact on the provider's side, never
 // part of the real name (confirmed: never appears on their own site's
 // titles/URLs). Strips it so it can't leak into new projects going forward.
-const stripLeadingColon = (s: string): string => s.replace(/^:\s*/, "");
+export const stripLeadingColon = (s: string): string => s.replace(/^:\s*/, "");
 const areaM2 = (v: any): string => { const n = toNum(v); return n ? `${n}\u00A0m²` : ""; }; // nbsp keeps "105 m²" on one line
 const districtFor = (lng?: number | null) => (lng == null ? "" : lng < 32.6 ? "Paphos" : lng < 33.4 ? "Limassol" : "Larnaca");
 // Fallback for projects with no coordinates at all (some Aristo units carry no
