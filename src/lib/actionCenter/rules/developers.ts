@@ -191,7 +191,7 @@ async function feedSyncFailures(): Promise<ActionItem[]> {
 async function feedMissingReminders(): Promise<ActionItem[]> {
   const devs = await prisma.development.findMany({
     where: { dev: { in: SYNCED_DEVS }, publishStatus: { in: ["published", "ready"] } },
-    select: { id: true, dev: true, publicName: true, unitsAvailable: true, syncedAt: true, createdAt: true },
+    select: { id: true, dev: true, publicName: true, syncedAt: true, createdAt: true, units: { select: { status: true } } },
   });
   const items: ActionItem[] = [];
   for (const d of devs) {
@@ -208,12 +208,19 @@ async function feedMissingReminders(): Promise<ActionItem[]> {
     }
     const days = daysSinceCalendar(new Date(d.syncedAt));
     if (days < FEED_MISSING_GRACE_DAYS) continue;
+    // computeAvailability(), not the Development.unitsAvailable cache column
+    // — that column is only ever refreshed by a full feed/drive sync, never
+    // by statusOnlySync() or a direct unit-status correction (confirmed
+    // 2026-07-31: Trinity Residences' unit was set sold, but its cached
+    // count still said 1 available). Every other surface in the app already
+    // reads live off DevelopmentUnit rows; this rule was the one exception.
+    const { available } = computeAvailability(d.units);
     const dateLabel = new Date(d.syncedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
     const unitsClause =
-      d.unitsAvailable > 0
-        ? `${d.unitsAvailable} available unit${d.unitsAvailable === 1 ? "" : "s"} still advertised with data from ${dateLabel}`
+      available > 0
+        ? `${available} available unit${available === 1 ? "" : "s"} still advertised with data from ${dateLabel}`
         : `No available units advertised`;
-    const severity: ActionItem["severity"] = d.unitsAvailable > 0 && days >= FEED_MISSING_ARCHIVE_REMINDER_DAYS ? "ACTION" : "INFO";
+    const severity: ActionItem["severity"] = available > 0 && days >= FEED_MISSING_ARCHIVE_REMINDER_DAYS ? "ACTION" : "INFO";
     items.push({
       id: `feed-missing:${d.id}`, severity, category: "DEVELOPERS",
       title: `${name}: missing from the ${d.dev} feed for ${days} day${days === 1 ? "" : "s"}`,
