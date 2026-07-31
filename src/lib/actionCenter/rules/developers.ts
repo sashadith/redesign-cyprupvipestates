@@ -1,14 +1,26 @@
 import { prisma } from "@/lib/prisma";
 import { computeAvailability, availabilityContradiction } from "@/lib/developmentAvailability";
 import { computePublishGate, areaSlugOf } from "@/lib/developmentPublishGate";
+import { SYNCED_DEVS } from "@/lib/feedSync";
 import type { ActionItem } from "../types";
 
 const DAY = 86_400_000;
 const SOLD_OUT_ARCHIVE_REMINDER_DAYS = 60;
 const NEW_DEV_WINDOW_DAYS = 7;
 const READY_TO_PUBLISH_MIN_AGE_DAYS = 3;
+const FEED_MISSING_GRACE_DAYS = 2; // 0-1 days is grace (transient feed hiccups happen); alert from day 2
+const FEED_MISSING_ARCHIVE_REMINDER_DAYS = 7; // escalate to ACTION only once real available inventory has been stale this long
 
 const arr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
+// Calendar-day difference (not a rolling 24h interval) — matches how "day 2"
+// reads intuitively against a fixed once-daily sync, independent of the
+// exact hour the cron happened to run.
+const daysSinceCalendar = (d: Date): number => {
+  const now = new Date();
+  const startOfToday = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const startOfThat = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  return Math.round((startOfToday - startOfThat) / DAY);
+};
 
 // (a) Sold-out published development — archive reminder once it's been sold
 // out a while. There's no stored "became sold out at" timestamp (no history
@@ -155,9 +167,66 @@ async function feedSyncFailures(): Promise<ActionItem[]> {
   return items;
 }
 
+// (f) Published/ready development whose source feed no longer lists it.
+// syncedAt only advances when the sync loop actually visits a project (see
+// feedSync.ts's developmentRow() — it's set unconditionally on every
+// successful upsert, for every id listProjectIds() currently returns), so
+// its age already IS "days since this dev's feed last confirmed the project
+// exists" — no separate "last seen" field needed.
+//
+// Scoped to SYNCED_DEVS only (confirmed 2026-07-31, not assumed): drive-
+// based developments (dev:"drive") update syncedAt on a different,
+// inconsistent cadence — only some driveAvailabilitySync.ts code paths
+// touch it — and manually-curated developments (dev:"manual") never get one
+// at all. Without this scope, the same query picks up 3 drive-devs with
+// meaningless "days since" values and 6 manual devs via a NULL syncedAt
+// that was never expected to be set — both false positives, not real
+// feed-disappearance cases.
+//
+// A separate itemId namespace (feed-missing:) from sold-out:<id> is
+// deliberate — the two conditions are independent (a development can be
+// both, either, or neither) and a "don't remind me again" on one must never
+// silently suppress the other; the Action Center's dismiss/snooze mechanism
+// keys on the exact itemId string, so this falls out for free.
+async function feedMissingReminders(): Promise<ActionItem[]> {
+  const devs = await prisma.development.findMany({
+    where: { dev: { in: SYNCED_DEVS }, publishStatus: { in: ["published", "ready"] } },
+    select: { id: true, dev: true, publicName: true, unitsAvailable: true, syncedAt: true, createdAt: true },
+  });
+  const items: ActionItem[] = [];
+  for (const d of devs) {
+    const name = d.publicName;
+    if (!d.syncedAt) {
+      // Never confirmed by a real sync at all — flag immediately, no grace period applies.
+      items.push({
+        id: `feed-missing:${d.id}`, severity: "INFO", category: "DEVELOPERS",
+        title: `${name}: never confirmed by the ${d.dev} feed`,
+        description: `Published, but no successful ${d.dev} sync has ever matched this project.`,
+        deepLink: `/admin/developments/${d.id}`, since: d.createdAt,
+      });
+      continue;
+    }
+    const days = daysSinceCalendar(new Date(d.syncedAt));
+    if (days < FEED_MISSING_GRACE_DAYS) continue;
+    const dateLabel = new Date(d.syncedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
+    const unitsClause =
+      d.unitsAvailable > 0
+        ? `${d.unitsAvailable} available unit${d.unitsAvailable === 1 ? "" : "s"} still advertised with data from ${dateLabel}`
+        : `No available units advertised`;
+    const severity: ActionItem["severity"] = d.unitsAvailable > 0 && days >= FEED_MISSING_ARCHIVE_REMINDER_DAYS ? "ACTION" : "INFO";
+    items.push({
+      id: `feed-missing:${d.id}`, severity, category: "DEVELOPERS",
+      title: `${name}: missing from the ${d.dev} feed for ${days} day${days === 1 ? "" : "s"}`,
+      description: `${unitsClause}, ${days} day${days === 1 ? "" : "s"} since it last appeared in the ${d.dev} feed.`,
+      deepLink: `/admin/developments/${d.id}`, since: d.syncedAt,
+    });
+  }
+  return items;
+}
+
 export async function developerRules(): Promise<ActionItem[]> {
-  const [a, b, c, d, e] = await Promise.all([
-    soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(),
+  const [a, b, c, d, e, f] = await Promise.all([
+    soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(),
   ]);
-  return [...a, ...b, ...c, ...d, ...e];
+  return [...a, ...b, ...c, ...d, ...e, ...f];
 }
