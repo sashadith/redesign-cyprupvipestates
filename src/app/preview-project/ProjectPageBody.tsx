@@ -83,7 +83,7 @@ export default async function ProjectPageBody({
   const stageLabel = resolveStageLabel(p.stage, p.status, lang);
   // Slug-less admin preview (feed rendered before a Development row/slug exists,
   // see src/app/[lang]/preview-project/page.tsx) has no DB row to rank against.
-  const alternatives = p.slug ? await getAlternativeDevelopments(p.slug) : [];
+  const alternatives = p.slug ? await getAlternativeDevelopments(p.slug, lang) : [];
 
   // Plot / build-area ranges, computed from the currently AVAILABLE units (not
   // sold/reserved) — values aren't always suffixed "m²" at the source, so extract
@@ -157,7 +157,7 @@ export default async function ProjectPageBody({
               </div>
             </section>
 
-            <AlternativesBlock cards={alternatives} lang={lang} heading={t.alternativesHeading} prominent t={t} />
+            <AlternativesBlock cards={alternatives} lang={lang} heading={t.alternativesHeading} prominent />
 
             <section className="pp-wrap pp-section pp-offmarket">
               <a className="pp-panel pp-offmarket__panel" href="#enquiry">
@@ -259,10 +259,6 @@ export default async function ProjectPageBody({
           </section>
         )}
 
-        {/* Available project: same alternatives ranking, shown dezent further down
-            rather than prominently under a (non-existent) sold-out hint. */}
-        {!isSold && <AlternativesBlock cards={alternatives} lang={lang} heading={t.alternativesHeading} prominent={false} t={t} />}
-
         <div id="enquiry">
           <Form
             lang={lang}
@@ -271,6 +267,16 @@ export default async function ProjectPageBody({
             showQuestionField={isSold}
           />
         </div>
+
+        {/* Available project: same alternatives ranking, shown dezent below the
+            enquiry form rather than prominently under a (non-existent) sold-out
+            hint. Correction 2026-07-31: form belongs above this strip, not below. */}
+        {!isSold && alternatives.length > 0 && (
+          <>
+            <AlternativesBlock cards={alternatives} lang={lang} heading={t.alternativesHeading} prominent={false} />
+            <div className="pp-wrap"><hr className="pp-goldline" /></div>
+          </>
+        )}
       </main>
       <Footer params={params} />
       <WhatsAppButton lang={lang} />

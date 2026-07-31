@@ -1,43 +1,32 @@
-import Link from "next/link";
-import { localizedHref } from "@/lib/locale";
-import { atSize } from "@/app/preview-project/imageSize";
-import type { AlternativeCard } from "@/lib/developmentAlternatives";
-import type { DevelopmentStrings } from "@/lib/developmentCopy";
-
-const fmtPrice = (n: number | null, cur = "EUR") =>
-  n == null ? null : `${cur === "EUR" ? "€" : cur + " "}${n.toLocaleString("en-US")}`;
+import { ProjectCard, type ProjectCardData } from "@/app/preview-projects/ProjectCard";
+import { projectsStrings } from "@/app/[lang]/projects/projectsI18n";
 
 // Shared "similar projects" grid — prominent (under the sold-out banner) or
 // quiet (further down an available project's page), same component and same
 // ranking result either way, just a different heading/placement/CSS modifier
 // from the caller. See developmentAlternatives.ts for the ranking logic.
+//
+// Renders the SAME <ProjectCard> component as the /projects listing (2026-07-31
+// correction — an earlier version hand-built a second card here, which would
+// have drifted from the listing card's look/hover behaviour over time). The
+// only deliberate deviation is distances, dropped upstream in
+// getAlternativeDevelopments — this component doesn't know or care why.
 export default function AlternativesBlock({
-  cards, lang, heading, prominent, t,
+  cards, lang, heading, prominent,
 }: {
-  cards: AlternativeCard[];
+  cards: ProjectCardData[];
   lang: string;
   heading: string;
   prominent: boolean;
-  t: DevelopmentStrings;
 }) {
   if (!cards.length) return null;
+  const s = projectsStrings(lang);
   return (
     <section className={`pp-wrap pp-section pp-alts${prominent ? " pp-alts--prominent" : " pp-alts--quiet"}`}>
       {!prominent && <h2 className="pp-h2">{heading}</h2>}
-      <div className="pp-alts__grid">
+      <div className="px__grid">
         {cards.map((c) => (
-          <Link key={c.id} href={localizedHref(lang, ["projects", c.slug])} className="pp-alts__card">
-            <div className="pp-alts__media">
-              {c.mainImage ? <img src={atSize(c.mainImage, "medium")} alt={c.publicName} loading="lazy" /> : <span className="pp-alts__ph" />}
-            </div>
-            <div className="pp-alts__body">
-              <h3 className="pp-alts__name">{c.publicName}</h3>
-              {(c.area || c.district) && <p className="pp-alts__loc">{c.area || c.district}</p>}
-              {fmtPrice(c.priceFrom, c.currency) && (
-                <p className="pp-alts__price"><b>{fmtPrice(c.priceFrom, c.currency)}</b> <span>{t.heroFrom}</span></p>
-              )}
-            </div>
-          </Link>
+          <ProjectCard key={c.id} c={c} active={false} onHover={() => {}} s={s} locale={lang} />
         ))}
       </div>
     </section>

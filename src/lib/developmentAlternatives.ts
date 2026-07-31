@@ -14,17 +14,10 @@
 import { prisma } from "@/lib/prisma";
 import { computeAvailability } from "@/lib/developmentAvailability";
 import { resolveDevelopmentType } from "@/lib/developmentCard";
-
-export type AlternativeCard = {
-  id: string;
-  slug: string;
-  publicName: string;
-  mainImage: string | null;
-  area: string | null;
-  district: string | null;
-  priceFrom: number | null;
-  currency: string;
-};
+import { resolveCompletionYear } from "@/lib/text";
+import { mapDevelopmentRowToCard } from "@/sanity/sanity.utils";
+import { localizedHref } from "@/lib/locale";
+import type { ProjectCardData } from "@/app/preview-projects/ProjectCard";
 
 const PRICE_BAND_TIGHT = 0.4; // ±40% — stages 1 and 2
 const PRICE_BAND_LOOSE = 0.6; // ±60% — stage 3 (last resort) only
@@ -56,11 +49,7 @@ function inBand(price: number, center: number, band: number): boolean {
   return price >= center * (1 - band) && price <= center * (1 + band);
 }
 
-function firstGalleryImage(gallery: unknown): string | null {
-  return Array.isArray(gallery) && typeof gallery[0] === "string" ? (gallery[0] as string) : null;
-}
-
-export async function getAlternativeDevelopments(currentSlug: string): Promise<AlternativeCard[]> {
+export async function getAlternativeDevelopments(currentSlug: string, lang: string): Promise<ProjectCardData[]> {
   const current = await prisma.development.findUnique({
     where: { slug: currentSlug },
     select: {
@@ -85,16 +74,12 @@ export async function getAlternativeDevelopments(currentSlug: string): Promise<A
     select: {
       id: true,
       slug: true,
-      publicName: true,
       developerAccountId: true,
       area: true,
       district: true,
       priceFrom: true,
-      currency: true,
       category: true,
-      gallery: true,
       units: { select: { status: true, type: true, price: true } },
-      override: { select: { alias: true, mainImage: true } },
     },
   });
 
@@ -148,14 +133,44 @@ export async function getAlternativeDevelopments(currentSlug: string): Promise<A
 
   if (chosen.length < MIN_ALTERNATIVES) return [];
 
-  return chosen.map((d) => ({
-    id: d.id,
-    slug: d.slug as string,
-    publicName: d.override?.alias || d.publicName,
-    mainImage: d.override?.mainImage || firstGalleryImage(d.gallery),
-    area: d.area,
-    district: d.district,
-    priceFrom: d.priceFrom,
-    currency: d.currency ?? "EUR",
-  }));
+  // Full card data — same shape, same resolvers (mapDevelopmentRowToCard) as
+  // the /projects listing card, so AlternativesBlock can render the exact
+  // same <ProjectCard> component rather than a second hand-built variant.
+  // Only fetched for the small ranked shortlist, not the whole candidate pool.
+  const cardRows = await prisma.development.findMany({
+    where: { id: { in: chosen.map((c) => c.id) } },
+    include: { override: true, units: { select: { beds: true, status: true, price: true, type: true, areaBuilt: true } } },
+  });
+  const byId = new Map(cardRows.map((row) => [row.id, row]));
+
+  return chosen
+    .map((c) => byId.get(c.id))
+    .filter((row): row is (typeof cardRows)[number] => !!row)
+    .map((row) => {
+      const card = mapDevelopmentRowToCard(row);
+      const kf = card.keyFeatures;
+      const result: ProjectCardData = {
+        id: card.sanityId,
+        title: card.title,
+        href: card.slug ? localizedHref(lang, ["projects", card.slug]) : "#",
+        image: card.previewImage ?? undefined,
+        city: kf.city,
+        price: kf.price,
+        bedrooms: kf.bedrooms,
+        area: kf.coveredArea,
+        type: kf.propertyType,
+        energy: kf.energyEfficiency,
+        completion: resolveCompletionYear(kf.completionDate),
+        isNew: card.isNew,
+        isFeatured: card.isFeatured,
+        // Distances are deliberately dropped here — Sascha 2026-07-31: the
+        // alternatives strip shouldn't carry them even where the source
+        // project has them, unlike the /projects listing card.
+        distances: null,
+        vatApplies: kf.vatApplies,
+        unitsAvailable: card.unitsAvailable,
+        unitsTotal: card.unitsTotal,
+      };
+      return result;
+    });
 }
