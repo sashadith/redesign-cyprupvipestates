@@ -373,6 +373,26 @@ export async function statusOnlySync(devs: string[] = STATUS_SYNC_DEVS): Promise
           });
         }
       }
+
+      // Recompute the Development-level cache from ALL of this project's
+      // units (not just the manual ones just touched above). A full feed
+      // sync only ever refreshes unitsAvailable/unitsTotal from the FEED's
+      // own reported units, and never overwrites source:"manual" rows — so
+      // for any development with manual corrections, the cache and the
+      // actual unit rows can permanently disagree no matter how often a
+      // full sync runs. This is hygiene, not a functional dependency:
+      // nothing reads this cache for display or logic anymore (see
+      // feedMissingReminders(), fixed 2026-07-31 to use computeAvailability()
+      // instead) — but leaving it permanently wrong invites the same bug
+      // to be reintroduced by future code that reasonably assumes it's live.
+      const allUnits = await prisma.developmentUnit.findMany({
+        where: { developmentId: development.id },
+        select: { status: true },
+      });
+      await prisma.development.update({
+        where: { id: development.id },
+        data: { unitsAvailable: allUnits.filter((u) => u.status === "available").length, unitsTotal: allUnits.length },
+      });
     }
     results.push({ dev, developmentsChecked: developments.length, developmentsSkipped, matched, updated, skipped, changes });
   }
