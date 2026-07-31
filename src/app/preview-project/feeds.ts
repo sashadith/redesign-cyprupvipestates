@@ -49,6 +49,11 @@ const toNum = (v: any): number | null => {
 };
 // feeds ship literal "null"/"0"/empty for missing fields — treat those as absent
 const clean = (v: any): string => { const s = txt(v).trim(); return s && s.toLowerCase() !== "null" ? s : ""; };
+// qubehub (bbf/inex) project names sometimes arrive with a stray leading
+// ":" (e.g. ":balance") — a pipeline artifact on the provider's side, never
+// part of the real name (confirmed: never appears on their own site's
+// titles/URLs). Strips it so it can't leak into new projects going forward.
+export const stripLeadingColon = (s: string): string => s.replace(/^:\s*/, "");
 const areaM2 = (v: any): string => { const n = toNum(v); return n ? `${n}\u00A0m²` : ""; }; // nbsp keeps "105 m²" on one line
 const districtFor = (lng?: number | null) => (lng == null ? "" : lng < 32.6 ? "Paphos" : lng < 33.4 ? "Limassol" : "Larnaca");
 // Fallback for projects with no coordinates at all (some Aristo units carry no
@@ -114,13 +119,71 @@ const fmtCompletion = (s: string) => { if (!validDate(s)) return ""; const d = n
 type Ov = { name?: string; area?: string; mainImage?: string; heroVideo?: string };
 const OVERRIDES: Record<string, Ov> = {
   "island-blue:76": { name: "Design City Residences", area: "Universal", mainImage: "https://portal.islandbluecyprus.com/projects/project_76/artist_impressions/8bebe402bceee965dae5b25f88305daddd3b73a0.jpg" },
-  "inex:1": { name: "Marea Residences", mainImage: "https://qubehub.fra1.digitaloceanspaces.com/inex/project_images/1/68c7c3bed23fdc28ea47a753_07_medium.avif" }, // area comes from the feed (Coral Bay)
+  "inex:1": { name: "Morea Residences", mainImage: "https://qubehub.fra1.digitaloceanspaces.com/inex/project_images/1/68c7c3bed23fdc28ea47a753_07_medium.avif" }, // area comes from the feed (Coral Bay)
   "bbf:36": { name: "Flow Residences", area: "Agios Nicolaos", mainImage: "https://qubehub.fra1.digitaloceanspaces.com/bbf/images/projects/MEDIUM_0f5b9660-485b-407f-ae74-500d90fc5cc4.jpg" },
   "aristo:Pelagos Beachfront Villas": { name: "Azure Beachfront Villas", area: "Chloraka" },
   "pafilia:Elysia Blu": { name: "Elysia Blu Residences", area: "Kato Paphos" },
   "domenica:cirvis": { name: "Cirvis Residences" },
   "medousa:Cypress Park Living": { name: "Cypress Park Residences" },
   "agg:vasileon": { name: "Vasileon Signature Residences" },
+
+  // bbf feed data-quality fix (2026-07-31): these 35 arrive with a stray
+  // leading ":" AND all-lowercase (e.g. ":balance") — confirmed via BBF's
+  // own site that neither is their real formal name (their <title> tags/
+  // URLs are lowercase-no-colon too, but our own catalogue's convention is
+  // Title Case, so normalized to that here rather than adopted verbatim).
+  // stripLeadingColon() above already handles the ":" for every bbf/inex
+  // project including future ones; these entries fix the capitalization,
+  // which can't be done mechanically without risking words like "of"/"dei".
+  "bbf:72": { name: "Balance" },
+  "bbf:7": { name: "Berengaria" },
+  "bbf:47": { name: "Blackpine" },
+  "bbf:26": { name: "Capri House" },
+  "bbf:19": { name: "Cypress Grove" },
+  "bbf:126": { name: "Dream Tower" },
+  "bbf:32": { name: "Eden Bay" },
+  "bbf:68": { name: "Eden Coast" }, // feed also has a stray Cyrillic "с" in the raw name; this override sidesteps it entirely
+  "bbf:12": { name: "Eden Roc Residence Block D" },
+  "bbf:18": { name: "Evolution Tower" },
+  "bbf:4": { name: "Force" },
+  "bbf:57": { name: "Forma" },
+  "bbf:59": { name: "Glow" },
+  "bbf:127": { name: "Glow 2" },
+  "bbf:44": { name: "Grand Valley Homes" },
+  "bbf:6": { name: "Gravity" },
+  "bbf:5": { name: "Heart" },
+  "bbf:11": { name: "Hide" },
+  "bbf:55": { name: "Land of Tomorrow" }, // lowercase "of" is correct
+  "bbf:125": { name: "Legacy" }, // delisted from the live feed as of 2026-07-31 — kept in case bbf relists it; see DB backfill for the published row meanwhile
+  "bbf:24": { name: "Life" },
+  "bbf:69": { name: "Montville" },
+  "bbf:43": { name: "Nest" },
+  "bbf:48": { name: "Ridge" },
+  "bbf:25": { name: "Rise" },
+  "bbf:35": { name: "Rosa dei Venti" }, // lowercase "dei" is correct
+  "bbf:124": { name: "Ruby Project" }, // "Project" is part of BBF's own name (bbf.com/en/projects/ruby-project/), not a generic suffix
+  "bbf:21": { name: "Salt" }, // delisted from the live feed as of 2026-07-31 — kept in case bbf relists it; see DB backfill for the published row meanwhile
+  "bbf:2": { name: "Sense" },
+  "bbf:28": { name: "Sky Tower" },
+  "bbf:30": { name: "Spirit" },
+  "bbf:3": { name: "Synergy" },
+  "bbf:63": { name: "Upside" },
+  "bbf:27": { name: "Verde" },
+  "bbf:13": { name: "Vision" },
+
+  // Same cleanup, domenica-sourced projects whose feed `name` is a raw slug
+  // string instead of a real name (e.g. "amelia-luxury-apartments-paphos-
+  // city-centre"). Currently masked on-site by an admin `alias` override,
+  // but the raw value still leaks into paths that read publicName directly
+  // (see resolveIdentifiedProject() in crm/compose/generate.ts).
+  "domenica:amelia-luxury-apartments-paphos-city-centre": { name: "Amelia Luxury Apartments" },
+  "domenica:apartments-in-paphos-eniko-mare": { name: "Eniko Mare" },
+  "domenica:villas-for-sale-kissonerga-lyra": { name: "Lyra" },
+  "domenica:villas-for-sale-kissonerga": { name: "Lyra B" },
+  "domenica:villas-for-sale-tala-montes": { name: "Montes" },
+  "domenica:new-apartments-paphos-thea": { name: "Thea" },
+  "domenica:uptown-luxury-villas-in-tremithousa-paphos": { name: "Uptown Villas" },
+  "domenica:villas-for-sale-in-paphos-virgo": { name: "Virgo" },
 };
 
 // ==================================================================
@@ -243,7 +306,7 @@ async function qubehub(dev: string, id = "1"): Promise<ProjectVM | null> {
   const lat = Number(txt(loc.latitude)), lng = Number(txt(loc.longitude));
   const center = Number.isFinite(lat) && Number.isFinite(lng) && lat ? { lat, lng } : null;
   const ov = OVERRIDES[`${dev}:${id}`] ?? {};
-  const developerName = txt(project.name);
+  const developerName = stripLeadingColon(txt(project.name));
   const publicName = ov.name ?? developerName;
   const stage = STAGE_LABEL[txt(project.stage).toLowerCase()] ?? txt(project.stage);
   // location levels: District (from coords) · Town (city, if distinct) · Area
