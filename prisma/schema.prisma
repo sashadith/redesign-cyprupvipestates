@@ -623,8 +623,8 @@ model UserEmailSettings {
   // imapLastUid must be rebuilt from scratch (treated as if never polled)
   // or messages get skipped or reprocessed. BigInt because IMAP UIDs are
   // unsigned 32-bit (up to ~4.29 billion) — a signed Int32 could overflow.
-  imapLastUid       BigInt?
-  imapUidValidity   BigInt?
+  imapLastUid     BigInt?
+  imapUidValidity BigInt?
   signature       Json? // { en?, de?, pl?, ru? } plain multiline text, one per locale
   lastTestSentAt  DateTime?
   lastTestOk      Boolean?
@@ -944,6 +944,15 @@ model Development {
   currency       String? @default("EUR")
   latitude       Float?
   longitude      Float?
+  // May be stale — NEVER read for display or logic, always use
+  // computeAvailability() (src/lib/developmentAvailability.ts) against this
+  // Development's actual DevelopmentUnit rows instead. Only refreshed by a
+  // full feed/drive sync, which itself never overwrites source:"manual"
+  // units — so a development with any manual corrections can disagree with
+  // these two fields indefinitely, no matter how often it resyncs. statusOnlySync()
+  // recomputes them as a best-effort courtesy, but direct unit-status writes
+  // (e.g. an admin/DB correction) do not. Confirmed 2026-07-31: Trinity
+  // Residences' cache said 1 available with the underlying unit sold.
   unitsTotal     Int     @default(0)
   unitsAvailable Int     @default(0)
 
@@ -1254,28 +1263,28 @@ model PresentationView {
 // Never the reverse: nothing here ever writes to an external calendar, and no
 // availability/free-busy logic exists — see docs discussion for why.
 model BookingRequest {
-  id          String               @id @default(uuid())
-  leadId      String
-  token       String               @unique // same random-token pattern as ClientPresentation, see src/lib/crm/presentationToken.ts
-  status      BookingRequestStatus @default(PENDING)
-  meetingType MeetingType          @default(ZOOM) // set by Sascha at creation, not chosen by the lead — one less decision for them
+  id                String               @id @default(uuid())
+  leadId            String
+  token             String               @unique // same random-token pattern as ClientPresentation, see src/lib/crm/presentationToken.ts
+  status            BookingRequestStatus @default(PENDING)
+  meetingType       MeetingType          @default(ZOOM) // set by Sascha at creation, not chosen by the lead — one less decision for them
   // The lead's 2-3 picks: [{ utc: ISOString }, ...] — absolute instants, so
   // displaying them in Cyprus time and the lead's own time is a plain,
   // well-established conversion, never custom calendar-math.
-  proposedSlots Json?
+  proposedSlots     Json?
   // IANA tz name (e.g. "Europe/Berlin"), detected client-side when the lead
   // submits — display only. Never used to compute availability.
-  leadTimezone     String?
-  confirmedSlotUtc DateTime? // the one Sascha picked, if any
+  leadTimezone      String?
+  confirmedSlotUtc  DateTime? // the one Sascha picked, if any
   // Set only for ZOOM meetings once Sascha has manually sent the meeting
   // link (there's no static room — see the 2026-07-25 decision). Drives a
   // persistent "send the Zoom link" reminder on the Lead Cockpit until this
   // is set, since a confirmed-but-linkless meeting must never go unnoticed.
-  zoomLinkSentAt DateTime?
-  expiresAt      DateTime? // default now + 30 days, same convention as ClientPresentation
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  confirmedAt    DateTime?
+  zoomLinkSentAt    DateTime?
+  expiresAt         DateTime? // default now + 30 days, same convention as ClientPresentation
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  confirmedAt       DateTime?
   // Telegram meeting reminders (2026-07-25) — set once each reminder has
   // either been sent OR deliberately skipped (see confirmBookingSlotAction:
   // a meeting confirmed less than 10 minutes before it starts pre-sets BOTH
