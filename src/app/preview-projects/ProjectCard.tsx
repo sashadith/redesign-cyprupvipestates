@@ -1,8 +1,14 @@
+"use client";
+
 // The project listing card — extracted from ProjectsExplorer.tsx (2026-07-31)
 // so the sold-out project page's "similar projects" block (AlternativesBlock)
 // can reuse the EXACT same component/markup/hover behaviour instead of a
 // second hand-built card that would drift from this one over time. Any visual
 // or behavioural change to the card belongs here, once, for both surfaces.
+// Needs "use client" itself now (not just inherited from ProjectsExplorer,
+// its original home) — AlternativesBlock renders it from the server-rendered
+// ProjectPageBody, and its onMouseEnter/onMouseLeave hover handlers can't
+// cross into a Server Component.
 import type { ProjectsStrings } from "@/app/[lang]/projects/projectsI18n";
 import ScarcityBanner from "@/app/components/ScarcityBanner/ScarcityBanner";
 import { soldOutFromCounts } from "@/lib/developmentAvailability";
@@ -70,11 +76,16 @@ const fmtPrice = (p: number | null, s: ProjectsStrings) =>
   p == null ? s.priceOnRequest : `€${p.toLocaleString(s.numLocale)}`;
 
 export function ProjectCard({
-  c, active, onHover, s, locale,
+  c, active = false, onHover = () => {}, s, locale,
 }: {
   c: ProjectCardData;
-  active: boolean;
-  onHover: (id: string | null) => void;
+  // Both optional, defaulted client-side — the map-hover-sync feature is only
+  // relevant to ProjectsExplorer's own grid. A caller across the server/client
+  // boundary (AlternativesBlock, rendered from the server-rendered project
+  // page) must NOT pass a function prop here: Server Components can't hand
+  // plain callbacks to a Client Component, only Client Components can.
+  active?: boolean;
+  onHover?: (id: string | null) => void;
   s: ProjectsStrings;
   locale: string;
 }) {

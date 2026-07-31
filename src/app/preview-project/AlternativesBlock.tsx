@@ -26,7 +26,7 @@ export default function AlternativesBlock({
       {!prominent && <h2 className="pp-h2">{heading}</h2>}
       <div className="px__grid">
         {cards.map((c) => (
-          <ProjectCard key={c.id} c={c} active={false} onHover={() => {}} s={s} locale={lang} />
+          <ProjectCard key={c.id} c={c} s={s} locale={lang} />
         ))}
       </div>
     </section>
