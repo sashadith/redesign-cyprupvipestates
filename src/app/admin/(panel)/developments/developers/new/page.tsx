@@ -1,10 +1,12 @@
 import Link from "next/link";
 import NewDeveloperForm from "./new-developer-form";
+import { listDeveloperPageOptions } from "@/lib/developerLink";
 
 export const dynamic = "force-dynamic";
 
-export default function NewDeveloperPage({ searchParams }: { searchParams?: { feed?: string } }) {
+export default async function NewDeveloperPage({ searchParams }: { searchParams?: { feed?: string } }) {
   const withFeed = searchParams?.feed === "1";
+  const pageOptions = await listDeveloperPageOptions();
   return (
     <div className="space-y-5">
       <div>
@@ -16,7 +18,7 @@ export default function NewDeveloperPage({ searchParams }: { searchParams?: { fe
             : "Create a manual developer. Then add its developments and scan developer PDFs with Claude to auto-fill descriptions and units."}
         </p>
       </div>
-      <NewDeveloperForm />
+      <NewDeveloperForm pageOptions={pageOptions} />
     </div>
   );
 }

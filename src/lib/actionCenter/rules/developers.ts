@@ -3,6 +3,7 @@ import { computeAvailability, availabilityContradiction } from "@/lib/developmen
 import { computePublishGate, areaSlugOf } from "@/lib/developmentPublishGate";
 import { SYNCED_DEVS } from "@/lib/feedSync";
 import { ACTIVE_LEAD_STATUSES } from "./crm";
+import { developerGroupExists } from "@/lib/developerLink";
 import type { ActionItem } from "../types";
 
 const DAY = 86_400_000;
@@ -299,9 +300,56 @@ async function backInStockReminders(): Promise<ActionItem[]> {
   return items;
 }
 
+// (h) DeveloperAccount with no linked public developer page (Bündel 3
+// Schritt 1, 2026-08-01) — see DeveloperAccount.developerTranslationGroupId's
+// schema comment. Live: any account with a null link qualifies, no grace
+// period (same as sold-out: — snooze/dismiss handles noise, not a timer
+// here). Deliberately does NOT try to guess a match — that's exactly what
+// the whole linking step was designed to avoid (see the conversation this
+// was built from: slug similarity alone was wrong 6 times out of 12).
+async function developerNoPageReminders(): Promise<ActionItem[]> {
+  const accounts = await prisma.developerAccount.findMany({
+    where: { developerTranslationGroupId: null },
+    select: { id: true, name: true, createdAt: true },
+  });
+  return accounts.map((a) => ({
+    id: `developer-no-page:${a.id}`, severity: "INFO", category: "DEVELOPERS",
+    title: `${a.name} has no public developer page`,
+    description: "Link an existing page on this developer's admin screen, or create one under Content → Developers.",
+    deepLink: `/admin/developments/developers/${a.id}`, since: a.createdAt,
+  }));
+}
+
+// (i) DeveloperAccount whose linked translationGroupId no longer resolves to
+// ANY Developer row — the group was deleted, or its id changed, after the
+// link was made. No formal DB relation exists to catch this automatically
+// (see the schema comment), so this rule is the thing that keeps a stale
+// link from failing silently. ACTION severity (not INFO like (h)) — this
+// used to work and quietly stopped, which is a real regression to fix, not
+// a routine "not set up yet" state.
+async function developerLinkBrokenReminders(): Promise<ActionItem[]> {
+  const accounts = await prisma.developerAccount.findMany({
+    where: { developerTranslationGroupId: { not: null } },
+    select: { id: true, name: true, developerTranslationGroupId: true, updatedAt: true },
+  });
+  const items: ActionItem[] = [];
+  for (const a of accounts) {
+    const exists = await developerGroupExists(a.developerTranslationGroupId!);
+    if (exists) continue;
+    items.push({
+      id: `developer-link-broken:${a.id}`, severity: "ACTION", category: "DEVELOPERS",
+      title: `${a.name}: linked developer page no longer exists`,
+      description: "Its public profile page was deleted or moved to a different translation group — re-link it on this developer's admin screen.",
+      deepLink: `/admin/developments/developers/${a.id}`, since: a.updatedAt,
+    });
+  }
+  return items;
+}
+
 export async function developerRules(): Promise<ActionItem[]> {
-  const [a, b, c, d, e, f, g] = await Promise.all([
+  const [a, b, c, d, e, f, g, h, i] = await Promise.all([
     soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(), backInStockReminders(),
+    developerNoPageReminders(), developerLinkBrokenReminders(),
   ]);
-  return [...a, ...b, ...c, ...d, ...e, ...f, ...g];
+  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i];
 }

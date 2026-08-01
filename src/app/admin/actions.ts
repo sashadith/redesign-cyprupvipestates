@@ -1733,10 +1733,29 @@ export async function createDeveloperAccount(_prev: any, formData: FormData) {
       website: s("website"), contactInfo: s("contactInfo"),
       contactPerson: s("contactPerson"), phone: s("phone"), email: s("email"),
       developerCloudUrl: s("developerCloudUrl"), driveFolderUrl: s("driveFolderUrl"), notes: s("notes"),
+      // Optional at creation (Bündel 3 Schritt 1) — the dropdown only ever
+      // offers real translation groups (listDeveloperPageOptions()), so a
+      // value here is always a deliberate human pick, never a guess.
+      developerTranslationGroupId: s("developerTranslationGroupId"),
     },
   });
   revalidatePath("/admin/developments");
   redirect(`/admin/developments/developers/${dev.id}`);
+}
+
+// Bündel 3 Schritt 1 (2026-08-01) — the ONLY place developerTranslationGroupId
+// changes after creation, deliberately separate from saveDeveloperContact
+// (a different concern, its own small settings card on the detail page —
+// see DeveloperPageLink.tsx). value is "" to clear the link, or a real
+// translationGroupId picked from listDeveloperPageOptions() — never
+// free text, so this can't drift into an unreviewed guess either.
+export async function setDeveloperPageLink(id: string, value: string): Promise<void> {
+  await requireSession();
+  await prisma.developerAccount.update({
+    where: { id },
+    data: { developerTranslationGroupId: value || null },
+  });
+  revalidatePath(`/admin/developments/developers/${id}`);
 }
 
 export async function updateDeveloperAccount(id: string, formData: FormData) {
