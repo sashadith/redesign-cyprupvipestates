@@ -1046,7 +1046,7 @@ function bedroomsMatch(range: string | null | undefined, want: string): boolean 
 // (resolvePinnedProjects, for the admin-insertable Projects block) can reuse
 // the exact same field derivation instead of re-deriving it — one source of
 // truth for what a Development's listing-card shape looks like.
-function mapDevelopmentRowToCard(d: any) {
+export function mapDevelopmentRowToCard(d: any) {
   const ov = d.override;
   const town = ov?.town || d.town || "";
   const district = ov?.district || d.district || "";

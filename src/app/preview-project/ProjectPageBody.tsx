@@ -17,8 +17,10 @@ import type { ProjectVM } from "@/app/preview-project/feeds";
 import { splitDescriptionParagraphs } from "@/lib/text";
 import { resolveDevelopmentType } from "@/lib/developmentCard";
 import DistancesStrip from "@/app/components/DistancesStrip/DistancesStrip";
-import { computeAvailability, resolveAvailabilityLabel } from "@/lib/developmentAvailability";
+import { computeAvailability, resolveAvailabilityStatusLabel, resolveStageLabel } from "@/lib/developmentAvailability";
 import { developmentCopy } from "@/lib/developmentCopy";
+import { getAlternativeDevelopments } from "@/lib/developmentAlternatives";
+import AlternativesBlock from "@/app/preview-project/AlternativesBlock";
 
 // Shared render body for both the SEO-facing slug route (the Development
 // branch of src/app/[lang]/projects/[slug]/page.tsx) and the admin-only
@@ -40,7 +42,7 @@ const LocationPin = () => (
 export default async function ProjectPageBody({
   p, lang, params, translations, banner,
 }: {
-  p: ProjectVM;
+  p: ProjectVM & { slug?: string | null };
   lang: string;
   params: { lang: string };
   translations: Translation[];
@@ -73,9 +75,15 @@ export default async function ProjectPageBody({
     // drop levels that repeat the same place (normalise ph→f so "Paphos" === "Pafos")
     .filter((c) => { const k = c.name.toLowerCase().replace(/ph/g, "f").replace(/[^a-z]/g, ""); return locSeen.has(k) ? false : (locSeen.add(k), true); });
   // Sold-out is computed from live unit data ONLY — never from stage/status
-  // text (see src/lib/developmentAvailability.ts for why).
+  // text (see src/lib/developmentAvailability.ts for why). Availability and
+  // construction stage are resolved as two independent facts — a project can
+  // be fully sold out and still mid-construction (or vice versa).
   const { soldOut: isSold } = computeAvailability(p.units);
-  const statusLabel = resolveAvailabilityLabel(p.stage, p.status, isSold, lang);
+  const availabilityLabel = resolveAvailabilityStatusLabel(isSold, lang);
+  const stageLabel = resolveStageLabel(p.stage, p.status, lang);
+  // Slug-less admin preview (feed rendered before a Development row/slug exists,
+  // see src/app/[lang]/preview-project/page.tsx) has no DB row to rank against.
+  const alternatives = p.slug ? await getAlternativeDevelopments(p.slug, lang) : [];
 
   // Plot / build-area ranges, computed from the currently AVAILABLE units (not
   // sold/reserved) — values aren't always suffixed "m²" at the source, so extract
@@ -95,7 +103,8 @@ export default async function ProjectPageBody({
     { label: t.factLocation, value: p.location },
     types.length ? { label: t.factPropertyType, value: types.join(", ") } : null,
     p.units.length ? { label: t.factUnits, value: `${p.units.length}${avail.length !== p.units.length ? ` ${t.factUnitsAvailable(avail.length)}` : ""}` } : null,
-    { label: t.factStatus, value: statusLabel },
+    { label: t.factStatus, value: availabilityLabel },
+    stageLabel ? { label: t.factConstructionStage, value: stageLabel } : null,
     plotRange ? { label: t.factPlot, value: plotRange } : null,
     builtRange ? { label: t.factBuildArea, value: builtRange } : null,
     p.completion ? { label: t.factCompletion, value: p.completion } : null,
@@ -121,18 +130,43 @@ export default async function ProjectPageBody({
           <div className="pp-hero__overlay">
             <div className="pp-wrap">
               <div className="pp-eyebrow">
-                <span className={`pp-badge pp-badge--${isSold ? "sold" : "ok"}`}>{statusLabel}</span>
+                <span className={`pp-badge pp-badge--${isSold ? "sold" : "ok"}`}>{isSold ? t.soldOut : (stageLabel ?? t.unitStatus.available)}</span>
                 <span className="pp-loc">{p.location}</span>
               </div>
               <h1 className="pp-title">{p.publicName}</h1>
               <div className="pp-hero__stats">
-                <div className="pp-hero__price"><b>{priceFrom != null ? fmtPrice(priceFrom, p.currency, t.priceOnRequest) : "—"}</b><span>{priceFrom != null ? `${t.heroFrom}${p.vatApplies !== false ? ` · ${t.vatSuffix}` : ""}` : t.heroFrom}</span></div>
+                <div className="pp-hero__price"><b>{priceFrom != null ? fmtPrice(priceFrom, p.currency, t.priceOnRequest) : "—"}</b><span>{priceFrom != null ? (isSold ? t.heroFromSoldOut : `${t.heroFrom}${p.vatApplies !== false ? ` · ${t.vatSuffix}` : ""}`) : t.heroFrom}</span></div>
                 <div><b>{types.join(" · ") || "—"}</b><span>{t.heroType}</span></div>
                 {p.units.length > 0 && <div><b>{avail.length}{avail.length !== p.units.length && <small>/{p.units.length}</small>}</b><span>{t.heroAvailable}</span></div>}
               </div>
             </div>
           </div>
         </header>
+
+        {/* ---------- SOLD OUT: hint + alternatives + off-market CTA teaser ----------
+            Bündel 1 (2026-07-31). "Sold out" is derived from isSold (computeAvailability)
+            only — see the comment above isSold. Alternatives use the same corrected
+            ranking funnel on every project page (developmentAlternatives.ts); here
+            placed prominently right under the hint text, per spec. */}
+        {isSold && (
+          <>
+            <section className="pp-wrap pp-section pp-soldout">
+              <div className="pp-panel pp-soldout__panel">
+                <h2 className="pp-h2">{t.soldOutBannerHeadline}</h2>
+                <p className="pp-desc">{t.soldOutBannerBody}</p>
+              </div>
+            </section>
+
+            <AlternativesBlock cards={alternatives} lang={lang} heading={t.alternativesHeading} prominent />
+
+            <section className="pp-wrap pp-section pp-offmarket">
+              <a className="pp-panel pp-offmarket__panel" href="#enquiry">
+                <h3 className="pp-offmarket__headline">{t.offMarketCtaHeadline}</h3>
+                <p className="pp-desc">{t.offMarketCtaBody}</p>
+              </a>
+            </section>
+          </>
+        )}
 
         {/* ---------- ABOUT + HIGHLIGHTS ---------- */}
         <section className="pp-wrap pp-section pp-about">
@@ -218,14 +252,28 @@ export default async function ProjectPageBody({
         {p.units.length > 0 && (
           <section className="pp-wrap pp-section pp-units-sec">
             <div className="pp-units-head">
-              <h2 className="pp-h2">{t.unitsHeading}</h2>
+              <h2 className="pp-h2">{isSold ? t.unitsHeadingSoldOut : t.unitsHeading}</h2>
               <p className="pp-hint" style={{ margin: 0 }}>{t.unitsSubAvailable(avail.length)}{p.units.length !== avail.length ? t.unitsSubSold(p.units.length - avail.length) : ""}</p>
             </div>
             <UnitsView units={p.units} lang={lang} />
           </section>
         )}
 
-        <Form lang={lang} />
+        <div id="enquiry">
+          <Form
+            lang={lang}
+            title={isSold ? t.offMarketCtaHeadline : undefined}
+            subtitle={isSold ? t.offMarketCtaBody : undefined}
+            showQuestionField={isSold}
+          />
+        </div>
+
+        {/* Available project: same alternatives ranking, shown dezent below the
+            enquiry form rather than prominently under a (non-existent) sold-out
+            hint. Correction 2026-07-31: form belongs above this strip, not below. */}
+        {!isSold && alternatives.length > 0 && (
+          <AlternativesBlock cards={alternatives} lang={lang} heading={t.alternativesHeading} prominent={false} />
+        )}
       </main>
       <Footer params={params} />
       <WhatsAppButton lang={lang} />

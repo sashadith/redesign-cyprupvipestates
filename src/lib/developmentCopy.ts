@@ -36,11 +36,23 @@ export type DevelopmentStrings = {
   factUnits: string;
   factUnitsAvailable: (n: number) => string; // "({n} available)"
   factStatus: string;
+  factConstructionStage: string; // separate from factStatus — construction phase, never hidden by sold-out
   factPlot: string;
   factBuildArea: string;
   factCompletion: string;
   factEnergyRating: string;
   priceOnRequest: string;
+  heroFromSoldOut: string; // replaces heroFrom's caption once sold out — a past price, not a live offer
+
+  // ---- sold-out banner + off-market CTA (2026-07-31) ----
+  soldOutBannerHeadline: string;
+  soldOutBannerBody: string;
+  offMarketCtaHeadline: string;
+  offMarketCtaBody: string;
+  unitsHeadingSoldOut: string; // replaces unitsHeading once sold out
+
+  // ---- alternatives block ----
+  alternativesHeading: string; // dezent placement on an available project's page
 
   // ---- neighbourhood tags ----
   tagDistrict: string;
@@ -113,11 +125,19 @@ const EN: DevelopmentStrings = {
   factUnits: "Units",
   factUnitsAvailable: (n) => `(${n} available)`,
   factStatus: "Status",
+  factConstructionStage: "Construction stage",
   factPlot: "Plot",
   factBuildArea: "Build area",
   factCompletion: "Completion",
   factEnergyRating: "Energy rating",
   priceOnRequest: "Price on request",
+  heroFromSoldOut: "sold from",
+  soldOutBannerHeadline: "Sold out — take it as confirmation of your taste.",
+  soldOutBannerBody: "Homes like these move quickly, and fortunately Cyprus isn't done building beautiful ones. These projects come closest to what brought you here — and are still open:",
+  offMarketCtaHeadline: "Get there before the listing does.",
+  offMarketCtaBody: "Describe your ideal home in one message — we often know about units before they go public, and when we do, we'll think of you first.",
+  unitsHeadingSoldOut: "The Properties",
+  alternativesHeading: "Similar projects",
   tagDistrict: "District",
   tagLocality: "Locality",
   tagArea: "Area",
@@ -167,11 +187,19 @@ const DE: DevelopmentStrings = {
   factUnits: "Einheiten",
   factUnitsAvailable: (n) => `(${n} verfügbar)`,
   factStatus: "Status",
+  factConstructionStage: "Bauphase",
   factPlot: "Grundstück",
   factBuildArea: "Wohnfläche",
   factCompletion: "Fertigstellung",
   factEnergyRating: "Energieeffizienz",
   priceOnRequest: "Preis auf Anfrage",
+  heroFromSoldOut: "verkauft ab",
+  soldOutBannerHeadline: "Ausverkauft — nehmen Sie es als Bestätigung Ihres Geschmacks.",
+  soldOutBannerBody: "Solche Objekte bleiben nicht lange, und zum Glück ist Zypern mit dem Bauen schöner Projekte noch nicht fertig. Diese kommen dem, was Sie hierhergeführt hat, am nächsten — und sind noch zu haben:",
+  offMarketCtaHeadline: "Seien Sie schneller als das Inserat.",
+  offMarketCtaBody: "Beschreiben Sie uns Ihr Wunschobjekt in einer Nachricht — wir wissen oft von Einheiten, bevor sie öffentlich werden, und denken dann zuerst an Sie.",
+  unitsHeadingSoldOut: "Die Objekte",
+  alternativesHeading: "Ähnliche Projekte",
   tagDistrict: "Bezirk",
   tagLocality: "Ort",
   tagArea: "Gebiet",
@@ -221,11 +249,19 @@ const PL: DevelopmentStrings = {
   factUnits: "Lokale",
   factUnitsAvailable: (n) => `(${n} dostępnych)`,
   factStatus: "Status",
+  factConstructionStage: "Etap budowy",
   factPlot: "Działka",
   factBuildArea: "Powierzchnia użytkowa",
   factCompletion: "Zakończenie",
   factEnergyRating: "Klasa energetyczna",
   priceOnRequest: "Cena na zapytanie",
+  heroFromSoldOut: "sprzedano od",
+  soldOutBannerHeadline: "Wyprzedane — potraktuj to jako potwierdzenie swojego gustu.",
+  soldOutBannerBody: "Takie rezydencje nie czekają długo, ale na szczęście Cypr nie skończył jeszcze budować pięknych projektów. Te są najbliżej tego, co Cię tu przyciągnęło — i wciąż dostępne:",
+  offMarketCtaHeadline: "Bądź szybszy niż ogłoszenie.",
+  offMarketCtaBody: "Opisz nam swoją idealną nieruchomość w jednej wiadomości — często wiemy o rezydencjach, zanim staną się publiczne, i wtedy pomyślimy najpierw o Tobie.",
+  unitsHeadingSoldOut: "Obiekty",
+  alternativesHeading: "Podobne projekty",
   tagDistrict: "Okręg",
   tagLocality: "Miejscowość",
   tagArea: "Obszar",
@@ -276,11 +312,19 @@ const RU: DevelopmentStrings = {
   factUnits: "Объекты",
   factUnitsAvailable: (n) => `(${n} доступно)`,
   factStatus: "Статус",
+  factConstructionStage: "Стадия строительства",
   factPlot: "Участок",
   factBuildArea: "Жилая площадь",
   factCompletion: "Завершение",
   factEnergyRating: "Энергокласс",
   priceOnRequest: "Цена по запросу",
+  heroFromSoldOut: "продано от",
+  soldOutBannerHeadline: "Продано — считайте это подтверждением вашего вкуса.",
+  soldOutBannerBody: "Такие резиденции не задерживаются, но, к счастью, Кипр ещё не закончил строить красивое. Эти проекты ближе всего к тому, что привело вас сюда — и они ещё доступны:",
+  offMarketCtaHeadline: "Опередите объявление.",
+  offMarketCtaBody: "Опишите нам идеальный объект в одном сообщении — мы часто узнаём о резиденциях до их публикации, и тогда в первую очередь вспомним о вас.",
+  unitsHeadingSoldOut: "Объекты",
+  alternativesHeading: "Похожие проекты",
   tagDistrict: "Округ",
   tagLocality: "Населённый пункт",
   tagArea: "Район",

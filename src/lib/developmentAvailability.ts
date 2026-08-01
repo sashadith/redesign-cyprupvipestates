@@ -7,7 +7,8 @@
 // a later sync re-asserts a stale feed value. Celestia (2026-07-17) showed a
 // "SOLD OUT" badge while 2 of its 16 units were genuinely available, because
 // the badge trusted `stage || status` instead of counting units. See
-// resolveAvailabilityLabel/availabilityContradiction below for the fix.
+// resolveAvailabilityStatusLabel/resolveStageLabel/availabilityContradiction
+// below for the fix.
 
 import { developmentCopy } from "@/lib/developmentCopy";
 
@@ -27,21 +28,31 @@ export function soldOutFromCounts(available: number, total: number): boolean {
   return total > 0 && available <= 0;
 }
 
-// The manual stage/status field still controls the construction-stage label
-// (Off-plan / Under Construction / Key-Ready / …) when the development is NOT
-// sold out — but it never gets to claim "sold out" on its own, and if it does
-// claim sold-out while units say otherwise, we fall back to a neutral label
-// rather than surface the contradiction to visitors.
-export function resolveAvailabilityLabel(
+// Pure availability — "Sold out" or "Available", never blended with
+// construction stage. In Cyprus a project routinely sells out off-plan, long
+// before construction even starts, so availability and stage are always
+// shown as two independent facts (see resolveStageLabel below) — never one
+// collapsed string. 2026-07-31: split out of the old resolveAvailabilityLabel,
+// which returned a single string and silently dropped the stage entirely
+// once a project sold out.
+export function resolveAvailabilityStatusLabel(soldOut: boolean, lang: string = "en"): string {
+  const t = developmentCopy(lang);
+  return soldOut ? t.soldOut : t.unitStatus.available;
+}
+
+// Pure construction stage (Off-plan / Under Construction / Key-Ready / …) —
+// resolved independently of soldOut, so it stays visible on a sold-out page
+// (a project can be fully sold out and still mid-construction). Returns null
+// only when there's genuinely no stage data to show, never because of
+// availability.
+export function resolveStageLabel(
   stage: string | null | undefined,
   status: string | null | undefined,
-  soldOut: boolean,
   lang: string = "en",
-): string {
+): string | null {
   const t = developmentCopy(lang);
-  if (soldOut) return t.soldOut;
   const raw = stage || status || "";
-  if (!raw || raw.toLowerCase().includes("sold")) return t.unitStatus.available;
+  if (!raw || raw.toLowerCase().includes("sold")) return null;
   // Canonical stage/status values (the admin dropdown + feed adapters only ever
   // produce these — see feeds.ts's STAGE_LABEL and the admin page's <select>)
   // map to a localized label; anything else (a free-typed custom value) is
@@ -53,8 +64,8 @@ export function resolveAvailabilityLabel(
 // Admin-facing warning: the stored stage/status claims sold-out, but live unit
 // data proves units are still available. Only this direction warns — the
 // reverse (all units sold but stage says something else) is handled silently
-// by resolveAvailabilityLabel/soldOut always winning on the public page, so
-// there's nothing urgent for an admin to fix there.
+// by soldOut always winning on the public page, so there's nothing urgent
+// for an admin to fix there.
 export function availabilityContradiction(
   stage: string | null | undefined,
   status: string | null | undefined,

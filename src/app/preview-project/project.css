@@ -2,7 +2,11 @@
    Cyprus VIP Estates — NEW project page (preview). Dark, on tokens.css.
    ===================================================================== */
 .pp { position: relative; display: block; background: transparent; color: var(--text); min-height: 100vh;
-  font-family: var(--font-body), sans-serif; padding-bottom: 0; }
+  font-family: var(--font-body), sans-serif; padding-bottom: 0;
+  /* shared with .pp-map.px-mapwrap::before/::after below — defined once here so
+     both the map's contour and any other divider on this page reference the
+     same value instead of a second literal gradient. */
+  --pp-gold-contour: linear-gradient(90deg, transparent, #C29A5E, transparent); }
 /* fixed golden-cloud atmosphere on the page background — behind ALL content, so
    the clouds are never clipped by a section (drift via the design-kit keyframes) */
 .pp-atmos { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: var(--sea-deep); }
@@ -114,7 +118,7 @@
 .pp-map.px-mapwrap::before,
 .pp-map.px-mapwrap::after {
   content: ""; position: absolute; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, #C29A5E, transparent);
+  background: var(--pp-gold-contour);
   z-index: 1000; pointer-events: none;
 }
 .pp-map.px-mapwrap::before { top: 0; }
@@ -422,4 +426,32 @@
 .dist-strip--compact .dist-strip__item { padding: 10px 12px; gap: 8px; }
 .dist-strip--compact .dist-strip__ic svg { width: 16px; height: 16px; }
 .dist-strip--compact .dist-strip__label { font-size: 0.62rem; }
+
+/* =====================================================================
+   Sold-out hint + off-market CTA (Bündel 1, 2026-07-31). Reuses .pp-panel's
+   glass-and-gold-hairline language — dezent, not a banner. See ProjectPageBody
+   for placement: hint -> prominent alternatives -> CTA, all under the hero,
+   only when isSold (computeAvailability).
+   ===================================================================== */
+.pp-soldout__panel, .pp-offmarket__panel { padding: clamp(22px, 3.4vw, 36px); }
+.pp-soldout__panel .pp-h2 { margin-bottom: 0.5em; }
+.pp-soldout__panel .pp-desc { max-width: none; }
+
+.pp-offmarket__panel { display: block; text-decoration: none; transition: border-color var(--dur-sm) var(--ease); }
+.pp-offmarket__panel:hover { border-color: var(--accent); }
+.pp-offmarket__headline { font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  font-size: clamp(1.15rem, 1rem + 0.7vw, 1.5rem); color: var(--ivory); margin: 0 0 .5em; letter-spacing: -0.01em; }
+.pp-offmarket__panel .pp-desc { max-width: none; }
+
+/* Similar projects — prominent (under the sold-out hint) or quiet (further
+   down an available project's page); see AlternativesBlock.tsx. Cards are the
+   real <ProjectCard> from the /projects listing (src/app/preview-projects/
+   ProjectCard.tsx), rendered with compact — the card's own look/hover
+   behaviour, just sized for 4 per row via .prj--compact (projects.css). This
+   grid is deliberately its own class, not .px__grid (the /projects listing's
+   grid) — changing that one would also resize the listing itself. */
+.pp-alts--prominent { padding-top: 0; }
+.pp-alts__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(12px, 1.4vw, 20px); }
+@media (max-width: 900px) { .pp-alts__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .pp-alts__grid { grid-template-columns: 1fr; } }
 .dist-strip--compact .dist-strip__value { font-size: 0.85rem; }

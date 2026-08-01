@@ -8,7 +8,8 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import "leaflet-gesture-handling/dist/leaflet-gesture-handling.css";
 import "leaflet-gesture-handling";
-import { topDistances, type MapMarker } from "./ProjectsExplorer";
+import type { MapMarker } from "./ProjectsExplorer";
+import { topDistances } from "./ProjectCard";
 import { projectsStrings, type ProjectsStrings } from "@/app/[lang]/projects/projectsI18n";
 
 const CYPRUS_CENTER: [number, number] = [34.85, 32.95];
