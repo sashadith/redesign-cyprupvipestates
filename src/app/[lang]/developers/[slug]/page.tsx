@@ -1,6 +1,7 @@
 import "@/app/preview-home/tokens.css";
 import "@/app/preview-projects/projects.css";
 import "@/app/preview-project/project.css";
+import "@/app/preview-insights/insights.css";
 import "@/app/[lang]/developers/developer-catalog.css";
 
 import React from "react";
@@ -32,14 +33,14 @@ import PropertyDistances from "@/app/components/PropertyDistances/PropertyDistan
 import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
 import { FormStandardDocument } from "@/types/formStandardDocument";
 import PropertyFeatures from "@/app/components/PropertyFeatures/PropertyFeatures";
-import { ButtonModal } from "@/app/components/ButtonModal/ButtonModal";
 import { urlFor } from "@/sanity/sanity.client";
-import FormStatic from "@/app/components/FormStatic/FormStatic";
 import FullDescriptionBlock from "@/app/components/FullDescriptionBlock/FullDescriptionBlock";
 import SchemaMarkup from "@/app/components/SchemaMarkup/SchemaMarkup";
 import PropertyDescription from "@/app/components/PropertyDescription/PropertyDescription";
-import DeveloperIntro from "@/app/components/DeveloperIntro/DeveloperIntro";
+import DeveloperJournalIntro from "@/app/[lang]/developers/[slug]/DeveloperJournalIntro";
 import DeveloperProjectsGrid, { type DeveloperProjectCardData } from "@/app/[lang]/developers/[slug]/DeveloperProjectsGrid";
+import type { MapMarker } from "@/app/preview-projects/ProjectsExplorer";
+import Form from "@/app/preview-home/sections/Form";
 import DeveloperSchemaMarkup from "@/app/components/DeveloperSchemaMarkup/DeveloperSchemaMarkup";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 import NotFoundPageComponent from "@/app/components/NotFoundPageComponent/NotFoundPageComponent";
@@ -57,6 +58,32 @@ const safeUrl = (img: unknown) => {
   } catch {
     return undefined;
   }
+};
+
+// Kontaktformular copy, right under the project list (2026-08-01) — reuses
+// the existing Form component (preview-home/sections/Form.tsx), never a new
+// form.
+const FORM_COPY: Record<string, { title: string; subtitle: string }> = {
+  en: {
+    title: "Before you decide, talk to us.",
+    subtitle:
+      "We know this developer's projects in detail — and everyone else's. What really separates one apartment from another isn't in the brochure. We'll tell you, and our guidance costs you nothing extra.",
+  },
+  de: {
+    title: "Bevor Sie sich entscheiden, sprechen Sie mit uns.",
+    subtitle:
+      "Wir kennen die Projekte dieses Bauträgers genau — und die der anderen. Was die eine Wohnung wirklich von der anderen unterscheidet, sehen Sie im Prospekt nicht. Wir sagen es Ihnen, und unsere Begleitung kostet Sie nichts extra.",
+  },
+  ru: {
+    title: "Прежде чем решить, поговорите с нами.",
+    subtitle:
+      "Мы детально знаем проекты этого застройщика — и проекты всех остальных. То, что действительно отличает одну квартиру от другой, в буклете не написано. Мы вам об этом расскажем, а наше сопровождение не будет стоить вам ничего дополнительно.",
+  },
+  pl: {
+    title: "Zanim zdecydujesz, porozmawiaj z nami.",
+    subtitle:
+      "Znamy projekty tego dewelopera w szczegółach — i projekty wszystkich pozostałych. To, co naprawdę odróżnia jedno mieszkanie od drugiego, nie jest napisane w folderze. Powiemy Ci to, a nasze wsparcie nic dodatkowo nie kosztuje.",
+  },
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -130,11 +157,30 @@ const DeveloperPage = async ({ params }: Props) => {
         vatApplies: p._source === "development" ? (kf.vatApplies ?? null) : undefined,
         unitsAvailable: p.unitsAvailable,
         unitsTotal: p.unitsTotal,
-        stageLabel: p.stageLabel,
       };
     });
   const availableCards = toCardData(catalog.available);
   const soldOutCards = toCardData(catalog.soldOut);
+
+  // Map markers: available projects only — a sold-out pin is a dead end (same
+  // principle /projects itself already applies, see getFilteredProjectLocationsByLang).
+  const markers: MapMarker[] = catalog.available
+    .filter((p) => p.latitude != null && p.longitude != null)
+    .map((p) => {
+      const kf = p.keyFeatures ?? {};
+      const cardSlug = p.slug?.current ?? "";
+      return {
+        id: p._id,
+        title: p.title,
+        href: cardSlug ? localizedHref(lang, ["projects", cardSlug]) : "#",
+        city: kf.city ?? "",
+        price: typeof kf.price === "number" ? kf.price : Number(kf.price) || null,
+        lat: p.latitude as number,
+        lng: p.longitude as number,
+        image: p._source === "development" ? (p.previewImage as string | undefined) : safeUrl(p.previewImage),
+        distances: p.distances ?? null,
+      };
+    });
 
   // const pageUrl = `/${lang}/developers/${developer.slug[lang].current}`;
 
@@ -183,40 +229,29 @@ const DeveloperPage = async ({ params }: Props) => {
       : acc;
   }, []);
 
+  const formCopy = FORM_COPY[lang] ?? FORM_COPY.en;
+
   return (
     <>
       {/* <SchemaMarkup project={developer} /> */}
       <DeveloperSchemaMarkup developer={developer} pageUrl={pageUrl} />
       <Header params={params} translations={translations} />
       <main>
-        <DeveloperIntro
-          titleFull={developer.titleFull}
+        <DeveloperJournalIntro
+          lang={lang}
+          title={developer.title}
           excerpt={developer.excerpt}
           logo={developer.logo}
         />
         <DeveloperProjectsGrid
           available={availableCards}
           soldOut={soldOutCards}
+          markers={markers}
           lang={lang}
           developerName={developer.title}
+          formSlot={<Form lang={lang} title={formCopy.title} subtitle={formCopy.subtitle} />}
         />
-        <FormStatic lang={params.lang} />
         <FullDescriptionBlock description={developer.description} />
-        <div className="container">
-          <div className="developers-button">
-            <ButtonModal>
-              {lang === "en"
-                ? "Buy property from this developer now!"
-                : lang === "de"
-                  ? "Kaufen Sie jetzt eine Immobilie von diesem Entwickler!"
-                  : lang === "pl"
-                    ? "Kup teraz nieruchomość od tego dewelopera!"
-                    : lang === "ru"
-                      ? "Купите недвижимость у этого застройщика!"
-                      : "Buy property from this developer now!"}
-            </ButtonModal>
-          </div>
-        </div>
       </main>
       <Footer params={params} />
       <ModalBrochure lang={params.lang} formDocument={formDocument} />

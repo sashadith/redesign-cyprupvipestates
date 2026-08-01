@@ -10,7 +10,7 @@ import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
 import { localizedHref } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
 import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances } from "@/lib/developmentCard";
-import { soldOutFromCounts, computeAvailability, resolveStageLabel } from "@/lib/developmentAvailability";
+import { soldOutFromCounts, computeAvailability } from "@/lib/developmentAvailability";
 import { Homepage } from "@/types/homepage";
 import { Header } from "@/types/header";
 import { FormStandardDocument } from "@/types/formStandardDocument";
@@ -836,14 +836,11 @@ export type DeveloperCatalogItem = {
   isNew: boolean; isFeatured: boolean; listingPriority: number; videoId?: string | null;
   distances?: Record<string, string> | null; unitsAvailable?: number; unitsTotal?: number; _createdAt?: string;
   _source: "project" | "development";
+  latitude: number | null; longitude: number | null;
   // Live-computed (computeAvailability for developments, isSold for legacy
   // rows) — decides which of the two blocks (available/sold-out) an item
   // lands in below; not meant to be read past that split.
   _soldOut: boolean;
-  // Development rows only, already localized server-side via resolveStageLabel
-  // (developmentAvailability.ts) — null for legacy Sanity rows (no stage data)
-  // and whenever there's nothing meaningful to show.
-  stageLabel: string | null;
 };
 
 // Bündel 3 Teil 2 (2026-08-01) — the developer page's mixed catalog: legacy
@@ -902,7 +899,8 @@ export async function getDeveloperCatalogByLang(
     _id: p.sanityId, _createdAt: p.createdAt?.toISOString?.(), title: p.title,
     slug: { current: p.slug }, previewImage: D(p.previewImage), keyFeatures: p.keyFeatures as any,
     isNew: p.isNew, isFeatured: p.isFeatured, listingPriority: p.listingPriority, videoId: p.videoId ?? undefined,
-    distances: distMap[p.sanityId] ?? null, _source: "project", _soldOut: !!p.isSold, stageLabel: null,
+    distances: distMap[p.sanityId] ?? null, _source: "project",
+    latitude: p.latitude, longitude: p.longitude, _soldOut: !!p.isSold,
   }));
 
   const devItems: DeveloperCatalogItem[] = visibleDevRows.map((d) => {
@@ -913,8 +911,8 @@ export async function getDeveloperCatalogByLang(
       slug: { current: card.slug }, previewImage: card.previewImage, keyFeatures: card.keyFeatures,
       isNew: card.isNew, isFeatured: card.isFeatured, listingPriority: card.listingPriority, videoId: card.videoId,
       distances: card.distances, _source: "development",
-      unitsAvailable: availability.available, unitsTotal: availability.total,
-      _soldOut: availability.soldOut, stageLabel: resolveStageLabel(d.stage, d.status, lang),
+      latitude: card.latitude ?? null, longitude: card.longitude ?? null,
+      unitsAvailable: availability.available, unitsTotal: availability.total, _soldOut: availability.soldOut,
     };
   });
 

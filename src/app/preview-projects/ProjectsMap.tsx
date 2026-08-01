@@ -397,12 +397,20 @@ export default function ProjectsMap({
   onHover,
   locale = "en",
   strings,
+  // Writes the visible bbox to the URL for the /projects catalog's own
+  // server-side bbox refetch (BoundsSync below). A caller embedding this map
+  // for an already-fixed marker set (e.g. the developer page, Bündel 3 Teil
+  // 2) has no bbox route to refetch against — default true keeps every
+  // existing /projects usage byte-identical; pass false to skip the
+  // otherwise-inert URL writes.
+  syncBoundsToUrl = true,
 }: {
   markers: MapMarker[];
   hoveredId: string | null;
   onHover: (id: string | null) => void;
   locale?: string;
   strings?: ProjectsStrings;
+  syncBoundsToUrl?: boolean;
 }) {
   const s = strings ?? projectsStrings(locale);
   const items = validMarkers(markers);
@@ -551,7 +559,7 @@ export default function ProjectsMap({
 
       <GestureZoom locale={locale} />
       <InvalidateOnOpen />
-      <BoundsSync />
+      {syncBoundsToUrl && <BoundsSync />}
       <FitBounds markers={items} />
       <PoiLayers active={poiActive} onState={setPoiState} />
     </MapContainer>

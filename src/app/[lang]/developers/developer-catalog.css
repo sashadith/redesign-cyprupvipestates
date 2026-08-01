@@ -1,26 +1,32 @@
-/* Bündel 3 Teil 2 (2026-08-01) — the developer page's mixed project catalog.
-   Reuses .pp-wrap/.pp-section/.pp-h2/.pp-alts__grid (project.css) and .prj/
-   .prj--compact (projects.css), both already imported on this route — only
+/* Bündel 3 Teil 2 (2026-08-01) — the developer page's mixed project catalog
+   + journal-style intro. Reuses .pp-wrap/.pp-section/.pp-h2/.h3 (project.css)
+   and .prj (projects.css), and .ins__hero-grid/.ins__eyebrow/.ins__hero-title/
+   .ins__hero-lead (insights.css) — all already imported on this route; only
    the few rules genuinely new to this surface live here. */
 
 .dev-catalog__empty { color: var(--text-soft); }
 
 .dev-catalog__sold-heading { margin-top: var(--section-y); }
 
-.dev-catalog__item { display: flex; flex-direction: column; gap: var(--s-2); }
+/* 3-per-row, matching /projects' own card size (not the 4-per-row compact
+   "alternatives" strip) — /projects itself uses a fluid auto-fill grid, but
+   a fixed 3-up reads calmer for a single developer's bounded project count. */
+.dev-catalog__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(12px, 1.4vw, 20px); }
+@media (max-width: 900px) { .dev-catalog__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .dev-catalog__grid { grid-template-columns: 1fr; } }
 
-/* Construction stage — deliberately quieter than the on-image badges
-   (.prj__badge / .prj__type): those signal urgency/status over the photo,
-   this is background context sitting above the card. Only ever present on
-   Development-sourced cards (legacy Sanity projects carry no stage data). */
-.dev-catalog__stage {
-  align-self: flex-start;
-  font-family: var(--font-body), sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-soft);
+.dev-catalog__mapwrap {
+  height: clamp(360px, 42vw, 520px);
+  border-radius: var(--r-ui);
   border: 1px solid var(--hairline);
-  border-radius: 999px;
-  padding: 3px 10px;
+  overflow: hidden;
+}
+
+/* ---- Journal-style developer intro (DeveloperJournalIntro.tsx) ---- */
+.dev-journal__logo-wrap { display: flex; justify-content: center; align-items: center; }
+.dev-journal__logo {
+  max-width: 160px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
 }
