@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { computeAvailability, availabilityContradiction } from "@/lib/developmentAvailability";
 import { computePublishGate, areaSlugOf } from "@/lib/developmentPublishGate";
 import { SYNCED_DEVS } from "@/lib/feedSync";
+import { ACTIVE_LEAD_STATUSES } from "./crm";
 import type { ActionItem } from "../types";
 
 const DAY = 86_400_000;
@@ -10,6 +11,7 @@ const NEW_DEV_WINDOW_DAYS = 7;
 const READY_TO_PUBLISH_MIN_AGE_DAYS = 3;
 const FEED_MISSING_GRACE_DAYS = 2; // 0-1 days is grace (transient feed hiccups happen); alert from day 2
 const FEED_MISSING_ARCHIVE_REMINDER_DAYS = 7; // escalate to ACTION only once real available inventory has been stale this long
+const BACK_IN_STOCK_WINDOW_DAYS = 14; // rolling live-query window — see backInStockReminders() below
 
 const arr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
 // Calendar-day difference (not a rolling 24h interval) — matches how "day 2"
@@ -231,9 +233,75 @@ async function feedMissingReminders(): Promise<ActionItem[]> {
   return items;
 }
 
+// (g) Development that recently regained available units after being sold
+// out — Bündel 2, 2026-08-01. soldOutSince/returnedToMarketAt are set/cleared
+// by recomputeDevelopmentDerivedState() (src/lib/developmentDerivedState.ts)
+// from every write path that can change unit status; this rule only READS
+// returnedToMarketAt, live, same as every other item here — it never writes.
+//
+// Keyed off returnedToMarketAt (a real stored timestamp), not a recomputed
+// available-count comparison done here: computeAvailability()'s own
+// `total > 0 && available === 0` guard already ensures returnedToMarketAt
+// only gets stamped on a genuine sold-out->available transition, so a whole-
+// project feed delisting (Salt/legacy — the dev's rows are never touched at
+// all while missing) or a transient units-sub-feed glitch (count briefly
+// zeroed, syncedAt still advances) can never produce a false one — see that
+// helper's own header for the full reasoning. The live `available <= 0`
+// check below only guards the OTHER direction: a development that returned
+// and then sold out again within the window shouldn't still read as
+// "back in stock" just because returnedToMarketAt hasn't been overwritten
+// yet by a third transition.
+//
+// Separate itemId namespace (back-in-stock:) from sold-out:<id> — same
+// reasoning as feed-missing: above: a "don't remind me again" on the
+// sold-out reminder must never suppress this unrelated notification, and
+// the Action Center's exact-itemId-string snooze match already guarantees
+// that (see snooze.ts) — no extra code needed here for the separation to hold.
+//
+// Lead count: resolveIdentifiedProject() (src/lib/crm/compose/generate.ts)
+// is a live regex-parse of Lead.pageSource with no indexed/FK equivalent to
+// query against — so this counts leads by a direct "/projects/<slug>"
+// substring match on THIS development's own current slug, not the full
+// resolution chain (which also falls back through a legacy, since-superseded
+// Project model). That can under-count leads whose page URL pointed at an
+// old, superseded slug — a deliberate simplification for this notification,
+// phrased as "at least N" rather than an exact count. Only non-closed/
+// non-lost leads count as a live "warm" contact (ACTIVE_LEAD_STATUSES,
+// shared with crm.ts's own follow-up rule — one definition, not a second one
+// invented here).
+async function backInStockReminders(): Promise<ActionItem[]> {
+  const since = new Date(Date.now() - BACK_IN_STOCK_WINDOW_DAYS * DAY);
+  const devs = await prisma.development.findMany({
+    where: { publishStatus: { in: ["published", "ready"] }, returnedToMarketAt: { gte: since } },
+    select: { id: true, slug: true, publicName: true, returnedToMarketAt: true, units: { select: { status: true } } },
+  });
+  const items: ActionItem[] = [];
+  for (const d of devs) {
+    if (!d.returnedToMarketAt) continue;
+    const { available } = computeAvailability(d.units);
+    if (available <= 0) continue; // sold out again within the window — not currently "back in stock"
+    const leadCount = d.slug
+      ? await prisma.lead.count({
+          where: { pageSource: { contains: `/projects/${d.slug}` }, status: { in: [...ACTIVE_LEAD_STATUSES] }, deletedAt: null },
+        })
+      : 0;
+    const leadsClause = leadCount > 0
+      ? ` — at least ${leadCount} interested lead${leadCount === 1 ? "" : "s"} had enquired about this project.`
+      : "";
+    items.push({
+      id: `back-in-stock:${d.id}`, severity: "INFO", category: "DEVELOPERS",
+      title: `${d.publicName} is back in stock (${available} unit${available === 1 ? "" : "s"})`,
+      description: `Sold out, now has ${available} available unit${available === 1 ? "" : "s"} again${leadsClause}`,
+      deepLink: d.slug && leadCount > 0 ? `/admin/crm?project=${encodeURIComponent(d.slug)}` : `/admin/developments/${d.id}`,
+      since: d.returnedToMarketAt,
+    });
+  }
+  return items;
+}
+
 export async function developerRules(): Promise<ActionItem[]> {
-  const [a, b, c, d, e, f] = await Promise.all([
-    soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(),
+  const [a, b, c, d, e, f, g] = await Promise.all([
+    soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(), backInStockReminders(),
   ]);
-  return [...a, ...b, ...c, ...d, ...e, ...f];
+  return [...a, ...b, ...c, ...d, ...e, ...f, ...g];
 }

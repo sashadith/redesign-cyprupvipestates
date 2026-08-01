@@ -956,6 +956,27 @@ model Development {
   unitsTotal     Int     @default(0)
   unitsAvailable Int     @default(0)
 
+  // Derived sold-out tracking (Bündel 2, 2026-08-01) — kept in sync by
+  // recomputeDevelopmentDerivedState() (src/lib/developmentDerivedState.ts),
+  // called from every write path that can change unit status (feed sync,
+  // statusOnlySync, the admin unit editor, PDF import, drive sync). Never
+  // set/cleared by hand elsewhere.
+  // soldOutSince: stamped on a false->true transition of computeAvailability's
+  // soldOut flag, cleared back to null the moment it regains an available
+  // unit. For developments already sold out before this field existed, a
+  // one-off backfill (scripts/backfill-sold-out-since.mjs) stamped "now" at
+  // rollout — that value is a LOWER BOUND ("sold out for at least this long"),
+  // never the true sold-out date; always display it as such, never as exact.
+  soldOutSince DateTime?
+  // returnedToMarketAt: stamped at the same moment soldOutSince clears —
+  // needed because the Action Center's items are computed live on every
+  // request, never persisted (see src/lib/actionCenter/), so once
+  // soldOutSince is nulled there's nothing left to query against for a
+  // "recently back in stock" notification. Read by backInStockReminders()
+  // (src/lib/actionCenter/rules/developers.ts) with a rolling window, not
+  // archival history — it's simply overwritten on the next return event.
+  returnedToMarketAt DateTime?
+
   // rich/nested (JSONB) — feed values; images already mirrored to our storage
   description String? // feed description (plain text)
   amenities   Json? // string[]
