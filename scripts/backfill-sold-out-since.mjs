@@ -21,15 +21,25 @@
 // uses the "@/..." TS path alias, which plain `node` can't resolve outside
 // the Next.js build (same reason every other scripts/*.mjs file in this repo
 // is self-contained). If that rule ever changes, mirror it here too.
+//
+// Scoped to published/ready only (2026-08-01, same day, after review) —
+// matches recomputeDevelopmentDerivedState()'s own "trackable" gate exactly:
+// a draft can be mid-edit through "has units, none available yet" as pure
+// data entry, not a real sold-out event, and an archived dev's archiving
+// decision is already made — backfilling either would only risk a false
+// "back in stock" notification later for a project that was never really
+// on the market to begin with. See developmentDerivedState.ts for the full
+// reasoning (identical gate, kept consistent on purpose).
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 const APPLY = process.argv.includes("--apply");
+const TRACKABLE_STATUSES = ["published", "ready"];
 
 async function main() {
   const devs = await prisma.development.findMany({
-    where: { soldOutSince: null },
-    select: { id: true, publicName: true, dev: true, units: { select: { status: true } } },
+    where: { soldOutSince: null, publishStatus: { in: TRACKABLE_STATUSES } },
+    select: { id: true, publicName: true, dev: true, publishStatus: true, units: { select: { status: true } } },
   });
 
   const toBackfill = devs.filter((d) => {
@@ -38,8 +48,8 @@ async function main() {
     return total > 0 && available === 0;
   });
 
-  console.log(`${toBackfill.length} development(s) currently sold out with no soldOutSince yet:`);
-  for (const d of toBackfill) console.log(`  - [${d.dev}] ${d.publicName} (${d.id})`);
+  console.log(`${toBackfill.length} published/ready development(s) currently sold out with no soldOutSince yet:`);
+  for (const d of toBackfill) console.log(`  - [${d.dev}/${d.publishStatus}] ${d.publicName} (${d.id})`);
 
   if (!APPLY) {
     console.log("\nDry run — no changes written. Re-run with --apply to write.");
