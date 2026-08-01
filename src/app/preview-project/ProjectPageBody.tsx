@@ -21,6 +21,7 @@ import { computeAvailability, resolveAvailabilityStatusLabel, resolveStageLabel 
 import { developmentCopy } from "@/lib/developmentCopy";
 import { getAlternativeDevelopments } from "@/lib/developmentAlternatives";
 import AlternativesBlock from "@/app/preview-project/AlternativesBlock";
+import type { GoldPhrase } from "@/lib/developmentCopy";
 
 // Shared render body for both the SEO-facing slug route (the Development
 // branch of src/app/[lang]/projects/[slug]/page.tsx) and the admin-only
@@ -31,6 +32,13 @@ import AlternativesBlock from "@/app/preview-project/AlternativesBlock";
 
 const fmtPrice = (n: number | null | undefined, cur = "EUR", priceOnRequest = "Price on request") =>
   n == null ? priceOnRequest : `${cur === "EUR" ? "€" : cur + " "}${n.toLocaleString("en-US")}`;
+
+// Renders a GoldPhrase (developmentCopy.ts) with its accent word wrapped in
+// the site's existing .it gold-shimmer class (preview-home/tokens.css) —
+// same component/class as the neighbourhood heading below, not a new one.
+const goldPhrase = (h: GoldPhrase) => (
+  <>{h.lead}<span className="it">{h.gold}</span>{h.trail}</>
+);
 
 const LocationPin = () => (
   <svg viewBox="0 0 24 24" fill="none">
@@ -143,28 +151,26 @@ export default async function ProjectPageBody({
           </div>
         </header>
 
-        {/* ---------- SOLD OUT: hint + alternatives + off-market CTA teaser ----------
-            Bündel 1 (2026-07-31). "Sold out" is derived from isSold (computeAvailability)
-            only — see the comment above isSold. Alternatives use the same corrected
-            ranking funnel on every project page (developmentAlternatives.ts); here
-            placed prominently right under the hint text, per spec. */}
+        {/* ---------- SOLD OUT: hint + alternatives + enquiry form ----------
+            Bündel 1 (2026-07-31), corrected 2026-08-01: hint text and the
+            alternatives grid read as one continuous block (no panel frame,
+            no gap — see .pp-soldout in project.css), and the CTA is the real
+            enquiry form at this position, not a teaser linking further down.
+            "Sold out" is derived from isSold (computeAvailability) only —
+            see the comment above isSold. Alternatives use the same corrected
+            ranking funnel on every project page (developmentAlternatives.ts). */}
         {isSold && (
           <>
             <section className="pp-wrap pp-section pp-soldout">
-              <div className="pp-panel pp-soldout__panel">
-                <h2 className="pp-h2">{t.soldOutBannerHeadline}</h2>
-                <p className="pp-desc">{t.soldOutBannerBody}</p>
-              </div>
+              <h2 className="pp-h2">{goldPhrase(t.soldOutBannerHeadline)}</h2>
+              <p className="pp-desc pp-soldout__lead">{t.soldOutBannerBody}</p>
             </section>
 
             <AlternativesBlock cards={alternatives} lang={lang} heading={t.alternativesHeading} prominent />
 
-            <section className="pp-wrap pp-section pp-offmarket">
-              <a className="pp-panel pp-offmarket__panel" href="#enquiry">
-                <h3 className="pp-offmarket__headline">{t.offMarketCtaHeadline}</h3>
-                <p className="pp-desc">{t.offMarketCtaBody}</p>
-              </a>
-            </section>
+            <div id="enquiry">
+              <Form lang={lang} title={goldPhrase(t.offMarketCtaHeadline)} subtitle={t.offMarketCtaBody} showQuestionField />
+            </div>
           </>
         )}
 
@@ -259,20 +265,22 @@ export default async function ProjectPageBody({
           </section>
         )}
 
-        <div id="enquiry">
-          <Form
-            lang={lang}
-            title={isSold ? t.offMarketCtaHeadline : undefined}
-            subtitle={isSold ? t.offMarketCtaBody : undefined}
-            showQuestionField={isSold}
-          />
-        </div>
+        {/* Sold-out projects already rendered their enquiry form above, right
+            after the alternatives grid (see the isSold block) — never twice
+            on one page. */}
+        {!isSold && (
+          <>
+            <div id="enquiry">
+              <Form lang={lang} />
+            </div>
 
-        {/* Available project: same alternatives ranking, shown dezent below the
-            enquiry form rather than prominently under a (non-existent) sold-out
-            hint. Correction 2026-07-31: form belongs above this strip, not below. */}
-        {!isSold && alternatives.length > 0 && (
-          <AlternativesBlock cards={alternatives} lang={lang} heading={t.alternativesHeading} prominent={false} />
+            {/* Same alternatives ranking, shown dezent below the enquiry form
+                rather than prominently under a (non-existent) sold-out hint.
+                Correction 2026-07-31: form belongs above this strip, not below. */}
+            {alternatives.length > 0 && (
+              <AlternativesBlock cards={alternatives} lang={lang} heading={t.alternativesHeading} prominent={false} />
+            )}
+          </>
         )}
       </main>
       <Footer params={params} />
