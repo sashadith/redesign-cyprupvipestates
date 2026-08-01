@@ -7,6 +7,7 @@ import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleA
 import { resolveMapsUrlToGeo } from "./mapsGeo";
 import { normalizeRef } from "./unitRef";
 import { recomputeDevelopmentDistances } from "./developmentDistances";
+import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import type { ExtractedUnit } from "./ai/pricelistExtract";
 
 const MAX_IMAGES = 10;
@@ -193,6 +194,7 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
       existingByKey.set(k, { id: created.id, ref: created.ref, beds: created.beds, baths: created.baths, areaBuilt: created.areaBuilt, areaPlot: created.areaPlot, areaVeranda: created.areaVeranda, areaVerandaOpen: created.areaVerandaOpen, attrs: created.attrs as any, amenities: created.amenities as any });
     }
   }
+  if (p.units.length) await recomputeDevelopmentDerivedState(dev.id);
 
 
   // Generate a description on FULL import, but only when none exists yet.

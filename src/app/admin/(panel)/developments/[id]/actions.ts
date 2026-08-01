@@ -8,6 +8,7 @@ import type { FourLang } from "@/lib/ai/areaContent";
 import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart } from "@/lib/imageMirror";
 import { resolveMapsUrlToGeo } from "@/lib/mapsGeo";
 import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
+import { recomputeDevelopmentDerivedState } from "@/lib/developmentDerivedState";
 import { syncDeveloperDrive, type DriveSyncResult } from "@/lib/driveAvailabilitySync";
 import { syncOneDevelopment, type SyncOneDevelopmentResult } from "@/lib/feedSync";
 import { uniqueDevelopmentSlug } from "@/lib/developmentSeo";
@@ -326,6 +327,7 @@ export async function importFromPdfs(formData: FormData) {
       })),
     });
   }
+  await recomputeDevelopmentDerivedState(id);
   revalidatePath(`/admin/developments/${id}`);
 }
 
@@ -504,6 +506,7 @@ export async function saveUnits(developmentId: string, units: any[]) {
   });
   await prisma.developmentUnit.deleteMany({ where: { developmentId } });
   if (rows.length) await prisma.developmentUnit.createMany({ data: rows });
+  await recomputeDevelopmentDerivedState(developmentId);
   revalidatePath(`/admin/developments/${developmentId}`);
 }
 

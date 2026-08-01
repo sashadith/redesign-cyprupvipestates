@@ -46,7 +46,9 @@ const leadName = (l: { firstName: string; lastName: string }) => `${l.firstName}
 // or OFFER previously fell out of this rule entirely and could go stale
 // without ever triggering a follow-up nudge again.
 const REAL_CONTACT_TYPES = ["CALL", "EMAIL_OUT", "EMAIL_IN", "WHATSAPP_OUT", "WHATSAPP_IN"] as const;
-const ACTIVE_LEAD_STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER"] as const;
+// Exported — reused by developers.ts's backInStockReminders() for its lead
+// count, so "warm contact" has exactly one definition across the Action Center.
+export const ACTIVE_LEAD_STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER"] as const;
 
 async function noFollowUp(): Promise<ActionItem[]> {
   const leads = await prisma.lead.findMany({

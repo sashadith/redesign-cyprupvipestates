@@ -5,7 +5,8 @@ import Link from "next/link";
 
 export type DevRow = {
   id: string; name: string; feedName: string | null; dev: string; developer: string;
-  location: string; priceFrom: string; units: string; status: string; soldOut?: boolean; noFolder?: boolean; synced: string;
+  location: string; priceFrom: string; units: string; status: string; soldOut?: boolean;
+  soldOutSince?: string | null; noFolder?: boolean; synced: string;
 };
 
 const STATUS_STYLE: Record<string, string> = {
@@ -61,7 +62,10 @@ export default function DevelopmentsTable({ rows }: { rows: DevRow[] }) {
                 <td className="px-4 py-3 whitespace-nowrap">
                   <span className={`inline-block rounded px-2 py-0.5 text-xs capitalize ${STATUS_STYLE[r.status] ?? "bg-[#F3F4F6] text-[#6B7280]"}`}>{r.status}</span>
                   {r.soldOut && (
-                    <span title="Computed from unit data — updates with every sync" className="ml-1.5 inline-block rounded px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700">
+                    <span
+                      title={`Computed from unit data — updates with every sync.${r.soldOutSince ? ` ${r.soldOutSince[0].toUpperCase()}${r.soldOutSince.slice(1)}.` : ""}`}
+                      className="ml-1.5 inline-block rounded px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700"
+                    >
                       SOLD OUT
                     </span>
                   )}

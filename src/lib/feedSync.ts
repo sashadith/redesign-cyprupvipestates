@@ -3,6 +3,7 @@ import { getPreviewProject, listProjectIds, type ProjectVM } from "@/app/preview
 import type { UnitVM } from "@/app/preview-project/UnitsView";
 import { mirrorAll, devKeyFor, scheduleAppRestart } from "@/lib/imageMirror";
 import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
+import { recomputeDevelopmentDerivedState } from "@/lib/developmentDerivedState";
 
 /* Feed sync (Phase 1). Pulls every development of a developer from its feed
    (reusing the feeds.ts adapters → canonical ProjectVM) and upserts into
@@ -147,6 +148,7 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
   }
   await prisma.developmentUnit.deleteMany({ where: { developmentId: development.id, source: "feed" } });
   if (vm.units.length) await prisma.developmentUnit.createMany({ data: vm.units.map((u, i) => unitRow(u, development.id, i)) });
+  await recomputeDevelopmentDerivedState(development.id);
   return { ok: true, created: !existing, unitsWritten: vm.units.length, skippedManual: false };
 }
 
@@ -374,25 +376,19 @@ export async function statusOnlySync(devs: string[] = STATUS_SYNC_DEVS): Promise
         }
       }
 
-      // Recompute the Development-level cache from ALL of this project's
-      // units (not just the manual ones just touched above). A full feed
+      // Recompute the Development-level cache + soldOutSince/returnedToMarketAt
+      // from ALL of this project's units (not just the manual ones just
+      // touched above) — see recomputeDevelopmentDerivedState()'s own header
+      // for why this must run from every unit-status write path. A full feed
       // sync only ever refreshes unitsAvailable/unitsTotal from the FEED's
       // own reported units, and never overwrites source:"manual" rows — so
       // for any development with manual corrections, the cache and the
       // actual unit rows can permanently disagree no matter how often a
-      // full sync runs. This is hygiene, not a functional dependency:
-      // nothing reads this cache for display or logic anymore (see
+      // full sync runs. This is hygiene, not a functional dependency for the
+      // cache fields: nothing reads them for display or logic anymore (see
       // feedMissingReminders(), fixed 2026-07-31 to use computeAvailability()
-      // instead) — but leaving it permanently wrong invites the same bug
-      // to be reintroduced by future code that reasonably assumes it's live.
-      const allUnits = await prisma.developmentUnit.findMany({
-        where: { developmentId: development.id },
-        select: { status: true },
-      });
-      await prisma.development.update({
-        where: { id: development.id },
-        data: { unitsAvailable: allUnits.filter((u) => u.status === "available").length, unitsTotal: allUnits.length },
-      });
+      // instead) — but soldOutSince/returnedToMarketAt ARE load-bearing.
+      await recomputeDevelopmentDerivedState(development.id);
     }
     results.push({ dev, developmentsChecked: developments.length, developmentsSkipped, matched, updated, skipped, changes });
   }

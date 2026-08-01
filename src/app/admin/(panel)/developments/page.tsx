@@ -9,6 +9,18 @@ export const dynamic = "force-dynamic";
 const fmtDate = (d: Date | null) =>
   d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
 const fmtPrice = (n: number | null) => (n == null ? "—" : "€" + n.toLocaleString("en-US"));
+// soldOutSince is always phrased as a lower bound, never an exact date — for
+// developments already sold out before this field existed, a one-off backfill
+// (scripts/backfill-sold-out-since.mjs) stamped the rollout time, which could
+// understate the true duration by months. Phrasing every value this way
+// (not just backfilled ones, since there's no stored flag distinguishing the
+// two) keeps the claim honest either way — see the schema comment on
+// Development.soldOutSince.
+const fmtSoldOutSince = (d: Date | null) => {
+  if (!d) return null;
+  const days = Math.floor((Date.now() - new Date(d).getTime()) / 86_400_000);
+  return `sold out since at least ${fmtDate(d)} (${days}+ day${days === 1 ? "" : "s"})`;
+};
 
 const STATUS_STYLE: Record<string, string> = {
   draft: "bg-[#F3F4F6] text-[#6B7280]",
@@ -114,6 +126,7 @@ export default async function DevelopmentsPage({ searchParams }: { searchParams?
           units: r._count.units ? String(r._count.units) : "—",
           status: r.publishStatus,
           soldOut: computeAvailability(r.units).soldOut,
+          soldOutSince: fmtSoldOutSince(r.soldOutSince),
           noFolder: r.dev === "drive" && !r.driveFolderId,
           synced: fmtDate(r.syncedAt),
         }))}

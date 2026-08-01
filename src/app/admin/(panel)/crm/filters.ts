@@ -30,6 +30,14 @@ export function buildLeadWhere(sp: LeadSearchParams): Prisma.LeadWhereInput {
   const assignee = one(sp.assignee);
   if (assignee === "unassigned") where.assignedToId = null;
   else if (assignee) where.assignedToId = assignee;
+  // Deep-link from the Action Center's "back in stock" notification (Bündel 2)
+  // — matches the same way resolveIdentifiedProject() extracts a project from
+  // a lead's pageSource URL, but as a direct substring filter against a known
+  // Development slug rather than re-running its full resolution chain
+  // (which also falls back through a legacy, since-superseded Project model —
+  // deliberately not chased here, see developers.ts's backInStockReminders()).
+  const project = one(sp.project);
+  if (project) where.pageSource = { contains: `/projects/${project}` };
   return where;
 }
 
@@ -45,7 +53,7 @@ export function orderForSort(sp: LeadSearchParams): Prisma.LeadOrderByWithRelati
 // Re-encode the active filters into a query string (used for pagination + export links).
 export function leadQueryString(sp: LeadSearchParams, overrides: Record<string, string> = {}): string {
   const params = new URLSearchParams();
-  for (const k of ["q", "status", "source", "lang", "assignee", "sort", "page"]) {
+  for (const k of ["q", "status", "source", "lang", "assignee", "project", "sort", "page"]) {
     const v = one(sp[k]);
     if (v) params.set(k, v);
   }
