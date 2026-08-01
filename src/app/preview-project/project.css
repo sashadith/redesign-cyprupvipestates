@@ -428,29 +428,49 @@
 .dist-strip--compact .dist-strip__label { font-size: 0.62rem; }
 
 /* =====================================================================
-   Sold-out hint + off-market CTA (Bündel 1, 2026-07-31). Reuses .pp-panel's
-   glass-and-gold-hairline language — dezent, not a banner. See ProjectPageBody
-   for placement: hint -> prominent alternatives -> CTA, all under the hero,
-   only when isSold (computeAvailability).
+   Sold-out hint (Bündel 1, 2026-07-31; corrected 2026-08-01 — no panel frame
+   or separate background anymore: headline, lead text and the alternatives
+   grid below now read as one continuous block, not two boxed sections. See
+   ProjectPageBody for placement: hint -> prominent alternatives -> enquiry
+   form, all under the hero, only when isSold (computeAvailability).
    ===================================================================== */
-.pp-soldout__panel, .pp-offmarket__panel { padding: clamp(22px, 3.4vw, 36px); }
-.pp-soldout__panel .pp-h2 { margin-bottom: 0.5em; }
-.pp-soldout__panel .pp-desc { max-width: none; }
+/* Headline/lead/cards spacing is entirely token-driven (2026-08-02
+   correction) so it can never drift by language — RU/PL wrap the headline
+   onto different line counts than EN/DE, but the GAP between elements
+   never depends on how many lines the text itself took.
+   - headline -> lead, and lead -> cards: both var(--s-6), the one token,
+     so the two gaps are provably equal rather than incidentally similar.
+     line-height: 1.06 on the headline (same value .pp-title already uses
+     for var(--font-display) at a comparably large size) matters here: at
+     the new var(--text-h2) size, an unset line-height's extra "invisible"
+     leading below the text made the headline->lead gap visibly bigger than
+     lead->cards even though both share the identical var(--s-6) margin —
+     tightening it makes the margin the ONLY space, so the two gaps are
+     actually equal, not just equal on paper.
+   - cards -> enquiry form: SYMMETRIC around the dark->light colour
+     boundary (corrected 2026-08-02, twice — an intermediate attempt put
+     the whole var(--section-y) on one side, which just moved the "glued"
+     edge from the cards to the form's own headline instead of fixing it).
+     Both sides now carry their own var(--section-y) — .pp-alts--prominent's
+     bottom padding (dark) AND the enquiry form's normal .section top
+     padding (light, unmodified — no more zeroing it for this placement).
+     Same token on both sides, so they're provably equal, not just visually
+     close; the colour line sits exactly in the middle. Total gap is
+     correspondingly two token-widths, not one — that's fine here, the
+     earlier "exactly one token" constraint was wrong for this boundary. */
+.pp-soldout { padding-bottom: 0; }
+.pp-soldout .pp-h2 { font-size: var(--text-h2); line-height: 1.06; margin: 0 0 var(--s-6); }
+.pp-soldout__lead { max-width: none; font-size: var(--text-lead); margin: 0 0 var(--s-6); }
 
-.pp-offmarket__panel { display: block; text-decoration: none; transition: border-color var(--dur-sm) var(--ease); }
-.pp-offmarket__panel:hover { border-color: var(--accent); }
-.pp-offmarket__headline { font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
-  font-size: clamp(1.15rem, 1rem + 0.7vw, 1.5rem); color: var(--ivory); margin: 0 0 .5em; letter-spacing: -0.01em; }
-.pp-offmarket__panel .pp-desc { max-width: none; }
-
-/* Similar projects — prominent (under the sold-out hint) or quiet (further
-   down an available project's page); see AlternativesBlock.tsx. Cards are the
-   real <ProjectCard> from the /projects listing (src/app/preview-projects/
-   ProjectCard.tsx), rendered with compact — the card's own look/hover
-   behaviour, just sized for 4 per row via .prj--compact (projects.css). This
-   grid is deliberately its own class, not .px__grid (the /projects listing's
-   grid) — changing that one would also resize the listing itself. */
-.pp-alts--prominent { padding-top: 0; }
+/* Similar projects — prominent (directly under the sold-out hint) or quiet
+   (further down an available project's page); see AlternativesBlock.tsx.
+   Cards are the real <ProjectCard> from the /projects listing (src/app/
+   preview-projects/ProjectCard.tsx), rendered compact — the card's own
+   look/hover behaviour, just sized for 4 per row via .prj--compact
+   (projects.css). This grid is deliberately its own class, not .px__grid
+   (the /projects listing's grid) — changing that one would also resize the
+   listing itself. */
+.pp-alts--prominent { padding-top: 0; padding-bottom: var(--section-y); }
 .pp-alts__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(12px, 1.4vw, 20px); }
 @media (max-width: 900px) { .pp-alts__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 520px) { .pp-alts__grid { grid-template-columns: 1fr; } }

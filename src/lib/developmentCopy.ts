@@ -12,6 +12,11 @@ export type Lang = "en" | "de" | "pl" | "ru";
 const LANGS: Lang[] = ["en", "de", "pl", "ru"];
 export const asDevLang = (l: string): Lang => (LANGS.includes(l as Lang) ? (l as Lang) : "en");
 
+// A sentence with ONE accent word/phrase wrapped in the site's .it gold-shimmer
+// style (preview-home/tokens.css) — lead + gold + trail concatenate back to the
+// plain-text sentence. trail is "" when the accent word ends the sentence.
+export type GoldPhrase = { lead: string; gold: string; trail: string };
+
 export type DevelopmentStrings = {
   // ---- hero ----
   galleryLabel: (n: number) => string;
@@ -45,9 +50,13 @@ export type DevelopmentStrings = {
   heroFromSoldOut: string; // replaces heroFrom's caption once sold out — a past price, not a live offer
 
   // ---- sold-out banner + off-market CTA (2026-07-31) ----
-  soldOutBannerHeadline: string;
+  // headline text split around the .it gold-shimmer accent word (see
+  // preview-home/tokens.css) — lead + trail concatenated around gold
+  // reproduce the plain-text sentence; trail is "" where the accent word
+  // ends the sentence.
+  soldOutBannerHeadline: GoldPhrase;
   soldOutBannerBody: string;
-  offMarketCtaHeadline: string;
+  offMarketCtaHeadline: GoldPhrase;
   offMarketCtaBody: string;
   unitsHeadingSoldOut: string; // replaces unitsHeading once sold out
 
@@ -132,9 +141,9 @@ const EN: DevelopmentStrings = {
   factEnergyRating: "Energy rating",
   priceOnRequest: "Price on request",
   heroFromSoldOut: "sold from",
-  soldOutBannerHeadline: "Sold out — take it as confirmation of your taste.",
+  soldOutBannerHeadline: { lead: "Sold out — take it as ", gold: "confirmation of your taste.", trail: "" },
   soldOutBannerBody: "Homes like these move quickly, and fortunately Cyprus isn't done building beautiful ones. These projects come closest to what brought you here — and are still open:",
-  offMarketCtaHeadline: "Get there before the listing does.",
+  offMarketCtaHeadline: { lead: "Get there ", gold: "before the listing", trail: " does." },
   offMarketCtaBody: "Describe your ideal home in one message — we often know about units before they go public, and when we do, we'll think of you first.",
   unitsHeadingSoldOut: "The Properties",
   alternativesHeading: "Similar projects",
@@ -194,9 +203,9 @@ const DE: DevelopmentStrings = {
   factEnergyRating: "Energieeffizienz",
   priceOnRequest: "Preis auf Anfrage",
   heroFromSoldOut: "verkauft ab",
-  soldOutBannerHeadline: "Ausverkauft — nehmen Sie es als Bestätigung Ihres Geschmacks.",
+  soldOutBannerHeadline: { lead: "Ausverkauft — nehmen Sie es als ", gold: "Bestätigung Ihres Geschmacks.", trail: "" },
   soldOutBannerBody: "Solche Objekte bleiben nicht lange, und zum Glück ist Zypern mit dem Bauen schöner Projekte noch nicht fertig. Diese kommen dem, was Sie hierhergeführt hat, am nächsten — und sind noch zu haben:",
-  offMarketCtaHeadline: "Seien Sie schneller als das Inserat.",
+  offMarketCtaHeadline: { lead: "Seien Sie ", gold: "schneller", trail: " als das Inserat." },
   offMarketCtaBody: "Beschreiben Sie uns Ihr Wunschobjekt in einer Nachricht — wir wissen oft von Einheiten, bevor sie öffentlich werden, und denken dann zuerst an Sie.",
   unitsHeadingSoldOut: "Die Objekte",
   alternativesHeading: "Ähnliche Projekte",
@@ -256,9 +265,9 @@ const PL: DevelopmentStrings = {
   factEnergyRating: "Klasa energetyczna",
   priceOnRequest: "Cena na zapytanie",
   heroFromSoldOut: "sprzedano od",
-  soldOutBannerHeadline: "Wyprzedane — potraktuj to jako potwierdzenie swojego gustu.",
+  soldOutBannerHeadline: { lead: "Wyprzedane — potraktuj to jako ", gold: "potwierdzenie swojego gustu.", trail: "" },
   soldOutBannerBody: "Takie rezydencje nie czekają długo, ale na szczęście Cypr nie skończył jeszcze budować pięknych projektów. Te są najbliżej tego, co Cię tu przyciągnęło — i wciąż dostępne:",
-  offMarketCtaHeadline: "Bądź szybszy niż ogłoszenie.",
+  offMarketCtaHeadline: { lead: "Bądź ", gold: "szybszy niż", trail: " ogłoszenie." },
   offMarketCtaBody: "Opisz nam swoją idealną nieruchomość w jednej wiadomości — często wiemy o rezydencjach, zanim staną się publiczne, i wtedy pomyślimy najpierw o Tobie.",
   unitsHeadingSoldOut: "Obiekty",
   alternativesHeading: "Podobne projekty",
@@ -319,9 +328,9 @@ const RU: DevelopmentStrings = {
   factEnergyRating: "Энергокласс",
   priceOnRequest: "Цена по запросу",
   heroFromSoldOut: "продано от",
-  soldOutBannerHeadline: "Продано — считайте это подтверждением вашего вкуса.",
+  soldOutBannerHeadline: { lead: "Продано — считайте это ", gold: "подтверждением вашего вкуса.", trail: "" },
   soldOutBannerBody: "Такие резиденции не задерживаются, но, к счастью, Кипр ещё не закончил строить красивое. Эти проекты ближе всего к тому, что привело вас сюда — и они ещё доступны:",
-  offMarketCtaHeadline: "Опередите объявление.",
+  offMarketCtaHeadline: { lead: "Опередите ", gold: "объявление.", trail: "" },
   offMarketCtaBody: "Опишите нам идеальный объект в одном сообщении — мы часто узнаём о резиденциях до их публикации, и тогда в первую очередь вспомним о вас.",
   unitsHeadingSoldOut: "Объекты",
   alternativesHeading: "Похожие проекты",
