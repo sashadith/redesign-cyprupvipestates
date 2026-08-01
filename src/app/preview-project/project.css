@@ -447,20 +447,20 @@
      lead->cards even though both share the identical var(--s-6) margin —
      tightening it makes the margin the ONLY space, so the two gaps are
      actually equal, not just equal on paper.
-   - cards -> enquiry form: ONE var(--section-y), correction 2026-08-02 —
-     realized as .pp-alts--prominent's own bottom padding (dark, same
-     background as the rest of this section) rather than the enquiry form's
-     own .section top padding (light — .formsec's gradient starts exactly
-     at its box edge, so that padding rendered as light-colored space
-     starting flush against the cards, reading as "no gap" even though the
-     token was technically applied). .pp-soldout-enquiry below zeroes the
-     form's own top padding for this ONE placement so the token is never
-     applied twice — every other Form usage on this page (the !isSold path)
-     keeps its normal .section top padding untouched. */
+   - cards -> enquiry form: SYMMETRIC around the dark->light colour
+     boundary (corrected 2026-08-02, twice — an intermediate attempt put
+     the whole var(--section-y) on one side, which just moved the "glued"
+     edge from the cards to the form's own headline instead of fixing it).
+     Both sides now carry their own var(--section-y) — .pp-alts--prominent's
+     bottom padding (dark) AND the enquiry form's normal .section top
+     padding (light, unmodified — no more zeroing it for this placement).
+     Same token on both sides, so they're provably equal, not just visually
+     close; the colour line sits exactly in the middle. Total gap is
+     correspondingly two token-widths, not one — that's fine here, the
+     earlier "exactly one token" constraint was wrong for this boundary. */
 .pp-soldout { padding-bottom: 0; }
 .pp-soldout .pp-h2 { font-size: var(--text-h2); line-height: 1.06; margin: 0 0 var(--s-6); }
 .pp-soldout__lead { max-width: none; font-size: var(--text-lead); margin: 0 0 var(--s-6); }
-.pp-soldout-enquiry .formsec { padding-top: 0; }
 
 /* Similar projects — prominent (directly under the sold-out hint) or quiet
    (further down an available project's page); see AlternativesBlock.tsx.
