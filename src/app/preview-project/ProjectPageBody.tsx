@@ -168,7 +168,7 @@ export default async function ProjectPageBody({
 
             <AlternativesBlock cards={alternatives} lang={lang} heading={t.alternativesHeading} prominent />
 
-            <div id="enquiry">
+            <div id="enquiry" className="pp-soldout-enquiry">
               <Form lang={lang} title={goldPhrase(t.offMarketCtaHeadline)} subtitle={t.offMarketCtaBody} showQuestionField />
             </div>
           </>

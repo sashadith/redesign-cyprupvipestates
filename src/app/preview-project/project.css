@@ -440,15 +440,27 @@
    never depends on how many lines the text itself took.
    - headline -> lead, and lead -> cards: both var(--s-6), the one token,
      so the two gaps are provably equal rather than incidentally similar.
-   - cards -> enquiry form: .pp-alts--prominent now contributes ZERO bottom
-     padding (was pp-section's own clamp, double-stacking with the enquiry
-     form's own top padding below) — the form's own var(--section-y) top
-     padding (.section, preview-home/tokens.css) is the ONLY gap left, so
-     "below the cards" and "above the enquiry block" are literally the same
-     padding, not two values that merely match by coincidence. */
+     line-height: 1.06 on the headline (same value .pp-title already uses
+     for var(--font-display) at a comparably large size) matters here: at
+     the new var(--text-h2) size, an unset line-height's extra "invisible"
+     leading below the text made the headline->lead gap visibly bigger than
+     lead->cards even though both share the identical var(--s-6) margin —
+     tightening it makes the margin the ONLY space, so the two gaps are
+     actually equal, not just equal on paper.
+   - cards -> enquiry form: ONE var(--section-y), correction 2026-08-02 —
+     realized as .pp-alts--prominent's own bottom padding (dark, same
+     background as the rest of this section) rather than the enquiry form's
+     own .section top padding (light — .formsec's gradient starts exactly
+     at its box edge, so that padding rendered as light-colored space
+     starting flush against the cards, reading as "no gap" even though the
+     token was technically applied). .pp-soldout-enquiry below zeroes the
+     form's own top padding for this ONE placement so the token is never
+     applied twice — every other Form usage on this page (the !isSold path)
+     keeps its normal .section top padding untouched. */
 .pp-soldout { padding-bottom: 0; }
-.pp-soldout .pp-h2 { font-size: var(--text-h2); margin: 0 0 var(--s-6); }
+.pp-soldout .pp-h2 { font-size: var(--text-h2); line-height: 1.06; margin: 0 0 var(--s-6); }
 .pp-soldout__lead { max-width: none; font-size: var(--text-lead); margin: 0 0 var(--s-6); }
+.pp-soldout-enquiry .formsec { padding-top: 0; }
 
 /* Similar projects — prominent (directly under the sold-out hint) or quiet
    (further down an available project's page); see AlternativesBlock.tsx.
@@ -458,7 +470,7 @@
    (projects.css). This grid is deliberately its own class, not .px__grid
    (the /projects listing's grid) — changing that one would also resize the
    listing itself. */
-.pp-alts--prominent { padding-top: 0; padding-bottom: 0; }
+.pp-alts--prominent { padding-top: 0; padding-bottom: var(--section-y); }
 .pp-alts__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(12px, 1.4vw, 20px); }
 @media (max-width: 900px) { .pp-alts__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 520px) { .pp-alts__grid { grid-template-columns: 1fr; } }
