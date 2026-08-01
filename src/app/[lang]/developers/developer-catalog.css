@@ -1,0 +1,26 @@
+/* Bündel 3 Teil 2 (2026-08-01) — the developer page's mixed project catalog.
+   Reuses .pp-wrap/.pp-section/.pp-h2/.pp-alts__grid (project.css) and .prj/
+   .prj--compact (projects.css), both already imported on this route — only
+   the few rules genuinely new to this surface live here. */
+
+.dev-catalog__empty { color: var(--text-soft); }
+
+.dev-catalog__sold-heading { margin-top: var(--section-y); }
+
+.dev-catalog__item { display: flex; flex-direction: column; gap: var(--s-2); }
+
+/* Construction stage — deliberately quieter than the on-image badges
+   (.prj__badge / .prj__type): those signal urgency/status over the photo,
+   this is background context sitting above the card. Only ever present on
+   Development-sourced cards (legacy Sanity projects carry no stage data). */
+.dev-catalog__stage {
+  align-self: flex-start;
+  font-family: var(--font-body), sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 3px 10px;
+}

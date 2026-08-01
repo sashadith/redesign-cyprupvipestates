@@ -1,10 +1,15 @@
+import "@/app/preview-home/tokens.css";
+import "@/app/preview-projects/projects.css";
+import "@/app/preview-project/project.css";
+import "@/app/[lang]/developers/developer-catalog.css";
+
 import React from "react";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import {
   getFormStandardDocumentByLang,
   getDeveloperByLang,
-  getProjectsByDeveloper,
+  getDeveloperCatalogByLang,
   getNotFoundPageByLang,
   getDeveloperSlugs,
   ALL_LOCALES,
@@ -34,14 +39,24 @@ import FullDescriptionBlock from "@/app/components/FullDescriptionBlock/FullDesc
 import SchemaMarkup from "@/app/components/SchemaMarkup/SchemaMarkup";
 import PropertyDescription from "@/app/components/PropertyDescription/PropertyDescription";
 import DeveloperIntro from "@/app/components/DeveloperIntro/DeveloperIntro";
-import ProjectLink from "@/app/components/ProjectLink/ProjectLink";
+import DeveloperProjectsGrid, { type DeveloperProjectCardData } from "@/app/[lang]/developers/[slug]/DeveloperProjectsGrid";
 import DeveloperSchemaMarkup from "@/app/components/DeveloperSchemaMarkup/DeveloperSchemaMarkup";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 import NotFoundPageComponent from "@/app/components/NotFoundPageComponent/NotFoundPageComponent";
 import { abs, localizedPath, languageAlternates, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import { localizedHref } from "@/lib/locale";
+import { resolveCompletionYear } from "@/lib/text";
 
 type Props = {
   params: { lang: string; slug: string };
+};
+
+const safeUrl = (img: unknown) => {
+  try {
+    return urlFor(img as never).url();
+  } catch {
+    return undefined;
+  }
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -92,7 +107,34 @@ const DeveloperPage = async ({ params }: Props) => {
     notFound();
   }
 
-  const projects = await getProjectsByDeveloper(lang, developer._id);
+  const catalog = await getDeveloperCatalogByLang(lang, developer._id);
+  const toCardData = (items: typeof catalog.available): DeveloperProjectCardData[] =>
+    items.map((p) => {
+      const kf = p.keyFeatures ?? {};
+      const cardSlug = p.slug?.current ?? "";
+      return {
+        id: p._id,
+        title: p.title,
+        href: cardSlug ? localizedHref(lang, ["projects", cardSlug]) : "#",
+        image: p._source === "development" ? (p.previewImage as string | undefined) : safeUrl(p.previewImage),
+        city: kf.city ?? "",
+        price: typeof kf.price === "number" ? kf.price : Number(kf.price) || null,
+        bedrooms: kf.bedrooms ?? "",
+        area: kf.coveredArea ?? "",
+        type: kf.propertyType ?? "",
+        energy: kf.energyEfficiency ?? "",
+        completion: resolveCompletionYear(kf.completionDate),
+        isNew: !!p.isNew,
+        isFeatured: !!p.isFeatured,
+        distances: p.distances ?? null,
+        vatApplies: p._source === "development" ? (kf.vatApplies ?? null) : undefined,
+        unitsAvailable: p.unitsAvailable,
+        unitsTotal: p.unitsTotal,
+        stageLabel: p.stageLabel,
+      };
+    });
+  const availableCards = toCardData(catalog.available);
+  const soldOutCards = toCardData(catalog.soldOut);
 
   // const pageUrl = `/${lang}/developers/${developer.slug[lang].current}`;
 
@@ -152,52 +194,12 @@ const DeveloperPage = async ({ params }: Props) => {
           excerpt={developer.excerpt}
           logo={developer.logo}
         />
-        <section className="">
-          <div className="container">
-            <h2 className="h2-white">
-              {lang === "en"
-                ? `Projects of developer ${developer.title}`
-                : lang === "de"
-                  ? `Projekte des Entwicklers ${developer.title}`
-                  : lang === "pl"
-                    ? `Projekty dewelopera ${developer.title}`
-                    : lang === "ru"
-                      ? `Проекты застройщика ${developer.title}`
-                      : `Projects of developer ${developer.title}`}
-            </h2>
-            <div className="projectsDeveloper">
-              {projects.length ? (
-                projects.map((project) => (
-                  <div key={project._id}>
-                    <ProjectLink
-                      url={localizedPath(lang, ["projects", project.slug[lang].current])}
-                      previewImage={project.previewImage}
-                      title={project.title}
-                      price={project.keyFeatures.price}
-                      bedrooms={parseFloat(project.keyFeatures.bedrooms)} // Преобразование строки в число
-                      coveredArea={parseFloat(project.keyFeatures.coveredArea)} // Преобразование строки в число
-                      plotSize={parseFloat(project.keyFeatures.plotSize)} // Преобразование строки в число
-                      lang={params.lang}
-                      isSold={project.isSold}
-                    />
-                  </div>
-                ))
-              ) : (
-                <p>
-                  {lang === "en"
-                    ? "No projects available for this developer."
-                    : lang === "de"
-                      ? "Keine Projekte für diesen Entwickler verfügbar."
-                      : lang === "pl"
-                        ? "Brak projektów dostępnych dla tego dewelopera."
-                        : lang === "ru"
-                          ? "Нет доступных проектов для этого застройщика."
-                          : "No projects available for this developer."}
-                </p>
-              )}
-            </div>
-          </div>
-        </section>
+        <DeveloperProjectsGrid
+          available={availableCards}
+          soldOut={soldOutCards}
+          lang={lang}
+          developerName={developer.title}
+        />
         <FormStatic lang={params.lang} />
         <FullDescriptionBlock description={developer.description} />
         <div className="container">
