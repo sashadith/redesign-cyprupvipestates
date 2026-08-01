@@ -417,6 +417,23 @@
 .prj__dist i { font-style: normal; color: var(--text-soft); }
 .prj__dist small { font-size: 0.66rem; color: var(--text-faint); margin-left: 2px; }
 
+/* Compact variant — sized for a 4-per-row grid (the project page's
+   alternatives strip, see AlternativesBlock.tsx / ProjectCard.tsx's
+   `compact` prop). Pure modifier: only ever adds narrower overrides here,
+   never edits the base .prj rules above — the /projects listing (plain
+   .prj, no --compact) renders exactly as before. */
+.prj--compact .prj__title { font-size: 1.08rem; }
+.prj--compact .prj__info { padding: 12px 14px 10px; }
+.prj--compact .prj__type, .prj--compact .prj__badge { font-size: 0.62rem; padding: 3px 8px; }
+.prj--compact .prj__footer { padding: 11px 14px 13px; }
+.prj--compact .prj__specs { font-size: 0.72rem; }
+/* Price block above the specs row, left-aligned (column-reverse flips the
+   two DOM children — .prj__specs then .prj__price — without a markup
+   change) and the "€1,125,000 from" order (row-reverse flips the price
+   value ahead of the leading "from" label already in the markup). */
+.prj--compact .prj__specrow { flex-direction: column-reverse; align-items: flex-start; gap: 6px; }
+.prj--compact .prj__price { display: flex; flex-direction: row-reverse; align-items: baseline; gap: 0.32em; font-size: 1.15rem; }
+
 /* ---------------- MAP TEASER TILE (in grid) ---------------- */
 /* Frameless map that dissolves into the background; decoupled from .prj.
    z-index 0 keeps the bleed one level BELOW the cards (z-index 1). isolate

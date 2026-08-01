@@ -272,10 +272,7 @@ export default async function ProjectPageBody({
             enquiry form rather than prominently under a (non-existent) sold-out
             hint. Correction 2026-07-31: form belongs above this strip, not below. */}
         {!isSold && alternatives.length > 0 && (
-          <>
-            <AlternativesBlock cards={alternatives} lang={lang} heading={t.alternativesHeading} prominent={false} />
-            <div className="pp-wrap"><hr className="pp-goldline" /></div>
-          </>
+          <AlternativesBlock cards={alternatives} lang={lang} heading={t.alternativesHeading} prominent={false} />
         )}
       </main>
       <Footer params={params} />

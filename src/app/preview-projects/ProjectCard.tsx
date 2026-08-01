@@ -76,7 +76,7 @@ const fmtPrice = (p: number | null, s: ProjectsStrings) =>
   p == null ? s.priceOnRequest : `€${p.toLocaleString(s.numLocale)}`;
 
 export function ProjectCard({
-  c, active = false, onHover = () => {}, s, locale,
+  c, active = false, onHover = () => {}, s, locale, compact = false,
 }: {
   c: ProjectCardData;
   // Both optional, defaulted client-side — the map-hover-sync feature is only
@@ -88,11 +88,16 @@ export function ProjectCard({
   onHover?: (id: string | null) => void;
   s: ProjectsStrings;
   locale: string;
+  // Smaller card for a 4-per-row grid (the project page's alternatives strip)
+  // — a pure CSS modifier (.prj--compact in projects.css), never changes the
+  // base .prj rules the /projects listing itself renders with. See
+  // AlternativesBlock.tsx.
+  compact?: boolean;
 }) {
   const soldOut = c.unitsTotal != null && soldOutFromCounts(c.unitsAvailable ?? 0, c.unitsTotal);
   return (
     <a
-      className={`prj${active ? " is-active" : ""}${soldOut ? " is-sold" : ""}`}
+      className={`prj${compact ? " prj--compact" : ""}${active ? " is-active" : ""}${soldOut ? " is-sold" : ""}`}
       href={c.href}
       onMouseEnter={() => onHover(c.id)}
       onMouseLeave={() => onHover(null)}

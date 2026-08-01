@@ -446,13 +446,12 @@
 /* Similar projects — prominent (under the sold-out hint) or quiet (further
    down an available project's page); see AlternativesBlock.tsx. Cards are the
    real <ProjectCard> from the /projects listing (src/app/preview-projects/
-   ProjectCard.tsx) laid out in its own .px__grid — not a second card design —
-   so this page's grid only needs the section-level modifiers. */
+   ProjectCard.tsx), rendered with compact — the card's own look/hover
+   behaviour, just sized for 4 per row via .prj--compact (projects.css). This
+   grid is deliberately its own class, not .px__grid (the /projects listing's
+   grid) — changing that one would also resize the listing itself. */
 .pp-alts--prominent { padding-top: 0; }
-
-/* Gold divider between the (quiet) alternatives strip and the footer —
-   reuses --pp-gold-contour, the exact value the map section's top/bottom
-   contour already uses, rather than a second literal gradient. */
-.pp-goldline { margin-block: clamp(10px, 3vw, 30px); max-width: none; border: 0; height: 1px;
-  background: var(--pp-gold-contour); opacity: 0.9; }
+.pp-alts__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(12px, 1.4vw, 20px); }
+@media (max-width: 900px) { .pp-alts__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .pp-alts__grid { grid-template-columns: 1fr; } }
 .dist-strip--compact .dist-strip__value { font-size: 0.85rem; }

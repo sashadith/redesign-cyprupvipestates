@@ -33,9 +33,12 @@ export default function AlternativesBlock({
   return (
     <section className={`pp-wrap pp-section pp-alts${prominent ? " pp-alts--prominent" : " pp-alts--quiet"}`}>
       {!prominent && <h2 className="pp-h2">{heading}</h2>}
-      <div className="px__grid">
+      {/* Own grid (4-per-row), NOT .px__grid — that class is the /projects
+          listing's own grid; reusing it here would also change its column
+          count if it were ever tuned for this narrower use. */}
+      <div className="pp-alts__grid">
         {cards.map((c) => (
-          <ProjectCard key={c.id} c={c} s={s} locale={lang} />
+          <ProjectCard key={c.id} c={c} s={s} locale={lang} compact />
         ))}
       </div>
     </section>
