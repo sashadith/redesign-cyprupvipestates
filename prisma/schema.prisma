@@ -886,6 +886,24 @@ model DeveloperAccount {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
+  // Bündel 3 Schritt 1 (2026-08-01) — links this feed/admin developer to its
+  // public profile page. Points at Developer.translationGroupId, NOT a
+  // single Developer.id: Developer is a per-language table (one row per
+  // language, @@unique([language, slug])), while this account is language-
+  // neutral, so a single-row FK would arbitrarily pick one locale. No formal
+  // @relation (translationGroupId isn't unique per row — it identifies a
+  // GROUP of up to 4 rows) — resolve via the same
+  // findFirst({ where: { translationGroupId, language } }) pattern already
+  // used elsewhere for Developer/Project translation groups (e.g.
+  // src/app/admin/actions.ts). Nullable and NOT auto-populated — never guess
+  // a match from name/slug similarity; only a human-reviewed link (admin UI)
+  // or the one-off scripts/link-developer-accounts.mjs sets it. Because
+  // there's no formal relation, a linked group can go stale (Developer rows
+  // deleted, translationGroupId reassigned) without a DB-level error — see
+  // developerLinkBrokenReminders() in src/lib/actionCenter/rules/developers.ts,
+  // which surfaces that live rather than letting it fail silently.
+  developerTranslationGroupId String?
+
   analyses     DeveloperFeedAnalysis[]
   developments Development[]
 

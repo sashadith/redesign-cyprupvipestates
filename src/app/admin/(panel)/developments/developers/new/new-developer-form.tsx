@@ -21,7 +21,7 @@ const field = (label: string, name: string, type = "text", placeholder = "") => 
   </div>
 );
 
-export default function NewDeveloperForm() {
+export default function NewDeveloperForm({ pageOptions }: { pageOptions: { translationGroupId: string; title: string }[] }) {
   const [state, formAction] = useFormState<{ error?: string } | null>(createDeveloperAccount as any, null);
   return (
     <form action={formAction} className="bg-white rounded-lg border border-[#E5E7EB] p-6 space-y-4 max-w-lg">
@@ -38,6 +38,16 @@ export default function NewDeveloperForm() {
         {field("Developer Cloud link", "developerCloudUrl", "url", "https://…")}
         {field("Drive folder link", "driveFolderUrl", "url", "https://drive.google.com/…")}
         <SlugField initialValue="" titleFieldName="name" label="Slug (optional)" helpText="(auto from name)" />
+      </div>
+      <div>
+        <label className="block text-xs text-[#6B7280] mb-1">Public developer page</label>
+        <select name="developerTranslationGroupId" defaultValue="" className={input}>
+          <option value="">— none yet —</option>
+          {pageOptions.map((o) => (
+            <option key={o.translationGroupId} value={o.translationGroupId}>{o.title}</option>
+          ))}
+        </select>
+        <p className="text-xs text-[#9CA3AF] mt-1">Only link a page you've confirmed is really this developer — leave unset otherwise, it can be linked later.</p>
       </div>
       <div>
         <label className="block text-xs text-[#6B7280] mb-1">Notes</label>

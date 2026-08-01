@@ -5,10 +5,12 @@ import { deleteDeveloperAccount } from "@/app/admin/actions";
 import { createManualDevelopment, runSync } from "../../actions";
 import AnalyzeForm from "./analyze-form";
 import DeveloperContact from "./DeveloperContact";
+import DeveloperPageLink from "./DeveloperPageLink";
 import DriveSyncButton from "./DriveSyncButton";
 import DriveIntervalSelect from "./DriveIntervalSelect";
 import BackLink from "../../BackLink";
 import { computeAvailability } from "@/lib/developmentAvailability";
+import { resolveLinkedDeveloper, developerGroupExists, listDeveloperPageOptions } from "@/lib/developerLink";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +45,17 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
   const addDev = createManualDevelopment.bind(null, dev.id);
   const feedDevKey = dev.developments.find((d) => d.dev && d.dev !== "manual")?.dev ?? null;
   const lastSynced = dev.developments.map((d) => d.syncedAt).filter(Boolean).sort((a, b) => (a! < b! ? 1 : -1))[0] ?? null;
+
+  // Bündel 3 Schritt 1 — resolve the linked public page (EN, for the admin
+  // preview link) and whether the link is stale, alongside the option list
+  // for the picker. All three read the same underlying data every load —
+  // no caching, so an admin never sees a stale "broken" state after fixing it.
+  const [linkedDeveloperEn, linkBroken, pageOptions] = await Promise.all([
+    resolveLinkedDeveloper(dev.developerTranslationGroupId, "en"),
+    dev.developerTranslationGroupId ? developerGroupExists(dev.developerTranslationGroupId).then((ok) => !ok) : Promise.resolve(false),
+    listDeveloperPageOptions(),
+  ]);
+  const developerPreviewUrl = linkedDeveloperEn ? `/en/developers/${linkedDeveloperEn.slug}` : null;
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -206,6 +219,14 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
           </div>
         )}
       </div>
+
+      <DeveloperPageLink
+        developerAccountId={dev.id}
+        value={dev.developerTranslationGroupId}
+        options={pageOptions}
+        previewUrl={developerPreviewUrl}
+        broken={linkBroken}
+      />
 
       {/* Danger */}
       <form action={del} className="pt-1">
