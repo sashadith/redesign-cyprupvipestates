@@ -47,7 +47,7 @@ export default function NewDeveloperForm({ pageOptions }: { pageOptions: { trans
             <option key={o.translationGroupId} value={o.translationGroupId}>{o.title}</option>
           ))}
         </select>
-        <p className="text-xs text-[#9CA3AF] mt-1">Only link a page you've confirmed is really this developer — leave unset otherwise, it can be linked later.</p>
+        <p className="text-xs text-[#9CA3AF] mt-1">Only link a page you&apos;ve confirmed is really this developer — leave unset otherwise, it can be linked later.</p>
       </div>
       <div>
         <label className="block text-xs text-[#6B7280] mb-1">Notes</label>
