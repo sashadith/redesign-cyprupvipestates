@@ -56,6 +56,9 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
     listDeveloperPageOptions(),
   ]);
   const developerPreviewUrl = linkedDeveloperEn ? `/en/developers/${linkedDeveloperEn.slug}` : null;
+  // The content editor edits ONE language row at a time — EN, same as the
+  // preview link above, since linkedDeveloperEn already carries that row's id.
+  const editProfileHref = linkedDeveloperEn ? `/admin/content/developers/${linkedDeveloperEn.id}` : null;
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -64,6 +67,16 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
       <DeveloperContact
         dev={{ id: dev.id, name: dev.name, website: dev.website, contactPerson: dev.contactPerson, phone: dev.phone, email: dev.email, developerCloudUrl: dev.developerCloudUrl, driveFolderUrl: dev.driveFolderUrl, contactInfo: dev.contactInfo, notes: dev.notes }}
         badge={<span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${hasFeed ? "bg-[#DCFCE7] text-[#166534]" : "bg-[#F3F4F6] text-[#6B7280]"}`}>{hasFeed ? "With feed" : "No feed"}</span>}
+        pageLinkSection={
+          <DeveloperPageLink
+            developerAccountId={dev.id}
+            value={dev.developerTranslationGroupId}
+            options={pageOptions}
+            previewUrl={developerPreviewUrl}
+            editProfileHref={editProfileHref}
+            broken={linkBroken}
+          />
+        }
       />
 
       {/* Developments */}
@@ -219,14 +232,6 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
           </div>
         )}
       </div>
-
-      <DeveloperPageLink
-        developerAccountId={dev.id}
-        value={dev.developerTranslationGroupId}
-        options={pageOptions}
-        previewUrl={developerPreviewUrl}
-        broken={linkBroken}
-      />
 
       {/* Danger */}
       <form action={del} className="pt-1">
