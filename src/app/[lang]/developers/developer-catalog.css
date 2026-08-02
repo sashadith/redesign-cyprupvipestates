@@ -36,36 +36,45 @@
   content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; aspect-ratio: 1; will-change: transform;
   background: radial-gradient(circle, rgba(194, 154, 94, 0.14), rgba(194, 154, 94, 0) 66%);
 }
-.dev-catalog::before { width: min(55vw, 640px); top: -18%; left: -10%; animation: cloudDriftA 28s ease-in-out infinite alternate; }
-.dev-catalog::after { width: min(48vw, 560px); right: -10%; bottom: -16%; animation: cloudDriftB 33s ease-in-out infinite alternate; }
+/* top/bottom are FIXED offsets, not percentages (2026-08-02c) — the working
+   precedent (.pp-about/.pp-units-sec) uses percentages, but their sections
+   have fairly stable heights; this one doesn't (1 sold-out row vs. up to 34
+   available cards / ~12 rows). A percentage offset scales with the section's
+   own height, so on the tall available grid the cloud got pushed hundreds of
+   px above the visible area — invisible in practice — while the short
+   sold-out section (small % of a small height) kept it right where
+   intended. Fixed px offsets anchor both consistently near their section's
+   actual edge regardless of how many rows of cards it holds. */
+.dev-catalog::before { width: min(55vw, 640px); top: -120px; left: -10%; animation: cloudDriftA 28s ease-in-out infinite alternate; }
+.dev-catalog::after { width: min(48vw, 560px); right: -10%; bottom: -100px; animation: cloudDriftB 33s ease-in-out infinite alternate; }
 @media (prefers-reduced-motion: reduce) { .dev-catalog::before, .dev-catalog::after { animation: none; } }
 
 /* ---- Map: full-width (edge-to-edge, no card panel), thin gold-gradient
-   strip top+bottom — SAME construction as the project detail page's own map
-   (.pp-mapsection / .pp-map.px-mapwrap::before/::after, project.css). That
-   exact rule is scoped under `.pp` (the detail page's own root class, which
-   this route doesn't carry), so the gradient value is repeated here — same
-   literal (#C29A5E via transparent), not a new effect. The "LIFE NEARBY" POI
-   legend (ProjectsMap.tsx's own .px-poi) belongs to a single property's
+   strip top+bottom — same value as the project detail page's own map
+   contour (.pp-map.px-mapwrap::before/::after, project.css; that exact rule
+   is scoped under `.pp`, which this route doesn't carry, so the literal
+   gradient is repeated here, not a new effect). Real sibling DOM elements
+   (DeveloperProjectsGrid.tsx: dev-catalog__map-goldline--top/--bottom),
+   NOT pseudo-elements on .px-mapwrap (2026-08-02c) — the pseudo-element
+   version, even after correcting its z-index, still lost to Leaflet's own
+   zoom control at the top specifically (nothing sits at the bottom edge by
+   default, which is why only the top strip stayed broken). Rendering the
+   strips as real elements OUTSIDE Leaflet's own DOM/stacking tree entirely
+   sidesteps guessing at Leaflet's internal z-index scheme altogether — they
+   now only need to out-rank the whole map component as one sibling block,
+   not fight individual layers inside it. The "LIFE NEARBY" POI legend
+   (ProjectsMap.tsx's own .px-poi) belongs to a single property's
    walkability — meaningless once the map shows scattered pins across a
    developer's whole portfolio, so it's hidden here rather than plumbing a
-   new prop through the shared map component.
-   z-index:900, NOT 1000 (the original's own value, copied here without
-   checking it against THIS context first) — best diagnosis for the missing
-   top strip AND the missing Leaflet zoom control together: Leaflet's own
-   zoom control (.leaflet-control-container) also sits at z-index:1000, and
-   at a tie something in that fight lost. 900 still clears every Leaflet
-   content pane (tiles/markers/popups top out around 700) while staying
-   under the control layer — verify both are actually fixed on staging. */
+   new prop through the shared map component. */
 .dev-catalog__mapwrap { position: relative; width: 100%; height: min(51vh, 450px); }
-.dev-catalog__mapwrap .px-mapwrap::before,
-.dev-catalog__mapwrap .px-mapwrap::after {
-  content: ""; position: absolute; left: 0; right: 0; height: 1px;
+.dev-catalog__map-goldline {
+  position: absolute; left: 0; right: 0; height: 1px;
   background: linear-gradient(90deg, transparent, #C29A5E, transparent);
-  z-index: 900; pointer-events: none;
+  z-index: 5; pointer-events: none;
 }
-.dev-catalog__mapwrap .px-mapwrap::before { top: 0; }
-.dev-catalog__mapwrap .px-mapwrap::after { bottom: 0; }
+.dev-catalog__map-goldline--top { top: 0; }
+.dev-catalog__map-goldline--bottom { bottom: 0; }
 .dev-catalog__mapwrap .px-poi { display: none; }
 
 /* ---- Journal-style developer hero (DeveloperJournalIntro.tsx) ---- */

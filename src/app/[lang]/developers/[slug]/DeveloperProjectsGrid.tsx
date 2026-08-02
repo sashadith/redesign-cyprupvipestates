@@ -74,7 +74,9 @@ export default function DeveloperProjectsGrid({
       {markers.length > 0 && (
         <section className="pp-mapsection dev-map-section" data-theme="dark">
           <div className="dev-catalog__mapwrap">
+            <div className="dev-catalog__map-goldline dev-catalog__map-goldline--top" />
             <ProjectsMap markers={markers} hoveredId={hoveredId} onHover={setHoveredId} locale={lang} strings={s} syncBoundsToUrl={false} />
+            <div className="dev-catalog__map-goldline dev-catalog__map-goldline--bottom" />
           </div>
         </section>
       )}
