@@ -37,32 +37,45 @@ function buildClouds(mainEl: HTMLElement): Cloud[] {
       return { top: r.top - mainTop, bottom: r.bottom - mainTop };
     });
 
-  const clearOpaque = (y: number) => {
+  // Bumps a candidate center down until this cloud's actual footprint
+  // (center ± size/2) no longer overlaps any opaque section — checked against
+  // the real size, not a fixed margin, so a large cloud can't still poke back
+  // into the section it was just pushed out of.
+  const clearOpaque = (center: number, size: number) => {
+    let y = center;
     for (const r of avoidRects) {
-      if (y >= r.top - 60 && y <= r.bottom + 60) return r.bottom + 80;
+      const top = y - size / 2;
+      const bottom = y + size / 2;
+      if (bottom >= r.top - 60 && top <= r.bottom + 60) {
+        y = r.bottom + 60 + size / 2;
+      }
     }
     return y;
   };
 
   const clouds: Cloud[] = [];
-  let y = clearOpaque(rand(120, 260));
+  // The 500-700px spacing is a center-to-center guarantee, not edge-to-edge —
+  // diameters vary per cloud, so tracking by top edge alone would let two
+  // large clouds land visually closer than two small ones.
+  let center = rand(280, 420);
   let side: 1 | -1 = Math.random() < 0.5 ? 1 : -1;
   let id = 0;
 
-  while (y < height - 150 && id < MAX_CLOUDS) {
+  while (center < height - 150 && id < MAX_CLOUDS) {
     const size = Math.round(rand(520, 760));
+    center = clearOpaque(center, size);
     const jitter = rand(-140, 140);
     const x = side * (containerHalf + jitter);
     clouds.push({
       id: id++,
-      top: Math.round(y),
+      top: Math.round(center - size / 2),
       left: `calc(50% + ${Math.round(x - size / 2)}px)`,
       size,
       opacity: Number(rand(0.75, 0.95).toFixed(2)),
       animationName: reducedMotion ? undefined : side === 1 ? "cloudDriftB" : "cloudDriftA",
       animationDuration: reducedMotion ? undefined : `${Math.round(rand(24, 34))}s`,
     });
-    y = clearOpaque(y + rand(MIN_GAP, MAX_GAP));
+    center = center + rand(MIN_GAP, MAX_GAP);
     side = side === 1 ? -1 : 1;
   }
 
