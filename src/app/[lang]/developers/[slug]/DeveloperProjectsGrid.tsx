@@ -1,15 +1,20 @@
 "use client";
 
-// Bündel 3 Teil 2 (2026-08-01) — the developer page's mixed catalog: legacy
+// Bündel 3 Teil 2 (2026-08-02) — the developer page's mixed catalog: legacy
 // Sanity projects + this developer's linked Developments
 // (getDeveloperCatalogByLang), already deduplicated and split server-side
 // into available/sold-out. Renders the SAME <ProjectCard> AND the SAME
 // <ProjectsMap> the /projects listing uses — see AlternativesBlock.tsx for
 // why a second hand-built card/map drifts over time. 3-per-row (matching
-// /projects' own card size, not the 4-per-row compact "alternatives" strip),
-// no construction-stage label (tried, dropped — see conversation: a mixed
-// page with 27 labeled Development cards next to 7 unlabeled legacy cards
-// read as a data gap, not two independent facts).
+// /projects' own card size, not the 4-per-row compact "alternatives" strip).
+//
+// Order: map (all available projects, clickable pins — sold-out gets no pin,
+// same dead-end-avoidance rule /projects itself already applies) -> available
+// grid -> sold-out grid -> contact form. Sold-out is its OWN .pp-section
+// (not a heading with a guessed margin-top) specifically so its spacing
+// matches every other section boundary on the page via the same
+// .pp-section padding-block every section already uses — never a bespoke
+// value.
 //
 // "use client" for the same reason AlternativesBlock is: projectsStrings(lang)
 // returns function-valued fields that can't cross the server->client boundary
@@ -66,40 +71,37 @@ export default function DeveloperProjectsGrid({
 
   return (
     <>
-      <section className="pp-wrap pp-section dev-catalog" data-theme="dark">
-        <h2 className="pp-h2">{headline}</h2>
-        {available.length === 0 && soldOut.length === 0 ? (
-          <p className="dev-catalog__empty">{EMPTY[lang] ?? EMPTY.en}</p>
-        ) : (
-          <>
-            {available.length > 0 && (
-              <div className="dev-catalog__grid">
-                {available.map((c) => (
-                  <ProjectCard key={c.id} c={c} s={s} locale={lang} active={c.id === hoveredId} onHover={setHoveredId} />
-                ))}
-              </div>
-            )}
-            {soldOut.length > 0 && (
-              <>
-                <h3 className="h3 dev-catalog__sold-heading">{soldOutHeading}</h3>
-                <div className="dev-catalog__grid">
-                  {soldOut.map((c) => <ProjectCard key={c.id} c={c} s={s} locale={lang} />)}
-                </div>
-              </>
-            )}
-          </>
-        )}
-      </section>
-
-      {formSlot}
-
       {markers.length > 0 && (
-        <section className="pp-wrap pp-section dev-catalog">
+        <section className="pp-wrap pp-section dev-catalog" data-theme="dark">
           <div className="dev-catalog__mapwrap">
             <ProjectsMap markers={markers} hoveredId={hoveredId} onHover={setHoveredId} locale={lang} strings={s} syncBoundsToUrl={false} />
           </div>
         </section>
       )}
+
+      <section className="pp-wrap pp-section dev-catalog" data-theme="dark">
+        <h2 className="pp-h2">{headline}</h2>
+        {available.length === 0 && soldOut.length === 0 ? (
+          <p className="dev-catalog__empty">{EMPTY[lang] ?? EMPTY.en}</p>
+        ) : (
+          <div className="dev-catalog__grid">
+            {available.map((c) => (
+              <ProjectCard key={c.id} c={c} s={s} locale={lang} active={c.id === hoveredId} onHover={setHoveredId} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {soldOut.length > 0 && (
+        <section className="pp-wrap pp-section dev-catalog" data-theme="dark">
+          <h3 className="pp-h2 dev-catalog__sold-heading">{soldOutHeading}</h3>
+          <div className="dev-catalog__grid">
+            {soldOut.map((c) => <ProjectCard key={c.id} c={c} s={s} locale={lang} />)}
+          </div>
+        </section>
+      )}
+
+      {formSlot}
     </>
   );
 }

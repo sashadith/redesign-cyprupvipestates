@@ -1,12 +1,16 @@
-/* Bündel 3 Teil 2 (2026-08-01) — the developer page's mixed project catalog
-   + journal-style intro. Reuses .pp-wrap/.pp-section/.pp-h2/.h3 (project.css)
-   and .prj (projects.css), and .ins__hero-grid/.ins__eyebrow/.ins__hero-title/
-   .ins__hero-lead (insights.css) — all already imported on this route; only
-   the few rules genuinely new to this surface live here. */
+/* Bündel 3 Teil 2 (2026-08-02) — the developer page's mixed project catalog,
+   map, and journal-style hero+sign. Reuses .pp-wrap/.pp-section/.pp-h2
+   (project.css), .prj (projects.css), and .ins__hero*/.ins__eyebrow/
+   .ins__hero-title/.ins__hero-lead (insights.css) — all already imported on
+   this route; only the few rules genuinely new to this surface live here. */
 
 .dev-catalog__empty { color: var(--text-soft); }
 
-.dev-catalog__sold-heading { margin-top: var(--section-y); }
+/* Sold-out sits in its own .pp-section (see DeveloperProjectsGrid.tsx) so its
+   spacing to the block above/below comes from the SAME .pp-section
+   padding-block every other section boundary on this page already uses —
+   never a guessed margin value on the heading itself. */
+.dev-catalog__sold-heading { margin: 0 0 var(--s-6); }
 
 /* 3-per-row, matching /projects' own card size (not the 4-per-row compact
    "alternatives" strip) — /projects itself uses a fluid auto-fill grid, but
@@ -22,11 +26,40 @@
   overflow: hidden;
 }
 
-/* ---- Journal-style developer intro (DeveloperJournalIntro.tsx) ---- */
-.dev-journal__logo-wrap { display: flex; justify-content: center; align-items: center; }
-.dev-journal__logo {
-  max-width: 160px;
-  width: 100%;
-  height: auto;
-  object-fit: contain;
+/* ---- Journal-style developer hero (DeveloperJournalIntro.tsx) ---- */
+/* Same desktop-only positioning treatment as .ins__hero-art (flex/perspective),
+   but — unlike that class — never display:none below 960px: the logo is
+   information, not decoration, so it stays visible, stacked under the text
+   (.ins__hero-grid already goes single-column below 960px; DOM order does
+   the rest). */
+.dev-sign-slot {
+  display: flex; justify-content: center; align-items: center;
+  position: relative; z-index: 2;
+  margin-top: var(--s-7);
 }
+@media (min-width: 960px) {
+  .dev-sign-slot { align-items: flex-end; perspective: 1800px; margin-top: 0; }
+}
+
+/* ---- DeveloperSignMockup.tsx — built once, reused for every developer ---- */
+.dev-sign {
+  display: flex; flex-direction: column; align-items: center;
+  transform: rotateY(-6deg) rotateX(2deg);
+  transform-style: preserve-3d;
+}
+.dev-sign__board {
+  width: clamp(200px, 22vw, 300px);
+  aspect-ratio: 4 / 3;
+  display: flex; align-items: center; justify-content: center;
+  padding: clamp(16px, 2.2vw, 26px);
+  background: linear-gradient(155deg, var(--paper) 0%, var(--paper-2) 100%);
+  border: 1px solid var(--champagne);
+  border-radius: 10px;
+  box-shadow: 0 24px 48px -20px rgba(34, 28, 21, 0.35), inset 0 0 0 6px rgba(142, 107, 61, 0.08);
+}
+.dev-sign__plate { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+/* Logos vary wildly in proportion (wide/flat vs. near-square) — contain +
+   generous max-width/height keeps every one centered and undistorted. */
+.dev-sign__logo { max-width: 82%; max-height: 78%; width: auto; height: auto; object-fit: contain; }
+.dev-sign__posts { display: flex; gap: clamp(60px, 9vw, 120px); margin-top: -4px; }
+.dev-sign__post { width: 14px; height: clamp(60px, 8vw, 100px); border-radius: 2px; background: linear-gradient(180deg, var(--bronze), var(--ink-warm)); box-shadow: 2px 0 6px rgba(0, 0, 0, 0.25); }

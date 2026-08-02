@@ -1,25 +1,22 @@
 import { urlFor } from "@/sanity/sanity.client";
+import DeveloperSignMockup from "@/app/[lang]/developers/[slug]/DeveloperSignMockup";
 
-// Bündel 3 Teil 2 (2026-08-01) — developer-profile intro, above the project
-// list. Content comes exclusively from the existing Developer profile
-// (content editor) — nothing new authored here: title = developer name,
-// text = excerpt (the short curated summary; the long-form description stays
-// where it already was, further down via FullDescriptionBlock), logo = the
-// existing logo field.
+// Bündel 3 Teil 2 (2026-08-02) — developer-profile hero, full "Journal" style
+// (InsightsIndex.tsx's own hero, "The Journal" eyebrow on /blog): now taken
+// over in its FULL build, including the light "paper" panel (.ins__hero
+// is-light) and its built-in golden-clouds effect (.ins__hero::before/::after
+// — comes for free with the class, not re-implemented here). The one
+// deliberate swap: .ins__hero-art's phone mockup (bespoke, hardcoded site
+// branding, not reusable) is replaced by DeveloperSignMockup — same slot,
+// same desktop-only positioning treatment, but visible on mobile too (the
+// logo is information, not decoration, unlike the phone mockup — see
+// .dev-sign-slot in developer-catalog.css, NOT .ins__hero-art, which hides
+// below 960px).
 //
-// Styled after the Journal ("The Journal" eyebrow on /blog's own hero,
-// InsightsIndex.tsx): reuses ONLY the grid mechanic (.ins__hero-grid) and
-// typography (.ins__eyebrow/.ins__hero-title/.ins__hero-lead) from
-// insights.css — NOT .ins__hero itself (that section is a light "paper"
-// panel; this stays dark, matching the rest of this page, avoiding a second
-// tone-flip right after the photo hero above it) and NOT .ins__hero-art
-// (a bespoke phone-mockup illustration with hardcoded site branding, not a
-// logo slot). The logo gets its own small treatment below.
-//
-// Mobile: unlike the blog hero's decorative art (hidden below 960px), the
-// logo is information, not decoration — .ins__hero-grid already stacks to a
-// single column below 960px, and DOM order (text, then logo) means it lands
-// under the text automatically, never hidden.
+// Content comes exclusively from the existing Developer profile (content
+// editor) — nothing new authored here: title = developer name, text =
+// excerpt (short curated summary; the long-form description stays further
+// down via FullDescriptionBlock), logo = the existing logo field.
 
 const safeUrl = (img: unknown) => {
   try {
@@ -47,19 +44,17 @@ export default function DeveloperJournalIntro({
   const logoUrl = safeUrl(logo);
 
   return (
-    <section className="pp-wrap pp-section dev-journal" data-theme="dark">
-      <div className="ins__hero-grid">
-        <div>
+    <header className="ins__hero is-light">
+      <div className="wrap ins__hero-grid">
+        <div className="ins__hero-text">
           <p className="ins__eyebrow">{EYEBROW[lang] ?? EYEBROW.en}</p>
           <h1 className="ins__hero-title">{title}</h1>
           {excerpt && <p className="ins__hero-lead">{excerpt}</p>}
         </div>
-        {logoUrl && (
-          <div className="dev-journal__logo-wrap">
-            <img className="dev-journal__logo" src={logoUrl} alt={title} />
-          </div>
-        )}
+        <div className="dev-sign-slot">
+          <DeveloperSignMockup logoUrl={logoUrl} alt={title} />
+        </div>
       </div>
-    </section>
+    </header>
   );
 }

@@ -60,27 +60,27 @@ const safeUrl = (img: unknown) => {
   }
 };
 
-// Kontaktformular copy, right under the project list (2026-08-01) — reuses
-// the existing Form component (preview-home/sections/Form.tsx), never a new
-// form.
-const FORM_COPY: Record<string, { title: string; subtitle: string }> = {
+// Kontaktformular copy, right under the project list (2026-08-01, headline
+// gold-word + DE/RU wording corrected 2026-08-02) — reuses the existing Form
+// component (preview-home/sections/Form.tsx), never a new form.
+const FORM_COPY: Record<string, { title: React.ReactNode; subtitle: string }> = {
   en: {
-    title: "Before you decide, talk to us.",
+    title: <>Before <span className="it">you decide</span>, talk to us.</>,
     subtitle:
       "We know this developer's projects in detail — and everyone else's. What really separates one apartment from another isn't in the brochure. We'll tell you, and our guidance costs you nothing extra.",
   },
   de: {
-    title: "Bevor Sie sich entscheiden, sprechen Sie mit uns.",
+    title: <>Bevor <span className="it">Sie entscheiden</span>, sprechen Sie mit uns.</>,
     subtitle:
       "Wir kennen die Projekte dieses Bauträgers genau — und die der anderen. Was die eine Wohnung wirklich von der anderen unterscheidet, sehen Sie im Prospekt nicht. Wir sagen es Ihnen, und unsere Begleitung kostet Sie nichts extra.",
   },
   ru: {
-    title: "Прежде чем решить, поговорите с нами.",
+    title: <>Прежде чем <span className="it">принимать решение</span>, поговорите с нами.</>,
     subtitle:
       "Мы детально знаем проекты этого застройщика — и проекты всех остальных. То, что действительно отличает одну квартиру от другой, в буклете не написано. Мы вам об этом расскажем, а наше сопровождение не будет стоить вам ничего дополнительно.",
   },
   pl: {
-    title: "Zanim zdecydujesz, porozmawiaj z nami.",
+    title: <>Zanim <span className="it">zdecydujesz</span>, porozmawiaj z nami.</>,
     subtitle:
       "Znamy projekty tego dewelopera w szczegółach — i projekty wszystkich pozostałych. To, co naprawdę odróżnia jedno mieszkanie od drugiego, nie jest napisane w folderze. Powiemy Ci to, a nasze wsparcie nic dodatkowo nie kosztuje.",
   },
