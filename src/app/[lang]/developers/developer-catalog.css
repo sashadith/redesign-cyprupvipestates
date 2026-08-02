@@ -194,8 +194,8 @@
    unreadable. See FullDescriptionBlock.tsx for the empty-spacer-block filter
    that does most of the actual work of making this feel less sprawling. */
 .dev-catalog__seo-col {
-  max-width: 1100px;
-  column-count: 2;
+  max-width: 1360px;
+  column-count: 1;
   column-gap: clamp(32px, 4vw, 56px);
   column-rule: 1px solid var(--hairline);
 }
