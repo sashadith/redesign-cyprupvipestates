@@ -72,6 +72,15 @@
    viewport), so raising the px ceiling alone never actually changed the
    rendered height. */
 .dev-catalog__mapwrap { position: relative; width: 100%; height: 600px; --pp-gold-contour: linear-gradient(90deg, transparent, #C29A5E, transparent); }
+/* .pp-map.px-mapwrap (project.css) sets its OWN height — min(51vh, 450px),
+   for the single-property page's own sizing — which silently overrode the
+   600px above, since it's an absolute value, not a percentage inheriting
+   from this wrapper. Confirmed live: the outer .dev-catalog__mapwrap
+   measured 600px while the actual Leaflet container inside it stayed at
+   min(51vh,450px)'s ~421px. Only the height is overridden back to 100%
+   (restoring .px-mapwrap's own generic rule) — the gold contour and
+   everything else .pp-map provides is untouched. */
+.dev-catalog__mapwrap .pp-map.px-mapwrap { height: 100%; }
 
 /* Zoom control was invisible on this map — but ALSO on the reference page
    above, confirmed live: a site-wide legacy rule (globals.css:413,
