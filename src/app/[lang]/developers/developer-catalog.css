@@ -24,8 +24,14 @@
 /* Golden clouds behind the card-grid sections — SAME technique/values as
    .descblock/.casestudies/.faq/.ins__hero (tokens.css/insights.css): shared
    cloudDriftA/cloudDriftB keyframes (defined once, tokens.css), a radial
-   gradient pseudo-element per corner. Not a new effect, reused verbatim. */
-.dev-catalog { position: relative; isolation: isolate; overflow: clip; z-index: 1; }
+   gradient pseudo-element per corner. Not a new effect, reused verbatim —
+   including the ABSENCE of overflow/isolation, which the first attempt added
+   and shouldn't have: the working examples (.pp-about/.pp-units-sec,
+   project.css) are just `position:relative; z-index:0`, nothing more. A
+   clipped, isolated stacking context on a grid section shorter than the
+   cloud's own ~640px diameter clipped the whole thing away — invisible, not
+   just subtle. */
+.dev-catalog { position: relative; z-index: 0; }
 .dev-catalog::before, .dev-catalog::after {
   content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; aspect-ratio: 1; will-change: transform;
   background: radial-gradient(circle, rgba(194, 154, 94, 0.14), rgba(194, 154, 94, 0) 66%);
@@ -39,38 +45,46 @@
    (.pp-mapsection / .pp-map.px-mapwrap::before/::after, project.css). That
    exact rule is scoped under `.pp` (the detail page's own root class, which
    this route doesn't carry), so the gradient value is repeated here — same
-   literal (#C29A5E via transparent), not a new effect. z-index:1000 clears
-   Leaflet's internal panes exactly like the original. The "LIFE NEARBY" POI
+   literal (#C29A5E via transparent), not a new effect. The "LIFE NEARBY" POI
    legend (ProjectsMap.tsx's own .px-poi) belongs to a single property's
    walkability — meaningless once the map shows scattered pins across a
    developer's whole portfolio, so it's hidden here rather than plumbing a
-   new prop through the shared map component. */
+   new prop through the shared map component.
+   z-index:900, NOT 1000 (the original's own value, copied here without
+   checking it against THIS context first) — best diagnosis for the missing
+   top strip AND the missing Leaflet zoom control together: Leaflet's own
+   zoom control (.leaflet-control-container) also sits at z-index:1000, and
+   at a tie something in that fight lost. 900 still clears every Leaflet
+   content pane (tiles/markers/popups top out around 700) while staying
+   under the control layer — verify both are actually fixed on staging. */
 .dev-catalog__mapwrap { position: relative; width: 100%; height: min(51vh, 450px); }
 .dev-catalog__mapwrap .px-mapwrap::before,
 .dev-catalog__mapwrap .px-mapwrap::after {
   content: ""; position: absolute; left: 0; right: 0; height: 1px;
   background: linear-gradient(90deg, transparent, #C29A5E, transparent);
-  z-index: 1000; pointer-events: none;
+  z-index: 900; pointer-events: none;
 }
 .dev-catalog__mapwrap .px-mapwrap::before { top: 0; }
 .dev-catalog__mapwrap .px-mapwrap::after { bottom: 0; }
 .dev-catalog__mapwrap .px-poi { display: none; }
 
 /* ---- Journal-style developer hero (DeveloperJournalIntro.tsx) ---- */
-/* Top and bottom padding share ONE value, kept symmetric (2026-08-02) — was
-   clamp(120px,16vh,210px), halved again on visual review (2026-08-02b, still
-   comfortably clear of the fixed header per Header.module.scss). Scoped to
-   .dev-hero so /blog's own hero is untouched. Compound selector
-   (.ins__hero.dev-hero, NOT .dev-hero alone) is deliberate — .dev-hero alone
-   ties with .ins__hero's own padding rule on specificity, so Next.js's
-   global-CSS chunk order (not guaranteed to match this file's import order
-   across routes) was silently deciding the winner; the first attempt lost
-   that coin flip. Two classes on one selector always outranks one,
-   regardless of file order. */
+/* Top stays .ins__hero's own clamp(120px,16vh,210px) — needed for fixed-
+   header clearance (Header.module.scss) and NOT the thing that was ever
+   reported wrong; only the bottom gap under the lead text was too small
+   originally (clamp(0px,2vw,22px)) and then, on a later "make them equal"
+   round, ended up shrinking the TOP along with it, reducing the hero's
+   total height, which was never the ask. Bottom is now exactly half the
+   top's own clamp — asymmetric on purpose, not equal. Scoped to .dev-hero
+   so /blog's own hero is untouched. Compound selector (.ins__hero.dev-hero,
+   NOT .dev-hero alone) is deliberate — .dev-hero alone ties with .ins__hero's
+   own padding rule on specificity, so Next.js's global-CSS chunk order (not
+   guaranteed to match this file's import order across routes) was silently
+   deciding the winner; the first attempt lost that coin flip. Two classes on
+   one selector always outranks one, regardless of file order. */
 .ins__hero.dev-hero {
-  --dev-hero-y: clamp(60px, 8vh, 105px);
-  padding-top: var(--dev-hero-y);
-  padding-bottom: var(--dev-hero-y);
+  padding-top: clamp(120px, 16vh, 210px);
+  padding-bottom: clamp(60px, 8vh, 105px);
 }
 .dev-hero .ins__hero-title { font-size: var(--text-h1); }
 
