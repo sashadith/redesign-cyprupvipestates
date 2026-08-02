@@ -236,7 +236,22 @@ const DeveloperPage = async ({ params }: Props) => {
       {/* <SchemaMarkup project={developer} /> */}
       <DeveloperSchemaMarkup developer={developer} pageUrl={pageUrl} />
       <Header params={params} translations={translations} />
-      <main>
+      <main className="dev-atmos-root">
+        {/* Golden clouds live on ONE shared page-background layer (2026-08-02g),
+            not per-section pseudo-elements — those got hard-clipped by
+            whichever container's overflow:hidden happened to be nearest,
+            since the clouds' own visible radius routinely exceeds a single
+            section's edge distance. Same architecture as .pp-atmos (the
+            project detail page's own page-wide clouds, project.css): one
+            absolutely-positioned layer behind everything, sized to this
+            page's full content height, clipped only at the page's own
+            edges — never close enough to a cloud's visible portion to cut
+            it. */}
+        <div className="dev-atmos" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
         <DeveloperJournalIntro
           lang={lang}
           title={developer.title}
