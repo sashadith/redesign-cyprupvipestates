@@ -25,13 +25,21 @@
    .descblock/.casestudies/.faq/.ins__hero (tokens.css/insights.css): shared
    cloudDriftA/cloudDriftB keyframes (defined once, tokens.css), a radial
    gradient pseudo-element per corner. Not a new effect, reused verbatim —
-   including the ABSENCE of overflow/isolation, which the first attempt added
-   and shouldn't have: the working examples (.pp-about/.pp-units-sec,
+   including the ABSENCE of a full `overflow` cut, which an earlier attempt
+   added and shouldn't have: the working examples (.pp-about/.pp-units-sec,
    project.css) are just `position:relative; z-index:0`, nothing more. A
    clipped, isolated stacking context on a grid section shorter than the
    cloud's own ~640px diameter clipped the whole thing away — invisible, not
-   just subtle. */
-.dev-catalog { position: relative; z-index: 0; }
+   just subtle.
+   overflow-x (ONLY x, not the y that broke visibility before) was added
+   later (2026-08-02f) — this section's own ::after bleeds past its right
+   edge by design (right:-10%), same as .ins__hero's own clouds do, and nothing
+   upstream of this page (main/body/html) clips horizontal overflow, so it
+   was silently widening the whole page and enabling a horizontal scrollbar.
+   Confirmed live (window.scrollX stayed 0 after scrolling far right) that
+   clipping only the X axis here removes that without touching the
+   top/bottom bleed the vertical fix depends on. */
+.dev-catalog { position: relative; z-index: 0; overflow-x: hidden; }
 .dev-catalog::before, .dev-catalog::after {
   content: ""; position: absolute; z-index: -1; pointer-events: none; border-radius: 50%; aspect-ratio: 1; will-change: transform;
   background: radial-gradient(circle, rgba(194, 154, 94, 0.14), rgba(194, 154, 94, 0) 66%);
@@ -109,6 +117,13 @@
 .ins__hero.dev-hero {
   padding-top: clamp(120px, 16vh, 210px);
   padding-bottom: clamp(60px, 8vh, 105px);
+  /* .ins__hero::after (insights.css) bleeds past the hero's own right edge
+     by design (right:-10%) — fine on /blog, apparently clipped upstream
+     there, but nothing on this route clips horizontal overflow, so it was
+     silently widening the whole page (confirmed live: page could scroll
+     ~160px right into empty space). x-only, so the top/bottom cloud bleed
+     is untouched. */
+  overflow-x: hidden;
 }
 .dev-hero .ins__hero-title { font-size: var(--text-h1); }
 
