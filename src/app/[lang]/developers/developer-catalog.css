@@ -1,7 +1,7 @@
 /* Bündel 3 Teil 2 (2026-08-02) — the developer page's mixed project catalog,
    map, and journal-style hero+sign. Reuses .pp-wrap/.pp-section/.pp-h2
-   (project.css), .prj (projects.css), and .ins__hero*/.ins__eyebrow/
-   .ins__hero-title/.ins__hero-lead (insights.css) — all already imported on
+   (project.css), .prj (projects.css), and .ins__hero, .ins__eyebrow,
+   .ins__hero-title, .ins__hero-lead (insights.css) — all already imported on
    this route; only the few rules genuinely new to this surface live here. */
 
 .dev-catalog__empty { color: var(--text-soft); }
