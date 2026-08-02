@@ -49,42 +49,34 @@
 .dev-catalog::after { width: min(48vw, 560px); right: -10%; bottom: -100px; animation: cloudDriftB 33s ease-in-out infinite alternate; }
 @media (prefers-reduced-motion: reduce) { .dev-catalog::before, .dev-catalog::after { animation: none; } }
 
-/* ---- Map: full-width (edge-to-edge, no card panel), thin gold-gradient
-   strip top+bottom — same value as the project detail page's own map
-   contour (.pp-map.px-mapwrap::before/::after, project.css; that exact rule
-   is scoped under `.pp`, which this route doesn't carry, so the literal
-   gradient is repeated here, not a new effect). Real sibling DOM elements
-   (DeveloperProjectsGrid.tsx: dev-catalog__map-goldline--top/--bottom),
-   NOT pseudo-elements on .px-mapwrap — confirmed live via Chrome DevTools
-   (2026-08-02d) that a 1px hairline reads fine against the light hero panel
-   above (high inherent contrast) but is practically invisible against the
-   dark map/dark next-section seam below (both sides similar luminance) —
-   not a rendering bug, a genuine low-contrast case. 2px + a soft glow
-   (box-shadow, same gold) fixes the dark seam without overpowering the
-   light one, confirmed both live before committing this value. The "LIFE
-   NEARBY" POI legend (ProjectsMap.tsx's own .px-poi) belongs to a single
-   property's walkability — meaningless once the map shows scattered pins
-   across a developer's whole portfolio, so it's hidden here rather than
-   plumbing a new prop through the shared map component. */
-.dev-catalog__mapwrap { position: relative; width: 100%; height: min(51vh, 450px); }
-.dev-catalog__map-goldline {
-  position: absolute; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, transparent, #E0B876, transparent);
-  box-shadow: 0 0 14px 3px rgba(194, 154, 94, 0.85);
-  z-index: 5; pointer-events: none;
-}
-.dev-catalog__map-goldline--top { top: 0; }
-.dev-catalog__map-goldline--bottom { bottom: 0; }
-.dev-catalog__mapwrap .px-poi { display: none; }
+/* ---- Map: same construction as the project detail page's own map
+   (2026-08-02e — verified live against cyprusvipestates.com/projects/gravity
+   in Chrome DevTools, then matched exactly rather than approximated).
+   ProjectsMap now takes className="pp-map" (see ProjectsMap.tsx) so the
+   REAL, existing .pp-map.px-mapwrap::before/::after gold contour rule
+   (project.css) applies unmodified — no custom goldline elements, no glow,
+   the earlier attempts at both were working around not having found this
+   rule was reusable at all. That rule reads var(--pp-gold-contour), defined
+   on .pp (the project detail page's own root class, which this route
+   doesn't carry) — redefined here on .dev-catalog__mapwrap instead of
+   wrapping in .pp (which also sets min-height:100vh and other page-root
+   assumptions this isn't). tileStyle="layered" reuses PropertyMap.tsx's
+   exact tile treatment (dark_nolabels base + filtered dark_only_labels
+   overlay + Sea-Deep tint pane) via the SAME .pp-map__base/.pp-map__labels/
+   .pp-map__tint rules (project.css) — this section already carries
+   .pp-mapsection, which those rules are scoped under, so no new CSS was
+   needed for them. "LIFE NEARBY" (.px-poi) is intentionally left alone —
+   no override here — so ProjectsMap's own default (visible) stands. */
+.dev-catalog__mapwrap { position: relative; width: 100%; height: min(51vh, 450px); --pp-gold-contour: linear-gradient(90deg, transparent, #C29A5E, transparent); }
 
-/* Zoom controls were invisible everywhere on this map, confirmed via Chrome
-   DevTools (2026-08-02d) to be a site-wide legacy rule — globals.css:413,
-   `.leaflet-control { display: none !important; }`, written for the OLD
-   map implementation (the .projects-map__wrapper right below it in that
-   file) and never scoped to it, so it silently suppresses every Leaflet
-   control on any page, including this new one. Not touching the global
-   rule itself (unknown whether something else still depends on it); this
-   scoped override just wins back this one map. */
+/* Zoom control was invisible on this map — but ALSO on the reference page
+   above, confirmed live: a site-wide legacy rule (globals.css:413,
+   `.leaflet-control { display: none !important; }`, written for the old
+   map implementation and never scoped to it) suppresses every Leaflet
+   control everywhere. Not touching the global rule itself (unknown whether
+   something else still depends on it); this scoped override wins the
+   control back just for this map, per explicit request even though the
+   reference page itself doesn't show it either. */
 .dev-catalog__mapwrap .leaflet-control { display: block !important; }
 
 /* ---- Journal-style developer hero (DeveloperJournalIntro.tsx) ---- */
