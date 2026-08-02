@@ -1203,7 +1203,23 @@ async function queryFilteredRows(lang: string, f: ProjectFilters) {
   const projectRows = rows
     .filter((p) => p.previewImage && (!bedrooms || bedroomsMatch(p.bedrooms, bedrooms)))
     .map((p) => ({ ...p, _source: "project" as const }));
-  const devRows = await queryFilteredDevelopmentRows(f);
+  // The public /projects listing/search excludes sold-out Developments
+  // entirely (2026-08-02) rather than just sorting them last — legacy sold
+  // Projects are already excluded above via isSold: false. Sold-out items
+  // stay reachable via their developer page and direct URL, and stay in the
+  // sitemap (generateDevelopmentsSitemap queries prisma.development directly,
+  // an unrelated data path — see src/app/sitemaps/[type]/route.ts). unitsAvailable/
+  // unitsTotal here are already live-computed from the loaded units relation
+  // (mapDevelopmentRowToCard), never the unreliable Development.unitsAvailable/
+  // unitsTotal cache columns. Scoped to THIS function only — computeFilteredProjects
+  // (admin projectsSection/landingProjects content blocks) calls
+  // queryFilteredDevelopmentRows directly and deliberately keeps sold-out
+  // Developments (pushed last via sortProjectsRecommended's pushSoldOutLast),
+  // matching how it already treats sold legacy Projects; don't move this
+  // filter into queryFilteredDevelopmentRows itself, that would change that
+  // surface too.
+  const devRows = (await queryFilteredDevelopmentRows(f))
+    .filter((d) => !soldOutFromCounts(d.unitsAvailable, d.unitsTotal));
   return [...projectRows, ...devRows];
 }
 
