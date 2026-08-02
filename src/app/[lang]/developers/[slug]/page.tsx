@@ -1,10 +1,16 @@
+import "@/app/preview-home/tokens.css";
+import "@/app/preview-projects/projects.css";
+import "@/app/preview-project/project.css";
+import "@/app/preview-insights/insights.css";
+import "@/app/[lang]/developers/developer-catalog.css";
+
 import React from "react";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import {
   getFormStandardDocumentByLang,
   getDeveloperByLang,
-  getProjectsByDeveloper,
+  getDeveloperCatalogByLang,
   getNotFoundPageByLang,
   getDeveloperSlugs,
   ALL_LOCALES,
@@ -27,21 +33,58 @@ import PropertyDistances from "@/app/components/PropertyDistances/PropertyDistan
 import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
 import { FormStandardDocument } from "@/types/formStandardDocument";
 import PropertyFeatures from "@/app/components/PropertyFeatures/PropertyFeatures";
-import { ButtonModal } from "@/app/components/ButtonModal/ButtonModal";
 import { urlFor } from "@/sanity/sanity.client";
-import FormStatic from "@/app/components/FormStatic/FormStatic";
 import FullDescriptionBlock from "@/app/components/FullDescriptionBlock/FullDescriptionBlock";
 import SchemaMarkup from "@/app/components/SchemaMarkup/SchemaMarkup";
 import PropertyDescription from "@/app/components/PropertyDescription/PropertyDescription";
-import DeveloperIntro from "@/app/components/DeveloperIntro/DeveloperIntro";
-import ProjectLink from "@/app/components/ProjectLink/ProjectLink";
+import DeveloperJournalIntro from "@/app/[lang]/developers/[slug]/DeveloperJournalIntro";
+import DevAtmosphere from "@/app/[lang]/developers/[slug]/DevAtmosphere";
+import DeveloperProjectsGrid, { type DeveloperProjectCardData } from "@/app/[lang]/developers/[slug]/DeveloperProjectsGrid";
+import type { MapMarker } from "@/app/preview-projects/ProjectsExplorer";
+import Form from "@/app/preview-home/sections/Form";
 import DeveloperSchemaMarkup from "@/app/components/DeveloperSchemaMarkup/DeveloperSchemaMarkup";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 import NotFoundPageComponent from "@/app/components/NotFoundPageComponent/NotFoundPageComponent";
 import { abs, localizedPath, languageAlternates, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import { localizedHref } from "@/lib/locale";
+import { resolveCompletionYear } from "@/lib/text";
 
 type Props = {
   params: { lang: string; slug: string };
+};
+
+const safeUrl = (img: unknown) => {
+  try {
+    return urlFor(img as never).url();
+  } catch {
+    return undefined;
+  }
+};
+
+// Kontaktformular copy, right under the project list (2026-08-01, headline
+// gold-word + DE/RU wording corrected 2026-08-02) — reuses the existing Form
+// component (preview-home/sections/Form.tsx), never a new form.
+const FORM_COPY: Record<string, { title: React.ReactNode; subtitle: string }> = {
+  en: {
+    title: <>Before <span className="it">you decide</span>, talk to us.</>,
+    subtitle:
+      "We know this developer's projects in detail — and everyone else's. What really separates one apartment from another isn't in the brochure. We'll tell you, and our guidance costs you nothing extra.",
+  },
+  de: {
+    title: <>Bevor <span className="it">Sie entscheiden</span>, sprechen Sie mit uns.</>,
+    subtitle:
+      "Wir kennen die Projekte dieses Bauträgers genau — und die der anderen. Was die eine Wohnung wirklich von der anderen unterscheidet, sehen Sie im Prospekt nicht. Wir sagen es Ihnen, und unsere Begleitung kostet Sie nichts extra.",
+  },
+  ru: {
+    title: <>Прежде чем <span className="it">принимать решение</span>, поговорите с нами.</>,
+    subtitle:
+      "Мы детально знаем проекты этого застройщика — и проекты всех остальных. То, что действительно отличает одну квартиру от другой, в буклете не написано. Мы вам об этом расскажем, а наше сопровождение не будет стоить вам ничего дополнительно.",
+  },
+  pl: {
+    title: <>Zanim <span className="it">zdecydujesz</span>, porozmawiaj z nami.</>,
+    subtitle:
+      "Znamy projekty tego dewelopera w szczegółach — i projekty wszystkich pozostałych. To, co naprawdę odróżnia jedno mieszkanie od drugiego, nie jest napisane w folderze. Powiemy Ci to, a nasze wsparcie nic dodatkowo nie kosztuje.",
+  },
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -92,7 +135,53 @@ const DeveloperPage = async ({ params }: Props) => {
     notFound();
   }
 
-  const projects = await getProjectsByDeveloper(lang, developer._id);
+  const catalog = await getDeveloperCatalogByLang(lang, developer._id);
+  const toCardData = (items: typeof catalog.available): DeveloperProjectCardData[] =>
+    items.map((p) => {
+      const kf = p.keyFeatures ?? {};
+      const cardSlug = p.slug?.current ?? "";
+      return {
+        id: p._id,
+        title: p.title,
+        href: cardSlug ? localizedHref(lang, ["projects", cardSlug]) : "#",
+        image: p._source === "development" ? (p.previewImage as string | undefined) : safeUrl(p.previewImage),
+        city: kf.city ?? "",
+        price: typeof kf.price === "number" ? kf.price : Number(kf.price) || null,
+        bedrooms: kf.bedrooms ?? "",
+        area: kf.coveredArea ?? "",
+        type: kf.propertyType ?? "",
+        energy: kf.energyEfficiency ?? "",
+        completion: resolveCompletionYear(kf.completionDate),
+        isNew: !!p.isNew,
+        isFeatured: !!p.isFeatured,
+        distances: p.distances ?? null,
+        vatApplies: p._source === "development" ? (kf.vatApplies ?? null) : undefined,
+        unitsAvailable: p.unitsAvailable,
+        unitsTotal: p.unitsTotal,
+      };
+    });
+  const availableCards = toCardData(catalog.available);
+  const soldOutCards = toCardData(catalog.soldOut);
+
+  // Map markers: available projects only — a sold-out pin is a dead end (same
+  // principle /projects itself already applies, see getFilteredProjectLocationsByLang).
+  const markers: MapMarker[] = catalog.available
+    .filter((p) => p.latitude != null && p.longitude != null)
+    .map((p) => {
+      const kf = p.keyFeatures ?? {};
+      const cardSlug = p.slug?.current ?? "";
+      return {
+        id: p._id,
+        title: p.title,
+        href: cardSlug ? localizedHref(lang, ["projects", cardSlug]) : "#",
+        city: kf.city ?? "",
+        price: typeof kf.price === "number" ? kf.price : Number(kf.price) || null,
+        lat: p.latitude as number,
+        lng: p.longitude as number,
+        image: p._source === "development" ? (p.previewImage as string | undefined) : safeUrl(p.previewImage),
+        distances: p.distances ?? null,
+      };
+    });
 
   // const pageUrl = `/${lang}/developers/${developer.slug[lang].current}`;
 
@@ -141,80 +230,42 @@ const DeveloperPage = async ({ params }: Props) => {
       : acc;
   }, []);
 
+  const formCopy = FORM_COPY[lang] ?? FORM_COPY.en;
+
   return (
     <>
       {/* <SchemaMarkup project={developer} /> */}
       <DeveloperSchemaMarkup developer={developer} pageUrl={pageUrl} />
       <Header params={params} translations={translations} />
-      <main>
-        <DeveloperIntro
-          titleFull={developer.titleFull}
+      <main className="dev-atmos-root">
+        {/* Golden clouds live on ONE shared page-background layer (2026-08-02g),
+            not per-section pseudo-elements — those got hard-clipped by
+            whichever container's overflow:hidden happened to be nearest,
+            since the clouds' own visible radius routinely exceeds a single
+            section's edge distance. Same architecture as .pp-atmos (the
+            project detail page's own page-wide clouds, project.css): one
+            absolutely-positioned layer behind everything, sized to this
+            page's full content height, clipped only at the page's own
+            edges — never close enough to a cloud's visible portion to cut
+            it. Positions/sizes are generated client-side (DevAtmosphere,
+            2026-08-02h) since they depend on this page's actual rendered
+            height, which varies hugely by developer. */}
+        <DevAtmosphere />
+        <DeveloperJournalIntro
+          lang={lang}
+          title={developer.title}
           excerpt={developer.excerpt}
           logo={developer.logo}
         />
-        <section className="">
-          <div className="container">
-            <h2 className="h2-white">
-              {lang === "en"
-                ? `Projects of developer ${developer.title}`
-                : lang === "de"
-                  ? `Projekte des Entwicklers ${developer.title}`
-                  : lang === "pl"
-                    ? `Projekty dewelopera ${developer.title}`
-                    : lang === "ru"
-                      ? `Проекты застройщика ${developer.title}`
-                      : `Projects of developer ${developer.title}`}
-            </h2>
-            <div className="projectsDeveloper">
-              {projects.length ? (
-                projects.map((project) => (
-                  <div key={project._id}>
-                    <ProjectLink
-                      url={localizedPath(lang, ["projects", project.slug[lang].current])}
-                      previewImage={project.previewImage}
-                      title={project.title}
-                      price={project.keyFeatures.price}
-                      bedrooms={parseFloat(project.keyFeatures.bedrooms)} // Преобразование строки в число
-                      coveredArea={parseFloat(project.keyFeatures.coveredArea)} // Преобразование строки в число
-                      plotSize={parseFloat(project.keyFeatures.plotSize)} // Преобразование строки в число
-                      lang={params.lang}
-                      isSold={project.isSold}
-                    />
-                  </div>
-                ))
-              ) : (
-                <p>
-                  {lang === "en"
-                    ? "No projects available for this developer."
-                    : lang === "de"
-                      ? "Keine Projekte für diesen Entwickler verfügbar."
-                      : lang === "pl"
-                        ? "Brak projektów dostępnych dla tego dewelopera."
-                        : lang === "ru"
-                          ? "Нет доступных проектов для этого застройщика."
-                          : "No projects available for this developer."}
-                </p>
-              )}
-            </div>
-          </div>
-        </section>
-        <FormStatic lang={params.lang} />
+        <DeveloperProjectsGrid
+          available={availableCards}
+          soldOut={soldOutCards}
+          markers={markers}
+          lang={lang}
+          developerName={developer.title}
+          formSlot={<Form lang={lang} title={formCopy.title} subtitle={formCopy.subtitle} />}
+        />
         <FullDescriptionBlock description={developer.description} />
-        <div className="container">
-          <div className="developers-button">
-            <ButtonModal>
-              {lang === "en"
-                ? "Buy property from this developer now!"
-                : lang === "de"
-                  ? "Kaufen Sie jetzt eine Immobilie von diesem Entwickler!"
-                  : lang === "pl"
-                    ? "Kup teraz nieruchomość od tego dewelopera!"
-                    : lang === "ru"
-                      ? "Купите недвижимость у этого застройщика!"
-                      : "Buy property from this developer now!"}
-            </ButtonModal>
-          </div>
-        </div>
       </main>
       <Footer params={params} />
       <ModalBrochure lang={params.lang} formDocument={formDocument} />

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Tooltip, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Tooltip, Pane, useMap } from "react-leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import { useRouter, useSearchParams } from "next/navigation";
 import L from "leaflet";
@@ -397,12 +397,33 @@ export default function ProjectsMap({
   onHover,
   locale = "en",
   strings,
+  // Writes the visible bbox to the URL for the /projects catalog's own
+  // server-side bbox refetch (BoundsSync below). A caller embedding this map
+  // for an already-fixed marker set (e.g. the developer page, Bündel 3 Teil
+  // 2) has no bbox route to refetch against — default true keeps every
+  // existing /projects usage byte-identical; pass false to skip the
+  // otherwise-inert URL writes.
+  syncBoundsToUrl = true,
+  // Extra class on the root .px-mapwrap div — e.g. "pp-map" to opt into the
+  // project detail page's gold contour (.pp-map.px-mapwrap::before/::after,
+  // project.css). Empty by default, so /projects' own usage is unchanged.
+  className = "",
+  // "unified" (default, /projects' own look): one dark_all tile layer with
+  // labels baked in. "layered": PropertyMap.tsx's treatment (dark_nolabels
+  // base + a separately-filtered dark_only_labels overlay + a Sea-Deep tint
+  // pane below the markers) — reused verbatim, not reinvented, for callers
+  // that want the property-detail page's exact map styling (e.g. the
+  // developer page, Bündel 3 Teil 2).
+  tileStyle = "unified",
 }: {
   markers: MapMarker[];
   hoveredId: string | null;
   onHover: (id: string | null) => void;
   locale?: string;
   strings?: ProjectsStrings;
+  syncBoundsToUrl?: boolean;
+  className?: string;
+  tileStyle?: "unified" | "layered";
 }) {
   const s = strings ?? projectsStrings(locale);
   const items = validMarkers(markers);
@@ -465,7 +486,7 @@ export default function ProjectsMap({
     });
 
   return (
-    <div className="px-mapwrap">
+    <div className={`px-mapwrap${className ? ` ${className}` : ""}`}>
       <MapContainer
         center={CYPRUS_CENTER}
         zoom={9}
@@ -475,12 +496,36 @@ export default function ProjectsMap({
         className="px-leaflet"
         style={{ height: "100%", width: "100%" }}
       >
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        subdomains="abcd"
-        maxZoom={20}
-      />
+      {tileStyle === "layered" ? (
+        <>
+          {/* label-free dark base → cleaner, tinted to Sea-Deep in CSS */}
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+            subdomains="abcd"
+            maxZoom={20}
+            className="pp-map__base"
+          />
+          <TileLayer
+            url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
+            subdomains="abcd"
+            maxZoom={20}
+            className="pp-map__labels"
+            pane="overlayPane"
+          />
+          {/* Sea-Deep wash over the tiles (below markers, so pins stay crisp) */}
+          <Pane name="seatint" style={{ zIndex: 350 }}>
+            <div className="pp-map__tint" />
+          </Pane>
+        </>
+      ) : (
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          subdomains="abcd"
+          maxZoom={20}
+        />
+      )}
 
       <MarkerClusterGroup chunkedLoading showCoverageOnHover={false} maxClusterRadius={48}>
         {items.map((m) => (
@@ -551,7 +596,7 @@ export default function ProjectsMap({
 
       <GestureZoom locale={locale} />
       <InvalidateOnOpen />
-      <BoundsSync />
+      {syncBoundsToUrl && <BoundsSync />}
       <FitBounds markers={items} />
       <PoiLayers active={poiActive} onState={setPoiState} />
     </MapContainer>

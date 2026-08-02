@@ -1,0 +1,229 @@
+/* Bündel 3 Teil 2 (2026-08-02) — the developer page's mixed project catalog,
+   map, journal-style hero+sign, and SEO description. Reuses .pp-wrap/
+   .pp-section/.pp-mapsection/.pp-h2 (project.css), .prj (projects.css),
+   .ins__hero/.ins__eyebrow/.ins__hero-title/.ins__hero-lead (insights.css),
+   and .iart__* article typography (insightsBlocks.tsx's insightsComponents)
+   — all already imported/reused on this route; only the few rules genuinely
+   new to this surface live here. */
+
+.dev-catalog__empty { color: var(--text-soft); }
+
+/* Sold-out sits in its own .pp-section (see DeveloperProjectsGrid.tsx) so its
+   spacing to the block above/below comes from the SAME .pp-section
+   padding-block every other section boundary on this page already uses —
+   never a guessed margin value on the heading itself. */
+.dev-catalog__sold-heading { margin: 0 0 var(--s-6); }
+
+/* 3-per-row, matching /projects' own card size (not the 4-per-row compact
+   "alternatives" strip) — /projects itself uses a fluid auto-fill grid, but
+   a fixed 3-up reads calmer for a single developer's bounded project count. */
+.dev-catalog__grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(12px, 1.4vw, 20px); }
+@media (max-width: 900px) { .dev-catalog__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .dev-catalog__grid { grid-template-columns: 1fr; } }
+
+/* Golden clouds used to live here as per-section pseudo-elements — retired
+   (2026-08-02g). They kept getting hard-clipped by whichever container's
+   overflow:hidden happened to be nearest (needed to stop them widening the
+   whole page — see the horizontal-scroll fix this replaces), which cut
+   visibly into the clouds' own still-opaque inner portion, not just their
+   already-transparent fringe. See .dev-atmos below (page-bottom of this
+   file) for the replacement: one shared background layer, page-wide, never
+   close enough to any edge to clip visibly. */
+.dev-catalog { position: relative; z-index: 0; }
+
+/* ---- Map: same construction as the project detail page's own map
+   (2026-08-02e — verified live against cyprusvipestates.com/projects/gravity
+   in Chrome DevTools, then matched exactly rather than approximated).
+   ProjectsMap now takes className="pp-map" (see ProjectsMap.tsx) so the
+   REAL, existing .pp-map.px-mapwrap::before/::after gold contour rule
+   (project.css) applies unmodified — no custom goldline elements, no glow,
+   the earlier attempts at both were working around not having found this
+   rule was reusable at all. That rule reads var(--pp-gold-contour), defined
+   on .pp (the project detail page's own root class, which this route
+   doesn't carry) — redefined here on .dev-catalog__mapwrap instead of
+   wrapping in .pp (which also sets min-height:100vh and other page-root
+   assumptions this isn't). tileStyle="layered" reuses PropertyMap.tsx's
+   exact tile treatment (dark_nolabels base + filtered dark_only_labels
+   overlay + Sea-Deep tint pane) via the SAME .pp-map__base/.pp-map__labels/
+   .pp-map__tint rules (project.css) — this section already carries
+   .pp-mapsection, which those rules are scoped under, so no new CSS was
+   needed for them. "LIFE NEARBY" (.px-poi) is intentionally left alone —
+   no override here — so ProjectsMap's own default (visible) stands. */
+/* Fixed 600px (not min(51vh, 600px)) — that formula's 51vh side rarely
+   clears 600px on any real browser window (would need a >1176px-tall
+   viewport), so raising the px ceiling alone never actually changed the
+   rendered height. */
+.dev-catalog__mapwrap { position: relative; width: 100%; height: 600px; --pp-gold-contour: linear-gradient(90deg, transparent, #C29A5E, transparent); }
+/* .pp-map.px-mapwrap (project.css) sets its OWN height — min(51vh, 450px),
+   for the single-property page's own sizing — which silently overrode the
+   600px above, since it's an absolute value, not a percentage inheriting
+   from this wrapper. Confirmed live: the outer .dev-catalog__mapwrap
+   measured 600px while the actual Leaflet container inside it stayed at
+   min(51vh,450px)'s ~421px. Only the height is overridden back to 100%
+   (restoring .px-mapwrap's own generic rule) — the gold contour and
+   everything else .pp-map provides is untouched. */
+.dev-catalog__mapwrap .pp-map.px-mapwrap { height: 100%; }
+
+/* Zoom control was invisible on this map — but ALSO on the reference page
+   above, confirmed live: a site-wide legacy rule (globals.css:413,
+   `.leaflet-control { display: none !important; }`, written for the old
+   map implementation and never scoped to it) suppresses every Leaflet
+   control everywhere. Not touching the global rule itself (unknown whether
+   something else still depends on it); this scoped override wins the
+   control back just for this map, per explicit request even though the
+   reference page itself doesn't show it either. */
+.dev-catalog__mapwrap .leaflet-control { display: block !important; }
+
+/* ---- Journal-style developer hero (DeveloperJournalIntro.tsx) ---- */
+/* Top stays .ins__hero's own clamp(120px,16vh,210px) — needed for fixed-
+   header clearance (Header.module.scss) and NOT the thing that was ever
+   reported wrong; only the bottom gap under the lead text was too small
+   originally (clamp(0px,2vw,22px)) and then, on a later "make them equal"
+   round, ended up shrinking the TOP along with it, reducing the hero's
+   total height, which was never the ask. Bottom is now exactly half the
+   top's own clamp — asymmetric on purpose, not equal. Scoped to .dev-hero
+   so /blog's own hero is untouched. Compound selector (.ins__hero.dev-hero,
+   NOT .dev-hero alone) is deliberate — .dev-hero alone ties with .ins__hero's
+   own padding rule on specificity, so Next.js's global-CSS chunk order (not
+   guaranteed to match this file's import order across routes) was silently
+   deciding the winner; the first attempt lost that coin flip. Two classes on
+   one selector always outranks one, regardless of file order. */
+.ins__hero.dev-hero {
+  padding-top: clamp(120px, 16vh, 210px);
+  padding-bottom: clamp(60px, 8vh, 105px);
+}
+.dev-hero .ins__hero-title { font-size: var(--text-h1); }
+/* .ins__hero's own clouds (insights.css) are retired here — .dev-atmos below
+   covers this whole page including the hero, so keeping both would double
+   them up, and .ins__hero::after's own right:-10% bleed was what caused the
+   whole-page horizontal-scroll bug in the first place (nothing on this
+   route clipped it). /blog itself is untouched — this is scoped to
+   .dev-hero only. Compound selector (.ins__hero.dev-hero::before, NOT
+   .dev-hero::before alone) for the same reason as every other override on
+   this page — a single-class selector ties .ins__hero::before's own
+   specificity and can lose the cascade-order coin flip; confirmed live that
+   the first version of this rule did exactly that (content stayed "", not
+   none). Two classes always outranks one, file order notwithstanding. */
+.ins__hero.dev-hero::before, .ins__hero.dev-hero::after { content: none; }
+
+/* Same desktop-only positioning treatment as .ins__hero-art (flex), but —
+   unlike that class — never display:none below 960px: the logo is
+   information, not decoration, so it stays visible, stacked under the text
+   (.ins__hero-grid already goes single-column below 960px; DOM order does
+   the rest). At 960px+ it stretches to the grid row's full height so the
+   sign's posts (below) can reach all the way to the panel's own edge. */
+.dev-sign-slot {
+  display: flex; justify-content: center;
+  position: relative; z-index: 2;
+  margin-top: var(--s-7);
+}
+@media (min-width: 960px) {
+  .dev-sign-slot { align-self: stretch; align-items: stretch; margin-top: 0; }
+}
+
+/* No dark strip between the hero panel and the map (2026-08-02) — the map
+   section's own top padding is zeroed here (bottom kept, for normal spacing
+   before the grid below) so the gold contour at its top edge sits exactly on
+   the hero/map boundary instead of floating in a dark gap. See
+   DeveloperProjectsGrid.tsx, which adds this class alongside .pp-mapsection.
+   Compound selector for the same reason as .ins__hero.dev-hero above —
+   .dev-map-section alone ties .pp-mapsection's own padding-block on
+   specificity and lost that tie the first time. */
+.pp-mapsection.dev-map-section { padding-top: 0; }
+
+/* ---- DeveloperSignMockup.tsx — built once, reused for every developer ---- */
+/* v3 (2026-08-02): 2:1 board, stronger 3D tilt, posts stretching to the hero
+   panel's own bottom edge and fading to transparent there (mask-image) so
+   they visually sink into the panel rather than ending on a hard edge.
+   Logo now sits DIRECTLY on the sea-deep board (#142E2D) — no light backing
+   chip, per explicit instruction. Flagged and still true: Cybarco/Korantina
+   Homes/Imperio Properties/AGG Luxury Homes use dark-colored logos (avg
+   pixel luminance 45-100 out of 255, vs. Aristo's white logo at 216) that
+   will be hard to read directly on #142E2D with no protective backing. */
+.dev-sign {
+  width: 100%;
+  max-width: 460px;
+  display: flex; flex-direction: column; align-items: center;
+  transform: perspective(1000px) rotateY(-26deg) rotateX(3deg);
+}
+@media (min-width: 960px) { .dev-sign { height: 100%; } }
+.dev-sign__board {
+  flex: 0 0 auto;
+  position: relative;
+  width: 100%;
+  /* height-driven (not width-driven): keeps the SAME height as the old 16:9
+     board (clamp(200px,22vw,300px) wide * 9/16) while the 2:1 ratio makes it
+     wider, per "breiter, ohne die Höhe zu ändern". */
+  height: clamp(112px, 12.4vw, 169px);
+  aspect-ratio: 2 / 1;
+  display: flex; align-items: center; justify-content: center;
+  padding: clamp(14px, 2vw, 22px);
+  background: linear-gradient(160deg, #142E2D 0%, #0E211F 100%);
+  border: 1px solid var(--champagne);
+  border-radius: 8px;
+  box-shadow: 0 30px 60px -22px rgba(8, 12, 11, 0.55), inset 0 0 0 1px rgba(194, 154, 94, 0.22);
+}
+.dev-sign__plate { display: inline-flex; align-items: center; justify-content: center; }
+/* Logos vary wildly in proportion (wide/flat vs. near-square) — contain +
+   generous max-width/height keeps every one centered and undistorted. */
+.dev-sign__logo { max-width: clamp(140px, 15vw, 220px); max-height: clamp(40px, 5.4vw, 64px); width: auto; height: auto; object-fit: contain; }
+.dev-sign__posts { flex: 0 0 auto; display: flex; justify-content: space-between; width: 78%; margin: -2px auto 0; height: clamp(46px, 8vw, 70px); }
+@media (min-width: 960px) { .dev-sign__posts { flex: 1 1 auto; height: auto; } }
+/* Fade to transparent toward the bottom — sinks into the hero panel instead
+   of ending on a hard-cut edge. */
+.dev-sign__post {
+  width: 12px; border-radius: 2px;
+  background: linear-gradient(180deg, var(--bronze), var(--ink-warm));
+  -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+}
+
+/* ---- SEO description (FullDescriptionBlock.tsx) ---- */
+/* Two-column magazine layout (2026-08-02b) — a single ~68ch column left most
+   of this wide dark section empty. CSS columns need no content
+   restructuring (the browser reflows the already-linear portable text on
+   its own); break-inside/break-after: avoid on headings/lists/quotes stops
+   them splitting mid-element across the column gap. Collapses to one column
+   below 900px — two narrow columns on a phone-width screen would be
+   unreadable. See FullDescriptionBlock.tsx for the empty-spacer-block filter
+   that does most of the actual work of making this feel less sprawling. */
+.dev-catalog__seo-col {
+  max-width: 1360px;
+  column-count: 1;
+  column-gap: clamp(32px, 4vw, 56px);
+  column-rule: 1px solid var(--hairline);
+}
+@media (max-width: 900px) { .dev-catalog__seo-col { column-count: 1; } }
+.dev-catalog__seo-col .iart__h2,
+.dev-catalog__seo-col .iart__h3,
+.dev-catalog__seo-col .iart__h4,
+.dev-catalog__seo-col .iart__ul,
+.dev-catalog__seo-col .iart__ol,
+.dev-catalog__seo-col .iart__quote,
+.dev-catalog__seo-col .iart__figure {
+  break-inside: avoid;
+}
+.dev-catalog__seo-col .iart__h2,
+.dev-catalog__seo-col .iart__h3 {
+  break-after: avoid;
+}
+
+/* ---- Page-wide golden-cloud background (2026-08-02g/h, page.tsx) ---- */
+/* Same architecture as .pp-atmos (the project detail page's own page-wide
+   clouds, project.css): one absolutely-positioned layer behind everything
+   (z-index:-1), sized to this page's FULL content height via inset:0 on a
+   position:relative <main>, clipped only at the page's own top/bottom/left/
+   right edges — never close enough to a cloud's still-visible inner portion
+   to cut it, unlike the per-section pseudo-elements this replaces.
+   Individual cloud count/position/size/animation are generated client-side
+   by DevAtmosphere.tsx (spaced 500-700px down the page, alternating either
+   side of the 1360px main container, each with its own slight jitter/size/
+   duration so they never form a fixed pattern) — this rule only supplies
+   the shared visual (shape + gradient) each generated <span> inherits. */
+.dev-atmos-root { position: relative; }
+.dev-atmos { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.dev-atmos span {
+  position: absolute; display: block; border-radius: 50%; aspect-ratio: 1; will-change: transform;
+  background: radial-gradient(circle, rgba(194, 154, 94, 0.16), rgba(194, 154, 94, 0) 66%);
+}
+@media (prefers-reduced-motion: reduce) { .dev-atmos span { animation: none !important; } }

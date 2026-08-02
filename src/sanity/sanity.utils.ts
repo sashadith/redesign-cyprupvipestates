@@ -10,7 +10,7 @@ import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
 import { localizedHref } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
 import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances } from "@/lib/developmentCard";
-import { soldOutFromCounts } from "@/lib/developmentAvailability";
+import { soldOutFromCounts, computeAvailability } from "@/lib/developmentAvailability";
 import { Homepage } from "@/types/homepage";
 import { Header } from "@/types/header";
 import { FormStandardDocument } from "@/types/formStandardDocument";
@@ -822,42 +822,119 @@ async function _getDeveloperByLang(lang: string, slug: string): Promise<Develope
   const out: AnyRow = {
     _id: row.sanityId, seo: row.seo, slug: slugObj(row), title: row.title, titleFull: row.titleFull,
     excerpt: row.excerpt, logo: D(row.logo), description: D(row.description), language: row.language,
+    // Extra (not part of the Sanity-era Developer shape): resolves the linked
+    // DeveloperAccount for getDeveloperCatalogByLang below — see Bündel 3
+    // Schritt 1 (DeveloperAccount.developerTranslationGroupId).
+    translationGroupId: row.translationGroupId,
     _translations: await translationsFor(prisma.developer as any, row.translationGroupId, false),
   };
   return D(out) as unknown as Developer;
 }
 
-export async function getProjectsByDeveloper(lang: string, developerId: string): Promise<Project[]> {
-  // developerId here is the original Sanity ref (developer._ref). Resolve to our row id.
-  const dev = await prisma.developer.findUnique({ where: { sanityId: developerId }, select: { id: true } });
-  if (!dev) return [];
-  const rows = await prisma.project.findMany({
-    where: { language: lang as any, developerId: dev.id, isSold: false },
+export type DeveloperCatalogItem = {
+  _id: string; title: string; slug: { current: string }; previewImage: any; keyFeatures: any;
+  isNew: boolean; isFeatured: boolean; listingPriority: number; videoId?: string | null;
+  distances?: Record<string, string> | null; unitsAvailable?: number; unitsTotal?: number; _createdAt?: string;
+  _source: "project" | "development";
+  latitude: number | null; longitude: number | null;
+  // Live-computed (computeAvailability for developments, isSold for legacy
+  // rows) — decides which of the two blocks (available/sold-out) an item
+  // lands in below; not meant to be read past that split.
+  _soldOut: boolean;
+};
+
+// Bündel 3 Teil 2 (2026-08-01) — the developer page's mixed catalog: legacy
+// Sanity projects (Project.developerId) + this developer's linked
+// DeveloperAccount's Developments (developerTranslationGroupId, Schritt 1),
+// deduplicated and split into available/sold-out.
+//
+// Entdopplung reuses the EXACT rule the /projects catalog has used since the
+// 2026-07-17 cutover (queryFilteredDevelopmentRows/queryFilteredRows above),
+// not a slug/name heuristic: a legacy Project shows only while status stays
+// PUBLISHED (an admin-confirmed cutover archives it, so it drops out on its
+// own — no LegacyProjectRedirect juggling needed here, unlike the
+// getProjectsByDeveloper this replaces), and a Development is hidden only
+// while a Project it supersedes is STILL PUBLISHED (cutover not yet
+// confirmed) — never both hidden, never both shown.
+export async function getDeveloperCatalogByLang(
+  lang: string,
+  developerSanityId: string,
+): Promise<{ available: DeveloperCatalogItem[]; soldOut: DeveloperCatalogItem[] }> {
+  const dev = await prisma.developer.findUnique({
+    where: { sanityId: developerSanityId },
+    select: { id: true, translationGroupId: true },
+  });
+  if (!dev) return { available: [], soldOut: [] };
+
+  const projectRows = await prisma.project.findMany({
+    where: { language: lang as any, developerId: dev.id, status: "PUBLISHED", sanityId: { notIn: HIDDEN_PROJECT_IDS } },
     orderBy: { createdAt: "desc" },
   });
+  const withImage = projectRows.filter((p) => p.previewImage);
 
-  // Same fix as resolveProjectRefs above: no `status` filter here means an
-  // ARCHIVED (superseded-by-Development) row still shows on its developer's
-  // page — use its LegacyProjectRedirect target slug instead of its own
-  // stale one, so the card doesn't send visitors through a 308 hop.
-  const redirects = await prisma.legacyProjectRedirect.findMany({
-    where: { projectId: { in: rows.map((r) => r.id) } },
-    select: { projectId: true, targetPath: true },
-  });
-  const targetSlugById = new Map(
-    redirects
-      .map((r) => [r.projectId, r.targetPath.match(/\/projects\/([^/?#]+)/)?.[1]] as const)
-      .filter((entry): entry is [string, string] => !!entry[1])
-  );
-
-  return rows.filter((p) => p.previewImage).map((p) => {
-    const canonicalSlug = targetSlugById.get(p.id);
-    const row = canonicalSlug ? { ...p, slug: canonicalSlug } : p;
-    return D({
-      _id: p.sanityId, title: p.title, slug: slugObj(row), previewImage: D(p.previewImage),
-      keyFeatures: p.keyFeatures, language: p.language, isSold: p.isSold,
+  let devRows: AnyRow[] = [];
+  if (dev.translationGroupId) {
+    const account = await prisma.developerAccount.findFirst({
+      where: { developerTranslationGroupId: dev.translationGroupId },
+      select: { id: true },
     });
-  }) as unknown as Project[];
+    if (account) {
+      const rows = await prisma.development.findMany({
+        where: { developerAccountId: account.id, publishStatus: "published" },
+        include: { override: true, units: { select: { beds: true, status: true, price: true, type: true, areaBuilt: true } } },
+      });
+      devRows = rows.filter((d) => !!d.slug);
+    }
+  }
+
+  const blockedDevIds = new Set(
+    withImage.filter((p) => p.supersededByDevelopmentId).map((p) => p.supersededByDevelopmentId as string),
+  );
+  const visibleDevRows = devRows.filter((d) => !blockedDevIds.has(d.id));
+
+  const distIds = withImage.map((p) => p.sanityId);
+  const distMap = distIds.length ? await getProjectDistancesByIds(distIds) : {};
+
+  const legacyItems: DeveloperCatalogItem[] = withImage.map((p) => ({
+    _id: p.sanityId, _createdAt: p.createdAt?.toISOString?.(), title: p.title,
+    slug: { current: p.slug }, previewImage: D(p.previewImage), keyFeatures: p.keyFeatures as any,
+    isNew: p.isNew, isFeatured: p.isFeatured, listingPriority: p.listingPriority, videoId: p.videoId ?? undefined,
+    distances: distMap[p.sanityId] ?? null, _source: "project",
+    latitude: p.latitude, longitude: p.longitude, _soldOut: !!p.isSold,
+  }));
+
+  const devItems: DeveloperCatalogItem[] = visibleDevRows.map((d) => {
+    const card = mapDevelopmentRowToCard(d);
+    const availability = computeAvailability(d.units as { status?: string | null }[]);
+    return {
+      _id: card.sanityId, _createdAt: d.createdAt?.toISOString?.(), title: card.title,
+      slug: { current: card.slug }, previewImage: card.previewImage, keyFeatures: card.keyFeatures,
+      isNew: card.isNew, isFeatured: card.isFeatured, listingPriority: card.listingPriority, videoId: card.videoId,
+      distances: card.distances, _source: "development",
+      latitude: card.latitude ?? null, longitude: card.longitude ?? null,
+      unitsAvailable: availability.available, unitsTotal: availability.total, _soldOut: availability.soldOut,
+    };
+  });
+
+  // Featured first, then price descending (2026-08-02) — the price-segment
+  // interleave sortProjectsRecommended uses for the multi-developer /projects
+  // catalog reads as arbitrary here: a visitor is looking through ONE
+  // developer's own inventory, not comparing across price brackets. Price-
+  // descending (not ascending) is deliberate: leading with the cheapest units
+  // undersells a developer's actual positioning.
+  const orderBlock = (items: DeveloperCatalogItem[]) => {
+    const price = (i: DeveloperCatalogItem) => Number((i.keyFeatures as any)?.price ?? 0);
+    return [...items].sort((a, b) => {
+      if (a.isFeatured !== b.isFeatured) return a.isFeatured ? -1 : 1;
+      return price(b) - price(a);
+    });
+  };
+
+  const all = [...legacyItems, ...devItems];
+  return {
+    available: orderBlock(all.filter((i) => !i._soldOut)),
+    soldOut: orderBlock(all.filter((i) => i._soldOut)),
+  };
 }
 
 export async function getThreeProjectsBySameCity(lang: string, city: string, excludeProjectId?: string): Promise<any[]> {
