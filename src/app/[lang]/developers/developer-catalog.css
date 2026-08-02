@@ -208,29 +208,22 @@
   break-after: avoid;
 }
 
-/* ---- Page-wide golden-cloud background (2026-08-02g, page.tsx) ---- */
+/* ---- Page-wide golden-cloud background (2026-08-02g/h, page.tsx) ---- */
 /* Same architecture as .pp-atmos (the project detail page's own page-wide
    clouds, project.css): one absolutely-positioned layer behind everything
    (z-index:-1), sized to this page's FULL content height via inset:0 on a
    position:relative <main>, clipped only at the page's own top/bottom/left/
    right edges — never close enough to a cloud's still-visible inner portion
-   to cut it, unlike the per-section pseudo-elements this replaces. Fixed px
-   vertical offsets (not percentages) for the same reason as the old
-   .dev-catalog clouds: this page's total height varies hugely with how many
-   projects a developer has, so a percentage offset could land anywhere. */
+   to cut it, unlike the per-section pseudo-elements this replaces.
+   Individual cloud count/position/size/animation are generated client-side
+   by DevAtmosphere.tsx (spaced 500-700px down the page, alternating either
+   side of the 1360px main container, each with its own slight jitter/size/
+   duration so they never form a fixed pattern) — this rule only supplies
+   the shared visual (shape + gradient) each generated <span> inherits. */
 .dev-atmos-root { position: relative; }
 .dev-atmos { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
 .dev-atmos span {
   position: absolute; display: block; border-radius: 50%; aspect-ratio: 1; will-change: transform;
   background: radial-gradient(circle, rgba(194, 154, 94, 0.16), rgba(194, 154, 94, 0) 66%);
 }
-/* span 1 sits below the hero on purpose (top:1100px, not near the page's own
-   top) — confirmed live that .dev-hero's own background is fully opaque
-   (a solid paper-tone gradient, not transparent), so a cloud positioned
-   behind it is invisible no matter how bright; 1100px reliably clears the
-   hero+map (hero maxes out around 615px per its own clamp()s, map is a
-   fixed 600px) and lands in the always-transparent card-grid section. */
-.dev-atmos span:nth-child(1) { width: min(60vw, 720px); top: 1100px; left: -8%; animation: cloudDriftA 26s ease-in-out infinite alternate; }
-.dev-atmos span:nth-child(2) { width: min(55vw, 640px); top: 45%; right: -9%; opacity: 0.85; animation: cloudDriftB 30s ease-in-out infinite alternate; }
-.dev-atmos span:nth-child(3) { width: min(58vw, 680px); bottom: 40px; left: 18%; opacity: 0.9; animation: cloudDriftA 28s ease-in-out infinite alternate; }
-@media (prefers-reduced-motion: reduce) { .dev-atmos span { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .dev-atmos span { animation: none !important; } }

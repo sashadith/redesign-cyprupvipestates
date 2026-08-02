@@ -38,6 +38,7 @@ import FullDescriptionBlock from "@/app/components/FullDescriptionBlock/FullDesc
 import SchemaMarkup from "@/app/components/SchemaMarkup/SchemaMarkup";
 import PropertyDescription from "@/app/components/PropertyDescription/PropertyDescription";
 import DeveloperJournalIntro from "@/app/[lang]/developers/[slug]/DeveloperJournalIntro";
+import DevAtmosphere from "@/app/[lang]/developers/[slug]/DevAtmosphere";
 import DeveloperProjectsGrid, { type DeveloperProjectCardData } from "@/app/[lang]/developers/[slug]/DeveloperProjectsGrid";
 import type { MapMarker } from "@/app/preview-projects/ProjectsExplorer";
 import Form from "@/app/preview-home/sections/Form";
@@ -246,12 +247,10 @@ const DeveloperPage = async ({ params }: Props) => {
             absolutely-positioned layer behind everything, sized to this
             page's full content height, clipped only at the page's own
             edges — never close enough to a cloud's visible portion to cut
-            it. */}
-        <div className="dev-atmos" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </div>
+            it. Positions/sizes are generated client-side (DevAtmosphere,
+            2026-08-02h) since they depend on this page's actual rendered
+            height, which varies hugely by developer. */}
+        <DevAtmosphere />
         <DeveloperJournalIntro
           lang={lang}
           title={developer.title}
