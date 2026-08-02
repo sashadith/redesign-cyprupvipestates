@@ -67,7 +67,11 @@
    .pp-mapsection, which those rules are scoped under, so no new CSS was
    needed for them. "LIFE NEARBY" (.px-poi) is intentionally left alone —
    no override here — so ProjectsMap's own default (visible) stands. */
-.dev-catalog__mapwrap { position: relative; width: 100%; height: min(51vh, 600px); --pp-gold-contour: linear-gradient(90deg, transparent, #C29A5E, transparent); }
+/* Fixed 600px (not min(51vh, 600px)) — that formula's 51vh side rarely
+   clears 600px on any real browser window (would need a >1176px-tall
+   viewport), so raising the px ceiling alone never actually changed the
+   rendered height. */
+.dev-catalog__mapwrap { position: relative; width: 100%; height: 600px; --pp-gold-contour: linear-gradient(90deg, transparent, #C29A5E, transparent); }
 
 /* Zoom control was invisible on this map — but ALSO on the reference page
    above, confirmed live: a site-wide legacy rule (globals.css:413,
