@@ -57,21 +57,18 @@
 .dev-catalog__mapwrap .px-poi { display: none; }
 
 /* ---- Journal-style developer hero (DeveloperJournalIntro.tsx) ---- */
-/* Top and bottom padding now share ONE value (2026-08-02) — .ins__hero's own
-   asymmetric padding (clamp(120px,16vh,210px) top / clamp(0px,2vw,22px)
-   bottom) left almost no room under the lead text. The shared value is the
-   TOP one, not var(--section-y): that top clamp exists for fixed-header
-   clearance (Header.module.scss: position:fixed), so the bottom was raised
-   to match it rather than the top lowered to risk the header overlapping
-   the eyebrow. Scoped to .dev-hero so /blog's own hero is untouched.
-   Compound selector (.ins__hero.dev-hero, NOT .dev-hero alone) is
-   deliberate — .dev-hero alone ties with .ins__hero's own padding rule on
-   specificity, so Next.js's global-CSS chunk order (not guaranteed to match
-   this file's import order across routes) was silently deciding the winner;
-   the first attempt lost that coin flip. Two classes on one selector always
-   outranks one, regardless of file order. */
+/* Top and bottom padding share ONE value, kept symmetric (2026-08-02) — was
+   clamp(120px,16vh,210px), halved again on visual review (2026-08-02b, still
+   comfortably clear of the fixed header per Header.module.scss). Scoped to
+   .dev-hero so /blog's own hero is untouched. Compound selector
+   (.ins__hero.dev-hero, NOT .dev-hero alone) is deliberate — .dev-hero alone
+   ties with .ins__hero's own padding rule on specificity, so Next.js's
+   global-CSS chunk order (not guaranteed to match this file's import order
+   across routes) was silently deciding the winner; the first attempt lost
+   that coin flip. Two classes on one selector always outranks one,
+   regardless of file order. */
 .ins__hero.dev-hero {
-  --dev-hero-y: clamp(120px, 16vh, 210px);
+  --dev-hero-y: clamp(60px, 8vh, 105px);
   padding-top: var(--dev-hero-y);
   padding-bottom: var(--dev-hero-y);
 }
@@ -150,4 +147,31 @@
 }
 
 /* ---- SEO description (FullDescriptionBlock.tsx) ---- */
-.dev-catalog__seo-col { max-width: 68ch; }
+/* Two-column magazine layout (2026-08-02b) — a single ~68ch column left most
+   of this wide dark section empty. CSS columns need no content
+   restructuring (the browser reflows the already-linear portable text on
+   its own); break-inside/break-after: avoid on headings/lists/quotes stops
+   them splitting mid-element across the column gap. Collapses to one column
+   below 900px — two narrow columns on a phone-width screen would be
+   unreadable. See FullDescriptionBlock.tsx for the empty-spacer-block filter
+   that does most of the actual work of making this feel less sprawling. */
+.dev-catalog__seo-col {
+  max-width: 1100px;
+  column-count: 2;
+  column-gap: clamp(32px, 4vw, 56px);
+  column-rule: 1px solid var(--hairline);
+}
+@media (max-width: 900px) { .dev-catalog__seo-col { column-count: 1; } }
+.dev-catalog__seo-col .iart__h2,
+.dev-catalog__seo-col .iart__h3,
+.dev-catalog__seo-col .iart__h4,
+.dev-catalog__seo-col .iart__ul,
+.dev-catalog__seo-col .iart__ol,
+.dev-catalog__seo-col .iart__quote,
+.dev-catalog__seo-col .iart__figure {
+  break-inside: avoid;
+}
+.dev-catalog__seo-col .iart__h2,
+.dev-catalog__seo-col .iart__h3 {
+  break-after: avoid;
+}
