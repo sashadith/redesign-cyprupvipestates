@@ -57,64 +57,89 @@
 .dev-catalog__mapwrap .px-poi { display: none; }
 
 /* ---- Journal-style developer hero (DeveloperJournalIntro.tsx) ---- */
-/* .ins__hero's own bottom padding is near-zero (0-22px) — fine on /blog,
-   where the phone mockup's rotation visually bleeds past the panel edge, but
-   this page's lead text needs the same breathing room every other section
-   boundary gets. Scoped to .dev-hero so /blog's own hero is untouched. */
-.dev-hero { padding-bottom: var(--section-y); }
+/* Top and bottom padding now share ONE value (2026-08-02) — .ins__hero's own
+   asymmetric padding (clamp(120px,16vh,210px) top / clamp(0px,2vw,22px)
+   bottom) left almost no room under the lead text. The shared value is the
+   TOP one, not var(--section-y): that top clamp exists for fixed-header
+   clearance (Header.module.scss: position:fixed), so the bottom was raised
+   to match it rather than the top lowered to risk the header overlapping
+   the eyebrow. Scoped to .dev-hero so /blog's own hero is untouched. */
+.dev-hero {
+  --dev-hero-y: clamp(120px, 16vh, 210px);
+  padding-top: var(--dev-hero-y);
+  padding-bottom: var(--dev-hero-y);
+}
+.dev-hero .ins__hero-title { font-size: var(--text-h1); }
 
-/* Same desktop-only positioning treatment as .ins__hero-art (flex/perspective),
-   but — unlike that class — never display:none below 960px: the logo is
+/* Same desktop-only positioning treatment as .ins__hero-art (flex), but —
+   unlike that class — never display:none below 960px: the logo is
    information, not decoration, so it stays visible, stacked under the text
    (.ins__hero-grid already goes single-column below 960px; DOM order does
-   the rest). */
+   the rest). At 960px+ it stretches to the grid row's full height so the
+   sign's posts (below) can reach all the way to the panel's own edge. */
 .dev-sign-slot {
-  display: flex; justify-content: center; align-items: center;
+  display: flex; justify-content: center;
   position: relative; z-index: 2;
   margin-top: var(--s-7);
 }
 @media (min-width: 960px) {
-  .dev-sign-slot { align-items: center; margin-top: 0; }
+  .dev-sign-slot { align-self: stretch; align-items: stretch; margin-top: 0; }
 }
 
+/* No dark strip between the hero panel and the map (2026-08-02) — the map
+   section's own top padding is zeroed here (bottom kept, for normal spacing
+   before the grid below) so the gold contour at its top edge sits exactly on
+   the hero/map boundary instead of floating in a dark gap. See
+   DeveloperProjectsGrid.tsx, which adds this class alongside .pp-mapsection. */
+.dev-map-section { padding-top: 0; }
+
 /* ---- DeveloperSignMockup.tsx — built once, reused for every developer ---- */
-/* 16:9 board (roadside-billboard proportions, not the earlier square-ish
-   panel), tilted in 3D toward the viewer. Checked against Aristo (500x142,
-   3.5:1), Domenica (490x160, 3.1:1), Island Blue (433x72, 6:1) and Luma
-   Development (1182x1182, 1:1, the squarest logo in the set) — the inner
-   .dev-sign__plate gives every proportion a bounded, lit rectangle to sit
-   in, so even a square logo (necessarily narrower than the 16:9 frame under
-   object-fit: contain) reads as "centered on its own panel", not "lost in
-   empty space". */
+/* v2 (2026-08-02): 2:1 board (was 16:9, same height, wider), stronger 3D tilt,
+   posts stretching to the hero panel's own bottom edge (not a fixed stub).
+   Inner background is sea-deep green (#142E2D) per developer request — but
+   the logo itself sits on its own opaque light chip (sized to the logo, not
+   the whole board), not directly on the green: checked actual logo pixel
+   luminance for all 22 developers, and Cybarco/Korantina Homes/Imperio
+   Properties/AGG Luxury Homes all use dark-colored logos that would be
+   unreadable directly on #142E2D (avg luminance 45-100 out of 255, vs.
+   Aristo's white logo at 216) — the chip protects every developer
+   uniformly rather than special-casing four of them. */
 .dev-sign {
   width: 100%;
-  max-width: 420px;
-  transform: perspective(1400px) rotateY(-13deg) rotateX(2deg);
+  max-width: 460px;
+  display: flex; flex-direction: column; align-items: center;
+  transform: perspective(1000px) rotateY(-26deg) rotateX(3deg);
 }
+@media (min-width: 960px) { .dev-sign { height: 100%; } }
 .dev-sign__board {
+  flex: 0 0 auto;
   position: relative;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  /* height-driven (not width-driven): keeps the SAME height as the old 16:9
+     board (clamp(200px,22vw,300px) wide * 9/16) while the 2:1 ratio makes it
+     wider, per "breiter, ohne die Höhe zu ändern". */
+  height: clamp(112px, 12.4vw, 169px);
+  aspect-ratio: 2 / 1;
   display: flex; align-items: center; justify-content: center;
   padding: clamp(14px, 2vw, 22px);
-  background: linear-gradient(160deg, var(--paper) 0%, var(--paper-2) 100%);
+  background: linear-gradient(160deg, #142E2D 0%, #0E211F 100%);
   border: 1px solid var(--champagne);
   border-radius: 8px;
-  box-shadow: 0 30px 60px -22px rgba(34, 28, 21, 0.4), inset 0 0 0 1px rgba(142, 107, 61, 0.18);
+  box-shadow: 0 30px 60px -22px rgba(8, 12, 11, 0.55), inset 0 0 0 1px rgba(194, 154, 94, 0.22);
 }
 .dev-sign__plate {
-  width: 100%; height: 100%;
-  display: flex; align-items: center; justify-content: center;
-  padding: clamp(10px, 1.6vw, 18px);
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.32);
-  box-shadow: inset 0 1px 4px rgba(34, 28, 21, 0.14);
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: clamp(9px, 1.3vw, 14px) clamp(14px, 2vw, 22px);
+  border-radius: 6px;
+  background: rgba(245, 241, 232, 0.94);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 /* Logos vary wildly in proportion (wide/flat vs. near-square) — contain +
    generous max-width/height keeps every one centered and undistorted. */
-.dev-sign__logo { max-width: 80%; max-height: 72%; width: auto; height: auto; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(34, 28, 21, 0.18)); }
-.dev-sign__posts { display: flex; justify-content: space-between; width: 78%; margin: -2px auto 0; }
-.dev-sign__post { width: 12px; height: clamp(46px, 6vw, 76px); border-radius: 2px; background: linear-gradient(180deg, var(--bronze), var(--ink-warm)); box-shadow: 2px 0 6px rgba(0, 0, 0, 0.22); }
+.dev-sign__logo { max-width: clamp(140px, 15vw, 220px); max-height: clamp(40px, 5.4vw, 64px); width: auto; height: auto; object-fit: contain; }
+.dev-sign__posts { flex: 0 0 auto; display: flex; justify-content: space-between; width: 78%; margin: -2px auto 0; height: clamp(46px, 8vw, 70px); }
+@media (min-width: 960px) { .dev-sign__posts { flex: 1 1 auto; height: auto; } }
+.dev-sign__post { width: 12px; border-radius: 2px; background: linear-gradient(180deg, var(--bronze), var(--ink-warm)); box-shadow: 2px 0 6px rgba(0, 0, 0, 0.22); }
 
 /* ---- SEO description (FullDescriptionBlock.tsx) ---- */
 .dev-catalog__seo-col { max-width: 68ch; }
