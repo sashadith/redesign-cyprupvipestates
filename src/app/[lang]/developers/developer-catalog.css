@@ -166,7 +166,7 @@
 .dev-sign__plate { display: inline-flex; align-items: center; justify-content: center; }
 /* Logos vary wildly in proportion (wide/flat vs. near-square) — contain +
    generous max-width/height keeps every one centered and undistorted. */
-.dev-sign__logo { max-width: clamp(140px, 15vw, 220px); max-height: clamp(40px, 5.4vw, 64px); width: auto; height: auto; object-fit: contain; }
+.dev-sign__logo { max-width: clamp(400px, 15vw, 220px); max-height: clamp(130px, 5.4vw, 64px); width: auto; height: auto; object-fit: contain; }
 .dev-sign__posts { flex: 0 0 auto; display: flex; justify-content: space-between; width: 78%; margin: -2px auto 0; height: clamp(46px, 8vw, 70px); }
 @media (min-width: 960px) { .dev-sign__posts { flex: 1 1 auto; height: auto; } }
 /* Fade to transparent toward the bottom — sinks into the hero panel instead
