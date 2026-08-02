@@ -44,7 +44,7 @@ export default function DeveloperJournalIntro({
   const logoUrl = safeUrl(logo);
 
   return (
-    <header className="ins__hero is-light">
+    <header className="ins__hero is-light dev-hero">
       <div className="wrap ins__hero-grid">
         <div className="ins__hero-text">
           <p className="ins__eyebrow">{EYEBROW[lang] ?? EYEBROW.en}</p>

@@ -916,10 +916,19 @@ export async function getDeveloperCatalogByLang(
     };
   });
 
-  const orderBlock = (items: DeveloperCatalogItem[]) => [
-    ...interleaveByPriceSegments(items.filter((i) => i.isFeatured) as any),
-    ...interleaveByPriceSegments(items.filter((i) => !i.isFeatured) as any),
-  ] as DeveloperCatalogItem[];
+  // Featured first, then price descending (2026-08-02) — the price-segment
+  // interleave sortProjectsRecommended uses for the multi-developer /projects
+  // catalog reads as arbitrary here: a visitor is looking through ONE
+  // developer's own inventory, not comparing across price brackets. Price-
+  // descending (not ascending) is deliberate: leading with the cheapest units
+  // undersells a developer's actual positioning.
+  const orderBlock = (items: DeveloperCatalogItem[]) => {
+    const price = (i: DeveloperCatalogItem) => Number((i.keyFeatures as any)?.price ?? 0);
+    return [...items].sort((a, b) => {
+      if (a.isFeatured !== b.isFeatured) return a.isFeatured ? -1 : 1;
+      return price(b) - price(a);
+    });
+  };
 
   const all = [...legacyItems, ...devItems];
   return {
