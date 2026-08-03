@@ -2,11 +2,28 @@
 // provides its own <html>/<body> under [lang]); /admin lives outside [lang], so it needs its own
 // html/body + global stylesheet (Tailwind), otherwise it renders unstyled with no document shell.
 import "@/app/globals.css";
-import type { Metadata } from "next";
+import "./admin-mobile.css";
+import type { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
   title: "Admin — Cyprus VIP Estates",
   robots: { index: false, follow: false },
+};
+
+// 2026-08-03 — neither this layout nor [lang]/layout.tsx (the public site,
+// completely separate <html>/<body> tree, untouched by this change) ever
+// set a viewport meta tag at all, so iOS fell back to rendering the admin
+// at desktop width and scaling down (explains it not filling the screen)
+// on top of the auto-zoom-into-input behavior above. maximumScale/
+// userScalable are a best-effort ask, not a guarantee — iOS only honors
+// them for a Home Screen / standalone-mode install, and even then only on
+// some versions; regular in-Safari admin use still lets a visitor pinch-
+// zoom freely regardless of these values.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function AdminRootLayout({ children }: { children: React.ReactNode }) {

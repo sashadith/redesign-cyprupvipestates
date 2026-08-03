@@ -1,0 +1,36 @@
+/* Admin-only mobile fixes (2026-08-03) — imported ONLY by
+   src/app/admin/layout.tsx, never by the public [lang] tree, so nothing
+   here can ever affect a customer-facing page.
+
+   1. iOS Safari auto-zooms into any input/select/textarea whose computed
+      font-size resolves below 16px. Nearly every admin form field uses a
+      shared `const input = "...text-sm..."` (14px) or `text-xs` (12px)
+      Tailwind className string — 26 admin files define one, ~328
+      input/select/textarea elements total, virtually none set an explicit
+      16px+ size. Rewriting every one of those className strings would be
+      the "correct" per-element fix but is impractical and easy to miss on
+      the next new form; overriding at the element-selector level, scoped
+      to a phone-width breakpoint only, fixes every current and future
+      admin field in one place without changing how dense the admin looks
+      on desktop (where 16px form fields would look oversized).
+      !important is deliberate and necessary here: a plain element
+      selector (input, select, textarea) has LOWER specificity than the
+      single Tailwind utility class (e.g. .text-sm) already setting the
+      smaller size on nearly every field, so a same-specificity or lower
+      override would silently lose the cascade. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* 2. Suppresses the double-tap-to-zoom gesture admin-wide — the pinch-zoom
+      side of the standalone-web-app zoom issue is addressed by the
+      viewport meta (maximumScale/userScalable) in layout.tsx itself; this
+      covers the separate double-tap gesture, which the viewport meta does
+      not. */
+body {
+  touch-action: manipulation;
+}
