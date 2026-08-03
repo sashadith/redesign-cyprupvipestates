@@ -1,12 +1,22 @@
 import Link from "next/link";
 import NewDeveloperForm from "./new-developer-form";
 import { listDeveloperPageOptions } from "@/lib/developerLink";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewDeveloperPage({ searchParams }: { searchParams?: { feed?: string } }) {
   const withFeed = searchParams?.feed === "1";
-  const pageOptions = await listDeveloperPageOptions();
+  const [pageOptions, linkedAccounts] = await Promise.all([
+    listDeveloperPageOptions(),
+    prisma.developerAccount.findMany({ where: { developerTranslationGroupId: { not: null } }, select: { name: true, developerTranslationGroupId: true } }),
+  ]);
+  // 2026-08-03 — same "already linked to X" labelling as the existing-
+  // account picker (DeveloperPageLink.tsx); a new account has no existing
+  // link to misroute, so no confirmation dialog is needed here — the label
+  // plus the DB's own unique constraint (schema.prisma) are enough.
+  const takenBy = new Map(linkedAccounts.map((a) => [a.developerTranslationGroupId as string, a.name]));
+  const pageOptionsWithTaken = pageOptions.map((o) => ({ ...o, takenByName: takenBy.get(o.translationGroupId) ?? null }));
   return (
     <div className="space-y-5">
       <div>
@@ -18,7 +28,7 @@ export default async function NewDeveloperPage({ searchParams }: { searchParams?
             : "Create a manual developer. Then add its developments and scan developer PDFs with Claude to auto-fill descriptions and units."}
         </p>
       </div>
-      <NewDeveloperForm pageOptions={pageOptions} />
+      <NewDeveloperForm pageOptions={pageOptionsWithTaken} />
     </div>
   );
 }

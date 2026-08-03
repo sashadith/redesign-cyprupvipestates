@@ -50,12 +50,22 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
   // preview link) and whether the link is stale, alongside the option list
   // for the picker. All three read the same underlying data every load —
   // no caching, so an admin never sees a stale "broken" state after fixing it.
-  const [linkedDeveloperEn, linkBroken, pageOptions] = await Promise.all([
+  const [linkedDeveloperEn, linkBroken, pageOptions, otherAccounts] = await Promise.all([
     resolveLinkedDeveloper(dev.developerTranslationGroupId, "en"),
     dev.developerTranslationGroupId ? developerGroupExists(dev.developerTranslationGroupId).then((ok) => !ok) : Promise.resolve(false),
     listDeveloperPageOptions(),
+    prisma.developerAccount.findMany({
+      where: { id: { not: dev.id }, developerTranslationGroupId: { not: null } },
+      select: { name: true, developerTranslationGroupId: true },
+    }),
   ]);
   const developerPreviewUrl = linkedDeveloperEn ? `/en/developers/${linkedDeveloperEn.slug}` : null;
+  // 2026-08-03 — label each option already claimed by a DIFFERENT account
+  // (see DeveloperPageLink.tsx header comment for why) so the risk is
+  // visible in the dropdown itself, before the DB's own unique constraint
+  // would reject the pick.
+  const takenBy = new Map(otherAccounts.map((a) => [a.developerTranslationGroupId as string, a.name]));
+  const pageOptionsWithTaken = pageOptions.map((o) => ({ ...o, takenByName: takenBy.get(o.translationGroupId) ?? null }));
   // The content editor edits ONE language row at a time — EN, same as the
   // preview link above, since linkedDeveloperEn already carries that row's id.
   const editProfileHref = linkedDeveloperEn ? `/admin/content/developers/${linkedDeveloperEn.id}` : null;
@@ -70,8 +80,9 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
         pageLinkSection={
           <DeveloperPageLink
             developerAccountId={dev.id}
+            accountName={dev.name}
             value={dev.developerTranslationGroupId}
-            options={pageOptions}
+            options={pageOptionsWithTaken}
             previewUrl={developerPreviewUrl}
             editProfileHref={editProfileHref}
             broken={linkBroken}
