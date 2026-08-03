@@ -316,11 +316,13 @@ export async function backfillFeedRefFromDigits(developmentId: string, opts: { d
 // Domenica confirmed live (see feeds.ts); Aristo's adapter already parses
 // its own Status field the same way, so it's included ready-to-go even
 // though no Aristo development currently has manual units — harmless no-op
-// until one does. Pafilia/Medousa/SquareOne have no status field in their
-// feeds at all (see the 2026-07-26 investigation), so they're excluded
-// rather than silently doing nothing every run. qubehub (inex/bbf) stays
-// out pending API access, same as everywhere else this session.
-export const STATUS_SYNC_DEVS = ["island-blue", "domenica", "aristo"];
+// until one does. Pafilia/SquareOne have no status field in their feeds at
+// all (see the 2026-07-26 investigation), so they're excluded rather than
+// silently doing nothing every run. qubehub (inex/bbf) stays out pending
+// API access, same as everywhere else this session. Medousa's OLD
+// file-based feed had no status field either — its new live XML feed
+// (2026-08-03) does (sold|active|reserved), so it's added here too.
+export const STATUS_SYNC_DEVS = ["island-blue", "domenica", "aristo", "medousa"];
 
 export type StatusOnlySyncChange = { slug: string; unitRef: string; from: string; to: string };
 
