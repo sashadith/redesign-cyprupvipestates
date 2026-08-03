@@ -18,7 +18,14 @@ const DEV_ACCOUNT: Record<string, { slug: string; name: string }> = {
   aristo: { slug: "aristo", name: "Aristo" },
   pafilia: { slug: "pafilia", name: "Pafilia" },
   domenica: { slug: "domenica", name: "Domenica Group" },
-  medousa: { slug: "medousa", name: "Medousa" },
+  // slug "medousa-xml" (2026-08-03), not "medousa" — the old file-based-era
+  // DeveloperAccount (slug "medousa") was deleted along with its 16 unpublished
+  // drafts when the old adapter was retired; the account the admin manually
+  // created for this new live feed has slug "medousa-xml". ensureAccount()
+  // below upserts by this exact slug — leaving it as the old "medousa" would
+  // silently create a THIRD, empty, disconnected account on the next sync
+  // instead of attaching to the one already configured.
+  medousa: { slug: "medousa-xml", name: "Medousa (XML)" },
   agg: { slug: "agg", name: "AGG Luxury Homes" },
   squareone: { slug: "square-one", name: "Square One" },
 };
