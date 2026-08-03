@@ -49,4 +49,36 @@ export const OVERLAP_CANDIDATES: OverlapCandidate[] = [
   { legacySlug: "kamares-village", legacyTitle: "Kamares Village", developmentSlug: "neo-chorio-villas-1", developmentName: "Agnades Village 1", confidence: "Likely false positive", note: "matched only on generic \"village\" token, different specific names" },
   { legacySlug: "kamares-village", legacyTitle: "Kamares Village", developmentSlug: "argaka-villa", developmentName: "Argaka Village 6", confidence: "Likely false positive", note: "same reason" },
   { legacySlug: "pearl-sea-caves-villa-1-island-blue", legacyTitle: "Pearl Sea Caves Villa 1", developmentSlug: "chloraka-rose-residences", developmentName: "Roseland Villas 1", confidence: "Likely false positive" },
+
+  // 2026-08-03 addition — a second sweep (title + developer-feed-account
+  // match, run after the azalea-villas/serenity-court sold-out cutover
+  // surfaced them as an unlinked duplicate) found these 20 candidates the
+  // 2026-07-15 audit missed. Same rule as above: appearing here does NOT
+  // link or archive anything — a human still confirms/rejects each row via
+  // the overlaps UI. Deliberately excludes 3 exact-title matches with a
+  // DIFFERING developer (premier-residences-domenica/premier-residences,
+  // montville-sol/montville, riverside-residences-island-blue/riverside) —
+  // those need manual research into whether it's a real developer handover
+  // or two different buildings sharing a generic name, not a quick
+  // confirm/reject pass.
+  { legacySlug: "viewpoint-hills-aristo", legacyTitle: "Viewpoint Hills", developmentSlug: "viewpoint-hills", developmentName: "Viewpoint Hills", confidence: "High", note: "2026-08-03 sweep: exact title + same Aristo feed account, same pattern as azalea-villas/serenity-court" },
+  { legacySlug: "villa-superior-aristo", legacyTitle: "Villa Superior", developmentSlug: "villa-superior", developmentName: "Villa Superior", confidence: "High", note: "2026-08-03 sweep: exact title + same Aristo feed account" },
+  { legacySlug: "zephyros-village-3-aristo", legacyTitle: "Zephyros Village 3", developmentSlug: "zephyros-village-3", developmentName: "Zephyros Village 3", confidence: "High", note: "2026-08-03 sweep: exact title + same Aristo feed account" },
+  { legacySlug: "elementa-domenica", legacyTitle: "Elements", developmentSlug: "elements", developmentName: "Elements", confidence: "High", note: "2026-08-03 sweep: exact title + same Domenica feed account" },
+  { legacySlug: "konia-aura-domenica", legacyTitle: "Konia Aura", developmentSlug: "aura-konia", developmentName: "Konia Aura", confidence: "High", note: "2026-08-03 sweep: exact title + same Domenica feed account" },
+  { legacySlug: "la-bella-domenica", legacyTitle: "La Bella", developmentSlug: "la-bella", developmentName: "La Bella", confidence: "High", note: "2026-08-03 sweep: exact title + same Domenica feed account" },
+  { legacySlug: "morea-residences-inex", legacyTitle: "Morea Residences", developmentSlug: "morea-residences", developmentName: "Morea Residences", confidence: "High", note: "2026-08-03 sweep: exact title + same INEX feed account" },
+  { legacySlug: "qube-inex", legacyTitle: "Qube", developmentSlug: "qube", developmentName: "Qube", confidence: "High", note: "2026-08-03 sweep: exact title + same INEX feed account" },
+  { legacySlug: "rosa-dei-venti-bbf", legacyTitle: "Rosa Dei Venti", developmentSlug: "rosa-dei-venti", developmentName: "Rosa dei Venti", confidence: "Medium", note: "2026-08-03 sweep: exact title, developer text \"BBF\" on both sides — developer-account link not resolved programmatically, verify manually" },
+  { legacySlug: "salt-bbf", legacyTitle: "Salt", developmentSlug: "salt", developmentName: "Salt", confidence: "Medium", note: "2026-08-03 sweep: exact title, developer text \"BBF\" on both sides" },
+  { legacySlug: "sense-bbf", legacyTitle: "Sense", developmentSlug: "sense", developmentName: "Sense", confidence: "Medium", note: "2026-08-03 sweep: exact title, developer text \"BBF\" on both sides" },
+  { legacySlug: "spirit-bbf", legacyTitle: "Spirit", developmentSlug: "spirit", developmentName: "Spirit", confidence: "Medium", note: "2026-08-03 sweep: exact title, developer text \"BBF\" on both sides" },
+  { legacySlug: "verde-bbf", legacyTitle: "Verde", developmentSlug: "verde", developmentName: "Verde", confidence: "Medium", note: "2026-08-03 sweep: exact title, developer text \"BBF\" on both sides" },
+  { legacySlug: "vision-bbf", legacyTitle: "Vision", developmentSlug: "vision", developmentName: "Vision", confidence: "Medium", note: "2026-08-03 sweep: exact title, developer text \"BBF\" on both sides" },
+  { legacySlug: "synergy-bbf", legacyTitle: "Synergy", developmentSlug: "synergy", developmentName: "Synergy", confidence: "Medium", note: "2026-08-03 sweep: exact title, developer text \"BBF\" on both sides, same district (Larnaca)" },
+  { legacySlug: "rise-bbf", legacyTitle: "Rise", developmentSlug: "rise", developmentName: "Rise", confidence: "Medium", note: "2026-08-03 sweep: exact title, developer text \"BBF\" on both sides" },
+  { legacySlug: "nest-bbf", legacyTitle: "Nest", developmentSlug: "nest", developmentName: "Nest", confidence: "Medium", note: "2026-08-03 sweep: exact title, developer text \"BBF\" on both sides" },
+  { legacySlug: "life-bbf", legacyTitle: "Life", developmentSlug: "life", developmentName: "Life", confidence: "Medium", note: "2026-08-03 sweep: exact title, developer text \"BBF\" on both sides" },
+  { legacySlug: "glow-bbf", legacyTitle: "Glow", developmentSlug: "glow", developmentName: "Glow", confidence: "Medium", note: "2026-08-03 sweep: exact title, developer text \"BBF\" on both sides — a second Development (\"Glow 2\") also exists, likely a distinct later phase, not this match" },
+  { legacySlug: "eden-bay-bbf", legacyTitle: "Eden Bay", developmentSlug: "eden-bay", developmentName: "Eden Bay", confidence: "Medium", note: "2026-08-03 sweep: exact title, developer text \"BBF\" on both sides" },
 ];
