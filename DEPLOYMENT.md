@@ -520,6 +520,27 @@ builds. Fixed by capping the build-time-only `DATABASE_URL` with
 `connection_limit=5&pool_timeout=30`, baked into both deploy scripts and the
 CI workflow permanently.
 
+**`tar` over a symlinked path silently backs up nothing (2026-08-03).**
+`public/uploads` has been a symlink to `/var/www/shared-uploads` since the
+2026-07-24 release-directory + symlink-swap model (see "Production release
+structure" above). `cvp-uploads-backup.sh`'s `tar -czf ... uploads` — without
+`-h`/`--dereference` — archives the symlink itself, not its target: a
+~125-byte tarball containing one symlink entry, not the 5+ GB of real files
+behind it. The script's own size guard (`< 1MB → ERROR`) correctly caught
+this on every run since 2026-07-19, but the failure only ever reached
+`/var/log/cvp-uploads-backup.log` — nobody was watching it, so the uploads
+directory silently had zero working backups for three weeks. Any `tar` (or
+similar archiver) invoked against a path under `public/uploads`, or against
+`/var/www/cyprusvipestates` itself (also a symlink, to the live release —
+see the same section), needs `-h`/`--dereference` or the equivalent, or it
+will archive a symlink instead of content. Fixed in `cvp-uploads-backup.sh`;
+`cvp-db-backup.sh` uses `pg_dump` directly and was never affected. `psql -l`
+periodically listing an unexpected extra database can also be a signal worth
+checking against `pg_stat_activity` before dropping it — `cyprusvipestates_forensic_before`,
+a temporary safety-net DB created after a 2026-07-27/28 staging incident (see
+"Staging is not a write sandbox" below), was found and removed 2026-08-03,
+weeks after it was meant to be temporary.
+
 **Client-side animation bugs are invisible to curl/SSR verification.** A
 homepage stats-counter fix was verified after deploy by curling the page and
 confirming the server-rendered HTML showed real numbers (not `0`) — it did,
