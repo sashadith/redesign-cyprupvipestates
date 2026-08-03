@@ -932,7 +932,18 @@ model DeveloperAccount {
   // deleted, translationGroupId reassigned) without a DB-level error — see
   // developerLinkBrokenReminders() in src/lib/actionCenter/rules/developers.ts,
   // which surfaces that live rather than letting it fail silently.
-  developerTranslationGroupId String?
+  //
+  // @unique below (2026-08-03, after the BBF/Domenica collision incident —
+  // BBF's account silently held Domenica's group id via the admin picker,
+  // no confirmation, no error, findFirst() elsewhere just picked a "winner"
+  // and showed BBF's entire catalog on Domenica's public page): Postgres
+  // treats NULL as pairwise-distinct in a unique index, so any number of
+  // unlinked accounts (developerTranslationGroupId: null) coexist fine —
+  // only two accounts genuinely claiming the SAME real group now fails at
+  // the DB, not silently. setDeveloperPageLink()/createDeveloperAccount()
+  // (admin/actions.ts) catch that P2002 and surface which account already
+  // holds it, rather than crashing or overwriting.
+  developerTranslationGroupId String? @unique
 
   analyses     DeveloperFeedAnalysis[]
   developments Development[]

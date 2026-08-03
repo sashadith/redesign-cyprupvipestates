@@ -874,13 +874,28 @@ export async function getDeveloperCatalogByLang(
 
   let devRows: AnyRow[] = [];
   if (dev.translationGroupId) {
-    const account = await prisma.developerAccount.findFirst({
+    // findMany, not findFirst (2026-08-03, BBF/Domenica incident): two
+    // DeveloperAccount rows once silently shared a translationGroupId —
+    // findFirst just picked one and showed its ENTIRE catalog on the
+    // other's public page, no error, no warning. A DB-level unique
+    // constraint now makes that state unreachable through the app's own
+    // write paths (schema.prisma), but this stays defensive for anything
+    // that bypasses it (a raw write, a pre-constraint migration window):
+    // on a genuine collision, show NO Development-sourced items rather
+    // than guessing — the legacy items below still render, so the page
+    // isn't empty, just missing content that's now provably ambiguous
+    // rather than silently wrong.
+    const accounts = await prisma.developerAccount.findMany({
       where: { developerTranslationGroupId: dev.translationGroupId },
-      select: { id: true },
+      select: { id: true, name: true },
     });
-    if (account) {
+    if (accounts.length > 1) {
+      console.error(
+        `getDeveloperCatalogByLang: translationGroupId ${dev.translationGroupId} is claimed by ${accounts.length} DeveloperAccounts (${accounts.map((a) => a.name).join(", ")}) — showing no Development-sourced items rather than guessing which one is right.`,
+      );
+    } else if (accounts.length === 1) {
       const rows = await prisma.development.findMany({
-        where: { developerAccountId: account.id, publishStatus: "published" },
+        where: { developerAccountId: accounts[0].id, publishStatus: "published" },
         include: { override: true, units: { select: { beds: true, status: true, price: true, type: true, areaBuilt: true } } },
       });
       devRows = rows.filter((d) => !!d.slug);

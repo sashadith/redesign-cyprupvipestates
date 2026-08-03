@@ -21,7 +21,7 @@ const field = (label: string, name: string, type = "text", placeholder = "") => 
   </div>
 );
 
-export default function NewDeveloperForm({ pageOptions }: { pageOptions: { translationGroupId: string; title: string }[] }) {
+export default function NewDeveloperForm({ pageOptions }: { pageOptions: { translationGroupId: string; title: string; takenByName?: string | null }[] }) {
   const [state, formAction] = useFormState<{ error?: string } | null>(createDeveloperAccount as any, null);
   return (
     <form action={formAction} className="bg-white rounded-lg border border-[#E5E7EB] p-6 space-y-4 max-w-lg">
@@ -44,7 +44,9 @@ export default function NewDeveloperForm({ pageOptions }: { pageOptions: { trans
         <select name="developerTranslationGroupId" defaultValue="" className={input}>
           <option value="">— none yet —</option>
           {pageOptions.map((o) => (
-            <option key={o.translationGroupId} value={o.translationGroupId}>{o.title}</option>
+            <option key={o.translationGroupId} value={o.translationGroupId}>
+              {o.takenByName ? `${o.title} — already linked to ${o.takenByName}` : o.title}
+            </option>
           ))}
         </select>
         <p className="text-xs text-[#9CA3AF] mt-1">Only link a page you&apos;ve confirmed is really this developer — leave unset otherwise, it can be linked later.</p>

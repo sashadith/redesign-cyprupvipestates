@@ -1721,24 +1721,44 @@ async function uniqueAccountSlug(desired: string, excludeId?: string): Promise<s
   return slug;
 }
 
+// The account that already holds a given translationGroupId, for the P2002
+// error message below — "already linked to X", not a generic constraint
+// failure a human has to go look up themselves.
+async function accountHoldingGroup(groupId: string, excludeId?: string) {
+  return prisma.developerAccount.findFirst({
+    where: { developerTranslationGroupId: groupId, ...(excludeId ? { id: { not: excludeId } } : {}) },
+    select: { name: true },
+  });
+}
+
 export async function createDeveloperAccount(_prev: any, formData: FormData) {
   await requireSession();
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: "Developer name is required." };
   const slug = await uniqueAccountSlug(String(formData.get("slug") ?? "") || name);
   const s = (k: string) => String(formData.get(k) ?? "").trim() || null;
-  const dev = await prisma.developerAccount.create({
-    data: {
-      name, slug,
-      website: s("website"), contactInfo: s("contactInfo"),
-      contactPerson: s("contactPerson"), phone: s("phone"), email: s("email"),
-      developerCloudUrl: s("developerCloudUrl"), driveFolderUrl: s("driveFolderUrl"), notes: s("notes"),
-      // Optional at creation (Bündel 3 Schritt 1) — the dropdown only ever
-      // offers real translation groups (listDeveloperPageOptions()), so a
-      // value here is always a deliberate human pick, never a guess.
-      developerTranslationGroupId: s("developerTranslationGroupId"),
-    },
-  });
+  const pageLink = s("developerTranslationGroupId");
+  let dev: { id: string };
+  try {
+    dev = await prisma.developerAccount.create({
+      data: {
+        name, slug,
+        website: s("website"), contactInfo: s("contactInfo"),
+        contactPerson: s("contactPerson"), phone: s("phone"), email: s("email"),
+        developerCloudUrl: s("developerCloudUrl"), driveFolderUrl: s("driveFolderUrl"), notes: s("notes"),
+        // Optional at creation (Bündel 3 Schritt 1) — the dropdown only ever
+        // offers real translation groups (listDeveloperPageOptions()), so a
+        // value here is always a deliberate human pick, never a guess.
+        developerTranslationGroupId: pageLink,
+      },
+    });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002" && pageLink) {
+      const holder = await accountHoldingGroup(pageLink);
+      return { error: `That public page is already linked to ${holder?.name ?? "another developer"}. Pick a different page, or unlink it there first.` };
+    }
+    throw e;
+  }
   revalidatePath("/admin/developments");
   redirect(`/admin/developments/developers/${dev.id}`);
 }
@@ -1749,13 +1769,29 @@ export async function createDeveloperAccount(_prev: any, formData: FormData) {
 // see DeveloperPageLink.tsx). value is "" to clear the link, or a real
 // translationGroupId picked from listDeveloperPageOptions() — never
 // free text, so this can't drift into an unreviewed guess either.
-export async function setDeveloperPageLink(id: string, value: string): Promise<void> {
+//
+// 2026-08-03 — catches the DB's own @unique(developerTranslationGroupId)
+// (see schema comment) after the BBF/Domenica incident: BBF's account held
+// Domenica's group id with no error and no warning, silently showing BBF's
+// entire catalog on Domenica's public page. Returns a result instead of
+// throwing so DeveloperPageLink.tsx can show which account already holds
+// the page, by name, not a generic failure.
+export async function setDeveloperPageLink(id: string, value: string): Promise<{ ok: true } | { ok: false; error: string }> {
   await requireSession();
-  await prisma.developerAccount.update({
-    where: { id },
-    data: { developerTranslationGroupId: value || null },
-  });
+  try {
+    await prisma.developerAccount.update({
+      where: { id },
+      data: { developerTranslationGroupId: value || null },
+    });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+      const holder = await accountHoldingGroup(value, id);
+      return { ok: false, error: `That public page is already linked to ${holder?.name ?? "another developer"}. Pick a different page, or unlink it there first.` };
+    }
+    throw e;
+  }
   revalidatePath(`/admin/developments/developers/${id}`);
+  return { ok: true };
 }
 
 export async function updateDeveloperAccount(id: string, formData: FormData) {

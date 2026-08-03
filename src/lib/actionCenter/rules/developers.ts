@@ -423,10 +423,48 @@ async function overlapCandidatesPending(): Promise<ActionItem[]> {
   }];
 }
 
+// (k) Two (or more) DeveloperAccounts claiming the SAME public page
+// (2026-08-03, BBF/Domenica incident) — a fangnet alongside the DB's own
+// @unique(developerTranslationGroupId) constraint (schema.prisma), not a
+// replacement for it: this project runs raw DB writes fairly often
+// (several this week alone, including the fix for this exact incident),
+// any of which can set this column directly without going through
+// setDeveloperPageLink()/the constraint's own application-layer handling.
+// URGENT unconditionally — this is precisely the bug class that showed
+// one developer's entire live catalog under another's brand with no
+// error and no warning; there's no "quiet" version of this condition.
+// Separate itemId namespace (developer-link-collision:) from
+// developer-link-broken:/developer-no-page: — same reasoning as those two
+// already document: a dismiss on one must never swallow an unrelated one.
+async function developerLinkCollisions(): Promise<ActionItem[]> {
+  const accounts = await prisma.developerAccount.findMany({
+    where: { developerTranslationGroupId: { not: null } },
+    select: { id: true, name: true, developerTranslationGroupId: true, updatedAt: true },
+  });
+  const byGroup = new Map<string, typeof accounts>();
+  for (const a of accounts) {
+    const key = a.developerTranslationGroupId as string;
+    byGroup.set(key, [...(byGroup.get(key) ?? []), a]);
+  }
+  const items: ActionItem[] = [];
+  for (const [groupId, group] of Array.from(byGroup)) {
+    if (group.length < 2) continue;
+    const names = group.map((a) => a.name).join(", ");
+    const mostRecent = group.reduce((max, a) => (a.updatedAt > max ? a.updatedAt : max), group[0].updatedAt);
+    items.push({
+      id: `developer-link-collision:${groupId}`, severity: "URGENT", category: "DEVELOPERS",
+      title: `${group.length} developer accounts linked to the same public page`,
+      description: `${names} all claim the same public page — one of them is showing the wrong project catalog to visitors. Re-link the wrong one(s) on their own admin screen.`,
+      deepLink: `/admin/developments/developers/${group[0].id}`, since: mostRecent,
+    });
+  }
+  return items;
+}
+
 export async function developerRules(): Promise<ActionItem[]> {
-  const [a, b, c, d, e, f, g, h, i, j] = await Promise.all([
+  const [a, b, c, d, e, f, g, h, i, j, k] = await Promise.all([
     soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(), backInStockReminders(),
-    developerNoPageReminders(), developerLinkBrokenReminders(), overlapCandidatesPending(),
+    developerNoPageReminders(), developerLinkBrokenReminders(), overlapCandidatesPending(), developerLinkCollisions(),
   ]);
-  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j];
+  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k];
 }
