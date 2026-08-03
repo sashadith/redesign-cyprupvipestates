@@ -237,6 +237,36 @@ model LegacyProjectRedirect {
   @@map("legacy_project_redirects")
 }
 
+// Nightly-swept legacy Project <-> Development overlap candidates
+// (2026-08-03) — replaces the frozen, one-time candidates.ts heuristic list.
+// A cron piggyback (see feed-sync route) finds title/developer/coordinate
+// matches among still-unlinked, still-PUBLISHED legacy Projects and inserts
+// genuinely NEW pairs here with a real discovery date; it never touches a
+// pair that already has a row (pending, confirmed, or rejected — all three
+// states are derived at read time from the Project fields below, not stored
+// here) or whose legacy Project already has supersededByDevelopmentId set.
+// Deliberately NOT related to Project/Development via a Prisma relation
+// (plain id columns, same pattern as CronRunLog) — keeps this table's own
+// migration fully additive, no touch to either of those two large,
+// already-live models.
+// Confirm/reject is NOT tracked here — Project.supersededByDevelopmentId /
+// Project.overlapRejectedDevelopmentIds (existing fields) remain the single
+// source of truth for that, exactly as with the old candidates.ts list; this
+// table only feeds the SUGGESTION side of the overlaps admin page.
+model OverlapCandidate {
+  id              String   @id @default(uuid())
+  legacyProjectId String // Project.id (translation-group anchor row, EN by convention)
+  developmentId   String // Development.id
+  confidence      String // "High" | "Medium" — "Low" is never persisted, see overlapSweep.ts
+  matchType       String // "exact-title" | "fuzzy-title"
+  distanceMeters  Float? // haversine distance between legacy lat/lng and the Development's resolved lat/lng, when both are known
+  note            String?
+  foundAt         DateTime @default(now())
+
+  @@unique([legacyProjectId, developmentId])
+  @@map("overlap_candidates")
+}
+
 // Generic admin action audit trail — distinct from LeadActivity (which is
 // scoped to a single CRM Lead and can't represent an action like "archived 4
 // legacy project rows"). Minimal by design: one row per meaningful admin
