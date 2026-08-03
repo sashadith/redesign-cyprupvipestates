@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { OVERLAP_CANDIDATES } from "./candidates";
 import { confirmOverlap, rejectOverlap } from "./actions";
 import RevertOverlapControl from "./RevertOverlapControl";
 
@@ -13,13 +12,19 @@ const CONFIDENCE_STYLE: Record<string, string> = {
   "Likely false positive": "bg-red-50 text-red-700",
 };
 
+// Reads OverlapCandidate (2026-08-03 nightly sweep, see src/lib/overlapSweep.ts)
+// instead of the frozen candidates.ts array it replaces. Confirm/reject
+// itself is untouched — Project.supersededByDevelopmentId /
+// overlapRejectedDevelopmentIds stay the single source of truth for that,
+// exactly as before; this table only supplies the suggestion list.
 export default async function OverlapsAdmin() {
-  const legacySlugs = Array.from(new Set(OVERLAP_CANDIDATES.map((c) => c.legacySlug)));
-  const devSlugs = Array.from(new Set(OVERLAP_CANDIDATES.map((c) => c.developmentSlug)));
+  const candidates = await prisma.overlapCandidate.findMany({ orderBy: { foundAt: "asc" } });
+  const legacyIds = Array.from(new Set(candidates.map((c) => c.legacyProjectId)));
+  const devIds = Array.from(new Set(candidates.map((c) => c.developmentId)));
 
   const [legacyProjects, developments] = await Promise.all([
     prisma.project.findMany({
-      where: { language: "en", slug: { in: legacySlugs } },
+      where: { id: { in: legacyIds } },
       select: {
         id: true,
         slug: true,
@@ -31,16 +36,16 @@ export default async function OverlapsAdmin() {
       },
     }),
     prisma.development.findMany({
-      where: { slug: { in: devSlugs } },
+      where: { id: { in: devIds } },
       select: { id: true, slug: true, publicName: true, publishStatus: true },
     }),
   ]);
-  const legacyBySlug = new Map(legacyProjects.map((p) => [p.slug, p]));
-  const devBySlug = new Map(developments.map((d) => [d.slug, d]));
+  const legacyById = new Map(legacyProjects.map((p) => [p.id, p]));
+  const devById = new Map(developments.map((d) => [d.id, d]));
 
-  const rows = OVERLAP_CANDIDATES.map((c) => {
-    const legacy = legacyBySlug.get(c.legacySlug);
-    const dev = devBySlug.get(c.developmentSlug);
+  const rows = candidates.map((c) => {
+    const legacy = legacyById.get(c.legacyProjectId);
+    const dev = devById.get(c.developmentId);
     const rejected = Array.isArray(legacy?.overlapRejectedDevelopmentIds)
       ? (legacy!.overlapRejectedDevelopmentIds as string[])
       : [];
@@ -48,7 +53,16 @@ export default async function OverlapsAdmin() {
     if (!legacy || !dev) state = "missing";
     else if (legacy.supersededByDevelopmentId === dev.id) state = "confirmed";
     else if (rejected.includes(dev.id)) state = "rejected";
-    return { ...c, legacy, dev, state };
+    return {
+      legacySlug: legacy?.slug ?? c.legacyProjectId,
+      legacyTitle: legacy?.title ?? "(unknown legacy project)",
+      developmentSlug: dev?.slug ?? c.developmentId,
+      developmentName: dev?.publicName ?? "(unknown development)",
+      confidence: c.confidence,
+      note: c.note,
+      foundAt: c.foundAt,
+      legacy, dev, state,
+    };
   });
 
   const pendingCount = rows.filter((r) => r.state === "pending").length;
@@ -58,12 +72,13 @@ export default async function OverlapsAdmin() {
       <div className="mb-4">
         <h1 className="text-2xl font-semibold">Legacy ↔ Development overlaps</h1>
         <p className="text-sm text-[#6B7280] mt-1 max-w-3xl">
-          One-time heuristic name-match list from the 2026-07-15 merge audit —
-          not a verified identity match. Confirm only pairs you know are the
-          same real project; reject the rest. Confirming links the legacy
-          project to the Development for the deactivate/redirect flow — it
-          does not by itself hide the legacy listing (use the
-          Activate/Deactivate toggle on the project itself for that).
+          Found automatically by the nightly sweep (title + developer +
+          coordinates) after each feed sync — not a verified identity match.
+          Confirm only pairs you know are the same real project; reject the
+          rest. Confirming links the legacy project to the Development for
+          the deactivate/redirect flow — it does not by itself hide the
+          legacy listing (use the Activate/Deactivate toggle on the project
+          itself for that).
         </p>
         <p className="text-sm mt-2">
           <span className="font-medium">{pendingCount}</span> of {rows.length} pending review.
@@ -77,6 +92,7 @@ export default async function OverlapsAdmin() {
               <th className="text-left font-medium px-4 py-2.5">Legacy project</th>
               <th className="text-left font-medium px-4 py-2.5">Proposed Development</th>
               <th className="text-left font-medium px-4 py-2.5">Confidence</th>
+              <th className="text-left font-medium px-4 py-2.5">Found</th>
               <th className="text-left font-medium px-4 py-2.5">Status</th>
               <th className="text-left font-medium px-4 py-2.5">Actions</th>
             </tr>
@@ -107,6 +123,9 @@ export default async function OverlapsAdmin() {
                 <td className="px-4 py-2.5">
                   <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium ${CONFIDENCE_STYLE[r.confidence]}`}>{r.confidence}</span>
                   {r.note && <div className="text-xs text-[#6B7280] mt-1 max-w-xs">{r.note}</div>}
+                </td>
+                <td className="px-4 py-2.5 text-xs text-[#6B7280] whitespace-nowrap">
+                  {r.foundAt.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
                 </td>
                 <td className="px-4 py-2.5">
                   {r.state === "confirmed" && <span className="text-emerald-700 font-medium">Confirmed</span>}
@@ -143,13 +162,6 @@ export default async function OverlapsAdmin() {
           </tbody>
         </table>
       </div>
-
-      <p className="text-xs text-[#6B7280] mt-4 max-w-3xl">
-        5 Developments from the audit had no legacy counterpart at all
-        (venus-ridge-villas, prodromi-modern-living, city-gardens,
-        kato-paphos-residences, blackpine) and aren&apos;t listed here — there&apos;s
-        nothing to link them against.
-      </p>
     </div>
   );
 }

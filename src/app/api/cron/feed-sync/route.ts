@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { syncAll, statusOnlySync } from "@/lib/feedSync";
 import { prisma } from "@/lib/prisma";
 import { withCronLog, logCronRun } from "@/lib/cronLog";
+import { sweepOverlapCandidates } from "@/lib/overlapSweep";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -35,6 +36,28 @@ async function purgeOldCronLogs() {
   } catch (e) {
     console.error("CronRunLog purge failed:", e);
     return { purged: 0, error: String(e) };
+  }
+}
+
+// Overlap-candidate sweep (2026-08-03) — same piggyback pattern as
+// purgeOldTrash/purgeOldCronLogs above: an error here must never fail the
+// actual feed sync (own try/catch, never rethrows), and this cron's existing
+// daily cadence is reused rather than a new crontab entry. Runs AFTER
+// syncAll/statusOnlySync above so it sees tonight's freshly-synced
+// Developments. Logged via logCronRun (job "overlap-sweep") so a silent
+// failure is as visible as any other daily job; Action Center rule
+// overlapCandidatesPending (rules/developers.ts) reads the resulting
+// OverlapCandidate rows independently of how any single run went.
+async function runOverlapSweep() {
+  try {
+    const result = await sweepOverlapCandidates();
+    await logCronRun("overlap-sweep", true, `${result.inserted} new of ${result.found} matched`);
+    return result;
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    console.error("Overlap sweep failed:", e);
+    await logCronRun("overlap-sweep", false, message);
+    return { found: 0, inserted: 0, error: message };
   }
 }
 
@@ -80,7 +103,8 @@ export async function GET(req: NextRequest) {
     }
     const trash = await purgeOldTrash();
     const cronLogCleanup = await purgeOldCronLogs();
-    return NextResponse.json({ ok: true, at: new Date().toISOString(), results, statusResults, trash, cronLogCleanup });
+    const overlapSweep = await runOverlapSweep();
+    return NextResponse.json({ ok: true, at: new Date().toISOString(), results, statusResults, trash, cronLogCleanup, overlapSweep });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }

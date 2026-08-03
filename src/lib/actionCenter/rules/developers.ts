@@ -346,10 +346,87 @@ async function developerLinkBrokenReminders(): Promise<ActionItem[]> {
   return items;
 }
 
-export async function developerRules(): Promise<ActionItem[]> {
-  const [a, b, c, d, e, f, g, h, i] = await Promise.all([
-    soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(), backInStockReminders(),
-    developerNoPageReminders(), developerLinkBrokenReminders(),
+// (j) Unconfirmed overlap-sweep candidates (2026-08-03) — legacy Project rows
+// that look like the same real building as a Development but aren't linked
+// yet (see src/lib/overlapSweep.ts + /admin/content/projects/overlaps). Left
+// unreviewed, the legacy page keeps advertising its own (possibly stale)
+// price/availability instead of redirecting to the live Development listing
+// — exactly the azalea-villas-aristo/serenity-court-aristo case this whole
+// feature exists because of. One aggregate item, not one per pair (same
+// pattern as readyToPublishBatch above) — with 0-2 new candidates expected
+// per night, per-pair items would be noise the admin has to dismiss one by
+// one instead of reviewing on the overlaps page where the actual decision
+// happens.
+//
+// A candidate row is "pending" here by the SAME rule the overlaps page
+// itself uses (re-derived live from Project.supersededByDevelopmentId /
+// overlapRejectedDevelopmentIds, not stored on OverlapCandidate) — the
+// instant an admin confirms or rejects a pair, it drops out of this count on
+// the very next Action Center computation, no extra bookkeeping needed.
+//
+// Severity: URGENT when any pending candidate's Development side is
+// currently sold out live (computeAvailability — never the cache column,
+// same rule as every other availability check in this file) — that's the
+// customer-facing case: a legacy page still advertising a sold-out building
+// as available, the exact bug azalea-villas-aristo/serenity-court-aristo
+// were. Otherwise ACTION — still needs a look, but nothing is actively
+// misrepresenting availability to a visitor right now.
+//
+// Separate itemId namespace (overlap-candidates-pending, singular — no
+// per-entity suffix since this is one aggregate item) from every other rule
+// in this file — a blanket dismiss-forever elsewhere matches on the exact
+// itemId string (see snooze.ts), so it can never silently swallow this one.
+async function overlapCandidatesPending(): Promise<ActionItem[]> {
+  const candidates = await prisma.overlapCandidate.findMany({
+    select: { legacyProjectId: true, developmentId: true, foundAt: true },
+  });
+  if (!candidates.length) return [];
+
+  const legacyIds = Array.from(new Set(candidates.map((c) => c.legacyProjectId)));
+  const devIds = Array.from(new Set(candidates.map((c) => c.developmentId)));
+  const [legacyRows, devs] = await Promise.all([
+    prisma.project.findMany({
+      where: { id: { in: legacyIds } },
+      select: { id: true, supersededByDevelopmentId: true, overlapRejectedDevelopmentIds: true },
+    }),
+    prisma.development.findMany({ where: { id: { in: devIds } }, include: { units: { select: { status: true } } } }),
   ]);
-  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i];
+  const legacyById = new Map(legacyRows.map((p) => [p.id, p]));
+  const devById = new Map(devs.map((d) => [d.id, d]));
+
+  let pendingCount = 0;
+  let soldOutCount = 0;
+  let oldestFoundAt: Date | null = null;
+  for (const c of candidates) {
+    const legacy = legacyById.get(c.legacyProjectId);
+    if (!legacy) continue;
+    const rejected = Array.isArray(legacy.overlapRejectedDevelopmentIds) ? (legacy.overlapRejectedDevelopmentIds as string[]) : [];
+    const isPending = legacy.supersededByDevelopmentId !== c.developmentId && !rejected.includes(c.developmentId);
+    if (!isPending) continue;
+    pendingCount++;
+    if (!oldestFoundAt || c.foundAt < oldestFoundAt) oldestFoundAt = c.foundAt;
+    const dev = devById.get(c.developmentId);
+    if (dev && computeAvailability(dev.units).soldOut) soldOutCount++;
+  }
+  if (pendingCount === 0) return [];
+
+  const severity: ActionItem["severity"] = soldOutCount > 0 ? "URGENT" : "ACTION";
+  const soldOutClause =
+    soldOutCount > 0
+      ? ` — ${soldOutCount} involve${soldOutCount === 1 ? "s" : ""} a sold-out Development still advertised as available on the legacy page`
+      : "";
+  return [{
+    id: "overlap-candidates-pending", severity, category: "DEVELOPERS",
+    title: `${pendingCount} legacy/Development overlap${pendingCount === 1 ? "" : "s"} to review`,
+    description: `Unconfirmed duplicate listing${pendingCount === 1 ? "" : "s"} found by the nightly sweep${soldOutClause}.`,
+    deepLink: "/admin/content/projects/overlaps", since: oldestFoundAt ?? new Date(),
+  }];
+}
+
+export async function developerRules(): Promise<ActionItem[]> {
+  const [a, b, c, d, e, f, g, h, i, j] = await Promise.all([
+    soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(), backInStockReminders(),
+    developerNoPageReminders(), developerLinkBrokenReminders(), overlapCandidatesPending(),
+  ]);
+  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j];
 }
