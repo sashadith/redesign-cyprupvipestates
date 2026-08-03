@@ -285,11 +285,6 @@ const QUBE_URL: Record<string, string> = {
 };
 const STAGE_LABEL: Record<string, string> = { planned: "Off-plan", "under construction": "Under construction", finished: "Completed", ready: "Completed" };
 
-// Explicitly "large" (not sizedImages()'s "medium" default) for both photos
-// below — confirmed 2026-08-03 that BBF/INEX genuinely ship a distinct,
-// often dramatically bigger large tier (e.g. a Ridge hero: 800x933 medium
-// vs. the real 3429x4000 camera original at large) that our own resize cap
-// (640/1280/1920, imageMirror.ts) was never even getting a chance to use.
 async function qubehub(dev: string, id = "1"): Promise<ProjectVM | null> {
   const url = QUBE_URL[dev];
   const key = process.env[`DEV_FEED_KEY_${dev.toUpperCase()}`] ?? ""; // read at call time
@@ -322,7 +317,7 @@ async function qubehub(dev: string, id = "1"): Promise<ProjectVM | null> {
       beds: beds !== "0" ? beds : "", baths: baths !== "0" ? baths : "",
       areaBuilt: areaM2(a.total), areaPlot: "", areaVeranda: areaM2(a.covered_veranda),
       floor: clean(u.floor), attrs, features: [],
-      photos: sizedImages(arr(u.images).map(txt).filter(Boolean), "large"),
+      photos: sizedImages(arr(u.images).map(txt).filter(Boolean)),
       plans: [], coords: null, description: "",
     };
   });
@@ -339,7 +334,7 @@ async function qubehub(dev: string, id = "1"): Promise<ProjectVM | null> {
   const areaName = ov.area ?? clean(loc.area);
   const cityTown = clean(loc.city);
   const town = cityTown && cityTown.toLowerCase() !== district.toLowerCase() && cityTown.toLowerCase() !== areaName.toLowerCase() ? cityTown : "";
-  const galleryAll = sizedImages(arr(project.images).map(txt).filter(Boolean), "large");
+  const galleryAll = sizedImages(arr(project.images).map(txt).filter(Boolean));
   const main = ov.mainImage ? secure(ov.mainImage) : null; // admin-selected hero image, shown first
   const gallery = main ? [main, ...galleryAll.filter((u) => u !== main)] : galleryAll;
   const amenities = arr(project.benefits).map(txt).filter(Boolean);

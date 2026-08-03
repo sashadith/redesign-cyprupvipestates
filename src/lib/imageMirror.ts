@@ -31,17 +31,51 @@ const root = () => join(process.cwd(), "public", "uploads", "developments");
 const hash = (s: string) => createHash("sha1").update(s).digest("hex").slice(0, 16);
 const exists = (p: string) => access(p).then(() => true).catch(() => false);
 
+// Upgrade any incoming URL to its "large" tier when the source follows a
+// known variant-naming convention, so we always mirror from the biggest
+// real source available before OUR OWN downscale (SIZES below) ever runs —
+// confirmed 2026-08-03 (BBF/INEX image-resolution investigation) that
+// picking "medium" this early was throwing away a genuinely bigger source
+// image (e.g. a Ridge hero: 800x933 medium vs. the real 3429x4000 camera
+// original at large) that our own resize cap never got a chance to use.
+// Deliberately duplicated from src/app/preview-project/imageSize.ts's
+// SUFFIX_RE/PREFIX_RE (same two patterns, confirmed to cover every BBF/INEX
+// URL sampled — suffix "_medium"/"_large" before the extension or a further
+// suffix, and UPPERCASE "MEDIUM_"/"LARGE_" filename prefixes) — kept local
+// so src/lib doesn't reach into an app-route feature directory. Deliberately
+// applied HERE, not at each adapter's call site: this is the one place every
+// mirrored image passes through regardless of origin — feed-derived via
+// sizedImages(), or a hardcoded feeds.ts OVERRIDES.mainImage literal — so a
+// future override or adapter benefits automatically without remembering to
+// ask for "large" itself. Any URL that doesn't match either pattern (Island
+// Blue, Domenica, Pafilia, Medousa — single-size feeds) passes through
+// unchanged.
+const SUFFIX_RE = /_(small|medium|large)(?=[._])/i;
+const PREFIX_RE = /(^|\/)(small|medium|large)_/i;
+const toLargeVariant = (url: string): string => {
+  if (SUFFIX_RE.test(url)) return url.replace(SUFFIX_RE, "_large");
+  if (PREFIX_RE.test(url)) return url.replace(PREFIX_RE, (_m, slash) => `${slash}LARGE_`);
+  return url;
+};
+
 export async function mirrorImage(src: string, devKey: string): Promise<string | null> {
   if (!src || !/^https?:\/\//i.test(src)) return null;
-  const h = hash(src);
+  const large = toLargeVariant(src);
+  const h = hash(large); // hash the normalized URL: a medium and large request for the same photo dedupe to one file
   const dir = join(root(), devKey);
   const mediumFile = join(dir, `${h}_medium.webp`);
   const mediumUrl = `/uploads/developments/${devKey}/${h}_medium.webp`;
   if (await exists(mediumFile)) return mediumUrl; // already mirrored → skip download
   try {
-    const res = await fetch(src, { signal: AbortSignal.timeout(20000) });
-    if (!res.ok) return null;
-    if (!/image\//i.test(res.headers.get("content-type") ?? "")) return null; // e.g. Cloudflare HTML
+    let res = await fetch(large, { signal: AbortSignal.timeout(20000) });
+    if (!res.ok || !/image\//i.test(res.headers.get("content-type") ?? "")) {
+      if (large !== src) {
+        console.warn(`[imageMirror] large-variant fetch failed (${res.status}) for ${large} (devKey=${devKey}) — falling back to ${src}`);
+        res = await fetch(src, { signal: AbortSignal.timeout(20000) });
+      }
+      if (!res.ok) return null;
+      if (!/image\//i.test(res.headers.get("content-type") ?? "")) return null; // e.g. Cloudflare HTML
+    }
     const buf = Buffer.from(await res.arrayBuffer());
     await mkdir(dir, { recursive: true });
     for (const [size, w] of SIZES) {
