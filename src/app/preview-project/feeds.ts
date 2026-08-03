@@ -1,6 +1,4 @@
 import { parseStringPromise } from "xml2js";
-import { readFile } from "fs/promises";
-import { join } from "path";
 import type { UnitVM } from "./UnitsView";
 import { sizeKey, sizeOf } from "./imageSize";
 
@@ -124,7 +122,6 @@ const OVERRIDES: Record<string, Ov> = {
   "aristo:Pelagos Beachfront Villas": { name: "Azure Beachfront Villas", area: "Chloraka" },
   "pafilia:Elysia Blu": { name: "Elysia Blu Residences", area: "Kato Paphos" },
   "domenica:cirvis": { name: "Cirvis Residences" },
-  "medousa:Cypress Park Living": { name: "Cypress Park Residences" },
   "agg:vasileon": { name: "Vasileon Signature Residences" },
 
   // bbf feed data-quality fix (2026-07-31): these 35 arrive with a stray
@@ -184,6 +181,29 @@ const OVERRIDES: Record<string, Ov> = {
   "domenica:new-apartments-paphos-thea": { name: "Thea" },
   "domenica:uptown-luxury-villas-in-tremithousa-paphos": { name: "Uptown Villas" },
   "domenica:villas-for-sale-in-paphos-virgo": { name: "Virgo" },
+
+  // Medousa's new live XML feed (2026-08-03) ships generic project names —
+  // 4 of the 12 are literally "Apartments in Paphos", which would collide
+  // on slug. Real names come from Medousa's own project report, not
+  // guessed: matched to these project refs via a 273/273 exact match on
+  // unit ids between the feed and that report (every one of this
+  // developer's units accounted for, 100% per project) — the highest-
+  // confidence source available, not a name/slug heuristic. Keyed by the
+  // project's own `ref` attribute (permanent), replacing the old file-
+  // based adapter's "medousa:<raw Name text>" keys entirely — those never
+  // match anything in this feed's id scheme and are gone, not migrated.
+  "medousa:PRJ-10034": { name: "Cypress Park Living" },
+  "medousa:PRJ-11601": { name: "Panorama Apartments" },
+  "medousa:PRJ-25735": { name: "MEDOUSA RESALES" },
+  "medousa:PRJ-26010": { name: "Infinity" },
+  "medousa:PRJ-28135": { name: "Golden Hills" },
+  "medousa:PRJ-29060": { name: "Business Centre (MBC)" },
+  "medousa:PRJ-29921": { name: "Aurelia Homes" },
+  "medousa:PRJ-29943": { name: "Marelia Valley" },
+  "medousa:PRJ-30014": { name: "Royal Horizon" },
+  "medousa:PRJ-30561": { name: "Michelle Park" },
+  "medousa:PRJ-30622": { name: "Amore Hills" },
+  "medousa:PRJ-31439": { name: "Azure Living" },
 };
 
 // ==================================================================
@@ -577,73 +597,113 @@ async function xml2u(dev: string, id: string): Promise<ProjectVM | null> {
 }
 
 // ==================================================================
-// Medousa (uploaded "project report" file, stored in the DB → exported to
-// public/medousa-feed.xml). Structure: ProjectsReport > Project > Unit.
-// Minimal feed: units + prices + specs only — NO images / coords / description.
+// Medousa Developers (2026-08-03) — live XML feed at agent-portal.cloud,
+// replaces the old manually-uploaded "project report" file
+// (public/medousa-feed.xml, ProjectsReport > Project > Unit — a completely
+// different shape this new feed can't be squeezed into; that file/adapter
+// is retired, not reused). New feed root:
+//   feed > projects > project[@ref] > properties > property[@ref]
+// First medousa feed with a real per-unit status (sold/active/reserved) —
+// "active" normalizes to "available" via the same inline pattern Island
+// Blue/Aristo already use below; our DB only knows sold/available/reserved,
+// "active" must never be written through. "medousa" was added to
+// STATUS_SYNC_DEVS (feedSync.ts) accordingly.
+// Project names arrive generic ("Apartments in Paphos" ×4, would collide on
+// slug) — real names come from Medousa's own project report, matched to
+// these project refs via 273/273 unit-id cross-reference; see the OVERRIDES
+// block below for the 12 corrections this adapter depends on for readable,
+// non-colliding names/slugs.
 // ==================================================================
-async function medousa(id: string): Promise<ProjectVM | null> {
-  const cacheKey = "medousa:file";
-  const hit = feedCache.get(cacheKey);
-  let data = hit && Date.now() - hit.at < FEED_TTL ? hit.data : null;
-  if (!data) {
-    try {
-      data = await parseXml(await readFile(join(process.cwd(), "public", "medousa-feed.xml"), "utf8"));
-      feedCache.set(cacheKey, { at: Date.now(), data });
-    } catch { return null; }
-  }
-  const projects = arr(data?.ProjectsReport?.Project);
-  const project = projects.find((p: any) => txt(p?.$?.Name) === id) ?? projects[0];
-  if (!project) return null;
-  const at = project.$ ?? {};
+const MEDOUSA_URL = "https://medousa.agent-portal.cloud/api/feed/v7a996A70CWQWgWobsAxCWqB9lB3YVcBgcgQMAc50nk.xml";
+const MEDOUSA_STAGE_LABEL: Record<string, string> = { off_plan: "Off Plan", under_construction: "Under Construction", completed: "Completed" };
+// amenity/feature codes arrive snake_case ("vrf_system", "furniture_package") —
+// title-case them for display; the couple of acronyms that'd otherwise read
+// oddly ("Vrf System") get a manual fixup.
+const MEDOUSA_WORD_FIX: Record<string, string> = { vrf: "VRF" };
+const humanizeCode = (s: string) =>
+  s.replace(/_/g, " ").replace(/\b\w+\b/g, (w) => MEDOUSA_WORD_FIX[w.toLowerCase()] ?? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+const medousaImages = (media: any, role: string) => sizedImages(arr(media?.image).filter((im: any) => txt(im?.$?.role) === role).map((im: any) => txt(im)));
 
-  const units: UnitVM[] = arr(project.Unit).map((u: any) => {
-    const a = u.Attributes ?? {};
-    const beds = clean(a.Bedrooms) !== "0" ? clean(a.Bedrooms) : "";
-    const baths = clean(a.Bathrooms) !== "0" ? clean(a.Bathrooms) : "";
-    const pool = clean(a.SwimmingPool);
-    // Garage/Basement ship either an area figure or a plain "Yes"/"Communal" flag —
-    // format as m² only when it's actually numeric, else pass the text through as-is.
-    const numOrText = (v: any) => { const t = clean(v); return t ? (/^\d/.test(t) ? areaM2(v) : t) : ""; };
+async function medousa(id: string): Promise<ProjectVM | null> {
+  const data = await cachedParse(MEDOUSA_URL);
+  const projects = arr(data?.feed?.projects?.project);
+  const project = projects.find((p: any) => txt(p?.$?.ref) === id) ?? projects[0];
+  if (!project) return null;
+  const ref = txt(project.$?.ref);
+  const loc = project.location ?? {};
+  const lat = toNum(loc.latitude), lng = toNum(loc.longitude);
+
+  const units: UnitVM[] = arr(project.properties?.property).map((p: any) => {
+    const areas = p.areas ?? {};
+    const st = clean(p.status).toLowerCase();
+    // "active" (the majority status in this feed) falls through to
+    // "available" here exactly like every other unmatched value would —
+    // deliberate, not a gap: it's the one normalization this adapter must
+    // never skip (see file header).
+    const status: UnitVM["status"] = st.includes("sold") ? "sold" : st.includes("reserv") ? "reserved" : "available";
+    const poolRaw = clean(p["swimming-pool"]);
+    const pool = poolRaw ? (/^communal$/i.test(poolRaw) ? "Communal" : poolRaw) : "";
+    const vatRate = clean(p.price?.["vat-rate"]);
+    const vatElig = clean(p.price?.["vat-eligibility"]);
     const attrs = [
-      ["Internal area", areaM2(a.InternalArea)], ["Total covered", areaM2(a.TotalCoveredArea)],
-      ["Covered veranda", areaM2(a.CoveredVeranda)], ["Uncovered veranda", areaM2(a.UncoveredVeranda)],
-      ["Roof terrace", areaM2(a.roofterrace)], ["Plot", areaM2(a.Plot)], ["Total area", areaM2(a.TotalArea)],
-      ["Swimming pool", pool && pool !== "0" ? pool.charAt(0) + pool.slice(1).toLowerCase() : ""],
-      ["Garage", numOrText(a.Garage)], ["Basement", numOrText(a.Basement)],
-      ["Storage", numOrText(a.Storages)], ["Elevator", numOrText(a.Elevator)], ["Conference room", numOrText(a.ConferenceRoom)],
-      ["Offices", clean(a.Offices) && clean(a.Offices) !== "0" ? clean(a.Offices) : ""],
+      ["Swimming pool", pool],
+      ["Block", clean(p.block)],
+      ["VAT", vatElig === "eligible" && vatRate ? `${vatRate}% VAT` : vatElig === "not_eligible" ? "VAT not applicable" : ""],
     ].filter(([, v]) => v).map(([name, value]) => ({ name: String(name), value: String(value) }));
-    const short = txt(u.Title).replace(new RegExp(`^${escapeRe(txt(at.Name))}\\s*`, "i"), "");
+    const referenceName = clean(p["reference-name"]);
+    const unitRef = txt(p.$?.ref);
     return {
-      ref: txt(u.Id), name: txt(u.Title), label: `Nr. ${short || txt(u.Id)}`,
-      type: txt(u.ProjectType) || clean(a.Type),
-      status: "available", statusLabel: "Available", price: toNum(u.Price), currency: "EUR",
-      // TotalCoveredArea already includes CoveredVeranda (confirmed against
-      // the live feed — equal in every sampled unit, e.g. 97.5 = 82 +
-      // 15.5) — areaBuilt needs the pure interior figure so Covered Area
-      // (computed at display time as areaBuilt + areaVeranda) doesn't
-      // double-count. InternalArea is populated on all 114 current units;
-      // TotalArea (Internal + Uncovered veranda, an imperfect but closer-
-      // than-nothing proxy) is kept only as a defensive fallback in case a
-      // future feed update ever leaves InternalArea blank. 2026-07-26.
-      beds, baths, areaBuilt: areaM2(a.InternalArea) || areaM2(a.TotalArea), areaPlot: areaM2(a.Plot), areaVeranda: areaM2(a.CoveredVeranda),
-      floor: "", attrs, features: [], photos: [], plans: [], coords: null, description: "",
+      // reference-name is the display value (renamed freely on Medousa's
+      // side over time); ref is the property's own numeric attribute,
+      // stable, and what unitRow() in feedSync.ts writes to
+      // DevelopmentUnit.feedRef — never swap these two.
+      ref: unitRef, name: referenceName, label: referenceName ? `Nr. ${referenceName}` : `Nr. ${unitRef}`,
+      type: clean(p.type),
+      status, statusLabel: status === "sold" ? "Sold" : status === "reserved" ? "Reserved" : "Available",
+      price: toNum(p.price?.amount), currency: "EUR",
+      // bedrooms/bathrooms/swimming-pool are absent (not empty) on the 7
+      // commercial units — clean()/toNum() already return ""/pool="" for a
+      // missing node, so this falls through correctly with no special case.
+      beds: clean(p.bedrooms), baths: clean(p.bathrooms),
+      // areaM2()/toNum() already treat 0 as absent (toNum: `n > 0` gate) —
+      // the 170 non-villa units carrying <plot>0</plot> correctly produce
+      // "" here, not "0 m²", with no extra handling needed.
+      areaBuilt: areaM2(areas["internal-area"]), areaPlot: areaM2(areas.plot), areaVeranda: areaM2(areas["covered-veranda"]),
+      floor: "", attrs, features: arr(p.features?.feature).map((f: any) => humanizeCode(clean(f))).filter(Boolean),
+      photos: [], plans: medousaImages(p.media, "floorplan"),
+      coords: null, description: "",
     };
   });
 
-  const ov = OVERRIDES[`medousa:${id}`] ?? {};
-  const developerName = id, publicName = ov.name ?? id;
-  const district = txt(at.City) || "Paphos";
+  const ov = OVERRIDES[`medousa:${ref}`] ?? {};
+  const developerName = clean(project.name) || ref, publicName = ov.name ?? developerName;
+  const district = clean(loc.district) || clean(loc.city) || "";
+  const town = clean(loc.city);
   const area = ov.area ?? "";
-  const pooled = arr(project.Unit).some((u: any) => /pool|communal/i.test(txt(u?.Attributes?.SwimmingPool)));
+  // completion/expected-date is populated on only 1 of 12 projects — fall
+  // back to the always-present completion/status enum (off_plan|under_
+  // construction|completed) rather than leaving completion blank whenever
+  // a date is missing.
+  const expectedDate = clean(project.completion?.["expected-date"]);
+  const completion = expectedDate && validDate(expectedDate)
+    ? fmtCompletion(expectedDate)
+    : MEDOUSA_STAGE_LABEL[clean(project.completion?.status).toLowerCase()] || "";
+  const amenities = arr(project.amenities?.amenity).map((a: any) => humanizeCode(clean(a))).filter(Boolean);
   const prices = units.map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b);
+
   return {
-    id, dev: "medousa", publicName, developerName, developer: "Medousa",
-    area, district, town: "", location: joinLoc(district, area),
-    status: "Available", category: "Residential", completion: clean(at.Year), energy: "",
+    id: ref, dev: "medousa", publicName, developerName, developer: "Medousa Developers",
+    area, district, town, location: joinLoc(district, town, area),
+    status: "Available", category: "Residential", completion, energy: "",
     description: "",
-    gallery: ov.mainImage ? [secure(ov.mainImage)] : [], plans: [], renders: [],
-    amenities: pooled ? ["Communal pool"] : [], heroVideo: ov.heroVideo, center: null, units,
+    // PRJ-25735 ("Medousa Resales") ships <location><country>CY</country></location>
+    // only — no city/lat/lng at all. lat/lng end up null (no map pin, by
+    // design, not an error); district/town/area all resolve to "" the same
+    // way any other project with a sparse location already would.
+    gallery: ov.mainImage ? [secure(ov.mainImage)] : medousaImages(project.media, "hero"), plans: [], renders: [],
+    amenities, heroVideo: ov.heroVideo,
+    center: lat != null && lng != null ? { lat, lng } : null,
+    units,
     priceFrom: prices[0] ?? null, priceTo: prices[prices.length - 1] ?? null, currency: "EUR",
   };
 }
@@ -759,7 +819,7 @@ const DEVELOPERS: Record<string, { label: string; default: string }> = {
   aristo: { label: "Aristo", default: "Pelagos Beachfront Villas" },
   pafilia: { label: "Pafilia", default: "Elysia Blu" },
   domenica: { label: "Domenica", default: "cirvis" },
-  medousa: { label: "Medousa", default: "Cypress Park Living" },
+  medousa: { label: "Medousa", default: "PRJ-10034" },
   agg: { label: "AGG", default: "vasileon" },
   squareone: { label: "Square One", default: "neon" },
 };
@@ -781,7 +841,7 @@ export async function listProjectIds(dev: string): Promise<string[]> {
     return uniq(arr((await cachedParse(cfg.url))?.document?.Clients?.Client?.properties?.Property).map((p: any) => cfg.groupKey(p)));
   }
   if (dev === "medousa") {
-    try { return uniq(arr((await parseXml(await readFile(join(process.cwd(), "public", "medousa-feed.xml"), "utf8")))?.ProjectsReport?.Project).map((p: any) => txt(p?.$?.Name))); }
+    try { return uniq(arr((await cachedParse(MEDOUSA_URL))?.feed?.projects?.project).map((p: any) => txt(p?.$?.ref))); }
     catch { return []; }
   }
   if (dev === "agg") return Object.keys(AGG_FIXTURES);

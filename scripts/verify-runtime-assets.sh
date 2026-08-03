@@ -19,7 +19,8 @@ TARGET="${1:?usage: verify-runtime-assets.sh <path-to-built-tree>}"
 
 REQUIRED_FILES=(
   "public/fonts/DejaVuSans.ttf"
-  "public/medousa-feed.xml"
+  # medousa-feed.xml removed 2026-08-03 — the medousa adapter now fetches a
+  # live XML feed (feeds.ts, MEDOUSA_URL) instead of reading this file.
   "public/poi/cyprus.json"
   "public/poi/cyprus-extra.json"
   # Branded OG/social-preview image (see src/lib/seo.ts DEFAULT_OG_IMAGE and

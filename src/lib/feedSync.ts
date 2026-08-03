@@ -18,7 +18,14 @@ const DEV_ACCOUNT: Record<string, { slug: string; name: string }> = {
   aristo: { slug: "aristo", name: "Aristo" },
   pafilia: { slug: "pafilia", name: "Pafilia" },
   domenica: { slug: "domenica", name: "Domenica Group" },
-  medousa: { slug: "medousa", name: "Medousa" },
+  // slug "medousa-xml" (2026-08-03), not "medousa" — the old file-based-era
+  // DeveloperAccount (slug "medousa") was deleted along with its 16 unpublished
+  // drafts when the old adapter was retired; the account the admin manually
+  // created for this new live feed has slug "medousa-xml". ensureAccount()
+  // below upserts by this exact slug — leaving it as the old "medousa" would
+  // silently create a THIRD, empty, disconnected account on the next sync
+  // instead of attaching to the one already configured.
+  medousa: { slug: "medousa-xml", name: "Medousa (XML)" },
   agg: { slug: "agg", name: "AGG Luxury Homes" },
   squareone: { slug: "square-one", name: "Square One" },
 };
@@ -316,11 +323,13 @@ export async function backfillFeedRefFromDigits(developmentId: string, opts: { d
 // Domenica confirmed live (see feeds.ts); Aristo's adapter already parses
 // its own Status field the same way, so it's included ready-to-go even
 // though no Aristo development currently has manual units — harmless no-op
-// until one does. Pafilia/Medousa/SquareOne have no status field in their
-// feeds at all (see the 2026-07-26 investigation), so they're excluded
-// rather than silently doing nothing every run. qubehub (inex/bbf) stays
-// out pending API access, same as everywhere else this session.
-export const STATUS_SYNC_DEVS = ["island-blue", "domenica", "aristo"];
+// until one does. Pafilia/SquareOne have no status field in their feeds at
+// all (see the 2026-07-26 investigation), so they're excluded rather than
+// silently doing nothing every run. qubehub (inex/bbf) stays out pending
+// API access, same as everywhere else this session. Medousa's OLD
+// file-based feed had no status field either — its new live XML feed
+// (2026-08-03) does (sold|active|reserved), so it's added here too.
+export const STATUS_SYNC_DEVS = ["island-blue", "domenica", "aristo", "medousa"];
 
 export type StatusOnlySyncChange = { slug: string; unitRef: string; from: string; to: string };
 
