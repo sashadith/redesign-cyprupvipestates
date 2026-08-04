@@ -1,6 +1,7 @@
 import sharp from "sharp";
 import { createHash } from "crypto";
 import { mkdir, writeFile, access, mkdtemp, readdir, readFile, rm } from "fs/promises";
+import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import { spawn } from "child_process";
@@ -21,9 +22,28 @@ const SIZES: [string, number][] = [["small", 640], ["medium", 1280], ["large", 1
 // NEW file under public/uploads/ must call this afterward. Detached + delayed
 // so the HTTP response returns before the restart. App name overridable via
 // PM2_APP_NAME.
+// Debounced: every admin save/sync that mirrors anything calls this, and pm2
+// runs cyprusvipestates in cluster mode (2 workers) — five clicks in a row,
+// possibly landing on different workers, must not mean five restarts. A
+// small lock file (shared filesystem, so it coordinates across BOTH cluster
+// workers, unlike an in-memory flag) records the last trigger time; a
+// trigger within RESTART_DEBOUNCE_MS of the last one is a no-op. 2026-08-04:
+// PM2_APP_NAME is now set correctly per environment (prod's/staging's own
+// shared .env) — the fallback below is only a last resort, no longer the
+// live bug it used to be (confirmed via pm2's restart counter: cve-staging
+// had silently absorbed every prod mirror-triggered restart for weeks).
+const RESTART_DEBOUNCE_MS = 15_000;
+const restartLockFile = () => join(process.cwd(), "public", "uploads", ".restart-lock");
+
 export function scheduleAppRestart() {
   try {
-    const app = process.env.PM2_APP_NAME || "cve-staging";
+    const lockPath = restartLockFile();
+    const now = Date.now();
+    let last = 0;
+    try { last = Number(readFileSync(lockPath, "utf8")) || 0; } catch { /* no lock yet */ }
+    if (now - last < RESTART_DEBOUNCE_MS) return; // already scheduled recently
+    writeFileSync(lockPath, String(now));
+    const app = process.env.PM2_APP_NAME || "cyprusvipestates";
     spawn("sh", ["-c", `sleep 4 && /usr/bin/pm2 restart ${app}`], { detached: true, stdio: "ignore" }).unref();
   } catch { /* ignore */ }
 }
@@ -58,14 +78,16 @@ const toLargeVariant = (url: string): string => {
   return url;
 };
 
-export async function mirrorImage(src: string, devKey: string): Promise<string | null> {
+export type MirrorResult = { url: string; wasNew: boolean };
+
+export async function mirrorImage(src: string, devKey: string): Promise<MirrorResult | null> {
   if (!src || !/^https?:\/\//i.test(src)) return null;
   const large = toLargeVariant(src);
   const h = hash(large); // hash the normalized URL: a medium and large request for the same photo dedupe to one file
   const dir = join(root(), devKey);
   const mediumFile = join(dir, `${h}_medium.webp`);
   const mediumUrl = `/uploads/developments/${devKey}/${h}_medium.webp`;
-  if (await exists(mediumFile)) return mediumUrl; // already mirrored → skip download
+  if (await exists(mediumFile)) return { url: mediumUrl, wasNew: false }; // already mirrored → skip download
   try {
     let res = await fetch(large, { signal: AbortSignal.timeout(20000) });
     if (!res.ok || !/image\//i.test(res.headers.get("content-type") ?? "")) {
@@ -82,7 +104,7 @@ export async function mirrorImage(src: string, devKey: string): Promise<string |
       const out = await sharp(buf).rotate().resize({ width: w, withoutEnlargement: true }).webp({ quality: 80 }).toBuffer();
       await writeFile(join(dir, `${h}_${size}.webp`), out);
     }
-    return mediumUrl;
+    return { url: mediumUrl, wasNew: true };
   } catch {
     return null;
   }
@@ -145,14 +167,42 @@ export async function pdfPagesToJpegs(buf: Buffer, maxPages = 6): Promise<Buffer
   }
 }
 
-// Mirror a list of source urls (limited concurrency); drops failures.
-export async function mirrorAll(urls: string[], devKey: string, concurrency = 4): Promise<string[]> {
+// Mirror a list of source urls (limited concurrency); drops failures. Every
+// entry is assumed to be an external URL — use this for feed-sourced arrays
+// (feedSync.ts), where a failed mirror is simply omitted (the feed remains
+// the source of truth next sync).
+export async function mirrorAll(urls: string[], devKey: string, concurrency = 4): Promise<{ urls: string[]; anyNew: boolean }> {
   const out: string[] = [];
+  let anyNew = false;
   for (let i = 0; i < urls.length; i += concurrency) {
     const batch = await Promise.all(urls.slice(i, i + concurrency).map((u) => mirrorImage(u, devKey)));
-    for (const r of batch) if (r) out.push(r);
+    for (const r of batch) if (r) { out.push(r.url); if (r.wasNew) anyNew = true; }
   }
-  return out;
+  return { urls: out, anyNew };
+}
+
+// Mirror a MIXED array (already-local /uploads/ paths alongside external
+// URLs) — for admin-save paths (saveGallery/savePlans/setUnitPhotos/etc.)
+// where order and array length matter (it's a curated, ordered gallery, not
+// a fresh feed pull) and a failed mirror must never make an image silently
+// vanish: already-local entries pass through untouched, and an external URL
+// that fails to mirror is kept as-is (a working hotlink beats a missing
+// image) rather than dropped.
+export async function mirrorAny(urls: string[], devKey: string, concurrency = 4): Promise<{ urls: string[]; anyNew: boolean }> {
+  const out: string[] = new Array(urls.length);
+  let anyNew = false;
+  const externalIdx: number[] = [];
+  urls.forEach((u, i) => { if (/^https?:\/\//i.test(u)) externalIdx.push(i); else out[i] = u; });
+  for (let i = 0; i < externalIdx.length; i += concurrency) {
+    const batchIdx = externalIdx.slice(i, i + concurrency);
+    const results = await Promise.all(batchIdx.map((idx) => mirrorImage(urls[idx], devKey)));
+    results.forEach((r, j) => {
+      const idx = batchIdx[j];
+      if (r) { out[idx] = r.url; if (r.wasNew) anyNew = true; }
+      else out[idx] = urls[idx]; // mirror failed — keep the original external URL rather than lose the image
+    });
+  }
+  return { urls: out, anyNew };
 }
 
 // Filesystem-safe folder key for a development, from its feedKey.

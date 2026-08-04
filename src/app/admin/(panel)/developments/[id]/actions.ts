@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { extractProjectFromPdfs } from "@/lib/ai/pdfExtract";
 import { generateProjectDescription } from "@/lib/ai/projectDescription";
 import type { FourLang } from "@/lib/ai/areaContent";
-import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart } from "@/lib/imageMirror";
+import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart, mirrorAny } from "@/lib/imageMirror";
 import { resolveMapsUrlToGeo } from "@/lib/mapsGeo";
 import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
 import { recomputeDevelopmentDerivedState } from "@/lib/developmentDerivedState";
@@ -194,16 +194,25 @@ export async function uploadUnitImages(unitId: string, formData: FormData): Prom
 }
 
 // Persist a unit's ordered photos (first = cover). Marks the unit manual.
+// Every image URL an admin action persists is mirrored first (2026-08-04) —
+// any external URL left in the DB is a dependency on a third-party server
+// we don't control (availability, resolution). mirrorAny() is a no-op for
+// URLs already under /uploads/ (the common case: reordering an existing
+// gallery), so this only costs real time for genuinely new/external images.
 export async function setUnitPhotos(unitId: string, photos: string[]) {
   const clean = photos.map((u) => String(u).trim()).filter(Boolean);
-  const unit = await prisma.developmentUnit.update({ where: { id: unitId }, data: { photos: clean as any, source: "manual" } });
+  const unit = await prisma.developmentUnit.findUnique({ where: { id: unitId }, select: { developmentId: true, development: { select: { feedKey: true } } } });
+  if (!unit) return;
+  const { urls, anyNew } = await mirrorAny(clean, devKeyFor(unit.development.feedKey));
+  await prisma.developmentUnit.update({ where: { id: unitId }, data: { photos: urls as any, source: "manual" } });
+  if (anyNew) scheduleAppRestart();
   revalidatePath(`/admin/developments/${unit.developmentId}`);
 }
 
 // Copy this unit's photos to every OTHER unit in the development that is 100%
 // identical (same type / beds / baths / areas). Returns how many were updated.
 export async function applyPhotosToIdentical(unitId: string): Promise<number> {
-  const u = await prisma.developmentUnit.findUnique({ where: { id: unitId } });
+  const u = await prisma.developmentUnit.findUnique({ where: { id: unitId }, include: { development: { select: { feedKey: true } } } });
   if (!u) return 0;
   const twins = await prisma.developmentUnit.findMany({
     where: {
@@ -218,7 +227,9 @@ export async function applyPhotosToIdentical(unitId: string): Promise<number> {
     select: { id: true },
   });
   if (twins.length) {
-    await prisma.developmentUnit.updateMany({ where: { id: { in: twins.map((t) => t.id) } }, data: { photos: u.photos as any, source: "manual" } });
+    const { urls, anyNew } = await mirrorAny((u.photos as string[] | null) ?? [], devKeyFor(u.development.feedKey));
+    await prisma.developmentUnit.updateMany({ where: { id: { in: twins.map((t) => t.id) } }, data: { photos: urls as any, source: "manual" } });
+    if (anyNew) scheduleAppRestart();
     revalidatePath(`/admin/developments/${u.developmentId}`);
   }
   return twins.length;
@@ -227,11 +238,18 @@ export async function applyPhotosToIdentical(unitId: string): Promise<number> {
 // Persist the admin-managed gallery order + hero. Wins over the feed gallery.
 export async function saveGallery(developmentId: string, gallery: string[], mainImage: string | null) {
   const clean = gallery.map((u) => String(u).trim()).filter(Boolean);
+  const dev = await prisma.development.findUnique({ where: { id: developmentId }, select: { feedKey: true } });
+  if (!dev) return;
+  const devKey = devKeyFor(dev.feedKey);
+  const { urls, anyNew: galleryNew } = await mirrorAny(clean, devKey);
+  const heroInput = mainImage ? mainImage.trim() : "";
+  const { urls: heroUrls, anyNew: heroNew } = heroInput ? await mirrorAny([heroInput], devKey) : { urls: [""], anyNew: false };
   await prisma.developmentOverride.upsert({
     where: { developmentId },
-    update: { gallery: clean as any, mainImage: mainImage || clean[0] || null },
-    create: { developmentId, gallery: clean as any, mainImage: mainImage || clean[0] || null },
+    update: { gallery: urls as any, mainImage: heroUrls[0] || urls[0] || null },
+    create: { developmentId, gallery: urls as any, mainImage: heroUrls[0] || urls[0] || null },
   });
+  if (galleryNew || heroNew) scheduleAppRestart();
   revalidatePath(`/admin/developments/${developmentId}`);
 }
 
@@ -267,7 +285,11 @@ export async function uploadDevPlans(developmentId: string, formData: FormData):
 // Persist the admin-managed floor-plan order / deletions.
 export async function savePlans(developmentId: string, plans: string[]) {
   const clean = plans.map((u) => String(u).trim()).filter(Boolean);
-  await prisma.development.update({ where: { id: developmentId }, data: { plans: clean as any } });
+  const dev = await prisma.development.findUnique({ where: { id: developmentId }, select: { feedKey: true } });
+  if (!dev) return;
+  const { urls, anyNew } = await mirrorAny(clean, devKeyFor(dev.feedKey));
+  await prisma.development.update({ where: { id: developmentId }, data: { plans: urls as any } });
+  if (anyNew) scheduleAppRestart();
   revalidatePath(`/admin/developments/${developmentId}`);
 }
 
@@ -463,9 +485,25 @@ export async function saveUnits(developmentId: string, units: any[]) {
     const k = (u.label || u.ref || "").trim().toLowerCase();
     if (k) { photoByKey.set(k, u.photos); attrsByKey.set(k, u.attrs); feedRefByKey.set(k, u.feedRef); sourceByKey.set(k, u.source); }
   }
-  const rows = (units || []).map((u, i) => {
+  // Every photo URL is mirrored before it's persisted (2026-08-04) — this is
+  // the main unit-photo editing path (no separate "save photos" step), so
+  // it's the one most likely to reintroduce an external URL. Already-local
+  // entries are a no-op in mirrorAny(). devKey resolution failing (no feed
+  // configured) falls back to the raw client array rather than blocking the
+  // whole save.
+  const dev = await prisma.development.findUnique({ where: { id: developmentId }, select: { feedKey: true } });
+  const devKey = dev ? devKeyFor(dev.feedKey) : null;
+  let anyNew = false;
+  const rows = await Promise.all((units || []).map(async (u, i) => {
     const label = String(u.label ?? "").trim() || null;
     const key = (label || "").toLowerCase();
+    const rawPhotos = Array.isArray(u.photos) ? u.photos.map((x: any) => String(x).trim()).filter(Boolean) : photoByKey.get(key);
+    let photos = rawPhotos;
+    if (devKey && Array.isArray(rawPhotos) && rawPhotos.length) {
+      const r = await mirrorAny(rawPhotos, devKey);
+      photos = r.urls;
+      if (r.anyNew) anyNew = true;
+    }
     return {
       developmentId,
       label,
@@ -493,8 +531,8 @@ export async function saveUnits(developmentId: string, units: any[]) {
       status: ["available", "reserved", "sold"].includes(u.status) ? u.status : "available",
       // The editor now edits photos directly (no separate "Save photos" button) —
       // the client is authoritative when it sends an array; only fall back to the
-      // stored value for any caller that doesn't send photos at all.
-      photos: (Array.isArray(u.photos) ? u.photos.map((x: any) => String(x).trim()).filter(Boolean) : photoByKey.get(key)) as any,
+      // stored value for any caller that doesn't send photos at all. Mirrored above.
+      photos: photos as any,
       attrs: (attrsByKey.get(key) ?? null) as any,
       // Never sourced from the form — feedRef has no editable field at all
       // (UnitDetail.tsx shows it read-only). Preserved by key exactly like
@@ -503,9 +541,10 @@ export async function saveUnits(developmentId: string, units: any[]) {
       sortIndex: i,
       source: sourceByKey.get(key) ?? "manual",
     };
-  });
+  }));
   await prisma.developmentUnit.deleteMany({ where: { developmentId } });
   if (rows.length) await prisma.developmentUnit.createMany({ data: rows });
+  if (anyNew) scheduleAppRestart();
   await recomputeDevelopmentDerivedState(developmentId);
   revalidatePath(`/admin/developments/${developmentId}`);
 }
@@ -526,13 +565,16 @@ export async function setDevelopmentSyncMode(developmentId: string, mode: "manua
 }
 
 // Teil 2 (sync control panel): "Units aus Feed neu ziehen" — pulls this one
-// Development immediately instead of waiting for the 4am cron. Data-only
-// (mirror:false) by design, matching the existing "Sync now" button's
-// philosophy — mirroring needs an app restart afterward (see
-// syncOneDevelopment/scheduleAppRestart in feedSync.ts), which is more
-// disruption than a single admin click should trigger.
+// Development immediately instead of waiting for the 4am cron. Mirrors
+// images now (2026-08-04) — was mirror:false "by design" (avoid the
+// app-restart disruption of a single click), but that meant this exact
+// button could silently overwrite an already-mirrored gallery/unit-photo
+// array with the feed's raw external URLs, which is worse than the
+// disruption it was avoiding. scheduleAppRestart() is itself debounced and
+// only fires when something was actually written (see feedSync.ts/
+// imageMirror.ts), so a routine click stays fast and restart-free.
 export async function syncOneDevelopmentAction(developmentId: string): Promise<SyncOneDevelopmentResult> {
-  const result = await syncOneDevelopment(developmentId, { mirror: false });
+  const result = await syncOneDevelopment(developmentId, { mirror: true });
   revalidatePath(`/admin/developments/${developmentId}`);
   return result;
 }

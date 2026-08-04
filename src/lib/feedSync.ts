@@ -107,7 +107,7 @@ function unitRow(u: UnitVM, developmentId: string, i: number) {
   };
 }
 
-export type SyncResult = { dev: string; found: number; created: number; updated: number; failed: number };
+export type SyncResult = { dev: string; found: number; created: number; updated: number; failed: number; mirroredNewFiles: boolean };
 
 // Every developer whose units are subject to the full deleteMany+createMany
 // sync (syncAll/the daily cron) — the read-only editor gate (Teil 1) and the
@@ -121,7 +121,7 @@ export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "
 // fixture data, not a live feed; nothing to "pull fresh".
 export const FORCE_SYNC_DEVS = SYNCED_DEVS.filter((d) => d !== "agg");
 
-type ProjectSyncOutcome = { ok: boolean; created: boolean; unitsWritten: number; skippedManual: boolean };
+type ProjectSyncOutcome = { ok: boolean; created: boolean; unitsWritten: number; skippedManual: boolean; mirroredNewFiles: boolean };
 
 // Per-project sync body, shared by syncDeveloperCore's loop (all projects of
 // a developer) and syncOneDevelopment (exactly one project, admin Force-Sync
@@ -129,12 +129,23 @@ type ProjectSyncOutcome = { ok: boolean; created: boolean; unitsWritten: number;
 // (manual-lock gate, distance recompute, mirroring) with no risk of drift.
 async function syncOneProject(dev: string, id: string, accountId: string, opts: { mirror?: boolean } = {}): Promise<ProjectSyncOutcome> {
   const vm = await getPreviewProject(dev, id);
-  if (!vm) return { ok: false, created: false, unitsWritten: 0, skippedManual: false };
+  if (!vm) return { ok: false, created: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false };
   const feedKey = `${dev}:${id}`;
+  let mirroredNewFiles = false;
   if (opts.mirror) {
     const dk = devKeyFor(feedKey);
-    vm.gallery = await mirrorAll(vm.gallery, dk);
-    for (const u of vm.units) u.photos = await mirrorAll(u.photos, dk);
+    const gallery = await mirrorAll(vm.gallery, dk);
+    vm.gallery = gallery.urls;
+    const plans = await mirrorAll(vm.plans, dk);
+    vm.plans = plans.urls;
+    mirroredNewFiles = gallery.anyNew || plans.anyNew;
+    for (const u of vm.units) {
+      const photos = await mirrorAll(u.photos, dk);
+      u.photos = photos.urls;
+      const uPlans = await mirrorAll(u.plans, dk);
+      u.plans = uPlans.urls;
+      if (photos.anyNew || uPlans.anyNew) mirroredNewFiles = true;
+    }
   }
   const existing = await prisma.development.findUnique({ where: { feedKey }, select: { id: true } });
   const data = developmentRow(vm, dev, id, accountId);
@@ -151,12 +162,12 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
   // gallery/price range/stage/etc.) — only DevelopmentUnit rows are protected.
   const manualUnits = await prisma.developmentUnit.count({ where: { developmentId: development.id, source: "manual" } });
   if (manualUnits > 0) {
-    return { ok: true, created: !existing, unitsWritten: 0, skippedManual: true };
+    return { ok: true, created: !existing, unitsWritten: 0, skippedManual: true, mirroredNewFiles };
   }
   await prisma.developmentUnit.deleteMany({ where: { developmentId: development.id, source: "feed" } });
   if (vm.units.length) await prisma.developmentUnit.createMany({ data: vm.units.map((u, i) => unitRow(u, development.id, i)) });
   await recomputeDevelopmentDerivedState(development.id);
-  return { ok: true, created: !existing, unitsWritten: vm.units.length, skippedManual: false };
+  return { ok: true, created: !existing, unitsWritten: vm.units.length, skippedManual: false, mirroredNewFiles };
 }
 
 // Core loop, no restart side-effect — syncAll() calls this per developer so a
@@ -164,17 +175,18 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
 async function syncDeveloperCore(dev: string, opts: { mirror?: boolean } = {}): Promise<SyncResult> {
   const accountId = await ensureAccount(dev);
   const ids = await listProjectIds(dev);
-  let created = 0, updated = 0, failed = 0;
+  let created = 0, updated = 0, failed = 0, mirroredNewFiles = false;
   for (const id of ids) {
     try {
       const r = await syncOneProject(dev, id, accountId, opts);
       if (!r.ok) { failed++; continue; }
       r.created ? created++ : updated++;
+      if (r.mirroredNewFiles) mirroredNewFiles = true;
     } catch {
       failed++;
     }
   }
-  return { dev, found: ids.length, created, updated, failed };
+  return { dev, found: ids.length, created, updated, failed, mirroredNewFiles };
 }
 
 // Public single-developer entry (admin "Sync now" for one dev, debug route) —
@@ -182,17 +194,21 @@ async function syncDeveloperCore(dev: string, opts: { mirror?: boolean } = {}): 
 // afterward or a fresh request for one of those URLs 404s into the [lang]/[...slug]
 // catch-all and crashes (see the big comment on scheduleAppRestart in imageMirror.ts).
 // This bit us in production once already: an unrestarted app after a mirror run
-// crash-looped on the first request for a newly-mirrored image.
+// crash-looped on the first request for a newly-mirrored image. Restart is only
+// scheduled when something was ACTUALLY written (mirroredNewFiles) — most syncs
+// re-hit already-mirrored images (skip-if-exists), and scheduleAppRestart()
+// itself is now debounced too (see imageMirror.ts), so this is belt-and-suspenders
+// against restart-storming a routine "nothing changed" sync.
 export async function syncDeveloper(dev: string, opts: { mirror?: boolean } = {}): Promise<SyncResult> {
   const result = await syncDeveloperCore(dev, opts);
-  if (opts.mirror) scheduleAppRestart();
+  if (opts.mirror && result.mirroredNewFiles) scheduleAppRestart();
   return result;
 }
 
 export async function syncAll(opts: { mirror?: boolean } = {}): Promise<SyncResult[]> {
   const out: SyncResult[] = [];
   for (const d of SYNCED_DEVS) out.push(await syncDeveloperCore(d, opts));
-  if (opts.mirror) scheduleAppRestart();
+  if (opts.mirror && out.some((r) => r.mirroredNewFiles)) scheduleAppRestart();
   return out;
 }
 
@@ -213,7 +229,7 @@ export async function syncOneDevelopment(developmentId: string, opts: { mirror?:
     const accountId = await ensureAccount(development.dev);
     const r = await syncOneProject(development.dev, development.feedProjectId, accountId, opts);
     if (!r.ok) return { ok: false, unitsWritten: 0, skippedManual: false, error: "feed unavailable or project not found" };
-    if (opts.mirror) scheduleAppRestart();
+    if (opts.mirror && r.mirroredNewFiles) scheduleAppRestart();
     return { ok: true, unitsWritten: r.unitsWritten, skippedManual: r.skippedManual };
   } catch (e) {
     return { ok: false, unitsWritten: 0, skippedManual: false, error: e instanceof Error ? e.message : String(e) };
