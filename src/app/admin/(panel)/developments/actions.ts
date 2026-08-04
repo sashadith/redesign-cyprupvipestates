@@ -21,12 +21,20 @@ export async function setDriveSyncInterval(developerAccountId: string, interval:
   revalidatePath(`/admin/developments/developers/${developerAccountId}`);
 }
 
-// Data-only sync (fast, ~15s). Image mirroring runs as its own job (cron), so a
-// button click never blocks on downloads.
+// Mirrors images now (2026-08-04) — previously data-only, which meant a
+// gallery/unit-photo array freshly written by this button could silently
+// contain raw external feed URLs (skipping mirroring, not just deferring it:
+// the DB write happens unconditionally either way). Confirmed live: 581 of
+// 584 external gallery/unit-photo URLs found in the DB had a matching
+// already-mirrored file still sitting on disk — this button had overwritten
+// the local reference with the feed's raw URL again. mirrorAll()'s
+// skip-if-exists + scheduleAppRestart()'s own debounce (imageMirror.ts) keep
+// a routine "nothing new" click fast and restart-free; only a click that
+// hits genuinely new/changed images pays the mirroring cost.
 export async function runSync(formData: FormData) {
   const dev = String(formData.get("dev") ?? "");
-  if (dev && dev !== "all") await syncDeveloper(dev);
-  else await syncAll();
+  if (dev && dev !== "all") await syncDeveloper(dev, { mirror: true });
+  else await syncAll({ mirror: true });
   revalidatePath("/admin/developments");
 }
 
