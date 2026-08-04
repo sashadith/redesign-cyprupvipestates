@@ -14,6 +14,13 @@ const JOBS: { job: string; label: string; expectedMs: number }[] = [
   { job: "publish-scheduled", label: "publish-scheduled", expectedMs: 5 * MIN },
   { job: "feed-sync", label: "feed-sync", expectedMs: 24 * HOUR },
   { job: "drive-sync", label: "drive-sync", expectedMs: 24 * HOUR },
+  // These two are plain VPS crontab scripts (cvp-db-backup.sh /
+  // cvp-uploads-backup.sh), not app cron routes — they write their own
+  // cron_run_logs row directly via psql (2026-08-04, after a 3-week-silent
+  // "backup suspiciously small" failure only ever reached a log file nobody
+  // was watching — see DEPLOYMENT.md's tar-over-symlink entry).
+  { job: "db-backup", label: "db-backup", expectedMs: 24 * HOUR },
+  { job: "uploads-backup", label: "uploads-backup", expectedMs: 7 * 24 * HOUR },
 ];
 
 export async function systemRules(): Promise<ActionItem[]> {
