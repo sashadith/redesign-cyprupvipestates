@@ -103,26 +103,64 @@ export function resolveDevelopmentLocation(...parts: (string | null | undefined)
 // `category` scalar — e.g. Luma Genesis has category=null but every unit is
 // type="Apartment". Only fall back to category when no unit has a type at
 // all (a development with no synced units yet).
+//
+// Raw unit.type is feed-sourced and NOT normalized (confirmed against real
+// data 2026-08-04: "Villa"/"villa"/"Villas" and "Apartment"/"apartment"/
+// "Apartments" all occur as distinct literal strings). A plain Set on the raw
+// string therefore doesn't dedupe them, and a development carrying more than
+// one casing/plural of the same real type showed every variant side by side
+// (e.g. "Villa · villa · Villas"). Grouped here case- and simple-plural-
+// insensitively instead; the display value per group is whichever raw
+// casing is most common among this development's own units (ties keep the
+// first-seen form), so the output stays grounded in the real feed data
+// rather than an invented canonical spelling.
 export function resolveDevelopmentType(category: string | null | undefined, units: UnitLike[]): string {
-  const types = Array.from(new Set(units.map((u) => (u.type ?? "").trim()).filter(Boolean)));
+  const order: string[] = [];
+  const variantCounts: Record<string, Record<string, number>> = {};
+  for (const u of units) {
+    const raw = (u.type ?? "").trim();
+    if (!raw) continue;
+    const dedupKey = raw.toLowerCase().replace(/s$/, "");
+    if (!variantCounts[dedupKey]) {
+      variantCounts[dedupKey] = {};
+      order.push(dedupKey);
+    }
+    variantCounts[dedupKey][raw] = (variantCounts[dedupKey][raw] ?? 0) + 1;
+  }
+  const types = order.map((dedupKey) => {
+    let best = "";
+    let bestCount = -1;
+    for (const [raw, count] of Object.entries(variantCounts[dedupKey])) {
+      if (count > bestCount) { best = raw; bestCount = count; }
+    }
+    return best;
+  });
   if (types.length) return types.join(" · ");
   return (category ?? "").trim();
 }
 
 // Catalogue/landing-page propertyType filter match. Every other filter value
 // still does a plain substring check against the resolveDevelopmentType()
-// output — unchanged, see the else branch. "Commercial" is the one
-// exception: no unit in this codebase is literally typed "Commercial" today
-// (they're typed "Office"/"Shop", the feed's own vocabulary — see the
-// Commercial-catalogue-tagging investigation, 2026-07-29), so a plain
-// substring match against "Commercial" would never match any of them.
-// Broadening ONLY this one filter value to also accept office/shop keeps the
-// change additive — every other filter value's matching behavior, and every
-// existing city+type landing page, is untouched.
+// output — unchanged, see the final return. "Commercial" and "Semi-detached
+// villa" are the two exceptions:
+// - "Commercial": no unit in this codebase is literally typed "Commercial"
+//   today (they're typed "Office"/"Shop", the feed's own vocabulary — see the
+//   Commercial-catalogue-tagging investigation, 2026-07-29), so a plain
+//   substring match against "Commercial" would never match any of them.
+// - "Semi-detached villa": the admin's filter *label* is "Semi-detached
+//   villa", but the raw feed vocabulary (confirmed against real data
+//   2026-08-04) only ever produces "Semi-detached" — never with "villa"
+//   appended — so `resolved.includes("semi-detached villa")` could never
+//   match anything; the filter was silently dead for every development that
+//   actually has this unit type (verified: exactly one, Zephyros Village 3).
+// Broadening ONLY these two filter values keeps the change additive — every
+// other filter value's matching behavior, and every existing city+type
+// landing page, is untouched.
 export function matchesPropertyTypeFilter(resolvedType: string, filterValue: string): boolean {
   const resolved = resolvedType.toLowerCase();
   const filter = filterValue.toLowerCase();
   if (filter === "commercial") return resolved.includes("commercial") || resolved.includes("office") || resolved.includes("shop");
+  if (filter === "semi-detached villa") return resolved.includes("semi-detached");
   return resolved.includes(filter);
 }
 
