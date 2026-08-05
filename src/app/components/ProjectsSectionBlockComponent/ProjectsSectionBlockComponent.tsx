@@ -49,6 +49,7 @@ function toCardData(project: any, lang: string): ProjectCardData {
     isNew: false,
     isFeatured: false,
     vatApplies: kf.vatApplies ?? null,
+    distances: project.distances ?? null,
   };
 }
 

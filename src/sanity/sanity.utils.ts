@@ -236,6 +236,17 @@ async function computeFilteredProjects(lang: string, filterCity?: string, filter
     previewImage: D(p.previewImage),
     keyFeatures: p.keyFeatures,
     isSold: !!p.isSold,
+    // Pure pass-through, no new query: `rows` (Project) already carries its
+    // own `distances` column (prisma.project.findMany above has no `select`,
+    // so every scalar column is already in memory) in the exact
+    // {beach,school,golfCourt,airport,...} string-value shape ProjectCard's
+    // Distances type expects — verified against real data 2026-08-05, no
+    // "golf"->"golfCourt" remap needed the way Development rows require.
+    // `devRows` already carries `distances` too, pre-adapted by
+    // mapDevelopmentRowToCard's own toCardDistances() call. Both sources
+    // were already computing this; only this function's own return object
+    // was dropping it.
+    distances: p.distances ?? null,
   }));
 }
 
