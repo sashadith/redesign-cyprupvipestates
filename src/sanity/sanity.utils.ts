@@ -236,17 +236,20 @@ async function computeFilteredProjects(lang: string, filterCity?: string, filter
     previewImage: D(p.previewImage),
     keyFeatures: p.keyFeatures,
     isSold: !!p.isSold,
-    // Pure pass-through, no new query: `rows` (Project) already carries its
-    // own `distances` column (prisma.project.findMany above has no `select`,
-    // so every scalar column is already in memory) in the exact
-    // {beach,school,golfCourt,airport,...} string-value shape ProjectCard's
-    // Distances type expects — verified against real data 2026-08-05, no
-    // "golf"->"golfCourt" remap needed the way Development rows require.
-    // `devRows` already carries `distances` too, pre-adapted by
-    // mapDevelopmentRowToCard's own toCardDistances() call. Both sources
-    // were already computing this; only this function's own return object
-    // was dropping it.
+    // Full field parity with getDeveloperCatalogByLang's own toCardData
+    // (developers/[slug]/page.tsx) — 2026-08-06. Every field below is a pure
+    // pass-through, no new query: `rows` (Project) has no `select`, so every
+    // scalar column (distances, isNew, isFeatured) is already in memory:
+    // devRows (mapDevelopmentRowToCard) already computes distances (pre-
+    // adapted via toCardDistances()), isNew/isFeatured (hardcoded false —
+    // Developments never carry these), and unitsAvailable/unitsTotal. Legacy
+    // Project rows have no unit concept, so unitsAvailable/unitsTotal are
+    // simply undefined for them — same as the developer page's own handling.
     distances: p.distances ?? null,
+    isNew: !!p.isNew,
+    isFeatured: !!p.isFeatured,
+    unitsAvailable: p.unitsAvailable,
+    unitsTotal: p.unitsTotal,
   }));
 }
 

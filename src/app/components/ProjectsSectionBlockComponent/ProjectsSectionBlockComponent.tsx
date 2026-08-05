@@ -17,20 +17,17 @@ type Props = {
   lang: string;
 };
 
-// Same field mapping /projects/page.tsx uses to build ProjectCardData from a
-// keyFeatures-shaped project row, kept in lockstep so this block's cards are
-// identical to the listing page's own cards, not a second hand-tuned mapping
-// that could drift. previewImage arrives here already asset-dereferenced by
-// computeFilteredProjects (via D()) for legacy Project rows — an object, not
-// a plain string — same {alt, asset:{url}} shape ProjectLink already resolves
-// via urlFor(); Development rows carry a plain string already (see
-// mapDevelopmentRowToCard). isNew/isFeatured/distances/unitsAvailable/
-// unitsTotal aren't present on this block's data source (computeFilteredProjects
-// returns a narrower shape than the listing page's own query) — ProjectCard
-// treats all of these as optional and simply omits the corresponding
-// badge/row when absent, so this degrades gracefully to exactly what the
-// previous ProjectLink card already showed (which never rendered any of
-// them either).
+// Field-for-field match with getDeveloperCatalogByLang's own toCardData
+// (developers/[slug]/page.tsx), so this block's cards receive the exact same
+// ProjectCardData shape the developer page's cards do — not a second
+// hand-tuned mapping that could drift out of sync with it. previewImage
+// arrives here already asset-dereferenced by computeFilteredProjects (via
+// D()) for legacy Project rows — an object, not a plain string — same
+// {alt, asset:{url}} shape resolved via urlFor(); Development rows carry a
+// plain string already (see mapDevelopmentRowToCard). computeFilteredProjects
+// now supplies isNew/isFeatured/distances/unitsAvailable/unitsTotal too
+// (2026-08-06) — previously a narrower shape than the listing/developer
+// pages' own queries, closed to match.
 function toCardData(project: any, lang: string): ProjectCardData {
   const kf = project.keyFeatures ?? {};
   const img = project.previewImage;
@@ -46,10 +43,12 @@ function toCardData(project: any, lang: string): ProjectCardData {
     type: kf.propertyType ?? "",
     energy: kf.energyEfficiency ?? "",
     completion: resolveCompletionYear(kf.completionDate),
-    isNew: false,
-    isFeatured: false,
+    isNew: !!project.isNew,
+    isFeatured: !!project.isFeatured,
     vatApplies: kf.vatApplies ?? null,
     distances: project.distances ?? null,
+    unitsAvailable: project.unitsAvailable,
+    unitsTotal: project.unitsTotal,
   };
 }
 
@@ -160,40 +159,52 @@ const ProjectsSectionBlockComponent: FC<Props> = ({ block, lang }) => {
             invisible-heading bug this change is fixing, just with a
             different off-white value. */}
         <h2 ref={headingRef} className="iart__h2">{title}</h2>
-        <div className={styles.projects}>
-          {visibleProjects.map((project: any) => (
-            <ProjectCard key={project._id} c={toCardData(project, lang)} s={s} locale={lang} />
-          ))}
-        </div>
-        {isPaginated && (
-          <nav className={styles.pager} aria-label="Results pagination">
-            {page > 1 ? (
-              <button type="button" className={styles.pagerLink} onClick={() => goToPage(page - 1)} aria-label="Previous">‹</button>
-            ) : (
-              <span className={`${styles.pagerLink} ${styles.pagerLinkDisabled}`} aria-hidden="true">‹</span>
-            )}
-            {pageWindow(page, totalPages).map((it, i) =>
-              it === "…" ? (
-                <span key={`gap-${i}`} className={styles.pagerGap} aria-hidden="true">…</span>
+        {/* data-theme="dark" scopes the design tokens (--text-soft, --text-faint,
+            --glass-bg, etc.) to their dark/ivory values for the card grid + pager,
+            same as /projects (page.tsx's <main data-theme="dark">) and
+            /developers/[slug] (DeveloperProjectsGrid.tsx's <section data-theme=
+            "dark">). Without this, these tokens inherit the article body's
+            .is-light override (light "ink" values), which ProjectCard was never
+            designed for — its dark footer assumes the dark-token values, so
+            .prj__dist's <i>/<small> labels render near-invisible ink-on-ink.
+            The heading above stays outside this scope so .iart__h2 keeps using
+            the article's light-theme color. */}
+        <div data-theme="dark">
+          <div className={styles.projects}>
+            {visibleProjects.map((project: any) => (
+              <ProjectCard key={project._id} c={toCardData(project, lang)} s={s} locale={lang} />
+            ))}
+          </div>
+          {isPaginated && (
+            <nav className={styles.pager} aria-label="Results pagination">
+              {page > 1 ? (
+                <button type="button" className={styles.pagerLink} onClick={() => goToPage(page - 1)} aria-label="Previous">‹</button>
               ) : (
-                <button
-                  key={it}
-                  type="button"
-                  className={it === page ? `${styles.pagerLink} ${styles.pagerLinkActive}` : styles.pagerLink}
-                  onClick={() => goToPage(it)}
-                  aria-current={it === page ? "page" : undefined}
-                >
-                  {it}
-                </button>
-              ),
-            )}
-            {page < totalPages ? (
-              <button type="button" className={styles.pagerLink} onClick={() => goToPage(page + 1)} aria-label="Next">›</button>
-            ) : (
-              <span className={`${styles.pagerLink} ${styles.pagerLinkDisabled}`} aria-hidden="true">›</span>
-            )}
-          </nav>
-        )}
+                <span className={`${styles.pagerLink} ${styles.pagerLinkDisabled}`} aria-hidden="true">‹</span>
+              )}
+              {pageWindow(page, totalPages).map((it, i) =>
+                it === "…" ? (
+                  <span key={`gap-${i}`} className={styles.pagerGap} aria-hidden="true">…</span>
+                ) : (
+                  <button
+                    key={it}
+                    type="button"
+                    className={it === page ? `${styles.pagerLink} ${styles.pagerLinkActive}` : styles.pagerLink}
+                    onClick={() => goToPage(it)}
+                    aria-current={it === page ? "page" : undefined}
+                  >
+                    {it}
+                  </button>
+                ),
+              )}
+              {page < totalPages ? (
+                <button type="button" className={styles.pagerLink} onClick={() => goToPage(page + 1)} aria-label="Next">›</button>
+              ) : (
+                <span className={`${styles.pagerLink} ${styles.pagerLinkDisabled}`} aria-hidden="true">›</span>
+              )}
+            </nav>
+          )}
+        </div>
       </div>
     </section>
   );
