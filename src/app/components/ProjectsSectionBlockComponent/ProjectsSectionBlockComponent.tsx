@@ -69,7 +69,14 @@ const marginValues: Record<string, string> = {
 const bySoldLast = (projects: ProjectsSectionBlock["projects"]) =>
   [...projects].sort((a: any, b: any) => (a.isSold === b.isSold ? 0 : a.isSold ? 1 : -1));
 
-const DEFAULT_PAGE_SIZE = 12;
+// Fallback ONLY for a block with no pageSize stored at all (shared with
+// case-study/landing renders of this same component — see the render-time
+// investigation in the commit message/PR description for exactly which
+// blocks this can and can't reach). Every currently-existing
+// projectsSectionBlock has pageSize explicitly baked in at 12, so changing
+// this constant does not retroactively change any of them — this only sets
+// what a future block with pageSize left unset would fall back to.
+const DEFAULT_PAGE_SIZE = 8;
 
 // Windowed page numbers: 1 … current-1 current current+1 … last
 function pageWindow(current: number, total: number): Array<number | "…"> {
@@ -87,8 +94,12 @@ function pageWindow(current: number, total: number): Array<number | "…"> {
 
 const ProjectsSectionBlockComponent: FC<Props> = ({ block, lang }) => {
   const { title, projects, marginTop, marginBottom, paginate, pageSize } = block;
-  // Existing blocks never set pageSize — falls back to the original hardcoded
-  // 12, unchanged. The admin-insertable Projects block can override it.
+  // pageSize is stored per-block (set once, at creation, by whatever wrote
+  // the block — the admin's "Add Projects" picker or an import script) and
+  // is NOT re-derived from DEFAULT_PAGE_SIZE on every render. Every
+  // currently-existing projectsSectionBlock has pageSize explicitly baked in
+  // (confirmed against real data 2026-08-05: all 25 are set to 12) — this
+  // fallback only ever applies to a block where pageSize was left unset.
   const effectivePageSize = pageSize && pageSize > 0 ? pageSize : DEFAULT_PAGE_SIZE;
   const orderedProjects = useMemo(() => bySoldLast(projects), [projects]);
   const [page, setPage] = useState(1);
