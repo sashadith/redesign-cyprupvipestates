@@ -6,6 +6,11 @@
 // fonts (Fraunces/Mulish/Playfair) are already global via [lang]/layout.tsx.
 import "@/app/preview-home/tokens.css";
 import "@/app/preview-insights/insights.css";
+// .prj/.prj__* card styles for ProjectsSectionBlockComponent's reuse of the
+// /projects listing's own ProjectCard — same stylesheet the listing page and
+// the project detail page (for AlternativesBlock) already import; global
+// classnames, not CSS Modules, so this is the one place it must be loaded.
+import "@/app/preview-projects/projects.css";
 
 import React from "react";
 import { notFound } from "next/navigation";

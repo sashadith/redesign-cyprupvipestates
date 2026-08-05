@@ -1,15 +1,25 @@
+// Own grid, not .px__grid (the /projects listing's fluid auto-fill grid) or
+// .pp-alts__grid (the project detail page's 4-per-row "similar projects"
+// strip) — same reasoning as AlternativesBlock.tsx's own grid: reusing either
+// of those classes here would also change ITS column count if either is ever
+// retuned for its own context. Two per row on desktop per spec; single
+// breakpoint down to one column (unlike .pp-alts__grid's extra 900px tier,
+// which exists to step 4→2 — with only two columns to begin with, one step
+// straight to 1fr is the equivalent behaviour, not a smaller feature set).
 .projects {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 1.4vw, 20px);
 
-  @media screen and (min-width: 768px) {
-    gap: 30px;
-    justify-content: flex-start;
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
   }
 }
 
+// No longer referenced — the heading now uses the global .iart__h2 class
+// (see ProjectsSectionBlockComponent.tsx) so it matches the rest of the
+// article instead of this hardcoded white. Left in place rather than
+// deleted; unused CSS, not a functional issue, out of this change's scope.
 .title {
   color: #fff;
   font-size: clamp(1.5rem, 1.125rem + 1.5vw, 2.25rem);

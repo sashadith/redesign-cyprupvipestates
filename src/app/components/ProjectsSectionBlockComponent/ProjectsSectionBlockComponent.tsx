@@ -8,11 +8,49 @@ import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
 import ProjectLink from "../ProjectLink/ProjectLink";
 import { localePrefix } from "@/lib/locale";
+import { ProjectCard, type ProjectCardData } from "@/app/preview-projects/ProjectCard";
+import { projectsStrings } from "@/app/[lang]/projects/projectsI18n";
+import { resolveCompletionYear } from "@/lib/text";
 
 type Props = {
   block: ProjectsSectionBlock;
   lang: string;
 };
+
+// Same field mapping /projects/page.tsx uses to build ProjectCardData from a
+// keyFeatures-shaped project row, kept in lockstep so this block's cards are
+// identical to the listing page's own cards, not a second hand-tuned mapping
+// that could drift. previewImage arrives here already asset-dereferenced by
+// computeFilteredProjects (via D()) for legacy Project rows — an object, not
+// a plain string — same {alt, asset:{url}} shape ProjectLink already resolves
+// via urlFor(); Development rows carry a plain string already (see
+// mapDevelopmentRowToCard). isNew/isFeatured/distances/unitsAvailable/
+// unitsTotal aren't present on this block's data source (computeFilteredProjects
+// returns a narrower shape than the listing page's own query) — ProjectCard
+// treats all of these as optional and simply omits the corresponding
+// badge/row when absent, so this degrades gracefully to exactly what the
+// previous ProjectLink card already showed (which never rendered any of
+// them either).
+function toCardData(project: any, lang: string): ProjectCardData {
+  const kf = project.keyFeatures ?? {};
+  const img = project.previewImage;
+  return {
+    id: project._id,
+    title: project.title,
+    href: `${localePrefix(lang)}/projects/${project.slug}`,
+    image: typeof img === "string" ? img : img ? urlFor(img).url() : undefined,
+    city: kf.city ?? "",
+    price: typeof kf.price === "number" ? kf.price : Number(kf.price) || null,
+    bedrooms: kf.bedrooms ?? "",
+    area: kf.coveredArea ?? "",
+    type: kf.propertyType ?? "",
+    energy: kf.energyEfficiency ?? "",
+    completion: resolveCompletionYear(kf.completionDate),
+    isNew: false,
+    isFeatured: false,
+    vatApplies: kf.vatApplies ?? null,
+  };
+}
 
 const marginValues: Record<string, string> = {
   small: "clamp(0.625rem, 2.5vw, 1.875rem)",
@@ -90,6 +128,8 @@ const ProjectsSectionBlockComponent: FC<Props> = ({ block, lang }) => {
       ? marginValues[marginBottom]
       : "0";
 
+  const s = projectsStrings(lang);
+
   return (
     <section
       className={styles.projectsSectionBlock}
@@ -99,25 +139,19 @@ const ProjectsSectionBlockComponent: FC<Props> = ({ block, lang }) => {
       }}
     >
       <div className="container">
-        <h2 ref={headingRef} className={styles.title}>{title}</h2>
+        {/* iart__h2 — the same heading style every other H2 in this article
+            already uses (color: var(--text), readable on the article's light
+            background). NOT the /projects listing's own pp-h2: that class
+            resolves color: var(--ivory), a fixed global token (#EFE9DB, not
+            theme-scoped) meant for the listing page's dark-themed <main>
+            (data-theme="dark") — reusing it here would reproduce the exact
+            invisible-heading bug this change is fixing, just with a
+            different off-white value. */}
+        <h2 ref={headingRef} className="iart__h2">{title}</h2>
         <div className={styles.projects}>
-          {visibleProjects.map((project: any) => {
-            const projectUrl = `${localePrefix(lang)}/projects/${project.slug}`;
-            return (
-              <ProjectLink
-                key={project._id}
-                url={projectUrl}
-                previewImage={project.previewImage}
-                title={project.title}
-                price={project.keyFeatures.price}
-                bedrooms={project.keyFeatures.bedrooms}
-                coveredArea={project.keyFeatures.coveredArea}
-                plotSize={project.keyFeatures.plotSize}
-                lang={lang}
-                isSold={project.isSold}
-              />
-            );
-          })}
+          {visibleProjects.map((project: any) => (
+            <ProjectCard key={project._id} c={toCardData(project, lang)} s={s} locale={lang} />
+          ))}
         </div>
         {isPaginated && (
           <nav className={styles.pager} aria-label="Results pagination">
