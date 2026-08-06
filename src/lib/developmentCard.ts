@@ -15,7 +15,16 @@ type UnitLike = { status?: string | null; price?: number | null; beds?: string |
 // (unit-driven feeds, and manually-created developments never get a
 // project-level price set by any adapter) — fall back to the available
 // units' own price range rather than showing "Price on request" when real
-// prices are one join away.
+// prices are one join away. A fully sold-out development has zero
+// "available" units by definition, so that fallback alone still leaves it
+// priceless (found 2026-08-06: Celestia's own sold-out hero showed "—"
+// instead of "sold from €170,000", the same gap as the alternatives funnel's
+// currentPrice derivation — see developmentAlternatives.ts). Second
+// fallback: the cheapest unit price of ANY status — the price it actually
+// sold for, which every caller already labels as a past/sold price rather
+// than a live offer (this page's own "sold from" caption, and
+// DevelopmentSchema's Offer.availability: SoldOut on the JSON-LD side), so
+// showing it here doesn't misrepresent it as current stock.
 export function resolveDevelopmentPrice(
   devPriceFrom: number | null,
   devPriceTo: number | null,
@@ -24,8 +33,10 @@ export function resolveDevelopmentPrice(
   const availablePrices = units
     .filter((u) => u.status === "available" && u.price != null)
     .map((u) => u.price as number);
-  const priceFrom = devPriceFrom ?? (availablePrices.length ? Math.min(...availablePrices) : null);
-  const priceTo = devPriceTo ?? (availablePrices.length ? Math.max(...availablePrices) : priceFrom);
+  const anyPrices = units.filter((u) => u.price != null).map((u) => u.price as number);
+  const pricePool = availablePrices.length ? availablePrices : anyPrices;
+  const priceFrom = devPriceFrom ?? (pricePool.length ? Math.min(...pricePool) : null);
+  const priceTo = devPriceTo ?? (pricePool.length ? Math.max(...pricePool) : priceFrom);
   return { priceFrom, priceTo };
 }
 
