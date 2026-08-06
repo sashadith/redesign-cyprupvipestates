@@ -22,15 +22,26 @@
 // HARD filter (never guessed/loosened silently):
 //   1. same developer AND same location, same property type, price within ±40%
 //   2. same developer OR  same location, same property type, price within ±40%
-//   3. (last resort) same developer OR same location, price within ±60% — only
-//      the fine-grained type preference (villa/apartment/studio/...) is
-//      dropped here, never the commercial/residential bucket.
+//   3. same developer OR  same location, price within ±60% — the fine-grained
+//      type preference (villa/apartment/studio/...) is dropped here, never
+//      the commercial/residential bucket.
+//   4. (final last resort, added 2026-08-06) developer AND location BOTH
+//      dropped, type preference reinstated, price within ±60% — "similar
+//      property, similar price, anywhere in Cyprus". Traced 2026-08-06: 9 of
+//      the then-13 blockless projects (e.g. Luma Genesis, Quatrro, Lazzero
+//      Park) had a real price and reachable candidates but never enough
+//      sharing a developer or location — stages 1-3 all require at least
+//      one of the two, so a project with neither ran out of road. Same-
+//      location candidates still sort first within this stage (see
+//      fillLocationFirst) purely as a tie-breaker, so a project with a thin
+//      but non-empty same-district pool doesn't get buried under
+//      closer-priced but farther-away suggestions.
 // Each stage tops up toward MAX_ALTERNATIVES and only stops once full — a
 // stage that lands on exactly MIN_ALTERNATIVES (3) still advances to the next,
 // looser stage looking for a 4th (fixed 2026-08-06: it used to stop the moment
 // it cleared MIN_ALTERNATIVES, leaving a project stuck at 3 in a 4-column grid
 // even when a legitimate 4th candidate existed one stage further out).
-// Fewer than MIN_ALTERNATIVES after stage 3 → return [] (the caller omits the
+// Fewer than MIN_ALTERNATIVES after stage 4 → return [] (the caller omits the
 // block entirely rather than show weak/random suggestions) — this is also
 // what makes a Gewerbeimmobilie's block silently disappear when there simply
 // aren't 3+ other commercial developments to suggest, by design.
@@ -56,7 +67,7 @@ import { localizedHref } from "@/lib/locale";
 import type { ProjectCardData } from "@/app/preview-projects/ProjectCard";
 
 const PRICE_BAND_TIGHT = 0.4; // ±40% — stages 1 and 2
-const PRICE_BAND_LOOSE = 0.6; // ±60% — stage 3 (last resort) only
+const PRICE_BAND_LOOSE = 0.6; // ±60% — stages 3 and 4 (last resorts)
 const MIN_ALTERNATIVES = 3;
 const MAX_ALTERNATIVES = 4;
 
@@ -173,6 +184,21 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
     return [...chosen, ...more].slice(0, MAX_ALTERNATIVES);
   };
 
+  // Stage 4 only: same-location candidates still come first even though
+  // location is no longer a filter — otherwise a Paphos project with a thin
+  // same-district market (e.g. Lazzero Park) could fill entirely with
+  // Limassol suggestions ahead of the one Paphos match that does exist.
+  // Within each location bucket, still closest price first.
+  const fillLocationFirst = (chosen: Candidate[], pool: Candidate[]) => {
+    if (chosen.length >= MAX_ALTERNATIVES) return chosen;
+    const seen = new Set(chosen.map((c) => c.id));
+    const more = [...pool.filter((c) => !seen.has(c.id))].sort((a, b) => {
+      if (a.sameLocation !== b.sameLocation) return a.sameLocation ? -1 : 1;
+      return Math.abs(a.price - currentPrice) - Math.abs(b.price - currentPrice);
+    });
+    return [...chosen, ...more].slice(0, MAX_ALTERNATIVES);
+  };
+
   let chosen: Candidate[];
   if (currentIsCommercial) {
     // No developer/location/price filtering — see the header comment above
@@ -195,11 +221,25 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
       );
     }
 
-    // Stage 3 (last resort): developer OR location, type dropped, loose price band.
+    // Stage 3: developer OR location, type dropped, loose price band.
     if (chosen.length < MAX_ALTERNATIVES) {
       chosen = fill(
         chosen,
         candidates.filter((c) => (c.sameDeveloper || c.sameLocation) && inBand(c.price, currentPrice, PRICE_BAND_LOOSE)),
+      );
+    }
+
+    // Stage 4 (final last resort): developer AND location both dropped —
+    // "similar property, similar price, anywhere in Cyprus". Type comes back
+    // as the one remaining constraint (dropped in stage 3, reinstated here —
+    // without it this stage would suggest e.g. a commercial-adjacent studio
+    // to a villa buyer purely on price). Same-location candidates still sort
+    // first within this stage via fillLocationFirst, even though location is
+    // no longer required to be included at all.
+    if (chosen.length < MAX_ALTERNATIVES) {
+      chosen = fillLocationFirst(
+        chosen,
+        candidates.filter((c) => c.typeMatch && inBand(c.price, currentPrice, PRICE_BAND_LOOSE)),
       );
     }
   }
