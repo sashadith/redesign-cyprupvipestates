@@ -461,6 +461,13 @@
 .pp-soldout { padding-bottom: 0; }
 .pp-soldout .pp-h2 { font-size: var(--text-h2); line-height: 1.06; margin: 0 0 var(--s-6); }
 .pp-soldout__lead { max-width: none; font-size: var(--text-lead); margin: 0 0 var(--s-6); }
+/* No alternatives block follows (getAlternativeDevelopments returned too few
+   matches) — AlternativesBlock renders null, contributing none of its own
+   .pp-alts--prominent bottom padding. Add that same var(--section-y) here
+   instead, so the lead->enquiry-form gap is identical to the with-cards case
+   (lead margin var(--s-6) + this padding + the form's own unmodified top
+   padding) rather than collapsing to just the lead's own margin. */
+.pp-soldout--no-alts { padding-bottom: var(--section-y); }
 
 /* Similar projects — prominent (directly under the sold-out hint) or quiet
    (further down an available project's page); see AlternativesBlock.tsx.
