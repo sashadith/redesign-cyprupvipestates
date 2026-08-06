@@ -162,18 +162,17 @@ export async function GET(req: NextRequest) {
 
     const notifications: Promise<void>[] = [];
     for (const [dev, lines] of Array.from(removedByDev)) {
-      if (!lines.length) continue;
-      const { subject, text } = buildRemovedUnitsMessage(dev, lines, Array.from(soldOutNamesByDev.get(dev) ?? []));
-      notifications.push(sendFeedNotification(text, subject));
+      const msg = buildRemovedUnitsMessage(dev, lines, Array.from(soldOutNamesByDev.get(dev) ?? []));
+      if (msg) notifications.push(sendFeedNotification(msg.text, msg.subject));
     }
     for (const r of results) {
       if (r.unitsCreated > 0) {
-        const { subject, text } = buildNewUnitsMessage(r.dev, r.unitsCreated);
-        notifications.push(sendFeedNotification(text, subject));
+        const msg = buildNewUnitsMessage(r.dev, r.unitsCreated);
+        if (msg) notifications.push(sendFeedNotification(msg.text, msg.subject));
       }
       if (r.blocked) {
-        const { subject, text } = buildFeedIncompleteMessage(r.dev, r.blockedMissing ?? 0, r.blockedTotal ?? 0);
-        notifications.push(sendFeedNotification(text, subject));
+        const msg = buildFeedIncompleteMessage(r.dev, r.blockedMissing ?? 0, r.blockedTotal ?? 0);
+        if (msg) notifications.push(sendFeedNotification(msg.text, msg.subject));
       }
     }
     // Best-effort: a Telegram/email hiccup must never fail the cron itself —
