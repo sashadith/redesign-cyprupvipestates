@@ -25,10 +25,28 @@
 //   3. (last resort) same developer OR same location, price within ±60% — only
 //      the fine-grained type preference (villa/apartment/studio/...) is
 //      dropped here, never the commercial/residential bucket.
+// Each stage tops up toward MAX_ALTERNATIVES and only stops once full — a
+// stage that lands on exactly MIN_ALTERNATIVES (3) still advances to the next,
+// looser stage looking for a 4th (fixed 2026-08-06: it used to stop the moment
+// it cleared MIN_ALTERNATIVES, leaving a project stuck at 3 in a 4-column grid
+// even when a legitimate 4th candidate existed one stage further out).
 // Fewer than MIN_ALTERNATIVES after stage 3 → return [] (the caller omits the
 // block entirely rather than show weak/random suggestions) — this is also
 // what makes a Gewerbeimmobilie's block silently disappear when there simply
 // aren't 3+ other commercial developments to suggest, by design.
+//
+// Commercial developments skip this funnel entirely (2026-08-06): with only
+// 5 published commercial developments total, developer/location/price
+// filtering routinely filtered the pool down to nothing worth showing (e.g.
+// Qube Offices, the one INEX commercial project, shares neither developer
+// nor location with the four BBF ones and got zero alternatives under the
+// residential-shaped funnel even with the price band removed). At this
+// population size there's no meaningful "best match" to rank for — every
+// other commercial development is a reasonable suggestion — so it's just
+// every other same-bucket development, sorted by price proximity, capped at
+// MAX_ALTERNATIVES. The categorical boundary itself (already enforced when
+// `candidates` is built, see isCommercial() below) still applies — nothing
+// here can pull in a residential project.
 import { prisma } from "@/lib/prisma";
 import { computeAvailability } from "@/lib/developmentAvailability";
 import { resolveDevelopmentType, matchesPropertyTypeFilter } from "@/lib/developmentCard";
@@ -139,25 +157,35 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
     return [...chosen, ...more].slice(0, MAX_ALTERNATIVES);
   };
 
-  // Stage 1: developer AND location, type required, tight price band.
-  let chosen = byPriceProximity(
-    candidates.filter((c) => c.sameDeveloper && c.sameLocation && c.typeMatch && inBand(c.price, currentPrice, PRICE_BAND_TIGHT)),
-  ).slice(0, MAX_ALTERNATIVES);
+  let chosen: Candidate[];
+  if (currentIsCommercial) {
+    // No developer/location/price filtering — see the header comment above
+    // for why. Just every other commercial development, best price match first.
+    chosen = byPriceProximity(candidates).slice(0, MAX_ALTERNATIVES);
+  } else {
+    // Stage 1: developer AND location, type required, tight price band.
+    chosen = byPriceProximity(
+      candidates.filter((c) => c.sameDeveloper && c.sameLocation && c.typeMatch && inBand(c.price, currentPrice, PRICE_BAND_TIGHT)),
+    ).slice(0, MAX_ALTERNATIVES);
 
-  // Stage 2: developer OR location, type still required, tight price band.
-  if (chosen.length < MIN_ALTERNATIVES) {
-    chosen = fill(
-      chosen,
-      candidates.filter((c) => (c.sameDeveloper || c.sameLocation) && c.typeMatch && inBand(c.price, currentPrice, PRICE_BAND_TIGHT)),
-    );
-  }
+    // Stage 2: developer OR location, type still required, tight price band.
+    // Advances even from exactly MIN_ALTERNATIVES — only a full MAX_ALTERNATIVES
+    // skips the next, looser stage (see header comment: a project stuck at 3
+    // when a legitimate 4th candidate exists one stage out reads as broken).
+    if (chosen.length < MAX_ALTERNATIVES) {
+      chosen = fill(
+        chosen,
+        candidates.filter((c) => (c.sameDeveloper || c.sameLocation) && c.typeMatch && inBand(c.price, currentPrice, PRICE_BAND_TIGHT)),
+      );
+    }
 
-  // Stage 3 (last resort): developer OR location, type dropped, loose price band.
-  if (chosen.length < MIN_ALTERNATIVES) {
-    chosen = fill(
-      chosen,
-      candidates.filter((c) => (c.sameDeveloper || c.sameLocation) && inBand(c.price, currentPrice, PRICE_BAND_LOOSE)),
-    );
+    // Stage 3 (last resort): developer OR location, type dropped, loose price band.
+    if (chosen.length < MAX_ALTERNATIVES) {
+      chosen = fill(
+        chosen,
+        candidates.filter((c) => (c.sameDeveloper || c.sameLocation) && inBand(c.price, currentPrice, PRICE_BAND_LOOSE)),
+      );
+    }
   }
 
   if (chosen.length < MIN_ALTERNATIVES) return [];
