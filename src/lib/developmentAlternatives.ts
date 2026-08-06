@@ -132,6 +132,14 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
       priceFrom: true,
       category: true,
       units: { select: { status: true, type: true, price: true } },
+      // area/district ARE admin-editable (DevelopmentOverride, sync never
+      // touches that table — same protection every other admin field there
+      // has). Reading only the raw Development columns meant an admin
+      // correction here would silently do nothing for this funnel — found
+      // 2026-08-06 tracing why Lazzero Park's own district was null despite
+      // being clearly Paphos. Resolve override-first, same as every other
+      // surface (mapDevelopmentRowToCard: `ov?.district || d.district`).
+      override: { select: { area: true, district: true } },
     },
   });
   if (!current) return [];
@@ -141,6 +149,8 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
 
   const currentTypes = typeTokens(current.category, current.units);
   const currentIsCommercial = isCommercial(current.category, current.units);
+  const currentArea = current.override?.area || current.area;
+  const currentDistrict = current.override?.district || current.district;
 
   const rows = await prisma.development.findMany({
     where: { publishStatus: "published", id: { not: current.id } },
@@ -153,6 +163,7 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
       priceFrom: true,
       category: true,
       units: { select: { status: true, type: true, price: true } },
+      override: { select: { area: true, district: true } },
     },
   });
 
@@ -167,8 +178,10 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
     if (price == null) continue;
     if (isCommercial(d.category, d.units) !== currentIsCommercial) continue; // categorical boundary — excluded from the pool entirely, no stage can reintroduce it
     const sameDeveloper = !!current.developerAccountId && d.developerAccountId === current.developerAccountId;
-    const sameArea = !!current.area && !!d.area && current.area.toLowerCase() === d.area.toLowerCase();
-    const sameDistrict = !!current.district && !!d.district && current.district.toLowerCase() === d.district.toLowerCase();
+    const dArea = d.override?.area || d.area;
+    const dDistrict = d.override?.district || d.district;
+    const sameArea = !!currentArea && !!dArea && currentArea.toLowerCase() === dArea.toLowerCase();
+    const sameDistrict = !!currentDistrict && !!dDistrict && currentDistrict.toLowerCase() === dDistrict.toLowerCase();
     const sameLocation = sameArea || sameDistrict;
     const typeMatch = sharesType(currentTypes, typeTokens(d.category, d.units));
     candidates.push({ ...d, price, sameDeveloper, sameLocation, typeMatch });
