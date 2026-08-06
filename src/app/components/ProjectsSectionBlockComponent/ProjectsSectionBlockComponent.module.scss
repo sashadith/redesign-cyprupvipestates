@@ -40,8 +40,13 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin-top: clamp(28px, 4vw, 48px);
-  margin-bottom: 20px;
+  // Swapped from the previous margin-top: clamp(28px,4vw,48px) / margin-bottom:
+  // 20px — that read as too much space above the pager (pushing it away from
+  // the grid it belongs to) and too little below it (crowding the next
+  // paragraph). Tight, fixed gap to the grid above; the larger, responsive
+  // gap now separates the pager from whatever content follows the block.
+  margin-top: 20px;
+  margin-bottom: clamp(28px, 4vw, 48px);
   width: 100%;
 }
 

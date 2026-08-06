@@ -159,52 +159,56 @@ const ProjectsSectionBlockComponent: FC<Props> = ({ block, lang }) => {
             invisible-heading bug this change is fixing, just with a
             different off-white value. */}
         <h2 ref={headingRef} className="iart__h2">{title}</h2>
-        {/* data-theme="dark" scopes the design tokens (--text-soft, --text-faint,
-            --glass-bg, etc.) to their dark/ivory values for the card grid + pager,
-            same as /projects (page.tsx's <main data-theme="dark">) and
-            /developers/[slug] (DeveloperProjectsGrid.tsx's <section data-theme=
-            "dark">). Without this, these tokens inherit the article body's
-            .is-light override (light "ink" values), which ProjectCard was never
-            designed for — its dark footer assumes the dark-token values, so
-            .prj__dist's <i>/<small> labels render near-invisible ink-on-ink.
-            The heading above stays outside this scope so .iart__h2 keeps using
-            the article's light-theme color. */}
-        <div data-theme="dark">
-          <div className={styles.projects}>
-            {visibleProjects.map((project: any) => (
-              <ProjectCard key={project._id} c={toCardData(project, lang)} s={s} locale={lang} />
-            ))}
-          </div>
-          {isPaginated && (
-            <nav className={styles.pager} aria-label="Results pagination">
-              {page > 1 ? (
-                <button type="button" className={styles.pagerLink} onClick={() => goToPage(page - 1)} aria-label="Previous">‹</button>
-              ) : (
-                <span className={`${styles.pagerLink} ${styles.pagerLinkDisabled}`} aria-hidden="true">‹</span>
-              )}
-              {pageWindow(page, totalPages).map((it, i) =>
-                it === "…" ? (
-                  <span key={`gap-${i}`} className={styles.pagerGap} aria-hidden="true">…</span>
-                ) : (
-                  <button
-                    key={it}
-                    type="button"
-                    className={it === page ? `${styles.pagerLink} ${styles.pagerLinkActive}` : styles.pagerLink}
-                    onClick={() => goToPage(it)}
-                    aria-current={it === page ? "page" : undefined}
-                  >
-                    {it}
-                  </button>
-                ),
-              )}
-              {page < totalPages ? (
-                <button type="button" className={styles.pagerLink} onClick={() => goToPage(page + 1)} aria-label="Next">›</button>
-              ) : (
-                <span className={`${styles.pagerLink} ${styles.pagerLinkDisabled}`} aria-hidden="true">›</span>
-              )}
-            </nav>
-          )}
+        {/* data-theme="dark" scopes ONLY the card grid, not the pager below it.
+            Each ProjectCard paints its own dark surface (.prj's own
+            background: var(--sea-deep)), so it needs the dark-token values
+            for --text-soft/--text-faint regardless of the surrounding page —
+            same reasoning as /projects (page.tsx's <main data-theme="dark">)
+            and /developers/[slug] (DeveloperProjectsGrid.tsx's <section
+            data-theme="dark">), both of which are ALSO full dark-background
+            pages, unlike this block. Without this scope, .prj__dist's
+            <i>/<small> labels inherit the article body's .is-light override
+            (light "ink" values) and render invisible on the card's dark
+            footer. The pager, by contrast, sits directly on the article's
+            light page background (no dark panel behind it) — scoping it dark
+            too (as tried previously) made its default/disabled buttons
+            near-invisible (dark-on-dark-inherited-tokens on a light page).
+            It's left in the inherited light scope, matching the tokens it
+            was originally styled against. */}
+        <div data-theme="dark" className={styles.projects}>
+          {visibleProjects.map((project: any) => (
+            <ProjectCard key={project._id} c={toCardData(project, lang)} s={s} locale={lang} />
+          ))}
         </div>
+        {isPaginated && (
+          <nav className={styles.pager} aria-label="Results pagination">
+            {page > 1 ? (
+              <button type="button" className={styles.pagerLink} onClick={() => goToPage(page - 1)} aria-label="Previous">‹</button>
+            ) : (
+              <span className={`${styles.pagerLink} ${styles.pagerLinkDisabled}`} aria-hidden="true">‹</span>
+            )}
+            {pageWindow(page, totalPages).map((it, i) =>
+              it === "…" ? (
+                <span key={`gap-${i}`} className={styles.pagerGap} aria-hidden="true">…</span>
+              ) : (
+                <button
+                  key={it}
+                  type="button"
+                  className={it === page ? `${styles.pagerLink} ${styles.pagerLinkActive}` : styles.pagerLink}
+                  onClick={() => goToPage(it)}
+                  aria-current={it === page ? "page" : undefined}
+                >
+                  {it}
+                </button>
+              ),
+            )}
+            {page < totalPages ? (
+              <button type="button" className={styles.pagerLink} onClick={() => goToPage(page + 1)} aria-label="Next">›</button>
+            ) : (
+              <span className={`${styles.pagerLink} ${styles.pagerLinkDisabled}`} aria-hidden="true">›</span>
+            )}
+          </nav>
+        )}
       </div>
     </section>
   );
