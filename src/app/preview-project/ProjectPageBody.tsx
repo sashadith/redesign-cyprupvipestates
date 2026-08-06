@@ -161,9 +161,20 @@ export default async function ProjectPageBody({
             ranking funnel on every project page (developmentAlternatives.ts). */}
         {isSold && (
           <>
-            <section className="pp-wrap pp-section pp-soldout">
+            {/* AlternativesBlock renders null once `alternatives` is empty
+                (fewer than MIN_ALTERNATIVES genuine matches even at the
+                loosest stage — developmentAlternatives.ts) — found 2026-08-06
+                on 3 real sold-out projects (Celestia, absolute-villas, Neon
+                Homes): the lead text's original closing "...and are still
+                open:" pointed at nothing, since this section always rendered
+                regardless. Swap to a colon-free closer in that case (no
+                promise of cards below), and give the section back the same
+                padding-bottom the (now-absent) alternatives section would
+                have contributed, so the gap to the enquiry form stays the
+                same either way — see .pp-soldout--no-alts in project.css. */}
+            <section className={`pp-wrap pp-section pp-soldout${alternatives.length === 0 ? " pp-soldout--no-alts" : ""}`}>
               <h2 className="pp-h2">{goldPhrase(t.soldOutBannerHeadline)}</h2>
-              <p className="pp-desc pp-soldout__lead">{t.soldOutBannerBody}</p>
+              <p className="pp-desc pp-soldout__lead">{alternatives.length > 0 ? t.soldOutBannerBody : t.soldOutBannerBodyNoAlternatives}</p>
             </section>
 
             <AlternativesBlock cards={alternatives} lang={lang} heading={t.alternativesHeading} prominent />

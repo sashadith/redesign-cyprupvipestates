@@ -56,6 +56,13 @@ export type DevelopmentStrings = {
   // ends the sentence.
   soldOutBannerHeadline: GoldPhrase;
   soldOutBannerBody: string;
+  // Shown instead of soldOutBannerBody when getAlternativeDevelopments()
+  // returns nothing (fewer than MIN_ALTERNATIVES genuine matches even at
+  // the loosest stage — see developmentAlternatives.ts) — 2026-08-06, after
+  // the original body's trailing "...and are still open:" was found pointing
+  // at an empty AlternativesBlock (which renders null, not an empty grid)
+  // on 3 real sold-out projects. No trailing colon — nothing follows it here.
+  soldOutBannerBodyNoAlternatives: string;
   offMarketCtaHeadline: GoldPhrase;
   offMarketCtaBody: string;
   unitsHeadingSoldOut: string; // replaces unitsHeading once sold out
@@ -143,6 +150,7 @@ const EN: DevelopmentStrings = {
   heroFromSoldOut: "sold from",
   soldOutBannerHeadline: { lead: "Sold out — take it as ", gold: "confirmation of your taste.", trail: "" },
   soldOutBannerBody: "Homes like these move quickly, and fortunately Cyprus isn't done building beautiful ones. These projects come closest to what brought you here — and are still open:",
+  soldOutBannerBodyNoAlternatives: "Homes like these move quickly, and fortunately Cyprus isn't done building beautiful ones. Tell us what brought you here — we'll find what comes closest.",
   offMarketCtaHeadline: { lead: "Get there ", gold: "before the listing", trail: " does." },
   offMarketCtaBody: "Describe your ideal home in one message — we often know about units before they go public, and when we do, we'll think of you first.",
   unitsHeadingSoldOut: "The Properties",
@@ -205,6 +213,7 @@ const DE: DevelopmentStrings = {
   heroFromSoldOut: "verkauft ab",
   soldOutBannerHeadline: { lead: "Ausverkauft — nehmen Sie es als ", gold: "Bestätigung Ihres Geschmacks.", trail: "" },
   soldOutBannerBody: "Solche Objekte bleiben nicht lange, und zum Glück ist Zypern mit dem Bauen schöner Projekte noch nicht fertig. Diese kommen dem, was Sie hierhergeführt hat, am nächsten — und sind noch zu haben:",
+  soldOutBannerBodyNoAlternatives: "Solche Objekte bleiben nicht lange, und zum Glück ist Zypern mit dem Bauen schöner Projekte noch nicht fertig. Sagen Sie uns, was Sie hierhergeführt hat — wir finden, was dem am nächsten kommt.",
   offMarketCtaHeadline: { lead: "Seien Sie ", gold: "schneller", trail: " als das Inserat." },
   offMarketCtaBody: "Beschreiben Sie uns Ihr Wunschobjekt in einer Nachricht — wir wissen oft von Einheiten, bevor sie öffentlich werden, und denken dann zuerst an Sie.",
   unitsHeadingSoldOut: "Die Objekte",
@@ -267,6 +276,7 @@ const PL: DevelopmentStrings = {
   heroFromSoldOut: "sprzedano od",
   soldOutBannerHeadline: { lead: "Wyprzedane — potraktuj to jako ", gold: "potwierdzenie swojego gustu.", trail: "" },
   soldOutBannerBody: "Takie rezydencje nie czekają długo, ale na szczęście Cypr nie skończył jeszcze budować pięknych projektów. Te są najbliżej tego, co Cię tu przyciągnęło — i wciąż dostępne:",
+  soldOutBannerBodyNoAlternatives: "Takie rezydencje nie czekają długo, ale na szczęście Cypr nie skończył jeszcze budować pięknych projektów. Powiedz nam, co Cię tu przyciągnęło — znajdziemy to, co jest najbliżej.",
   offMarketCtaHeadline: { lead: "Bądź ", gold: "szybszy niż", trail: " ogłoszenie." },
   offMarketCtaBody: "Opisz nam swoją idealną nieruchomość w jednej wiadomości — często wiemy o rezydencjach, zanim staną się publiczne, i wtedy pomyślimy najpierw o Tobie.",
   unitsHeadingSoldOut: "Obiekty",
@@ -330,6 +340,7 @@ const RU: DevelopmentStrings = {
   heroFromSoldOut: "продано от",
   soldOutBannerHeadline: { lead: "Продано — считайте это ", gold: "подтверждением вашего вкуса.", trail: "" },
   soldOutBannerBody: "Такие резиденции не задерживаются, но, к счастью, Кипр ещё не закончил строить красивое. Эти проекты ближе всего к тому, что привело вас сюда — и они ещё доступны:",
+  soldOutBannerBodyNoAlternatives: "Такие резиденции не задерживаются, но, к счастью, Кипр ещё не закончил строить красивое. Расскажите, что привело вас сюда — мы найдём то, что ближе всего.",
   offMarketCtaHeadline: { lead: "Опередите ", gold: "объявление.", trail: "" },
   offMarketCtaBody: "Опишите нам идеальный объект в одном сообщении — мы часто узнаём о резиденциях до их публикации, и тогда в первую очередь вспомним о вас.",
   unitsHeadingSoldOut: "Объекты",
