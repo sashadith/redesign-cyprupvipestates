@@ -5,15 +5,33 @@
 // AND have at least one available unit (computeAvailability) — a sold-out
 // project as an "alternative" would defeat the point.
 //
-// Ranking funnel, each stage a HARD filter (never guessed/loosened silently):
+// Commercial vs. residential is a CATEGORICAL boundary, not a preference —
+// unlike "villa vs apartment" (a taste the last stage is allowed to ignore),
+// a Gewerbeimmobilie must never surface a home as an "alternative" and a
+// Wohnimmobilie must never surface an office/shop, at ANY stage (bug found
+// 2026-08-06: stage 3 dropped the type filter entirely, so this boundary
+// leaked once stages 1-2 couldn't fill the list). Enforced up front by
+// excluding different-bucket candidates from the pool before any staging
+// runs — structurally impossible for a later, looser stage to let one back
+// in. "Commercial" reuses matchesPropertyTypeFilter (developmentCard.ts),
+// the SAME classification the /projects catalogue filter already uses
+// (office/shop count as commercial; nothing else does) — one definition,
+// not two that can silently disagree.
+//
+// Ranking funnel WITHIN the current development's own bucket, each stage a
+// HARD filter (never guessed/loosened silently):
 //   1. same developer AND same location, same property type, price within ±40%
 //   2. same developer OR  same location, same property type, price within ±40%
-//   3. (last resort) same developer OR same location, price within ±60% — type dropped
+//   3. (last resort) same developer OR same location, price within ±60% — only
+//      the fine-grained type preference (villa/apartment/studio/...) is
+//      dropped here, never the commercial/residential bucket.
 // Fewer than MIN_ALTERNATIVES after stage 3 → return [] (the caller omits the
-// block entirely rather than show weak/random suggestions).
+// block entirely rather than show weak/random suggestions) — this is also
+// what makes a Gewerbeimmobilie's block silently disappear when there simply
+// aren't 3+ other commercial developments to suggest, by design.
 import { prisma } from "@/lib/prisma";
 import { computeAvailability } from "@/lib/developmentAvailability";
-import { resolveDevelopmentType } from "@/lib/developmentCard";
+import { resolveDevelopmentType, matchesPropertyTypeFilter } from "@/lib/developmentCard";
 import { resolveCompletionYear } from "@/lib/text";
 import { mapDevelopmentRowToCard } from "@/sanity/sanity.utils";
 import { localizedHref } from "@/lib/locale";
@@ -38,6 +56,15 @@ function typeTokens(category: string | null, units: UnitLike[]): Set<string> {
 function sharesType(a: Set<string>, b: Set<string>): boolean {
   if (!a.size || !b.size) return false;
   return Array.from(a).some((t) => b.has(t));
+}
+
+// A development counts as "commercial" the moment ANY of its units are
+// office/shop-typed — a genuinely mixed-use building (rare; see the
+// 2026-08-06 investigation) is treated as commercial-bucket rather than
+// residential, the more conservative choice (never surface a pure-residential
+// project on a building that includes commercial space).
+function isCommercial(category: string | null, units: UnitLike[]): boolean {
+  return matchesPropertyTypeFilter(resolveDevelopmentType(category, units as any), "commercial");
 }
 
 function cheapestAvailable(units: UnitLike[]): number | null {
@@ -68,6 +95,7 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
   if (currentPrice == null) return []; // no price basis to compare against — never guess
 
   const currentTypes = typeTokens(current.category, current.units);
+  const currentIsCommercial = isCommercial(current.category, current.units);
 
   const rows = await prisma.development.findMany({
     where: { publishStatus: "published", id: { not: current.id } },
@@ -92,6 +120,7 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
     if (soldOut) continue; // never suggest a sold-out project as an alternative
     const price = d.priceFrom ?? cheapestAvailable(d.units);
     if (price == null) continue;
+    if (isCommercial(d.category, d.units) !== currentIsCommercial) continue; // categorical boundary — excluded from the pool entirely, no stage can reintroduce it
     const sameDeveloper = !!current.developerAccountId && d.developerAccountId === current.developerAccountId;
     const sameArea = !!current.area && !!d.area && current.area.toLowerCase() === d.area.toLowerCase();
     const sameDistrict = !!current.district && !!d.district && current.district.toLowerCase() === d.district.toLowerCase();
