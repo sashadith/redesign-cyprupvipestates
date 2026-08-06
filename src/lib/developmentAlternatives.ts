@@ -90,6 +90,22 @@ function cheapestAvailable(units: UnitLike[]): number | null {
   return prices.length ? Math.min(...prices) : null;
 }
 
+// A sold-out development has, by definition, zero "available" units — so
+// cheapestAvailable() can never produce a price for one, no matter what.
+// Found 2026-08-06 tracing why Celestia/absolute-villas/neon-homes (all sold
+// out, all missing a Development.priceFrom because their feed stopped
+// sending one once nothing was left to sell) got zero alternatives: the
+// funnel bailed out before stage 1 even ran, on `currentPrice == null` —
+// developer/location were never the bottleneck. Only used for the CURRENT
+// project's own price basis, never for a candidate (candidates are always
+// non-sold-out by construction — see the `if (soldOut) continue;` filter
+// below — so a candidate's own live cheapestAvailable() price is what should
+// represent it, not a stale one).
+function cheapestOfAnyStatus(units: UnitLike[]): number | null {
+  const prices = units.filter((u) => u.price != null).map((u) => u.price as number);
+  return prices.length ? Math.min(...prices) : null;
+}
+
 function inBand(price: number, center: number, band: number): boolean {
   return price >= center * (1 - band) && price <= center * (1 + band);
 }
@@ -109,7 +125,7 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
   });
   if (!current) return [];
 
-  const currentPrice = current.priceFrom ?? cheapestAvailable(current.units);
+  const currentPrice = current.priceFrom ?? cheapestAvailable(current.units) ?? cheapestOfAnyStatus(current.units);
   if (currentPrice == null) return []; // no price basis to compare against — never guess
 
   const currentTypes = typeTokens(current.category, current.units);
