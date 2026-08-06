@@ -11,7 +11,7 @@ import { recomputeDevelopmentDerivedState } from "@/lib/developmentDerivedState"
    DevelopmentOverride are NEVER touched. Images are stored as the feed URLs for
    now — the mirroring step (Increment 3) rewrites them to our own URLs. */
 
-const DEV_ACCOUNT: Record<string, { slug: string; name: string }> = {
+export const DEV_ACCOUNT: Record<string, { slug: string; name: string }> = {
   "island-blue": { slug: "island-blue", name: "Island Blue" },
   inex: { slug: "inex", name: "INEX" },
   bbf: { slug: "bbf", name: "BBF" },
@@ -107,7 +107,21 @@ function unitRow(u: UnitVM, developmentId: string, i: number) {
   };
 }
 
-export type SyncResult = { dev: string; found: number; created: number; updated: number; failed: number; mirroredNewFiles: boolean };
+// One line per unit that flipped to "unlisted" this run — the detail behind
+// the "N units removed from the feed" notification (src/lib/feedNotifications.ts).
+export type UnitChangeLine = { developmentId: string; development: string; ref: string; label: string };
+
+export type SyncResult = {
+  dev: string; found: number; created: number; updated: number; failed: number; mirroredNewFiles: boolean;
+  unitsCreated: number; unitsUnlisted: UnitChangeLine[];
+  // Feed-completeness guard tripped (see checkFeedCompleteness below) — this
+  // developer's sync was skipped entirely this run, nothing written at all,
+  // found/created/updated/failed are meaningless zeros for it.
+  blocked?: boolean;
+  blockedMessage?: string;
+  blockedMissing?: number;
+  blockedTotal?: number;
+};
 
 // Every developer whose units are subject to the full deleteMany+createMany
 // sync (syncAll/the daily cron) — the read-only editor gate (Teil 1) and the
@@ -121,15 +135,83 @@ export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "
 // fixture data, not a live feed; nothing to "pull fresh".
 export const FORCE_SYNC_DEVS = SYNCED_DEVS.filter((d) => d !== "agg");
 
-type ProjectSyncOutcome = { ok: boolean; created: boolean; unitsWritten: number; skippedManual: boolean; mirroredNewFiles: boolean };
+type ProjectSyncOutcome = {
+  ok: boolean; created: boolean; unitsWritten: number; skippedManual: boolean; mirroredNewFiles: boolean;
+  developmentId?: string; developmentName?: string;
+  unitsCreated: number; unitsUnlisted: { ref: string; label: string }[];
+};
+
+// Customer-facing catalogue fields, frozen once a Development is published —
+// an admin's careful hand-edits (public name, description, amenities,
+// curated gallery/plans) must never be silently reverted by a routine sync.
+// Everything else keeps syncing normally: unit data (price/area/status) via
+// syncFeedUnitsPreservingUnlisted below, and every other Development-level
+// field (district/town/area/stage/completion/energy/coordinates/price/etc.)
+// — mapRowToVM() (developmentRender.ts) already resolves ALL of those
+// override-first, so an admin correction there is separately protected and
+// staying live-tracking the feed for the rest is exactly what's wanted.
+// Confirmed 2026-08-06 by reading mapRowToVM() directly, not assumed.
+const FROZEN_WHEN_PUBLISHED = ["publicName", "description", "amenities", "gallery", "plans"] as const;
+
+// Published developments: never hard-delete a feed-sourced unit that
+// disappears from today's feed pull — a customer may already be looking at
+// it (Client Presentation, browser tab, an earlier email). Diff against the
+// fresh feed by ref instead: matched units update in place, new units are
+// created, and units no longer in the feed flip to "unlisted" (row otherwise
+// untouched — photos, price, area, ref, feedRef all survive) rather than
+// being deleted. See the Salt/legacy investigation (2026-08-06) for why
+// "gone from the feed" must never be conflated with "sold". A unit already
+// "sold" (or already "unlisted") stays put even once it disappears — same
+// hard rule as statusOnlySync below: sold is terminal, never silently
+// reinterpreted from feed noise, and there's no point re-flagging an already-
+// unlisted row every single day.
+async function syncFeedUnitsPreservingUnlisted(
+  developmentId: string,
+  freshUnits: UnitVM[],
+): Promise<{ written: number; createdCount: number; unlisted: { ref: string; label: string }[] }> {
+  const existing = await prisma.developmentUnit.findMany({
+    where: { developmentId, source: "feed" },
+    select: { id: true, ref: true, status: true, label: true, name: true },
+  });
+  const existingByRef = new Map<string, (typeof existing)[number]>();
+  for (const u of existing) if (u.ref) existingByRef.set(u.ref, u);
+  const freshRefs = new Set(freshUnits.map((u) => u.ref).filter(Boolean));
+
+  let written = 0, createdCount = 0;
+  for (let i = 0; i < freshUnits.length; i++) {
+    const u = freshUnits[i];
+    const row = unitRow(u, developmentId, i);
+    const match = u.ref ? existingByRef.get(u.ref) : undefined;
+    if (match) {
+      await prisma.developmentUnit.update({ where: { id: match.id }, data: row });
+    } else {
+      await prisma.developmentUnit.create({ data: row });
+      createdCount++;
+    }
+    written++;
+  }
+
+  const unlisted: { ref: string; label: string }[] = [];
+  for (const old of existing) {
+    if (!old.ref || freshRefs.has(old.ref)) continue; // no stable key to diff, or still present
+    if (old.status === "sold" || old.status === "unlisted") continue; // hard rule / already flagged
+    await prisma.developmentUnit.update({ where: { id: old.id }, data: { status: "unlisted" } });
+    unlisted.push({ ref: old.ref, label: old.label || old.name || old.ref });
+  }
+  return { written, createdCount, unlisted };
+}
 
 // Per-project sync body, shared by syncDeveloperCore's loop (all projects of
 // a developer) and syncOneDevelopment (exactly one project, admin Force-Sync
 // button) — one implementation, so both call sites get identical protections
 // (manual-lock gate, distance recompute, mirroring) with no risk of drift.
-async function syncOneProject(dev: string, id: string, accountId: string, opts: { mirror?: boolean } = {}): Promise<ProjectSyncOutcome> {
-  const vm = await getPreviewProject(dev, id);
-  if (!vm) return { ok: false, created: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false };
+// opts.vm: a pre-fetched ProjectVM, used by syncDeveloperCore so the feed-
+// completeness guard (checkFeedCompleteness) and the actual sync share one
+// fetch instead of two. undefined (the syncOneDevelopment call site) means
+// "fetch it fresh here"; null means "already looked up, not found".
+async function syncOneProject(dev: string, id: string, accountId: string, opts: { mirror?: boolean; vm?: ProjectVM | null } = {}): Promise<ProjectSyncOutcome> {
+  const vm = opts.vm !== undefined ? opts.vm : await getPreviewProject(dev, id);
+  if (!vm) return { ok: false, created: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, unitsCreated: 0, unitsUnlisted: [] };
   const feedKey = `${dev}:${id}`;
   let mirroredNewFiles = false;
   if (opts.mirror) {
@@ -147,11 +229,17 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
       if (photos.anyNew || uPlans.anyNew) mirroredNewFiles = true;
     }
   }
-  const existing = await prisma.development.findUnique({ where: { feedKey }, select: { id: true } });
-  const data = developmentRow(vm, dev, id, accountId);
+  const existing = await prisma.development.findUnique({ where: { feedKey }, select: { id: true, publishStatus: true } });
+  const fullData = developmentRow(vm, dev, id, accountId);
+  let updateData: Partial<typeof fullData> = fullData;
+  if (existing?.publishStatus === "published") {
+    const frozen = { ...fullData };
+    for (const k of FROZEN_WHEN_PUBLISHED) delete (frozen as any)[k];
+    updateData = frozen;
+  }
   const development = existing
-    ? await prisma.development.update({ where: { feedKey }, data })
-    : await prisma.development.create({ data });
+    ? await prisma.development.update({ where: { feedKey }, data: updateData })
+    : await prisma.development.create({ data: fullData });
   // Auto recompute (haversine, src/lib/developmentDistances.ts) — resolves
   // override lat/lng first, so a deliberately-corrected admin pin is never
   // clobbered by the feed's own (possibly wrong) coordinates.
@@ -159,15 +247,70 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
   // If a human imported the real unit list (manual units exist), the feed's
   // partial list is ignored entirely — never re-add feed units on top. The
   // Development row above is still refreshed regardless (name/description/
-  // gallery/price range/stage/etc.) — only DevelopmentUnit rows are protected.
+  // gallery/price range/stage/etc., or a subset thereof once published — see
+  // FROZEN_WHEN_PUBLISHED) — only DevelopmentUnit rows are protected.
   const manualUnits = await prisma.developmentUnit.count({ where: { developmentId: development.id, source: "manual" } });
   if (manualUnits > 0) {
-    return { ok: true, created: !existing, unitsWritten: 0, skippedManual: true, mirroredNewFiles };
+    return { ok: true, created: !existing, unitsWritten: 0, skippedManual: true, mirroredNewFiles, developmentId: development.id, developmentName: development.publicName, unitsCreated: 0, unitsUnlisted: [] };
   }
-  await prisma.developmentUnit.deleteMany({ where: { developmentId: development.id, source: "feed" } });
-  if (vm.units.length) await prisma.developmentUnit.createMany({ data: vm.units.map((u, i) => unitRow(u, development.id, i)) });
+  let unitsWritten: number, unitsCreated = 0, unitsUnlisted: { ref: string; label: string }[] = [];
+  if (development.publishStatus === "published") {
+    const diff = await syncFeedUnitsPreservingUnlisted(development.id, vm.units);
+    unitsWritten = diff.written; unitsCreated = diff.createdCount; unitsUnlisted = diff.unlisted;
+  } else {
+    await prisma.developmentUnit.deleteMany({ where: { developmentId: development.id, source: "feed" } });
+    if (vm.units.length) await prisma.developmentUnit.createMany({ data: vm.units.map((u, i) => unitRow(u, development.id, i)) });
+    unitsWritten = vm.units.length;
+  }
   await recomputeDevelopmentDerivedState(development.id);
-  return { ok: true, created: !existing, unitsWritten: vm.units.length, skippedManual: false, mirroredNewFiles };
+  return { ok: true, created: !existing, unitsWritten, skippedManual: false, mirroredNewFiles, developmentId: development.id, developmentName: development.publicName, unitsCreated, unitsUnlisted };
+}
+
+// Guards against a partial/broken feed fetch masquerading as "half the
+// catalogue sold" — a large chunk of a developer's previously-known units
+// vanishing from one day's pull is far more likely a feed/API hiccup than a
+// genuine sales event (see the Salt/legacy premise-check, 2026-08-06: "unit
+// disappeared" ≠ "sold", and a bad fetch can make far more than one unit
+// disappear at once). Blocks only when BOTH thresholds are crossed — percent
+// alone would trip constantly for small developers (a 3-project, 16-unit
+// developer loses "15%" over a single real unit selling), and an absolute
+// count alone would rarely trip for large ones. Validated against real
+// per-developer unit counts (2026-08-06): bbf 506, olias-homes 330, aristo
+// 309, medousa-xml 273, island-blue 201, domenica 120, luma 84, inex 78,
+// square-one 53, pafilia 27, kuutio-homes-drive 16 — the 20-unit floor
+// dominates for the small end, 15% for the large end, exactly as intended.
+// Scoped developer-wide (not per-published-project): a broken feed/API
+// response affects the developer's whole pull equally, published or not.
+const FEED_INCOMPLETE_PCT = 0.15;
+const FEED_INCOMPLETE_ABS_FLOOR = 20;
+
+async function checkFeedCompleteness(
+  dev: string,
+  ids: string[],
+): Promise<{ blocked: boolean; message?: string; missing?: number; total?: number; vmsById: Map<string, ProjectVM | null> }> {
+  const vmsById = new Map<string, ProjectVM | null>();
+  let afterCount = 0;
+  for (const id of ids) {
+    let vm: ProjectVM | null = null;
+    try { vm = await getPreviewProject(dev, id); } catch { vm = null; }
+    vmsById.set(id, vm);
+    afterCount += vm?.units.length ?? 0;
+  }
+  const beforeCount = await prisma.developmentUnit.count({ where: { source: "feed", development: { dev } } });
+  if (beforeCount > 0) {
+    const missing = beforeCount - afterCount;
+    const missingPct = missing / beforeCount;
+    if (missing > FEED_INCOMPLETE_ABS_FLOOR && missingPct > FEED_INCOMPLETE_PCT) {
+      const pctLabel = Math.round(missingPct * 100);
+      return {
+        blocked: true,
+        message: `${missing} of ${beforeCount} units are missing from today's feed (${pctLabel} %). Nothing was changed — the catalogue stays as it is until this has been checked.`,
+        missing, total: beforeCount,
+        vmsById,
+      };
+    }
+  }
+  return { blocked: false, vmsById };
 }
 
 // Core loop, no restart side-effect — syncAll() calls this per developer so a
@@ -175,18 +318,29 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
 async function syncDeveloperCore(dev: string, opts: { mirror?: boolean } = {}): Promise<SyncResult> {
   const accountId = await ensureAccount(dev);
   const ids = await listProjectIds(dev);
-  let created = 0, updated = 0, failed = 0, mirroredNewFiles = false;
+
+  const guard = await checkFeedCompleteness(dev, ids);
+  if (guard.blocked) {
+    return { dev, found: ids.length, created: 0, updated: 0, failed: 0, mirroredNewFiles: false, unitsCreated: 0, unitsUnlisted: [], blocked: true, blockedMessage: guard.message, blockedMissing: guard.missing, blockedTotal: guard.total };
+  }
+
+  let created = 0, updated = 0, failed = 0, mirroredNewFiles = false, unitsCreated = 0;
+  const unitsUnlisted: UnitChangeLine[] = [];
   for (const id of ids) {
     try {
-      const r = await syncOneProject(dev, id, accountId, opts);
+      const r = await syncOneProject(dev, id, accountId, { ...opts, vm: guard.vmsById.get(id) ?? null });
       if (!r.ok) { failed++; continue; }
       r.created ? created++ : updated++;
       if (r.mirroredNewFiles) mirroredNewFiles = true;
+      unitsCreated += r.unitsCreated;
+      for (const u of r.unitsUnlisted) {
+        unitsUnlisted.push({ developmentId: r.developmentId!, development: r.developmentName!, ref: u.ref, label: u.label });
+      }
     } catch {
       failed++;
     }
   }
-  return { dev, found: ids.length, created, updated, failed, mirroredNewFiles };
+  return { dev, found: ids.length, created, updated, failed, mirroredNewFiles, unitsCreated, unitsUnlisted };
 }
 
 // Public single-developer entry (admin "Sync now" for one dev, debug route) —
@@ -347,7 +501,7 @@ export async function backfillFeedRefFromDigits(developmentId: string, opts: { d
 // (2026-08-03) does (sold|active|reserved), so it's added here too.
 export const STATUS_SYNC_DEVS = ["island-blue", "domenica", "aristo", "medousa"];
 
-export type StatusOnlySyncChange = { slug: string; unitRef: string; from: string; to: string };
+export type StatusOnlySyncChange = { developmentId: string; developmentName: string; slug: string; unitRef: string; from: string; to: string };
 
 export type StatusOnlySyncResult = {
   dev: string;
@@ -371,7 +525,7 @@ export async function statusOnlySync(devs: string[] = STATUS_SYNC_DEVS): Promise
   for (const dev of devs) {
     const developments = await prisma.development.findMany({
       where: { dev, units: { some: { source: "manual" } } },
-      select: { id: true, feedProjectId: true, slug: true, developerName: true },
+      select: { id: true, feedProjectId: true, slug: true, developerName: true, publicName: true },
     });
     let developmentsSkipped = 0, matched = 0, updated = 0, skipped = 0;
     const changes: StatusOnlySyncChange[] = [];
@@ -387,12 +541,43 @@ export async function statusOnlySync(devs: string[] = STATUS_SYNC_DEVS): Promise
       });
       for (const unit of manualUnits) {
         const feedStatus = unit.feedRef ? feedStatusByRef.get(unit.feedRef) : undefined;
-        if (feedStatus == null) { skipped++; continue; }
+        if (feedStatus == null) {
+          // Unit not found in today's (successfully-fetched) feed response —
+          // the developer no longer lists it. Never delete or guess "sold":
+          // flip to "unlisted" so it drops off the public site but keeps its
+          // full row (price/area/photos/ref/feedRef), and returns automatically
+          // the day it reappears in the feed (see UnitsView.tsx's filter and
+          // recomputeDevelopmentDerivedState's back-in-stock handling below).
+          // Hard rule: "sold" is terminal — a unit that was genuinely sold and
+          // then disappears (the expected, common case) must stay "sold", never
+          // get relabeled "unlisted" just because it's no longer for sale. An
+          // already-"unlisted" unit is left alone too — nothing to change, and
+          // re-writing it every run would be noise, not signal.
+          if (unit.status === "sold" || unit.status === "unlisted") { skipped++; continue; }
+          await prisma.developmentUnit.update({ where: { id: unit.id }, data: { status: "unlisted" } });
+          matched++; updated++;
+          changes.push({
+            developmentId: development.id,
+            developmentName: development.publicName || development.developerName || development.id,
+            slug: development.slug || development.developerName || development.id,
+            unitRef: unit.ref || unit.feedRef || unit.id,
+            from: unit.status || "(none)",
+            to: "unlisted",
+          });
+          continue;
+        }
         matched++;
+        // Same hard rule as above, the other direction: a unit already marked
+        // "sold" never springs back to available/reserved just because the
+        // feed briefly reports it differently (a stale re-list, a feed glitch) —
+        // sold is a one-way door once set.
+        if (unit.status === "sold") continue;
         if (feedStatus !== unit.status) {
           await prisma.developmentUnit.update({ where: { id: unit.id }, data: { status: feedStatus } });
           updated++;
           changes.push({
+            developmentId: development.id,
+            developmentName: development.publicName || development.developerName || development.id,
             slug: development.slug || development.developerName || development.id,
             unitRef: unit.ref || unit.feedRef || unit.id,
             from: unit.status || "(none)",

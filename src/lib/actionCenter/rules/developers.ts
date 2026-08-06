@@ -170,6 +170,36 @@ async function feedSyncFailures(): Promise<ActionItem[]> {
   return items;
 }
 
+// (e2) Feed-completeness guard tripped — a developer's sync was skipped
+// entirely this run because too much of its previously-known inventory
+// vanished from one day's pull (see checkFeedCompleteness in feedSync.ts).
+// Own job-key namespace ("feed-incomplete:", distinct from "feed-sync:") so
+// this never collides with feedSyncFailures() above — a blocked run is a
+// deliberate skip, not a crash, and the two conditions must stay
+// independently visible/snoozable. Same "latest row per job" pattern.
+async function feedIncompleteWarnings(): Promise<ActionItem[]> {
+  const rows = await prisma.cronRunLog.findMany({
+    where: { job: { startsWith: "feed-incomplete:" } },
+    orderBy: { ranAt: "desc" },
+    take: 500,
+  });
+  const latestByJob = new Map<string, (typeof rows)[number]>();
+  for (const r of rows) if (!latestByJob.has(r.job)) latestByJob.set(r.job, r);
+
+  const items: ActionItem[] = [];
+  for (const [job, row] of Array.from(latestByJob)) {
+    if (row.ok) continue; // a later, complete sync superseded the block — not a live condition
+    const devKey = job.slice("feed-incomplete:".length);
+    items.push({
+      id: `feed-incomplete:${job}`, severity: "URGENT", category: "DEVELOPERS",
+      title: `${devKey} feed looks incomplete — nothing was synced`,
+      description: row.message || "A large share of this developer's known units are missing from the feed. Nothing was written; check the feed before the next run.",
+      deepLink: `/admin/developments?dev=${encodeURIComponent(devKey)}`, since: row.ranAt,
+    });
+  }
+  return items;
+}
+
 // (f) Published/ready development whose source feed no longer lists it.
 // syncedAt only advances when the sync loop actually visits a project (see
 // feedSync.ts's developmentRow() — it's set unconditionally on every
@@ -462,9 +492,9 @@ async function developerLinkCollisions(): Promise<ActionItem[]> {
 }
 
 export async function developerRules(): Promise<ActionItem[]> {
-  const [a, b, c, d, e, f, g, h, i, j, k] = await Promise.all([
+  const [a, b, c, d, e, f, g, h, i, j, k, l] = await Promise.all([
     soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(), backInStockReminders(),
-    developerNoPageReminders(), developerLinkBrokenReminders(), overlapCandidatesPending(), developerLinkCollisions(),
+    developerNoPageReminders(), developerLinkBrokenReminders(), overlapCandidatesPending(), developerLinkCollisions(), feedIncompleteWarnings(),
   ]);
-  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k];
+  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l];
 }

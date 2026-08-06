@@ -3,6 +3,8 @@ import { syncAll, statusOnlySync } from "@/lib/feedSync";
 import { prisma } from "@/lib/prisma";
 import { withCronLog, logCronRun } from "@/lib/cronLog";
 import { sweepOverlapCandidates } from "@/lib/overlapSweep";
+import { computeAvailability } from "@/lib/developmentAvailability";
+import { buildRemovedUnitsMessage, buildNewUnitsMessage, buildFeedIncompleteMessage, sendFeedNotification, type RemovedUnitLine } from "@/lib/feedNotifications";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -83,7 +85,17 @@ export async function GET(req: NextRequest) {
     );
     // Per-developer rows — Action Center rule (e) ("Medousa feed failed last
     // sync") needs per-developer status, not just the whole job's outcome.
-    for (const r of results) await logCronRun(`feed-sync:${r.dev}`, r.failed === 0, r.failed === 0 ? undefined : `${r.failed}/${r.found} project(s) failed`);
+    // A blocked developer (feed-completeness guard tripped, see
+    // checkFeedCompleteness in feedSync.ts) gets its own job key instead —
+    // logging it as a plain "0/N failed" success would misrepresent a
+    // deliberate skip as a clean run.
+    for (const r of results) {
+      if (r.blocked) {
+        await logCronRun(`feed-incomplete:${r.dev}`, false, r.blockedMessage);
+        continue;
+      }
+      await logCronRun(`feed-sync:${r.dev}`, r.failed === 0, r.failed === 0 ? undefined : `${r.failed}/${r.found} project(s) failed`);
+    }
     // Status-only sync for manual developments — the normal syncAll() above
     // skips them entirely (any manual unit locks the whole Development out
     // of the regular resync), so this is their only path back to a current
@@ -101,6 +113,75 @@ export async function GET(req: NextRequest) {
       // without diffing a raw DB backup by hand.
       for (const c of r.changes) await logCronRun(`status-only-sync-change:${r.dev}`, true, `${c.slug} / ${c.unitRef}: ${c.from} → ${c.to}`);
     }
+
+    // Inventory-change notifications (Telegram + email) — merges the two
+    // independent "unit no longer in the feed" sources: the published-
+    // development diff sync above (results[].unitsUnlisted) and the manual-
+    // development status-only sync (statusResults[].changes with to:"unlisted").
+    // One message per developer per category, never per unit — see
+    // src/lib/feedNotifications.ts for the exact wording (reviewed and
+    // approved by Sascha 2026-08-06).
+    const removedByDev = new Map<string, RemovedUnitLine[]>();
+    const devByDevelopmentId = new Map<string, string>();
+    const touchedDevelopmentIds = new Set<string>();
+    const pushRemoved = (dev: string, line: RemovedUnitLine, developmentId: string) => {
+      const arr = removedByDev.get(dev) ?? [];
+      arr.push(line);
+      removedByDev.set(dev, arr);
+      devByDevelopmentId.set(developmentId, dev);
+      touchedDevelopmentIds.add(developmentId);
+    };
+    for (const r of results) {
+      for (const u of r.unitsUnlisted) pushRemoved(r.dev, { development: u.development, ref: u.ref, label: u.label }, u.developmentId);
+    }
+    for (const r of statusResults) {
+      for (const c of r.changes) {
+        if (c.to !== "unlisted") continue;
+        pushRemoved(r.dev, { development: c.developmentName, ref: c.unitRef, label: c.unitRef }, c.developmentId);
+      }
+    }
+
+    // Which of the touched developments are now fully sold out as a direct
+    // result of today's removals — its own line in the "removed" message
+    // ("Salt now shows as sold out."), not folded silently into the count.
+    const soldOutNamesByDev = new Map<string, Set<string>>();
+    if (touchedDevelopmentIds.size) {
+      const touched = await prisma.development.findMany({
+        where: { id: { in: Array.from(touchedDevelopmentIds) } },
+        select: { id: true, publicName: true, units: { select: { status: true } } },
+      });
+      for (const d of touched) {
+        if (!computeAvailability(d.units).soldOut) continue;
+        const dev = devByDevelopmentId.get(d.id);
+        if (!dev) continue;
+        const set = soldOutNamesByDev.get(dev) ?? new Set<string>();
+        set.add(d.publicName);
+        soldOutNamesByDev.set(dev, set);
+      }
+    }
+
+    const notifications: Promise<void>[] = [];
+    for (const [dev, lines] of Array.from(removedByDev)) {
+      if (!lines.length) continue;
+      const { subject, text } = buildRemovedUnitsMessage(dev, lines, Array.from(soldOutNamesByDev.get(dev) ?? []));
+      notifications.push(sendFeedNotification(text, subject));
+    }
+    for (const r of results) {
+      if (r.unitsCreated > 0) {
+        const { subject, text } = buildNewUnitsMessage(r.dev, r.unitsCreated);
+        notifications.push(sendFeedNotification(text, subject));
+      }
+      if (r.blocked) {
+        const { subject, text } = buildFeedIncompleteMessage(r.dev, r.blockedMissing ?? 0, r.blockedTotal ?? 0);
+        notifications.push(sendFeedNotification(text, subject));
+      }
+    }
+    // Best-effort: a Telegram/email hiccup must never fail the cron itself —
+    // the sync already succeeded and is logged; a missed notification is
+    // recoverable from the Action Center (feed-incomplete:/sync-fail: rules)
+    // and cron_run_logs on the next check, not from retrying this request.
+    await Promise.allSettled(notifications);
+
     const trash = await purgeOldTrash();
     const cronLogCleanup = await purgeOldCronLogs();
     const overlapSweep = await runOverlapSweep();

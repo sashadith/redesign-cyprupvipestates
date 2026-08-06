@@ -11,7 +11,11 @@ export type UnitVM = {
   name: string;
   label: string; // clean display label built per feed (e.g. "Block C · Nr. 504")
   type: string;
-  status: "available" | "sold" | "reserved";
+  // "unlisted" — no longer in the developer's feed, kept in the DB with its
+  // full row (price/area/photos) but never shown on the public site (see the
+  // filter in UnitsView() below). It has no localized statusLabel because it
+  // never reaches a public renderer to display one.
+  status: "available" | "sold" | "reserved" | "unlisted";
   statusLabel: string;
   price: number | null;
   currency: string;
@@ -30,7 +34,7 @@ export type UnitVM = {
   description: string;
 };
 
-const statusClass = (s: string) => (s === "sold" ? "sold" : s === "reserved" ? "warn" : "ok");
+const statusClass = (s: string) => (s === "sold" ? "sold" : s === "reserved" || s === "unlisted" ? "warn" : "ok");
 const unitLabel = (u: UnitVM) => u.label || u.name || u.ref;
 // numeric value → "123 m²" — feed/price-list data isn't always suffixed
 // consistently (Island Blue's own raw attrs ship a bare ASCII "m2"; the
@@ -250,10 +254,16 @@ export default function UnitsView({ units, lang = "en" }: { units: UnitVM[]; lan
   // row assignments change with the column count / view → reset to stay consistent
   useEffect(() => { setOpenRows(new Set()); }, [cols, view]);
 
+  // Unlisted (no longer in the developer's feed) never reaches the public
+  // page at all — it's not "sold" or "reserved" for a buyer to see, it's
+  // simply not for sale anymore. The row survives in the DB (admin + sync
+  // still see it) purely so it can silently return if the feed re-lists it.
+  const visibleUnits = useMemo(() => units.filter((u) => u.status !== "unlisted"), [units]);
+
   const sorted = useMemo(() => {
-    const rank = { available: 0, reserved: 1, sold: 2 } as const;
-    return [...units].sort((a, b) => rank[a.status] - rank[b.status] || (a.price ?? 9e9) - (b.price ?? 9e9));
-  }, [units]);
+    const rank = { available: 0, reserved: 1, sold: 2, unlisted: 3 } as const;
+    return [...visibleUnits].sort((a, b) => rank[a.status] - rank[b.status] || (a.price ?? 9e9) - (b.price ?? 9e9));
+  }, [visibleUnits]);
   // Reserved is treated exactly like sold — de-prioritized, dimmed, and hidden
   // behind the same "show more" toggle — only truly available units show by default.
   const available = sorted.filter((u) => u.status === "available");

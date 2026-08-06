@@ -29,6 +29,13 @@ export const COPY: Record<PLocale, {
   viewDetails: string;
   availableUnits: string;
   unitsTable: { ref: string; type: string; beds: string; area: string; price: string; status: string };
+  // Keyed by DevelopmentUnit.status (a plain string, not an enum — see
+  // prisma/schema.prisma). Must cover "available"/"reserved"/"sold" plus
+  // "unlisted" — the one status a hand-picked unit can carry that a live feed
+  // never reports itself (derived by the sync when a unit disappears from the
+  // feed, see feedSync.ts) — shown here, never hidden, per the 2026-08-06
+  // decision: a client who already saw a unit shouldn't have it vanish
+  // without explanation.
   statusLabel: Record<string, string>;
   advisorTitle: string;
   unitsPlural: { one: string; few?: string; many: string };
@@ -61,7 +68,7 @@ export const COPY: Record<PLocale, {
     viewDetails: "View details",
     availableUnits: "Available units",
     unitsTable: { ref: "Ref", type: "Type", beds: "Beds", area: "Area", price: "Price", status: "Status" },
-    statusLabel: { available: "Available", reserved: "Reserved", sold: "Sold" },
+    statusLabel: { available: "Available", reserved: "Reserved", sold: "Sold", unlisted: "No longer available" },
     advisorTitle: "Your personal advisor",
     unitsPlural: { one: "unit", many: "units" },
     newForYou: "New for you",
@@ -93,7 +100,7 @@ export const COPY: Record<PLocale, {
     viewDetails: "Details ansehen",
     availableUnits: "Verfügbare Einheiten",
     unitsTable: { ref: "Ref.", type: "Typ", beds: "Zimmer", area: "Fläche", price: "Preis", status: "Status" },
-    statusLabel: { available: "Verfügbar", reserved: "Reserviert", sold: "Verkauft" },
+    statusLabel: { available: "Verfügbar", reserved: "Reserviert", sold: "Verkauft", unlisted: "Nicht mehr verfügbar" },
     advisorTitle: "Ihr persönlicher Berater",
     unitsPlural: { one: "Objekt", many: "Objekte" },
     newForYou: "Neu für Sie",
@@ -125,7 +132,7 @@ export const COPY: Record<PLocale, {
     viewDetails: "Zobacz szczegóły",
     availableUnits: "Dostępne lokale",
     unitsTable: { ref: "Nr", type: "Typ", beds: "Sypialnie", area: "Powierzchnia", price: "Cena", status: "Status" },
-    statusLabel: { available: "Dostępne", reserved: "Zarezerwowane", sold: "Sprzedane" },
+    statusLabel: { available: "Dostępne", reserved: "Zarezerwowane", sold: "Sprzedane", unlisted: "Już niedostępne" },
     advisorTitle: "Państwa osobisty doradca",
     unitsPlural: { one: "obiekt", few: "obiekty", many: "obiektów" },
     newForYou: "Nowe dla Ciebie",
@@ -157,7 +164,7 @@ export const COPY: Record<PLocale, {
     viewDetails: "Подробнее",
     availableUnits: "Доступные объекты",
     unitsTable: { ref: "№", type: "Тип", beds: "Спальни", area: "Площадь", price: "Цена", status: "Статус" },
-    statusLabel: { available: "Доступно", reserved: "Забронировано", sold: "Продано" },
+    statusLabel: { available: "Доступно", reserved: "Забронировано", sold: "Продано", unlisted: "Больше не доступно" },
     advisorTitle: "Ваш персональный консультант",
     unitsPlural: { one: "объект", few: "объекта", many: "объектов" },
     newForYou: "Новое для вас",

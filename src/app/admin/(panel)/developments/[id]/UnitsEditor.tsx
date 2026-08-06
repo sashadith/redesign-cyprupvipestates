@@ -148,7 +148,7 @@ export default function UnitsEditor({ developmentId, initial, isDriveSynced, isF
         </button>
         <label className="flex items-center gap-1.5 ml-auto text-[#374151] cursor-pointer">
           <input type="checkbox" checked={hideUnavailable} onChange={(e) => setHideUnavailable(e.target.checked)} className="h-4 w-4 rounded border-[#D1D5DB] text-[#1B4B43] focus:ring-[#1B4B43]" />
-          Hide sold/reserved{hiddenCount > 0 ? ` (${hiddenCount})` : ""}
+          Hide sold/reserved/unlisted{hiddenCount > 0 ? ` (${hiddenCount})` : ""}
         </label>
       </div>
       <div className="overflow-x-auto">
@@ -190,6 +190,7 @@ export default function UnitsEditor({ developmentId, initial, isDriveSynced, isF
                     <option value="available">Available</option>
                     <option value="reserved">Reserved</option>
                     <option value="sold">Sold</option>
+                    <option value="unlisted">Unlisted</option>
                   </select>
                   {/* Status is exempt from manual protection — the feed always wins here,
                       even on a manually-managed unit, via the daily statusOnlySync (matched
@@ -198,6 +199,13 @@ export default function UnitsEditor({ developmentId, initial, isDriveSynced, isF
                     <div className="text-[10px] text-[#9CA3AF] mt-1">
                       {u.feedRef ? "Auto-synced from feed" : "No feed match — set manually"}
                     </div>
+                  )}
+                  {/* Auto-set by the sync (either statusOnlySync for manual units, or the
+                      published-development diff sync for feed units) when the developer
+                      stops listing this unit — never a hard delete, so the row (photos/
+                      price/area/ref) survives and it returns automatically if re-listed. */}
+                  {u.status === "unlisted" && (
+                    <div className="text-[10px] text-[#B45309] mt-1 font-medium">Not in the feed anymore — hidden from the public site</div>
                   )}
                 </td>
                 <td className="px-4 py-1 text-center">

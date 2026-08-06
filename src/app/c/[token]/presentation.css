@@ -349,6 +349,7 @@
 .cp-unit-status--available { background: rgba(34, 197, 94, 0.15); color: #4ADE80; }
 .cp-unit-status--reserved { background: rgba(194, 154, 94, 0.2); color: var(--champagne); }
 .cp-unit-status--sold { background: rgba(255, 255, 255, 0.08); color: rgba(239, 233, 219, 0.5); }
+.cp-unit-status--unlisted { background: rgba(255, 255, 255, 0.08); color: rgba(239, 233, 219, 0.5); }
 
 /* ---------- CLOSING ---------- */
 /* Same drifting-gold-clouds background used elsewhere on the page
