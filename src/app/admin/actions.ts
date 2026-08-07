@@ -498,7 +498,22 @@ export async function toggleProjectActive(id: string) {
 // The redirect only takes effect while a project stays ARCHIVED — see
 // getLegacyProjectRedirect in sanity.utils.ts — so re-activating later makes
 // it dormant again without needing to delete the row.
-export async function deactivateProjectWithRedirect(id: string, redirectTarget: string | null) {
+//
+// `linkedTarget` (Phase 5.6, 2026-08-07): for the NO-confirmed-Development
+// case — an admin picking one of getDeactivateSuggestions()'s suggestions
+// (a same-developer/same-location Development, or the developer's own page)
+// instead of hand-typing a path. Same per-locale auto-computation as the
+// confirmed-Development branch, generalized to also cover /developers/*, and
+// applied to every row including the viewed one (not just siblings) so a
+// stale `redirectTarget` string can't disagree with the picked slug. A
+// hand-typed `redirectTarget` with no `linkedTarget` still only ever applies
+// to the single row it was typed for, same as before this change — there's
+// no reliable way to auto-translate an arbitrary free-text path per locale.
+export async function deactivateProjectWithRedirect(
+  id: string,
+  redirectTarget: string | null,
+  linkedTarget?: { kind: "development" | "developer"; slug: string } | null,
+) {
   await requireSession();
   const rows = await projectGroupRows(id);
   if (!rows) throw new Error("Not found");
@@ -507,9 +522,14 @@ export async function deactivateProjectWithRedirect(id: string, redirectTarget: 
 
   const targets: string[] = [];
   const ops = rows.flatMap((row) => {
-    const target = row.id === id
-      ? (redirectTarget ?? "").trim()
-      : (dev?.slug ? localizedHref(row.language, ["projects", dev.slug]) : "");
+    let target: string;
+    if (dev?.slug) {
+      target = row.id === id ? (redirectTarget ?? "").trim() : localizedHref(row.language, ["projects", dev.slug]);
+    } else if (linkedTarget) {
+      target = localizedHref(row.language, [linkedTarget.kind === "developer" ? "developers" : "projects", linkedTarget.slug]);
+    } else {
+      target = row.id === id ? (redirectTarget ?? "").trim() : "";
+    }
     if (target) targets.push(target);
     return [
       prisma.project.update({ where: { id: row.id }, data: { status: "ARCHIVED" } }),
@@ -529,6 +549,79 @@ export async function deactivateProjectWithRedirect(id: string, redirectTarget: 
   // Fire-and-forget — the redirect TARGET is what should be recrawled (the
   // canonical page that now serves this traffic), not the deactivated page.
   if (targets.length) void pingIndexNow("legacy-project-deactivated", targets.map(absUrl));
+}
+
+export type DeactivateSuggestion = { kind: "development" | "developer"; slug: string; label: string; detail: string };
+
+// Phase 5.6 (2026-08-07): redirect-target suggestions for the DeactivateControl
+// dialog when there's no confirmed Development match — same-developer and/or
+// same-city Developments, plus the developer's own page. Built after finding
+// trees-apartments-inex/trees-villas-inex had no real successor (the nearest
+// Development, Trees Park, turned out to be a different product at a
+// different price point) but DO get branded search traffic ("inex trees") —
+// the developer page is a reasonable, on-topic landing spot in that case, and
+// an admin shouldn't be limited to hand-typing a path or defaulting to a 404.
+// Read-only; picking a suggestion is wired through DeactivateControl's
+// `linkedTarget` param on deactivateProjectWithRedirect, not here.
+export async function getDeactivateSuggestions(projectId: string): Promise<DeactivateSuggestion[]> {
+  await requireSession();
+  const p = await prisma.project.findUnique({ where: { id: projectId }, select: { developerId: true, city: true } });
+  if (!p) return [];
+
+  let developerAccount: { id: string; slug: string; name: string } | null = null;
+  if (p.developerId) {
+    const legacyDev = await prisma.developer.findUnique({ where: { id: p.developerId }, select: { translationGroupId: true } });
+    if (legacyDev?.translationGroupId) {
+      developerAccount = await prisma.developerAccount.findFirst({
+        where: { developerTranslationGroupId: legacyDev.translationGroupId },
+        select: { id: true, slug: true, name: true },
+      });
+    }
+  }
+
+  const suggestions: DeactivateSuggestion[] = [];
+  if (developerAccount) {
+    suggestions.push({ kind: "developer", slug: developerAccount.slug, label: `Developer page — ${developerAccount.name}`, detail: `/developers/${developerAccount.slug}` });
+  }
+
+  const orClauses: Prisma.DevelopmentWhereInput[] = [];
+  if (developerAccount) orClauses.push({ developerAccountId: developerAccount.id });
+  if (p.city) {
+    orClauses.push(
+      { area: { equals: p.city, mode: "insensitive" } },
+      { district: { equals: p.city, mode: "insensitive" } },
+      { town: { equals: p.city, mode: "insensitive" } },
+    );
+  }
+  if (!orClauses.length) return suggestions;
+
+  const nearby = await prisma.development.findMany({
+    where: { publishStatus: "published", slug: { not: null }, OR: orClauses },
+    select: { slug: true, publicName: true, area: true, district: true, town: true, developerAccountId: true },
+    take: 20,
+  });
+
+  const scored = nearby
+    .map((d) => {
+      const sameDev = !!developerAccount && d.developerAccountId === developerAccount.id;
+      const sameCity = !!p.city && [d.area, d.district, d.town].some((v) => v?.toLowerCase() === p.city!.toLowerCase());
+      return { d, score: (sameDev ? 2 : 0) + (sameCity ? 1 : 0), sameDev, sameCity };
+    })
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 6);
+
+  for (const { d, sameDev, sameCity } of scored) {
+    if (!d.slug) continue;
+    suggestions.push({
+      kind: "development",
+      slug: d.slug,
+      label: d.publicName,
+      detail: [sameDev ? "same developer" : null, sameCity ? (d.area || d.district || d.town || "same city") : null].filter(Boolean).join(" · ") || "nearby",
+    });
+  }
+
+  return suggestions;
 }
 
 // Converts BlockEditor's serialized item list (see CONTENT_BLOCKS_FIELD in
