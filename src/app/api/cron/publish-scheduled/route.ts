@@ -9,6 +9,7 @@ import crypto from "node:crypto";
 import { withCronLog } from "@/lib/cronLog";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
 import { localizedHref } from "@/lib/locale";
+import { findEmptyProjectsBlock } from "@/lib/projectsBlockValidation";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,12 +31,32 @@ async function run() {
   const where = { status: "SCHEDULED" as const, scheduledAt: { lte: now } };
   const select = { id: true, language: true, slug: true, scheduledAt: true, publishedAt: true };
 
-  const [blogs, projects, pages, caseStudies] = await Promise.all([
-    prisma.blog.findMany({ where, select }),
+  const [blogsRaw, projects, pages, caseStudies] = await Promise.all([
+    // contentBlocks is only fetched here — needed to run the empty-projects-
+    // block gate below, and the other three content types either don't carry
+    // this block type (Project) or aren't in scope for the gate yet
+    // (Singlepage/CaseStudy — see findEmptyProjectsBlock's own scope note).
+    prisma.blog.findMany({ where, select: { ...select, contentBlocks: true } }),
     prisma.project.findMany({ where, select }),
     prisma.singlepage.findMany({ where, select }),
     prisma.caseStudy.findMany({ where, select }),
   ]);
+
+  // Same gate as saveBlogAll (src/app/admin/actions.ts) — a scheduled post
+  // whose projectsSectionBlock has neither a filter nor pins would otherwise
+  // auto-publish silently broken. Leave it SCHEDULED (not flipped) and log
+  // loudly; it's re-checked and re-logged on every future cron run until
+  // someone fixes the block in the admin.
+  const blogsSkipped: Array<{ id: string; language: string; slug: string; blockTitle: string }> = [];
+  const blogs = blogsRaw.filter((b) => {
+    const empty = findEmptyProjectsBlock(b.contentBlocks as any[]);
+    if (!empty) return true;
+    blogsSkipped.push({ id: b.id, language: b.language, slug: b.slug, blockTitle: empty.title });
+    console.error(
+      `[publish-scheduled] Held back "${b.slug}" (${b.language}, id=${b.id}): projects block "${empty.title}" has no filter and no pinned projects — would publish empty. Fix in admin, it stays SCHEDULED.`,
+    );
+    return false;
+  });
 
   const published: Record<string, number> = {};
 
@@ -63,13 +84,17 @@ async function run() {
   await flip(prisma.caseStudy, caseStudies, (l, s) => { revalidatePath(`/${l}/case-studies/${s}`); revalidatePath(`/${l}/case-studies`); }, "caseStudy");
 
   const total = Object.values(published).reduce((a, b) => a + b, 0);
-  return { ranAt: now.toISOString(), total, published };
+  return { ranAt: now.toISOString(), total, published, blogsSkipped };
 }
 
 export async function GET(req: NextRequest) {
   if (!authorized(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
-    const result = await withCronLog("publish-scheduled", run, (r) => `${r.total} item(s) published`);
+    const result = await withCronLog("publish-scheduled", run, (r) =>
+      r.blogsSkipped.length
+        ? `${r.total} item(s) published; ${r.blogsSkipped.length} blog(s) held back (empty projects block): ${r.blogsSkipped.map((s) => `${s.slug} (${s.language})`).join(", ")}`
+        : `${r.total} item(s) published`,
+    );
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });

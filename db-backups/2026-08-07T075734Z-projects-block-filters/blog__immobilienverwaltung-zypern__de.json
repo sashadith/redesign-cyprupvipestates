@@ -1,0 +1,1106 @@
+{
+  "id": "0db67993-1f16-4c88-a8cf-22ea08d3e692",
+  "sanityId": "local-1be5cda3-8629-47cb-aef4-caea7c74d7ad",
+  "translationGroupId": "483ca223-6dc5-4c0f-affe-f20d22ca1203",
+  "language": "de",
+  "slug": "immobilienverwaltung-zypern",
+  "title": "Immobilie auf Zypern aus der Ferne verwalten: Kosten, Dienstleister und Pflichten",
+  "excerpt": "Wer aus Deutschland eine Immobilie auf Zypern besitzt, braucht jemanden vor Ort. Was Verwaltung kostet, was sie übernimmt und wie Sie sie auswählen.",
+  "status": "DRAFT",
+  "authorId": "5a63a569-3b41-4157-ae07-b3daec063833",
+  "categoryId": "8b411c85-50d2-4042-93a2-b64269e9bc6e",
+  "previewImage": {
+    "alt": "management-fee-comparison.png",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-d0a3a5311d26f8fde8cecb4e858282e2915fcd11-1732x908-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "Immobilienverwaltung auf Zypern: Kosten und Anbieter",
+    "metaDescription": "Immobilie auf Zypern aus der Ferne verwalten: Verwaltungsgebühren von 8 bis 30 %, laufende Kosten, Pflichten bei Leerstand und worauf Sie im Vertrag achten."
+  },
+  "contentBlocks": [
+    {
+      "_key": "imp10",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Der Kauf ist der Teil, über den geschrieben wird. Was danach kommt, deutlich seltener — dabei ist es für Eigentümer aus dem deutschsprachigen Raum die eigentlich entscheidende Frage: Wer kümmert sich um die Immobilie, wenn Sie zweimal im Jahr da sind?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "Dieser Leitfaden behandelt genau das: was eine Verwaltung übernimmt, was sie kostet, welche Pflichten auch bei leerstehender Immobilie bestehen und woran Sie einen guten Dienstleister erkennen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt4",
+              "text": "Was eine Hausverwaltung auf Zypern übernimmt",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "Die Leistungen unterscheiden sich stark je nachdem, ob Sie vermieten oder nicht — und das ist die erste Weichenstellung.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pta",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "Ohne Vermietung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt9",
+              "text": " geht es um Instandhaltung und Präsenz: regelmäßige Kontrolle des Objekts, Poolwartung, Bewässerung und Gartenpflege, Weiterleitung und Begleichung von Rechnungen, Schlüsselverwaltung, Kontakt zur Verwaltung der Wohnanlage und ein Ansprechpartner, wenn im August die Klimaanlage ausfällt.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptd",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptb",
+              "text": "Bei Langzeitvermietung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptc",
+              "text": " kommen hinzu: Mietersuche und -prüfung, Mietvertrag, Mieteinzug, Nebenkostenabrechnung, Wohnungsübergaben und die Abwicklung von Reparaturen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptj",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pte",
+              "text": "Bei Kurzzeitvermietung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptf",
+              "text": " wird daraus ein operatives Geschäft: Inserate auf den Plattformen, Preissteuerung, Gästekommunikation rund um die Uhr, Reinigung zwischen den Aufenthalten, Wäsche, Schlüsselübergabe und die Gästemeldung über das staatliche Xenia-System innerhalb von 24 Stunden nach Anreise. Die regulatorische Seite dazu behandeln wir in ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pth",
+              "text": "Kurzzeitvermietung auf Zypern",
+              "_type": "span",
+              "marks": [
+                "ptg"
+              ]
+            },
+            {
+              "_key": "pti",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "ptg",
+              "href": "/de/blog/kurzzeitvermietung-zypern-registrierung",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "ptl",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ptk",
+              "text": "Verwaltungsgebühren auf Zypern: 8 bis 12 % bei Langzeit-, 15 bis 30 % bei Kurzzeitvermietung",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptn",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptm",
+              "text": "Die Spanne erklärt sich durch den Arbeitsaufwand.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "imp11",
+      "rows": [
+        {
+          "_key": "imp12",
+          "_type": "tableRow",
+          "cells": [
+            "Langzeitvermietung, prozentual",
+            "8–12 % der Kaltmiete (Ausreißer 4–15 %)"
+          ]
+        },
+        {
+          "_key": "imp13",
+          "_type": "tableRow",
+          "cells": [
+            "Langzeitvermietung, Pauschale",
+            "50–200 € pro Monat je nach Objektgröße"
+          ]
+        },
+        {
+          "_key": "imp14",
+          "_type": "tableRow",
+          "cells": [
+            "Kurzzeitvermietung",
+            "15–30 % der Bruttoeinnahmen, meist 15–25 %"
+          ]
+        },
+        {
+          "_key": "imp15",
+          "_type": "tableRow",
+          "cells": [
+            "Mietersuche (einmalig)",
+            "häufig eine Monatsmiete"
+          ]
+        },
+        {
+          "_key": "imp16",
+          "_type": "tableRow",
+          "cells": [
+            "Notfalleinsatz",
+            "30–80 € je Vorfall"
+          ]
+        }
+      ],
+      "_type": "tableBlock",
+      "columns": [
+        "Modell",
+        "Übliche Gebühr"
+      ]
+    },
+    {
+      "_key": "imp17",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Zwei Hinweise zur Einordnung. Bei Langzeitvermietung kann das ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1",
+              "text": "Pauschalmodell günstiger",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2",
+              "text": " sein, wenn die Miete hoch ist — bei 1.500 € Monatsmiete entspricht eine Pauschale von 150 € gerade 10 %, bei 2.500 € nur noch 6 %. Fragen Sie beide Varianten ab.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt4",
+              "text": "Und bei Kurzzeitvermietung ist der Prozentsatz allein wenig aussagekräftig: Entscheidend ist, was enthalten ist. Zwei Anbieter mit identischen 20 % können sich erheblich unterscheiden, wenn bei einem Reinigung, Wäsche und Plattformgebühren inklusive sind und beim anderen nicht.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "Laufende Kosten einer zyprischen Immobilie auch ohne Vermietung",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt9",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "Diese Posten fallen an, ob Sie vermieten oder nicht:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pte",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pta",
+              "text": "Hausgeld",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptb",
+              "text": " in Wohnanlagen: rund ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptc",
+              "text": "500–2.000 € pro Jahr",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptd",
+              "text": ", abhängig von Größe und Ausstattung (Pool, Aufzug, Sicherheitsdienst)",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptg",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptf",
+              "text": "Gebäudeversicherung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pti",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pth",
+              "text": "Kommunale Abgaben und Abwassergebühren",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptl",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptj",
+              "text": "Strom und Wasser",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptk",
+              "text": ", auch bei geringem Verbrauch — Grundgebühren laufen weiter",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pto",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptm",
+              "text": "Poolwartung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptn",
+              "text": " bei Villen, ganzjährig",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptr",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptp",
+              "text": "Bewässerung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptq",
+              "text": ", im zyprischen Sommer nicht verzichtbar",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptz",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pts",
+              "text": "Der Unterschied zwischen Wohnung und Villa ist hier am deutlichsten: In der Anlage übernimmt die Verwaltung Außenanlagen und Gemeinschaftspool gegen eine kalkulierbare Umlage, bei der Villa organisieren und bezahlen Sie jeden Posten selbst. Wir haben das in ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptu",
+              "text": "Wohnung oder Villa auf Zypern",
+              "_type": "span",
+              "marks": [
+                "ptt"
+              ]
+            },
+            {
+              "_key": "ptv",
+              "text": " und in ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptx",
+              "text": "Wie viel Grundstück gehört zu einer Villa",
+              "_type": "span",
+              "marks": [
+                "ptw"
+              ]
+            },
+            {
+              "_key": "pty",
+              "text": " im Detail verglichen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "ptt",
+              "href": "/de/blog/wohnung-oder-villa-auf-zypern",
+              "_type": "link"
+            },
+            {
+              "_key": "ptw",
+              "href": "/de/blog/grundstuecksgroesse-villa-zypern",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt11",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt10",
+              "text": "Pflichten, die auch bei leerstehender Immobilie bestehen",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt13",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt12",
+              "text": "Ein leeres Objekt ist nicht wartungsfrei — und das unterschätzen viele.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt16",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt14",
+              "text": "Der Pool läuft weiter.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt15",
+              "text": " Ohne Umwälzung und Chemie kippt das Wasser innerhalb weniger Wochen, und die Sanierung kostet mehr als ein Jahr Wartung.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt19",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt17",
+              "text": "Die Bewässerung darf nicht ausfallen.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt18",
+              "text": " Zwei Wochen ohne Wasser im August, und die Bepflanzung ist verloren.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1c",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1a",
+              "text": "Post und Rechnungen laufen ein.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1b",
+              "text": " Hausgeld, Versicherung und kommunale Abgaben werden fällig, und unbezahlte Hausgelder können rechtliche Folgen haben.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1f",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1d",
+              "text": "Die Versicherung setzt Bedingungen.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1e",
+              "text": " Viele Policen verlangen regelmäßige Kontrolle bei längerer Abwesenheit — prüfen Sie Ihre Bedingungen, bevor Sie sich darauf verlassen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1i",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1g",
+              "text": "Bei Vermietungsregistrierung laufen Fristen.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1h",
+              "text": " Die Registrierung für Kurzzeitvermietung muss verlängert werden; wer sie versäumt, vermietet unzulässig.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1k",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1j",
+              "text": "Eine Hausverwaltung auf Zypern auswählen: Worauf Sie achten sollten",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1l",
+              "text": "Der häufigste Grund für einen Wechsel ist nicht schlechte Auslastung, sondern das Gefühl, über die eigene Immobilie nicht informiert zu sein. Fragen Sie deshalb gezielt nach der Kommunikation, nicht nur nach dem Preis.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1p",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1n",
+              "text": "Wie und wie oft berichtet der Anbieter?",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1o",
+              "text": " Verlangen Sie ein Musterreporting: Einnahmen, Ausgaben, Belege, Netto-Auszahlung. Wenn ein Anbieter das nicht zeigen kann, ist das die Antwort.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1s",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1q",
+              "text": "Wer haftet für die Kasse?",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1r",
+              "text": " Klären Sie, auf welches Konto Mieteinnahmen fließen und in welchem Rhythmus ausgezahlt wird.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1v",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1t",
+              "text": "Welche Referenzobjekte betreut er?",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1u",
+              "text": " Bei Kurzzeitvermietung sind die Bewertungen der betreuten Inserate öffentlich einsehbar — schauen Sie sich Antwortzeiten und Sauberkeitsbewertungen an.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1y",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1w",
+              "text": "Wie schnell reagiert er wirklich?",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1x",
+              "text": " Testen Sie es: eine Anfrage an einem Samstagabend sagt mehr als jede Zusage.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt21",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1z",
+              "text": "Was passiert bei Notfällen?",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt20",
+              "text": " Bis zu welchem Betrag darf ohne Rückfrage repariert werden, und ab wann wird Ihre Freigabe eingeholt?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt23",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt22",
+              "text": "Vertrag mit der Hausverwaltung: Welche Punkte Sie klären sollten",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt26",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt24",
+              "text": "Leistungsumfang im Einzelnen",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt25",
+              "text": " — was ist in der Gebühr enthalten, was wird gesondert berechnet",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt29",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt27",
+              "text": "Kündigungsfrist",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt28",
+              "text": " und ob eine Mindestlaufzeit besteht",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2c",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2a",
+              "text": "Freigabegrenze",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2b",
+              "text": " für Reparaturen ohne Rücksprache",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2f",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2d",
+              "text": "Auszahlungsrhythmus",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2e",
+              "text": " und Nachweispflichten",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2i",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2g",
+              "text": "Zuständigkeit für die Vermietungsregistrierung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2h",
+              "text": " und ihre Verlängerung",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2l",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2j",
+              "text": "Was bei Eigennutzung passiert",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2k",
+              "text": " — dürfen Sie das Objekt selbst blocken, und mit welcher Vorlaufzeit",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2o",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2m",
+              "text": "Umsatzsteuer",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2n",
+              "text": " auf die Verwaltungsgebühr",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2q",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2p",
+              "text": "Der vorletzte Punkt wird regelmäßig vergessen und führt später zu Streit: Wenn Sie zwei Wochen im Sommer selbst dort sein wollen, ist genau das die Hochsaison.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2s",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2r",
+              "text": "Selbst verwalten oder abgeben: Wann sich was rechnet",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2v",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2t",
+              "text": "Selbst verwalten ist realistisch,",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2u",
+              "text": " wenn Sie langfristig an einen Mieter vermieten, mehrfach im Jahr vor Ort sind und einen verlässlichen Handwerker kennen. Dann ersparen Sie sich 8 bis 12 % laufend.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2y",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2w",
+              "text": "Selbst verwalten ist praktisch unmöglich,",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2x",
+              "text": " wenn Sie kurzzeitvermieten. Die 24-Stunden-Frist für die Gästemeldung, Reinigung zwischen den Aufenthalten und Erreichbarkeit rund um die Uhr lassen sich aus Deutschland nicht abbilden.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt30",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2z",
+              "text": "Rechnen Sie ehrlich: Eine Kurzzeitvermietung mit 20 % Verwaltungsgebühr, Reinigungskosten und Plattformprovision liegt netto deutlich näher an einer gut geführten Langzeitvermietung, als die Bruttorenditen vermuten lassen. Die Mehrrendite ist real, aber sie ist Arbeitsertrag, nicht Kapitalertrag.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "imp18",
+      "_type": "projectsSectionBlock",
+      "title": "Immobilien auf Zypern mit Verwaltungsoption ansehen",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "imp19",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Viele Neubauanlagen bringen eine Verwaltung mit — das erspart die Suche, bindet Sie aber auch. Sagen Sie uns, wie oft Sie vor Ort sein werden und ob Sie vermieten möchten, und wir zeigen Ihnen Objekte, bei denen das zusammenpasst.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": "2026-08-07T07:38:00.000Z",
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:09.732Z",
+  "updatedAt": "2026-08-07T07:40:13.890Z"
+}

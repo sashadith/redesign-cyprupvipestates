@@ -1,0 +1,1208 @@
+{
+  "id": "50bca7ce-f548-484f-aa3d-0c9a066f6a64",
+  "sanityId": "local-77a329b8-2825-46bb-80e9-2ae60d4fd395",
+  "translationGroupId": "9ae09e23-1d86-4785-8a4c-b47c21c0c6b4",
+  "language": "en",
+  "slug": "cyprus-short-term-rental-rules",
+  "title": "Short-Term Rental Rules in Cyprus: Registration, Taxes and Penalties",
+  "excerpt": "Letting a Cyprus property on Airbnb or Booking requires a registration number by law. Here's what it takes to get one and what happens if you don't.",
+  "status": "DRAFT",
+  "authorId": "68063c4f-b907-49c1-9f15-a09fea8a8383",
+  "categoryId": null,
+  "previewImage": null,
+  "seo": {
+    "metaTitle": "Airbnb in Cyprus: Registration Rules for Property Owners",
+    "metaDescription": "Short-term letting in Cyprus requires registration with the Deputy Ministry of Tourism. Requirements, taxes, guest reporting and fines of up to €5,000."
+  },
+  "contentBlocks": [
+    {
+      "_key": "imp45",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "If you buy a property in Cyprus and plan to let it on Airbnb, Booking.com or any similar platform, you need to register it with the authorities first. This isn't a technicality: letting without a registration number is a criminal offence, and enforcement has tightened considerably over the past two years.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "The process itself is manageable once you know what's required. This guide covers who has to register, what documents you need, which taxes apply and what the penalties are.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt4",
+              "text": "Who Needs to Register a Short-Term Rental in Cyprus",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt9",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "The framework comes from the Regulation of the Establishment and Operation of Hotels and Touristic Accommodation (Amending) Law 2020. Under it, any property let to tourists ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt7",
+              "text": "for fewer than 90 consecutive days",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt8",
+              "text": " must be entered in the register of self-catering tourist accommodation.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptd",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pta",
+              "text": "The register is administered by the ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptb",
+              "text": "Deputy Ministry of Tourism",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptc",
+              "text": ", which took over the functions of the former Cyprus Tourism Organisation.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptf",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pte",
+              "text": "It covers three categories:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pti",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptg",
+              "text": "Furnished villas",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pth",
+              "text": " — independent units with private access and exclusive use of the land",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptl",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptj",
+              "text": "Furnished residences",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptk",
+              "text": " — houses in a row or complex, with private or shared access",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pto",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptm",
+              "text": "Apartments",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptn",
+              "text": " — complete, separate units within a building",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pts",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptp",
+              "text": "The registration number you're issued ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptq",
+              "text": "must appear on every listing",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptr",
+              "text": " — Airbnb, Booking.com and anywhere else you advertise.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptu",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ptt",
+              "text": "Requirements for a Cyprus Short-Term Rental Licence",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptw",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptv",
+              "text": "To apply, you'll generally need:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptz",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptx",
+              "text": "Tax registration",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pty",
+              "text": " with the Cyprus Tax Department — a tax identification number, and a VAT number where required",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt12",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt10",
+              "text": "Valid property insurance",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt11",
+              "text": ", at minimum against fire and natural disasters",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt15",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt13",
+              "text": "A certificate of occupancy",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt14",
+              "text": " for the property",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt17",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt16",
+              "text": "Compliance with health and safety standards",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1a",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt18",
+              "text": "Property details",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt19",
+              "text": ": address, number of bedrooms and bathrooms, maximum guest capacity",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1d",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1b",
+              "text": "An affidavit",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1c",
+              "text": " confirming the minimum technical and operational conditions are met",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1g",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1e",
+              "text": "An annual fee",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1f",
+              "text": " to the ministry",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1i",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1h",
+              "text": "Both individuals and companies can register. A proposal to cap how many properties one owner could register was rejected in 2025, so there is currently no limit.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1l",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1j",
+              "text": "If you're buying off-plan:",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1k",
+              "text": " registration depends on the certificate of occupancy, so factor the sequence into your plans if you intend to let from day one.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1n",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1m",
+              "text": "Penalties for Letting Without Registration in Cyprus",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1p",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1o",
+              "text": "The sanctions are not symbolic.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1x",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1q",
+              "text": "Advertising or operating short-term accommodation without registration carries ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1r",
+              "text": "fines of up to €5,000",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1s",
+              "text": " and/or ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1t",
+              "text": "imprisonment for up to one year",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1u",
+              "text": ". If the offence continues after conviction, further fines of around ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1v",
+              "text": "€200 per day",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1w",
+              "text": " may be imposed.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt21",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1y",
+              "text": "Then there's the platform side. Airbnb and Booking.com are required to assist with enforcement: ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1z",
+              "text": "unregistered listings are removed",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt20",
+              "text": ", and the platforms themselves face penalties for failing to police this.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt23",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt22",
+              "text": "Enforcement is visible in practice. Complaints have been lodged against unlicensed operators since inspections began, and the Tax Department has run targeted audits covering VAT, income tax and the health contribution. The ministry now emails hosts every two weeks when their registration is approaching expiry — an indication of how closely the system is now managed.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt25",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt24",
+              "text": "Tax on Short-Term Rental Income in Cyprus",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt27",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt26",
+              "text": "Registration is one obligation; tax is the other.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2e",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt28",
+              "text": "VAT.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt29",
+              "text": " Short-term letting for tourist accommodation attracts the ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2a",
+              "text": "reduced rate of 9%",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2b",
+              "text": " when you let directly to the guest. VAT registration becomes compulsory once turnover from the activity exceeds roughly ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2c",
+              "text": "€15,600",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2d",
+              "text": " a year.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2h",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2f",
+              "text": "Income tax.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2g",
+              "text": " Rental income from Cyprus property is taxable in Cyprus, including for non-residents. The 2026 tax reform raised the tax-free band; the bands above it were still being finalised, so confirm the current schedule with a Cyprus tax adviser rather than relying on figures published earlier.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2o",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2i",
+              "text": "Special Defence Contribution.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2j",
+              "text": " The 2026 tax reform ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2k",
+              "text": "abolished the Special Defence Contribution on rental income",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2l",
+              "text": ". Before that it was charged at 3%, and only on individuals who were both tax resident ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2m",
+              "text": "and",
+              "_type": "span",
+              "marks": [
+                "em"
+              ]
+            },
+            {
+              "_key": "pt2n",
+              "text": " domiciled in Cyprus — so non-resident owners were already outside it. If you are reading older guidance that still lists SDC on rents, it predates the reform.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2r",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2p",
+              "text": "General Health System contribution.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2q",
+              "text": " A contribution is due on rental income. It's a small line that yield calculations routinely omit.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2t",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2s",
+              "text": "You will also normally need to declare this income in your country of residence. Double taxation treaties determine how the two interact — take advice in both jurisdictions.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2v",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2u",
+              "text": "Guest Registration Through the Xenia System Within 24 Hours",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2z",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2w",
+              "text": "An ongoing obligation many owners miss: guest details must be reported through the state ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2x",
+              "text": "Xenia system within 24 hours of arrival",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2y",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt31",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt30",
+              "text": "If you're managing the property yourself from abroad, this is the most awkward part in practice — it means someone has to act within a day of every single check-in. Management companies handle it as standard.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt33",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt32",
+              "text": "What the New EU Short-Term Rental Regulation Changes",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt37",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt34",
+              "text": "Since ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt35",
+              "text": "20 May 2026",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt36",
+              "text": ", a unified EU digital database has held information on registered short-term rentals across member states, Cyprus included. It stems from EU Regulation 2024/1028, and Cyprus was among the first countries to implement it.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt39",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt38",
+              "text": "In practice this means more data sharing between platforms and authorities, and a much lower chance that unregistered letting goes unnoticed. If you've been putting registration off, that window is closing.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3b",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt3a",
+              "text": "Short-Term or Long-Term Letting in Cyprus: Which Makes More Sense",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3d",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3c",
+              "text": "After all those obligations, the fair question is whether it's worth it.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3g",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3e",
+              "text": "Short-term letting",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3f",
+              "text": " delivers higher gross yields in tourist locations. Well-run properties in prime coastal positions are reported to achieve 6–10% gross annualised, materially above what a long-let apartment returns.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3j",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3h",
+              "text": "Against that",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3i",
+              "text": " sits the workload: registration, annual fee, 24-hour guest reporting, changeover cleaning, VAT once you pass the threshold, and a management company whose fee absorbs a real share of the extra yield.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3k",
+              "text": "Long-term letting",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3l",
+              "text": " is far simpler — no tourist-register requirement, no guest reporting, one tenant instead of fifty. In Limassol, gross yields on apartments run around 5.3–6% anyway, supported by year-round demand.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3r",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3n",
+              "text": "Put simply: short-term letting is a small business, long-term letting is an investment. More on the yield comparison in ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt3p",
+              "text": "apartment or villa in Cyprus",
+              "_type": "span",
+              "marks": [
+                "pt3o"
+              ]
+            },
+            {
+              "_key": "pt3q",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt3o",
+              "href": "/blog/apartment-or-villa-in-cyprus",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt3t",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt3s",
+              "text": "Managing a Cyprus Short-Term Rental From Abroad",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3v",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3u",
+              "text": "If you don't live in Cyprus, you need someone on the ground. Settle these questions specifically:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3x",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3w",
+              "text": "Who files the guest report inside the 24-hour window?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3z",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3y",
+              "text": "Who handles cleaning and key handover between stays?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt41",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt40",
+              "text": "Who responds the same day when the air conditioning fails in August?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt43",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt42",
+              "text": "Who tracks the registration renewal date?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt45",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt44",
+              "text": "What is the fee — as a percentage of revenue — and at what occupancy does it pay for itself?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt47",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt46",
+              "text": "Build those costs into your yield before treating 6–10% as your number. It's a gross figure, before management.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "imp46",
+      "_type": "projectsSectionBlock",
+      "title": "Browse Cyprus Properties in Tourist Locations",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "imp47",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt4",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "If short-term letting is part of your plan, location decides the outcome — and not every development permits it. Tell us what you're planning and we'll show you properties where it realistically works. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2",
+              "text": "Request a personalised shortlist",
+              "_type": "span",
+              "marks": [
+                "pt1"
+              ]
+            },
+            {
+              "_key": "pt3",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt1",
+              "href": "/contacts",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt6",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt5",
+              "text": "This guide is for general information and reflects the position as of the date above; short-term rental rules change frequently. It is not legal or tax advice. Cyprus VIP Estates is a real estate marketing and consulting agency; registration, tax registration and ongoing compliance should be handled with an independent licensed Cyprus lawyer and tax adviser.",
+              "_type": "span",
+              "marks": [
+                "em"
+              ]
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": null,
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:10.199Z",
+  "updatedAt": "2026-08-04T15:40:10.199Z"
+}

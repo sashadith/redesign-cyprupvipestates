@@ -1,0 +1,1206 @@
+{
+  "id": "110c5087-b687-47a0-a04d-035dcf7985e0",
+  "sanityId": "local-d0f7096e-8274-4c55-a935-e2b369c479cb",
+  "translationGroupId": "6f8b764f-1949-4a0a-bbb5-bfaefadd5a54",
+  "language": "pl",
+  "slug": "zakup-off-plan-cypr-ochrona-wplat",
+  "title": "Zakup off-plan na Cyprze: jak chronione są Twoje wpłaty",
+  "excerpt": "Kupując off-plan, płacisz za coś, czego jeszcze nie ma. Jakie zabezpieczenia istnieją na Cyprze, które są obowiązkowe, a które trzeba wynegocjować.",
+  "status": "DRAFT",
+  "authorId": "183674ff-601c-455a-8585-c0ae04b1d94e",
+  "categoryId": null,
+  "previewImage": null,
+  "seo": {
+    "metaTitle": "Zakup off-plan na Cyprze: ochrona wpłat kupującego",
+    "metaDescription": "Zakup na etapie budowy na Cyprze: jak chronią wpłaty raty powiązane z etapami, gwarancja bankowa, rachunek powierniczy i złożenie umowy w Księdze Wieczystej."
+  },
+  "contentBlocks": [
+    {
+      "_key": "impr",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Kupując na etapie budowy, płacisz w ratach za nieruchomość, która jeszcze nie istnieje. Między pierwszą wpłatą a odbiorem kluczy mijają często dwa lata, a przez cały ten czas Twoje pieniądze są u dewelopera, nie u Ciebie.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "Najważniejsze na wstępie, bo w rozmowach sprzedażowych rzadko pada: ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt3",
+              "text": "Cypr nie wymaga obowiązkowych gwarancji wykonania przy zakupie off-plan.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt4",
+              "text": " W przeciwieństwie do Polski, gdzie ustawa deweloperska nakłada rachunek powierniczy i Deweloperski Fundusz Gwarancyjny, tutaj zabezpieczenia trzeba zapisać w umowie. Są dostępne — po prostu nie pojawiają się same.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "Harmonogram wpłat przy zakupie off-plan na Cyprze",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt9",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "Rynkowy standard wygląda mniej więcej tak:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptc",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pta",
+              "text": "20–30 %",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptb",
+              "text": " przy podpisaniu umowy",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptf",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptd",
+              "text": "40–50 %",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pte",
+              "text": " w transzach w trakcie budowy",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pti",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptg",
+              "text": "20–30 %",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pth",
+              "text": " przy zakończeniu i odbiorze",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptm",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptj",
+              "text": "Rabat wobec gotowego odpowiednika to zwykle ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptk",
+              "text": "10–20 %",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptl",
+              "text": ". To Twoja rekompensata za współfinansowanie budowy i przyjęcie ryzyka niezakończenia.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pto",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ptn",
+              "text": "Dlaczego raty muszą być powiązane z etapami budowy, a nie z datami",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptq",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptp",
+              "text": "To warunek umowny o największym praktycznym znaczeniu, i łatwo go przeoczyć.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptt",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptr",
+              "text": "Powiązanie z etapami",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pts",
+              "text": " oznacza, że płacisz, gdy potwierdzone zostaną stan surowy, dach czy wykończenie. Budowa się opóźnia — opóźnia się też Twoja płatność.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptw",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptu",
+              "text": "Powiązanie z datami",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptv",
+              "text": " oznacza, że płacisz w ustalonych terminach niezależnie od tego, czy cokolwiek powstało. W praktyce finansujesz z góry przestój.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt10",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptx",
+              "text": "Nalegaj na pierwszy wariant i dopilnuj, by umowa wskazywała, ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pty",
+              "text": "kto potwierdza osiągnięcie etapu",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptz",
+              "text": " — najlepiej niezależny inspektor, nie deweloper.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt12",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt11",
+              "text": "Gwarancja bankowa i gwarancja wykonania: na Cyprze nieobowiązkowe",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt17",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt13",
+              "text": "Gwarancja bankowa",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt14",
+              "text": " albo ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt15",
+              "text": "gwarancja ubezpieczeniowa",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt16",
+              "text": " pokrywa zadatek i raty do momentu przeniesienia własności. Jeśli projekt nie zostanie ukończony, gwarancja działa.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1b",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt18",
+              "text": "W kilku państwach UE to standard. Na Cyprze ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt19",
+              "text": "nie jest to wymóg ustawowy",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1a",
+              "text": ", więc musisz o to poprosić i wpisać do umowy.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1d",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1c",
+              "text": "Widać tu realny podział między dużymi a mniejszymi deweloperami: firmy z relacjami bankowymi zwykle mogą wystawić gwarancję, mniejsze często nie. Deweloper, który zbywa to pytanie, mimowolnie mówi coś o swojej kondycji finansowej.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1f",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1e",
+              "text": "Rachunek powierniczy przy zakupie nieruchomości na Cyprze",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1h",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1g",
+              "text": "Przy rachunku powierniczym wpłaty trafiają nie bezpośrednio do dewelopera, tylko na konto podmiotu trzeciego i są uwalniane po osiągnięciu określonych etapów.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1l",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1i",
+              "text": "To również ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1j",
+              "text": "nie jest obowiązkowe",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1k",
+              "text": " na Cyprze, choć część rzetelnych deweloperów taką opcję oferuje. Jeśli ją proponują, ustal:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1n",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1m",
+              "text": "Kto prowadzi rachunek — bank czy kancelaria prawna?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1p",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1o",
+              "text": "Według jakich kryteriów następuje uwolnienie środków i kto potwierdza etap?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1r",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1q",
+              "text": "Co dzieje się z saldem, jeśli projekt upadnie?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1t",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1s",
+              "text": "Złożenie umowy w Księdze Wieczystej: najważniejsza ochrona",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1v",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1u",
+              "text": "Jeśli masz zapamiętać z tego tekstu jedno, to właśnie to.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt21",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1w",
+              "text": "Podpisaną umowę trzeba ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1x",
+              "text": "złożyć w Department of Lands and Surveys",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1y",
+              "text": ". Powstaje wtedy ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1z",
+              "text": "roszczenie o wykonanie umowy",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt20",
+              "text": " (Specific Performance) — Twoje egzekwowalne prawo do wpisania nieruchomości na siebie, skuteczne nawet jeśli deweloper później popadnie w tarapaty albo spróbuje sprzedać ten sam lokal dwa razy.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt25",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt22",
+              "text": "Złożenie jest ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt23",
+              "text": "ograniczone terminem",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt24",
+              "text": ". Publikacje podają różne okresy, więc poproś prawnika o wskazanie terminu obowiązującego obecnie i o pisemne potwierdzenie wykonania. Przekroczonego terminu nie da się nadrobić.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt27",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt26",
+              "text": "Ta jedna czynność jest warta więcej niż wszystkie zapewnienia ze spotkania sprzedażowego razem wzięte.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt29",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt28",
+              "text": "Hipoteka dewelopera na gruncie i list o zwolnieniu",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2b",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2a",
+              "text": "Jeśli deweloper zaciągnął kredyt pod zastaw gruntu, ciąży na nim obciążenie — a Twojego lokalu nie da się wydzielić, dopóki nie zostanie z niego zwolniony.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2d",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2c",
+              "text": "Trzeba zamknąć dwie kwestie:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2g",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2e",
+              "text": "List banku o zwolnieniu",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2f",
+              "text": " Twojego lokalu z obciążenia albo umowne zobowiązanie z harmonogramem wykreślenia przed odbiorem.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2j",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2h",
+              "text": "Płatności przez rachunek powierniczy",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2i",
+              "text": ", żeby Twoje raty w sposób udokumentowany szły na spłatę odpowiedniej części długu.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2o",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2k",
+              "text": "Bez jednego lub drugiego bierzesz na siebie ryzyko, którym nie zarządzasz. Jak wcześniej ocenić dewelopera — w tekście ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2m",
+              "text": "jak sprawdzić dewelopera na Cyprze",
+              "_type": "span",
+              "marks": [
+                "pt2l"
+              ]
+            },
+            {
+              "_key": "pt2n",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt2l",
+              "href": "/pl/blog/jak-sprawdzic-dewelopera-na-cyprze",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt2q",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2p",
+              "text": "Zapisy umowne, które warto wynegocjować",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2s",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2r",
+              "text": "Standardowe umowy deweloperskie są przewidywalnie korzystne dla sprzedającego. Te punkty na listę negocjacyjną:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2v",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2t",
+              "text": "Twardy termin zakończenia",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2u",
+              "text": " plus data graniczna, po której możesz odstąpić i odzyskać zadatek w całości",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2y",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2w",
+              "text": "Kary umowne",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2x",
+              "text": " za opóźnienie ponad ustalony okres karencji",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt31",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2z",
+              "text": "Gwarancja bankowa lub wykonania",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt30",
+              "text": " obejmująca zadatek i raty do przeniesienia własności",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt34",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt32",
+              "text": "Okres rękojmi minimum 24 miesiące",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt33",
+              "text": " od odbioru, wyraźnie obejmujący konstrukcję i hydroizolację",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt37",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt35",
+              "text": "Prawo cesji",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt36",
+              "text": " umowy na osobę trzecią przed odbiorem",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3a",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt38",
+              "text": "Zapewnienie co do obniżonego VAT",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt39",
+              "text": ", jeśli liczysz na stawkę 5 %",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3d",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3b",
+              "text": "Oświadczenie o braku obciążeń",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3c",
+              "text": " albo wiążące zobowiązanie z harmonogramem ich wykreślenia",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3g",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3e",
+              "text": "Specyfikacja materiałów i wykończenia",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3f",
+              "text": " wraz ze skutkami odstępstw",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3i",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3h",
+              "text": "Dwa ostatnie punkty rodzą najwięcej sporów. Jeśli w umowie stoi tylko „wykończenie wysokiej jakości\", nie masz czego egzekwować.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3k",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt3j",
+              "text": "Co się dzieje przy niewypłacalności dewelopera",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3l",
+              "text": "Scenariusz, dla którego cały ten aparat istnieje.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3p",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3n",
+              "text": "Ze złożoną umową",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3o",
+              "text": " masz egzekwowalne prawo do wpisu — pozycja wyraźnie mocniejsza niż zwykłego wierzyciela.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3s",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3q",
+              "text": "Z gwarancją bankową",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3r",
+              "text": " wpłacone kwoty są pokryte.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3v",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3t",
+              "text": "Bez jednego i drugiego",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3u",
+              "text": " stajesz w kolejce wierzycieli, a takie postępowania ciągną się latami i rzadko kończą pełnym zaspokojeniem.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3x",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3w",
+              "text": "Cypr uchwalił przepisy naprawcze dla kupujących pozostawionych bez aktu własności. Ich status prawny był ostatnio przedmiotem sporu konstytucyjnego, więc nie traktuj ich jako swojej poduszki bezpieczeństwa — zapytaj prawnika o aktualny stan.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3z",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt3y",
+              "text": "Odbiór przed ostatnią płatnością",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt41",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt40",
+              "text": "Ostatnia rata to Twój ostatni argument. Nie oddawaj jej, zanim nie sprawdzisz.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt45",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt42",
+              "text": "Zleć ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt43",
+              "text": "niezależny odbiór",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt44",
+              "text": " i porównaj gotowy lokal ze specyfikacją umowną: materiały, wyposażenie, wymiary, działanie instalacji. Usterki spisz i doprowadź do usunięcia przed ostatnią płatnością.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt47",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt46",
+              "text": "Jeśli kupujesz z Polski, odbiór powinien wykonać ktoś działający w Twoim interesie — nie deweloper i nie jego podwykonawcy. Loty poza sezonem bywają z przesiadką, więc zaplanuj to wcześniej.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "imps",
+      "_type": "projectsSectionBlock",
+      "title": "Zobacz nowe inwestycje na Cyprze",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "impt",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt4",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Pracujemy wyłącznie z nowymi inwestycjami licencjonowanych cypryjskich deweloperów w cenach deweloperskich. Przy każdym projekcie powiemy, jakie zabezpieczenia dany deweloper zwykle akceptuje, a gdzie z doświadczenia nie ma pola do negocjacji. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2",
+              "text": "Poproś o osobistą selekcję",
+              "_type": "span",
+              "marks": [
+                "pt1"
+              ]
+            },
+            {
+              "_key": "pt3",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt1",
+              "href": "/pl/contacts",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt6",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt5",
+              "text": "Ten przewodnik ma charakter ogólnoinformacyjny i odzwierciedla stan na podaną datę; ramy prawne zakupów off-plan ewoluują. Nie jest to porada prawna. Cyprus VIP Estates to agencja marketingu i doradztwa w nieruchomościach; redakcję umowy, terminy, złożenie w Księdze Wieczystej i gwarancje powinien prowadzić niezależny licencjonowany cypryjski prawnik wybrany przez Ciebie.",
+              "_type": "span",
+              "marks": [
+                "em"
+              ]
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": null,
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:09.315Z",
+  "updatedAt": "2026-08-04T15:40:09.315Z"
+}

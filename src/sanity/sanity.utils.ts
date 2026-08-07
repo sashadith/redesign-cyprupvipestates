@@ -11,6 +11,7 @@ import { localizedHref } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
 import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances } from "@/lib/developmentCard";
 import { soldOutFromCounts, computeAvailability } from "@/lib/developmentAvailability";
+import { isNewStyleProjectsBlock, projectsBlockHasCriteria } from "@/lib/projectsBlockValidation";
 import { Homepage } from "@/types/homepage";
 import { Header } from "@/types/header";
 import { FormStandardDocument } from "@/types/formStandardDocument";
@@ -205,6 +206,22 @@ async function resolveProjectRefs(refs: any[], lang: string) {
 // safety net on top of this (kept for the manual-array/non-filtered path).
 type ComputeFilteredProjectsOpts = { priceMin?: number | null; priceMax?: number | null };
 
+// Data-layer cap for computeFilteredProjects' RETURNED array — separate from
+// (and upstream of) any block's own client-side pageSize slicing in
+// ProjectsSectionBlockComponent. Before this existed, a broad filter (e.g.
+// propertyType: "Apartment" alone, no city) could return the entire matching
+// catalog — measured at 137 projects / ~145KB of serialized JSON for a single
+// blog block, repeated across every page using that same broad filter (2026-
+// 08-07, see the 6-topic Apartment-filter rollout this was found during).
+// pageSize only ever slices what's already in the page payload; this is what
+// actually bounds it. Flat constant, not per-block-pageSize-aware (that would
+// need threading pageSize into this function, a bigger change than the
+// payload-size problem here called for) — available projects are kept
+// preferentially (recommended/available first, sold-last, per the ordering
+// below), so the cap only ever discards sold-out overflow before it discards
+// anything available.
+const MAX_FILTERED_PROJECTS = 60;
+
 async function computeFilteredProjects(lang: string, filterCity?: string, filterPropertyType?: string, opts?: ComputeFilteredProjectsOpts) {
   const priceMin = opts?.priceMin ?? null;
   const priceMax = opts?.priceMax ?? null;
@@ -227,7 +244,7 @@ async function computeFilteredProjects(lang: string, filterCity?: string, filter
   const devRows = await queryFilteredDevelopmentRows({ city: filterCity, propertyType: filterPropertyType, priceFrom: priceMin, priceTo: priceMax });
 
   const recommended = sortProjectsRecommended([...available, ...devRows] as any);
-  const full = [...recommended, ...sold];
+  const full = [...recommended, ...sold].slice(0, MAX_FILTERED_PROJECTS);
 
   return full.map((p: any) => ({
     _id: p.sanityId,
@@ -346,15 +363,16 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string): Pr
       // present marks a block built via the new picker — pre-existing content
       // (Sanity-migrated posts, landingProjectsBlock, landing pages) never has
       // them, so this can never misfire on anything already published.
-      const isNewStyleBlock =
-        b._type === "projectsSectionBlock" &&
-        (Array.isArray(b.pinnedRefs) || Array.isArray(b.excludeRefs) || b.priceMin != null || b.priceMax != null || b.pageSize != null);
-      if (isNewStyleBlock) {
+      // isNewStyleProjectsBlock/projectsBlockHasCriteria are shared with the
+      // publish-time gate (src/lib/projectsBlockValidation.ts, used by
+      // saveBlogAll and the publish-scheduled cron) so the two can never
+      // define "will this render empty" differently.
+      if (isNewStyleProjectsBlock(b)) {
         // Only run the criteria query when actual criteria are set — an admin
         // who configures pins only (no city/type/price) gets exactly those
         // pins, not "pins + every other published project" (same
         // avoid-the-unbounded-query discipline as the branch below).
-        const hasCriteria = !!(b.filterCity || b.filterPropertyType || b.priceMin != null || b.priceMax != null);
+        const hasCriteria = projectsBlockHasCriteria(b);
         const criteriaResults = hasCriteria
           ? await computeFilteredProjects(lang, b.filterCity, b.filterPropertyType, { priceMin: b.priceMin, priceMax: b.priceMax })
           : [];

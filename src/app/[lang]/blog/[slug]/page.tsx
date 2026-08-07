@@ -22,6 +22,7 @@ import {
   getBlogSlugs,
   ALL_LOCALES,
 } from "@/sanity/sanity.utils";
+import { isNewStyleProjectsBlock } from "@/lib/projectsBlockValidation";
 import { urlFor } from "@/sanity/sanity.client";
 import {
   abs,
@@ -193,11 +194,10 @@ const PagePost = async ({ params }: Props) => {
         // Admin-insertable "Projects" block (2026-07-24): any of these fields
         // present marks a block built via the new criteria+pin/exclude picker
         // — pre-existing Sanity-migrated posts never have them, so this can't
-        // change how any already-published article renders.
-        const isNewStyle =
-          Array.isArray(b.pinnedRefs) || Array.isArray(b.excludeRefs) ||
-          b.priceMin != null || b.priceMax != null || b.pageSize != null;
-        if (isNewStyle) {
+        // change how any already-published article renders. Shared with the
+        // publish-time gate (src/lib/projectsBlockValidation.ts) so the two
+        // definitions of "new-style" can never drift apart.
+        if (isNewStyleProjectsBlock(b)) {
           const results = Array.isArray(b.filteredProjects) ? b.filteredProjects : [];
           if (!results.length) return null;
           // Empty/thin guard only applies to a live city/type/price query — a
