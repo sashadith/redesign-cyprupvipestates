@@ -1,0 +1,790 @@
+{
+  "id": "137f8eb6-d020-4c74-8f6a-53fea43270f9",
+  "sanityId": "local-de-renditeimmobilien-zypern",
+  "translationGroupId": "single-buy-to-let-property-cyprus.i18n",
+  "language": "de",
+  "slug": "renditeimmobilien-zypern",
+  "title": "Renditeimmobilien auf Zypern",
+  "excerpt": "Neubau-Renditeimmobilien auf Zypern direkt vom Bauträger – Wohnungen und Villen zur Vermietung.",
+  "status": "PUBLISHED",
+  "allowIntroBlock": false,
+  "parentSanityId": null,
+  "previewImage": {
+    "alt": "Renditeimmobilien auf Zypern – Buy-to-Let vom Bauträger",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-c6073ca08d91714d9e21d141a8df2997c494a187-1000x1000-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "Renditeimmobilien auf Zypern – Buy-to-Let vom Bauträger",
+    "metaDescription": "Renditeimmobilien auf Zypern: Neubau zur Vermietung direkt vom Bauträger. Hohe Mietrendite, niedrige Steuern, ohne Maklerprovision. Jetzt investieren."
+  },
+  "contentBlocks": [
+    {
+      "_key": "b-intro-de-r6al1r",
+      "_type": "landingIntroBlock",
+      "image": {
+        "alt": "Renditeimmobilien auf Zypern",
+        "_type": "image",
+        "asset": {
+          "_ref": "image-c6073ca08d91714d9e21d141a8df2997c494a187-1000x1000-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "Renditeimmobilien auf Zypern",
+      "subtitle": "Buy-to-Let auf Zypern",
+      "buttonLabel": "Projekte ansehen",
+      "description": "Neubau-Renditeimmobilien auf Zypern direkt vom Bauträger – Wohnungen und Villen zur Vermietung mit attraktiver Mietrendite. Ohne Maklerprovision."
+    },
+    {
+      "_key": "b-proj-de-0qec6c",
+      "_type": "landingProjectsBlock",
+      "title": "Aktuelle Renditeimmobilien auf Zypern"
+    },
+    {
+      "_key": "b-tf-de-093p9d",
+      "_type": "landingTextFirst",
+      "content": [
+        {
+          "_key": "pt-0-ffamvd",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-0-jliizd-t0-t0",
+              "text": "Renditeimmobilien auf Zypern – Einkommen und Vermögen mit System aufbauen",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-1-f3jzw5",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-1-u830bi-t0-t0",
+              "text": "Renditeimmobilien sind kein Einzelkauf, sondern eine Strategie: verlässlicher Mietertrag, planbarer Cashflow und ein Portfolio, das über die Jahre wächst. Zypern bietet dafür ein selten günstiges Umfeld – niedrige Steuern, ganzjährige Nachfrage und ein EU-Rechtsrahmen. Wir helfen Ihnen, aus geprüften Neubauprojekten ein tragfähiges Buy-to-Let-Portfolio aufzubauen, direkt vom Bauträger und ohne Maklerkosten.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-3-fsunwo",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-3-3x4r85-t0-t0",
+              "text": "Die drei Bausteine einer Rendite-Strategie",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-4-c34ee4",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-4-wwrki9-t0-t0",
+              "text": "Eine erfolgreiche Renditeimmobilie beruht nicht auf dem niedrigsten Preis, sondern auf dem Zusammenspiel dreier Faktoren:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-6-e2iytw",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-6-2dktff-m0-t0",
+              "text": "Nettorendite",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "span-6-2dktff-t1-t0",
+              "text": " – Mietertrag nach Kosten, nicht der schöngerechnete Bruttowert.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-7-h5y29o",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-7-vqexte-m0-t0",
+              "text": "Auslastung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "span-7-vqexte-t1-t0",
+              "text": " – wie zuverlässig das Objekt über das Jahr vermietet ist.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-8-9nwcqv",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-8-6h2l12-m0-t0",
+              "text": "Wertentwicklung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "span-8-6h2l12-t1-t0",
+              "text": " – der erwartete Wiederverkaufswert am Ende der Haltedauer.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-10-9sdaje",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-10-cwna84-t0-t0",
+              "text": "Wir bewerten jedes Objekt entlang dieser drei Größen und stellen ihm eine realistische Kostenseite gegenüber – von Verwaltung über Instandhaltung bis zu Leerstandsrisiko.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-12-dh81sm",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-12-qkjj4r-t0-t0",
+              "text": "Kurzfristiger Cashflow oder langfristiges Einkommen?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-13-bdjjf6",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-13-wjoz3n-t0-t0",
+              "text": "Zypern erlaubt beide Wege – oft ist die Mischung am stärksten:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-15-ser2ln",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-15-j9yufw-m0-t0",
+              "text": "Ferienvermietung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "span-15-j9yufw-t1-t0",
+              "text": " – höhere Saisonsätze in Küstenlagen, dafür mehr Verwaltung.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-16-uigntm",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-16-rq6ql0-m0-t0",
+              "text": "Langzeitvermietung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "span-16-rq6ql0-t1-t0",
+              "text": " – stabile, planbare Monatserträge an Expats und Fachkräfte.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-17-59j6l2",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-17-b2iwef-m0-t0",
+              "text": "Hybrid",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "span-17-b2iwef-t1-t0",
+              "text": " – Eigennutzung in Nebensaison, Vermietung in der Hauptsaison.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-19-3inmzr",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-19-hb4b1m-t0-t0",
+              "text": "Ein Portfolio über die Insel streuen",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-20-nb4uo2",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-20-ut1m9m-t0-t0",
+              "text": "Wer mehrere Einheiten hält, senkt sein Risiko durch Streuung – über Standorte, Objekttypen und Mietmodelle:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-22-td114u",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-22-b5cfhv-m0-t0",
+              "text": "Stadt (Limassol)",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "span-22-b5cfhv-t1-t0",
+              "text": " für stabile Langzeitmieten und Wertstabilität.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-23-8h62ig",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-23-v3oibk-m0-t0",
+              "text": "Küste (Paphos)",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "span-23-v3oibk-t1-t0",
+              "text": " für höhere Ferienrenditen bei niedrigerem Einstieg.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-24-3n1yfm",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-24-g2aoml-m0-t0",
+              "text": "Objektmix",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "span-24-g2aoml-t1-t0",
+              "text": " aus Apartments für Cashflow und Villen für Wertsteigerung.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-26-up374o",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-26-os5mgm-t0-t0",
+              "text": "Für regionale Schwerpunkte lohnen ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "span-26-tg8cqu-t0-t0",
+              "text": "Investment-Immobilien in Paphos",
+              "_type": "span",
+              "marks": [
+                "link-26-qrnof9"
+              ]
+            },
+            {
+              "_key": "span-26-m81tg0-t0-t0",
+              "text": " und ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "span-26-u2a5nm-t0-t0",
+              "text": "Wohnungen in Limassol",
+              "_type": "span",
+              "marks": [
+                "link-26-24fps2"
+              ]
+            },
+            {
+              "_key": "span-26-7h68ug-t0-t0",
+              "text": "; ergänzend zeigen unsere ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "span-26-l1ph57-t0-t0",
+              "text": "Wohnungen auf Zypern für Investoren",
+              "_type": "span",
+              "marks": [
+                "link-26-a4yy0p"
+              ]
+            },
+            {
+              "_key": "span-26-qg3360-t0-t0",
+              "text": " weitere Renditeobjekte.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "link-26-qrnof9",
+              "href": "/de/investment-immobilien-paphos",
+              "_type": "link"
+            },
+            {
+              "_key": "link-26-24fps2",
+              "href": "/de/wohnungen-in-limassol",
+              "_type": "link"
+            },
+            {
+              "_key": "link-26-a4yy0p",
+              "href": "/de/wohnungen-auf-zypern-fuer-investoren",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt-28-n8rpil",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-28-kh6ijv-t0-t0",
+              "text": "Steuern und laufende Kosten auf Zypern",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-29-x0kz5n",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-29-5q1qlx-t0-t0",
+              "text": "Zypern zählt zu den steuerlich attraktivsten EU-Standorten: vergleichsweise niedrige Besteuerung von Mieteinkünften und keine Erbschaftsteuer. Für die konkrete Struktur – privat oder über eine Gesellschaft – vermitteln wir Ihnen erfahrene Steuerberater vor Ort, damit Ihre Nettorendite auch nach Steuern stimmt. Tiefer einsteigen können Sie in unseren Ratgebern zu ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "span-29-ru7e1f-t0-t0",
+              "text": "Steuern auf Immobilien in Zypern",
+              "_type": "span",
+              "marks": [
+                "link-29-m4zpzy"
+              ]
+            },
+            {
+              "_key": "span-29-qugyaq-t0-t0",
+              "text": ", zur ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "span-29-actbgg-t0-t0",
+              "text": "Versteuerung von Mieteinnahmen aus Deutschland",
+              "_type": "span",
+              "marks": [
+                "link-29-g6muuy"
+              ]
+            },
+            {
+              "_key": "span-29-4zf2vq-t0-t0",
+              "text": " und zur ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "span-29-go7sjl-t0-t0",
+              "text": "Mehrwertsteuer beim Immobilienkauf",
+              "_type": "span",
+              "marks": [
+                "link-29-8d2jah"
+              ]
+            },
+            {
+              "_key": "span-29-a4gqyg-t0-t0",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "link-29-m4zpzy",
+              "href": "/de/blog/steuern-auf-immobilien-in-zypern",
+              "_type": "link"
+            },
+            {
+              "_key": "link-29-g6muuy",
+              "href": "/de/blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern",
+              "_type": "link"
+            },
+            {
+              "_key": "link-29-8d2jah",
+              "href": "/de/blog/vat-beim-immobilienkauf-auf-zypern",
+              "_type": "link"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "faq": {
+        "_type": "accordionBlock",
+        "items": [
+          {
+            "_key": "faq-de-0-mg5hje",
+            "answer": [
+              {
+                "_key": "pt-0-y80vqk",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-6m5k6r-t0-t0",
+                    "text": "Entscheidend ist die Nettorendite: Jahresmiete abzüglich Verwaltung, Instandhaltung, Steuern und Leerstand, geteilt durch den Gesamtinvest. Wir stellen Ihnen diese Rechnung pro Objekt auf.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Wie berechne ich die tatsächliche Rendite einer Immobilie auf Zypern?"
+          },
+          {
+            "_key": "faq-de-1-vjlue8",
+            "answer": [
+              {
+                "_key": "pt-0-w3iqt0",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-q6m1z4-t0-t0",
+                    "text": "Ja. Viele Kunden starten mit einer Einheit und erweitern gestaffelt. Wir helfen, Standorte, Objekttypen und Mietmodelle so zu streuen, dass Risiko und Ertrag ausgewogen bleiben.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Kann ich mit mehreren Objekten ein Portfolio auf Zypern aufbauen?"
+          },
+          {
+            "_key": "faq-de-2-k58th3",
+            "answer": [
+              {
+                "_key": "pt-0-c9btfr",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-gjshib-t0-t0",
+                    "text": "Ferienvermietung bringt in Küstenlagen höhere Saisonerträge, Langzeitmiete stabilere Einnahmen bei weniger Aufwand. Für ein Portfolio ist häufig eine Kombination am rentabelsten.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Lohnt sich langfristige Vermietung oder Ferienvermietung mehr?"
+          },
+          {
+            "_key": "faq-de-3-pd5sb6",
+            "answer": [
+              {
+                "_key": "pt-0-ve14vq",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0f28e5-t0-t0",
+                    "text": "Zypern besteuert Mieteinkünfte vergleichsweise niedrig und erhebt keine Erbschaftsteuer. Für die optimale Struktur vermitteln wir Ihnen lokale Steuerberater.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Wie werden Mieteinnahmen auf Zypern besteuert?"
+          },
+          {
+            "_key": "faq-de-4-mqdgjc",
+            "answer": [
+              {
+                "_key": "pt-0-w9jffr",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-ocdpe9-t0-t0",
+                    "text": "Vor allem Verwaltung, Instandhaltung, Versicherung, mögliche Leerstände und Steuern. Wir kalkulieren diese Positionen realistisch ein, statt nur mit der Bruttomiete zu rechnen.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Welche laufenden Kosten mindern meine Rendite?"
+          },
+          {
+            "_key": "faq-de-5-z4gh8d",
+            "answer": [
+              {
+                "_key": "pt-0-0qsza2",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-i8uvo4-t0-t0",
+                    "text": "Ja. Wir vermitteln Verwaltungspartner für Vermietung, Buchhaltung und Instandhaltung – auch für ein über die Insel verteiltes Portfolio bei reinem Fernbesitz.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Übernehmen Sie das Management meiner Renditeobjekte?"
+          }
+        ]
+      },
+      "_key": "b-faq-de-3afhmm",
+      "_type": "landingFaqBlock",
+      "title": "Häufige Fragen zu Renditeimmobilien auf Zypern"
+    },
+    {
+      "_key": "b-ts-de-vcap0v",
+      "_type": "landingTextSecond",
+      "content": [
+        {
+          "_key": "pt-0-mtfnrh",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-0-9a4lwv-t0-t0",
+              "text": "Ihre Buy-to-Let-Strategie für Zypern",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-1-gowocv",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-1-6bjqz2-t0-t0",
+              "text": "Vermögensaufbau mit Immobilien ist ein Marathon, kein Sprint: Der erste Kauf legt das Fundament, jede weitere Einheit verstärkt Cashflow und Streuung. Zypern liefert dafür die Zutaten – günstige Steuern, robuste Nachfrage und Off-Plan-Einstiegspreise, die den Vermögensaufbau beschleunigen. Wir denken dabei nicht in einzelnen Objekten, sondern in Ihrer Gesamtstrategie über mehrere Jahre.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-3-wmwglq",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-3-jfwo8j-t0-t0",
+              "text": "Lassen Sie uns Ihre Zielrendite und Ihren Anlagehorizont besprechen: Wir entwerfen einen Portfolio-Vorschlag mit konkreten Objekten und einer Netto-Renditerechnung – als belastbare Grundlage für Ihre erste oder nächste Einheit auf Zypern.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "blk-de-cs3-ap62sd",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "sp1-de-cs3-8p6740",
+              "text": "Neugierig, wie das in der Praxis aussieht? ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "sp2-de-cs3-yw2sya",
+              "text": "Erfahren Sie, wie ein britischer Investor sein Vermögen durch Immobilien in Limassol diversifizierte.",
+              "_type": "span",
+              "marks": [
+                "lk-de-cs3-r2uuzr"
+              ]
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "lk-de-cs3-r2uuzr",
+              "href": "/de/case-studies/wie-ein-britischer-investor-sein-vermoegen-durch-immobilien-in-limassol-diversifizierte",
+              "_type": "link"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "relatedLandingPages": [
+    {
+      "_key": "rel-1nu62y",
+      "_ref": "single-apartments-cyprus-investors",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "rel-70anak",
+      "_ref": "local-de-investment-immobilien-paphos",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "rel-rupsp2",
+      "_ref": "single-investing-crypto",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "rel-sc0xul",
+      "_ref": "9ed6ceb4-a9b3-41da-87a9-fb862b1d5332",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "rel-7ortt8",
+      "_ref": "local-de-wohnungen-in-limassol",
+      "_type": "singlepageRef"
+    }
+  ],
+  "publishedAt": "2026-07-07T09:20:06.979Z",
+  "scheduledAt": null,
+  "createdAt": "2026-07-07T08:35:05.068Z",
+  "updatedAt": "2026-07-18T13:15:56.755Z"
+}

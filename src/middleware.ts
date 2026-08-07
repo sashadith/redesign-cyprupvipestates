@@ -41,11 +41,28 @@ const DE_LANDING_MERGES: Record<string, string> = {
   "strandhaus-auf-zypern": "/de/strandvillen-zypern",
 };
 
+// Retired DE blog articles — same shape/mechanism as DE_LANDING_MERGES above
+// (a plain map, checked first, single-hop 301), kept as its own block because
+// it's a different content type/retirement reason, not landing-page
+// consolidation. Unconditional on the article's DB publish status: once this
+// ships, the old URL redirects immediately, even while the row is still
+// PUBLISHED — that's intentional, so the redirect can go out ahead of the
+// unpublish with no 404 gap.
+const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
+  "blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern": "/de/blog/immobilien-zypern-mit-garantierten-mieteinnahmen",
+};
+
 export default async function middleware(request: NextRequest) {
   const deMergeMatch = request.nextUrl.pathname.match(/^\/de\/(.+)$/);
   if (deMergeMatch && DE_LANDING_MERGES[deMergeMatch[1]]) {
     const url = request.nextUrl.clone();
     url.pathname = DE_LANDING_MERGES[deMergeMatch[1]];
+    url.search = "";
+    return NextResponse.redirect(url, 301);
+  }
+  if (deMergeMatch && RETIRED_BLOG_REDIRECTS[deMergeMatch[1]]) {
+    const url = request.nextUrl.clone();
+    url.pathname = RETIRED_BLOG_REDIRECTS[deMergeMatch[1]];
     url.search = "";
     return NextResponse.redirect(url, 301);
   }

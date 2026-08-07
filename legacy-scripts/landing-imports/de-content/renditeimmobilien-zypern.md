@@ -28,7 +28,7 @@ Wer mehrere Einheiten hält, senkt sein Risiko durch Streuung – über Standort
 Für regionale Schwerpunkte lohnen [Investment-Immobilien in Paphos](/de/investment-immobilien-paphos) und [Wohnungen in Limassol](/de/wohnungen-in-limassol); ergänzend zeigen unsere [Wohnungen auf Zypern für Investoren](/de/wohnungen-auf-zypern-fuer-investoren) weitere Renditeobjekte.
 
 ## Steuern und laufende Kosten auf Zypern
-Zypern zählt zu den steuerlich attraktivsten EU-Standorten: vergleichsweise niedrige Besteuerung von Mieteinkünften und keine Erbschaftsteuer. Für die konkrete Struktur – privat oder über eine Gesellschaft – vermitteln wir Ihnen erfahrene Steuerberater vor Ort, damit Ihre Nettorendite auch nach Steuern stimmt. Tiefer einsteigen können Sie in unseren Ratgebern zu [Steuern auf Immobilien in Zypern](/de/blog/steuern-auf-immobilien-in-zypern), zur [Versteuerung von Mieteinnahmen aus Deutschland](/de/blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern) und zur [Mehrwertsteuer beim Immobilienkauf](/de/blog/vat-beim-immobilienkauf-auf-zypern).
+Zypern zählt zu den steuerlich attraktivsten EU-Standorten: vergleichsweise niedrige Besteuerung von Mieteinkünften und keine Erbschaftsteuer. Für die konkrete Struktur – privat oder über eine Gesellschaft – vermitteln wir Ihnen erfahrene Steuerberater vor Ort, damit Ihre Nettorendite auch nach Steuern stimmt. Tiefer einsteigen können Sie in unseren Ratgebern zu [Steuern auf Immobilien in Zypern](/de/blog/steuern-auf-immobilien-in-zypern), zur Versteuerung von Mieteinnahmen aus Deutschland und zur [Mehrwertsteuer beim Immobilienkauf](/de/blog/vat-beim-immobilienkauf-auf-zypern).
 
 === FAQ ===
 Q: Wie berechne ich die tatsächliche Rendite einer Immobilie auf Zypern?
