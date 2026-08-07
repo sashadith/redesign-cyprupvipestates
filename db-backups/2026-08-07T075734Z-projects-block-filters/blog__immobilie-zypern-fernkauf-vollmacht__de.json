@@ -1,0 +1,820 @@
+{
+  "id": "e50924b6-02d2-45b8-8ab6-50e4b0cc49dc",
+  "sanityId": "local-77fd576e-3920-4897-a659-e30f01da2fef",
+  "translationGroupId": "46e7ea01-5a64-4fdc-a302-ed61dcbfaf98",
+  "language": "de",
+  "slug": "immobilie-zypern-fernkauf-vollmacht",
+  "title": "Immobilie auf Zypern aus der Ferne kaufen: Vollmacht, Besichtigung und Abnahme",
+  "excerpt": "Ein Immobilienkauf auf Zypern lässt sich vollständig aus der Ferne abwickeln. Welche Schritte per Vollmacht gehen und wo Sie besser selbst hinschauen.",
+  "status": "DRAFT",
+  "authorId": "5a63a569-3b41-4157-ae07-b3daec063833",
+  "categoryId": null,
+  "previewImage": null,
+  "seo": {
+    "metaTitle": "Immobilie auf Zypern aus der Ferne kaufen: Vollmacht",
+    "metaDescription": "Immobilienkauf auf Zypern ohne Anreise: Vollmacht, virtuelle Besichtigung, Fernunterzeichnung und unabhängige Abnahme — was funktioniert und was nicht."
+  },
+  "contentBlocks": [
+    {
+      "_key": "imp0",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Ein Immobilienkauf auf Zypern lässt sich vollständig abwickeln, ohne dass Sie zur Unterzeichnung anreisen. Das ist gängige Praxis und rechtlich unproblematisch — vorausgesetzt, die Vollmacht ist sauber gefasst und liegt bei der richtigen Person.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "Dieser Leitfaden zeigt, welche Schritte aus der Ferne funktionieren, welche Sie besser nicht delegieren und woran Fernkäufe in der Praxis scheitern.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt4",
+              "text": "Was sich beim Immobilienkauf auf Zypern aus der Ferne erledigen lässt",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "Praktisch der gesamte Ablauf:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pta",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "Reservierung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt9",
+              "text": " und Zahlung der Reservierungsgebühr",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptd",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptb",
+              "text": "Rechtliche Prüfung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptc",
+              "text": " durch Ihren Anwalt — Titel, Lasten, Genehmigungen",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptg",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pte",
+              "text": "Vertragsunterzeichnung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptf",
+              "text": " per Vollmacht",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptj",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pth",
+              "text": "Hinterlegung des Vertrags",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pti",
+              "text": " beim Grundbuchamt",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptm",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptk",
+              "text": "Zahlungen",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptl",
+              "text": " von Ihrem eigenen Konto",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptp",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptn",
+              "text": "Eigentumsübertragung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pto",
+              "text": " beim Grundbuchamt",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptt",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptq",
+              "text": "Was Sie ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptr",
+              "text": "nicht",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pts",
+              "text": " delegieren sollten, ist die Auswahl des Anwalts und die Abnahme des fertigen Objekts. Dazu unten mehr.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptv",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ptu",
+              "text": "Vollmacht für den Immobilienkauf auf Zypern: Form und Inhalt",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptz",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptw",
+              "text": "Die Vollmacht wird bei einem Notar beurkundet und anschließend mit ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptx",
+              "text": "Apostille",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pty",
+              "text": " versehen, damit sie auf Zypern anerkannt wird. Rechnen Sie mit ein bis zwei Wochen, je nach Notar und Behörde.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt11",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt10",
+              "text": "Drei Punkte entscheiden über die Qualität:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt16",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt12",
+              "text": "An wen die Vollmacht geht.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt13",
+              "text": " Sie gehört Ihrem ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt14",
+              "text": "unabhängigen Anwalt",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt15",
+              "text": ", nicht dem Bauträger, nicht dessen Kanzlei und nicht dem Vermittler. Wer Ihnen anbietet, die Vollmacht auf einen Mitarbeiter des Verkäufers auszustellen, verlangt, dass beide Seiten des Geschäfts von derselben Partei vertreten werden.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt19",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt17",
+              "text": "Wie weit sie reicht.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt18",
+              "text": " Eine allgemeine Vollmacht ist bequem und riskant. Besser ist eine auf das konkrete Objekt und die konkreten Handlungen begrenzte Vollmacht — Unterzeichnung dieses Vertrags, Hinterlegung, Übertragung.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1c",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1a",
+              "text": "Wie lange sie gilt.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1b",
+              "text": " Befristen Sie sie auf den erwarteten Ablauf plus Puffer, statt sie unbefristet zu erteilen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1e",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1d",
+              "text": "Virtuelle Besichtigung: Was Sie verlangen sollten",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1g",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1f",
+              "text": "Verkaufsvideos zeigen, was gefällt. Was Sie brauchen, ist etwas anderes.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1j",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1h",
+              "text": "Ein durchgehendes Video statt Einzelaufnahmen.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1i",
+              "text": " Vom Eingang durch alle Räume bis zur Terrasse, ohne Schnitt. Schnitte verbergen genau das, was Sie sehen wollen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1k",
+              "text": "Ein fertiggestelltes Projekt desselben Bauträgers",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1l",
+              "text": ", das vor drei bis fünf Jahren übergeben wurde — nicht die Musterwohnung. Neubauten sehen bei allen gut aus; die Frage ist, wie sie altern.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1p",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1n",
+              "text": "Die Umgebung, nicht nur das Objekt.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1o",
+              "text": " Der Blick vom Balkon nach unten, die Nachbarbebauung, die Baustelle nebenan, der Lärm zur Tageszeit.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1s",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1q",
+              "text": "Ein Video zur Tageszeit Ihrer Nutzung.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1r",
+              "text": " Ein Ferienobjekt im August sieht anders aus als im November.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1u",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1t",
+              "text": "Wenn Ihr Anwalt vor Ort ist, lassen Sie ihn filmen — er hat kein Interesse am Abschluss.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1w",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1v",
+              "text": "Der Schutz, der auch beim Fernkauf greift: Vertragshinterlegung",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt20",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1x",
+              "text": "Unabhängig davon, ob Sie anwesend sind: Der unterzeichnete Kaufvertrag muss beim Grundbuchamt hinterlegt werden. Nach dem Gesetz über den Verkauf unbeweglichen Vermögens (Specific Performance), Gesetz 81(I)/2011, haben Sie dafür ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1y",
+              "text": "sechs Monate ab Unterzeichnung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1z",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt22",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt21",
+              "text": "Damit entsteht Ihr durchsetzbarer Anspruch auf Eintragung — wirksam auch dann, wenn der Verkäufer später in Schwierigkeiten gerät oder dieselbe Einheit ein zweites Mal verkauft.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt24",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt23",
+              "text": "Lassen Sie sich die Erledigung schriftlich bestätigen. Es kommt vor, dass Käufer erst Jahre später feststellen, dass die Hinterlegung nie erfolgt ist.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt26",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt25",
+              "text": "Zahlungen aus Deutschland: worauf Sie achten sollten",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt29",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt27",
+              "text": "Zahlen Sie von Ihrem eigenen Konto.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt28",
+              "text": " Zahlungen Dritter erschweren sowohl die Transaktion als auch den späteren Verkauf, weil die Bank die Herkunft nachvollziehen will.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2c",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2a",
+              "text": "Bestätigen Sie Bankverbindungen telefonisch",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2b",
+              "text": ", über eine Nummer, die Sie bereits kennen — nicht über eine Nummer aus der E-Mail. Der Abgleich von Kontodaten vor einer großen Überweisung kostet fünf Minuten.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2f",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2d",
+              "text": "Bewahren Sie alle Zahlungsbelege auf.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2e",
+              "text": " Sie brauchen sie zweimal: beim späteren Verkauf zur Minderung der Kapitalertragsteuer und beim Nachweis der Mittelherkunft.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2h",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2g",
+              "text": "Was Sie beim Fernkauf nicht delegieren sollten",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2k",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2i",
+              "text": "Die Wahl des Anwalts.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2j",
+              "text": " Er muss unabhängig vom Verkäufer sein, und Sie müssen ihn selbst beauftragen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2n",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2l",
+              "text": "Die Abnahme vor der Schlusszahlung.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2m",
+              "text": " Beauftragen Sie eine unabhängige Abnahme und vergleichen Sie das fertige Objekt mit der vertraglichen Spezifikation. Die letzte Rate ist Ihr letztes Druckmittel.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2q",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2o",
+              "text": "Die Entscheidung selbst.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2p",
+              "text": " Ein Video ersetzt keine Ortskenntnis. Wenn Sie die Region nicht kennen, ist eine Reise vor dem Kauf die günstigste Versicherung, die Sie abschließen können.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "imp1",
+      "_type": "projectsSectionBlock",
+      "title": "Neubauprojekte auf Zypern ansehen",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "imp2",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt4",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Wir arbeiten regelmäßig mit Käufern, die aus der Ferne kaufen — und sagen Ihnen offen, wann wir zu einer Anreise raten. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2",
+              "text": "Persönliche Auswahl anfordern",
+              "_type": "span",
+              "marks": [
+                "pt1"
+              ]
+            },
+            {
+              "_key": "pt3",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt1",
+              "href": "/de/contacts",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt6",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt5",
+              "text": "Dieser Leitfaden dient der allgemeinen Information und gibt den Stand zum genannten Datum wieder. Es handelt sich nicht um Rechtsberatung. Cyprus VIP Estates ist eine Immobilien-Marketing- und Beratungsagentur; Vollmacht, Vertragsprüfung und Hinterlegung gehören in die Hände eines unabhängigen, von Ihnen selbst gewählten lizenzierten zyprischen Anwalts.",
+              "_type": "span",
+              "marks": [
+                "em"
+              ]
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": null,
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:08.157Z",
+  "updatedAt": "2026-08-04T15:40:08.157Z"
+}

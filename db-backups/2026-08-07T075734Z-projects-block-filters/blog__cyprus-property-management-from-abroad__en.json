@@ -1,0 +1,1222 @@
+{
+  "id": "12d4b87b-f72f-4e77-be7a-d13bec3fc8ad",
+  "sanityId": "local-fcd14518-d13e-4baf-a795-7c09e455c283",
+  "translationGroupId": "483ca223-6dc5-4c0f-affe-f20d22ca1203",
+  "language": "en",
+  "slug": "cyprus-property-management-from-abroad",
+  "title": "Managing a Cyprus Property From Abroad: Costs, Companies and Obligations",
+  "excerpt": "If you own in Cyprus but live elsewhere, you need someone on the ground. What management costs, what it covers, and how to choose a company.",
+  "status": "PUBLISHED",
+  "authorId": "68063c4f-b907-49c1-9f15-a09fea8a8383",
+  "categoryId": "b6c31030-519d-4588-b1f0-a20c396b81e0",
+  "previewImage": {
+    "alt": "management-fee-comparison.png",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-d0a3a5311d26f8fde8cecb4e858282e2915fcd11-1732x908-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "Property Management in Cyprus: Fees and What's Included",
+    "metaDescription": "Owning a Cyprus property from abroad: management fees of 8–30%, running costs, obligations while the property sits empty, and what to check in the contract."
+  },
+  "contentBlocks": [
+    {
+      "_key": "imp1u",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Buying is the part everyone writes about. What happens afterwards gets far less attention — yet for owners who live somewhere else, it's the question that actually determines whether the purchase works: who looks after the property when you're there twice a year?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "This guide covers what a management company does, what it costs, which obligations continue even when the property is empty, and how to tell a good operator from a bad one.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt4",
+              "text": "What a Property Management Company in Cyprus Actually Does",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "The service differs sharply depending on whether you let the property, and that's the first decision to make.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pta",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "With no letting",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt9",
+              "text": ", it's about upkeep and presence: periodic inspections, pool servicing, irrigation and garden maintenance, receiving and settling bills, key holding, dealing with the building's management committee, and being the person who responds when the air conditioning fails in August.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptd",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptb",
+              "text": "For long-term letting",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptc",
+              "text": ", add tenant sourcing and screening, the lease, rent collection, utility reconciliation, check-ins and check-outs, and organising repairs.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptj",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pte",
+              "text": "For short-term letting",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptf",
+              "text": ", it becomes an operating business: platform listings, pricing, round-the-clock guest communication, changeover cleaning, linen, key handover, and filing guest details through the state Xenia system within 24 hours of arrival. The regulatory side is covered in ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pth",
+              "text": "short-term rental rules in Cyprus",
+              "_type": "span",
+              "marks": [
+                "ptg"
+              ]
+            },
+            {
+              "_key": "pti",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "ptg",
+              "href": "/blog/cyprus-short-term-rental-rules",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "ptl",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ptk",
+              "text": "Property Management Fees in Cyprus: 8–12% for Long Lets, 15–30% for Short Lets",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptn",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptm",
+              "text": "The spread reflects the workload.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "imp1v",
+      "rows": [
+        {
+          "_key": "imp1w",
+          "_type": "tableRow",
+          "cells": [
+            "Long-term letting, percentage",
+            "8–12% of rent (outliers 4–15%)"
+          ]
+        },
+        {
+          "_key": "imp1x",
+          "_type": "tableRow",
+          "cells": [
+            "Long-term letting, flat fee",
+            "€50–200 per month by property size"
+          ]
+        },
+        {
+          "_key": "imp1y",
+          "_type": "tableRow",
+          "cells": [
+            "Short-term letting",
+            "15–30% of gross income, most commonly 15–25%"
+          ]
+        },
+        {
+          "_key": "imp1z",
+          "_type": "tableRow",
+          "cells": [
+            "Tenant finding (one-off)",
+            "often one month's rent"
+          ]
+        },
+        {
+          "_key": "imp20",
+          "_type": "tableRow",
+          "cells": [
+            "Emergency call-out",
+            "€30–80 per incident"
+          ]
+        }
+      ],
+      "_type": "tableBlock",
+      "columns": [
+        "Model",
+        "Typical fee"
+      ]
+    },
+    {
+      "_key": "imp21",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Two things worth knowing. On long lets, a ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1",
+              "text": "flat fee can beat a percentage",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2",
+              "text": " when the rent is high — €150 a month is 10% of a €1,500 rent but only 6% of a €2,500 one. Ask for both structures.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt4",
+              "text": "And on short lets, the headline percentage tells you little on its own. What matters is what's included: two companies quoting 20% can differ substantially once you account for whether cleaning, linen and platform fees sit inside or outside that number.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "Running Costs of a Cyprus Property Even When It's Empty",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt9",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "These apply whether or not you let:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pte",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pta",
+              "text": "Communal fees",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptb",
+              "text": " in a development: roughly ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptc",
+              "text": "€500–2,000 a year",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptd",
+              "text": ", depending on size and facilities",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptg",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptf",
+              "text": "Building insurance",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pti",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pth",
+              "text": "Municipal charges and sewerage",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptl",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptj",
+              "text": "Electricity and water",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptk",
+              "text": ", since standing charges continue regardless of usage",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pto",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptm",
+              "text": "Pool servicing",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptn",
+              "text": " on a villa, year-round",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptr",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptp",
+              "text": "Irrigation",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptq",
+              "text": ", which isn't optional through a Cyprus summer",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptz",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pts",
+              "text": "The apartment-versus-villa difference is at its sharpest here: in a development, the management company handles grounds and the communal pool for a predictable charge; on a villa, you arrange and pay for each item yourself. We compared this in ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptu",
+              "text": "apartment or villa in Cyprus",
+              "_type": "span",
+              "marks": [
+                "ptt"
+              ]
+            },
+            {
+              "_key": "ptv",
+              "text": " and ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptx",
+              "text": "how much land comes with a Cyprus villa",
+              "_type": "span",
+              "marks": [
+                "ptw"
+              ]
+            },
+            {
+              "_key": "pty",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "ptt",
+              "href": "/blog/apartment-or-villa-in-cyprus",
+              "_type": "link"
+            },
+            {
+              "_key": "ptw",
+              "href": "/blog/cyprus-villa-plot-size",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt11",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt10",
+              "text": "Obligations That Continue While the Property Sits Empty",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt13",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt12",
+              "text": "An empty property is not a maintenance-free one, and this is the part owners underestimate.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt16",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt14",
+              "text": "The pool keeps running.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt15",
+              "text": " Without circulation and chemicals, the water turns within weeks and restoring it costs more than a year of servicing.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt19",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt17",
+              "text": "Irrigation cannot lapse.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt18",
+              "text": " Two weeks without water in August and the planting is gone.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1c",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1a",
+              "text": "Bills keep arriving.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1b",
+              "text": " Communal fees, insurance and municipal charges fall due, and unpaid communal fees can result in legal action by the management committee.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1f",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1d",
+              "text": "Insurance often has conditions.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1e",
+              "text": " Many policies require periodic inspection during extended absence — check yours before assuming you're covered.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1i",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1g",
+              "text": "Registrations expire.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1h",
+              "text": " If the property is registered for short-term letting, that registration must be renewed. Miss it and you're letting unlawfully.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1k",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1j",
+              "text": "What UK and International Owners Should Not Assume Carries Over",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1l",
+              "text": "If you've let property at home, some habits don't transfer.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1p",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1n",
+              "text": "There is no equivalent of a statutory tenancy deposit scheme.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1o",
+              "text": " Deposit handling is a matter of contract, so agree in writing where the deposit is held and on what basis it's returned.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1s",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1q",
+              "text": "Leases longer than one year must be in writing",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1r",
+              "text": ", signed and witnessed. A verbal or informal arrangement that would muddle through elsewhere is a real problem here.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1v",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1t",
+              "text": "Rent Control legislation applies to certain older properties",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1u",
+              "text": " — broadly those completed by the end of 1999 in designated areas, where statutory tenancies carry capped rent increases. It won't affect a new-build purchase, but it's worth knowing the regime exists if you later buy resale.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1y",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1w",
+              "text": "Agency terms are not standardised.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1x",
+              "text": " Read what you sign, particularly on exclusivity and notice periods.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt20",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1z",
+              "text": "How to Choose a Property Management Company in Cyprus",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt22",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt21",
+              "text": "The most common reason owners switch isn't poor occupancy — it's feeling out of the loop about their own asset. So ask about communication as hard as you ask about price.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt25",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt23",
+              "text": "How and how often do they report?",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt24",
+              "text": " Ask to see a sample statement: income, expenses, receipts, net payout. If they can't show one, that's your answer.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt28",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt26",
+              "text": "Where does the money sit?",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt27",
+              "text": " Establish which account rental income flows into and how often you're paid out.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2b",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt29",
+              "text": "Which properties do they currently manage?",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2a",
+              "text": " For short lets, the reviews on their managed listings are public — look at response times and cleanliness scores.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2e",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2c",
+              "text": "How fast do they actually respond?",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2d",
+              "text": " Test it. An enquiry on a Saturday evening tells you more than any promise.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2h",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2f",
+              "text": "What happens in an emergency?",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2g",
+              "text": " Up to what value can they authorise a repair without asking, and above what threshold do they need your approval?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2j",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2i",
+              "text": "What to Settle in the Management Contract",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2m",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2k",
+              "text": "Scope of service in detail",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2l",
+              "text": " — what the fee covers and what's charged separately",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2p",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2n",
+              "text": "Notice period",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2o",
+              "text": " and whether there's a minimum term",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2s",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2q",
+              "text": "Spending authority",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2r",
+              "text": " for repairs without prior approval",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2v",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2t",
+              "text": "Payout frequency",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2u",
+              "text": " and reporting obligations",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2y",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2w",
+              "text": "Who handles the letting registration",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2x",
+              "text": " and its renewal",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt31",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2z",
+              "text": "Owner use",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt30",
+              "text": " — can you block the property for yourself, and with how much notice",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt34",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt32",
+              "text": "VAT",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt33",
+              "text": " on the management fee",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt36",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt35",
+              "text": "That second-to-last point gets forgotten regularly and causes friction later: the two weeks you want for yourself in summer are peak season.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt38",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt37",
+              "text": "Self-Managing or Outsourcing: When Each Makes Sense",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3b",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt39",
+              "text": "Self-managing is realistic",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3a",
+              "text": " if you let long-term to a single tenant, visit several times a year and have a reliable local tradesperson. That saves you 8–12% on an ongoing basis.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3e",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3c",
+              "text": "Self-managing is effectively impossible",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3d",
+              "text": " with short lets. The 24-hour guest reporting window, changeover cleaning and round-the-clock availability can't be run from another country.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3g",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3f",
+              "text": "Run the arithmetic honestly: a short let carrying a 20% management fee, cleaning costs and platform commission lands much closer to a well-run long let than the gross yields suggest. The extra return is real, but it's earned income rather than passive income.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "imp22",
+      "_type": "projectsSectionBlock",
+      "title": "Browse Cyprus Properties With Management Available",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "imp23",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Many new developments come with management included — convenient, but it also ties you to one provider. Tell us how often you'll be there and whether you plan to let, and we'll show you properties where the arrangement fits.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": "2026-08-07T07:38:00.000Z",
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:09.732Z",
+  "updatedAt": "2026-08-07T07:40:24.421Z"
+}

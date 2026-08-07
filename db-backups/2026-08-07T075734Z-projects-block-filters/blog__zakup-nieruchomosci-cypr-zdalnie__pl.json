@@ -1,0 +1,828 @@
+{
+  "id": "4c55d233-f5d4-4f0a-8345-9986971912dc",
+  "sanityId": "local-3bf36b14-dadc-42aa-9f95-23b4a80875d7",
+  "translationGroupId": "46e7ea01-5a64-4fdc-a302-ed61dcbfaf98",
+  "language": "pl",
+  "slug": "zakup-nieruchomosci-cypr-zdalnie",
+  "title": "Zdalny zakup nieruchomości na Cyprze: pełnomocnictwo, oglądanie i odbiór",
+  "excerpt": "Transakcję na Cyprze można przeprowadzić w całości zdalnie. Które kroki przechodzą przez pełnomocnictwo, a co lepiej zostawić sobie.",
+  "status": "DRAFT",
+  "authorId": "183674ff-601c-455a-8585-c0ae04b1d94e",
+  "categoryId": null,
+  "previewImage": null,
+  "seo": {
+    "metaTitle": "Zakup nieruchomości na Cyprze zdalnie: pełnomocnictwo",
+    "metaDescription": "Jak kupić nieruchomość na Cyprze bez przyjazdu: pełnomocnictwo, wirtualne oglądanie, podpisanie umowy, płatności i odbiór, którego nie warto zlecać."
+  },
+  "contentBlocks": [
+    {
+      "_key": "imp3",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Zakup nieruchomości na Cyprze można sfinalizować bez przyjazdu na podpisanie. To powszechna praktyka i prawnie prosta — pod warunkiem, że pełnomocnictwo jest dobrze zredagowane i trafia do właściwej osoby.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "Ma to praktyczne znaczenie: połączenia lotnicze z Polski są w dużej mierze sezonowe, więc dopasowanie terminu podpisania do lotu bywa realnym problemem.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt4",
+              "text": "Co można załatwić zdalnie przy zakupie na Cyprze",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "Praktycznie cały proces:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pta",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "Rezerwacja",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt9",
+              "text": " i opłata rezerwacyjna",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptd",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptb",
+              "text": "Weryfikacja prawna",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptc",
+              "text": " przez Twojego prawnika — tytuł, obciążenia, pozwolenia",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptg",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pte",
+              "text": "Podpisanie umowy",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptf",
+              "text": " przez pełnomocnika",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptj",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pth",
+              "text": "Złożenie umowy",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pti",
+              "text": " w Księdze Wieczystej",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptm",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptk",
+              "text": "Płatności",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptl",
+              "text": " z Twojego własnego rachunku",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pto",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptn",
+              "text": "Przeniesienie własności",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptq",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptp",
+              "text": "Jako obywatel UE nie potrzebujesz zgody Rady Ministrów — ten etap, obowiązkowy dla kupujących spoza Unii, Ciebie nie dotyczy.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptu",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptr",
+              "text": "Czego ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pts",
+              "text": "nie warto",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptt",
+              "text": " zlecać: wyboru prawnika i odbioru gotowego lokalu.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptw",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ptv",
+              "text": "Pełnomocnictwo do zakupu nieruchomości na Cyprze",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt10",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptx",
+              "text": "Pełnomocnictwo sporządza notariusz, a następnie opatruje się je ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pty",
+              "text": "apostille",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptz",
+              "text": ", żeby było uznane na Cyprze. Licz na tydzień do dwóch, zależnie od notariusza i urzędu.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt12",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt11",
+              "text": "Trzy rzeczy decydują, czy to narzędzie, czy ryzyko:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt17",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt13",
+              "text": "Komu je udzielasz.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt14",
+              "text": " Powinien to być ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt15",
+              "text": "Twój niezależny prawnik",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt16",
+              "text": " — nie deweloper, nie jego kancelaria, nie pośrednik. Kto proponuje pełnomocnictwo dla osoby ze strony sprzedającego, proponuje, by jedna strona reprezentowała obie strony transakcji.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1a",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt18",
+              "text": "Jak szerokie jest.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt19",
+              "text": " Pełnomocnictwo ogólne jest wygodne i ryzykowne. Lepsze jest ograniczone do konkretnej nieruchomości i konkretnych czynności.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1d",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1b",
+              "text": "Na jak długo.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1c",
+              "text": " Wyznacz termin obejmujący spodziewany przebieg z zapasem, zamiast udzielać go bezterminowo.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1f",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1e",
+              "text": "Wirtualne oglądanie: o co poprosić",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1h",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1g",
+              "text": "Filmy sprzedażowe pokazują to, co się podoba. Ty potrzebujesz czegoś innego.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1k",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1i",
+              "text": "Ciągłego przejścia, nie montażu.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1j",
+              "text": " Od wejścia przez wszystkie pomieszczenia po taras, bez cięć. Cięcia ukrywają dokładnie to, co chcesz zobaczyć.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1n",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1l",
+              "text": "Gotowej inwestycji tego samego dewelopera",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1m",
+              "text": ", oddanej trzy do pięciu lat temu — nie mieszkania pokazowego.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1q",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1o",
+              "text": "Otoczenia, nie tylko lokalu.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1p",
+              "text": " Widok z balkonu w dół, sąsiednia zabudowa, budowa obok, hałas o różnych porach.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1t",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1r",
+              "text": "Nagrania o porze, w której zamierzasz tam bywać.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1s",
+              "text": " Nieruchomość wakacyjna w sierpniu i w listopadzie to dwa różne obiekty.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1v",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1u",
+              "text": "Ochrona działająca również przy zakupie zdalnym",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1z",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1w",
+              "text": "Niezależnie od Twojej obecności podpisaną umowę trzeba złożyć w Księdze Wieczystej. Zgodnie z ustawą o sprzedaży nieruchomości (Specific Performance) 81(I)/2011 masz na to ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1x",
+              "text": "sześć miesięcy od podpisania",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1y",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt21",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt20",
+              "text": "Powstaje wtedy egzekwowalne prawo do wpisu — skuteczne także wtedy, gdy sprzedający popadnie w kłopoty albo sprzeda ten sam lokal dwa razy.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt23",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt22",
+              "text": "Poproś o pisemne potwierdzenie wykonania. Zdarza się, że kupujący po latach i pełnej zapłacie odkrywają, że umowa nigdy nie została złożona.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt25",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt24",
+              "text": "Płatności z Polski",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt28",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt26",
+              "text": "Płać z własnego rachunku.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt27",
+              "text": " Płatności od osób trzecich komplikują transakcję i późniejszą sprzedaż.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2b",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt29",
+              "text": "Potwierdzaj dane bankowe telefonicznie",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2a",
+              "text": ", na numer, który już znasz — nie na ten z e-maila. Weryfikacja rachunku przed dużym przelewem zajmuje pięć minut.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2e",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2c",
+              "text": "Zachowaj wszystkie potwierdzenia płatności.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2d",
+              "text": " Przydadzą się dwukrotnie: przy obniżeniu podatku od zysku przy sprzedaży i przy wykazaniu pochodzenia środków.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2g",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2f",
+              "text": "Pamiętaj też o kursie: płacisz w euro, a środki zwykle masz w złotych — przy zaliczkach rozłożonych na dwa lata ruch kursu bywa istotny.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2i",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2h",
+              "text": "Czego nie zlecać przy zakupie zdalnym",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2l",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2j",
+              "text": "Wyboru prawnika.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2k",
+              "text": " Musi być niezależny od sprzedającego i to Ty go zatrudniasz.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2o",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2m",
+              "text": "Odbioru przed ostatnią płatnością.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2n",
+              "text": " Zleć niezależny odbiór i porównaj lokal ze specyfikacją umowną. Ostatnia rata to Twój ostatni argument.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2r",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2p",
+              "text": "Samej decyzji.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2q",
+              "text": " Film nie zastąpi znajomości okolicy. Jeśli nie znasz rejonu, jeden wyjazd przed zakupem jest najtańszym ubezpieczeniem.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "imp4",
+      "_type": "projectsSectionBlock",
+      "title": "Zobacz nowe inwestycje na Cyprze",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "imp5",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt4",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Regularnie pracujemy z kupującymi zdalnie — i mówimy wprost, kiedy naszym zdaniem warto przyjechać i zobaczyć. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2",
+              "text": "Poproś o osobistą selekcję",
+              "_type": "span",
+              "marks": [
+                "pt1"
+              ]
+            },
+            {
+              "_key": "pt3",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt1",
+              "href": "/pl/contacts",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt6",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt5",
+              "text": "Ten przewodnik ma charakter ogólnoinformacyjny i odzwierciedla stan na podaną datę. Nie jest to porada prawna. Cyprus VIP Estates to agencja marketingu i doradztwa w nieruchomościach; pełnomocnictwo, analizę umowy i złożenie jej w Księdze Wieczystej powinien prowadzić niezależny licencjonowany cypryjski prawnik wybrany przez Ciebie.",
+              "_type": "span",
+              "marks": [
+                "em"
+              ]
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": null,
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:08.157Z",
+  "updatedAt": "2026-08-04T15:40:08.157Z"
+}

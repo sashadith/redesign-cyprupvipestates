@@ -1,0 +1,844 @@
+{
+  "id": "87949704-dce7-49af-9fe7-279c063ca991",
+  "sanityId": "local-cf177811-9657-4ed3-a6ff-cd4662ee2650",
+  "translationGroupId": "46e7ea01-5a64-4fdc-a302-ed61dcbfaf98",
+  "language": "ru",
+  "slug": "pokupka-nedvizhimosti-kipr-udalenno",
+  "title": "Покупка недвижимости на Кипре удалённо: доверенность, осмотр и приёмка",
+  "excerpt": "Сделку на Кипре можно провести полностью удалённо. Какие шаги проходят по доверенности, а что стоит оставить за собой.",
+  "status": "DRAFT",
+  "authorId": "1253fa77-5bd7-4243-9d64-da11cb2d8ae6",
+  "categoryId": null,
+  "previewImage": null,
+  "seo": {
+    "metaTitle": "Покупка недвижимости на Кипре удалённо: доверенность",
+    "metaDescription": "Как купить недвижимость на Кипре не приезжая: доверенность, онлайн-осмотр, подписание, платежи и приёмка, которую нельзя доверять посторонним."
+  },
+  "contentBlocks": [
+    {
+      "_key": "imp6",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Сделку по покупке недвижимости на Кипре можно провести, не приезжая на подписание. Это обычная практика и юридически ничем не осложнена — при условии, что доверенность составлена корректно и выдана правильному человеку.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "Ниже — какие шаги проходят удалённо, что не стоит передоверять и где удалённые сделки обычно спотыкаются.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt4",
+              "text": "Что можно сделать удалённо при покупке на Кипре",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "Фактически весь процесс:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pta",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "Резервация",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt9",
+              "text": " и оплата резервационного платежа",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptd",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptb",
+              "text": "Юридическая проверка",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptc",
+              "text": " вашим юристом — титул, обременения, разрешения",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptg",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pte",
+              "text": "Подписание договора",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptf",
+              "text": " по доверенности",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptj",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pth",
+              "text": "Депонирование договора",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pti",
+              "text": " в Земельном кадастре",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptm",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptk",
+              "text": "Платежи",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptl",
+              "text": " с вашего собственного счёта",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptp",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptn",
+              "text": "Разрешение Совета министров",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pto",
+              "text": ", если вы не гражданин ЕС — юрист подаёт его после подписания",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pts",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptq",
+              "text": "Передача права собственности",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptr",
+              "text": " в кадастре",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptw",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptt",
+              "text": "Чего передоверять ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptu",
+              "text": "не стоит",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptv",
+              "text": " — выбор юриста и приёмку готового объекта. Об этом ниже.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pty",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ptx",
+              "text": "Доверенность на покупку недвижимости на Кипре",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt12",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptz",
+              "text": "Доверенность оформляется у нотариуса и затем ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt10",
+              "text": "апостилируется",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt11",
+              "text": ", чтобы её признали на Кипре. Закладывайте одну-две недели в зависимости от нотариуса и ведомства. Документы на русском языке потребуют нотариального перевода — уточните у своего юриста, в какой стране его делать удобнее.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt14",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt13",
+              "text": "Три момента определяют, инструмент это или уязвимость:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt19",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt15",
+              "text": "Кому выдана.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt16",
+              "text": " Доверенность выдаётся ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt17",
+              "text": "вашему независимому юристу",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt18",
+              "text": " — не застройщику, не его юридической фирме и не посреднику. Если вам предлагают оформить её на сотрудника продавца, вам предлагают, чтобы обе стороны сделки представляла одна сторона.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1c",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1a",
+              "text": "Насколько широка.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1b",
+              "text": " Генеральная доверенность удобна и рискованна. Правильнее ограничить её конкретным объектом и конкретными действиями: подписать этот договор, задепонировать, оформить переход права.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1f",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1d",
+              "text": "На какой срок.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1e",
+              "text": " Ограничьте её ожидаемым сроком сделки с запасом, а не оставляйте бессрочной.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1h",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1g",
+              "text": "Онлайн-осмотр: что просить показать",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1j",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1i",
+              "text": "Продающее видео показывает то, что нравится. Вам нужно другое.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1k",
+              "text": "Непрерывный обход, а не нарезка.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1l",
+              "text": " От входа через все комнаты до террасы, без монтажа. Склейки скрывают ровно то, что вы хотите увидеть.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1p",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1n",
+              "text": "Сданный объект того же застройщика",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1o",
+              "text": ", переданный три-пять лет назад, а не шоурум. Новостройки хорошо выглядят у всех; вопрос в том, как они стареют.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1s",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1q",
+              "text": "Окружение, а не только квартира.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1r",
+              "text": " Вид с балкона вниз, соседняя застройка, стройка рядом, шум в разное время суток.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1v",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1t",
+              "text": "Съёмка в то время, когда вы собираетесь там жить.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1u",
+              "text": " Курортный объект в августе и в ноябре — разные объекты.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1x",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1w",
+              "text": "Если ваш юрист на острове, попросите снять его: у него нет интереса в закрытии сделки.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1z",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1y",
+              "text": "Защита, которая действует и при удалённой покупке",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt23",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt20",
+              "text": "Независимо от вашего присутствия подписанный договор нужно задепонировать в Земельном кадастре. По Закону о продаже недвижимого имущества (Specific Performance) 81(I)/2011 на это есть ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt21",
+              "text": "шесть месяцев с даты подписания",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt22",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt25",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt24",
+              "text": "Так возникает ваше исполнимое право на регистрацию — действующее, даже если у продавца потом начнутся проблемы или он продаст ту же квартиру дважды.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt27",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt26",
+              "text": "Возьмите письменное подтверждение, что депонирование выполнено. Бывает, что покупатели узнают спустя годы, полностью расплатившись, что договор так и не был подан.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt29",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt28",
+              "text": "Платежи из-за границы",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2c",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2a",
+              "text": "Платите со своего счёта.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2b",
+              "text": " Платежи от третьих лиц осложняют и саму сделку, и будущую продажу: банк будет прослеживать происхождение денег.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2f",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2d",
+              "text": "Подтверждайте банковские реквизиты голосом",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2e",
+              "text": ", по номеру, который у вас уже был, — не по номеру из письма. Сверка реквизитов перед крупным переводом занимает пять минут.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2i",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2g",
+              "text": "Храните все платёжные документы.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2h",
+              "text": " Они понадобятся дважды: для уменьшения налога на прирост капитала при продаже и для подтверждения происхождения средств.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2k",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2j",
+              "text": "Что нельзя передоверять при удалённой покупке",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2n",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2l",
+              "text": "Выбор юриста.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2m",
+              "text": " Он должен быть независим от продавца, и нанимать его должны вы сами.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2q",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2o",
+              "text": "Приёмку до последнего платежа.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2p",
+              "text": " Закажите независимую приёмку и сверьте готовый объект с договорной спецификацией. Последний взнос — ваш последний рычаг.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2t",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2r",
+              "text": "Само решение.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2s",
+              "text": " Видео не заменяет знания места. Если вы не знакомы с районом, одна поездка до сделки — самая дешёвая страховка из возможных.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "imp7",
+      "_type": "projectsSectionBlock",
+      "title": "Посмотреть новостройки на Кипре",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "imp8",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt4",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Мы регулярно работаем с покупателями, которые приобретают удалённо, — и прямо говорим, когда считаем, что стоит приехать посмотреть. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2",
+              "text": "Запросить персональную подборку",
+              "_type": "span",
+              "marks": [
+                "pt1"
+              ]
+            },
+            {
+              "_key": "pt3",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt1",
+              "href": "/ru/contacts",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt6",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt5",
+              "text": "Это руководство носит общий информационный характер и отражает положение дел на указанную дату. Это не юридическая консультация. Cyprus VIP Estates — агентство маркетинга и консалтинга в сфере недвижимости; доверенность, проверку договора и депонирование должен вести независимый лицензированный кипрский юрист, которого вы выбираете сами.",
+              "_type": "span",
+              "marks": [
+                "em"
+              ]
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": null,
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:08.157Z",
+  "updatedAt": "2026-08-04T15:40:08.157Z"
+}

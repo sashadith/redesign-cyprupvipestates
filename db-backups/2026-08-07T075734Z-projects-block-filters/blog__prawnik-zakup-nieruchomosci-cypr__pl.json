@@ -1,0 +1,938 @@
+{
+  "id": "9634504d-6256-4e7d-b075-0eb47786e429",
+  "sanityId": "local-918f8da8-a77c-472d-a0fd-91274debb910",
+  "translationGroupId": "9767848b-c9d4-49f0-83ce-4c1fe99348c0",
+  "language": "pl",
+  "slug": "prawnik-zakup-nieruchomosci-cypr",
+  "title": "Prawnik przy zakupie nieruchomości na Cyprze: jak go wybrać i co sprawdza",
+  "excerpt": "Każdy poradnik radzi niezależnego prawnika, ale mało kto tłumaczy, jak go wybrać i co on właściwie sprawdza. Ten tekst to wyjaśnia.",
+  "status": "DRAFT",
+  "authorId": "183674ff-601c-455a-8585-c0ae04b1d94e",
+  "categoryId": null,
+  "previewImage": null,
+  "seo": {
+    "metaTitle": "Prawnik przy zakupie nieruchomości na Cyprze: jak wybrać",
+    "metaDescription": "Jak wybrać niezależnego prawnika do zakupu nieruchomości na Cyprze, co obejmuje weryfikacja prawna i jakie pytania zadać przed podpisaniem umowy."
+  },
+  "contentBlocks": [
+    {
+      "_key": "impf",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Każdy poradnik o zakupie na Cyprze radzi zatrudnić niezależnego prawnika. Niewiele z nich wyjaśnia, jak go wybrać, co dostajesz za honorarium i po czym poznać, że praca została wykonana rzetelnie.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "Ten tekst wypełnia tę lukę. Prawnik to najważniejsze zabezpieczenie całej transakcji — ważniejsze niż wybór agencji i niż wybór dewelopera.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt4",
+              "text": "Brak neutralnego notariusza: co działa inaczej niż w Polsce",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "Różnica, która najczęściej umyka polskim kupującym.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt9",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "W Polsce przeniesienie własności następuje w formie aktu notarialnego, a notariusz jest zobowiązany do bezstronności — nie reprezentuje ani kupującego, ani sprzedającego, tylko czuwa nad zgodnością czynności z prawem.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptd",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pta",
+              "text": "Na Cyprze takiej postaci przy zakupie nieruchomości ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptb",
+              "text": "nie ma",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptc",
+              "text": ". Każda strona zatrudnia własnego prawnika, który reprezentuje wyłącznie jej interes. Nikt w tym procesie nie ma obowiązku dbać o Ciebie poza osobą, którą sam opłacasz.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pth",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pte",
+              "text": "Stąd najważniejszy wniosek: ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptf",
+              "text": "nie bierz prawnika poleconego przez sprzedającego",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptg",
+              "text": ". Propozycja pada zwykle uprzejmie — kancelaria „zna inwestycję\" i działa szybko. To właśnie problem: kancelaria pracująca stale dla dewelopera chroni relację biznesową, która przetrwa Twoją jednorazową transakcję.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptj",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pti",
+              "text": "Co sprawdza cypryjski prawnik przy zakupie",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptl",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptk",
+              "text": "Za to płacisz — i o to możesz potem zapytać:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptq",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptm",
+              "text": "Badanie tytułu.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptn",
+              "text": " Zaświadczenie z Księgi Wieczystej ze wskazaniem wpisanego właściciela, opisu prawnego nieruchomości oraz — o to chodzi — wszystkich ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pto",
+              "text": "obciążeń",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptp",
+              "text": ": hipotek, zastawów, wpisów, zakazów zbywania.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptt",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptr",
+              "text": "Zdolność sprzedającego do rozporządzania.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pts",
+              "text": " Że sprzedający ma prawo sprzedać; przy spółce — że podpisujący jest umocowany.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptw",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptu",
+              "text": "Pozwolenia na budowę i zgodność z projektem.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptv",
+              "text": " Że budynek został zatwierdzony i wybudowany zgodnie z projektem, a przy inwestycjach gotowych — że jest pozwolenie na użytkowanie.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptz",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptx",
+              "text": "Analiza i negocjacja umowy.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pty",
+              "text": " Standardowe umowy są korzystne dla sprzedającego. Wartość prawnika tkwi w tym, co zmieni.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt14",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt10",
+              "text": "Złożenie umowy w Księdze Wieczystej.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt11",
+              "text": " Zgodnie z ustawą 81(I)/2011 — w ciągu ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt12",
+              "text": "sześciu miesięcy od podpisania",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt13",
+              "text": ". Powstaje wtedy egzekwowalne prawo do wpisu, skuteczne nawet gdy sprzedający popadnie w kłopoty. To najcenniejsza pojedyncza czynność w całej transakcji.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt17",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt15",
+              "text": "Zaległości.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt16",
+              "text": " Podatki miejskie, kanalizacja, opłaty wspólnotowe, rachunki za media.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1a",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt18",
+              "text": "Przeniesienie własności",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt19",
+              "text": " w urzędzie.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1c",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1b",
+              "text": "Zasada pięciu dni, o której mało kto wie",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1e",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1d",
+              "text": "Przepis, którego przestrzeganie możesz sprawdzić sam.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1k",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1f",
+              "text": "Zgodnie z ustawą 132(I)/2023 ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1g",
+              "text": "sprzedający ma obowiązek",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1h",
+              "text": " dostarczyć zaświadczenie z Księgi Wieczystej datowane ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1i",
+              "text": "nie wcześniej niż pięć dni przed",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1j",
+              "text": " podpisaniem umowy. Za jego brak grozi mu kara administracyjna.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1o",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1l",
+              "text": "W praktyce oznacza to, że przysługuje Ci niemal aktualny obraz obciążeń w momencie, gdy się wiążesz. Poproś prawnika o potwierdzenie, że zaświadczenie jest, i ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1m",
+              "text": "sprawdź jego datę",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1n",
+              "text": ". Dokument sprzed trzech miesięcy to nie to samo.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1q",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1p",
+              "text": "Jak wybrać prawnika na Cyprze",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1t",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1r",
+              "text": "Ustal niezależność.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1s",
+              "text": " Zapytaj wprost, czy kancelaria prowadzi inne sprawy tego dewelopera.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1w",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1u",
+              "text": "Ustal zakres honorarium.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1v",
+              "text": " Zwykle jest to procent ceny plus VAT albo stawka ryczałtowa. Sprawdź, czy przeniesienie własności i złożenie umowy są wliczone.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1z",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1x",
+              "text": "Zapytaj, kto prowadzi sprawę.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1y",
+              "text": " W większych kancelariach osoba ze spotkania nie zawsze prowadzi Twoje akta.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt22",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt20",
+              "text": "Sprawdź język.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt21",
+              "text": " Potrzebujesz kogoś, kto wyjaśni umowę w języku, w którym podejmujesz decyzje, a nie tylko ją przetłumaczy.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt25",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt23",
+              "text": "Wymagaj pisemnego raportu",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt24",
+              "text": " z weryfikacji, nie ustnych zapewnień. Przy kredycie bank i tak go zażąda.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt28",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt26",
+              "text": "Sprawdź czas reakcji",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt27",
+              "text": " przed zatrudnieniem.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2a",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt29",
+              "text": "Pytania przed podpisaniem umowy z prawnikiem",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2c",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2b",
+              "text": "Czy prowadzicie inne sprawy tego sprzedającego lub dewelopera?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2e",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2d",
+              "text": "Co dokładnie obejmuje honorarium, a co jest płatne osobno?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2g",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2f",
+              "text": "Czy otrzymam pisemny raport z weryfikacji?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2i",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2h",
+              "text": "Kto prowadzi sprawę na co dzień?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2k",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2j",
+              "text": "Czy zaświadczenie z Księgi Wieczystej zostało uzyskane i z jakiej jest daty?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2m",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2l",
+              "text": "Kiedy umowa zostanie złożona i czy potwierdzicie to na piśmie?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2o",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2n",
+              "text": "Co stanie się z moją opłatą rezerwacyjną, jeśli weryfikacja wykaże problem?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2q",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2p",
+              "text": "Ostatnie pytanie waży więcej, niż się wydaje. Ustal przed jakąkolwiek wpłatą, co się dzieje, gdy weryfikacja zatrzyma zakup.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2s",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2r",
+              "text": "Czego prawnik nie obejmuje",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2v",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2t",
+              "text": "Nie wycenia nieruchomości.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2u",
+              "text": " Weryfikacja potwierdza, że możesz bezpiecznie ją nabyć, a nie że cena jest właściwa.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2y",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2w",
+              "text": "Nie bada stanu technicznego.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2x",
+              "text": " Do tego potrzebny jest rzeczoznawca.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt34",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2z",
+              "text": "Nie ocenia dewelopera komercyjnie.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt30",
+              "text": " Czy firma oddaje w terminie i wydaje akty własności, oceniasz Ty — zobacz ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt32",
+              "text": "jak sprawdzić dewelopera na Cyprze",
+              "_type": "span",
+              "marks": [
+                "pt31"
+              ]
+            },
+            {
+              "_key": "pt33",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt31",
+              "href": "/pl/blog/jak-sprawdzic-dewelopera-na-cyprze",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt37",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt35",
+              "text": "Nie zastępuje doradcy podatkowego.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt36",
+              "text": " Cypryjskie i polskie opodatkowanie zazębiają się i wymagają osobnej porady.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "impg",
+      "_type": "projectsSectionBlock",
+      "title": "Zobacz nowe inwestycje na Cyprze",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "imph",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt4",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Możemy wskazać niezależnych prawników pracujących na co dzień z zagranicznymi kupującymi. Nie pobieramy za to prowizji — i powiedzielibyśmy, gdyby było inaczej. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2",
+              "text": "Poproś o osobistą selekcję",
+              "_type": "span",
+              "marks": [
+                "pt1"
+              ]
+            },
+            {
+              "_key": "pt3",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt1",
+              "href": "/pl/contacts",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt6",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt5",
+              "text": "Ten przewodnik ma charakter ogólnoinformacyjny i odzwierciedla stan na podaną datę. Nie jest to porada prawna, a my nie jesteśmy prawnikami. Cyprus VIP Estates to agencja marketingu i doradztwa w nieruchomościach; całą obsługę prawną powinien prowadzić niezależny licencjonowany cypryjski prawnik, którego zatrudniasz samodzielnie.",
+              "_type": "span",
+              "marks": [
+                "em"
+              ]
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": null,
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:08.733Z",
+  "updatedAt": "2026-08-04T15:40:08.733Z"
+}

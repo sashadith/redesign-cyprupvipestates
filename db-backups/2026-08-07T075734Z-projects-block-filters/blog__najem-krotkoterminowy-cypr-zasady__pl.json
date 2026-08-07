@@ -1,0 +1,1194 @@
+{
+  "id": "7e4e1ec0-2e2c-4124-83c7-fdb71f109e5d",
+  "sanityId": "local-dd870c5b-cb88-45d0-a88e-5ce00a4db547",
+  "translationGroupId": "9ae09e23-1d86-4785-8a4c-b47c21c0c6b4",
+  "language": "pl",
+  "slug": "najem-krotkoterminowy-cypr-zasady",
+  "title": "Najem krótkoterminowy na Cyprze: rejestracja, podatki i kary",
+  "excerpt": "Wynajem mieszkania na Cyprze przez Airbnb wymaga numeru rejestracyjnego. Co trzeba zrobić, żeby go uzyskać, i co grozi za jego brak.",
+  "status": "DRAFT",
+  "authorId": "183674ff-601c-455a-8585-c0ae04b1d94e",
+  "categoryId": null,
+  "previewImage": null,
+  "seo": {
+    "metaTitle": "Airbnb na Cyprze: rejestracja i zasady dla właścicieli",
+    "metaDescription": "Najem krótkoterminowy na Cyprze wymaga rejestracji w ministerstwie turystyki. Wymogi, podatki, zgłaszanie gości i kary sięgające 5 000 € za naruszenia."
+  },
+  "contentBlocks": [
+    {
+      "_key": "imp3z",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Jeśli kupujesz nieruchomość na Cyprze i planujesz wynajmować ją przez Airbnb, Booking.com albo podobną platformę, najpierw musisz ją zarejestrować. To nie formalność: wynajem bez numeru rejestracyjnego jest przestępstwem, a kontrola w ostatnich dwóch latach wyraźnie się zaostrzyła.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "Sama procedura jest do przejścia, gdy wiadomo, czego wymaga. Poniżej: kto ma obowiązek rejestracji, jakie dokumenty są potrzebne, jakie podatki powstają i co grozi za naruszenia.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt4",
+              "text": "Kto musi zarejestrować najem krótkoterminowy na Cyprze",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt9",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "Podstawą jest ustawa regulująca hotele i zakwaterowanie turystyczne w brzmieniu z 2020 roku. Zgodnie z nią każda nieruchomość wynajmowana turystom ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt7",
+              "text": "na mniej niż 90 kolejnych dni",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt8",
+              "text": " musi być wpisana do rejestru turystycznych obiektów samoobsługowych.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptd",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pta",
+              "text": "Rejestr prowadzi ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptb",
+              "text": "wiceministerstwo turystyki",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptc",
+              "text": ", które przejęło zadania dawnej Cypryjskiej Organizacji Turystycznej.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptf",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pte",
+              "text": "Rejestr obejmuje trzy kategorie:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pti",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptg",
+              "text": "Umeblowane wille",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pth",
+              "text": " — samodzielne obiekty z prywatnym wejściem i wyłącznym korzystaniem z działki",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptl",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptj",
+              "text": "Umeblowane domy",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptk",
+              "text": " — domy w zabudowie szeregowej lub w osiedlu, z własnym albo wspólnym wejściem",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pto",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptm",
+              "text": "Mieszkania",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptn",
+              "text": " — wyodrębnione, samodzielne lokale w budynku",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pts",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptp",
+              "text": "Nadany ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptq",
+              "text": "numer rejestracyjny musi być widoczny w każdym ogłoszeniu",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptr",
+              "text": " — na Airbnb, Booking.com i wszędzie indziej.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptu",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ptt",
+              "text": "Wymagania do uzyskania licencji na najem krótkoterminowy",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptw",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptv",
+              "text": "Do wniosku potrzebne będą:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptz",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptx",
+              "text": "Rejestracja podatkowa",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pty",
+              "text": " na Cyprze — numer identyfikacji podatkowej oraz numer VAT, jeśli jest wymagany",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt12",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt10",
+              "text": "Ważne ubezpieczenie nieruchomości",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt11",
+              "text": ", co najmniej od ognia i zdarzeń losowych",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt15",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt13",
+              "text": "Pozwolenie na użytkowanie",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt14",
+              "text": " (certificate of occupancy)",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt17",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt16",
+              "text": "Zgodność z wymogami bezpieczeństwa i sanitarnymi",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1a",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt18",
+              "text": "Dane obiektu",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt19",
+              "text": ": adres, liczba sypialni i łazienek, maksymalna liczba gości",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1d",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1b",
+              "text": "Oświadczenie pod przysięgą",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1c",
+              "text": " o spełnieniu minimalnych wymogów technicznych i operacyjnych",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1g",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1e",
+              "text": "Opłata roczna",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1f",
+              "text": " na rzecz ministerstwa",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1i",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1h",
+              "text": "Zarejestrować się mogą zarówno osoby fizyczne, jak i spółki. Propozycję ograniczenia liczby obiektów przypadających na jednego właściciela odrzucono w 2025 roku, więc obecnie limitu nie ma.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1l",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1j",
+              "text": "Jeśli kupujesz na etapie budowy:",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1k",
+              "text": " rejestracja wymaga pozwolenia na użytkowanie. Uwzględnij tę kolejność, jeśli chcesz wynajmować od razu po odbiorze.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1n",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1m",
+              "text": "Kary za wynajem bez rejestracji na Cyprze",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1p",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1o",
+              "text": "Sankcje nie są symboliczne.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1x",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1q",
+              "text": "Za ogłaszanie lub prowadzenie najmu krótkoterminowego bez rejestracji przewidziano ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1r",
+              "text": "kary grzywny do 5 000 €",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1s",
+              "text": " oraz (lub) ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1t",
+              "text": "karę pozbawienia wolności do roku",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1u",
+              "text": ". Jeśli naruszenie trwa po wyroku, mogą dochodzić grzywny rzędu ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1v",
+              "text": "200 € za każdy dzień",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1w",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt21",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1y",
+              "text": "Jest też druga strona — platformy. Airbnb i Booking.com mają obowiązek współdziałać w egzekwowaniu przepisów: ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1z",
+              "text": "niezarejestrowane ogłoszenia są usuwane",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt20",
+              "text": ", a samym platformom grożą sankcje, jeśli tego nie robią.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt23",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt22",
+              "text": "Kontrola jest odczuwalna w praktyce. Od rozpoczęcia inspekcji wpłynęły skargi na nielicencjonowanych wynajmujących, a urząd skarbowy prowadzi ukierunkowane kontrole VAT, podatku dochodowego, składki zdrowotnej i opłaty obronnej. Ministerstwo wysyła co dwa tygodnie przypomnienia o zbliżającym się wygaśnięciu rejestracji — co pokazuje, jak ściśle system jest dziś prowadzony.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt25",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt24",
+              "text": "Podatki od najmu krótkoterminowego na Cyprze",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt27",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt26",
+              "text": "Rejestracja to jeden obowiązek, podatki drugi.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2e",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt28",
+              "text": "VAT.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt29",
+              "text": " Najem krótkoterminowy na cele turystyczne objęty jest ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2a",
+              "text": "obniżoną stawką 9 %",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2b",
+              "text": ", gdy wynajmujesz bezpośrednio gościowi. Rejestracja VAT staje się obowiązkowa po przekroczeniu obrotu około ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2c",
+              "text": "15 600 €",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2d",
+              "text": " rocznie z tej działalności.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2h",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2f",
+              "text": "Podatek dochodowy.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2g",
+              "text": " Dochód z najmu cypryjskiej nieruchomości podlega opodatkowaniu na Cyprze, również u nierezydentów. Reforma podatkowa z 2026 roku podniosła kwotę wolną, ale stawki powyżej niej były jeszcze dopracowywane — aktualną skalę potwierdź u doradcy podatkowego, zamiast opierać się na wcześniejszych publikacjach.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2i",
+              "text": "Opłata obronna.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2j",
+              "text": " Reforma podatkowa z 2026 roku ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2k",
+              "text": "zniosła opłatę obronną od dochodu z najmu",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2l",
+              "text": ". Wcześniej wynosiła 3 % i dotyczyła wyłącznie osób będących jednocześnie rezydentami podatkowymi Cypru i tam domicylowanych — nierezydenci i tak byli poza jej zakresem. Starsze poradniki, które nadal ją wymieniają, pochodzą sprzed reformy.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2p",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2n",
+              "text": "Składka na system zdrowotny (GHS).",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2o",
+              "text": " Naliczana od dochodu z najmu. Niewielka pozycja, którą kalkulacje rentowności regularnie pomijają.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2r",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2q",
+              "text": "Dochód ten trzeba zwykle wykazać także w Polsce. O tym, jak układa się to między dwoma krajami, decyduje umowa o unikaniu podwójnego opodatkowania — zasięgnij porady po obu stronach.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2t",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2s",
+              "text": "Zgłaszanie gości w systemie Xenia w ciągu 24 godzin",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2x",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2u",
+              "text": "Obowiązek bieżący, o którym wielu właścicieli dowiaduje się późno: dane gości trzeba przekazać przez państwowy system ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2v",
+              "text": "Xenia w ciągu 24 godzin od przyjazdu",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2w",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2z",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2y",
+              "text": "Przy zarządzaniu z Polski to najbardziej kłopotliwy element — przy każdym zameldowaniu ktoś musi zadziałać w ciągu doby. Firmy zarządzające robią to standardowo, i to jeden z głównych powodów, dla których samodzielne prowadzenie najmu na odległość jest tu mało realne. Połączenia lotnicze z Polski są w dużej mierze sezonowe, więc „doskoczę i załatwię\" poza sezonem nie zadziała.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt31",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt30",
+              "text": "Co zmienia nowe rozporządzenie UE dla właścicieli na Cyprze",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt35",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt32",
+              "text": "Od ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt33",
+              "text": "20 maja 2026 roku",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt34",
+              "text": " działa jednolita cyfrowa baza UE obejmująca zarejestrowany najem krótkoterminowy we wszystkich państwach członkowskich, w tym na Cyprze. Podstawą jest rozporządzenie UE 2024/1028, a Cypr znalazł się wśród pierwszych krajów, które je wdrożyły.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt37",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt36",
+              "text": "W praktyce oznacza to więcej wymiany danych między platformami a urzędami i znacznie mniejszą szansę, że niezarejestrowany najem pozostanie niezauważony. Jeśli odkładałeś rejestrację, to już nie ma sensu.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt39",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt38",
+              "text": "Najem krótkoterminowy czy długoterminowy na Cyprze: co się bardziej opłaca",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3b",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3a",
+              "text": "Po liście obowiązków nasuwa się pytanie, czy warto.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3e",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3c",
+              "text": "Za krótkoterminowym",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3d",
+              "text": " przemawia wyższa rentowność brutto w lokalizacjach turystycznych. Przy dobrze prowadzonych obiektach w pierwszej linii podaje się 6–10 % brutto rocznie — wyraźnie więcej niż daje mieszkanie w najmie długoterminowym.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3h",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3f",
+              "text": "Przeciw",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3g",
+              "text": " przemawia nakład pracy: rejestracja, opłata roczna, zgłoszenie gości w ciągu doby, sprzątanie między pobytami, VAT po przekroczeniu progu oraz firma zarządzająca, której wynagrodzenie zjada istotną część tej wyższej rentowności. Do tego dochodzi to, że przychód masz w euro, a koszty życia w złotych.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3k",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3i",
+              "text": "Najem długoterminowy",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3j",
+              "text": " jest znacznie prostszy: bez rejestracji w rejestrze turystycznym, bez zgłaszania gości, jeden najemca zamiast pięćdziesięciu. W Limassol rentowność brutto przy mieszkaniach wynosi około 5,3–6 % dzięki całorocznemu popytowi.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3p",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3l",
+              "text": "Krótko: najem krótkoterminowy to mała firma, długoterminowy to inwestycja. Więcej o porównaniu rentowności w tekście ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt3n",
+              "text": "mieszkanie czy willa na Cyprze",
+              "_type": "span",
+              "marks": [
+                "pt3m"
+              ]
+            },
+            {
+              "_key": "pt3o",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt3m",
+              "href": "/pl/blog/mieszkanie-czy-willa-na-cyprze",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt3r",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt3q",
+              "text": "Jak zarządzać najmem krótkoterminowym na Cyprze z Polski",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3t",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3s",
+              "text": "Jeśli nie mieszkasz na Cyprze, potrzebujesz kogoś na miejscu. Ustal konkretnie:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3v",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3u",
+              "text": "Kto zgłasza gości w ciągu 24 godzin?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3x",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3w",
+              "text": "Kto zajmuje się sprzątaniem i przekazaniem kluczy między pobytami?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3z",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3y",
+              "text": "Kto zareaguje tego samego dnia, gdy w sierpniu padnie klimatyzacja?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt41",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt40",
+              "text": "Kto pilnuje terminu przedłużenia rejestracji?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt43",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt42",
+              "text": "Ile wynosi wynagrodzenie — jako procent od obrotu — i przy jakim obłożeniu się zwraca?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt45",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt44",
+              "text": "Wlicz te koszty do rentowności, zanim uznasz 6–10 % za swoją liczbę. To wartość brutto, przed zarządzaniem.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "imp40",
+      "_type": "projectsSectionBlock",
+      "title": "Zobacz nieruchomości na Cyprze w lokalizacjach turystycznych",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "imp41",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt4",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Jeśli najem krótkoterminowy jest częścią planu, decyduje lokalizacja — a nie każda inwestycja w ogóle na niego pozwala. Napisz, co planujesz, a pokażemy nieruchomości, przy których to realnie działa. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2",
+              "text": "Poproś o osobistą selekcję",
+              "_type": "span",
+              "marks": [
+                "pt1"
+              ]
+            },
+            {
+              "_key": "pt3",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt1",
+              "href": "/pl/contacts",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt6",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt5",
+              "text": "Ten przewodnik ma charakter ogólnoinformacyjny i odzwierciedla stan na podaną datę; przepisy o najmie krótkoterminowym często się zmieniają. Nie jest to porada prawna ani podatkowa. Cyprus VIP Estates to agencja marketingu i doradztwa w nieruchomościach; rejestrację, zgłoszenie podatkowe i bieżącą zgodność należy prowadzić z niezależnym licencjonowanym cypryjskim prawnikiem i doradcą podatkowym.",
+              "_type": "span",
+              "marks": [
+                "em"
+              ]
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": null,
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:10.199Z",
+  "updatedAt": "2026-08-04T15:40:10.199Z"
+}

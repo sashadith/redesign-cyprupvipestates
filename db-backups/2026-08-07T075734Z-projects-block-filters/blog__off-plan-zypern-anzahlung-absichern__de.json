@@ -1,0 +1,1226 @@
+{
+  "id": "412cd97e-fd71-49fd-97e2-c333744780f5",
+  "sanityId": "local-7f01239c-ec52-43ba-b157-ec9860041f2a",
+  "translationGroupId": "6f8b764f-1949-4a0a-bbb5-bfaefadd5a54",
+  "language": "de",
+  "slug": "off-plan-zypern-anzahlung-absichern",
+  "title": "Off-Plan-Kauf auf Zypern: Wie Ihre Anzahlungen abgesichert werden",
+  "excerpt": "Beim Kauf vom Plan zahlen Sie für etwas, das noch nicht existiert. Welche Sicherungen es auf Zypern gibt, welche Pflicht sind und welche Sie verhandeln müssen.",
+  "status": "DRAFT",
+  "authorId": "5a63a569-3b41-4157-ae07-b3daec063833",
+  "categoryId": null,
+  "previewImage": null,
+  "seo": {
+    "metaTitle": "Anzahlung beim Off-Plan-Kauf auf Zypern absichern",
+    "metaDescription": "Off-Plan auf Zypern: Wie Raten, Bankgarantien, Treuhandkonten und die Vertragshinterlegung Ihre Anzahlungen schützen — und welche Klauseln Sie verhandeln sollten."
+  },
+  "contentBlocks": [
+    {
+      "_key": "impo",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Beim Kauf vom Plan zahlen Sie in Raten für eine Immobilie, die es noch nicht gibt. Zwischen der ersten Zahlung und der Schlüsselübergabe liegen häufig zwei Jahre — und in dieser Zeit ist Ihr Geld beim Bauträger, nicht bei Ihnen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "Die zentrale Tatsache vorweg, weil sie in Verkaufsgesprächen selten fällt: ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt3",
+              "text": "Zypern schreibt bei Off-Plan-Käufen keine Erfüllungsgarantie vor.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt4",
+              "text": " Anders als in Deutschland, wo die Makler- und Bauträgerverordnung Ratenzahlung und Absicherung regelt, müssen Sie die Sicherungen hier vertraglich durchsetzen. Sie sind verfügbar — aber Sie bekommen sie nicht automatisch.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "Dieser Leitfaden zeigt, welche Mechanismen es gibt, welcher davon der wichtigste ist und welche Klauseln Sie verhandeln sollten, bevor Sie unterschreiben.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt9",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "Zahlungsplan beim Off-Plan-Kauf auf Zypern: Wie die Raten verteilt sind",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptb",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pta",
+              "text": "Der marktübliche Aufbau sieht in etwa so aus:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pte",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptc",
+              "text": "20 bis 30 %",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptd",
+              "text": " bei Vertragsunterzeichnung",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pth",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptf",
+              "text": "40 bis 50 %",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptg",
+              "text": " in Raten während der Bauphase",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptk",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pti",
+              "text": "20 bis 30 %",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptj",
+              "text": " bei Fertigstellung und Übergabe",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pto",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptl",
+              "text": "Der Preisvorteil gegenüber dem fertigen Objekt liegt typischerweise bei ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptm",
+              "text": "10 bis 20 %",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptn",
+              "text": " — das ist die Gegenleistung dafür, dass Sie das Projekt mitfinanzieren und das Fertigstellungsrisiko mittragen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptq",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ptp",
+              "text": "Warum Raten an Baufortschritt und nicht an Kalenderdaten gekoppelt sein müssen",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pts",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptr",
+              "text": "Das ist die einzelne Vertragsfrage mit dem größten Effekt, und sie wird oft übersehen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptv",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptt",
+              "text": "An Baufortschritt gekoppelt",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptu",
+              "text": " heißt: Sie zahlen, wenn Rohbau, Dach oder Innenausbau nachweislich erreicht sind. Verzögert sich der Bau, verzögert sich Ihre Zahlung mit.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pty",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptw",
+              "text": "An Kalenderdaten gekoppelt",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptx",
+              "text": " heißt: Sie zahlen zu festen Terminen, unabhängig davon, ob gebaut wurde. Damit finanzieren Sie im Zweifel Stillstand vor.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt12",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptz",
+              "text": "Bestehen Sie auf der ersten Variante, und lassen Sie im Vertrag festhalten, ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt10",
+              "text": "wer den Baufortschritt bestätigt",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt11",
+              "text": " — idealerweise ein unabhängiger Gutachter, nicht der Bauträger selbst.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt14",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt13",
+              "text": "Bankgarantie und Performance Bond: nicht vorgeschrieben, aber verhandelbar",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1a",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt15",
+              "text": "Eine ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt16",
+              "text": "Bankgarantie",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt17",
+              "text": " oder ein ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt18",
+              "text": "versicherungsgestützter Performance Bond",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt19",
+              "text": " deckt Ihre Anzahlung und die Bauraten ab, bis das Eigentum übertragen ist. Wird das Projekt nicht fertiggestellt, greift die Garantie.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1e",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1b",
+              "text": "In anderen EU-Staaten ist so etwas Standard. Auf Zypern ist es ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1c",
+              "text": "nicht gesetzlich vorgeschrieben",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1d",
+              "text": " — Sie müssen es also aktiv verlangen und in den Vertrag aufnehmen lassen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1g",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1f",
+              "text": "Hier zeigt sich ein realer Unterschied zwischen großen und kleinen Bauträgern: Etablierte Unternehmen mit Bankbeziehungen können eine Garantie stellen, kleinere häufig nicht. Ein Bauträger, der die Frage abwehrt, beantwortet damit indirekt auch die Frage nach seiner Bonität.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1i",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1h",
+              "text": "Treuhandkonto (Escrow) beim Immobilienkauf auf Zypern",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1k",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1j",
+              "text": "Beim Treuhandmodell fließen Ihre Zahlungen nicht direkt an den Bauträger, sondern auf ein Konto eines Dritten und werden erst bei Erreichen definierter Meilensteine freigegeben.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1o",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1l",
+              "text": "Auch das ist auf Zypern ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1m",
+              "text": "nicht verpflichtend",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1n",
+              "text": ", wird aber von einem Teil der seriösen Bauträger angeboten. Wenn es angeboten wird, klären Sie:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1q",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1p",
+              "text": "Wer führt das Treuhandkonto — eine Bank oder eine Anwaltskanzlei?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1s",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1r",
+              "text": "Nach welchen Kriterien wird freigegeben, und wer stellt das Erreichen fest?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1u",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1t",
+              "text": "Was passiert mit dem Guthaben, wenn das Projekt scheitert?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1w",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1v",
+              "text": "Vertragshinterlegung beim Grundbuchamt: der wichtigste Schutz",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1y",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1x",
+              "text": "Wenn Sie sich nur einen Punkt merken, dann diesen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt24",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1z",
+              "text": "Der unterzeichnete Kaufvertrag muss beim ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt20",
+              "text": "Department of Lands and Surveys hinterlegt",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt21",
+              "text": " werden. Dadurch entsteht der ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt22",
+              "text": "Anspruch auf Erfüllung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt23",
+              "text": " (Specific Performance): Ihr durchsetzbares Recht, die Immobilie auf Ihren Namen eintragen zu lassen — auch dann, wenn der Bauträger später in Schwierigkeiten gerät oder versucht, dieselbe Einheit ein zweites Mal zu verkaufen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt28",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt25",
+              "text": "Die Hinterlegung ist ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt26",
+              "text": "fristgebunden",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt27",
+              "text": ". Die Frist wird in der Praxis unterschiedlich angegeben — lassen Sie sich von Ihrem Anwalt die aktuell geltende Frist nennen und die Erledigung schriftlich bestätigen. Versäumt, ist der Schutz weg, und er lässt sich nicht nachholen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2a",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt29",
+              "text": "Diese eine Handlung ist wertvoller als alle Zusicherungen im Verkaufsgespräch zusammen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2c",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2b",
+              "text": "Grundschuld des Bauträgers: warum Sie eine Freigabeerklärung brauchen",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2e",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2d",
+              "text": "Hat der Bauträger das Grundstück zur Finanzierung beliehen, liegt eine Grundschuld darauf — und Ihre Einheit lässt sich daraus nicht herauslösen, solange sie nicht freigegeben ist.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2g",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2f",
+              "text": "Zwei Dinge gehören deshalb geklärt:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2j",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2h",
+              "text": "Eine Freigabeerklärung der Bank",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2i",
+              "text": " (Waiver Letter) für Ihre Einheit, oder eine vertragliche Verpflichtung mit Zeitplan zur Löschung vor Übergabe.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2k",
+              "text": "Zahlungen über ein Treuhandkonto",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2l",
+              "text": ", damit Ihre Raten nachweislich zur Tilgung des betreffenden Anteils verwendet werden und nicht anderweitig.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2r",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2n",
+              "text": "Ohne das eine oder andere tragen Sie ein Risiko, das Sie nicht kontrollieren können. Wie Sie die Bonität eines Bauträgers davor einschätzen, behandeln wir in ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2p",
+              "text": "Bauträger auf Zypern prüfen",
+              "_type": "span",
+              "marks": [
+                "pt2o"
+              ]
+            },
+            {
+              "_key": "pt2q",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt2o",
+              "href": "/de/blog/bautraeger-zypern-pruefen",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt2t",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2s",
+              "text": "Vertragsklauseln, die Sie beim Off-Plan-Kauf verhandeln sollten",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2v",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2u",
+              "text": "Standardverträge von Bauträgern sind erfahrungsgemäß verkäuferfreundlich. Diese Punkte gehören auf die Verhandlungsliste:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2y",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2w",
+              "text": "Fester Fertigstellungstermin",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2x",
+              "text": " plus ein Endtermin, nach dessen Überschreitung Sie zurücktreten und die Anzahlung vollständig zurückerhalten",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt31",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2z",
+              "text": "Vertragsstrafe",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt30",
+              "text": " für Verzug über eine definierte Karenzzeit hinaus",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt34",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt32",
+              "text": "Bankgarantie oder Performance Bond",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt33",
+              "text": " über Anzahlung und Raten bis zur Eigentumsübertragung",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt37",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt35",
+              "text": "Gewährleistungsfrist",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt36",
+              "text": " von mindestens 24 Monaten ab Übergabe, ausdrücklich einschließlich Statik und Abdichtung",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3a",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt38",
+              "text": "Abtretungsrecht",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt39",
+              "text": ": die Möglichkeit, den Vertrag vor Übergabe an einen Dritten zu übertragen",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3d",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3b",
+              "text": "Zusicherung zur ermäßigten Mehrwertsteuer",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3c",
+              "text": ", wenn Sie den Satz von 5 % beanspruchen wollen",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3g",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3e",
+              "text": "Erklärung zur Lastenfreiheit",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3f",
+              "text": " oder eine verbindliche Verpflichtung samt Zeitplan zur Löschung",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3j",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3h",
+              "text": "Spezifikation der Materialien und Ausstattung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3i",
+              "text": ", mit Rechtsfolgen bei Abweichung",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3l",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3k",
+              "text": "Der vorletzte und der letzte Punkt sind die, an denen später am häufigsten gestritten wird: Wenn im Vertrag nur „hochwertige Ausstattung\" steht, haben Sie im Streitfall nichts in der Hand.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3n",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt3m",
+              "text": "Was passiert bei Insolvenz des Bauträgers",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3p",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3o",
+              "text": "Der Fall, wegen dessen die ganze Absicherung existiert.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3s",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3q",
+              "text": "Mit hinterlegtem Vertrag",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3r",
+              "text": " haben Sie einen durchsetzbaren Anspruch auf Eintragung — Ihre Position ist deutlich stärker als die eines reinen Gläubigers.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3v",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3t",
+              "text": "Mit Bankgarantie",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3u",
+              "text": " sind Ihre geleisteten Zahlungen abgedeckt.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3y",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3w",
+              "text": "Ohne beides",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3x",
+              "text": " stehen Sie in der Reihe der Gläubiger, und die Erfahrung zeigt, dass solche Verfahren Jahre dauern und selten vollständig befriedigt werden.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt40",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3z",
+              "text": "Ergänzend: Zypern hat gesetzliche Abhilferegelungen für Käufer ohne Eigentumsurkunde geschaffen. Deren rechtlicher Status war zuletzt Gegenstand verfassungsrechtlicher Auseinandersetzungen — verlassen Sie sich also nicht darauf als Ihr Sicherheitsnetz, sondern klären Sie mit Ihrem Anwalt den aktuellen Stand.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt42",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt41",
+              "text": "Abnahme vor der Schlusszahlung",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt44",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt43",
+              "text": "Die letzte Rate ist Ihr letztes Druckmittel — geben Sie sie nicht aus der Hand, bevor Sie geprüft haben.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt48",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt45",
+              "text": "Beauftragen Sie eine ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt46",
+              "text": "unabhängige Abnahme",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt47",
+              "text": " und vergleichen Sie das fertige Objekt mit der vertraglich vereinbarten Spezifikation: Materialien, Ausstattung, Maße, Funktion der Technik. Mängel gehören schriftlich festgehalten und vor der Schlusszahlung behoben.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt4a",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt49",
+              "text": "Wenn Sie aus Deutschland kaufen, lassen Sie die Abnahme von jemandem durchführen, der in Ihrem Interesse handelt — nicht vom Bauträger und nicht von dessen Partnern.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "impp",
+      "_type": "projectsSectionBlock",
+      "title": "Neubauprojekte auf Zypern ansehen",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "impq",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt4",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Wir vermitteln ausschließlich Neubauten lizenzierter zyprischer Bauträger zu Bauträgerpreisen. Zu jedem Projekt sagen wir Ihnen, welche Sicherungen der jeweilige Bauträger üblicherweise akzeptiert — und wo erfahrungsgemäß nichts zu verhandeln ist. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2",
+              "text": "Persönliche Auswahl anfordern",
+              "_type": "span",
+              "marks": [
+                "pt1"
+              ]
+            },
+            {
+              "_key": "pt3",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt1",
+              "href": "/de/contacts",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt6",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt5",
+              "text": "Dieser Leitfaden dient der allgemeinen Information und gibt den Stand zum genannten Datum wieder; die Rechtslage zu Off-Plan-Käufen entwickelt sich. Es handelt sich nicht um Rechtsberatung. Cyprus VIP Estates ist eine Immobilien-Marketing- und Beratungsagentur; Vertragsgestaltung, Fristen, Hinterlegung und Garantien gehören in die Hände eines unabhängigen, von Ihnen selbst gewählten lizenzierten zyprischen Anwalts.",
+              "_type": "span",
+              "marks": [
+                "em"
+              ]
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": null,
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:09.315Z",
+  "updatedAt": "2026-08-04T15:40:09.315Z"
+}

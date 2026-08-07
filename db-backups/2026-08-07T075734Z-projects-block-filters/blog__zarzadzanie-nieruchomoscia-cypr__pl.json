@@ -1,0 +1,1256 @@
+{
+  "id": "5f4079db-57c9-4ecc-8397-05dbfcf20d09",
+  "sanityId": "local-2c078e17-4a1e-49b7-83f7-f1c162be665e",
+  "translationGroupId": "483ca223-6dc5-4c0f-affe-f20d22ca1203",
+  "language": "pl",
+  "slug": "zarzadzanie-nieruchomoscia-cypr",
+  "title": "Zarządzanie nieruchomością na Cyprze z Polski: koszty, firmy i obowiązki",
+  "excerpt": "Jeśli masz nieruchomość na Cyprze, a mieszkasz w Polsce, potrzebujesz kogoś na miejscu. Ile kosztuje zarządzanie, co obejmuje i jak wybrać firmę.",
+  "status": "PUBLISHED",
+  "authorId": "183674ff-601c-455a-8585-c0ae04b1d94e",
+  "categoryId": "3cb2faaf-dace-4881-a7ce-ca3b1406b35c",
+  "previewImage": {
+    "alt": "management-fee-comparison.png",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-d0a3a5311d26f8fde8cecb4e858282e2915fcd11-1732x908-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "Zarządzanie nieruchomością na Cyprze: koszty i zakres",
+    "metaDescription": "Nieruchomość na Cyprze z Polski: prowizje zarządcy 8–30%, koszty przy pustostanie, obowiązki właściciela i co ustalić w umowie z firmą zarządzającą."
+  },
+  "contentBlocks": [
+    {
+      "_key": "imp1a",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "O zakupie pisze się wszędzie. O tym, co dzieje się później — znacznie rzadziej. A dla właściciela mieszkającego w innym kraju to właśnie ta część decyduje, czy zakup okazał się trafiony: kto zajmuje się nieruchomością, gdy Ciebie tam nie ma.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "Poniżej: co robi firma zarządzająca, ile to kosztuje, jakie obowiązki trwają nawet przy pustej nieruchomości i jak odróżnić dobrego wykonawcę od słabego.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt4",
+              "text": "Co robi firma zarządzająca nieruchomością na Cyprze",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "Zakres usług mocno zależy od tego, czy wynajmujesz, i od tej decyzji wszystko się zaczyna.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pta",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "Bez wynajmu",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt9",
+              "text": " chodzi o utrzymanie i obecność: okresowe przeglądy, serwis basenu, nawadnianie i pielęgnacja ogrodu, odbiór i opłacanie rachunków, przechowywanie kluczy, kontakt z zarządem osiedla oraz ktoś, kto przyjedzie, gdy w sierpniu padnie klimatyzacja.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptd",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptb",
+              "text": "Przy najmie długoterminowym",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptc",
+              "text": " dochodzą: poszukiwanie i weryfikacja najemcy, umowa, pobieranie czynszu, rozliczanie mediów, przekazania lokalu i organizacja napraw.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptj",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pte",
+              "text": "Przy najmie krótkoterminowym",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptf",
+              "text": " staje się to działalnością operacyjną: ogłoszenia na platformach, ustalanie cen, całodobowa komunikacja z gośćmi, sprzątanie między pobytami, pranie, przekazanie kluczy i zgłoszenie danych gości przez państwowy system Xenia w ciągu 24 godzin od przyjazdu. Stronę regulacyjną omawiamy w tekście ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pth",
+              "text": "najem krótkoterminowy na Cyprze",
+              "_type": "span",
+              "marks": [
+                "ptg"
+              ]
+            },
+            {
+              "_key": "pti",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "ptg",
+              "href": "/pl/blog/najem-krotkoterminowy-cypr-zasady",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "ptl",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ptk",
+              "text": "Prowizje za zarządzanie nieruchomością na Cyprze",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptn",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptm",
+              "text": "Rozpiętość wynika z nakładu pracy.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "imp1b",
+      "rows": [
+        {
+          "_key": "imp1c",
+          "_type": "tableRow",
+          "cells": [
+            "Najem długoterminowy, procent",
+            "8–12 % czynszu (wartości skrajne 4–15 %)"
+          ]
+        },
+        {
+          "_key": "imp1d",
+          "_type": "tableRow",
+          "cells": [
+            "Najem długoterminowy, stała opłata",
+            "50–200 € miesięcznie zależnie od metrażu"
+          ]
+        },
+        {
+          "_key": "imp1e",
+          "_type": "tableRow",
+          "cells": [
+            "Najem krótkoterminowy",
+            "15–30 % przychodu brutto, najczęściej 15–25 %"
+          ]
+        },
+        {
+          "_key": "imp1f",
+          "_type": "tableRow",
+          "cells": [
+            "Znalezienie najemcy (jednorazowo)",
+            "często równowartość jednego czynszu"
+          ]
+        },
+        {
+          "_key": "imp1g",
+          "_type": "tableRow",
+          "cells": [
+            "Interwencja awaryjna",
+            "30–80 € za zdarzenie"
+          ]
+        }
+      ],
+      "_type": "tableBlock",
+      "columns": [
+        "Model",
+        "Typowa stawka"
+      ]
+    },
+    {
+      "_key": "imp1h",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Dwie uwagi. Przy najmie długoterminowym ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1",
+              "text": "stała opłata bywa korzystniejsza niż procent",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2",
+              "text": ", gdy czynsz jest wysoki: 150 € miesięcznie to 10 % przy czynszu 1 500 € i tylko 6 % przy 2 500 €. Pytaj o oba warianty.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt4",
+              "text": "A przy najmie krótkoterminowym sam procent niewiele mówi. Liczy się, co obejmuje: dwie firmy podające 20 % mogą się istotnie różnić, jeśli u jednej sprzątanie, pranie i prowizje platform są w cenie, a u drugiej nie.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "Koszty utrzymania nieruchomości na Cyprze przy pustostanie",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt9",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "Te pozycje powstają niezależnie od tego, czy wynajmujesz:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pte",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pta",
+              "text": "Opłaty wspólnotowe",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptb",
+              "text": " w osiedlu: mniej więcej ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptc",
+              "text": "500–2 000 € rocznie",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptd",
+              "text": ", zależnie od metrażu i infrastruktury",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptg",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptf",
+              "text": "Ubezpieczenie budynku",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pti",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pth",
+              "text": "Opłaty miejskie i kanalizacyjne",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptl",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptj",
+              "text": "Prąd i woda",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptk",
+              "text": " — opłaty abonamentowe naliczają się także przy zerowym zużyciu",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pto",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptm",
+              "text": "Serwis basenu",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptn",
+              "text": " przy willi, przez cały rok",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptr",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptp",
+              "text": "Nawadnianie",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptq",
+              "text": ", bez którego cypryjskiego lata się nie przetrwa",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptz",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pts",
+              "text": "Różnica między mieszkaniem a willą jest tu największa: w osiedlu teren i basen wspólny prowadzi zarząd za przewidywalną opłatę, przy willi każdą pozycję organizujesz i opłacasz sam. Porównanie w tekstach ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptu",
+              "text": "mieszkanie czy willa na Cyprze",
+              "_type": "span",
+              "marks": [
+                "ptt"
+              ]
+            },
+            {
+              "_key": "ptv",
+              "text": " i ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptx",
+              "text": "ile ziemi przypada na willę",
+              "_type": "span",
+              "marks": [
+                "ptw"
+              ]
+            },
+            {
+              "_key": "pty",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "ptt",
+              "href": "/pl/blog/mieszkanie-czy-willa-na-cyprze",
+              "_type": "link"
+            },
+            {
+              "_key": "ptw",
+              "href": "/pl/blog/wielkosc-dzialki-willa-cypr",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt11",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt10",
+              "text": "Obowiązki, które trwają, gdy nieruchomość stoi pusta",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt13",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt12",
+              "text": "Pusta nieruchomość nie jest bezobsługowa — i to bywa niedoceniane.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt16",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt14",
+              "text": "Basen pracuje dalej.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt15",
+              "text": " Bez obiegu i chemii woda psuje się w kilka tygodni, a przywrócenie jej kosztuje więcej niż rok serwisu.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt19",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt17",
+              "text": "Nawadnianie nie może się urwać.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt18",
+              "text": " Dwa tygodnie bez wody w sierpniu i nasadzeń nie ma.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1c",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1a",
+              "text": "Rachunki nadal przychodzą.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1b",
+              "text": " Opłaty wspólnotowe, ubezpieczenie i opłaty miejskie są wymagalne, a za zaległości wspólnota może skierować sprawę do sądu.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1f",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1d",
+              "text": "Ubezpieczenie miewa warunki.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1e",
+              "text": " Wiele polis wymaga okresowych przeglądów przy dłuższej nieobecności — sprawdź swoją, zanim uznasz, że jesteś chroniony.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1i",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1g",
+              "text": "Rejestracje mają terminy.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1h",
+              "text": " Jeśli nieruchomość jest zarejestrowana pod najem krótkoterminowy, rejestrację trzeba przedłużać.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1k",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1j",
+              "text": "Sezonowe loty a zarządzanie: dlaczego „doskoczę i załatwię\" nie działa",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1l",
+              "text": "Połączenia lotnicze z Polski na Cypr są w dużej mierze sezonowe. Poza sezonem zwykle trzeba lecieć z przesiadką, a to zmienia kalkulację przy każdej awarii.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1o",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1n",
+              "text": "Praktyczny wniosek: jeśli planujesz bywać dwa-trzy razy w roku, załóż z góry, że problemy będzie rozwiązywał ktoś inny, i wybierz go zawczasu. Znalezienie zarządcy pod presją zepsutej instalacji to najgorszy moment na negocjacje.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1q",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1p",
+              "text": "Warto też pamiętać, że przychód z najmu masz w euro, a koszty życia w złotych — przy planowaniu rentowności licz w walucie, w której wydajesz.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1s",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1r",
+              "text": "Czego nie zakładaj z automatu, jeśli wynajmowałeś w Polsce",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1u",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1t",
+              "text": "Część nawyków nie przenosi się na Cypr.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1x",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1v",
+              "text": "Zasady dotyczące kaucji są kwestią umowną",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1w",
+              "text": ", nie ustawowego mechanizmu ochrony. Ustal na piśmie, gdzie kaucja jest przechowywana i na jakich warunkach wraca.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt20",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1y",
+              "text": "Umowy najmu powyżej roku wymagają formy pisemnej",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1z",
+              "text": ", podpisu i świadków. Nieformalne ustalenia, które gdzie indziej jakoś działają, tutaj są realnym problemem.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt23",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt21",
+              "text": "Warunki umów z agencjami nie są ujednolicone.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt22",
+              "text": " Czytaj, co podpisujesz, zwłaszcza w kwestii wyłączności i okresu wypowiedzenia.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt25",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt24",
+              "text": "Jak sprawdzić firmę zarządzającą zdalnie",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt27",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt26",
+              "text": "Najczęstszym powodem zmiany zarządcy nie jest słabe obłożenie, tylko poczucie braku informacji o własnej nieruchomości. Pytaj więc o raportowanie równie stanowczo jak o cenę.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2a",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt28",
+              "text": "Jak i jak często raportują?",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt29",
+              "text": " Poproś o wzór zestawienia: przychody, koszty, dokumenty, kwota do wypłaty. Brak wzoru sam w sobie jest odpowiedzią.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2d",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2b",
+              "text": "Gdzie trafiają pieniądze?",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2c",
+              "text": " Ustal, na czyje konto wpływa czynsz i w jakim rytmie jest przekazywany Tobie.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2g",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2e",
+              "text": "Jakie obiekty prowadzą teraz?",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2f",
+              "text": " Przy najmie krótkoterminowym opinie na obsługiwanych ogłoszeniach są jawne — sprawdź czas odpowiedzi i oceny czystości.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2j",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2h",
+              "text": "Jak szybko naprawdę odpowiadają?",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2i",
+              "text": " Sprawdź to: zapytanie w sobotni wieczór powie więcej niż deklaracje.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2k",
+              "text": "Co dzieje się przy awarii?",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2l",
+              "text": " Do jakiej kwoty naprawiają bez pytania i od jakiego progu potrzebują Twojej zgody?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2o",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2n",
+              "text": "Co ustalić w umowie z firmą zarządzającą",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2r",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2p",
+              "text": "Szczegółowy zakres usług",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2q",
+              "text": " — co obejmuje prowizja, a co jest płatne osobno",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2u",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2s",
+              "text": "Okres wypowiedzenia",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2t",
+              "text": " i ewentualny minimalny czas trwania",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2x",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2v",
+              "text": "Limit wydatków",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2w",
+              "text": " na naprawy bez konsultacji",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt30",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2y",
+              "text": "Częstotliwość wypłat",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2z",
+              "text": " i forma raportowania",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt33",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt31",
+              "text": "Kto odpowiada za rejestrację najmu",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt32",
+              "text": " i jej przedłużenie",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt36",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt34",
+              "text": "Twoje własne korzystanie",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt35",
+              "text": " — czy możesz zablokować terminy dla siebie i z jakim wyprzedzeniem",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt39",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt37",
+              "text": "VAT",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt38",
+              "text": " od prowizji",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3b",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3a",
+              "text": "Przedostatni punkt bywa pomijany i później rodzi spory: te dwa tygodnie latem, które chcesz spędzić sam, to szczyt sezonu.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3d",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt3c",
+              "text": "Zarządzać samemu czy zlecić firmie",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3g",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3e",
+              "text": "Samodzielne zarządzanie ma sens,",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3f",
+              "text": " jeśli wynajmujesz długoterminowo jednemu najemcy, bywasz na miejscu kilka razy w roku i masz zaufanego fachowca. Oszczędzasz wtedy 8–12 % na stałe.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3j",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3h",
+              "text": "Samodzielne zarządzanie jest praktycznie niewykonalne",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3i",
+              "text": " przy najmie krótkoterminowym. Doba na zgłoszenie gości, sprzątanie między pobytami i całodobowa dostępność nie da się prowadzić z innego kraju.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3l",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3k",
+              "text": "Policz uczciwie: najem krótkoterminowy z prowizją 20 %, kosztem sprzątania i prowizją platformy wychodzi netto znacznie bliżej dobrze prowadzonego najmu długoterminowego, niż sugerują wartości brutto. Nadwyżka jest realna, ale to dochód z pracy, nie z kapitału.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "imp1i",
+      "_type": "projectsSectionBlock",
+      "title": "Zobacz nieruchomości na Cyprze z opcją zarządzania",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "imp1j",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Wiele nowych inwestycji ma zarządzanie w standardzie — to wygodne, ale wiąże z jednym dostawcą. Napisz, jak często planujesz bywać i czy zamierzasz wynajmować, a pokażemy nieruchomości, przy których to się spina.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": "2026-08-07T07:39:00.000Z",
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:09.732Z",
+  "updatedAt": "2026-08-07T07:40:03.688Z"
+}

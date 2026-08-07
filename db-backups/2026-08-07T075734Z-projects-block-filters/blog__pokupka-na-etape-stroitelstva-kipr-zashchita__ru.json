@@ -1,0 +1,1314 @@
+{
+  "id": "9b867bb5-34f8-4ce7-8872-cee93bd66d1d",
+  "sanityId": "local-a443dbe3-d574-44cc-9073-e3ad2d12405a",
+  "translationGroupId": "6f8b764f-1949-4a0a-bbb5-bfaefadd5a54",
+  "language": "ru",
+  "slug": "pokupka-na-etape-stroitelstva-kipr-zashchita",
+  "title": "Покупка на этапе строительства на Кипре: как защищены ваши платежи",
+  "excerpt": "Покупая на этапе строительства, вы платите за то, чего ещё нет. Какие механизмы защиты есть на Кипре, какие обязательны, а какие нужно требовать.",
+  "status": "DRAFT",
+  "authorId": "1253fa77-5bd7-4243-9d64-da11cb2d8ae6",
+  "categoryId": null,
+  "previewImage": null,
+  "seo": {
+    "metaTitle": "Покупка на этапе строительства на Кипре: защита денег",
+    "metaDescription": "Как защищены платежи при покупке новостройки на Кипре: привязка к этапам стройки, банковская гарантия, эскроу и депонирование договора в кадастре."
+  },
+  "contentBlocks": [
+    {
+      "_key": "impu",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Покупая на этапе строительства, вы платите частями за объект, которого пока не существует. Между первым платежом и передачей ключей нередко проходит два года, и всё это время ваши деньги находятся у застройщика, а не у вас.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "Главное сразу, потому что в разговорах с продавцами об этом говорят редко: ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt3",
+              "text": "Кипр не требует обязательных гарантий исполнения при покупке на этапе строительства.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt4",
+              "text": " В отличие от стран, где защита задатка предусмотрена законом, здесь механизмы защиты нужно закреплять в договоре. Они существуют — просто не появляются сами собой.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "Ниже — что бывает, какая защита важнее всего и о чём договариваться до подписания.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt9",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "График платежей при покупке на этапе строительства",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptb",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pta",
+              "text": "Рыночная схема выглядит примерно так:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pte",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptc",
+              "text": "20–30 %",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptd",
+              "text": " при подписании договора",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pth",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptf",
+              "text": "40–50 %",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptg",
+              "text": " платежами по ходу строительства",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptk",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pti",
+              "text": "20–30 %",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptj",
+              "text": " при завершении и передаче",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pto",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptl",
+              "text": "Скидка относительно готового аналога обычно ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptm",
+              "text": "10–20 %",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptn",
+              "text": ". Это и есть плата за то, что вы финансируете стройку и берёте на себя риск незавершения.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptq",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ptp",
+              "text": "Почему платежи должны быть привязаны к этапам стройки, а не к датам",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pts",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptr",
+              "text": "Это условие договора с самым большим практическим эффектом, и его легко упустить.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptv",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptt",
+              "text": "Привязка к этапам",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptu",
+              "text": " означает, что вы платите, когда подтверждённо достигнуты каркас, кровля или отделка. Стройка сдвигается — сдвигается и ваш платёж.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pty",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptw",
+              "text": "Привязка к календарю",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptx",
+              "text": " означает, что вы платите в назначенные даты независимо от того, построено ли что-нибудь. По сути вы авансируете простой.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt12",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptz",
+              "text": "Настаивайте на первом варианте и добейтесь, чтобы в договоре было указано, ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt10",
+              "text": "кто подтверждает достижение этапа",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt11",
+              "text": " — желательно независимый инженер, а не сам застройщик.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt14",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt13",
+              "text": "Банковская гарантия и гарантия исполнения: на Кипре не обязательны",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt19",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt15",
+              "text": "Банковская гарантия",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt16",
+              "text": " или ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt17",
+              "text": "страховая гарантия исполнения",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt18",
+              "text": " покрывает ваш задаток и платежи до момента передачи права собственности. Если проект не достроен, гарантия срабатывает.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1d",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1a",
+              "text": "В ряде стран ЕС это стандарт. На Кипре это ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1b",
+              "text": "не требование закона",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1c",
+              "text": ", поэтому запрашивать и вносить в договор нужно самостоятельно.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1f",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1e",
+              "text": "Здесь проходит реальная граница между крупными и небольшими застройщиками: у компаний с банковскими отношениями гарантия обычно возможна, у мелких — часто нет. Застройщик, уходящий от этого вопроса, невольно сообщает вам кое-что о своём финансовом положении.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1h",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1g",
+              "text": "Эскроу-счёт при покупке недвижимости на Кипре",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1j",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1i",
+              "text": "При эскроу ваши платежи идут не напрямую застройщику, а на счёт третьей стороны и высвобождаются только при достижении оговорённых этапов.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1n",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1k",
+              "text": "Это тоже ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1l",
+              "text": "не обязательно",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1m",
+              "text": " на Кипре, но часть добросовестных застройщиков такую схему предлагает. Если предлагают, выясните:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1p",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1o",
+              "text": "Кто ведёт счёт — банк или юридическая фирма?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1r",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1q",
+              "text": "По каким критериям происходит высвобождение и кто подтверждает этап?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1t",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1s",
+              "text": "Что произойдёт с остатком, если проект не состоится?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1v",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1u",
+              "text": "Депонирование договора в Земельном кадастре: главная защита",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1x",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1w",
+              "text": "Если запоминать из всей статьи одно — то это.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt23",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1y",
+              "text": "Подписанный договор купли-продажи нужно ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1z",
+              "text": "задепонировать в Департаменте земель и съёмок",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt20",
+              "text": ". Так возникает ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt21",
+              "text": "право требования исполнения",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt22",
+              "text": " (Specific Performance) — ваше право зарегистрировать объект на своё имя, действующее даже если у застройщика позже начнутся проблемы или он попытается продать ту же квартиру дважды.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt27",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt24",
+              "text": "Депонирование ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt25",
+              "text": "ограничено сроком",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt26",
+              "text": ". В публикациях срок называют по-разному, поэтому попросите юриста назвать действующий и письменно подтвердить, что депонирование выполнено. Пропущенный срок восстановить нельзя.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt29",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt28",
+              "text": "Одно это действие стоит больше, чем все заверения на встрече с продавцом вместе взятые.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2b",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2a",
+              "text": "Обременение застройщика и письмо о снятии залога",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2d",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2c",
+              "text": "Если застройщик заложил землю ради финансирования, на участке лежит обременение — и вашу квартиру нельзя выделить, пока залог с неё не снят.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2f",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2e",
+              "text": "Нужно закрыть два вопроса:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2i",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2g",
+              "text": "Письмо банка о снятии залога",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2h",
+              "text": " с вашей единицы либо договорное обязательство со сроками снять обременение до передачи.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2l",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2j",
+              "text": "Платежи через эскроу",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2k",
+              "text": ", чтобы ваши взносы доказуемо шли на погашение соответствующей доли долга, а не куда-то ещё.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2q",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2m",
+              "text": "Без одного из двух вы несёте риск, которым не управляете. Как заранее оценить надёжность застройщика — в материале ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2o",
+              "text": "как проверить застройщика на Кипре",
+              "_type": "span",
+              "marks": [
+                "pt2n"
+              ]
+            },
+            {
+              "_key": "pt2p",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt2n",
+              "href": "/ru/blog/kak-proverit-zastroyshchika-na-kipre",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt2s",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2r",
+              "text": "Как платить взносы из-за границы и не потерять цепочку документов",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2u",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2t",
+              "text": "Практический момент, важный при удалённой покупке.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2x",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2v",
+              "text": "Платите со счёта, открытого на вас.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2w",
+              "text": " Переводы от третьих лиц осложняют и саму сделку, и последующий вывод денег при продаже: банк будет смотреть, кто и за что платил.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt30",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2y",
+              "text": "Сохраняйте все платёжные документы.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2z",
+              "text": " Они понадобятся дважды — при вычете расходов из налога на прирост капитала при продаже и при подтверждении происхождения средств.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt33",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt31",
+              "text": "Сверяйте назначение платежа",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt32",
+              "text": " с формулировками договора. Расхождения всплывают через годы, когда доказывать что-то уже сложно.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt35",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt34",
+              "text": "Условия договора, о которых стоит договариваться",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt37",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt36",
+              "text": "Типовые договоры застройщиков ожидаемо составлены в пользу продавца. Эти пункты — в список для переговоров:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3a",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt38",
+              "text": "Твёрдый срок сдачи",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt39",
+              "text": " плюс предельная дата, после которой вы вправе расторгнуть договор и вернуть задаток полностью",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3d",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3b",
+              "text": "Неустойка",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3c",
+              "text": " за просрочку сверх оговорённого льготного периода",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3g",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3e",
+              "text": "Банковская гарантия или гарантия исполнения",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3f",
+              "text": " на задаток и платежи до передачи права",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3j",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3h",
+              "text": "Гарантийный срок не менее 24 месяцев",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3i",
+              "text": " с передачи, прямо включая конструктив и гидроизоляцию",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3m",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3k",
+              "text": "Право уступки",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3l",
+              "text": " договора третьему лицу до передачи",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3p",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3n",
+              "text": "Заверение по льготному НДС",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3o",
+              "text": ", если вы рассчитываете на ставку 5 %",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3s",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3q",
+              "text": "Заверение об отсутствии обременений",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3r",
+              "text": " либо обязательство со сроками их снять",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3v",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3t",
+              "text": "Спецификация материалов и отделки",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3u",
+              "text": " с последствиями за отклонение",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3x",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3w",
+              "text": "Последние два пункта дают больше всего споров. Если в договоре написано только «отделка высокого качества», предъявить будет нечего.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3z",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt3y",
+              "text": "Что происходит при банкротстве застройщика",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt41",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt40",
+              "text": "Сценарий, ради которого вся эта защита и существует.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt44",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt42",
+              "text": "С задепонированным договором",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt43",
+              "text": " у вас есть исполнимое право на регистрацию — позиция заметно сильнее, чем у обычного кредитора.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt47",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt45",
+              "text": "С банковской гарантией",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt46",
+              "text": " внесённые платежи покрыты.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt4a",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt48",
+              "text": "Без того и другого",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt49",
+              "text": " вы встаёте в очередь кредиторов, а такие процедуры тянутся годами и редко удовлетворяются полностью.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt4c",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt4b",
+              "text": "На Кипре приняты законы, помогающие покупателям, оставшимся без титула. Их правовой статус недавно оспаривался в конституционном порядке, так что рассчитывать на них как на подушку безопасности не стоит — уточните у юриста текущее положение.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt4e",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt4d",
+              "text": "Приёмка до внесения последнего платежа",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt4g",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt4f",
+              "text": "Последний взнос — ваш последний рычаг. Не отдавайте его, пока не проверили.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt4k",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt4h",
+              "text": "Закажите ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt4i",
+              "text": "независимую приёмку",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt4j",
+              "text": " и сверьте готовый объект с договорной спецификацией: материалы, оборудование, размеры, работа инженерных систем. Недостатки фиксируйте письменно и устраняйте до последнего платежа.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt4m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt4l",
+              "text": "При удалённой покупке приёмку должен проводить человек, действующий в ваших интересах, — не застройщик и не его подрядчики.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "impv",
+      "_type": "projectsSectionBlock",
+      "title": "Посмотреть новостройки на Кипре",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "impw",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt4",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Мы работаем только с новостройками лицензированных кипрских застройщиков по ценам застройщика. По каждому проекту скажем, какие механизмы защиты этот застройщик обычно принимает, а где, по нашему опыту, договориться не удастся. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2",
+              "text": "Запросить персональную подборку",
+              "_type": "span",
+              "marks": [
+                "pt1"
+              ]
+            },
+            {
+              "_key": "pt3",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt1",
+              "href": "/ru/contacts",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt6",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt5",
+              "text": "Это руководство носит общий информационный характер и отражает положение дел на указанную дату; правовая база по покупкам на этапе строительства меняется. Это не юридическая консультация. Cyprus VIP Estates — агентство маркетинга и консалтинга в сфере недвижимости; составление договора, соблюдение сроков, депонирование и гарантии должен вести независимый лицензированный кипрский юрист, которого вы выбираете сами.",
+              "_type": "span",
+              "marks": [
+                "em"
+              ]
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": null,
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:09.315Z",
+  "updatedAt": "2026-08-04T15:40:09.315Z"
+}

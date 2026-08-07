@@ -1,0 +1,896 @@
+{
+  "id": "7bb55de1-903b-4ec0-a5f4-1397c2535d9a",
+  "sanityId": "local-0094a63b-e88e-4205-9e30-dfe7932aba91",
+  "translationGroupId": "9767848b-c9d4-49f0-83ce-4c1fe99348c0",
+  "language": "en",
+  "slug": "choosing-property-lawyer-cyprus",
+  "title": "Choosing a Property Lawyer in Cyprus and What Their Due Diligence Covers",
+  "excerpt": "Every guide says use an independent lawyer in Cyprus. Almost none explains how to choose one or what their search actually covers. This one does.",
+  "status": "DRAFT",
+  "authorId": "68063c4f-b907-49c1-9f15-a09fea8a8383",
+  "categoryId": null,
+  "previewImage": null,
+  "seo": {
+    "metaTitle": "Choosing a Property Lawyer in Cyprus: What They Check",
+    "metaDescription": "How to choose an independent lawyer for a Cyprus property purchase, what the title search and due diligence actually cover, and what it typically costs."
+  },
+  "contentBlocks": [
+    {
+      "_key": "impl",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Every guide to buying in Cyprus tells you to use an independent lawyer. Very few explain how to choose one, what they actually do for the fee, or how to tell whether the work has been done properly.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "This is the piece that fills that gap. Your lawyer is the single most important safeguard in a Cyprus purchase — considerably more important than which agent you use or which developer you buy from.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt4",
+              "text": "Why Your Cyprus Property Lawyer Must Be Independent of the Seller",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "The most common way buyers weaken their own position is by accepting the seller's recommendation.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt9",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "It is often offered helpfully: the developer has a law firm that \"knows the project\" and can move quickly. That is precisely the problem. A lawyer who works regularly for the developer has a commercial relationship to protect that outlasts your single transaction.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptb",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pta",
+              "text": "Appoint your own. If the seller pushes back on that, you have learned something useful at no cost.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptd",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ptc",
+              "text": "What a Cyprus Property Lawyer Actually Checks",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptf",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pte",
+              "text": "Here is what you are paying for, so you can ask whether each step was done.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptk",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptg",
+              "text": "The title search.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pth",
+              "text": " A search certificate from the Land Registry showing the registered owner, the property's legal description, and — the point of the exercise — any ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pti",
+              "text": "encumbrances",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptj",
+              "text": ": mortgages, charges, memos, prohibitions. This is the check that determines whether the property can be transferred to you at all.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptn",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptl",
+              "text": "Legal capacity of the seller.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptm",
+              "text": " That the person selling is entitled to sell. On a company sale, that the signatory is authorised.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptq",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pto",
+              "text": "Planning and building permits.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptp",
+              "text": " That the building was approved and constructed to the approved plans, and — on completed projects — that the certificate of final approval exists.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptt",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptr",
+              "text": "Contract review and negotiation.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pts",
+              "text": " Standard developer contracts are seller-friendly. The lawyer's value is in what they change, not in confirming what's already there.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pty",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptu",
+              "text": "Depositing the contract at the Land Registry.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptv",
+              "text": " Under the Sale of Immovable Property (Specific Performance) Law 81(I)/2011, this must be done within ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptw",
+              "text": "six months of signing",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptx",
+              "text": ", and it creates your enforceable right to registration even if the seller later runs into trouble. It is the most valuable single act in the transaction.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt11",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptz",
+              "text": "Outstanding charges.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt10",
+              "text": " That municipal taxes, sewerage, communal fees and utility accounts are settled.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt14",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt12",
+              "text": "The transfer itself",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt13",
+              "text": " at the Land Registry, and for non-EU buyers, the Council of Ministers permission application.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt16",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt15",
+              "text": "The Search Certificate Rule Most Buyers Have Never Heard Of",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt18",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt17",
+              "text": "Worth knowing because it is a protection you can actively check.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1e",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt19",
+              "text": "Under Law 132(I)/2023, the ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1a",
+              "text": "seller",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1b",
+              "text": " is obliged to provide a Land Registry search certificate dated ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1c",
+              "text": "no more than five days before",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1d",
+              "text": " the contract is signed. Failure to provide it exposes the seller to an administrative fine.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1g",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1f",
+              "text": "Practically, that means you are entitled to a near-current picture of the property's encumbrances at the moment you commit. Ask your lawyer to confirm they have it and that its date is within the window. A search certificate from three months ago is not the same document.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1i",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1h",
+              "text": "How to Choose a Property Lawyer in Cyprus",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1l",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1j",
+              "text": "Confirm they are independent of the seller.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1k",
+              "text": " Ask directly whether they act for this developer on other matters.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1o",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1m",
+              "text": "Ask what the fee covers.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1n",
+              "text": " Fees are commonly quoted as a percentage of the purchase price plus VAT, or as a fixed fee. Establish whether the transfer, the Land Registry deposit and the Council of Ministers application are included or billed separately.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1r",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1p",
+              "text": "Ask who will actually do the work.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1q",
+              "text": " In larger firms the partner you meet may not be the person handling your file.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1u",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1s",
+              "text": "Ask about language.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1t",
+              "text": " You need someone who will explain the contract in a language you are comfortable making decisions in — not merely translate it.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1x",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1v",
+              "text": "Ask how they report.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1w",
+              "text": " You should receive a written due diligence report, not a verbal assurance that everything is fine. That report is also what a lender will want if you finance the purchase.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt20",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1y",
+              "text": "Test responsiveness before you appoint.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1z",
+              "text": " How quickly they answer a pre-engagement question is a reasonable indicator of how they will handle your file.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt22",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt21",
+              "text": "Questions to Ask Before You Appoint a Cyprus Lawyer",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt24",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt23",
+              "text": "Do you act for this seller or developer on other matters?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt26",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt25",
+              "text": "What exactly does your fee include, and what is billed separately?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt28",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt27",
+              "text": "Will I receive a written due diligence report?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2a",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt29",
+              "text": "Who will handle the file day to day?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2c",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2b",
+              "text": "Have you obtained the search certificate, and what is its date?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2e",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2d",
+              "text": "When will the contract be deposited at the Land Registry, and will you confirm it in writing?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2g",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2f",
+              "text": "If a problem is found in the title, what happens to my reservation fee?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2i",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2h",
+              "text": "That last question matters more than it looks. Establish before you pay anything what happens if due diligence turns up something that stops the purchase.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2k",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2j",
+              "text": "What Your Lawyer Does Not Cover",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2l",
+              "text": "Being clear about the boundary saves disappointment later.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2p",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2n",
+              "text": "They do not value the property.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2o",
+              "text": " Legal due diligence confirms you can safely own it, not that you should pay that price.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2s",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2q",
+              "text": "They do not survey the building.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2r",
+              "text": " Structural condition on a resale, or build quality at handover, needs an independent surveyor.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2y",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2t",
+              "text": "They do not assess the developer commercially.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2u",
+              "text": " Whether a company delivers on time and issues title deeds is a judgement you make — see ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2w",
+              "text": "how to vet a Cyprus developer",
+              "_type": "span",
+              "marks": [
+                "pt2v"
+              ]
+            },
+            {
+              "_key": "pt2x",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt2v",
+              "href": "/blog/how-to-vet-cyprus-developer",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt31",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2z",
+              "text": "They are not your tax adviser.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt30",
+              "text": " Cyprus tax and your home-country tax interact, and that needs separate advice.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "impm",
+      "_type": "projectsSectionBlock",
+      "title": "Browse New-Build Properties in Cyprus",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "impn",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt4",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "We can point you toward independent lawyers who work regularly with international buyers. We do not receive commission for those referrals, and we would tell you if we did. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2",
+              "text": "Request a personalised shortlist",
+              "_type": "span",
+              "marks": [
+                "pt1"
+              ]
+            },
+            {
+              "_key": "pt3",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt1",
+              "href": "/contacts",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt6",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt5",
+              "text": "This guide is for general information and reflects the position as of the date above. It is not legal advice, and we are not lawyers. Cyprus VIP Estates is a real estate marketing and consulting agency; all legal work should be carried out by an independent licensed Cyprus lawyer whom you appoint yourself.",
+              "_type": "span",
+              "marks": [
+                "em"
+              ]
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": null,
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:08.733Z",
+  "updatedAt": "2026-08-04T15:40:08.733Z"
+}

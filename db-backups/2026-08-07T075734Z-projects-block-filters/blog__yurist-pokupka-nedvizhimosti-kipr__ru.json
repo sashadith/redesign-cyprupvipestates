@@ -1,0 +1,924 @@
+{
+  "id": "d9255628-f44e-4546-8282-d1712cb8bae6",
+  "sanityId": "local-362648d4-3b87-4c32-a6fd-c383884df95e",
+  "translationGroupId": "9767848b-c9d4-49f0-83ce-4c1fe99348c0",
+  "language": "ru",
+  "slug": "yurist-pokupka-nedvizhimosti-kipr",
+  "title": "Юрист при покупке недвижимости на Кипре: как выбрать и что он проверяет",
+  "excerpt": "Все руководства советуют независимого юриста, но почти никто не объясняет, как его выбрать и что он на самом деле проверяет. Разбираем по пунктам.",
+  "status": "DRAFT",
+  "authorId": "1253fa77-5bd7-4243-9d64-da11cb2d8ae6",
+  "categoryId": null,
+  "previewImage": null,
+  "seo": {
+    "metaTitle": "Юрист при покупке недвижимости на Кипре: как выбрать",
+    "metaDescription": "Как выбрать независимого юриста для покупки недвижимости на Кипре, что именно входит в юридическую проверку и какие вопросы задать до заключения договора."
+  },
+  "contentBlocks": [
+    {
+      "_key": "impi",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Любое руководство по покупке на Кипре советует нанять независимого юриста. Но мало кто объясняет, как его выбирать, что именно вы получаете за гонорар и как понять, что работа сделана как следует.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "Этот пробел мы и закрываем. Юрист — главная защита во всей сделке, важнее выбора агентства и важнее выбора застройщика.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt4",
+              "text": "Почему юрист должен быть независим от продавца",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "Чаще всего покупатели ослабляют собственную позицию, соглашаясь на рекомендацию продавца.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt9",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "Предлагают это обычно доброжелательно: у застройщика есть юрфирма, которая «знает проект» и работает быстро. В этом и проблема. Юрист, регулярно работающий на застройщика, защищает деловые отношения, которые переживут вашу разовую сделку.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptb",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pta",
+              "text": "Нанимайте своего. Если продавец начнёт возражать против этого — вы бесплатно узнали кое-что полезное.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptf",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptc",
+              "text": "Отдельно: если сделка идёт удалённо по доверенности, ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptd",
+              "text": "доверенность выдаётся вашему юристу",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pte",
+              "text": ", а не человеку со стороны продавца. Иначе одна сторона представляет обе.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pth",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ptg",
+              "text": "Что именно проверяет кипрский юрист при покупке",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptj",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pti",
+              "text": "Вот за что вы платите — и о чём потом можно спросить:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pto",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptk",
+              "text": "Проверка титула.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptl",
+              "text": " Справка из Земельного кадастра с указанием зарегистрированного собственника, юридического описания объекта и, главное, всех ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptm",
+              "text": "обременений",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptn",
+              "text": ": залогов, ипотек, отметок, запретов на отчуждение.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptr",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptp",
+              "text": "Правомочность продавца.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptq",
+              "text": " Что продающий вправе продавать; при продаже от компании — что подписант уполномочен.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptu",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pts",
+              "text": "Разрешения на строительство и соответствие проекту.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptt",
+              "text": " Что объект согласован и построен по утверждённому проекту, а для сданных проектов есть акт ввода в эксплуатацию.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptx",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptv",
+              "text": "Проверка и правка договора.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptw",
+              "text": " Типовые договоры составлены в пользу продавца. Ценность юриста в том, что он изменит, а не в подтверждении написанного.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt12",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pty",
+              "text": "Депонирование договора в Земельном кадастре.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptz",
+              "text": " По Закону 81(I)/2011 — в течение ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt10",
+              "text": "шести месяцев с подписания",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt11",
+              "text": ". Так возникает ваше исполнимое право на регистрацию, действующее даже при проблемах у продавца. Это самое ценное действие во всей сделке.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt15",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt13",
+              "text": "Задолженности.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt14",
+              "text": " Муниципальные сборы, канализация, взносы за содержание, счета за коммунальные услуги.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt18",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt16",
+              "text": "Переход права",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt17",
+              "text": " в кадастре и, для покупателей не из ЕС, подача на разрешение Совета министров.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1a",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt19",
+              "text": "Правило пяти дней, о котором мало кто знает",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1c",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1b",
+              "text": "Норма, соблюдение которой вы можете проверить сами.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1i",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1d",
+              "text": "По Закону 132(I)/2023 ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1e",
+              "text": "продавец обязан",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1f",
+              "text": " предоставить справку из Земельного кадастра, датированную ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1g",
+              "text": "не более чем за пять дней",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1h",
+              "text": " до подписания договора. За непредоставление ему грозит административный штраф.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1j",
+              "text": "На практике это значит, что вы вправе получить почти актуальную картину обременений на момент принятия обязательств. Попросите юриста подтвердить, что справка есть, и ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1k",
+              "text": "проверьте её дату",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1l",
+              "text": ". Справка трёхмесячной давности — это другой документ.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1o",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1n",
+              "text": "Как проверить кипрского юриста, не приезжая",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1r",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1p",
+              "text": "Убедитесь в независимости.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1q",
+              "text": " Спросите прямо, работает ли он с этим застройщиком по другим вопросам.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1u",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1s",
+              "text": "Выясните состав гонорара.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1t",
+              "text": " Обычно это процент от цены плюс НДС либо фиксированная сумма. Уточните, входят ли переход права, депонирование и подача на разрешение.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1x",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1v",
+              "text": "Спросите, кто ведёт дело.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1w",
+              "text": " В крупных фирмах человек на первой встрече не всегда тот, кто занимается вашим файлом.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt20",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1y",
+              "text": "Проверьте язык.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1z",
+              "text": " Нужен тот, кто объяснит договор на языке, на котором вы принимаете решения, а не просто переведёт.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt23",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt21",
+              "text": "Требуйте письменный отчёт",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt22",
+              "text": " о проверке, а не устные заверения. При ипотеке банк его запросит в любом случае.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt26",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt24",
+              "text": "Проверьте скорость ответа",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt25",
+              "text": " до найма — это неплохой показатель того, как будут вести ваше дело.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt28",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt27",
+              "text": "Какие вопросы задать до заключения соглашения",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2a",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt29",
+              "text": "Работаете ли вы с этим продавцом или застройщиком по другим вопросам?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2c",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2b",
+              "text": "Что именно входит в гонорар, а что оплачивается отдельно?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2e",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2d",
+              "text": "Получу ли я письменный отчёт о проверке?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2g",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2f",
+              "text": "Кто ведёт дело в ежедневном режиме?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2i",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2h",
+              "text": "Получена ли справка из кадастра и какой она даты?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2k",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2j",
+              "text": "Когда будет задепонирован договор и подтвердите ли вы это письменно?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2m",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2l",
+              "text": "Что произойдёт с моим резервационным платежом, если проверка выявит проблему?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2o",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2n",
+              "text": "Последний вопрос весит больше, чем кажется. Договоритесь до любых платежей, что будет, если проверка остановит сделку.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2q",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2p",
+              "text": "Чего юрист не делает",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2t",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2r",
+              "text": "Не оценивает объект.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2s",
+              "text": " Юридическая проверка подтверждает, что вы можете безопасно владеть, а не что цена адекватна.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2w",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2u",
+              "text": "Не обследует здание.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2v",
+              "text": " Для состояния конструкций нужен независимый инженер.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt32",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2x",
+              "text": "Не оценивает застройщика коммерчески.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2y",
+              "text": " Сдаёт ли компания в срок и выдаёт ли титулы — это ваша оценка, см. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt30",
+              "text": "как проверить застройщика на Кипре",
+              "_type": "span",
+              "marks": [
+                "pt2z"
+              ]
+            },
+            {
+              "_key": "pt31",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt2z",
+              "href": "/ru/blog/kak-proverit-zastroyshchika-na-kipre",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt35",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt33",
+              "text": "Не заменяет налогового консультанта.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt34",
+              "text": " Кипрское и ваше домашнее налогообложение взаимодействуют, и это отдельный вопрос.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "impj",
+      "_type": "projectsSectionBlock",
+      "title": "Посмотреть новостройки на Кипре",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "impk",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt4",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Мы можем назвать независимых юристов, которые постоянно работают с иностранными покупателями. Комиссию за такие рекомендации мы не получаем — и сказали бы, если бы было иначе. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2",
+              "text": "Запросить персональную подборку",
+              "_type": "span",
+              "marks": [
+                "pt1"
+              ]
+            },
+            {
+              "_key": "pt3",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt1",
+              "href": "/ru/contacts",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt6",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt5",
+              "text": "Это руководство носит общий информационный характер и отражает положение дел на указанную дату. Это не юридическая консультация, и мы не являемся юристами. Cyprus VIP Estates — агентство маркетинга и консалтинга в сфере недвижимости; всю юридическую работу должен вести независимый лицензированный кипрский юрист, которого вы нанимаете сами.",
+              "_type": "span",
+              "marks": [
+                "em"
+              ]
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": null,
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:08.733Z",
+  "updatedAt": "2026-08-04T15:40:08.733Z"
+}

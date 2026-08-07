@@ -1,0 +1,938 @@
+{
+  "id": "d0f03413-a43a-4d89-a6ac-238a2e6618f5",
+  "sanityId": "local-22865666-8395-4a09-b444-79f9d5656132",
+  "translationGroupId": "9767848b-c9d4-49f0-83ce-4c1fe99348c0",
+  "language": "de",
+  "slug": "anwalt-immobilienkauf-zypern",
+  "title": "Anwalt für den Immobilienkauf auf Zypern wählen: Auswahl und Prüfungsumfang",
+  "excerpt": "Jeder Ratgeber empfiehlt einen unabhängigen Anwalt auf Zypern. Kaum einer erklärt, wie Sie ihn auswählen und was er tatsächlich prüft.",
+  "status": "DRAFT",
+  "authorId": "5a63a569-3b41-4157-ae07-b3daec063833",
+  "categoryId": null,
+  "previewImage": null,
+  "seo": {
+    "metaTitle": "Anwalt auf Zypern wählen: Was er beim Kauf prüft",
+    "metaDescription": "Wie Sie einen unabhängigen Anwalt für den Immobilienkauf auf Zypern auswählen, was die rechtliche Prüfung umfasst und welche Fragen Sie vorher stellen sollten."
+  },
+  "contentBlocks": [
+    {
+      "_key": "impc",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Jeder Ratgeber zum Immobilienkauf auf Zypern rät zu einem unabhängigen Anwalt. Nur wenige erklären, wie Sie ihn auswählen, was Sie für das Honorar bekommen und woran Sie erkennen, ob sauber gearbeitet wurde.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "Genau das steht hier. Ihr Anwalt ist die wichtigste Absicherung des gesamten Kaufs — wichtiger als die Wahl des Maklers und wichtiger als die Wahl des Bauträgers.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt4",
+              "text": "Kein neutraler Notar: Was auf Zypern anders ist als in Deutschland",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "Der Unterschied, der deutschen Käufern am häufigsten entgeht.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptb",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "In Deutschland beurkundet ein ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt9",
+              "text": "Notar",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pta",
+              "text": " den Kaufvertrag und ist dabei zur Neutralität verpflichtet — er vertritt weder Käufer noch Verkäufer, sondern wacht über die Rechtmäßigkeit des Vorgangs.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptf",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptc",
+              "text": "Auf Zypern gibt es diese Figur beim Immobilienkauf ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptd",
+              "text": "nicht",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pte",
+              "text": ". Jede Seite beauftragt ihren eigenen Anwalt, und dieser vertritt ausschließlich die Interessen seines Mandanten. Niemand im Verfahren ist verpflichtet, auf Sie zu achten, außer der Person, die Sie selbst bezahlen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptj",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptg",
+              "text": "Daraus folgt das Wichtigste: Nehmen Sie ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pth",
+              "text": "nicht",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pti",
+              "text": " den Anwalt, den der Verkäufer empfiehlt. Das Angebot wird oft freundlich gemacht — die Kanzlei „kenne das Projekt\" und arbeite schnell. Genau darin liegt das Problem: Eine Kanzlei, die regelmäßig für den Bauträger arbeitet, hat eine Geschäftsbeziehung zu schützen, die Ihre einmalige Transaktion überdauert.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptl",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ptk",
+              "text": "Was ein zyprischer Anwalt beim Immobilienkauf prüft",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptn",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptm",
+              "text": "Dafür zahlen Sie — und danach können Sie fragen:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pts",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pto",
+              "text": "Die Titelrecherche.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptp",
+              "text": " Ein Search Certificate vom Grundbuchamt mit eingetragenem Eigentümer, rechtlicher Beschreibung und — darum geht es — allen ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptq",
+              "text": "Belastungen",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptr",
+              "text": ": Grundschulden, Pfandrechte, Vermerke, Verfügungsverbote.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptv",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptt",
+              "text": "Verfügungsbefugnis des Verkäufers.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptu",
+              "text": " Dass der Verkäufer verkaufen darf; bei Gesellschaften, dass der Unterzeichnende bevollmächtigt ist.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pty",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptw",
+              "text": "Bau- und Planungsgenehmigungen.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptx",
+              "text": " Dass genehmigt und plangerecht gebaut wurde, und bei fertigen Projekten die Abnahmebescheinigung vorliegt.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt11",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptz",
+              "text": "Vertragsprüfung und Verhandlung.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt10",
+              "text": " Standardverträge sind verkäuferfreundlich. Der Wert des Anwalts liegt darin, was er ändert.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt16",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt12",
+              "text": "Hinterlegung des Vertrags beim Grundbuchamt.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt13",
+              "text": " Nach dem Gesetz 81(I)/2011 innerhalb von ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt14",
+              "text": "sechs Monaten ab Unterzeichnung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt15",
+              "text": ". Damit entsteht Ihr durchsetzbarer Anspruch auf Eintragung, auch wenn der Verkäufer später in Schwierigkeiten gerät. Es ist die wertvollste Einzelhandlung des gesamten Vorgangs.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt19",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt17",
+              "text": "Offene Forderungen.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt18",
+              "text": " Kommunale Abgaben, Abwasser, Hausgeld, Versorgerkonten.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1c",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1a",
+              "text": "Die Übertragung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1b",
+              "text": " beim Grundbuchamt.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1e",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1d",
+              "text": "Die Fünf-Tage-Regel, die kaum ein Käufer kennt",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1g",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1f",
+              "text": "Eine Schutzvorschrift, deren Einhaltung Sie aktiv überprüfen können.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1h",
+              "text": "Nach Gesetz 132(I)/2023 ist der ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1i",
+              "text": "Verkäufer verpflichtet",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1j",
+              "text": ", ein Search Certificate des Grundbuchamts vorzulegen, das ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1k",
+              "text": "höchstens fünf Tage vor",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1l",
+              "text": " der Vertragsunterzeichnung datiert ist. Kommt er dem nicht nach, droht ihm ein Bußgeld.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1o",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1n",
+              "text": "Praktisch heißt das: Sie haben Anspruch auf ein nahezu tagesaktuelles Bild der Belastungen zum Zeitpunkt Ihrer Bindung. Lassen Sie sich vom Anwalt bestätigen, dass es vorliegt — und prüfen Sie das Datum. Ein drei Monate altes Zertifikat ist nicht dasselbe Dokument.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1q",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1p",
+              "text": "Wie Sie einen Anwalt auf Zypern auswählen",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1t",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1r",
+              "text": "Unabhängigkeit klären.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1s",
+              "text": " Fragen Sie direkt, ob die Kanzlei in anderen Angelegenheiten für diesen Bauträger tätig ist.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1w",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1u",
+              "text": "Honorarumfang klären.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1v",
+              "text": " Üblich sind ein Prozentsatz des Kaufpreises zuzüglich Mehrwertsteuer oder ein Festhonorar. Klären Sie, ob Übertragung und Hinterlegung enthalten sind.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1z",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1x",
+              "text": "Wer bearbeitet die Akte?",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1y",
+              "text": " In größeren Kanzleien ist die Person im Erstgespräch nicht zwingend die, die Ihren Fall führt.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt22",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt20",
+              "text": "Sprache.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt21",
+              "text": " Sie brauchen jemanden, der Ihnen den Vertrag in einer Sprache erklärt, in der Sie Entscheidungen treffen — nicht bloß übersetzt.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt25",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt23",
+              "text": "Berichtsform.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt24",
+              "text": " Sie sollten einen schriftlichen Prüfbericht erhalten, keine mündliche Zusicherung. Bei Finanzierung verlangt die Bank ihn ohnehin.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt28",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt26",
+              "text": "Reaktionsgeschwindigkeit testen",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt27",
+              "text": ", bevor Sie beauftragen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2a",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt29",
+              "text": "Fragen, die Sie vor der Mandatierung stellen sollten",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2c",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2b",
+              "text": "Arbeiten Sie in anderen Angelegenheiten für diesen Verkäufer oder Bauträger?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2e",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2d",
+              "text": "Was genau ist im Honorar enthalten, was wird gesondert berechnet?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2g",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2f",
+              "text": "Erhalte ich einen schriftlichen Prüfbericht?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2i",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2h",
+              "text": "Wer bearbeitet die Akte im Tagesgeschäft?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2k",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2j",
+              "text": "Liegt das Search Certificate vor, und wie ist es datiert?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2m",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2l",
+              "text": "Wann wird der Vertrag hinterlegt, und bestätigen Sie das schriftlich?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2o",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2n",
+              "text": "Was passiert mit meiner Reservierungsgebühr, wenn die Prüfung ein Problem ergibt?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt2q",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2p",
+              "text": "Die letzte Frage wiegt schwerer, als sie klingt. Klären Sie vor jeder Zahlung, was gilt, wenn die Prüfung den Kauf verhindert.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2s",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2r",
+              "text": "Was Ihr Anwalt nicht abdeckt",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2v",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2t",
+              "text": "Keine Wertermittlung.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2u",
+              "text": " Die Prüfung bestätigt, dass Sie die Immobilie sicher erwerben können — nicht, dass der Preis angemessen ist.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2y",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2w",
+              "text": "Keine Bausubstanzprüfung.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2x",
+              "text": " Dafür brauchen Sie einen Gutachter.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt34",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2z",
+              "text": "Keine Beurteilung des Bauträgers.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt30",
+              "text": " Ob ein Unternehmen termintreu liefert und Eigentumsurkunden verschafft, beurteilen Sie — siehe ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt32",
+              "text": "Bauträger auf Zypern prüfen",
+              "_type": "span",
+              "marks": [
+                "pt31"
+              ]
+            },
+            {
+              "_key": "pt33",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt31",
+              "href": "/de/blog/bautraeger-zypern-pruefen",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt37",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt35",
+              "text": "Keine Steuerberatung.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt36",
+              "text": " Zyprische und deutsche Besteuerung greifen ineinander; das gehört gesondert geklärt.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "impd",
+      "_type": "projectsSectionBlock",
+      "title": "Neubauten auf Zypern ansehen",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "impe",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt4",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Wir können Ihnen unabhängige Anwälte nennen, die regelmäßig mit internationalen Käufern arbeiten. Wir erhalten dafür keine Provision — und würden es Ihnen sagen, wenn es anders wäre. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2",
+              "text": "Persönliche Auswahl anfordern",
+              "_type": "span",
+              "marks": [
+                "pt1"
+              ]
+            },
+            {
+              "_key": "pt3",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt1",
+              "href": "/de/contacts",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt6",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt5",
+              "text": "Dieser Leitfaden dient der allgemeinen Information und gibt den Stand zum genannten Datum wieder. Es handelt sich nicht um Rechtsberatung, und wir sind keine Anwälte. Cyprus VIP Estates ist eine Immobilien-Marketing- und Beratungsagentur; sämtliche rechtliche Arbeit gehört zu einem unabhängigen lizenzierten zyprischen Anwalt, den Sie selbst beauftragen.",
+              "_type": "span",
+              "marks": [
+                "em"
+              ]
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": null,
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:08.733Z",
+  "updatedAt": "2026-08-04T15:40:08.733Z"
+}

@@ -18,6 +18,7 @@ import { slugify } from "@/lib/slugify";
 import { listProjectsForPicker as listProjectsForPickerQuery } from "@/sanity/sanity.utils";
 import { applyFollowUpCadence, resetFollowUpCadence } from "@/lib/crm/followUpCadence";
 import { isManualInteractionType } from "@/lib/crm/interactionHelpers";
+import { findEmptyProjectsBlock } from "@/lib/projectsBlockValidation";
 
 // Convert every `{__html}` rich-text marker (produced by the block editor) into
 // Portable Text via the shared converter — so all blocks store consistent PT and
@@ -660,6 +661,19 @@ export async function saveBlogAll(id: string, _prev: any, formData: FormData): P
       ...(explicitPublishedAt ? { publishedAt: explicitPublishedAt } : await publishedAtOnPublish(prisma.blog, id, status)),
     };
     const blocks = blocksFromItemsJson(String(formData.get("contentBlocksJson") ?? "[]"));
+    // Bitten twice on prod by a new-style projectsSectionBlock with neither a
+    // city/type/price filter nor any pinned projects — it resolves to
+    // filteredProjects: [] and silently renders null (see
+    // projectsBlockValidation.ts). Block the publish outright rather than
+    // discover it live.
+    if (status === "PUBLISHED") {
+      const empty = findEmptyProjectsBlock(blocks);
+      if (empty) {
+        return {
+          error: `Projects block "${empty.title}" has no city/type/price filter and no pinned projects — it will render empty. Add a filter or pin at least one project before publishing.`,
+        };
+      }
+    }
     const row = await prisma.blog.update({
       where: { id },
       data: {

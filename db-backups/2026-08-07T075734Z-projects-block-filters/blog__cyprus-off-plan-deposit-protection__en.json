@@ -1,0 +1,1298 @@
+{
+  "id": "49ff012b-6e48-4ca5-94bc-13854f428dda",
+  "sanityId": "local-2ebc1bcf-2465-4653-95ee-db073272a292",
+  "translationGroupId": "6f8b764f-1949-4a0a-bbb5-bfaefadd5a54",
+  "language": "en",
+  "slug": "cyprus-off-plan-deposit-protection",
+  "title": "Buying Off-Plan in Cyprus: How Your Deposit and Instalments Are Protected",
+  "excerpt": "Buying off-plan means paying for something that doesn't exist yet. Which safeguards Cyprus requires, which it doesn't, and which you have to negotiate.",
+  "status": "DRAFT",
+  "authorId": "68063c4f-b907-49c1-9f15-a09fea8a8383",
+  "categoryId": null,
+  "previewImage": null,
+  "seo": {
+    "metaTitle": "Off-Plan Deposits in Cyprus: How They Are Protected",
+    "metaDescription": "Buying off-plan in Cyprus: how staged payments, bank guarantees, escrow and the Land Registry deposit protect your money — and which clauses to negotiate."
+  },
+  "contentBlocks": [
+    {
+      "_key": "impx",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Buying off-plan means paying in instalments for a property that does not yet exist. Two years often pass between your first payment and the handover, and throughout that period your money is with the developer rather than with you.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "The central fact first, because sales conversations rarely lead with it: ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt3",
+              "text": "Cyprus does not mandate performance guarantees on off-plan purchases.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt4",
+              "text": " Unlike jurisdictions where deposit protection is statutory, here the safeguards have to be secured contractually. They are available — you simply do not get them automatically.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt7",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "This guide covers what exists, which protection matters most, and what to negotiate before you sign.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt9",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt8",
+              "text": "Off-Plan Payment Schedules in Cyprus: How Instalments Are Structured",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptb",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pta",
+              "text": "The market-standard structure runs approximately:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pte",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptc",
+              "text": "20–30%",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptd",
+              "text": " on signing the contract",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pth",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptf",
+              "text": "40–50%",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptg",
+              "text": " in stage payments during construction",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptk",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pti",
+              "text": "20–30%",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptj",
+              "text": " on completion and handover",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pto",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptl",
+              "text": "The discount against a finished equivalent is typically ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptm",
+              "text": "10–20%",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptn",
+              "text": ". That is your compensation for helping fund the build and carrying the completion risk.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptq",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ptp",
+              "text": "Why Instalments Must Be Tied to Construction Milestones, Not Calendar Dates",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pts",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptr",
+              "text": "This is the single contract term with the largest practical effect, and it is easy to miss.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptv",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptt",
+              "text": "Milestone-linked",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptu",
+              "text": " means you pay when the frame, the roof or the internal fit-out is verifiably reached. If construction slips, your payment slips with it.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pty",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptw",
+              "text": "Date-linked",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptx",
+              "text": " means you pay on fixed dates whether or not anything has been built. In effect, you pre-fund a stall.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt12",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptz",
+              "text": "Insist on the first, and have the contract state ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt10",
+              "text": "who certifies that a milestone has been reached",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt11",
+              "text": " — ideally an independent surveyor rather than the developer.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt14",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt13",
+              "text": "Bank Guarantees and Performance Bonds: Not Required in Cyprus, But Negotiable",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1a",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt15",
+              "text": "A ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt16",
+              "text": "bank guarantee",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt17",
+              "text": " or ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt18",
+              "text": "insurance-backed performance bond",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt19",
+              "text": " covers your deposit and instalments until title is delivered. If the project is not completed, the guarantee responds.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1e",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1b",
+              "text": "In several EU jurisdictions this is standard. In Cyprus it is ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1c",
+              "text": "not a legal requirement",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1d",
+              "text": ", so you have to request it and have it written into the contract.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1g",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1f",
+              "text": "There is a real divide here between larger and smaller developers: established companies with banking relationships can usually provide a guarantee; smaller ones often cannot. A developer who deflects the question has told you something about their financial standing without meaning to.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1i",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1h",
+              "text": "Escrow Accounts on Cyprus Property Purchases",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1k",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1j",
+              "text": "Under an escrow arrangement your payments go to a third party rather than directly to the developer, and are released only when defined milestones are met.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1o",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1l",
+              "text": "This is also ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1m",
+              "text": "not compulsory",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1n",
+              "text": " in Cyprus, though some reputable developers offer it. If it is offered, establish:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1q",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1p",
+              "text": "Who holds the escrow account — a bank or a law firm?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1s",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1r",
+              "text": "On what criteria are funds released, and who certifies that the milestone is met?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1u",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1t",
+              "text": "What happens to the balance if the project fails?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1w",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1v",
+              "text": "Depositing the Contract at the Land Registry: the Protection That Matters Most",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1y",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1x",
+              "text": "If you remember one thing from this guide, make it this.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt24",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1z",
+              "text": "The signed sale contract must be ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt20",
+              "text": "deposited with the Department of Lands and Surveys",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt21",
+              "text": ". Doing so creates the ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt22",
+              "text": "Specific Performance Right",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt23",
+              "text": " — your enforceable right to have the property registered in your name, effective even if the developer later runs into difficulty or attempts to sell the same unit twice.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt28",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt25",
+              "text": "The deposit is ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt26",
+              "text": "time-limited",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt27",
+              "text": ". Published sources differ on the exact period, so have your lawyer confirm the deadline that currently applies and confirm in writing that it has been done. Miss it and the protection is lost; it cannot be reinstated later.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2a",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt29",
+              "text": "This one administrative act is worth more than every assurance given in a sales meeting combined.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2c",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2b",
+              "text": "The Developer's Mortgage on the Land and Why You Need a Waiver Letter",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2e",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2d",
+              "text": "If the developer borrowed against the land to fund construction, a charge sits over it — and your unit cannot be separated out while that charge remains.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2g",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2f",
+              "text": "Two things need settling:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2j",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2h",
+              "text": "A waiver letter from the bank",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2i",
+              "text": " releasing your unit, or a contractual undertaking with a timetable to discharge the charge before handover.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2k",
+              "text": "Payments routed through escrow",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2l",
+              "text": ", so your instalments demonstrably go toward discharging the relevant portion rather than elsewhere.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2r",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2n",
+              "text": "Without one or the other you are carrying a risk you cannot control. How to assess a developer's standing beforehand is covered in ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2p",
+              "text": "how to vet a Cyprus developer",
+              "_type": "span",
+              "marks": [
+                "pt2o"
+              ]
+            },
+            {
+              "_key": "pt2q",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt2o",
+              "href": "/blog/how-to-vet-cyprus-developer",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt2t",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2s",
+              "text": "What UK and International Buyers Should Not Assume",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2v",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2u",
+              "text": "If you have bought new-build at home, two habits do not transfer.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2y",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2w",
+              "text": "There is no Cyprus equivalent of an NHBC-style structural warranty.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2x",
+              "text": " Defects cover comes from the contract, which is why the defects liability clause below matters.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt31",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2z",
+              "text": "Deposits are not held by a solicitor as standard.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt30",
+              "text": " Unless escrow is expressly agreed, your money goes to the developer.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt33",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt32",
+              "text": "Contract Clauses to Negotiate on an Off-Plan Purchase",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt35",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt34",
+              "text": "Developer standard contracts are, predictably, seller-friendly. These belong on the negotiation list:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt38",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt36",
+              "text": "A firm completion date",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt37",
+              "text": " plus a long-stop date beyond which you may rescind and recover your deposit in full",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3b",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt39",
+              "text": "Liquidated damages",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3a",
+              "text": " for delay past a defined grace period",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3e",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3c",
+              "text": "A bank guarantee or performance bond",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3d",
+              "text": " covering deposit and instalments until title transfer",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3h",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3f",
+              "text": "A defects liability period of at least 24 months",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3g",
+              "text": " from handover, expressly including structural and waterproofing defects",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3k",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3i",
+              "text": "An assignment right",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3j",
+              "text": " — the ability to transfer the contract to a third party before delivery",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3n",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3l",
+              "text": "A reduced-VAT warranty",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3m",
+              "text": " if you intend to claim the 5% rate",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3q",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3o",
+              "text": "A representation that the property is unencumbered",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3p",
+              "text": ", or a binding undertaking and timetable to discharge",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3t",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3r",
+              "text": "Specification of materials and finishes",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3s",
+              "text": ", with remedies for deviation",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt3v",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3u",
+              "text": "The last two cause most disputes. If the contract says only \"high-quality finishes\", you have nothing to enforce.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3x",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt3w",
+              "text": "What Happens If the Developer Becomes Insolvent",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3z",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3y",
+              "text": "This is the scenario the whole apparatus exists for.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt42",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt40",
+              "text": "With the contract deposited",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt41",
+              "text": ", you hold an enforceable right to registration — a materially stronger position than an ordinary creditor.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt45",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt43",
+              "text": "With a bank guarantee",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt44",
+              "text": ", the payments you have made are covered.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt48",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt46",
+              "text": "With neither",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt47",
+              "text": ", you join the queue of creditors, and those processes take years and rarely pay out in full.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt4a",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt49",
+              "text": "Cyprus has enacted remedial legislation for buyers left without title deeds. Its legal status has recently been the subject of constitutional challenge, so do not treat it as your safety net — ask your lawyer for the current position.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt4c",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt4b",
+              "text": "Inspection Before the Final Payment",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt4e",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt4d",
+              "text": "The final instalment is your last piece of leverage. Do not release it before you have checked.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt4i",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt4f",
+              "text": "Commission an ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt4g",
+              "text": "independent inspection",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt4h",
+              "text": " and compare the finished unit against the contracted specification: materials, fittings, dimensions, working services. Defects should be listed in writing and remedied before the final payment.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt4k",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt4j",
+              "text": "If you are buying from abroad, have the inspection done by someone acting for you — not the developer, and not the developer's partners.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "impy",
+      "_type": "projectsSectionBlock",
+      "title": "Browse New-Build Projects in Cyprus",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "impz",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt4",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "We deal only in new-build from licensed Cypriot developers at developer pricing. For any project you are considering, we will tell you which safeguards that developer typically accepts — and where, in our experience, there is no room to negotiate. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2",
+              "text": "Request a personalised shortlist",
+              "_type": "span",
+              "marks": [
+                "pt1"
+              ]
+            },
+            {
+              "_key": "pt3",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt1",
+              "href": "/contacts",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt6",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt5",
+              "text": "This guide is for general information and reflects the position as of the date above; the legal framework around off-plan purchases is evolving. It is not legal advice. Cyprus VIP Estates is a real estate marketing and consulting agency; contract drafting, deadlines, Land Registry deposits and guarantees should be handled by an independent licensed Cyprus lawyer of your own choosing.",
+              "_type": "span",
+              "marks": [
+                "em"
+              ]
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": null,
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:09.315Z",
+  "updatedAt": "2026-08-04T15:40:09.315Z"
+}

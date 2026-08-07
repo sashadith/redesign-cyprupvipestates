@@ -1,0 +1,1206 @@
+{
+  "id": "9bd7a4ae-0962-4d0f-bf3f-cfa7c2ac1987",
+  "sanityId": "local-71034a3c-7c45-470c-8a30-f92efb63585b",
+  "translationGroupId": "9ae09e23-1d86-4785-8a4c-b47c21c0c6b4",
+  "language": "de",
+  "slug": "kurzzeitvermietung-zypern-registrierung",
+  "title": "Kurzzeitvermietung auf Zypern: Registrierung, Pflichten und Bußgelder",
+  "excerpt": "Wer auf Zypern über Airbnb oder Booking vermietet, braucht eine Registrierungsnummer. Was dafür nötig ist und was bei Verstößen droht.",
+  "status": "DRAFT",
+  "authorId": "5a63a569-3b41-4157-ae07-b3daec063833",
+  "categoryId": null,
+  "previewImage": null,
+  "seo": {
+    "metaTitle": "Airbnb auf Zypern: Registrierung und Regeln für Vermieter",
+    "metaDescription": "Kurzzeitvermietung auf Zypern erfordert eine Registrierung beim Tourismusministerium. Pflichten, Steuern und Bußgelder bis 5.000 € im Überblick."
+  },
+  "contentBlocks": [
+    {
+      "_key": "imp3w",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt1",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Wer auf Zypern eine Immobilie kauft und sie über Airbnb, Booking.com oder eine ähnliche Plattform vermieten möchte, braucht dafür eine behördliche Registrierung. Das ist keine Formalie am Rande: Vermietung ohne Registrierungsnummer ist eine Straftat, und die Aufsicht ist in den vergangenen zwei Jahren deutlich strenger geworden.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2",
+              "text": "Die gute Nachricht: Das Verfahren ist überschaubar, wenn man weiß, was verlangt wird. Dieser Leitfaden erklärt, wer registrierungspflichtig ist, welche Unterlagen nötig sind, welche Steuern anfallen und was bei Verstößen droht.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt5",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt4",
+              "text": "Registrierungspflicht für Kurzzeitvermietung auf Zypern: Wer betroffen ist",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt9",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt6",
+              "text": "Grundlage ist das Gesetz zur Regulierung von Hotels und touristischen Unterkünften in der Fassung von 2020 (9(I)/2020). Danach muss jede Immobilie, die ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt7",
+              "text": "an Touristen für weniger als 90 aufeinanderfolgende Tage",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt8",
+              "text": " vermietet wird, im Register für touristische Selbstversorgerunterkünfte eingetragen sein.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptd",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pta",
+              "text": "Zuständig ist heute das ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptb",
+              "text": "stellvertretende Tourismusministerium",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptc",
+              "text": ", das die Aufgaben der früheren Cyprus Tourism Organisation übernommen hat.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptf",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pte",
+              "text": "Das Register unterscheidet drei Kategorien:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pti",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptg",
+              "text": "Möblierte Villen",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pth",
+              "text": " — eigenständige Objekte mit privatem Zugang und alleiniger Nutzung des Grundstücks",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ptl",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptj",
+              "text": "Möblierte Wohnhäuser",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptk",
+              "text": " — Häuser in einer Reihe oder Anlage mit eigenem oder gemeinsamem Zugang",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pto",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptm",
+              "text": "Wohnungen",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptn",
+              "text": " — abgeschlossene, eigenständige Einheiten innerhalb eines Gebäudes",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pts",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptp",
+              "text": "Die zugeteilte ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "ptq",
+              "text": "Registrierungsnummer muss in jedem Inserat sichtbar sein",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "ptr",
+              "text": " — auf Airbnb, Booking.com und jeder anderen Plattform.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptu",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ptt",
+              "text": "Voraussetzungen für die Registrierung: Versicherung, Steuernummer und Sicherheit",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptw",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptv",
+              "text": "Für den Antrag benötigen Sie im Wesentlichen:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "ptz",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ptx",
+              "text": "Steuerliche Registrierung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pty",
+              "text": " bei der zyprischen Steuerbehörde — Steuernummer und, sofern erforderlich, Umsatzsteuernummer",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt12",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt10",
+              "text": "Gültige Gebäudeversicherung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt11",
+              "text": ", mindestens gegen Feuer und Naturgefahren",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt15",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt13",
+              "text": "Nutzungsgenehmigung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt14",
+              "text": " (certificate of occupancy) für die Immobilie",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt17",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt16",
+              "text": "Einhaltung der Gesundheits- und Sicherheitsstandards",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1a",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt18",
+              "text": "Angaben zur Unterkunft",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt19",
+              "text": ": Adresse, Zahl der Schlaf- und Badezimmer, maximale Gästezahl",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1d",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1b",
+              "text": "Eidesstattliche Versicherung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1c",
+              "text": ", dass die technischen und betrieblichen Mindestanforderungen erfüllt sind",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1g",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1e",
+              "text": "Jahresgebühr",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1f",
+              "text": " an die Behörde",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt1i",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1h",
+              "text": "Sowohl Privatpersonen als auch Gesellschaften können sich registrieren lassen. Ein Vorschlag, die Zahl der Objekte pro Eigentümer zu begrenzen, wurde 2025 von der Generalstaatsanwaltschaft abgelehnt — derzeit gibt es also keine Obergrenze.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1l",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1j",
+              "text": "Wichtig für Neubauten:",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1k",
+              "text": " Die Registrierung setzt die Nutzungsgenehmigung voraus. Wer off-plan kauft und von Beginn an vermieten will, sollte den zeitlichen Ablauf mit einplanen.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1n",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt1m",
+              "text": "Bußgelder bei Vermietung ohne Registrierung auf Zypern",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1p",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1o",
+              "text": "Hier lohnt es sich, genau hinzusehen, denn die Sanktionen sind nicht symbolisch.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt1x",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1q",
+              "text": "Für das Anbieten von Kurzzeitunterkünften ohne Registrierung drohen ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1r",
+              "text": "Geldstrafen von bis zu 5.000 €",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1s",
+              "text": " und/oder ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1t",
+              "text": "Freiheitsstrafe von bis zu einem Jahr",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1u",
+              "text": ". Wird der Verstoß nach einer Verurteilung fortgesetzt, können zusätzlich ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1v",
+              "text": "200 € pro Tag",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt1w",
+              "text": " verhängt werden.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt21",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt1y",
+              "text": "Hinzu kommt die Plattformseite: Airbnb und Booking.com sind verpflichtet, an der Durchsetzung mitzuwirken. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt1z",
+              "text": "Nicht registrierte Inserate werden entfernt",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt20",
+              "text": ", und den Plattformen selbst drohen Sanktionen, wenn sie das nicht tun.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt23",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt22",
+              "text": "Die Aufsicht ist auch praktisch spürbar geworden. Seit Beginn der Kontrollen wurden Beschwerden gegen nicht lizenzierte Anbieter eingereicht, und die Steuerbehörde führt gezielte Prüfungen zu Mehrwertsteuer, Einkommensteuer und Gesundheitsbeitrag durch. Das Ministerium erinnert Vermieter inzwischen alle zwei Wochen per E-Mail an auslaufende Registrierungen — ein Hinweis darauf, wie eng das System mittlerweile geführt wird.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt25",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt24",
+              "text": "Steuern auf Kurzzeitvermietung: Einkommensteuer, Mehrwertsteuer und Gesundheitsbeitrag",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt27",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt26",
+              "text": "Die Registrierung ist die eine Pflicht, die steuerliche Behandlung die andere.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2e",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt28",
+              "text": "Mehrwertsteuer.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt29",
+              "text": " Kurzzeitvermietung zu touristischen Zwecken unterliegt dem ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2a",
+              "text": "ermäßigten Satz von 9 %",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2b",
+              "text": ", wenn Sie direkt an den Gast vermieten. Ab einem Jahresumsatz von rund ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2c",
+              "text": "15.600 €",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2d",
+              "text": " aus dieser Tätigkeit besteht Registrierungspflicht für die Mehrwertsteuer.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2h",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2f",
+              "text": "Einkommensteuer.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2g",
+              "text": " Mieteinnahmen aus zyprischen Immobilien sind auf Zypern einkommensteuerpflichtig, auch für Nichtansässige. Mit der Steuerreform 2026 wurde der Grundfreibetrag angehoben; die genauen Stufen darüber sollten Sie mit einem Steuerberater abklären, da sie zuletzt noch angepasst wurden.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2m",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2i",
+              "text": "Verteidigungsabgabe.",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2j",
+              "text": " Die Steuerreform 2026 hat die ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2k",
+              "text": "Verteidigungsabgabe auf Mieteinnahmen abgeschafft",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2l",
+              "text": ". Zuvor betrug sie 3 % und galt ohnehin nur für auf Zypern steuerlich ansässige und dort domizilierte Personen — wer in Deutschland ansässig blieb, war nie betroffen. Ältere Ratgeber, die diese Abgabe noch aufführen, sind nicht auf dem Stand der Reform.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2p",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2n",
+              "text": "Gesundheitsbeitrag (GESY).",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2o",
+              "text": " Auf Mieteinnahmen fällt ein Beitrag zum allgemeinen Gesundheitssystem an — eine kleine Position, die in Renditerechnungen regelmäßig fehlt.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2u",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2q",
+              "text": "Und der Punkt, den deutsche Vermieter zusätzlich beachten müssen: Diese Einkünfte sind auch in Deutschland zu erklären. Wie das Zusammenspiel funktioniert, behandeln wir in ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2s",
+              "text": "Mieteinnahmen aus Zypern versteuern",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2t",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt2w",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt2v",
+              "text": "Gästemeldung über das Xenia-System innerhalb von 24 Stunden",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt30",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt2x",
+              "text": "Eine laufende Pflicht, die viele Vermieter übersehen: Die Daten Ihrer Gäste müssen ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2y",
+              "text": "innerhalb von 24 Stunden nach Anreise",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt2z",
+              "text": " über das staatliche Xenia-System gemeldet werden.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt32",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt31",
+              "text": "Das ist bei Selbstverwaltung aus Deutschland heraus in der Praxis der unangenehmste Teil — es bedeutet, dass bei jeder Anreise jemand innerhalb eines Tages tätig werden muss. Verwaltungsgesellschaften übernehmen das üblicherweise mit.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt34",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt33",
+              "text": "Was die neue EU-Verordnung für zyprische Vermieter ändert",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt38",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt35",
+              "text": "Seit ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt36",
+              "text": "20. Mai 2026",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt37",
+              "text": " besteht eine einheitliche digitale EU-Datenbank, in der registrierte Kurzzeitvermietungen aller Mitgliedstaaten erfasst sind — Zypern eingeschlossen. Grundlage ist die EU-Verordnung 2024/1028, und Zypern gehört zu den ersten Staaten, die sie umgesetzt haben.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3a",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt39",
+              "text": "Praktisch bedeutet das: mehr Datenaustausch zwischen Plattformen und Behörden und damit eine deutlich geringere Wahrscheinlichkeit, dass unregistrierte Vermietung unbemerkt bleibt. Wer die Registrierung bisher aufgeschoben hat, sollte das nicht länger tun.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3c",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt3b",
+              "text": "Kurzzeit- oder Langzeitvermietung auf Zypern: Was sich rechnet",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3e",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3d",
+              "text": "Nach all den Pflichten die naheliegende Frage: Lohnt sich der Aufwand?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3h",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3f",
+              "text": "Für Kurzzeitvermietung spricht",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3g",
+              "text": " die höhere Bruttorendite in touristischen Lagen. Gut geführte Objekte in erstklassigen Küstenlagen erreichen berichteten Werten zufolge 6 bis 10 % brutto auf Jahresbasis — deutlich über dem, was eine langzeitvermietete Wohnung abwirft.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3k",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3i",
+              "text": "Dagegen spricht",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3j",
+              "text": " der Aufwand: Registrierung, Jahresgebühr, Gästemeldung binnen 24 Stunden, Reinigung zwischen den Aufenthalten, Mehrwertsteuer ab der Umsatzschwelle — und eine Verwaltung vor Ort, deren Honorar einen spürbaren Teil der Mehrrendite aufzehrt.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3n",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3l",
+              "text": "Langzeitvermietung",
+              "_type": "span",
+              "marks": [
+                "strong"
+              ]
+            },
+            {
+              "_key": "pt3m",
+              "text": " ist deutlich einfacher: keine Registrierungspflicht im touristischen Register, keine Gästemeldung, ein Mieter statt fünfzig. In Limassol liegen die Bruttorenditen bei Wohnungen bei rund 5,3 bis 6 % und damit ohnehin auf gutem Niveau, gestützt von ganzjähriger Nachfrage.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3s",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3o",
+              "text": "Grob gesagt: Kurzzeitvermietung ist ein kleines Unternehmen, Langzeitvermietung eine Kapitalanlage. Mehr zum Renditevergleich in ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt3q",
+              "text": "Wohnung oder Villa auf Zypern",
+              "_type": "span",
+              "marks": [
+                "pt3p"
+              ]
+            },
+            {
+              "_key": "pt3r",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt3p",
+              "href": "/de/blog/wohnung-oder-villa-auf-zypern",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt3u",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "pt3t",
+              "text": "Kurzzeitvermietung aus Deutschland verwalten",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3w",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3v",
+              "text": "Wenn Sie nicht auf Zypern leben, brauchen Sie jemanden vor Ort. Zu klären ist dabei konkret:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt3y",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3x",
+              "text": "Wer meldet die Gäste innerhalb der 24-Stunden-Frist?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt40",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt3z",
+              "text": "Wer übernimmt Reinigung und Schlüsselübergabe zwischen den Aufenthalten?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt42",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt41",
+              "text": "Wer reagiert am selben Tag, wenn die Klimaanlage im August ausfällt?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt44",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt43",
+              "text": "Wer überwacht die Verlängerung der Registrierung?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt46",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt45",
+              "text": "Wie hoch ist das Honorar — als Prozentsatz vom Umsatz, und ab welcher Auslastung trägt es sich?",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt48",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt47",
+              "text": "Rechnen Sie diese Kosten in die Rendite ein, bevor Sie die 6 bis 10 % als Ihre Zahl betrachten. Sie sind eine Bruttoangabe vor Verwaltung.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "imp3x",
+      "_type": "projectsSectionBlock",
+      "title": "Immobilien auf Zypern in touristischen Lagen ansehen",
+      "pageSize": 12,
+      "projects": []
+    },
+    {
+      "_key": "imp3y",
+      "_type": "textContent",
+      "content": [
+        {
+          "_key": "pt4",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt0",
+              "text": "Wenn Kurzzeitvermietung Teil Ihres Plans ist, ist die Lage entscheidend — und nicht jede Anlage erlaubt sie überhaupt. Sagen Sie uns, was Sie vorhaben, und wir zeigen Ihnen Objekte, bei denen das realistisch funktioniert. ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "pt2",
+              "text": "Persönliche Auswahl anfordern",
+              "_type": "span",
+              "marks": [
+                "pt1"
+              ]
+            },
+            {
+              "_key": "pt3",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "pt1",
+              "href": "/de/contacts",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "pt6",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pt5",
+              "text": "Dieser Leitfaden dient der allgemeinen Information und gibt den Stand zum genannten Datum wieder; die Regeln zur Kurzzeitvermietung ändern sich häufig. Es handelt sich nicht um Rechts- oder Steuerberatung. Cyprus VIP Estates ist eine Immobilien-Marketing- und Beratungsagentur; die Registrierung, steuerliche Anmeldung und laufende Compliance sollten Sie mit einem unabhängigen lizenzierten zyprischen Anwalt und Steuerberater klären.",
+              "_type": "span",
+              "marks": [
+                "em"
+              ]
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "videoBlock": null,
+  "popularProperties": null,
+  "relatedArticles": null,
+  "readingTime": null,
+  "publishedAt": null,
+  "scheduledAt": null,
+  "createdAt": "2026-08-04T15:40:10.199Z",
+  "updatedAt": "2026-08-07T06:29:01.512Z"
+}
