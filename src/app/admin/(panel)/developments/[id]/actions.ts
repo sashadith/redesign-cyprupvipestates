@@ -574,7 +574,10 @@ export async function setDevelopmentSyncMode(developmentId: string, mode: "manua
 // only fires when something was actually written (see feedSync.ts/
 // imageMirror.ts), so a routine click stays fast and restart-free.
 export async function syncOneDevelopmentAction(developmentId: string): Promise<SyncOneDevelopmentResult> {
-  const result = await syncOneDevelopment(developmentId, { mirror: true });
+  // forceMirror (2026-08-08): admin-initiated click, deliberately bypasses
+  // the published-project mirror freeze the nightly cron respects — see
+  // feedSync.ts's syncOneProject for the freeze itself.
+  const result = await syncOneDevelopment(developmentId, { mirror: true, forceMirror: true });
   revalidatePath(`/admin/developments/${developmentId}`);
   return result;
 }

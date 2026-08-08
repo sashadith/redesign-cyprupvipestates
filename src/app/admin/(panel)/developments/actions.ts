@@ -31,10 +31,14 @@ export async function setDriveSyncInterval(developerAccountId: string, interval:
 // skip-if-exists + scheduleAppRestart()'s own debounce (imageMirror.ts) keep
 // a routine "nothing new" click fast and restart-free; only a click that
 // hits genuinely new/changed images pays the mirroring cost.
+// forceMirror (2026-08-08): this is an admin-initiated "sync now" click, so
+// it deliberately bypasses the published-project mirror freeze (feedSync.ts)
+// the nightly cron respects — an admin who clicks this wants a real re-pull,
+// images included, regardless of publish status.
 export async function runSync(formData: FormData) {
   const dev = String(formData.get("dev") ?? "");
-  if (dev && dev !== "all") await syncDeveloper(dev, { mirror: true });
-  else await syncAll({ mirror: true });
+  if (dev && dev !== "all") await syncDeveloper(dev, { mirror: true, forceMirror: true });
+  else await syncAll({ mirror: true, forceMirror: true });
   revalidatePath("/admin/developments");
 }
 

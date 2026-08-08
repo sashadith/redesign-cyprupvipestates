@@ -168,6 +168,7 @@ const FROZEN_WHEN_PUBLISHED = ["publicName", "description", "amenities", "galler
 async function syncFeedUnitsPreservingUnlisted(
   developmentId: string,
   freshUnits: UnitVM[],
+  opts: { freezeExistingUnitMedia?: boolean } = {},
 ): Promise<{ written: number; createdCount: number; unlisted: { ref: string; label: string }[] }> {
   const existing = await prisma.developmentUnit.findMany({
     where: { developmentId, source: "feed" },
@@ -183,7 +184,17 @@ async function syncFeedUnitsPreservingUnlisted(
     const row = unitRow(u, developmentId, i);
     const match = u.ref ? existingByRef.get(u.ref) : undefined;
     if (match) {
-      await prisma.developmentUnit.update({ where: { id: match.id }, data: row });
+      // Photos/plans on an ALREADY-KNOWN unit of a published development are
+      // never mirrored in the first place when frozen (see syncOneProject) —
+      // `row.photos`/`row.plans` here would still be the feed's raw external
+      // URLs (mirroring was skipped, not the field), so writing them as-is
+      // would overwrite a correctly-mirrored local URL with a live hotlink.
+      // Omit both keys entirely so the update leaves them untouched, exactly
+      // like FROZEN_WHEN_PUBLISHED does for the Development row itself. A
+      // genuinely NEW unit (no match) always gets the full row below,
+      // photos/plans included — "new units get their photos once" holds.
+      const data = opts.freezeExistingUnitMedia ? (({ photos, plans, ...rest }) => rest)(row) : row;
+      await prisma.developmentUnit.update({ where: { id: match.id }, data });
     } else {
       await prisma.developmentUnit.create({ data: row });
       createdCount++;
@@ -209,19 +220,50 @@ async function syncFeedUnitsPreservingUnlisted(
 // completeness guard (checkFeedCompleteness) and the actual sync share one
 // fetch instead of two. undefined (the syncOneDevelopment call site) means
 // "fetch it fresh here"; null means "already looked up, not found".
-async function syncOneProject(dev: string, id: string, accountId: string, opts: { mirror?: boolean; vm?: ProjectVM | null } = {}): Promise<ProjectSyncOutcome> {
+async function syncOneProject(dev: string, id: string, accountId: string, opts: { mirror?: boolean; vm?: ProjectVM | null; forceMirror?: boolean } = {}): Promise<ProjectSyncOutcome> {
   const vm = opts.vm !== undefined ? opts.vm : await getPreviewProject(dev, id);
   if (!vm) return { ok: false, created: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, unitsCreated: 0, unitsUnlisted: [] };
   const feedKey = `${dev}:${id}`;
+  // Fetched up front (used to be after mirroring) so the freeze check below
+  // can gate the download itself, not just the DB write.
+  const existing = await prisma.development.findUnique({ where: { feedKey }, select: { id: true, publishStatus: true } });
+  // Published + not admin-forced: skip mirroring itself, not just the DB
+  // write. FROZEN_WHEN_PUBLISHED already discarded the resulting URLs from
+  // the Development update either way, so mirrorAll() was downloading and
+  // writing 3 fresh webp files to disk for nothing every time the feed's
+  // gallery/plans drifted even slightly — every such file was an orphan the
+  // instant it was created (found 2026-08-08 investigating the orphan
+  // cleanup: mirrorImage() itself already skips re-downloading an
+  // already-mirrored hash via its own exists() check, line ~90 — this isn't
+  // that path; a *new* hash from a *published* project's drifted feed URL
+  // was still always downloaded and mirrored, just never referenced).
+  // opts.forceMirror bypasses this — the admin "Pull units from feed"/Force-
+  // Sync buttons (runSync, syncOneDevelopmentAction) always pass it, so an
+  // admin can deliberately re-mirror a published project on demand.
+  const isPublished = existing?.publishStatus === "published";
+  const freezeMirror = isPublished && !opts.forceMirror;
   let mirroredNewFiles = false;
   if (opts.mirror) {
     const dk = devKeyFor(feedKey);
-    const gallery = await mirrorAll(vm.gallery, dk);
-    vm.gallery = gallery.urls;
-    const plans = await mirrorAll(vm.plans, dk);
-    vm.plans = plans.urls;
-    mirroredNewFiles = gallery.anyNew || plans.anyNew;
+    if (!freezeMirror) {
+      const gallery = await mirrorAll(vm.gallery, dk);
+      vm.gallery = gallery.urls;
+      const plans = await mirrorAll(vm.plans, dk);
+      vm.plans = plans.urls;
+      mirroredNewFiles = gallery.anyNew || plans.anyNew;
+    }
+    // Units: a brand-new unit (not yet in the DB) still gets its photos/plans
+    // mirrored once even on a frozen published project — "new units on a
+    // published project get their photos" was the explicit agreed exception.
+    // Existing/matched units are skipped entirely when frozen; their DB write
+    // (syncFeedUnitsPreservingUnlisted, below) also omits photos/plans for
+    // those so a skipped-mirror unit's raw external feed URL can never
+    // overwrite its already-correct local one.
+    const knownRefs = freezeMirror
+      ? new Set((await prisma.developmentUnit.findMany({ where: { developmentId: existing!.id, source: "feed" }, select: { ref: true } })).map((u) => u.ref).filter(Boolean))
+      : null;
     for (const u of vm.units) {
+      if (knownRefs && u.ref && knownRefs.has(u.ref)) continue; // existing unit, published, not forced — skip
       const photos = await mirrorAll(u.photos, dk);
       u.photos = photos.urls;
       const uPlans = await mirrorAll(u.plans, dk);
@@ -229,7 +271,6 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
       if (photos.anyNew || uPlans.anyNew) mirroredNewFiles = true;
     }
   }
-  const existing = await prisma.development.findUnique({ where: { feedKey }, select: { id: true, publishStatus: true } });
   const fullData = developmentRow(vm, dev, id, accountId);
   let updateData: Partial<typeof fullData> = fullData;
   if (existing?.publishStatus === "published") {
@@ -255,7 +296,7 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
   }
   let unitsWritten: number, unitsCreated = 0, unitsUnlisted: { ref: string; label: string }[] = [];
   if (development.publishStatus === "published") {
-    const diff = await syncFeedUnitsPreservingUnlisted(development.id, vm.units);
+    const diff = await syncFeedUnitsPreservingUnlisted(development.id, vm.units, { freezeExistingUnitMedia: freezeMirror });
     unitsWritten = diff.written; unitsCreated = diff.createdCount; unitsUnlisted = diff.unlisted;
   } else {
     await prisma.developmentUnit.deleteMany({ where: { developmentId: development.id, source: "feed" } });
@@ -315,7 +356,7 @@ async function checkFeedCompleteness(
 
 // Core loop, no restart side-effect — syncAll() calls this per developer so a
 // full run schedules exactly ONE restart at the end, not one per developer.
-async function syncDeveloperCore(dev: string, opts: { mirror?: boolean } = {}): Promise<SyncResult> {
+async function syncDeveloperCore(dev: string, opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncResult> {
   const accountId = await ensureAccount(dev);
   const ids = await listProjectIds(dev);
 
@@ -353,13 +394,13 @@ async function syncDeveloperCore(dev: string, opts: { mirror?: boolean } = {}): 
 // re-hit already-mirrored images (skip-if-exists), and scheduleAppRestart()
 // itself is now debounced too (see imageMirror.ts), so this is belt-and-suspenders
 // against restart-storming a routine "nothing changed" sync.
-export async function syncDeveloper(dev: string, opts: { mirror?: boolean } = {}): Promise<SyncResult> {
+export async function syncDeveloper(dev: string, opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncResult> {
   const result = await syncDeveloperCore(dev, opts);
   if (opts.mirror && result.mirroredNewFiles) scheduleAppRestart();
   return result;
 }
 
-export async function syncAll(opts: { mirror?: boolean } = {}): Promise<SyncResult[]> {
+export async function syncAll(opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncResult[]> {
   const out: SyncResult[] = [];
   for (const d of SYNCED_DEVS) out.push(await syncDeveloperCore(d, opts));
   if (opts.mirror && out.some((r) => r.mirroredNewFiles)) scheduleAppRestart();
@@ -374,7 +415,7 @@ export async function syncAll(opts: { mirror?: boolean } = {}): Promise<SyncResu
 // true) — the caller renders a message that says so explicitly, never a
 // silent no-op.
 export type SyncOneDevelopmentResult = { ok: boolean; unitsWritten: number; skippedManual: boolean; error?: string };
-export async function syncOneDevelopment(developmentId: string, opts: { mirror?: boolean } = {}): Promise<SyncOneDevelopmentResult> {
+export async function syncOneDevelopment(developmentId: string, opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncOneDevelopmentResult> {
   const development = await prisma.development.findUnique({ where: { id: developmentId }, select: { dev: true, feedProjectId: true } });
   if (!development?.dev || !development?.feedProjectId) {
     return { ok: false, unitsWritten: 0, skippedManual: false, error: "no feed configured for this development" };
