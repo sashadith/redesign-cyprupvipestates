@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getPreviewProject, listProjectIds, type ProjectVM } from "@/app/preview-project/feeds";
 import type { UnitVM } from "@/app/preview-project/UnitsView";
-import { mirrorAll, devKeyFor, scheduleAppRestart, sourceUrlHash, hashFromMirroredUrl } from "@/lib/imageMirror";
+import { mirrorAll, mirrorImage, devKeyFor, scheduleAppRestart, sourceUrlHash, hashFromMirroredUrl, classifyByContent } from "@/lib/imageMirror";
 import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
 import { recomputeDevelopmentDerivedState } from "@/lib/developmentDerivedState";
 
@@ -220,24 +220,81 @@ async function syncFeedUnitsPreservingUnlisted(
 // completeness guard (checkFeedCompleteness) and the actual sync share one
 // fetch instead of two. undefined (the syncOneDevelopment call site) means
 // "fetch it fresh here"; null means "already looked up, not found".
-// Text-only comparison, no network — the shared basis for both the
-// hash-only drift check (freezeMirror: nothing was downloaded, only fresh
-// feed URLs are known) and the "new in feed" picker list (forceMirror:
-// freshUrls are already-local mirrored URLs, same comparison still works
-// since hashFromMirroredUrl/sourceUrlHash agree on the same hash for the
-// same source image either way).
-function countNewAgainstStored(freshSourceUrls: string[], storedMirroredUrls: string[]): number {
-  const storedHashes = new Set(storedMirroredUrls.map(hashFromMirroredUrl).filter((h): h is string => !!h));
-  let n = 0;
-  for (const u of freshSourceUrls) if (!storedHashes.has(sourceUrlHash(u))) n++;
-  return n;
-}
-function pickNewLocalUrls(freshLocalUrls: string[], storedMirroredUrls: string[]): string[] {
-  const storedHashes = new Set(storedMirroredUrls.map(hashFromMirroredUrl).filter((h): h is string => !!h));
-  return freshLocalUrls.filter((u) => {
+
+// Classifies fresh source URLs against what's already stored for the SAME
+// scope (one project's gallery, or one unit's own photos — never mix
+// scopes, or a candidate could spuriously "match" an unrelated room).
+// Cheap hash comparison first (no network); anything that mismatches by
+// hash is checked against VerifiedDuplicateImage (a vendor's URL-only churn,
+// confirmed 2026-08-08 for Weblium/Domenica and BBF's unit-photo storage,
+// only ever needs downloading+content-verifying once per distinct URL —
+// see imageMirror.ts's classifyByContent doc comment for the full story);
+// anything still unresolved is downloaded ONCE into memory and content-
+// compared (never persisted here — no mirrorImage() call), with newly
+// confirmed duplicates memoized so the SAME vendor rotation is never
+// re-downloaded on a later sync. Never mirrors/persists anything itself —
+// callers decide what to do with genuinelyNew (count it, or mirror it) and
+// reuse (map straight to the existing local file, no download needed at
+// all).
+async function classifyFreshUrls(
+  freshSourceUrls: string[],
+  storedMirroredUrls: string[],
+): Promise<{ genuinelyNew: string[]; reuse: Map<string, string> }> {
+  const storedHashes = new Map<string, string>();
+  for (const u of storedMirroredUrls) {
     const h = hashFromMirroredUrl(u);
-    return h && !storedHashes.has(h);
+    if (h) storedHashes.set(h, u);
+  }
+  const reuse = new Map<string, string>(); // fresh source url -> local url to reuse, no download needed
+  const candidates: string[] = [];
+  for (const u of freshSourceUrls) {
+    const existingUrl = storedHashes.get(sourceUrlHash(u));
+    if (existingUrl) reuse.set(u, existingUrl);
+    else candidates.push(u);
+  }
+  if (!candidates.length) return { genuinelyNew: [], reuse };
+
+  const known = await prisma.verifiedDuplicateImage.findMany({
+    where: { sourceHash: { in: candidates.map(sourceUrlHash) } },
+    select: { sourceHash: true, matchedHash: true },
   });
+  const knownMap = new Map(known.map((k) => [k.sourceHash, k.matchedHash]));
+  const stillUnknown: string[] = [];
+  for (const u of candidates) {
+    const matchedHash = knownMap.get(sourceUrlHash(u));
+    const existingUrl = matchedHash ? storedHashes.get(matchedHash) : undefined;
+    if (existingUrl) reuse.set(u, existingUrl);
+    else stillUnknown.push(u); // either never checked before, or its match fell outside this scope
+  }
+  if (!stillUnknown.length) return { genuinelyNew: [], reuse };
+
+  const { genuinelyNew, duplicateOf } = await classifyByContent(stillUnknown, storedMirroredUrls);
+  if (duplicateOf.size) {
+    await prisma.verifiedDuplicateImage.createMany({
+      data: Array.from(duplicateOf.entries()).map(([url, matchedHash]) => ({ sourceHash: sourceUrlHash(url), matchedHash })),
+      skipDuplicates: true,
+    });
+    for (const [url, matchedHash] of Array.from(duplicateOf.entries())) {
+      const existingUrl = storedHashes.get(matchedHash);
+      if (existingUrl) reuse.set(url, existingUrl); // always found in practice — matchedHash came from these exact storedMirroredUrls
+    }
+  }
+  return { genuinelyNew, reuse };
+}
+
+// Mirrors each url individually and returns a source-url -> local-url map
+// (unlike mirrorAll's flat array, which silently drops failures with no way
+// to tell which input they belonged to) — needed here to reconstruct a
+// gallery/plans/photos array that mixes reused-as-is duplicates with newly
+// mirrored genuine content, in the original order.
+async function mirrorEachTracked(urls: string[], devKey: string, concurrency = 4): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  for (let i = 0; i < urls.length; i += concurrency) {
+    const batch = urls.slice(i, i + concurrency);
+    const results = await Promise.all(batch.map((u) => mirrorImage(u, devKey)));
+    batch.forEach((u, j) => { const r = results[j]; if (r) map.set(u, r.url); });
+  }
+  return map;
 }
 
 async function syncOneProject(dev: string, id: string, accountId: string, opts: { mirror?: boolean; vm?: ProjectVM | null; forceMirror?: boolean } = {}): Promise<ProjectSyncOutcome> {
@@ -301,41 +358,59 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
       : [];
     const knownRefs = new Set(existingUnits.map((u) => u.ref).filter(Boolean));
 
-    if (!freezeMirror) {
+    if (!freezeMirror && isPublished) {
+      // Admin-forced re-mirror of a published project. Content-verify BEFORE
+      // mirroring (classifyFreshUrls) so a vendor's URL-only churn never
+      // re-downloads+re-stores an image already on disk under its original
+      // hash — only genuinely new content gets mirrored and offered as a
+      // "new in feed" pick; everything else reuses the existing local file
+      // (mirrorEachTracked below covers exactly the genuinelyNew subset).
+      const galleryClass = await classifyFreshUrls(vm.gallery, resolvedStoredGallery);
+      const plansClass = await classifyFreshUrls(vm.plans, (existing?.plans as string[] | null) ?? []);
+      const galleryNewMap = await mirrorEachTracked(galleryClass.genuinelyNew, dk);
+      const plansNewMap = await mirrorEachTracked(plansClass.genuinelyNew, dk);
+      mirroredNewFiles = galleryNewMap.size > 0 || plansNewMap.size > 0;
+      // gallery/plans stay frozen in the DB write below regardless (an
+      // admin's curated set must never be silently replaced — see
+      // FROZEN_WHEN_PUBLISHED). What CAN happen: surface the freshly
+      // mirrored genuinely-new files as "new in feed" picks, and resolve the
+      // drift flag — the admin has looked, whether or not they add anything.
+      driftPatch = {
+        imageDriftDetectedAt: null,
+        newFromFeed: {
+          gallery: Array.from(galleryNewMap.values()),
+          plans: Array.from(plansNewMap.values()),
+          driftCounts: { gallery: 0, plans: 0, units: 0 }, // resolved by this very sync
+        },
+      };
+      vm.gallery = vm.gallery.map((u) => galleryClass.reuse.get(u) ?? galleryNewMap.get(u)).filter((u): u is string => !!u);
+      vm.plans = vm.plans.map((u) => plansClass.reuse.get(u) ?? plansNewMap.get(u)).filter((u): u is string => !!u);
+    } else if (!freezeMirror) {
+      // Draft/ready/archived — unaffected by any drift/dedup bookkeeping,
+      // full normal mirror exactly as before this feature existed.
       const gallery = await mirrorAll(vm.gallery, dk);
       const plans = await mirrorAll(vm.plans, dk);
       mirroredNewFiles = gallery.anyNew || plans.anyNew;
-      if (isPublished) {
-        // opts.forceMirror: gallery/plans just got genuinely re-mirrored to
-        // disk, but stay frozen in the DB write below regardless (an admin's
-        // curated gallery/plans must never be silently replaced — see
-        // FROZEN_WHEN_PUBLISHED). What CAN happen: surface the freshly
-        // mirrored files that aren't in the curated set yet as "new in
-        // feed" picks, and resolve the drift flag — the admin has looked,
-        // whether or not they add anything.
-        driftPatch = {
-          imageDriftDetectedAt: null,
-          newFromFeed: {
-            gallery: pickNewLocalUrls(gallery.urls, resolvedStoredGallery),
-            plans: pickNewLocalUrls(plans.urls, (existing?.plans as string[] | null) ?? []),
-            driftCounts: { gallery: 0, plans: 0, units: 0 }, // resolved by this very sync
-          },
-        };
-      }
       vm.gallery = gallery.urls;
       vm.plans = plans.urls;
     } else {
-      // freezeMirror: nothing downloaded above — hash-only comparison
-      // against the raw feed URLs still sitting in vm.gallery/vm.plans.
-      const galleryDrift = countNewAgainstStored(vm.gallery, resolvedStoredGallery);
-      const plansDrift = countNewAgainstStored(vm.plans, (existing?.plans as string[] | null) ?? []);
+      // freezeMirror: published, not forced — content-verified COUNT only.
+      // classifyFreshUrls downloads hash-mismatched candidates into memory
+      // to compare, but never calls mirrorImage/persists a file, and skips
+      // the download entirely for any URL already confirmed as a duplicate
+      // on a previous sync (VerifiedDuplicateImage).
+      const galleryClass = await classifyFreshUrls(vm.gallery, resolvedStoredGallery);
+      const plansClass = await classifyFreshUrls(vm.plans, (existing?.plans as string[] | null) ?? []);
+      const galleryDrift = galleryClass.genuinelyNew.length;
+      const plansDrift = plansClass.genuinelyNew.length;
       let unitsDrift = 0;
       const existingUnitByRef = new Map(existingUnits.map((u) => [u.ref, u]));
       for (const u of vm.units) {
         const match = u.ref ? existingUnitByRef.get(u.ref) : undefined;
         if (!match) continue; // brand-new unit — not "drift" on an existing one, handled by the mirror loop below
-        unitsDrift += countNewAgainstStored(u.photos, (match.photos as string[] | null) ?? []);
-        unitsDrift += countNewAgainstStored(u.plans, (match.plans as string[] | null) ?? []);
+        const photosClass = await classifyFreshUrls(u.photos, (match.photos as string[] | null) ?? []);
+        const unitPlansClass = await classifyFreshUrls(u.plans, (match.plans as string[] | null) ?? []);
+        unitsDrift += photosClass.genuinelyNew.length + unitPlansClass.genuinelyNew.length;
       }
       const hasDrift = galleryDrift + plansDrift + unitsDrift > 0;
       const wasFlagged = !!existing?.imageDriftDetectedAt;
@@ -367,14 +442,31 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
     // Existing/matched units are skipped entirely when frozen; their DB write
     // (syncFeedUnitsPreservingUnlisted, below) also omits photos/plans for
     // those so a skipped-mirror unit's raw external feed URL can never
-    // overwrite its already-correct local one.
+    // overwrite its already-correct local one. When forced (published, not
+    // frozen) an EXISTING unit is content-verified the same way as gallery/
+    // plans above, so "reload images" doesn't blow away 30 correct photos to
+    // keep just the 1 genuinely new one — a brand-new unit has nothing to
+    // compare against and always gets the plain full mirror.
+    const existingUnitByRef = new Map(existingUnits.map((u) => [u.ref, u]));
     for (const u of vm.units) {
-      if (freezeMirror && u.ref && knownRefs.has(u.ref)) continue; // existing unit, published, not forced — skip
-      const photos = await mirrorAll(u.photos, dk);
-      u.photos = photos.urls;
-      const uPlans = await mirrorAll(u.plans, dk);
-      u.plans = uPlans.urls;
-      if (photos.anyNew || uPlans.anyNew) mirroredNewFiles = true;
+      const known = !!(u.ref && knownRefs.has(u.ref));
+      if (freezeMirror && known) continue; // existing unit, published, not forced — skip entirely
+      if (isPublished && !freezeMirror && known) {
+        const match = existingUnitByRef.get(u.ref)!;
+        const photosClass = await classifyFreshUrls(u.photos, (match.photos as string[] | null) ?? []);
+        const plansClass = await classifyFreshUrls(u.plans, (match.plans as string[] | null) ?? []);
+        const photosNewMap = await mirrorEachTracked(photosClass.genuinelyNew, dk);
+        const plansNewMap = await mirrorEachTracked(plansClass.genuinelyNew, dk);
+        u.photos = u.photos.map((p) => photosClass.reuse.get(p) ?? photosNewMap.get(p)).filter((p): p is string => !!p);
+        u.plans = u.plans.map((p) => plansClass.reuse.get(p) ?? plansNewMap.get(p)).filter((p): p is string => !!p);
+        if (photosNewMap.size > 0 || plansNewMap.size > 0) mirroredNewFiles = true;
+      } else {
+        const photos = await mirrorAll(u.photos, dk);
+        u.photos = photos.urls;
+        const uPlans = await mirrorAll(u.plans, dk);
+        u.plans = uPlans.urls;
+        if (photos.anyNew || uPlans.anyNew) mirroredNewFiles = true;
+      }
     }
   }
   const fullData = developmentRow(vm, dev, id, accountId);

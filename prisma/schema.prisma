@@ -1036,12 +1036,20 @@ model Development {
   // archival history — it's simply overwritten on the next return event.
   returnedToMarketAt DateTime?
 
-  // imageDriftDetectedAt / newFromFeed (2026-08-08): once a Development is
+  // imageDriftDetectedAt / newFromFeed (2026-08-08, content-check added
+  // same day after discovering several feed vendors reissue URLs for
+  // unchanged images — see VerifiedDuplicateImage): once a Development is
   // published, its gallery/plans are frozen (FROZEN_WHEN_PUBLISHED below) —
-  // AND, since the same day, the feed sync no longer even downloads a
-  // published project's changed images (syncOneProject's freezeMirror), only
-  // hash-compares the fresh feed URLs against what's already mirrored
-  // (sourceUrlHash/hashFromMirroredUrl, imageMirror.ts) with no download.
+  // AND the feed sync no longer downloads a published project's changed
+  // images just to check them (syncOneProject's freezeMirror). It hash-
+  // compares fresh feed URLs against what's already mirrored first
+  // (sourceUrlHash/hashFromMirroredUrl, imageMirror.ts, no download), then —
+  // ONLY for URLs that mismatch by hash — downloads and content-compares
+  // against the existing mirrored files (classifyFreshUrls in feedSync.ts,
+  // classifyByContent in imageMirror.ts) before counting something as real
+  // drift, memoizing confirmed duplicates so the same vendor URL rotation is
+  // never re-downloaded on a later sync. Nothing is ever persisted to disk
+  // by this check either way — mirroring only happens on a forced sync.
   // imageDriftDetectedAt is stamped on the false->true transition only (same
   // pattern as soldOutSince above) — a persisting drift across many nights
   // keeps its FIRST-seen date, so "since" stays meaningful. Cleared the
@@ -1051,12 +1059,13 @@ model Development {
   imageDriftDetectedAt DateTime?
   // { gallery: string[]; plans: string[]; driftCounts: { gallery: number;
   // plans: number; units: number } }. driftCounts is recomputed on every
-  // published sync (forced or not) — hash-only, no download — and is what
-  // the image-drift-pending Action Center item reads to show "N gallery, M
-  // unit-photo" without ever calling the live feed at render time. gallery/
-  // plans are the actual LOCAL mirrored URLs an admin can pick from — only
-  // ever populated by a forced sync (a hash-only check has nothing to mirror
-  // yet); GalleryManager/FloorPlansManager's "New in feed" section reads
+  // published sync (forced or not) — hash- and content-verified, never
+  // downloads a whole gallery, only the URLs that mismatch by hash — and is
+  // what the image-drift-pending Action Center item reads to show "N
+  // gallery, M unit-photo" without ever calling the live feed at render
+  // time. gallery/plans are the actual LOCAL mirrored URLs an admin can pick
+  // from — only ever populated by a forced sync (an unforced check verifies
+  // but never mirrors); GalleryManager/FloorPlansManager's "New in feed" section reads
   // them, and saveGallery/savePlans filter out whatever was just picked so
   // it doesn't linger as "new" after being added for real. IMPORTANT for any
   // future orphan/waisen sweep: these gallery/plans URLs are real mirrored
@@ -1099,6 +1108,31 @@ model Development {
   @@index([publishStatus])
   @@index([district, area])
   @@map("developments")
+}
+
+// Memo of confirmed "same photo, new URL" cases (2026-08-08) — several feed
+// vendors (Weblium/Domenica in full; BBF's per-unit photo storage) reissue a
+// fresh asset URL/UUID for an image whose pixel content never changed
+// (a backend reprocessing/CDN migration on their end, confirmed by
+// downloading and content-comparing samples: e.g. Eden Bay unit 302, 30 of
+// 31 "drifted" photos were byte-different re-encodes of already-mirrored
+// images). sourceUrlHash() alone can't tell that apart from a genuine new
+// photo, so syncOneProject's drift/mirror logic downloads and content-
+// compares (see classifyByContent, imageMirror.ts) any URL that mismatches
+// by hash — but ONLY ONCE per distinct URL: the result is memoized here so a
+// vendor's periodic URL rotation doesn't mean re-downloading the same
+// confirmed-duplicate image every night forever (Eden Bay alone would be
+// ~565 needless downloads per night without this). sourceHash is global, not
+// scoped to a development — a URL belongs to exactly one project's asset in
+// practice, and sourceUrlHash() is a pure function of the URL string, so no
+// development-scoping is needed for correctness.
+model VerifiedDuplicateImage {
+  id          String   @id @default(cuid())
+  sourceHash  String   @unique
+  matchedHash String
+  verifiedAt  DateTime @default(now())
+
+  @@map("verified_duplicate_images")
 }
 
 model DevelopmentUnit {
