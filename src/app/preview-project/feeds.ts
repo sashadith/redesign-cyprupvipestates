@@ -544,7 +544,15 @@ async function xml2u(dev: string, id: string): Promise<ProjectVM | null> {
       price: toNum(p?.Price?.price), currency: txt(p?.Price?.currency) || "EUR",
       beds, baths, areaBuilt: areaM2(d.FloorSize?.floorSize), areaPlot: areaM2(d.PlotSize?.plotSize), areaVeranda: "",
       floor: clean(d.floorNumber), orientation, attrs, features: [],
-      photos: sizedImages(arr(p?.images?.image).map((e: any) => aristoImg(e?.image)).filter(Boolean)),
+      // prefer "large": only affects Domenica's weblium-hosted images, where
+      // the feed sometimes lists both a full-size and a smaller derivative
+      // of the same photo as separate entries (see imageSize.ts's WEBLIUM_RE
+      // comment) — this is what makes the bigger one win instead of the
+      // default "medium" tier, which would otherwise pick the smaller one
+      // whenever both exist. No effect on Pafilia (this adapter's other
+      // source): its images never match any of the three size patterns, so
+      // they always fall through the "single" bucket regardless of prefer.
+      photos: sizedImages(arr(p?.images?.image).map((e: any) => aristoImg(e?.image)).filter(Boolean), "large"),
       plans: arr(p?.Floorplans?.floorplan).map((e: any) => aristoImg(e?.floorplan)).filter(Boolean),
       coords: null, description: fullDescriptionText(d.description) || clean(d.shortDescription),
     };
@@ -582,7 +590,9 @@ async function xml2u(dev: string, id: string): Promise<ProjectVM | null> {
     sizeRange ? { label: "Unit size", value: sizeRange } : null,
     clean(d0.bedroomRange) && clean(d0.bedroomRange) !== clean(d0.bedrooms) ? { label: "Bedrooms", value: clean(d0.bedroomRange) } : null,
   ].filter(Boolean) as { label: string; value: string }[];
-  const gallery = sizedImages(Array.from(new Set(group.flatMap((p: any) => arr(p?.images?.image).map((e: any) => aristoImg(e?.image))))).filter(Boolean));
+  // prefer "large" — see the matching comment on the unit-photos sizedImages()
+  // call above; same reasoning, same no-op on Pafilia.
+  const gallery = sizedImages(Array.from(new Set(group.flatMap((p: any) => arr(p?.images?.image).map((e: any) => aristoImg(e?.image))))).filter(Boolean), "large");
   const plans = Array.from(new Set(group.flatMap((p: any) => arr(p?.Floorplans?.floorplan).map((e: any) => aristoImg(e?.floorplan))))).filter(Boolean);
   const prices = units.map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b);
   return {

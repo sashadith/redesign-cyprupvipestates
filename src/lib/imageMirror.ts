@@ -67,14 +67,35 @@ const exists = (p: string) => access(p).then(() => true).catch(() => false);
 // mirrored image passes through regardless of origin — feed-derived via
 // sizedImages(), or a hardcoded feeds.ts OVERRIDES.mainImage literal — so a
 // future override or adapter benefits automatically without remembering to
-// ask for "large" itself. Any URL that doesn't match either pattern (Island
-// Blue, Domenica, Pafilia, Medousa — single-size feeds) passes through
+// ask for "large" itself.
+//
+// WP_THUMB_RE (2026-08-08, resolution audit across the remaining feeds):
+// Pafilia (xml2u) is WordPress-hosted and its feed exports the auto-
+// generated intermediate thumbnail (e.g. "…-1024x683.jpg"), not the
+// original upload — confirmed on 213 live samples: stripping the trailing
+// "-WIDTHxHEIGHT" always resolved (213/213, zero 404s) to the real original,
+// 1500–8424px, vs. the 1024–1621px thumbnail we were mirroring. Our own
+// SIZES cap below still applies — this only raises the CEILING we mirror
+// FROM, never what we store. Every other current feed's URLs were checked
+// against this pattern and none match (Island Blue: opaque hashes; Aristo:
+// a single fixed "-4" suffix, not "-WxH"; Medousa: bare numeric ids; Square
+// One: random alphanumeric suffixes; BBF/INEX/Domenica: their own
+// "_medium"/"_optimized_N" suffixes, handled by the other two branches or
+// left as "single" — none contain a dash-prefixed "digitsxdigits").
+// If the stripped URL 404s (WordPress does sometimes prune originals),
+// mirrorImage()'s existing "large !== src → fall back to src" fetch retry
+// (below) already covers it with no extra code needed here — same generic
+// fallback the other two branches already rely on.
+// Any URL that doesn't match any of the three patterns (Island Blue,
+// Domenica, Medousa, Square One — single-size feeds) passes through
 // unchanged.
 const SUFFIX_RE = /_(small|medium|large)(?=[._])/i;
 const PREFIX_RE = /(^|\/)(small|medium|large)_/i;
+const WP_THUMB_RE = /-\d+x\d+(\.(?:jpe?g|png|webp))$/i;
 const toLargeVariant = (url: string): string => {
   if (SUFFIX_RE.test(url)) return url.replace(SUFFIX_RE, "_large");
   if (PREFIX_RE.test(url)) return url.replace(PREFIX_RE, (_m, slash) => `${slash}LARGE_`);
+  if (WP_THUMB_RE.test(url)) return url.replace(WP_THUMB_RE, "$1");
   return url;
 };
 
