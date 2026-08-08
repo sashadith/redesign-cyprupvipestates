@@ -13,7 +13,7 @@ const nameOf = (u: string) => decodeURIComponent(u.split("/").pop() || "plan.pdf
 // Floor plans (development.plans). Drive sync + upload both convert PDFs to JPEG
 // pages automatically, so this is mostly a grid of images; any older/unconverted
 // PDF still shows as a badge+link fallback. Mirrors GalleryManager's grid pattern.
-export default function FloorPlansManager({ developmentId, initial, isDriveSynced }: { developmentId: string; initial: string[]; isDriveSynced?: boolean }) {
+export default function FloorPlansManager({ developmentId, initial, isDriveSynced, newInFeed = [] }: { developmentId: string; initial: string[]; isDriveSynced?: boolean; newInFeed?: string[] }) {
   const [plans, setPlans] = useState<string[]>(initial);
   const [busy, setBusy] = useState<null | "upload" | "save">(null);
   const [dirty, setDirty] = useState(false);
@@ -46,6 +46,11 @@ export default function FloorPlansManager({ developmentId, initial, isDriveSynce
   }, [zoomIdx, plans]);
 
   const remove = (u: string) => { setPlans((p) => p.filter((x) => x !== u)); setDirty(true); };
+  const pickFromFeed = (u: string) => {
+    if (plans.includes(u)) return;
+    setPlans((p) => [...p, u]);
+    setDirty(true);
+  };
   const move = (i: number, dir: -1 | 1) => {
     const j = i + dir;
     if (j < 0 || j >= plans.length) return;
@@ -130,6 +135,41 @@ export default function FloorPlansManager({ developmentId, initial, isDriveSynce
         </div>
       </div>
       {msg && <div className="px-5 py-2 text-xs text-[#92400E] bg-[#FFFBEB] border-b border-[#FCD34D]">{msg}</div>}
+
+      {/* "New in feed" — same mechanism as GalleryManager's, see there for
+          why. Plans have no override table at all (savePlans writes
+          Development.plans directly), so this is the ONLY way to get a
+          feed-replaced floor plan in front of an admin without the sync
+          silently overwriting a hand-curated set. */}
+      {newInFeed.filter((u) => !plans.includes(u)).length > 0 && (
+        <div className="px-5 py-3 border-b border-[#E5E7EB] bg-[#F0FDF4]">
+          <div className="text-xs font-medium text-[#166534] mb-2">
+            New in feed — not added yet ({newInFeed.filter((u) => !plans.includes(u)).length})
+          </div>
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+            {newInFeed.filter((u) => !plans.includes(u)).map((u) => (
+              <div key={u} className="group relative aspect-[4/3] rounded overflow-hidden border-2 border-dashed border-[#86EFAC] bg-[#F8F9FA]">
+                {isPdf(u) ? (
+                  <div className="flex flex-col items-center justify-center gap-1.5 h-full text-center px-2 text-[#6B7280]">
+                    <span className="text-[#B91C1C] text-[10px] font-bold tracking-wide border border-[#FECACA] bg-[#FEF2F2] rounded px-1.5 py-0.5">PDF</span>
+                    <span className="text-xs truncate w-full">{nameOf(u)}</span>
+                  </div>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={thumb(u)} alt="" className="w-full h-full object-cover" loading="lazy" />
+                )}
+                <button
+                  type="button"
+                  onClick={() => pickFromFeed(u)}
+                  className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/50 text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  + Add to plans
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="p-4">
         {plans.length === 0 ? (

@@ -236,6 +236,23 @@ export async function applyPhotosToIdentical(unitId: string): Promise<number> {
 }
 
 // Persist the admin-managed gallery order + hero. Wins over the feed gallery.
+// Drops any URL the admin just saved into gallery/plans out of the stored
+// Development.newFromFeed candidate list — otherwise a "New in feed" image
+// they've already added would keep showing up as still-new until the next
+// force-mirror happens to recompute the list from scratch. driftCounts is
+// left as-is (it reflects hash-level drift, not the picker list; the next
+// sync recomputes it anyway).
+async function dropFromNewFromFeed(developmentId: string, key: "gallery" | "plans", justSaved: string[]) {
+  const d = await prisma.development.findUnique({ where: { id: developmentId }, select: { newFromFeed: true } });
+  const current = d?.newFromFeed as { gallery?: string[]; plans?: string[]; driftCounts?: any } | null;
+  const list = current?.[key];
+  if (!Array.isArray(list) || !list.length) return;
+  const saved = new Set(justSaved);
+  const remaining = list.filter((u) => !saved.has(u));
+  if (remaining.length === list.length) return; // nothing picked from this list, no write needed
+  await prisma.development.update({ where: { id: developmentId }, data: { newFromFeed: { ...current, [key]: remaining } as any } });
+}
+
 export async function saveGallery(developmentId: string, gallery: string[], mainImage: string | null) {
   const clean = gallery.map((u) => String(u).trim()).filter(Boolean);
   const dev = await prisma.development.findUnique({ where: { id: developmentId }, select: { feedKey: true } });
@@ -249,6 +266,7 @@ export async function saveGallery(developmentId: string, gallery: string[], main
     update: { gallery: urls as any, mainImage: heroUrls[0] || urls[0] || null },
     create: { developmentId, gallery: urls as any, mainImage: heroUrls[0] || urls[0] || null },
   });
+  await dropFromNewFromFeed(developmentId, "gallery", urls);
   if (galleryNew || heroNew) scheduleAppRestart();
   revalidatePath(`/admin/developments/${developmentId}`);
 }
@@ -289,6 +307,7 @@ export async function savePlans(developmentId: string, plans: string[]) {
   if (!dev) return;
   const { urls, anyNew } = await mirrorAny(clean, devKeyFor(dev.feedKey));
   await prisma.development.update({ where: { id: developmentId }, data: { plans: urls as any } });
+  await dropFromNewFromFeed(developmentId, "plans", urls);
   if (anyNew) scheduleAppRestart();
   revalidatePath(`/admin/developments/${developmentId}`);
 }

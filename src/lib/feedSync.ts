@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getPreviewProject, listProjectIds, type ProjectVM } from "@/app/preview-project/feeds";
 import type { UnitVM } from "@/app/preview-project/UnitsView";
-import { mirrorAll, devKeyFor, scheduleAppRestart } from "@/lib/imageMirror";
+import { mirrorAll, devKeyFor, scheduleAppRestart, sourceUrlHash, hashFromMirroredUrl } from "@/lib/imageMirror";
 import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
 import { recomputeDevelopmentDerivedState } from "@/lib/developmentDerivedState";
 
@@ -220,13 +220,55 @@ async function syncFeedUnitsPreservingUnlisted(
 // completeness guard (checkFeedCompleteness) and the actual sync share one
 // fetch instead of two. undefined (the syncOneDevelopment call site) means
 // "fetch it fresh here"; null means "already looked up, not found".
+// Text-only comparison, no network — the shared basis for both the
+// hash-only drift check (freezeMirror: nothing was downloaded, only fresh
+// feed URLs are known) and the "new in feed" picker list (forceMirror:
+// freshUrls are already-local mirrored URLs, same comparison still works
+// since hashFromMirroredUrl/sourceUrlHash agree on the same hash for the
+// same source image either way).
+function countNewAgainstStored(freshSourceUrls: string[], storedMirroredUrls: string[]): number {
+  const storedHashes = new Set(storedMirroredUrls.map(hashFromMirroredUrl).filter((h): h is string => !!h));
+  let n = 0;
+  for (const u of freshSourceUrls) if (!storedHashes.has(sourceUrlHash(u))) n++;
+  return n;
+}
+function pickNewLocalUrls(freshLocalUrls: string[], storedMirroredUrls: string[]): string[] {
+  const storedHashes = new Set(storedMirroredUrls.map(hashFromMirroredUrl).filter((h): h is string => !!h));
+  return freshLocalUrls.filter((u) => {
+    const h = hashFromMirroredUrl(u);
+    return h && !storedHashes.has(h);
+  });
+}
+
 async function syncOneProject(dev: string, id: string, accountId: string, opts: { mirror?: boolean; vm?: ProjectVM | null; forceMirror?: boolean } = {}): Promise<ProjectSyncOutcome> {
   const vm = opts.vm !== undefined ? opts.vm : await getPreviewProject(dev, id);
   if (!vm) return { ok: false, created: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, unitsCreated: 0, unitsUnlisted: [] };
   const feedKey = `${dev}:${id}`;
   // Fetched up front (used to be after mirroring) so the freeze check below
   // can gate the download itself, not just the DB write.
-  const existing = await prisma.development.findUnique({ where: { feedKey }, select: { id: true, publishStatus: true } });
+  const existing = await prisma.development.findUnique({
+    where: { feedKey },
+    select: {
+      id: true, publishStatus: true, gallery: true, plans: true, imageDriftDetectedAt: true,
+      // Gallery drift must compare against what's ACTUALLY resolved/shown
+      // (override-first, same as mapRowToVM/mapDevelopmentRowToCard — see
+      // Development.newFromFeed's schema comment), not the raw feed-synced
+      // Development.gallery alone: once an admin has ever saved via
+      // GalleryManager, DevelopmentOverride.gallery is where new picks
+      // land, and Development.gallery (frozen at publish time) never
+      // updates again — comparing against it alone would keep flagging
+      // images the admin already added as "still new". Plans have no
+      // override table (savePlans writes Development.plans directly), so
+      // no equivalent resolution is needed there.
+      override: { select: { gallery: true, mainImage: true } },
+    },
+  });
+  const resolvedStoredGallery: string[] = (() => {
+    const ovGallery = (existing?.override?.gallery as string[] | null) ?? [];
+    const base = ovGallery.length ? ovGallery : ((existing?.gallery as string[] | null) ?? []);
+    const hero = existing?.override?.mainImage;
+    return hero && !base.includes(hero) ? [hero, ...base] : base;
+  })();
   // Published + not admin-forced: skip mirroring itself, not just the DB
   // write. FROZEN_WHEN_PUBLISHED already discarded the resulting URLs from
   // the Development update either way, so mirrorAll() was downloading and
@@ -243,14 +285,81 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
   const isPublished = existing?.publishStatus === "published";
   const freezeMirror = isPublished && !opts.forceMirror;
   let mirroredNewFiles = false;
+  // imageDriftDetectedAt / newFromFeed — only meaningful for a published
+  // Development (see the schema comment for the full picture). Left
+  // undefined (not included in the update at all) for anything not
+  // published, so a draft/ready/archived project's bookkeeping is simply
+  // never touched either way.
+  let driftPatch: { imageDriftDetectedAt?: Date | null; newFromFeed?: any } | undefined;
   if (opts.mirror) {
     const dk = devKeyFor(feedKey);
+    // Units queried up front whenever published, so both the mirror-skip
+    // logic below AND unit-level drift counting (frozen case) can use the
+    // same rows — one query either way, not two.
+    const existingUnits = isPublished
+      ? await prisma.developmentUnit.findMany({ where: { developmentId: existing!.id, source: "feed" }, select: { ref: true, photos: true, plans: true } })
+      : [];
+    const knownRefs = new Set(existingUnits.map((u) => u.ref).filter(Boolean));
+
     if (!freezeMirror) {
       const gallery = await mirrorAll(vm.gallery, dk);
-      vm.gallery = gallery.urls;
       const plans = await mirrorAll(vm.plans, dk);
-      vm.plans = plans.urls;
       mirroredNewFiles = gallery.anyNew || plans.anyNew;
+      if (isPublished) {
+        // opts.forceMirror: gallery/plans just got genuinely re-mirrored to
+        // disk, but stay frozen in the DB write below regardless (an admin's
+        // curated gallery/plans must never be silently replaced — see
+        // FROZEN_WHEN_PUBLISHED). What CAN happen: surface the freshly
+        // mirrored files that aren't in the curated set yet as "new in
+        // feed" picks, and resolve the drift flag — the admin has looked,
+        // whether or not they add anything.
+        driftPatch = {
+          imageDriftDetectedAt: null,
+          newFromFeed: {
+            gallery: pickNewLocalUrls(gallery.urls, resolvedStoredGallery),
+            plans: pickNewLocalUrls(plans.urls, (existing?.plans as string[] | null) ?? []),
+            driftCounts: { gallery: 0, plans: 0, units: 0 }, // resolved by this very sync
+          },
+        };
+      }
+      vm.gallery = gallery.urls;
+      vm.plans = plans.urls;
+    } else {
+      // freezeMirror: nothing downloaded above — hash-only comparison
+      // against the raw feed URLs still sitting in vm.gallery/vm.plans.
+      const galleryDrift = countNewAgainstStored(vm.gallery, resolvedStoredGallery);
+      const plansDrift = countNewAgainstStored(vm.plans, (existing?.plans as string[] | null) ?? []);
+      let unitsDrift = 0;
+      const existingUnitByRef = new Map(existingUnits.map((u) => [u.ref, u]));
+      for (const u of vm.units) {
+        const match = u.ref ? existingUnitByRef.get(u.ref) : undefined;
+        if (!match) continue; // brand-new unit — not "drift" on an existing one, handled by the mirror loop below
+        unitsDrift += countNewAgainstStored(u.photos, (match.photos as string[] | null) ?? []);
+        unitsDrift += countNewAgainstStored(u.plans, (match.plans as string[] | null) ?? []);
+      }
+      const hasDrift = galleryDrift + plansDrift + unitsDrift > 0;
+      const wasFlagged = !!existing?.imageDriftDetectedAt;
+      // Only touch the row at all when there's something to say — hasDrift
+      // or wasFlagged, not both false — so a project with no drift, that's
+      // never had drift, doesn't get a no-op UPDATE every single night.
+      if (hasDrift || wasFlagged) {
+        driftPatch = {
+          // driftCounts refreshed on every pass regardless of transition — a
+          // persisting drift's COUNT can still grow night to night (2 new
+          // photos yesterday, 5 today) even though imageDriftDetectedAt
+          // itself stays pinned to the first-seen date. null once resolved.
+          newFromFeed: hasDrift
+            ? { gallery: [], plans: [], driftCounts: { gallery: galleryDrift, plans: plansDrift, units: unitsDrift } }
+            : null,
+        };
+        if (hasDrift !== wasFlagged) {
+          // false→true: stamp now. true→false (feed reverted on its own,
+          // rare but possible): clear. Persisting drift across many nights
+          // leaves imageDriftDetectedAt untouched — "since" stays the first
+          // night it was seen, not the most recent.
+          driftPatch.imageDriftDetectedAt = hasDrift ? new Date() : null;
+        }
+      }
     }
     // Units: a brand-new unit (not yet in the DB) still gets its photos/plans
     // mirrored once even on a frozen published project — "new units on a
@@ -259,11 +368,8 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
     // (syncFeedUnitsPreservingUnlisted, below) also omits photos/plans for
     // those so a skipped-mirror unit's raw external feed URL can never
     // overwrite its already-correct local one.
-    const knownRefs = freezeMirror
-      ? new Set((await prisma.developmentUnit.findMany({ where: { developmentId: existing!.id, source: "feed" }, select: { ref: true } })).map((u) => u.ref).filter(Boolean))
-      : null;
     for (const u of vm.units) {
-      if (knownRefs && u.ref && knownRefs.has(u.ref)) continue; // existing unit, published, not forced — skip
+      if (freezeMirror && u.ref && knownRefs.has(u.ref)) continue; // existing unit, published, not forced — skip
       const photos = await mirrorAll(u.photos, dk);
       u.photos = photos.urls;
       const uPlans = await mirrorAll(u.plans, dk);
@@ -272,12 +378,16 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
     }
   }
   const fullData = developmentRow(vm, dev, id, accountId);
-  let updateData: Partial<typeof fullData> = fullData;
+  let updateData: Partial<typeof fullData> & typeof driftPatch = fullData;
   if (existing?.publishStatus === "published") {
     const frozen = { ...fullData };
     for (const k of FROZEN_WHEN_PUBLISHED) delete (frozen as any)[k];
     updateData = frozen;
   }
+  // Never subject to FROZEN_WHEN_PUBLISHED — imageDriftDetectedAt/newFromFeed
+  // aren't customer-facing content, they're the admin's own "what changed"
+  // bookkeeping, meant to update on every published sync regardless.
+  if (driftPatch) updateData = { ...updateData, ...driftPatch };
   const development = existing
     ? await prisma.development.update({ where: { feedKey }, data: updateData })
     : await prisma.development.create({ data: fullData });

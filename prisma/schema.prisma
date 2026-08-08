@@ -1036,6 +1036,36 @@ model Development {
   // archival history — it's simply overwritten on the next return event.
   returnedToMarketAt DateTime?
 
+  // imageDriftDetectedAt / newFromFeed (2026-08-08): once a Development is
+  // published, its gallery/plans are frozen (FROZEN_WHEN_PUBLISHED below) —
+  // AND, since the same day, the feed sync no longer even downloads a
+  // published project's changed images (syncOneProject's freezeMirror), only
+  // hash-compares the fresh feed URLs against what's already mirrored
+  // (sourceUrlHash/hashFromMirroredUrl, imageMirror.ts) with no download.
+  // imageDriftDetectedAt is stamped on the false->true transition only (same
+  // pattern as soldOutSince above) — a persisting drift across many nights
+  // keeps its FIRST-seen date, so "since" stays meaningful. Cleared the
+  // moment an admin clicks "Reload images" (forceMirror), whether or not
+  // they end up adding anything to the curated gallery — that's the "I've
+  // looked at this" signal, not "the gallery changed".
+  imageDriftDetectedAt DateTime?
+  // { gallery: string[]; plans: string[]; driftCounts: { gallery: number;
+  // plans: number; units: number } }. driftCounts is recomputed on every
+  // published sync (forced or not) — hash-only, no download — and is what
+  // the image-drift-pending Action Center item reads to show "N gallery, M
+  // unit-photo" without ever calling the live feed at render time. gallery/
+  // plans are the actual LOCAL mirrored URLs an admin can pick from — only
+  // ever populated by a forced sync (a hash-only check has nothing to mirror
+  // yet); GalleryManager/FloorPlansManager's "New in feed" section reads
+  // them, and saveGallery/savePlans filter out whatever was just picked so
+  // it doesn't linger as "new" after being added for real. IMPORTANT for any
+  // future orphan/waisen sweep: these gallery/plans URLs are real mirrored
+  // files on disk awaiting a manual pick — MUST count as a reference source
+  // (same as Development.gallery/plans/DevelopmentOverride.*/DevelopmentUnit.
+  // photos/plans) or a sweep will treat them as orphaned and delete images
+  // that are one admin click away from being used.
+  newFromFeed Json?
+
   // rich/nested (JSONB) — feed values; images already mirrored to our storage
   description String? // feed description (plain text)
   amenities   Json? // string[]

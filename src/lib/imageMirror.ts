@@ -80,10 +80,31 @@ const toLargeVariant = (url: string): string => {
 
 export type MirrorResult = { url: string; wasNew: boolean };
 
+// The exact hash a source URL would mirror to — exported so drift detection
+// (feedSync.ts's syncOneProject) can compare a fresh feed URL against what's
+// already on disk WITHOUT downloading anything, using the identical formula
+// mirrorImage() itself uses below. Two independent implementations of "what
+// hash does this URL produce" would drift apart the first time either one
+// changes (e.g. toLargeVariant() growing a new pattern) — this is the one
+// definition both read from.
+export function sourceUrlHash(src: string): string {
+  return hash(toLargeVariant(src));
+}
+
+// The inverse: given an already-mirrored URL (`/uploads/developments/<devKey>/
+// <hash>_<size>.<ext>`), read the hash back out. Returns null for anything
+// that isn't in that shape (an external hotlink that was never mirrored, a
+// raw content-hashed file with no size suffix, etc.) — callers must decide
+// what "not a mirrored URL" means for them, this never guesses.
+export function hashFromMirroredUrl(url: string): string | null {
+  const m = url.match(/\/([a-f0-9]{16})_(?:small|medium|large)\.[a-z0-9]+$/i);
+  return m ? m[1].toLowerCase() : null;
+}
+
 export async function mirrorImage(src: string, devKey: string): Promise<MirrorResult | null> {
   if (!src || !/^https?:\/\//i.test(src)) return null;
+  const h = sourceUrlHash(src);
   const large = toLargeVariant(src);
-  const h = hash(large); // hash the normalized URL: a medium and large request for the same photo dedupe to one file
   const dir = join(root(), devKey);
   const mediumFile = join(dir, `${h}_medium.webp`);
   const mediumUrl = `/uploads/developments/${devKey}/${h}_medium.webp`;
