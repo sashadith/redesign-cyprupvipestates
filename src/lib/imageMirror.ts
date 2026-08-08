@@ -80,10 +80,116 @@ const toLargeVariant = (url: string): string => {
 
 export type MirrorResult = { url: string; wasNew: boolean };
 
+// The exact hash a source URL would mirror to — exported so drift detection
+// (feedSync.ts's syncOneProject) can compare a fresh feed URL against what's
+// already on disk WITHOUT downloading anything, using the identical formula
+// mirrorImage() itself uses below. Two independent implementations of "what
+// hash does this URL produce" would drift apart the first time either one
+// changes (e.g. toLargeVariant() growing a new pattern) — this is the one
+// definition both read from.
+export function sourceUrlHash(src: string): string {
+  return hash(toLargeVariant(src));
+}
+
+// The inverse: given an already-mirrored URL (`/uploads/developments/<devKey>/
+// <hash>_<size>.<ext>`), read the hash back out. Returns null for anything
+// that isn't in that shape (an external hotlink that was never mirrored, a
+// raw content-hashed file with no size suffix, etc.) — callers must decide
+// what "not a mirrored URL" means for them, this never guesses.
+export function hashFromMirroredUrl(url: string): string | null {
+  const m = url.match(/\/([a-f0-9]{16})_(?:small|medium|large)\.[a-z0-9]+$/i);
+  return m ? m[1].toLowerCase() : null;
+}
+
+// Content-based fallback for when sourceUrlHash() disagrees with reality —
+// several feed vendors reissue a fresh URL/UUID for an image whose pixel
+// content never changed (confirmed 2026-08-08: Weblium/Domenica in full,
+// and BBF's per-unit photo storage — e.g. Eden Bay unit 302, 30 of 31
+// "drifted" photos were re-encodes of already-mirrored images, only 1 was
+// genuinely new). Reduces to a tiny grayscale thumbnail so a re-encode
+// (webp vs original, different quality/size) still compares equal — a
+// mean-abs-diff below CONTENT_MATCH_THRESHOLD (out of 255) is treated as
+// the same photo. Callers (feedSync.ts) memoize confirmed matches in
+// VerifiedDuplicateImage so this download+compare only ever runs once per
+// distinct source URL, never on every sync.
+const CONTENT_MATCH_THRESHOLD = 8;
+
+async function contentThumbnail(buf: Buffer): Promise<Buffer | null> {
+  try {
+    return await sharp(buf).resize(24, 24, { fit: "fill" }).grayscale().raw().toBuffer();
+  } catch {
+    return null;
+  }
+}
+
+function meanAbsDiff(a: Buffer, b: Buffer): number {
+  if (a.length !== b.length) return 999;
+  let sum = 0;
+  for (let i = 0; i < a.length; i++) sum += Math.abs(a[i] - b[i]);
+  return sum / a.length;
+}
+
+async function readLocalThumbnail(mirroredUrl: string): Promise<Buffer | null> {
+  const rel = mirroredUrl.replace(/^\/uploads\/developments\//, "");
+  try {
+    const buf = await readFile(join(root(), rel));
+    return await contentThumbnail(buf);
+  } catch {
+    return null;
+  }
+}
+
+async function fetchThumbnail(src: string): Promise<Buffer | null> {
+  try {
+    const large = toLargeVariant(src);
+    const res = await fetch(large, { signal: AbortSignal.timeout(15000) });
+    if (!res.ok || !/image\//i.test(res.headers.get("content-type") ?? "")) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    return await contentThumbnail(buf);
+  } catch {
+    return null;
+  }
+}
+
+// Given candidate source URLs (already hash-filtered by the caller — none of
+// them matched storedMirroredUrls by sourceUrlHash) and the SAME-scope
+// stored URLs to compare against (this project's gallery, or one unit's own
+// photos — deliberately never a wider scope, to avoid a candidate matching
+// an unrelated room that happens to look similar), downloads each candidate
+// once and content-compares. Never persists anything — callers own
+// memoization (VerifiedDuplicateImage) and any actual mirroring.
+export async function classifyByContent(
+  candidateUrls: string[],
+  storedMirroredUrls: string[],
+): Promise<{ genuinelyNew: string[]; duplicateOf: Map<string, string> }> {
+  const storedThumbs: { hash: string; t: Buffer }[] = [];
+  for (const u of storedMirroredUrls) {
+    const h = hashFromMirroredUrl(u);
+    if (!h) continue;
+    const t = await readLocalThumbnail(u);
+    if (t) storedThumbs.push({ hash: h, t });
+  }
+  const genuinelyNew: string[] = [];
+  const duplicateOf = new Map<string, string>(); // candidate source URL -> matched local hash
+  for (const url of candidateUrls) {
+    const t = await fetchThumbnail(url);
+    if (!t) { genuinelyNew.push(url); continue; } // undownloadable/undecodable — treat as new, same as mirrorImage() would fail identically later
+    let best = Infinity;
+    let bestHash = "";
+    for (const st of storedThumbs) {
+      const diff = meanAbsDiff(t, st.t);
+      if (diff < best) { best = diff; bestHash = st.hash; }
+    }
+    if (best < CONTENT_MATCH_THRESHOLD) duplicateOf.set(url, bestHash);
+    else genuinelyNew.push(url);
+  }
+  return { genuinelyNew, duplicateOf };
+}
+
 export async function mirrorImage(src: string, devKey: string): Promise<MirrorResult | null> {
   if (!src || !/^https?:\/\//i.test(src)) return null;
+  const h = sourceUrlHash(src);
   const large = toLargeVariant(src);
-  const h = hash(large); // hash the normalized URL: a medium and large request for the same photo dedupe to one file
   const dir = join(root(), devKey);
   const mediumFile = join(dir, `${h}_medium.webp`);
   const mediumUrl = `/uploads/developments/${devKey}/${h}_medium.webp`;

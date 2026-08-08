@@ -68,6 +68,14 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
   };
 
   const gallery = arr(ov?.gallery).length ? arr(ov?.gallery) : arr(d.gallery);
+  // "New in feed" picks — locally-mirrored images from the last "Reload
+  // images" click that aren't in the curated gallery/plans yet (see
+  // Development.newFromFeed's schema comment, feedSync.ts). Empty for the
+  // common case (no drift, or drift not yet acted on) — GalleryManager/
+  // FloorPlansManager only render the section when it's non-empty.
+  const newFromFeed = d.newFromFeed as { gallery?: string[]; plans?: string[] } | null;
+  const newGalleryFromFeed = arr(newFromFeed?.gallery);
+  const newPlansFromFeed = arr(newFromFeed?.plans);
   const area = ov?.area || d.area || "";
   const district = ov?.district || d.district || "";
   const lat = ov?.latitude ?? d.latitude;
@@ -298,9 +306,9 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
         </div>
       </div>
 
-      <GalleryManager developmentId={d.id} initial={gallery} initialHero={ov?.mainImage ?? ""} isDriveSynced={d.dev === "drive"} />
+      <GalleryManager developmentId={d.id} initial={gallery} initialHero={ov?.mainImage ?? ""} isDriveSynced={d.dev === "drive"} newInFeed={newGalleryFromFeed} />
 
-      <FloorPlansManager developmentId={d.id} initial={arr(d.plans)} isDriveSynced={d.dev === "drive"} />
+      <FloorPlansManager developmentId={d.id} initial={arr(d.plans)} isDriveSynced={d.dev === "drive"} newInFeed={newPlansFromFeed} />
 
       <SyncControlPanel
         developmentId={d.id}

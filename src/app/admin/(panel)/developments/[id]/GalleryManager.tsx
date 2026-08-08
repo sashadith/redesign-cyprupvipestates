@@ -8,7 +8,7 @@ import SyncWithDriveButton from "./SyncWithDriveButton";
 const thumb = (u: string) => u.replace(/_medium\.webp$/, "_small.webp");
 const large = (u: string) => u.replace(/_medium\.webp$/, "_large.webp");
 
-export default function GalleryManager({ developmentId, initial, initialHero, isDriveSynced }: { developmentId: string; initial: string[]; initialHero: string; isDriveSynced?: boolean }) {
+export default function GalleryManager({ developmentId, initial, initialHero, isDriveSynced, newInFeed = [] }: { developmentId: string; initial: string[]; initialHero: string; isDriveSynced?: boolean; newInFeed?: string[] }) {
   const [images, setImages] = useState<string[]>(initial);
   const [hero, setHero] = useState<string>(initialHero || initial[0] || "");
   const [busy, setBusy] = useState<null | "upload" | "save">(null);
@@ -41,6 +41,11 @@ export default function GalleryManager({ developmentId, initial, initialHero, is
     setDirty(true);
   };
   const setAsHero = (u: string) => { setHero(u); setDirty(true); };
+  const pickFromFeed = (u: string) => {
+    if (images.includes(u)) return;
+    setImages((imgs) => [...imgs, u]);
+    setDirty(true);
+  };
   const move = (i: number, dir: -1 | 1) => {
     const j = i + dir;
     if (j < 0 || j >= images.length) return;
@@ -125,6 +130,32 @@ export default function GalleryManager({ developmentId, initial, initialHero, is
         </div>
       </div>
       {msg && <div className="px-5 py-2 text-xs text-[#92400E] bg-[#FFFBEB] border-b border-[#FCD34D]">{msg}</div>}
+
+      {/* "New in feed" — locally mirrored via "Reload images" (SyncControlPanel),
+          not yet in the curated gallery above. Never auto-added — an admin's
+          hand-curated gallery/order must never change on its own (2026-08-08).
+          Picking one just adds it to the grid below; still needs "Save images". */}
+      {newInFeed.filter((u) => !images.includes(u)).length > 0 && (
+        <div className="px-5 py-3 border-b border-[#E5E7EB] bg-[#F0FDF4]">
+          <div className="text-xs font-medium text-[#166534] mb-2">
+            New in feed — not in the gallery yet ({newInFeed.filter((u) => !images.includes(u)).length})
+          </div>
+          <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+            {newInFeed.filter((u) => !images.includes(u)).map((u) => (
+              <div key={u} className="group relative aspect-[4/3] rounded overflow-hidden border-2 border-dashed border-[#86EFAC]">
+                <img src={thumb(u)} alt="" className="w-full h-full object-cover" loading="lazy" />
+                <button
+                  type="button"
+                  onClick={() => pickFromFeed(u)}
+                  className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/50 text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  + Add to gallery
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="p-4">
         {images.length === 0 ? (

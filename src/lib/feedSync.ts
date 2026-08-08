@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getPreviewProject, listProjectIds, type ProjectVM } from "@/app/preview-project/feeds";
 import type { UnitVM } from "@/app/preview-project/UnitsView";
-import { mirrorAll, devKeyFor, scheduleAppRestart } from "@/lib/imageMirror";
+import { mirrorAll, mirrorImage, devKeyFor, scheduleAppRestart, sourceUrlHash, hashFromMirroredUrl, classifyByContent } from "@/lib/imageMirror";
 import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
 import { recomputeDevelopmentDerivedState } from "@/lib/developmentDerivedState";
 
@@ -220,13 +220,117 @@ async function syncFeedUnitsPreservingUnlisted(
 // completeness guard (checkFeedCompleteness) and the actual sync share one
 // fetch instead of two. undefined (the syncOneDevelopment call site) means
 // "fetch it fresh here"; null means "already looked up, not found".
+
+// Classifies fresh source URLs against what's already stored for the SAME
+// scope (one project's gallery, or one unit's own photos — never mix
+// scopes, or a candidate could spuriously "match" an unrelated room).
+// Cheap hash comparison first (no network); anything that mismatches by
+// hash is checked against VerifiedDuplicateImage (a vendor's URL-only churn,
+// confirmed 2026-08-08 for Weblium/Domenica and BBF's unit-photo storage,
+// only ever needs downloading+content-verifying once per distinct URL —
+// see imageMirror.ts's classifyByContent doc comment for the full story);
+// anything still unresolved is downloaded ONCE into memory and content-
+// compared (never persisted here — no mirrorImage() call), with newly
+// confirmed duplicates memoized so the SAME vendor rotation is never
+// re-downloaded on a later sync. Never mirrors/persists anything itself —
+// callers decide what to do with genuinelyNew (count it, or mirror it) and
+// reuse (map straight to the existing local file, no download needed at
+// all).
+async function classifyFreshUrls(
+  freshSourceUrls: string[],
+  storedMirroredUrls: string[],
+): Promise<{ genuinelyNew: string[]; reuse: Map<string, string> }> {
+  const storedHashes = new Map<string, string>();
+  for (const u of storedMirroredUrls) {
+    const h = hashFromMirroredUrl(u);
+    if (h) storedHashes.set(h, u);
+  }
+  const reuse = new Map<string, string>(); // fresh source url -> local url to reuse, no download needed
+  const candidates: string[] = [];
+  for (const u of freshSourceUrls) {
+    const existingUrl = storedHashes.get(sourceUrlHash(u));
+    if (existingUrl) reuse.set(u, existingUrl);
+    else candidates.push(u);
+  }
+  if (!candidates.length) return { genuinelyNew: [], reuse };
+
+  const known = await prisma.verifiedDuplicateImage.findMany({
+    where: { sourceHash: { in: candidates.map(sourceUrlHash) } },
+    select: { sourceHash: true, matchedHash: true },
+  });
+  const knownMap = new Map(known.map((k) => [k.sourceHash, k.matchedHash]));
+  const stillUnknown: string[] = [];
+  for (const u of candidates) {
+    const matchedHash = knownMap.get(sourceUrlHash(u));
+    const existingUrl = matchedHash ? storedHashes.get(matchedHash) : undefined;
+    if (existingUrl) reuse.set(u, existingUrl);
+    else stillUnknown.push(u); // either never checked before, or its match fell outside this scope
+  }
+  if (!stillUnknown.length) return { genuinelyNew: [], reuse };
+
+  const { genuinelyNew, duplicateOf } = await classifyByContent(stillUnknown, storedMirroredUrls);
+  if (duplicateOf.size) {
+    await prisma.verifiedDuplicateImage.createMany({
+      data: Array.from(duplicateOf.entries()).map(([url, matchedHash]) => ({ sourceHash: sourceUrlHash(url), matchedHash })),
+      skipDuplicates: true,
+    });
+    for (const [url, matchedHash] of Array.from(duplicateOf.entries())) {
+      const existingUrl = storedHashes.get(matchedHash);
+      if (existingUrl) reuse.set(url, existingUrl); // always found in practice — matchedHash came from these exact storedMirroredUrls
+    }
+  }
+  return { genuinelyNew, reuse };
+}
+
+// Mirrors each url individually and returns a source-url -> local-url map
+// (unlike mirrorAll's flat array, which silently drops failures with no way
+// to tell which input they belonged to) — needed here to reconstruct a
+// gallery/plans/photos array that mixes reused-as-is duplicates with newly
+// mirrored genuine content, in the original order.
+async function mirrorEachTracked(urls: string[], devKey: string, concurrency = 4): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  for (let i = 0; i < urls.length; i += concurrency) {
+    const batch = urls.slice(i, i + concurrency);
+    const results = await Promise.all(batch.map((u) => mirrorImage(u, devKey)));
+    batch.forEach((u, j) => { const r = results[j]; if (r) map.set(u, r.url); });
+  }
+  return map;
+}
+
 async function syncOneProject(dev: string, id: string, accountId: string, opts: { mirror?: boolean; vm?: ProjectVM | null; forceMirror?: boolean } = {}): Promise<ProjectSyncOutcome> {
   const vm = opts.vm !== undefined ? opts.vm : await getPreviewProject(dev, id);
   if (!vm) return { ok: false, created: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, unitsCreated: 0, unitsUnlisted: [] };
   const feedKey = `${dev}:${id}`;
   // Fetched up front (used to be after mirroring) so the freeze check below
   // can gate the download itself, not just the DB write.
-  const existing = await prisma.development.findUnique({ where: { feedKey }, select: { id: true, publishStatus: true } });
+  const existing = await prisma.development.findUnique({
+    where: { feedKey },
+    select: {
+      id: true, publishStatus: true, gallery: true, plans: true, imageDriftDetectedAt: true,
+      // Gallery drift must compare against every hash the admin has EVER
+      // accounted for, not just the currently-displayed set. This is
+      // deliberately the UNION of raw Development.gallery (frozen at
+      // publish time) + DevelopmentOverride.gallery + hero — NOT the
+      // override-first "what's shown" resolution used elsewhere
+      // (mapRowToVM/mapDevelopmentRowToCard). Discovered 2026-08-08
+      // pre-deploy: an override-first-only comparison treats every raw
+      // image the admin deliberately DIDN'T curate into their override as
+      // permanently "new" forever — confirmed on Pearl Sea Caves Villas
+      // (146 raw, only 38 in the curated override): 108 old, already-seen
+      // images were misreported as fresh drift on every single sync. 49 of
+      // 122 published developments have a smaller override than raw
+      // gallery, most by 1 (harmless) but several by double digits. Plans
+      // have no override table (savePlans writes Development.plans
+      // directly), so no union is needed there — raw IS the only set.
+      override: { select: { gallery: true, mainImage: true } },
+    },
+  });
+  const resolvedStoredGallery: string[] = (() => {
+    const raw = (existing?.gallery as string[] | null) ?? [];
+    const ovGallery = (existing?.override?.gallery as string[] | null) ?? [];
+    const hero = existing?.override?.mainImage;
+    return [...(hero ? [hero] : []), ...ovGallery, ...raw];
+  })();
   // Published + not admin-forced: skip mirroring itself, not just the DB
   // write. FROZEN_WHEN_PUBLISHED already discarded the resulting URLs from
   // the Development update either way, so mirrorAll() was downloading and
@@ -243,14 +347,99 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
   const isPublished = existing?.publishStatus === "published";
   const freezeMirror = isPublished && !opts.forceMirror;
   let mirroredNewFiles = false;
+  // imageDriftDetectedAt / newFromFeed — only meaningful for a published
+  // Development (see the schema comment for the full picture). Left
+  // undefined (not included in the update at all) for anything not
+  // published, so a draft/ready/archived project's bookkeeping is simply
+  // never touched either way.
+  let driftPatch: { imageDriftDetectedAt?: Date | null; newFromFeed?: any } | undefined;
   if (opts.mirror) {
     const dk = devKeyFor(feedKey);
-    if (!freezeMirror) {
+    // Units queried up front whenever published, so both the mirror-skip
+    // logic below AND unit-level drift counting (frozen case) can use the
+    // same rows — one query either way, not two.
+    const existingUnits = isPublished
+      ? await prisma.developmentUnit.findMany({ where: { developmentId: existing!.id, source: "feed" }, select: { ref: true, photos: true, plans: true } })
+      : [];
+    const knownRefs = new Set(existingUnits.map((u) => u.ref).filter(Boolean));
+
+    if (!freezeMirror && isPublished) {
+      // Admin-forced re-mirror of a published project. Content-verify BEFORE
+      // mirroring (classifyFreshUrls) so a vendor's URL-only churn never
+      // re-downloads+re-stores an image already on disk under its original
+      // hash — only genuinely new content gets mirrored and offered as a
+      // "new in feed" pick; everything else reuses the existing local file
+      // (mirrorEachTracked below covers exactly the genuinelyNew subset).
+      const galleryClass = await classifyFreshUrls(vm.gallery, resolvedStoredGallery);
+      const plansClass = await classifyFreshUrls(vm.plans, (existing?.plans as string[] | null) ?? []);
+      const galleryNewMap = await mirrorEachTracked(galleryClass.genuinelyNew, dk);
+      const plansNewMap = await mirrorEachTracked(plansClass.genuinelyNew, dk);
+      mirroredNewFiles = galleryNewMap.size > 0 || plansNewMap.size > 0;
+      // gallery/plans stay frozen in the DB write below regardless (an
+      // admin's curated set must never be silently replaced — see
+      // FROZEN_WHEN_PUBLISHED). What CAN happen: surface the freshly
+      // mirrored genuinely-new files as "new in feed" picks, and resolve the
+      // drift flag — the admin has looked, whether or not they add anything.
+      driftPatch = {
+        imageDriftDetectedAt: null,
+        newFromFeed: {
+          gallery: Array.from(galleryNewMap.values()),
+          plans: Array.from(plansNewMap.values()),
+          driftCounts: { gallery: 0, plans: 0, units: 0 }, // resolved by this very sync
+        },
+      };
+      vm.gallery = vm.gallery.map((u) => galleryClass.reuse.get(u) ?? galleryNewMap.get(u)).filter((u): u is string => !!u);
+      vm.plans = vm.plans.map((u) => plansClass.reuse.get(u) ?? plansNewMap.get(u)).filter((u): u is string => !!u);
+    } else if (!freezeMirror) {
+      // Draft/ready/archived — unaffected by any drift/dedup bookkeeping,
+      // full normal mirror exactly as before this feature existed.
       const gallery = await mirrorAll(vm.gallery, dk);
-      vm.gallery = gallery.urls;
       const plans = await mirrorAll(vm.plans, dk);
-      vm.plans = plans.urls;
       mirroredNewFiles = gallery.anyNew || plans.anyNew;
+      vm.gallery = gallery.urls;
+      vm.plans = plans.urls;
+    } else {
+      // freezeMirror: published, not forced — content-verified COUNT only.
+      // classifyFreshUrls downloads hash-mismatched candidates into memory
+      // to compare, but never calls mirrorImage/persists a file, and skips
+      // the download entirely for any URL already confirmed as a duplicate
+      // on a previous sync (VerifiedDuplicateImage).
+      const galleryClass = await classifyFreshUrls(vm.gallery, resolvedStoredGallery);
+      const plansClass = await classifyFreshUrls(vm.plans, (existing?.plans as string[] | null) ?? []);
+      const galleryDrift = galleryClass.genuinelyNew.length;
+      const plansDrift = plansClass.genuinelyNew.length;
+      let unitsDrift = 0;
+      const existingUnitByRef = new Map(existingUnits.map((u) => [u.ref, u]));
+      for (const u of vm.units) {
+        const match = u.ref ? existingUnitByRef.get(u.ref) : undefined;
+        if (!match) continue; // brand-new unit — not "drift" on an existing one, handled by the mirror loop below
+        const photosClass = await classifyFreshUrls(u.photos, (match.photos as string[] | null) ?? []);
+        const unitPlansClass = await classifyFreshUrls(u.plans, (match.plans as string[] | null) ?? []);
+        unitsDrift += photosClass.genuinelyNew.length + unitPlansClass.genuinelyNew.length;
+      }
+      const hasDrift = galleryDrift + plansDrift + unitsDrift > 0;
+      const wasFlagged = !!existing?.imageDriftDetectedAt;
+      // Only touch the row at all when there's something to say — hasDrift
+      // or wasFlagged, not both false — so a project with no drift, that's
+      // never had drift, doesn't get a no-op UPDATE every single night.
+      if (hasDrift || wasFlagged) {
+        driftPatch = {
+          // driftCounts refreshed on every pass regardless of transition — a
+          // persisting drift's COUNT can still grow night to night (2 new
+          // photos yesterday, 5 today) even though imageDriftDetectedAt
+          // itself stays pinned to the first-seen date. null once resolved.
+          newFromFeed: hasDrift
+            ? { gallery: [], plans: [], driftCounts: { gallery: galleryDrift, plans: plansDrift, units: unitsDrift } }
+            : null,
+        };
+        if (hasDrift !== wasFlagged) {
+          // false→true: stamp now. true→false (feed reverted on its own,
+          // rare but possible): clear. Persisting drift across many nights
+          // leaves imageDriftDetectedAt untouched — "since" stays the first
+          // night it was seen, not the most recent.
+          driftPatch.imageDriftDetectedAt = hasDrift ? new Date() : null;
+        }
+      }
     }
     // Units: a brand-new unit (not yet in the DB) still gets its photos/plans
     // mirrored once even on a frozen published project — "new units on a
@@ -258,26 +447,44 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
     // Existing/matched units are skipped entirely when frozen; their DB write
     // (syncFeedUnitsPreservingUnlisted, below) also omits photos/plans for
     // those so a skipped-mirror unit's raw external feed URL can never
-    // overwrite its already-correct local one.
-    const knownRefs = freezeMirror
-      ? new Set((await prisma.developmentUnit.findMany({ where: { developmentId: existing!.id, source: "feed" }, select: { ref: true } })).map((u) => u.ref).filter(Boolean))
-      : null;
+    // overwrite its already-correct local one. When forced (published, not
+    // frozen) an EXISTING unit is content-verified the same way as gallery/
+    // plans above, so "reload images" doesn't blow away 30 correct photos to
+    // keep just the 1 genuinely new one — a brand-new unit has nothing to
+    // compare against and always gets the plain full mirror.
+    const existingUnitByRef = new Map(existingUnits.map((u) => [u.ref, u]));
     for (const u of vm.units) {
-      if (knownRefs && u.ref && knownRefs.has(u.ref)) continue; // existing unit, published, not forced — skip
-      const photos = await mirrorAll(u.photos, dk);
-      u.photos = photos.urls;
-      const uPlans = await mirrorAll(u.plans, dk);
-      u.plans = uPlans.urls;
-      if (photos.anyNew || uPlans.anyNew) mirroredNewFiles = true;
+      const known = !!(u.ref && knownRefs.has(u.ref));
+      if (freezeMirror && known) continue; // existing unit, published, not forced — skip entirely
+      if (isPublished && !freezeMirror && known) {
+        const match = existingUnitByRef.get(u.ref)!;
+        const photosClass = await classifyFreshUrls(u.photos, (match.photos as string[] | null) ?? []);
+        const plansClass = await classifyFreshUrls(u.plans, (match.plans as string[] | null) ?? []);
+        const photosNewMap = await mirrorEachTracked(photosClass.genuinelyNew, dk);
+        const plansNewMap = await mirrorEachTracked(plansClass.genuinelyNew, dk);
+        u.photos = u.photos.map((p) => photosClass.reuse.get(p) ?? photosNewMap.get(p)).filter((p): p is string => !!p);
+        u.plans = u.plans.map((p) => plansClass.reuse.get(p) ?? plansNewMap.get(p)).filter((p): p is string => !!p);
+        if (photosNewMap.size > 0 || plansNewMap.size > 0) mirroredNewFiles = true;
+      } else {
+        const photos = await mirrorAll(u.photos, dk);
+        u.photos = photos.urls;
+        const uPlans = await mirrorAll(u.plans, dk);
+        u.plans = uPlans.urls;
+        if (photos.anyNew || uPlans.anyNew) mirroredNewFiles = true;
+      }
     }
   }
   const fullData = developmentRow(vm, dev, id, accountId);
-  let updateData: Partial<typeof fullData> = fullData;
+  let updateData: Partial<typeof fullData> & typeof driftPatch = fullData;
   if (existing?.publishStatus === "published") {
     const frozen = { ...fullData };
     for (const k of FROZEN_WHEN_PUBLISHED) delete (frozen as any)[k];
     updateData = frozen;
   }
+  // Never subject to FROZEN_WHEN_PUBLISHED — imageDriftDetectedAt/newFromFeed
+  // aren't customer-facing content, they're the admin's own "what changed"
+  // bookkeeping, meant to update on every published sync regardless.
+  if (driftPatch) updateData = { ...updateData, ...driftPatch };
   const development = existing
     ? await prisma.development.update({ where: { feedKey }, data: updateData })
     : await prisma.development.create({ data: fullData });

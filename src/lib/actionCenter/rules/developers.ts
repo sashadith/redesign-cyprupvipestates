@@ -491,10 +491,45 @@ async function developerLinkCollisions(): Promise<ActionItem[]> {
   return items;
 }
 
+// (m) A published Development whose feed gallery/plans/unit-photos have
+// drifted from what's actually mirrored (Development.imageDriftDetectedAt
+// set — see the schema comment for the full mechanism). The 2026-08-08
+// mirror-freeze fix deliberately stops downloading a published project's
+// changed images automatically, so this Action Center item is the ONLY
+// place that surfaces it — without it, a developer replacing bad renderings
+// with real photos would never be noticed. INFO, not ACTION/URGENT: nothing
+// is broken on the live site, this is "worth a look", and the admin decides
+// via "Reload images" + the New in feed picker whether to act on it.
+// One item PER Development (own itemId namespace, image-drift-pending:), not
+// one aggregate — same reasoning as developer-link-collision: above, a
+// dismiss on one project's drift must never swallow another's.
+async function imageDriftPending(): Promise<ActionItem[]> {
+  const rows = await prisma.development.findMany({
+    where: { publishStatus: "published", imageDriftDetectedAt: { not: null } },
+    select: { id: true, publicName: true, imageDriftDetectedAt: true, newFromFeed: true },
+  });
+  if (!rows.length) return [];
+  return rows.map((d) => {
+    const counts = (d.newFromFeed as { driftCounts?: { gallery: number; plans: number; units: number } } | null)?.driftCounts;
+    const galleryPlans = (counts?.gallery ?? 0) + (counts?.plans ?? 0);
+    const units = counts?.units ?? 0;
+    const parts = [
+      galleryPlans > 0 ? `${galleryPlans} gallery/plan image${galleryPlans === 1 ? "" : "s"}` : null,
+      units > 0 ? `${units} unit photo${units === 1 ? "" : "s"}` : null,
+    ].filter(Boolean);
+    return {
+      id: `image-drift-pending:${d.id}`, severity: "INFO", category: "DEVELOPERS",
+      title: `${d.publicName}: feed images changed since publish`,
+      description: `${parts.join(", ") || "Images"} in the feed no longer match what's mirrored — the sync skips re-downloading a published project's images automatically. "Reload images" on the project page mirrors the new ones for review.`,
+      deepLink: `/admin/developments/${d.id}`, since: d.imageDriftDetectedAt as Date,
+    };
+  });
+}
+
 export async function developerRules(): Promise<ActionItem[]> {
-  const [a, b, c, d, e, f, g, h, i, j, k, l] = await Promise.all([
+  const [a, b, c, d, e, f, g, h, i, j, k, l, m] = await Promise.all([
     soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(), backInStockReminders(),
-    developerNoPageReminders(), developerLinkBrokenReminders(), overlapCandidatesPending(), developerLinkCollisions(), feedIncompleteWarnings(),
+    developerNoPageReminders(), developerLinkBrokenReminders(), overlapCandidatesPending(), developerLinkCollisions(), feedIncompleteWarnings(), imageDriftPending(),
   ]);
-  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l];
+  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l, ...m];
 }
