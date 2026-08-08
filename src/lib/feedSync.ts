@@ -307,24 +307,29 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
     where: { feedKey },
     select: {
       id: true, publishStatus: true, gallery: true, plans: true, imageDriftDetectedAt: true,
-      // Gallery drift must compare against what's ACTUALLY resolved/shown
-      // (override-first, same as mapRowToVM/mapDevelopmentRowToCard — see
-      // Development.newFromFeed's schema comment), not the raw feed-synced
-      // Development.gallery alone: once an admin has ever saved via
-      // GalleryManager, DevelopmentOverride.gallery is where new picks
-      // land, and Development.gallery (frozen at publish time) never
-      // updates again — comparing against it alone would keep flagging
-      // images the admin already added as "still new". Plans have no
-      // override table (savePlans writes Development.plans directly), so
-      // no equivalent resolution is needed there.
+      // Gallery drift must compare against every hash the admin has EVER
+      // accounted for, not just the currently-displayed set. This is
+      // deliberately the UNION of raw Development.gallery (frozen at
+      // publish time) + DevelopmentOverride.gallery + hero — NOT the
+      // override-first "what's shown" resolution used elsewhere
+      // (mapRowToVM/mapDevelopmentRowToCard). Discovered 2026-08-08
+      // pre-deploy: an override-first-only comparison treats every raw
+      // image the admin deliberately DIDN'T curate into their override as
+      // permanently "new" forever — confirmed on Pearl Sea Caves Villas
+      // (146 raw, only 38 in the curated override): 108 old, already-seen
+      // images were misreported as fresh drift on every single sync. 49 of
+      // 122 published developments have a smaller override than raw
+      // gallery, most by 1 (harmless) but several by double digits. Plans
+      // have no override table (savePlans writes Development.plans
+      // directly), so no union is needed there — raw IS the only set.
       override: { select: { gallery: true, mainImage: true } },
     },
   });
   const resolvedStoredGallery: string[] = (() => {
+    const raw = (existing?.gallery as string[] | null) ?? [];
     const ovGallery = (existing?.override?.gallery as string[] | null) ?? [];
-    const base = ovGallery.length ? ovGallery : ((existing?.gallery as string[] | null) ?? []);
     const hero = existing?.override?.mainImage;
-    return hero && !base.includes(hero) ? [hero, ...base] : base;
+    return [...(hero ? [hero] : []), ...ovGallery, ...raw];
   })();
   // Published + not admin-forced: skip mirroring itself, not just the DB
   // write. FROZEN_WHEN_PUBLISHED already discarded the resulting URLs from
