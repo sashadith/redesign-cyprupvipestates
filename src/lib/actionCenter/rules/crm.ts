@@ -69,6 +69,14 @@ const ELEVATED_NO_CONTACT_STATUSES = ["COMMUNICATING", "VIEWING_SCHEDULED", "OFF
 type ElevatedStatus = (typeof ELEVATED_NO_CONTACT_STATUSES)[number];
 const isElevatedStatus = (s: string): s is ElevatedStatus => (ELEVATED_NO_CONTACT_STATUSES as readonly string[]).includes(s);
 
+// The "recent activity of any kind" anchor (below) must stay restricted to
+// REAL_CONTACT_TYPES + NOTE. STATUS_CHANGE/SYSTEM rows are written purely by
+// admin actions (updateLeadStatus, updateLead, updateAssignment, mergeLeads,
+// soft-delete/restore) — an admin editing a lead is not customer contact, and
+// counting it would let routine admin housekeeping permanently silence a
+// stale-contact warning just by touching the lead every few days.
+const RECENT_ACTIVITY_TYPES = [...REAL_CONTACT_TYPES, "NOTE"] as const;
+
 // Human-readable status for the item text — was hard-coded to "New lead"
 // regardless of actual status (misleading for e.g. a VIEWING_SCHEDULED lead
 // like Konstantin); now always names the real status.
@@ -96,7 +104,7 @@ async function noFollowUp(): Promise<ActionItem[]> {
   if (elevatedNoContactIds.length) {
     const rows = await prisma.leadInteraction.groupBy({
       by: ["leadId"],
-      where: { leadId: { in: elevatedNoContactIds } },
+      where: { leadId: { in: elevatedNoContactIds }, type: { in: [...RECENT_ACTIVITY_TYPES] } },
       _max: { occurredAt: true },
     });
     for (const r of rows) if (r._max.occurredAt) lastAnyActivity.set(r.leadId, r._max.occurredAt);
