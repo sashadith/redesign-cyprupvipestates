@@ -50,25 +50,83 @@ const REAL_CONTACT_TYPES = ["CALL", "EMAIL_OUT", "EMAIL_IN", "WHATSAPP_OUT", "WH
 // count, so "warm contact" has exactly one definition across the Action Center.
 export const ACTIVE_LEAD_STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER"] as const;
 
+// Status-plausibility split (2026-08-09, Konstantin Brenngold incident): a
+// lead can sit at NEW or CONTACTED purely because an admin flipped the
+// dropdown — no real conversation required, so "no contact logged yet" is
+// still plausibly true and stays URGENT there. COMMUNICATING/
+// VIEWING_SCHEDULED/OFFER structurally imply prior real engagement (you
+// don't reach an ongoing dialogue, a scheduled viewing, or an offer without
+// having actually talked to the lead) — Konstantin sat at VIEWING_SCHEDULED
+// while flagged "New lead, no contact logged yet" for 3380+ hours; the real
+// contact existed (a WhatsApp message) but was logged as a NOTE before the
+// proper WhatsApp-logging tool existed (built 2026-07-23, see
+// logWhatsAppSentAction). For these three statuses "no REAL_CONTACT_TYPES
+// row" is far more likely a logging gap than a genuinely untouched lead, so
+// it never reaches URGENT: recent activity of ANY kind (a note, a status
+// change — not just a real-contact type) suppresses the item entirely;
+// once that goes stale too, it's ACTION with honest wording, never URGENT.
+const ELEVATED_NO_CONTACT_STATUSES = ["COMMUNICATING", "VIEWING_SCHEDULED", "OFFER"] as const;
+type ElevatedStatus = (typeof ELEVATED_NO_CONTACT_STATUSES)[number];
+const isElevatedStatus = (s: string): s is ElevatedStatus => (ELEVATED_NO_CONTACT_STATUSES as readonly string[]).includes(s);
+
+// Human-readable status for the item text — was hard-coded to "New lead"
+// regardless of actual status (misleading for e.g. a VIEWING_SCHEDULED lead
+// like Konstantin); now always names the real status.
+const STATUS_LABEL: Record<string, string> = {
+  NEW: "New", CONTACTED: "Contacted", COMMUNICATING: "Communicating",
+  VIEWING_SCHEDULED: "Viewing scheduled", OFFER: "Offer",
+};
+
 async function noFollowUp(): Promise<ActionItem[]> {
   const leads = await prisma.lead.findMany({
     where: { status: { in: [...ACTIVE_LEAD_STATUSES] }, deletedAt: null },
     select: {
-      id: true, firstName: true, lastName: true, createdAt: true,
+      id: true, firstName: true, lastName: true, createdAt: true, status: true,
       interactions: { where: { type: { in: [...REAL_CONTACT_TYPES] } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true } },
     },
   });
+
+  // Second pass, only for elevated-status leads with no real contact: their
+  // most recent activity of ANY type decides suppress-vs-ACTION. Batched
+  // into one groupBy rather than N+1 per-lead queries.
+  const elevatedNoContactIds = leads
+    .filter((l) => isElevatedStatus(l.status) && !l.interactions[0])
+    .map((l) => l.id);
+  const lastAnyActivity = new Map<string, Date>();
+  if (elevatedNoContactIds.length) {
+    const rows = await prisma.leadInteraction.groupBy({
+      by: ["leadId"],
+      where: { leadId: { in: elevatedNoContactIds } },
+      _max: { occurredAt: true },
+    });
+    for (const r of rows) if (r._max.occurredAt) lastAnyActivity.set(r.leadId, r._max.occurredAt);
+  }
+
   const items: ActionItem[] = [];
   for (const l of leads) {
     const lastContact = l.interactions[0]?.occurredAt;
+    const statusLabel = STATUS_LABEL[l.status] ?? l.status;
     if (!lastContact) {
+      if (isElevatedStatus(l.status)) {
+        const anchor = lastAnyActivity.get(l.id) ?? l.createdAt;
+        const cutoff = Date.now() - STALE_FOLLOWUP_DAYS * DAY;
+        if (anchor.getTime() > cutoff) continue; // recent activity of any kind — suppressed entirely
+        const days = Math.floor((Date.now() - anchor.getTime()) / DAY);
+        items.push({
+          id: `lead-followup:${l.id}`, severity: "ACTION", category: "CRM",
+          title: `No follow-up on ${leadName(l)} for ${days} days`,
+          description: `${statusLabel}, but no contact logged in ${days} days.`,
+          deepLink: `/admin/crm/${l.id}`, since: anchor,
+        });
+        continue;
+      }
       const cutoff = Date.now() - NEW_LEAD_URGENT_HOURS * 3_600_000;
       if (l.createdAt.getTime() > cutoff) continue;
       const hours = Math.floor((Date.now() - l.createdAt.getTime()) / 3_600_000);
       items.push({
         id: `lead-followup:${l.id}`, severity: "URGENT", category: "CRM",
         title: `${leadName(l)} is waiting for a first response since ${hours}h`,
-        description: "New lead, no contact logged yet.",
+        description: `${statusLabel}, no contact logged yet.`,
         deepLink: `/admin/crm/${l.id}`, since: l.createdAt,
       });
     } else {
@@ -78,7 +136,7 @@ async function noFollowUp(): Promise<ActionItem[]> {
       items.push({
         id: `lead-followup:${l.id}`, severity: "ACTION", category: "CRM",
         title: `No follow-up on ${leadName(l)} for ${days} days`,
-        description: `Last contact ${days} days ago.`,
+        description: `${statusLabel}. Last contact ${days} days ago.`,
         deepLink: `/admin/crm/${l.id}`, since: lastContact,
       });
     }
