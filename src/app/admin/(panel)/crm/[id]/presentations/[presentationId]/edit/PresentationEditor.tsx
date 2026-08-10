@@ -42,14 +42,20 @@ export type EditorItem = {
   checkedUnitIds: string[];
 };
 
-// Same "whole project vs specific units" split used at generation time
-// (PropertyMatching.tsx's splitUnitSelection) — a fully-checked available set
-// collapses to unitRefs: null, unitIds: null ("whole project").
+// Same split used at generation time (PropertyMatching.tsx's
+// splitUnitSelection). 2026-08-11 correction — this used to collapse a
+// fully-checked selection to unitRefs: null, unitIds: null ("whole
+// project"), which src/app/c/[token]/page.tsx resolves as "show every
+// available unit, live, ignoring the filters this presentation was
+// generated with". That meant saving an edit — even just reordering or
+// fixing a typo — silently reset a correctly-filtered presentation back to
+// unfiltered. Always write the explicit checked set now; the only
+// remaining null case is a project with no available units at all, where
+// there's nothing to snapshot.
 function splitUnitSelection(item: { publicName: string; units: EditorUnit[]; checkedUnitIds: string[] }) {
   const availableIds = item.units.filter((u) => u.status === "available").map((u) => u.id);
+  if (availableIds.length === 0) return { unitRefs: null as string[] | null, unitIds: null as string[] | null };
   const checked = new Set(item.checkedUnitIds);
-  const isWholeProject = availableIds.length > 0 && checked.size === availableIds.length && availableIds.every((id) => checked.has(id));
-  if (isWholeProject) return { unitRefs: null as string[] | null, unitIds: null as string[] | null };
   const refs: string[] = [];
   const idsWithoutRef: string[] = [];
   for (const u of item.units) {

@@ -85,6 +85,11 @@ export default function PropertyMatching({
   const [autoSelected, setAutoSelected] = useState<Set<string>>(new Set());
   const [unitOverrides, setUnitOverrides] = useState<Map<string, Set<string>>>(new Map());
   const [comments, setComments] = useState<Map<string, string>>(new Map());
+  // Per-project "show all units (N more)" toggle — expanded unit table shows
+  // only matchedUnits (exact) by default; this reveals allAvailableUnits for
+  // deliberately including a near-miss.
+  const [showAllUnits, setShowAllUnits] = useState<Set<string>>(new Set());
+  const toggleShowAllUnits = (id: string) => setShowAllUnits((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
 
   const [greetingName, setGreetingName] = useState(suggestedGreeting(initialLocale, lead.firstName));
   const [greetingTouched, setGreetingTouched] = useState(false);
@@ -200,13 +205,15 @@ export default function PropertyMatching({
   // Split a unit-selection into stable normalized refs (survive feed re-syncs)
   // and, for units with no ref at all (manual units only — never wiped by a
   // sync), their UUIDs as a fallback identifier. See PART 1 in the task spec.
+  // Looks the id up in BOTH matchedUnits and allAvailableUnits — a unit added
+  // by hand via "show all units" lives only in the latter.
   function splitUnitSelection(developmentId: string, selectedIds: Set<string>) {
     const m = results.find((r) => r.development.id === developmentId);
     const publicName = m?.development.publicName || "";
     const refs: string[] = [];
     const idsWithoutRef: string[] = [];
     Array.from(selectedIds).forEach((id) => {
-      const u = m?.matchedUnits.find((mu) => mu.id === id);
+      const u = m?.matchedUnits.find((mu) => mu.id === id) ?? m?.allAvailableUnits.find((mu) => mu.id === id);
       if (u?.ref && u.ref.trim()) refs.push(normalizeRef(u.ref, publicName));
       else idsWithoutRef.push(id);
     });
@@ -217,8 +224,18 @@ export default function PropertyMatching({
     setGenerating(true); setGenError("");
     try {
       const items = Array.from(selectedDevs).map((developmentId, i) => {
-        const ov = unitOverrides.get(developmentId);
-        const { unitRefs, unitIds } = ov ? splitUnitSelection(developmentId, ov) : { unitRefs: null, unitIds: null };
+        // 2026-08-11 — the presentation is a snapshot of THIS selection, never
+        // a live query: always write the explicit set the admin is currently
+        // looking at, even when it's untouched from the default (matchedUnits).
+        // Previously, leaving the default fully checked (the common case)
+        // stored null/null, which the public page reads as "all available
+        // units of the project" — bypassing every filter entirely. The one
+        // remaining null case is genuine: a project with no unit-level data
+        // at all, where there's nothing to snapshot.
+        const m = results.find((r) => r.development.id === developmentId);
+        const defaultIds = m?.matchedUnits.map((u) => u.id) ?? [];
+        const effectiveSelection = unitOverrides.get(developmentId) ?? new Set(defaultIds);
+        const { unitRefs, unitIds } = defaultIds.length ? splitUnitSelection(developmentId, effectiveSelection) : { unitRefs: null, unitIds: null };
         return {
           developmentId,
           unitRefs,
@@ -332,8 +349,23 @@ export default function PropertyMatching({
             {results.map((m) => {
               const d = m.development;
               const isOpen = expanded.has(d.id);
-              const allAvailableIds = m.matchedUnits.length ? m.matchedUnits.filter((u) => u.status === "available").map((u) => u.id) : [];
+              // Default preselection = the EXACT matches; "show all" (below)
+              // reveals allAvailableUnits so a deliberate near-miss can still
+              // be added by hand.
+              const defaultCheckedIds = m.matchedUnits.filter((u) => u.status === "available").map((u) => u.id);
               const checkedUnits = unitOverrides.get(d.id);
+              const showingAll = showAllUnits.has(d.id);
+              const unitsToShow = showingAll ? m.allAvailableUnits : m.matchedUnits;
+              const extraCount = m.allAvailableUnits.length - m.matchedUnits.length;
+              // 2026-08-11 — "Price from" now comes live from the SELECTED
+              // units (matched by default, hand-adjustable), not the stored
+              // project-level field — reacts instantly to checkbox toggles.
+              const unitById = new Map(m.allAvailableUnits.map((u) => [u.id, u]));
+              const selectedIds = checkedUnits ?? new Set(defaultCheckedIds);
+              const selectedPrices = Array.from(selectedIds)
+                .map((id) => unitById.get(id)?.price)
+                .filter((p): p is number => p != null);
+              const priceFromSelection = selectedPrices.length ? Math.min(...selectedPrices) : null;
               return (
                 <Fragment key={d.id}>
                   <tr className="hover:bg-[#F8F9FA]">
@@ -343,7 +375,7 @@ export default function PropertyMatching({
                     </td>
                     <td className="px-3 py-2 font-medium text-[#111827]">{d.publicName}</td>
                     <td className="px-3 py-2 text-[#6B7280]">{[d.district || d.town, d.area].filter(Boolean).join(" · ") || "—"}</td>
-                    <td className="px-3 py-2 text-[#6B7280]">{fmtPrice(d.priceFrom)}</td>
+                    <td className="px-3 py-2 text-[#6B7280]">{fmtPrice(priceFromSelection)}</td>
                     <td className="px-3 py-2 text-right text-[#6B7280]">{d.unitsAvailable}</td>
                     <td className="px-3 py-2 text-right">
                       <span className="inline-block rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: scoreBg(m.score), color: scoreColor(m.score) }}>{m.score}%</span>
@@ -363,19 +395,23 @@ export default function PropertyMatching({
                             className={`${field} w-full mb-3`}
                           />
                         )}
-                        {m.matchedUnits.length === 0 ? (
-                          <p className="text-xs text-[#9CA3AF]">No individual unit data matched these filters — the whole project&apos;s available units will show.</p>
+                        {m.allAvailableUnits.length === 0 ? (
+                          <p className="text-xs text-[#9CA3AF]">No individual unit data for this project — the whole project&apos;s available units will show.</p>
                         ) : (
-                          <table className="w-full text-xs">
+                          <>
+                            {m.matchedUnits.length === 0 && (
+                              <p className="text-xs text-[#9CA3AF] mb-2">No units match this filter exactly.</p>
+                            )}
+                            <table className="w-full text-xs">
                             <thead className="text-[#9CA3AF] text-left">
                               <tr><th className="py-1 w-6"></th><th className="py-1">Ref</th><th className="py-1">Type</th><th className="py-1">Beds</th><th className="py-1">Area</th><th className="py-1">Price</th><th className="py-1">Status</th></tr>
                             </thead>
                             <tbody>
-                              {m.matchedUnits.map((u) => {
-                                const checked = checkedUnits ? checkedUnits.has(u.id) : true;
+                              {unitsToShow.map((u) => {
+                                const checked = checkedUnits ? checkedUnits.has(u.id) : defaultCheckedIds.includes(u.id);
                                 return (
                                   <tr key={u.id} className="border-t border-[#E5E7EB]">
-                                    <td className="py-1"><input type="checkbox" disabled={u.status !== "available"} checked={checked} onChange={() => toggleUnit(d.id, u.id, allAvailableIds)} className="h-3.5 w-3.5 rounded border-[#D1D5DB] text-[#1B4B43]" /></td>
+                                    <td className="py-1"><input type="checkbox" disabled={u.status !== "available"} checked={checked} onChange={() => toggleUnit(d.id, u.id, defaultCheckedIds)} className="h-3.5 w-3.5 rounded border-[#D1D5DB] text-[#1B4B43]" /></td>
                                     <td className="py-1">{u.ref || u.label || "—"}</td>
                                     <td className="py-1">{u.type || "—"}</td>
                                     <td className="py-1">{u.beds || "—"}</td>
@@ -386,7 +422,13 @@ export default function PropertyMatching({
                                 );
                               })}
                             </tbody>
-                          </table>
+                            </table>
+                            {extraCount > 0 && (
+                              <button type="button" onClick={() => toggleShowAllUnits(d.id)} className="mt-2 text-xs text-[#1B4B43] underline">
+                                {showingAll ? "Show only matching units" : `Show all units (${extraCount} more)`}
+                              </button>
+                            )}
+                          </>
                         )}
                       </td>
                     </tr>

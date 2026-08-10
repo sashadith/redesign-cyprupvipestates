@@ -54,14 +54,27 @@ export type MatchedDevelopment = {
   priceTo: number | null;
   currency: string;
   mainImage: string | null;
+  // 2026-08-11 correction — used to be every available unit regardless of
+  // match; now the count of units that actually satisfy the active filters
+  // (same set as `matchedUnits` below), so the admin table's "Available"
+  // column can't imply a match that doesn't exist. Raw available count is
+  // still exposed separately as unitsAvailableAll, for the "show all units"
+  // toggle in the panel.
   unitsAvailable: number;
+  unitsAvailableAll: number;
   unitsTotal: number;
 };
 
 export type DevelopmentMatch = {
   development: MatchedDevelopment;
   score: number;
+  // EXACT filter matches only (no scoring tolerance) — this is what the
+  // matching panel preselects and what gets persisted into a presentation.
   matchedUnits: MatchedUnit[];
+  // Every available unit, filtered or not — backs the panel's "show all
+  // units (N more)" toggle so a knowingly-near-miss unit can still be added
+  // by hand.
+  allAvailableUnits: MatchedUnit[];
   scoreBreakdown: { budget: number; bedrooms: number; location: number; propertyType: number };
 };
 
@@ -204,15 +217,32 @@ export async function matchDevelopmentsForLead(lead: LeadLike, filters: MatchFil
 
     const score = budgetScore + bedroomScore + locationScore + typeScore;
 
-    // matchedUnits: available units satisfying every UNIT-LEVEL criterion that
-    // was actually supplied (budget/beds/type — location is development-level).
+    const toMatchedUnit = (u: (typeof available)[number]): MatchedUnit => ({
+      id: u.id, ref: u.ref, label: u.label, type: u.type, beds: u.beds, areaBuilt: u.areaBuilt, price: u.price, status: u.status ?? "available",
+    });
+    const byPrice = (a: MatchedUnit, b: MatchedUnit) => (a.price ?? Infinity) - (b.price ?? Infinity);
+
+    // matchedUnits: EXACT UNIT-LEVEL criterion match (budget/beds/type —
+    // location is development-level, not unit-level, so it's not applied
+    // here). 2026-08-11 correction — this used to reuse the SAME ±1 bedroom /
+    // ±10% budget tolerance as the score above, which is right for "is this
+    // project worth showing at all" but wrong for "which units get
+    // preselected into a client's presentation" — a near-miss studio was
+    // landing pre-checked next to genuinely matching units with no visual
+    // distinction. Tolerance stays exclusively in the score block above;
+    // this list is deliberately exact, since it drives both the checkbox
+    // default AND (once explicitly persisted, see PropertyMatching.tsx's
+    // generate()) exactly what the client sees.
     const matchedUnits: MatchedUnit[] = available
       .filter((u) => {
-        if (hasBudget && u.price != null && !inRange(u.price, tight.lo, tight.hi)) return false;
-        if (hasBudget && u.price == null) return false; // can't confirm a budget match without a price
+        if (hasBudget) {
+          if (u.price == null) return false; // can't confirm a budget match without a price
+          if (budgetMin != null && u.price < budgetMin) return false;
+          if (budgetMax != null && u.price > budgetMax) return false;
+        }
         if (hasBedCriteria) {
           const b = parseBeds(u.beds);
-          if (b == null || !bedrooms.some((want) => Math.abs(want - b) <= 1)) return false;
+          if (b == null || !bedrooms.includes(b)) return false;
         }
         if (hasTypeCriteria) {
           const t = normalizeType(u.type);
@@ -220,8 +250,10 @@ export async function matchDevelopmentsForLead(lead: LeadLike, filters: MatchFil
         }
         return true;
       })
-      .sort((a, b) => (a.price ?? Infinity) - (b.price ?? Infinity))
-      .map((u) => ({ id: u.id, ref: u.ref, label: u.label, type: u.type, beds: u.beds, areaBuilt: u.areaBuilt, price: u.price, status: u.status ?? "available" }));
+      .map(toMatchedUnit)
+      .sort(byPrice);
+
+    const allAvailableUnits: MatchedUnit[] = available.map(toMatchedUnit).sort(byPrice);
 
     // Same fallback as developmentRender.ts's mapRowToVM — unit-driven feeds
     // and manually-created developments often leave the project-level price
@@ -233,10 +265,11 @@ export async function matchDevelopmentsForLead(lead: LeadLike, filters: MatchFil
       development: {
         id: d.id, publicName: ov?.alias || d.publicName, town, district, area,
         priceFrom, priceTo: d.priceTo, currency: d.currency || "EUR",
-        mainImage, unitsAvailable: available.length, unitsTotal: d.units.length,
+        mainImage, unitsAvailable: matchedUnits.length, unitsAvailableAll: available.length, unitsTotal: d.units.length,
       },
       score,
       matchedUnits,
+      allAvailableUnits,
       scoreBreakdown: { budget: budgetScore, bedrooms: bedroomScore, location: locationScore, propertyType: typeScore },
     });
   }
