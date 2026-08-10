@@ -93,6 +93,12 @@ export default function PresentationEditor({
 
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
+  // 2026-08-11 — same "name it, then let the admin confirm" pattern as
+  // PropertyMatching.tsx's generate(): a property with real unit data but
+  // zero units checked would collapse to unitRefs:null/unitIds:null (the
+  // public page's "show every available unit" fallback). Removed from the
+  // saved presentation, but only after the admin has seen which and why.
+  const [dropWarning, setDropWarning] = useState<{ developmentId: string; publicName: string }[] | null>(null);
   const [confirmation, setConfirmation] = useState<{ url: string; whatsappUrl: string | null } | null>(null);
 
   // ---- Add Properties panel ----
@@ -211,22 +217,26 @@ export default function PresentationEditor({
   const toggleExpandUnits = (devId: string) => setExpandedUnits((prev) => { const n = new Set(prev); n.has(devId) ? n.delete(devId) : n.add(devId); return n; });
 
   // ---- Save ----
-  async function save(opts: { silent?: boolean } = {}) {
+  async function save(opts: { silent?: boolean; force?: boolean } = {}) {
     if (items.length === 0) { if (!opts.silent) setSaveError("At least one property is required."); return; }
     // A property with real unit data but zero units checked would collapse
     // to unitRefs:null/unitIds:null in splitUnitSelection — the public
-    // page's "show every available unit" fallback. Block the save instead
-    // (same guard as PropertyMatching.tsx's generate()) rather than silently
-    // un-filtering it. Applies to the silent autosave path too, so a
-    // reorder can't sneak a bad write through unnoticed.
+    // page's "show every available unit" fallback. Named for the admin
+    // first (same pattern as PropertyMatching.tsx's generate()), excluded
+    // only after they confirm — not a silent write, not a hard block that
+    // forces manually unchecking every one. A silent autosave (reorder)
+    // just skips the write rather than surfacing a confirmation mid-drag.
     const empty = items.filter((it) => it.units.some((u) => u.status === "available") && it.checkedUnitIds.length === 0);
-    if (empty.length) {
-      if (!opts.silent) setSaveError(`No units selected for: ${empty.map((e) => e.publicName).join(", ")}. Check at least one unit, or remove the property.`);
+    if (empty.length && !opts.force) {
+      if (opts.silent) return;
+      setDropWarning(empty.map((e) => ({ developmentId: e.developmentId, publicName: e.publicName })));
       return;
     }
+    setDropWarning(null);
+    const keepItems = empty.length ? items.filter((it) => !empty.some((e) => e.developmentId === it.developmentId)) : items;
     setSaving(true); setSaveError("");
     try {
-      const payloadItems = items.map((it, i) => {
+      const payloadItems = keepItems.map((it, i) => {
         const { unitRefs, unitIds } = splitUnitSelection(it);
         return {
           developmentId: it.developmentId,
@@ -243,6 +253,7 @@ export default function PresentationEditor({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to save");
+      if (keepItems.length !== items.length) setItems(keepItems);
       if (!opts.silent) {
         setConfirmation({ url: data.url, whatsappUrl: data.whatsappUrl });
         router.refresh();
@@ -516,11 +527,29 @@ export default function PresentationEditor({
       </div>
 
       {/* ---- D) SAVE ---- */}
-      <div className="sticky bottom-0 z-10 bg-white border border-[#E5E7EB] rounded-lg shadow-lg p-4 flex items-center gap-3">
-        {saveError && <p className="text-sm text-[#DC2626]">{saveError}</p>}
-        <button type="button" onClick={() => save()} disabled={saving} className="ml-auto rounded-md bg-[#1B4B43] text-white text-sm font-medium px-5 py-2 hover:bg-[#142E2D] disabled:bg-[#D1D5DB]">
-          {saving ? "Saving…" : "Save changes"}
-        </button>
+      <div className="sticky bottom-0 z-10 bg-white border border-[#E5E7EB] rounded-lg shadow-lg p-4 space-y-3">
+        {dropWarning && (
+          <div className="rounded-md border border-[#FCD34D] bg-[#FFFBEB] p-3 text-sm">
+            <p className="font-medium text-[#92400E] mb-1">
+              {dropWarning.length} propert{dropWarning.length === 1 ? "y has" : "ies have"} no unit matching your filter exactly — {dropWarning.length === 1 ? "it" : "they"} will be removed from this presentation:
+            </p>
+            <ul className="list-disc list-inside text-[#92400E] mb-2">
+              {dropWarning.map((d) => <li key={d.developmentId}>{d.publicName}</li>)}
+            </ul>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => save({ force: true })} disabled={saving} className="rounded-md bg-[#92400E] text-white text-xs font-medium px-3 py-1.5 hover:opacity-90 disabled:opacity-50">
+                Save anyway (removing these)
+              </button>
+              <button type="button" onClick={() => setDropWarning(null)} className="text-xs text-[#92400E] hover:underline">Cancel — let me adjust</button>
+            </div>
+          </div>
+        )}
+        <div className="flex items-center gap-3">
+          {saveError && <p className="text-sm text-[#DC2626]">{saveError}</p>}
+          <button type="button" onClick={() => save()} disabled={saving} className="ml-auto rounded-md bg-[#1B4B43] text-white text-sm font-medium px-5 py-2 hover:bg-[#142E2D] disabled:bg-[#D1D5DB]">
+            {saving ? "Saving…" : "Save changes"}
+          </button>
+        </div>
       </div>
 
       {/* ---- SAVE CONFIRMATION ---- */}
