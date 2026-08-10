@@ -10,7 +10,10 @@ import { filterSnoozed } from "./snooze";
 export type { ActionItem, Severity, Category } from "./types";
 export { snoozeItem, dismissForeverItem } from "./snooze";
 
-const CATEGORY_ORDER: Record<Category, number> = { DEVELOPERS: 0, CRM: 1, SEO: 2, SEO_ADVISOR: 3, SYSTEM: 4 };
+// 2026-08-11 — CRM moved to the top per request (leads need the fastest
+// glance), Developers second, SEO/SEO_ADVISOR/SYSTEM unchanged relative to
+// each other.
+const CATEGORY_ORDER: Record<Category, number> = { CRM: 0, DEVELOPERS: 1, SEO: 2, SEO_ADVISOR: 3, SYSTEM: 4 };
 
 function sortItems(items: ActionItem[]): ActionItem[] {
   return [...items].sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity] || a.since.getTime() - b.since.getTime());

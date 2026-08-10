@@ -2,7 +2,12 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
-const sel = "rounded-md border border-[#E5E7EB] px-2 py-1.5 text-sm bg-white";
+// 2026-08-11 — fixed height instead of vertical padding: <input> and
+// <select> render at slightly different heights for the same py-* value
+// (native OS rendering of <select>'s box differs from <input>'s), which is
+// what made the row's heights visibly jump. An explicit h-9 makes every
+// control identical regardless of element type.
+const sel = "h-9 rounded-md border border-[#E5E7EB] px-2.5 text-sm bg-white";
 const SEARCH_DEBOUNCE_MS = 300;
 
 // Live search/filter (Batch A, 2026-07-25) — replaces the old GET <form> +
@@ -50,7 +55,7 @@ export default function LeadFilterBar({
   const val = (key: string) => searchParams.get(key) ?? "";
 
   return (
-    <div className="flex flex-wrap items-end gap-2 mb-4 bg-white border border-[#E5E7EB] rounded-lg p-3">
+    <div className="flex flex-wrap items-center gap-2 mb-4 bg-white border border-[#E5E7EB] rounded-lg p-3">
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}
@@ -77,7 +82,7 @@ export default function LeadFilterBar({
       <button
         type="button"
         onClick={() => { setQ(""); router.replace(pathname, { scroll: false }); }}
-        className="text-sm text-[#6B7280] hover:underline px-2 py-1.5"
+        className="h-9 rounded-md border border-[#E5E7EB] px-3 text-sm text-[#6B7280] hover:bg-[#F8F9FA] hover:text-[#111827]"
       >
         Reset
       </button>
