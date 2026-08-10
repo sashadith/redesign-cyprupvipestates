@@ -220,12 +220,20 @@ export default function PropertyMatching({
     return { unitRefs: refs.length ? refs : null, unitIds: idsWithoutRef.length ? idsWithoutRef : null };
   }
 
-  async function generate() {
+  // 2026-08-11 — a project with real unit data but nothing selected (0 exact
+  // matches, never hand-picked via "show all") has nothing to show a client.
+  // Auto-excluded from the presentation, but named here first so the admin
+  // sees which and why before it happens, rather than a hard stop that
+  // forces unchecking every one by hand (the original version of this fix)
+  // or a fully silent drop (no visibility at all).
+  const [dropWarning, setDropWarning] = useState<{ publicName: string }[] | null>(null);
+
+  async function generate(force = false) {
     setGenerating(true); setGenError("");
     try {
-      // 2026-08-11 — the presentation is a snapshot of THIS selection, never
-      // a live query: always write the explicit set the admin is currently
-      // looking at, even when it's untouched from the default (matchedUnits).
+      // The presentation is a snapshot of THIS selection, never a live
+      // query: always write the explicit set the admin is currently looking
+      // at, even when it's untouched from the default (matchedUnits).
       // Previously, leaving the default fully checked (the common case)
       // stored null/null, which the public page reads as "all available
       // units of the project" — bypassing every filter entirely.
@@ -245,17 +253,15 @@ export default function PropertyMatching({
         const effectiveSelection = unitOverrides.get(developmentId) ?? new Set(defaultIds);
         return { developmentId, publicName: m?.development.publicName ?? developmentId, hasUnitData, effectiveSelection };
       });
-      // A project with real unit data but nothing selected (0 exact matches,
-      // never hand-picked via "show all") has nothing to show a client —
-      // stop and ask, rather than silently drop it or fall back to "all
-      // available units".
       const empty = resolved.filter((r) => r.hasUnitData && r.effectiveSelection.size === 0);
-      if (empty.length) {
-        setGenError(`No matching units selected for: ${empty.map((e) => e.publicName).join(", ")}. Uncheck these projects, or open them and use "Show all units" to pick one by hand.`);
+      if (empty.length && !force) {
+        setDropWarning(empty.map((e) => ({ publicName: e.publicName })));
         setGenerating(false);
         return;
       }
-      const items = resolved.map(({ developmentId, hasUnitData, effectiveSelection }, i) => {
+      setDropWarning(null);
+      const kept = resolved.filter((r) => !(r.hasUnitData && r.effectiveSelection.size === 0));
+      const items = kept.map(({ developmentId, hasUnitData, effectiveSelection }, i) => {
         const { unitRefs, unitIds } = hasUnitData ? splitUnitSelection(developmentId, effectiveSelection) : { unitRefs: null, unitIds: null };
         return {
           developmentId,
@@ -489,7 +495,23 @@ export default function PropertyMatching({
             </div>
           </div>
           {genError && <p className="text-sm text-[#DC2626]">{genError}</p>}
-          <button type="button" onClick={generate} disabled={generating} className="w-full sm:w-auto rounded-md bg-[#1B4B43] text-white text-sm font-medium px-5 py-2 hover:bg-[#142E2D] disabled:bg-[#D1D5DB]">
+          {dropWarning && (
+            <div className="rounded-md border border-[#FCD34D] bg-[#FFFBEB] p-3 text-sm">
+              <p className="font-medium text-[#92400E] mb-1">
+                {dropWarning.length} project{dropWarning.length === 1 ? "" : "s"} {dropWarning.length === 1 ? "has" : "have"} no unit matching your filter exactly — {dropWarning.length === 1 ? "it" : "they"} will be left out of this presentation:
+              </p>
+              <ul className="list-disc list-inside text-[#92400E] mb-2">
+                {dropWarning.map((d) => <li key={d.publicName}>{d.publicName}</li>)}
+              </ul>
+              <div className="flex gap-2">
+                <button type="button" onClick={() => generate(true)} disabled={generating} className="rounded-md bg-[#92400E] text-white text-xs font-medium px-3 py-1.5 hover:opacity-90 disabled:opacity-50">
+                  Generate anyway (excluding these)
+                </button>
+                <button type="button" onClick={() => setDropWarning(null)} className="text-xs text-[#92400E] hover:underline">Cancel — let me adjust</button>
+              </div>
+            </div>
+          )}
+          <button type="button" onClick={() => generate()} disabled={generating} className="w-full sm:w-auto rounded-md bg-[#1B4B43] text-white text-sm font-medium px-5 py-2 hover:bg-[#142E2D] disabled:bg-[#D1D5DB]">
             {generating ? "Generating…" : "Generate Client Presentation"}
           </button>
         </div>
