@@ -62,11 +62,20 @@ function computeUrgency(
     }
     return { band: "YELLOW", reason: "New lead — first contact pending", sortTime: lead.createdAt.getTime() };
   }
+  // 2026-08-11 correction — GRAY now means exactly one thing: the deal is
+  // closed (CLOSED/LOST), nothing to act on. These two used to also be
+  // GRAY, but neither is a rest state — both are gaps that need a decision.
+  // Cadence-cap → RED: the automatic chain gave up: this is an action item,
+  // not neutral, and the Action Center has no rule covering it either (it
+  // never references autoFollowUpCount), so the color was this lead's only
+  // signal that something needs a human. No-date → YELLOW: a lead an admin
+  // hasn't yet scheduled anything for — a gap, not a rest state, but not as
+  // sharp as an exhausted automatic chain.
   if (lead.autoFollowUpCount >= 3 && lead.nextFollowUpAt && lead.nextFollowUpAt.getTime() <= now) {
-    return { band: "GRAY", reason: "Auto follow-up chain at cap (3/3), no reaction — needs manual reset", sortTime: lead.nextFollowUpAt.getTime() };
+    return { band: "RED", reason: "Automatic follow-ups exhausted — needs your decision", sortTime: lead.nextFollowUpAt.getTime() };
   }
   if (!lead.nextFollowUpAt) {
-    return { band: "GRAY", reason: "No follow-up date scheduled", sortTime: lead.createdAt.getTime() };
+    return { band: "YELLOW", reason: "No follow-up scheduled", sortTime: lead.createdAt.getTime() };
   }
   const diff = lead.nextFollowUpAt.getTime() - now;
   if (diff < 0) {
@@ -224,6 +233,16 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
       </div>
 
       <LeadFilterBar statuses={LEAD_STATUSES} sources={LEAD_SOURCES} locales={LEAD_LOCALES} users={users} />
+
+      {/* 2026-08-11 — the dot's meaning was previously only ever visible via
+          hover (title attribute on the dot itself); this makes the scheme
+          legible without hovering every row. */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3 text-xs text-[#6B7280]">
+        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${URGENCY_STYLE.RED.dot}`} />Overdue</span>
+        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${URGENCY_STYLE.YELLOW.dot}`} />Due soon / not yet scheduled</span>
+        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${URGENCY_STYLE.GREEN.dot}`} />On track</span>
+        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${URGENCY_STYLE.GRAY.dot}`} />Closed / Lost</span>
+      </div>
 
       <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-hidden">
         <table className="w-full text-sm">
