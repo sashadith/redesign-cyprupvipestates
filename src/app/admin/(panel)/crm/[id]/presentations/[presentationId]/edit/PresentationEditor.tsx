@@ -212,7 +212,18 @@ export default function PresentationEditor({
 
   // ---- Save ----
   async function save(opts: { silent?: boolean } = {}) {
-    if (items.length === 0) { setSaveError("At least one property is required."); return; }
+    if (items.length === 0) { if (!opts.silent) setSaveError("At least one property is required."); return; }
+    // A property with real unit data but zero units checked would collapse
+    // to unitRefs:null/unitIds:null in splitUnitSelection — the public
+    // page's "show every available unit" fallback. Block the save instead
+    // (same guard as PropertyMatching.tsx's generate()) rather than silently
+    // un-filtering it. Applies to the silent autosave path too, so a
+    // reorder can't sneak a bad write through unnoticed.
+    const empty = items.filter((it) => it.units.some((u) => u.status === "available") && it.checkedUnitIds.length === 0);
+    if (empty.length) {
+      if (!opts.silent) setSaveError(`No units selected for: ${empty.map((e) => e.publicName).join(", ")}. Check at least one unit, or remove the property.`);
+      return;
+    }
     setSaving(true); setSaveError("");
     try {
       const payloadItems = items.map((it, i) => {

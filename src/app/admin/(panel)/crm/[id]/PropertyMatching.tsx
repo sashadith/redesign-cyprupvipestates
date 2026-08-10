@@ -223,19 +223,40 @@ export default function PropertyMatching({
   async function generate() {
     setGenerating(true); setGenError("");
     try {
-      const items = Array.from(selectedDevs).map((developmentId, i) => {
-        // 2026-08-11 — the presentation is a snapshot of THIS selection, never
-        // a live query: always write the explicit set the admin is currently
-        // looking at, even when it's untouched from the default (matchedUnits).
-        // Previously, leaving the default fully checked (the common case)
-        // stored null/null, which the public page reads as "all available
-        // units of the project" — bypassing every filter entirely. The one
-        // remaining null case is genuine: a project with no unit-level data
-        // at all, where there's nothing to snapshot.
+      // 2026-08-11 — the presentation is a snapshot of THIS selection, never
+      // a live query: always write the explicit set the admin is currently
+      // looking at, even when it's untouched from the default (matchedUnits).
+      // Previously, leaving the default fully checked (the common case)
+      // stored null/null, which the public page reads as "all available
+      // units of the project" — bypassing every filter entirely.
+      //
+      // "No unit data at all" (null/null, unavoidable — nothing to snapshot)
+      // must be judged on allAvailableUnits, NOT matchedUnits: a project can
+      // have real available units and simply zero of them meet the filter
+      // exactly (matchedUnits.length === 0) — that is NOT the same as "no
+      // unit data". Using matchedUnits.length here reintroduced the exact
+      // same null-collapse bug for every such project (caught 2026-08-11
+      // regenerating a live presentation: 13 of 27 projects came back
+      // null/null despite having real units, just none matching).
+      const resolved = Array.from(selectedDevs).map((developmentId) => {
         const m = results.find((r) => r.development.id === developmentId);
+        const hasUnitData = (m?.allAvailableUnits.length ?? 0) > 0;
         const defaultIds = m?.matchedUnits.map((u) => u.id) ?? [];
         const effectiveSelection = unitOverrides.get(developmentId) ?? new Set(defaultIds);
-        const { unitRefs, unitIds } = defaultIds.length ? splitUnitSelection(developmentId, effectiveSelection) : { unitRefs: null, unitIds: null };
+        return { developmentId, publicName: m?.development.publicName ?? developmentId, hasUnitData, effectiveSelection };
+      });
+      // A project with real unit data but nothing selected (0 exact matches,
+      // never hand-picked via "show all") has nothing to show a client —
+      // stop and ask, rather than silently drop it or fall back to "all
+      // available units".
+      const empty = resolved.filter((r) => r.hasUnitData && r.effectiveSelection.size === 0);
+      if (empty.length) {
+        setGenError(`No matching units selected for: ${empty.map((e) => e.publicName).join(", ")}. Uncheck these projects, or open them and use "Show all units" to pick one by hand.`);
+        setGenerating(false);
+        return;
+      }
+      const items = resolved.map(({ developmentId, hasUnitData, effectiveSelection }, i) => {
+        const { unitRefs, unitIds } = hasUnitData ? splitUnitSelection(developmentId, effectiveSelection) : { unitRefs: null, unitIds: null };
         return {
           developmentId,
           unitRefs,
