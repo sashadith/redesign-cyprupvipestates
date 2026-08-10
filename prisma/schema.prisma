@@ -51,6 +51,12 @@ enum LeadStatus {
   COMMUNICATING
   VIEWING_SCHEDULED
   OFFER
+  // 2026-08-11 — parallel to the funnel, not a stage in it: reachable from
+  // any active status when the admin wants to stay in loose touch without
+  // triggering stale-follow-up reminders. See ACTIVE_LEAD_STATUSES split in
+  // actionCenter/rules/crm.ts — excluded from follow-up nagging, still
+  // counted as a warm contact for back-in-stock alerts.
+  KEEP_CONTACT
   CLOSED
   LOST
 }
@@ -757,6 +763,19 @@ model Lead {
   // Manually maintained (no reliable data source); UNKNOWN falls back to a
   // gender-neutral greeting instead of guessing. Not used for EN/RU.
   salutation           LeadSalutation        @default(UNKNOWN)
+  // 2026-08-11 — set (not just true/false) so the admin can see since when,
+  // matching the imageDriftDetectedAt/viewingScheduledAt convention already
+  // used elsewhere: null = not hot, set = hot since that instant. Cleared
+  // back to null on un-hot, never left stale.
+  hotAt                DateTime?
+  // 2026-08-11 — the site locale the enquiry form was actually submitted
+  // from, set ONCE at creation and never edited afterward (unlike
+  // languagePreference, which an admin can update as they learn the
+  // client's actual preference). Only populated going forward — see the
+  // backfill migration for the one-time historical reconstruction from
+  // pageSource, which could only recover ~66% of existing leads (no
+  // recoverable signal at all for manually-imported ones).
+  sourceLocale         Locale?
 
   @@index([status])
   @@index([createdAt])

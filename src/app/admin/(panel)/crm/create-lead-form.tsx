@@ -3,7 +3,7 @@ import { useFormState, useFormStatus } from "react-dom";
 import { createLead } from "../../actions";
 
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
-const STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "CLOSED", "LOST"];
+const STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"];
 const TIMELINES = ["", "IMMEDIATE", "THREE_MONTHS", "SIX_MONTHS", "ONE_YEAR", "JUST_LOOKING"];
 const FINANCING = ["", "CASH", "MORTGAGE", "UNDECIDED"];
 const PROP_TYPES = ["Apartment", "Villa", "Townhouse", "Penthouse"];
