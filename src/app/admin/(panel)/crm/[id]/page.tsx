@@ -164,7 +164,17 @@ export default async function LeadDetail({ params }: { params: { id: string } })
 
   async function setStatus(formData: FormData) {
     "use server";
-    await updateLeadStatus(id, String(formData.get("status")), String(formData.get("reason") ?? ""));
+    const status = String(formData.get("status"));
+    const reason = String(formData.get("reason") ?? "");
+    const contactChannel = String(formData.get("contactChannel") ?? "");
+    const contactDateStr = String(formData.get("contactDate") ?? "");
+    const contact =
+      (contactChannel === "CALL" || contactChannel === "WHATSAPP" || contactChannel === "EMAIL") && contactDateStr
+        ? { channel: contactChannel as "CALL" | "WHATSAPP" | "EMAIL", occurredAt: new Date(`${contactDateStr}T12:00:00.000Z`) }
+        : undefined;
+    const viewingScheduledAtStr = String(formData.get("viewingScheduledAt") ?? "");
+    const viewingScheduledAt = viewingScheduledAtStr ? new Date(`${viewingScheduledAtStr}T12:00:00.000Z`) : null;
+    await updateLeadStatus(id, status, reason, contact, viewingScheduledAt);
   }
   async function assign(formData: FormData) {
     "use server";

@@ -757,6 +757,12 @@ model Lead {
   // Manually maintained (no reliable data source); UNKNOWN falls back to a
   // gender-neutral greeting instead of guessing. Not used for EN/RU.
   salutation           LeadSalutation        @default(UNKNOWN)
+  // CRM Action Center batch (2026-08-10) — set only when status transitions
+  // to VIEWING_SCHEDULED, via the inline contact-capture row; retroactive
+  // dates allowed. Lets the "no follow-up" rule suppress until the
+  // appointment itself, then nudge the day after instead of waiting for the
+  // generic 7-day staleness threshold. See src/lib/actionCenter/rules/crm.ts.
+  viewingScheduledAt   DateTime?
 
   @@index([status])
   @@index([createdAt])

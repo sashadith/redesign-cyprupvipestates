@@ -65,17 +65,40 @@ export const ACTIVE_LEAD_STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWI
 // it never reaches URGENT: recent activity of ANY kind (a note, a status
 // change — not just a real-contact type) suppresses the item entirely;
 // once that goes stale too, it's ACTION with honest wording, never URGENT.
-const ELEVATED_NO_CONTACT_STATUSES = ["COMMUNICATING", "VIEWING_SCHEDULED", "OFFER"] as const;
+// Exported — also used by actions.ts's updateLeadStatus to decide whether a
+// STATUS_CHANGE row's target status should count as contact-equivalent (see
+// parseStatusChangeTarget below): these three can't be reached without a real
+// conversation, so a transition TO one of them is itself a contact signal.
+export const ELEVATED_NO_CONTACT_STATUSES = ["COMMUNICATING", "VIEWING_SCHEDULED", "OFFER"] as const;
 type ElevatedStatus = (typeof ELEVATED_NO_CONTACT_STATUSES)[number];
 const isElevatedStatus = (s: string): s is ElevatedStatus => (ELEVATED_NO_CONTACT_STATUSES as readonly string[]).includes(s);
 
 // The "recent activity of any kind" anchor (below) must stay restricted to
-// REAL_CONTACT_TYPES + NOTE. STATUS_CHANGE/SYSTEM rows are written purely by
-// admin actions (updateLeadStatus, updateLead, updateAssignment, mergeLeads,
-// soft-delete/restore) — an admin editing a lead is not customer contact, and
-// counting it would let routine admin housekeeping permanently silence a
-// stale-contact warning just by touching the lead every few days.
+// REAL_CONTACT_TYPES + NOTE, PLUS STATUS_CHANGE rows whose target status is
+// itself contact-implying (2026-08-10 correction — the original fix excluded
+// ALL STATUS_CHANGE rows, but a transition TO COMMUNICATING/VIEWING_SCHEDULED/
+// OFFER genuinely can't happen without contact; excluding those too would
+// misdate the anchor to whatever earlier real-contact row exists, or to
+// lead-creation). A transition to CONTACTED/NEW/CLOSED/LOST, or any SYSTEM
+// row (updateLead, updateAssignment, mergeLeads, soft-delete/restore), is
+// still pure admin housekeeping and never counts — an admin editing a lead is
+// not customer contact, and counting it would let routine admin housekeeping
+// permanently silence a stale-contact warning just by touching the lead every
+// few days.
 const RECENT_ACTIVITY_TYPES = [...REAL_CONTACT_TYPES, "NOTE"] as const;
+const VIEWING_FOLLOWUP_GRACE_DAYS = 1;
+
+// updateLeadStatus writes metadata.toStatus on every STATUS_CHANGE row going
+// forward; historical rows (written before this batch) have no metadata, so
+// fall back to parsing the body text it has always written ("Status changed
+// to VIEWING SCHEDULED — reason"). One-time parsing need, not a standing
+// dependency on free text.
+function parseStatusChangeTarget(row: { metadata: unknown; body: string | null }): string | null {
+  const meta = row.metadata as { toStatus?: string } | null;
+  if (meta?.toStatus) return meta.toStatus;
+  const m = row.body?.match(/^Status changed to ([A-Z ]+?)(?: — |$)/);
+  return m ? m[1].trim().replace(/ /g, "_") : null;
+}
 
 // Human-readable status for the item text — was hard-coded to "New lead"
 // regardless of actual status (misleading for e.g. a VIEWING_SCHEDULED lead
@@ -89,31 +112,81 @@ async function noFollowUp(): Promise<ActionItem[]> {
   const leads = await prisma.lead.findMany({
     where: { status: { in: [...ACTIVE_LEAD_STATUSES] }, deletedAt: null },
     select: {
-      id: true, firstName: true, lastName: true, createdAt: true, status: true,
+      id: true, firstName: true, lastName: true, createdAt: true, status: true, viewingScheduledAt: true,
       interactions: { where: { type: { in: [...REAL_CONTACT_TYPES] } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true } },
     },
   });
 
   // Second pass, only for elevated-status leads with no real contact: their
   // most recent activity of ANY type decides suppress-vs-ACTION. Batched
-  // into one groupBy rather than N+1 per-lead queries.
+  // into one groupBy (RECENT_ACTIVITY_TYPES) plus one extra fetch
+  // (STATUS_CHANGE rows, filtered in JS to contact-implying targets) rather
+  // than N+1 per-lead queries.
   const elevatedNoContactIds = leads
     .filter((l) => isElevatedStatus(l.status) && !l.interactions[0])
     .map((l) => l.id);
   const lastAnyActivity = new Map<string, Date>();
   if (elevatedNoContactIds.length) {
-    const rows = await prisma.leadInteraction.groupBy({
-      by: ["leadId"],
-      where: { leadId: { in: elevatedNoContactIds }, type: { in: [...RECENT_ACTIVITY_TYPES] } },
-      _max: { occurredAt: true },
-    });
+    const [rows, statusChangeRows] = await Promise.all([
+      prisma.leadInteraction.groupBy({
+        by: ["leadId"],
+        where: { leadId: { in: elevatedNoContactIds }, type: { in: [...RECENT_ACTIVITY_TYPES] } },
+        _max: { occurredAt: true },
+      }),
+      prisma.leadInteraction.findMany({
+        where: { leadId: { in: elevatedNoContactIds }, type: "STATUS_CHANGE" },
+        select: { leadId: true, occurredAt: true, body: true, metadata: true },
+      }),
+    ]);
     for (const r of rows) if (r._max.occurredAt) lastAnyActivity.set(r.leadId, r._max.occurredAt);
+    for (const r of statusChangeRows) {
+      const target = parseStatusChangeTarget(r);
+      if (!target || !(ELEVATED_NO_CONTACT_STATUSES as readonly string[]).includes(target)) continue;
+      const existing = lastAnyActivity.get(r.leadId);
+      if (!existing || r.occurredAt.getTime() > existing.getTime()) lastAnyActivity.set(r.leadId, r.occurredAt);
+    }
   }
 
   const items: ActionItem[] = [];
   for (const l of leads) {
     const lastContact = l.interactions[0]?.occurredAt;
     const statusLabel = STATUS_LABEL[l.status] ?? l.status;
+
+    // Viewing-date-aware checkpoint (2026-08-10) — an earlier stage of this
+    // same rule, not a separate one: same item id (`lead-followup:`), just a
+    // sharper reference point than "last contact ever"/"lead creation" when
+    // the appointment date is known. A future date fully suppresses (the
+    // lead isn't neglected, they're waiting on the appointment); a past date
+    // with no contact logged since it is the single most important follow-up
+    // moment in the whole lifecycle, so it fires after one day, not seven.
+    if (l.status === "VIEWING_SCHEDULED" && l.viewingScheduledAt) {
+      const viewingAt = l.viewingScheduledAt;
+      if (viewingAt.getTime() > Date.now()) continue;
+      const contactSinceViewing = lastContact && lastContact.getTime() > viewingAt.getTime() ? lastContact : null;
+      if (contactSinceViewing) {
+        const cutoff = Date.now() - STALE_FOLLOWUP_DAYS * DAY;
+        if (contactSinceViewing.getTime() > cutoff) continue;
+        const days = Math.floor((Date.now() - contactSinceViewing.getTime()) / DAY);
+        items.push({
+          id: `lead-followup:${l.id}`, severity: "ACTION", category: "CRM",
+          title: `No follow-up on ${leadName(l)} for ${days} days`,
+          description: `${statusLabel}. Last contact ${days} days ago.`,
+          deepLink: `/admin/crm/${l.id}`, since: contactSinceViewing,
+        });
+        continue;
+      }
+      const graceCutoff = Date.now() - VIEWING_FOLLOWUP_GRACE_DAYS * DAY;
+      if (viewingAt.getTime() > graceCutoff) continue;
+      const dateLabel = viewingAt.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit" });
+      items.push({
+        id: `lead-followup:${l.id}`, severity: "ACTION", category: "CRM",
+        title: `${leadName(l)}'s viewing was on ${dateLabel} — how did it go?`,
+        description: "No follow-up logged since the viewing.",
+        deepLink: `/admin/crm/${l.id}`, since: viewingAt,
+      });
+      continue;
+    }
+
     if (!lastContact) {
       if (isElevatedStatus(l.status)) {
         const anchor = lastAnyActivity.get(l.id) ?? l.createdAt;
