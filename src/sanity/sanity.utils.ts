@@ -177,10 +177,23 @@ async function resolveProjectRefs(refs: any[], lang: string) {
       .filter((entry): entry is [string, string] => !!entry[1])
   );
 
-  return mapped.map((p) => {
-    const canonicalSlug = targetSlugById.get(p.id);
-    return projectCardString(canonicalSlug ? { ...p, slug: canonicalSlug } : p);
-  });
+  // 2026-08-11 — an ARCHIVED project with NO LegacyProjectRedirect row at
+  // all (distinct from the drift bug above, which has a row that's just
+  // stale) previously fell through to `p` unchanged, i.e. its own dead
+  // slug — same broken-link outcome, different cause. That state is a
+  // legitimate, supported admin choice (DeactivateControl's "Deactivate"
+  // dialog allows archiving with no redirect, deliberately, when a listing
+  // should just 404 for direct visitors) — so the fix belongs here, not at
+  // the write side: omit the card entirely rather than link to a slug known
+  // to be dead. A still-PUBLISHED project always has `canonicalSlug`
+  // undefined too (it never has a redirect row), which is correct and
+  // unaffected — only ARCHIVED-and-unresolved is dropped.
+  return mapped
+    .filter((p) => p.status !== "ARCHIVED" || targetSlugById.has(p.id))
+    .map((p) => {
+      const canonicalSlug = targetSlugById.get(p.id);
+      return projectCardString(canonicalSlug ? { ...p, slug: canonicalSlug } : p);
+    });
 }
 
 // Compute filteredProjects for projectsSection/landingProjects blocks.
@@ -1008,12 +1021,22 @@ export async function getThreeProjectsBySameCity(lang: string, city: string, exc
       .filter((entry): entry is [string, string] => !!entry[1])
   );
 
-  const list = rows.filter((p) => p.previewImage).map((p) => {
-    const canonicalSlug = targetSlugById.get(p.id) ?? p.slug;
-    return D({
-      _id: p.sanityId, title: p.title, slug: { current: canonicalSlug }, previewImage: D(p.previewImage), keyFeatures: p.keyFeatures,
+  // 2026-08-11 — same fix as resolveProjectRefs above: an ARCHIVED row with
+  // no redirect row at all (a supported admin choice — see that function's
+  // comment) previously fell back to `p.slug`, its own dead slug. Omit
+  // instead of linking to a known-dead page. A still-PUBLISHED row's
+  // `canonicalSlug` is always undefined too (never has a redirect row) and
+  // keeps using its own (live) slug as before — only ARCHIVED-and-
+  // unresolved is dropped.
+  const list = rows
+    .filter((p) => p.previewImage)
+    .filter((p) => p.status !== "ARCHIVED" || targetSlugById.has(p.id))
+    .map((p) => {
+      const canonicalSlug = targetSlugById.get(p.id) ?? p.slug;
+      return D({
+        _id: p.sanityId, title: p.title, slug: { current: canonicalSlug }, previewImage: D(p.previewImage), keyFeatures: p.keyFeatures,
+      });
     });
-  });
   return list.sort(() => Math.random() - 0.5).slice(0, 3);
 }
 
