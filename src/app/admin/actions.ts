@@ -730,6 +730,11 @@ export async function updateLeadStatus(id: string, status: string, reason?: stri
       type: "STATUS_CHANGE",
       channel: "SYSTEM",
       body: statusContent,
+      // 2026-08-11 — lets actionCenter/rules/crm.ts's noFollowUp() know the
+      // exact target status without parsing body text (still falls back to
+      // that for historical rows written before this). See
+      // ELEVATED_NO_CONTACT_STATUSES there for why the target matters.
+      metadata: { toStatus: status },
       createdByUserId: (session.user as any)?.id ?? null,
       createdByName: session.user?.name ?? "admin",
     },
