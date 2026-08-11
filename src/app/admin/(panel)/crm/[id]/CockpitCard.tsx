@@ -3,7 +3,7 @@ import { StatusBadge } from "@/app/admin/status-badge";
 import { formatWaPhone } from "@/lib/crm/waFormat";
 import GenerateReplyButton from "./GenerateReplyButton";
 import BookingButton from "./BookingButton";
-import StatusChangeForm from "./StatusChangeForm";
+import StatusChangeForm from "../StatusChangeForm";
 
 // The Lead Cockpit's hero card (Phase 1 of 4, 2026-07-23; consolidated in the
 // correction batch, 2026-07-23) — a single glance-able summary that now
@@ -208,6 +208,7 @@ export default function CockpitCard({
       {/* Status — prominent and editable right in the header, replacing the
           old standalone "Status" box further down the page. */}
       <StatusChangeForm
+        leadId={lead.id}
         currentStatus={lead.status}
         viewingScheduledAt={lead.viewingScheduledAt ? lead.viewingScheduledAt.toISOString() : null}
         hasEmail={!!lead.email}

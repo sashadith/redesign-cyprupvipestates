@@ -6,9 +6,12 @@ import { useState } from "react";
 // so a status change can also capture a viewing date (VIEWING_SCHEDULED) and
 // an inline "contact happened at this change" log — both need client state
 // (show/hide fields based on the selected status) that a plain <form> can't
-// do. Submits through the exact same setStatusAction as before; the extra
-// fields are read server-side in page.tsx's setStatus and passed on to
-// updateLeadStatus's new contact/viewingScheduledAt params.
+// do. Submits through updateLeadStatusFromForm (src/app/admin/actions.ts) —
+// the SAME action for both the lead detail page and the lead-list table's
+// inline status change, so there's exactly one place that parses these
+// fields into updateLeadStatus's contact/viewingScheduledAt params, never
+// two paths that could drift (2026-08-11 lead-list rebuild, point 3).
+// Moved up from crm/[id]/ to crm/ once the list started reusing it.
 
 const STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"];
 
@@ -20,19 +23,27 @@ function nowForDatetimeLocal(): string {
 }
 
 export default function StatusChangeForm({
+  leadId,
   currentStatus,
   viewingScheduledAt,
   hasEmail,
   hasPhone,
   contactImplyingStatuses,
   action,
+  onSubmit,
 }: {
+  leadId: string;
   currentStatus: string;
   viewingScheduledAt: string | null; // ISO string, server/client boundary
   hasEmail: boolean;
   hasPhone: boolean;
   contactImplyingStatuses: readonly string[];
   action: (formData: FormData) => void;
+  // Fires synchronously on submit, before the action runs — the lead-list
+  // table's inline expand-row uses this to close itself immediately rather
+  // than waiting on the server round-trip (see LeadRow.tsx). Not used by
+  // the detail page (nothing to close there).
+  onSubmit?: () => void;
 }) {
   const [status, setStatus] = useState(currentStatus);
   const [logContact, setLogContact] = useState(false);
@@ -40,7 +51,8 @@ export default function StatusChangeForm({
   const showContactCapture = contactImplyingStatuses.includes(status);
 
   return (
-    <form action={action} className="flex flex-col gap-2 mt-2">
+    <form action={action} onSubmit={onSubmit} className="flex flex-col gap-2 mt-2">
+      <input type="hidden" name="id" value={leadId} />
       <div className="flex flex-wrap items-center gap-2">
         <select
           name="status"

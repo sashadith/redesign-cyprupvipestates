@@ -1,143 +1,24 @@
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { StatusBadge } from "@/app/admin/status-badge";
-import DeleteLeadButton from "./DeleteLeadButton";
+import { ELEVATED_NO_CONTACT_STATUSES } from "@/lib/actionCenter/rules/crm";
 import CollapsibleLeadsPanel from "./CollapsibleLeadsPanel";
 import LeadBlockRows from "./LeadBlockRows";
+import LeadRow from "./LeadRow";
 import LeadFilterBar from "./LeadFilterBar";
-import { COUNTRY_NAME_BY_CODE, countryCodeToFlagEmoji } from "@/lib/countries";
 import {
   buildLeadWhere, orderForSort, leadQueryString,
   LEAD_STATUSES, LEAD_SOURCES, LEAD_LOCALES, type LeadSearchParams,
 } from "./filters";
+import {
+  LAST_CONTACT_TYPES, BAND_STYLE, computeBand, type ColorBand, type LeadRowData,
+} from "./leadListShared";
 
 const LOST_CAP = 200;
 const CLOSED_CAP = 200;
 const BLOCK_PREVIEW = 6;
 
 export const dynamic = "force-dynamic";
-
-// "Contact" = an actual outreach/reply, not internal notes or system-generated
-// rows (status changes, presentation-view tracking). Presentation delivery by
-// email already lands as an EMAIL_OUT interaction (see PropertyMatching's
-// "Send by email"), so it's covered without a separate case here.
-const LAST_CONTACT_TYPES = ["CALL", "EMAIL_OUT", "EMAIL_IN", "WHATSAPP_OUT", "WHATSAPP_IN"] as const;
-const LAST_CONTACT_LABEL: Record<string, string> = {
-  CALL: "Call",
-  EMAIL_OUT: "Email",
-  EMAIL_IN: "Email",
-  WHATSAPP_OUT: "WhatsApp",
-  WHATSAPP_IN: "WhatsApp",
-};
-
-// 2026-08-11 lead-list rebuild — urgency now only decides which of the three
-// active COLOR blocks (Red/Yellow/Green) a lead lands in; it's no longer a
-// per-row sort key or a separate "Urgency" dropdown sort (block grouping
-// already conveys that, a redundant sort added no information). HOT and
-// KEEP_CONTACT leads are pulled out of this classification entirely before
-// it's ever called — see the bucketing loop below.
-const DAY_MS = 86_400_000;
-type ColorBand = "RED" | "YELLOW" | "GREEN";
-const BAND_STYLE: Record<ColorBand, { dot: string; border: string }> = {
-  RED: { dot: "bg-red-600", border: "border-l-red-600" },
-  YELLOW: { dot: "bg-amber-500", border: "border-l-amber-500" },
-  GREEN: { dot: "bg-green-600", border: "border-l-green-600" },
-};
-
-function agoLabel(ms: number): string {
-  const days = Math.floor(ms / DAY_MS);
-  return days <= 0 ? "less than a day" : days === 1 ? "1 day" : `${days} days`;
-}
-
-function computeBand(
-  lead: { status: string; nextFollowUpAt: Date | null; autoFollowUpCount: number; createdAt: Date },
-  hasContact: boolean,
-  now: number,
-): { band: ColorBand; reason: string } {
-  if (lead.status === "NEW" && !hasContact) {
-    const age = now - lead.createdAt.getTime();
-    if (age > DAY_MS) {
-      return { band: "RED", reason: `New lead — first contact overdue by ${agoLabel(age - DAY_MS)}` };
-    }
-    return { band: "YELLOW", reason: "New lead — first contact pending" };
-  }
-  // Cadence-cap → RED: the automatic chain gave up: this is an action item,
-  // not neutral, and the Action Center has no rule covering it either (it
-  // never references autoFollowUpCount), so the color is this lead's only
-  // signal that something needs a human. No-date → YELLOW: a lead an admin
-  // hasn't yet scheduled anything for — a gap, not a rest state, but not as
-  // sharp as an exhausted automatic chain.
-  if (lead.autoFollowUpCount >= 3 && lead.nextFollowUpAt && lead.nextFollowUpAt.getTime() <= now) {
-    return { band: "RED", reason: "Automatic follow-ups exhausted — needs your decision" };
-  }
-  if (!lead.nextFollowUpAt) {
-    return { band: "YELLOW", reason: "No follow-up scheduled" };
-  }
-  const diff = lead.nextFollowUpAt.getTime() - now;
-  if (diff < 0) {
-    return { band: "RED", reason: `Follow-up overdue since ${agoLabel(-diff)}` };
-  }
-  if (diff <= DAY_MS) {
-    return { band: "YELLOW", reason: "Due today" };
-  }
-  return { band: "GREEN", reason: `Follow-up due in ${Math.ceil(diff / DAY_MS)} days` };
-}
-
-type LeadRowData = {
-  id: string; firstName: string; lastName: string;
-  languagePreference: string | null; sourceLocale: string | null;
-  countryOfResidence: string | null; status: string; createdAt: Date;
-  hotAt: Date | null; budgetMax: number | null;
-  assignedTo: { name: string } | null;
-  interactions: { occurredAt: Date; type: string }[];
-};
-
-const money = (n: number | null) => (n == null ? "—" : `€${n.toLocaleString("en-GB")}`);
-
-// Shared row markup for every block (HOT/color/KEEP_CONTACT/LOST/CLOSED) —
-// `band` is only ever passed for the three color blocks; every other block
-// is visually flat (its own section heading already carries the meaning),
-// same as the old table's `muted` LOST/CLOSED rows.
-function LeadRow({ lead: l, band, muted }: { lead: LeadRowData; band: { band: ColorBand; reason: string } | null; muted?: boolean }) {
-  return (
-    <tr className={`hover:bg-[#F8F9FA] ${muted ? "bg-[#FAFAFA] text-[#9CA3AF]" : ""}`}>
-      <td className={`pl-3 pr-4 py-2.5 border-l-4 ${band ? BAND_STYLE[band.band].border : "border-l-transparent"}`}>
-        <div className="flex items-center gap-2">
-          {band && (
-            <span className={`w-2 h-2 rounded-full shrink-0 ${BAND_STYLE[band.band].dot}`} title={band.reason} aria-label={band.reason} role="img" />
-          )}
-          <Link href={`/admin/crm/${l.id}`} className={`font-medium hover:underline ${muted ? "" : "text-[#1B4B43]"}`}>{l.firstName} {l.lastName}</Link>
-        </div>
-      </td>
-      <td className="px-4 py-2.5 text-center text-base" title={l.hotAt ? `Hot since ${new Date(l.hotAt).toLocaleDateString("en-GB")}` : undefined}>
-        {l.hotAt ? "🔥" : ""}
-      </td>
-      <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>
-        {l.interactions[0] ? (
-          <>
-            {new Date(l.interactions[0].occurredAt).toLocaleDateString("en-GB")}
-            <br />
-            <span className="text-xs text-[#9CA3AF]">{LAST_CONTACT_LABEL[l.interactions[0].type]}</span>
-          </>
-        ) : (
-          "—"
-        )}
-      </td>
-      <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{money(l.budgetMax)}</td>
-      <td className="px-4 py-2.5"><StatusBadge status={l.status} /></td>
-      <td className="px-4 py-2.5 text-center text-base" title={l.countryOfResidence ? COUNTRY_NAME_BY_CODE[l.countryOfResidence] ?? l.countryOfResidence : undefined}>
-        {l.countryOfResidence ? countryCodeToFlagEmoji(l.countryOfResidence) : ""}
-      </td>
-      <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{l.assignedTo?.name ?? "—"}</td>
-      <td className={`px-4 py-2.5 text-xs ${muted ? "" : ""}`}>
-        <div title="Received (site locale at intake)">{l.sourceLocale ? l.sourceLocale.toUpperCase() : "—"}</div>
-        <div className="text-[#9CA3AF]" title="Preferred (editable)">{l.languagePreference ? l.languagePreference.toUpperCase() : "—"}</div>
-      </td>
-      <td className="px-4 py-2.5 text-right"><DeleteLeadButton id={l.id} /></td>
-    </tr>
-  );
-}
 
 const TABLE_HEAD = (
   <thead className="bg-[#F8F9FA] text-[#6B7280]">
@@ -159,12 +40,13 @@ const TABLE_HEAD = (
 // when empty (same "don't render empty sections" rule the old Lost/Closed
 // panels already followed).
 function LeadBlockSection({
-  title, dot, leads, bandById,
+  title, dot, leads, bandById, contactImplyingStatuses,
 }: {
   title: string;
   dot?: string;
   leads: LeadRowData[];
   bandById?: Map<string, { band: ColorBand; reason: string }>;
+  contactImplyingStatuses: readonly string[];
 }) {
   if (!leads.length) return null;
   return (
@@ -179,7 +61,7 @@ function LeadBlockSection({
           <tbody className="divide-y divide-[#E5E7EB]">
             <LeadBlockRows previewCount={BLOCK_PREVIEW}>
               {leads.map((l) => (
-                <LeadRow key={l.id} lead={l} band={bandById?.get(l.id) ?? null} />
+                <LeadRow key={l.id} lead={l} band={bandById?.get(l.id) ?? null} contactImplyingStatuses={contactImplyingStatuses} />
               ))}
             </LeadBlockRows>
           </tbody>
@@ -305,11 +187,11 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
         </div>
       ) : (
         <>
-          <LeadBlockSection title="Hot leads" leads={hot} />
-          <LeadBlockSection title="Overdue" dot={BAND_STYLE.RED.dot} leads={red} bandById={bandById} />
-          <LeadBlockSection title="Due soon" dot={BAND_STYLE.YELLOW.dot} leads={yellow} bandById={bandById} />
-          <LeadBlockSection title="On track" dot={BAND_STYLE.GREEN.dot} leads={green} bandById={bandById} />
-          <LeadBlockSection title="Keep contact" dot="bg-purple-500" leads={keepContact} />
+          <LeadBlockSection title="Hot leads" leads={hot} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
+          <LeadBlockSection title="Overdue" dot={BAND_STYLE.RED.dot} leads={red} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
+          <LeadBlockSection title="Due soon" dot={BAND_STYLE.YELLOW.dot} leads={yellow} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
+          <LeadBlockSection title="On track" dot={BAND_STYLE.GREEN.dot} leads={green} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
+          <LeadBlockSection title="Keep contact" dot="bg-purple-500" leads={keepContact} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
         </>
       )}
 
@@ -319,7 +201,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
             {TABLE_HEAD}
             <tbody className="divide-y divide-[#E5E7EB]">
               {rawLostLeads.map((l) => (
-                <LeadRow key={l.id} lead={l} band={null} muted />
+                <LeadRow key={l.id} lead={l} band={null} muted contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
               ))}
             </tbody>
           </table>
@@ -337,7 +219,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
             {TABLE_HEAD}
             <tbody className="divide-y divide-[#E5E7EB]">
               {rawClosedLeads.map((l) => (
-                <LeadRow key={l.id} lead={l} band={null} muted />
+                <LeadRow key={l.id} lead={l} band={null} muted contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
               ))}
             </tbody>
           </table>

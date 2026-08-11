@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import {
-  updateLeadStatus, addLeadNote, assignLead, mergeLeads, updateLeadFollowUp, addCallLog, addEmailLog,
+  updateLeadStatusFromForm, addLeadNote, assignLead, mergeLeads, updateLeadFollowUp, addCallLog, addEmailLog,
   resetLeadFollowUpCadenceAction, deleteLeadInteraction,
 } from "../../../actions";
 import { ELEVATED_NO_CONTACT_STATUSES } from "@/lib/actionCenter/rules/crm";
@@ -163,21 +163,6 @@ export default async function LeadDetail({ params }: { params: { id: string } })
   const utm = [lead.utmSource, lead.utmMedium, lead.utmCampaign, lead.utmTerm, lead.utmContent].filter(Boolean).join(" / ");
   const clickId = [lead.gclid ? `gclid: ${lead.gclid}` : null, lead.fbclid ? `fbclid: ${lead.fbclid}` : null].filter(Boolean).join("  ·  ");
 
-  async function setStatus(formData: FormData) {
-    "use server";
-    const status = String(formData.get("status"));
-    const reason = String(formData.get("reason") ?? "");
-    const viewingScheduledAtRaw = String(formData.get("viewingScheduledAt") ?? "");
-    const viewingScheduledAt = viewingScheduledAtRaw ? new Date(viewingScheduledAtRaw) : null;
-    let contact: { channel: "CALL" | "WHATSAPP" | "EMAIL"; occurredAt: Date } | undefined;
-    if (formData.get("logContact") === "on") {
-      const channel = String(formData.get("contactChannel") ?? "CALL") as "CALL" | "WHATSAPP" | "EMAIL";
-      const occurredAtRaw = String(formData.get("contactOccurredAt") ?? "");
-      const occurredAt = occurredAtRaw && !Number.isNaN(new Date(occurredAtRaw).getTime()) ? new Date(occurredAtRaw) : new Date();
-      contact = { channel, occurredAt };
-    }
-    await updateLeadStatus(id, status, reason, contact, viewingScheduledAt);
-  }
   async function assign(formData: FormData) {
     "use server";
     await assignLead(id, String(formData.get("assignedToId") ?? ""));
@@ -281,7 +266,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
           assignAction={assign}
           saveFollowUpAction={saveFollowUp}
           resetFollowUpAction={resetFollowUp}
-          setStatusAction={setStatus}
+          setStatusAction={updateLeadStatusFromForm}
           contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES}
         />
       </div>

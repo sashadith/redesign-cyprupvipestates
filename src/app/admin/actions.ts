@@ -776,6 +776,48 @@ export async function updateLeadStatus(
   revalidatePath("/admin");
 }
 
+// 2026-08-11 — the ONE place that parses a status-change <form>'s FormData
+// into updateLeadStatus's typed params. Used as the `action` for
+// StatusChangeForm both on the lead detail page and the lead-list table's
+// inline expand-row (LeadRow.tsx) — deliberately the same function, not two
+// separately-written parsers, so there's no way for the table's version of
+// "what counts as a status change" to drift from the detail page's. Reads
+// `id` from a hidden field (StatusChangeForm always renders one) rather than
+// a bound arg, matching this file's existing per-row action pattern (see
+// crm/board/page.tsx's `move`).
+export async function updateLeadStatusFromForm(formData: FormData) {
+  const id = String(formData.get("id"));
+  const status = String(formData.get("status"));
+  const reason = String(formData.get("reason") ?? "");
+  const viewingScheduledAtRaw = String(formData.get("viewingScheduledAt") ?? "");
+  const viewingScheduledAt = viewingScheduledAtRaw ? new Date(viewingScheduledAtRaw) : null;
+  let contact: { channel: "CALL" | "WHATSAPP" | "EMAIL"; occurredAt: Date } | undefined;
+  if (formData.get("logContact") === "on") {
+    const channel = String(formData.get("contactChannel") ?? "CALL") as "CALL" | "WHATSAPP" | "EMAIL";
+    const occurredAtRaw = String(formData.get("contactOccurredAt") ?? "");
+    const occurredAt = occurredAtRaw && !Number.isNaN(new Date(occurredAtRaw).getTime()) ? new Date(occurredAtRaw) : new Date();
+    contact = { channel, occurredAt };
+  }
+  await updateLeadStatus(id, status, reason, contact, viewingScheduledAt);
+}
+
+// 2026-08-11 — lead-list rebuild's inline Hot flame toggle. A single click
+// flips hotAt between null and now (see the schema comment on Lead.hotAt for
+// why it's a timestamp, not a boolean) — no separate save step, matching
+// "one click, done" for this specific control. No timeline/interaction row:
+// unlike a status change, hotAt was never specced as an audited event, just
+// a fast admin-only marker.
+export async function toggleLeadHotAction(formData: FormData) {
+  const id = String(formData.get("id"));
+  await requireSession();
+  const lead = await prisma.lead.findUnique({ where: { id }, select: { hotAt: true } });
+  if (!lead) return;
+  await prisma.lead.update({ where: { id }, data: { hotAt: lead.hotAt ? null : new Date() } });
+  revalidatePath("/admin/crm");
+  revalidatePath(`/admin/crm/${id}`);
+  revalidatePath("/admin");
+}
+
 // occurredAt is new (Lead Cockpit correction batch): the timeline quick-add
 // forms let an admin backdate a manually-logged entry (default = now).
 //
