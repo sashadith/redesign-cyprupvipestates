@@ -51,10 +51,18 @@ if [ "$GATED" != true ]; then
   exit 1
 fi
 
+# Prisma itself auto-loads DATABASE_URL from a .env in the CWD (dotenv),
+# but this script's own DB-name check runs in plain bash, which doesn't —
+# fall back to reading it from .env the same way, so a real deploy (which
+# only ever has it in .env, never exported) doesn't false-negative here.
+if [ -z "${DATABASE_URL:-}" ] && [ -f .env ]; then
+  DATABASE_URL=$(grep -E '^DATABASE_URL=' .env | head -1 | cut -d= -f2- | sed -e 's/^"//' -e 's/"$//')
+fi
 if [ -z "${DATABASE_URL:-}" ]; then
-  echo "ERROR: DATABASE_URL is not set. Refusing to run." >&2
+  echo "ERROR: DATABASE_URL is not set (checked env and ./.env). Refusing to run." >&2
   exit 1
 fi
+export DATABASE_URL
 
 DB_NAME=$(node -e "console.log(new URL(process.env.DATABASE_URL).pathname.replace(/^\//, ''))" 2>/dev/null || echo "")
 if [ -z "$DB_NAME" ]; then
