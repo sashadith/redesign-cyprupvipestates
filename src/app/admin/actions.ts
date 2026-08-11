@@ -711,26 +711,19 @@ export async function saveBlogAll(id: string, _prev: any, formData: FormData): P
   }
 }
 
-export async function updateLeadStatus(
-  id: string,
-  status: string,
-  reason?: string,
-  contact?: { channel: "CALL" | "WHATSAPP" | "EMAIL"; occurredAt: Date },
-  viewingScheduledAt?: Date | null,
-) {
+// 2026-08-11, revised — status change is now always a single click: pick a
+// status from StatusPopover's list and it's set immediately, no reason
+// field, no separate save step (reason was dropped entirely — a second,
+// slower path for "the same operation" was exactly what point 3 of the
+// 2026-08-11 spec was written to avoid). viewingScheduledAt/contact capture
+// moved out into logStatusChangeContact below, called as an optional SECOND
+// step only for the three statuses that structurally imply contact — see
+// StatusPopover.tsx.
+export async function updateLeadStatus(id: string, status: string) {
   const session = await requireSession();
   if (!STATUSES.includes(status)) throw new Error("Invalid status");
-  const r = String(reason ?? "").trim().slice(0, 500);
-  await prisma.lead.update({
-    where: { id },
-    data: {
-      status: status as any,
-      // 2026-08-11 — only touched when transitioning INTO VIEWING_SCHEDULED;
-      // other status changes must never clear a previously-set viewing date.
-      ...(status === "VIEWING_SCHEDULED" ? { viewingScheduledAt: viewingScheduledAt ?? null } : {}),
-    },
-  });
-  const statusContent = `Status changed to ${status.replace(/_/g, " ")}${r ? ` — ${r}` : ""}`;
+  await prisma.lead.update({ where: { id }, data: { status: status as any } });
+  const statusContent = `Status changed to ${status.replace(/_/g, " ")}`;
   await prisma.leadActivity.create({
     data: {
       leadId: id,
@@ -755,12 +748,30 @@ export async function updateLeadStatus(
       createdByName: session.user?.name ?? "admin",
     },
   });
-  // 2026-08-11 — inline contact-capture row on the status dropdown writes a
-  // REAL interaction via the same logging functions the manual +Call/+Email/
-  // +WhatsApp buttons use, so autoFollowUpCount/nextFollowUpAt cadence stays
-  // correct. Never a silent direct write past the timeline. Only offered (and
-  // only honored here) for statuses that structurally imply contact already
-  // happened — see ELEVATED_NO_CONTACT_STATUSES in crm.ts.
+  revalidatePath(`/admin/crm/${id}`);
+  revalidatePath("/admin/crm");
+  revalidatePath("/admin");
+}
+
+// 2026-08-11 — the optional second step StatusPopover's contact-capture
+// mini-panel calls, ONLY for COMMUNICATING/VIEWING_SCHEDULED/OFFER (see
+// ELEVATED_NO_CONTACT_STATUSES in crm.ts), after updateLeadStatus already
+// ran. Writes a REAL interaction via the same logging functions the manual
+// +Call/+Email/+WhatsApp buttons use, so autoFollowUpCount/nextFollowUpAt
+// cadence stays correct — never a silent direct write past the timeline.
+// Does NOT touch status or write a second STATUS_CHANGE row; `status` here
+// is only the just-applied target, used for the "logged at status change
+// to X" note text and to gate the viewingScheduledAt write.
+export async function logStatusChangeContact(
+  id: string,
+  status: string,
+  contact?: { channel: "CALL" | "WHATSAPP" | "EMAIL"; occurredAt: Date },
+  viewingScheduledAt?: Date | null,
+) {
+  await requireSession();
+  if (status === "VIEWING_SCHEDULED") {
+    await prisma.lead.update({ where: { id }, data: { viewingScheduledAt: viewingScheduledAt ?? null } });
+  }
   if (contact && (CONTACT_IMPLYING_STATUSES as readonly string[]).includes(status)) {
     const note = `Contact logged at status change to ${status.replace(/_/g, " ")}`;
     if (contact.channel === "CALL") {
@@ -774,31 +785,6 @@ export async function updateLeadStatus(
   revalidatePath(`/admin/crm/${id}`);
   revalidatePath("/admin/crm");
   revalidatePath("/admin");
-}
-
-// 2026-08-11 — the ONE place that parses a status-change <form>'s FormData
-// into updateLeadStatus's typed params. Used as the `action` for
-// StatusChangeForm both on the lead detail page and the lead-list table's
-// inline expand-row (LeadRow.tsx) — deliberately the same function, not two
-// separately-written parsers, so there's no way for the table's version of
-// "what counts as a status change" to drift from the detail page's. Reads
-// `id` from a hidden field (StatusChangeForm always renders one) rather than
-// a bound arg, matching this file's existing per-row action pattern (see
-// crm/board/page.tsx's `move`).
-export async function updateLeadStatusFromForm(formData: FormData) {
-  const id = String(formData.get("id"));
-  const status = String(formData.get("status"));
-  const reason = String(formData.get("reason") ?? "");
-  const viewingScheduledAtRaw = String(formData.get("viewingScheduledAt") ?? "");
-  const viewingScheduledAt = viewingScheduledAtRaw ? new Date(viewingScheduledAtRaw) : null;
-  let contact: { channel: "CALL" | "WHATSAPP" | "EMAIL"; occurredAt: Date } | undefined;
-  if (formData.get("logContact") === "on") {
-    const channel = String(formData.get("contactChannel") ?? "CALL") as "CALL" | "WHATSAPP" | "EMAIL";
-    const occurredAtRaw = String(formData.get("contactOccurredAt") ?? "");
-    const occurredAt = occurredAtRaw && !Number.isNaN(new Date(occurredAtRaw).getTime()) ? new Date(occurredAtRaw) : new Date();
-    contact = { channel, occurredAt };
-  }
-  await updateLeadStatus(id, status, reason, contact, viewingScheduledAt);
 }
 
 // 2026-08-11 — lead-list rebuild's inline Hot flame toggle. A single click

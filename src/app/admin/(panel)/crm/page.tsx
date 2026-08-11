@@ -128,6 +128,11 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
   // hotAt's schema comment), then KEEP_CONTACT (its own block, deliberately
   // outside the urgency cadence — see WARM_CONTACT_STATUSES in crm.ts), and
   // only leads reaching neither get classified into Red/Yellow/Green.
+  //
+  // Urgency is computed for every non-KEEP_CONTACT active lead, hot ones
+  // included (2026-08-11 fix) — being pulled out of the color block into HOT
+  // doesn't mean a lead stops being overdue/due-soon/on-track; the dot still
+  // needs to say which, right there in the HOT block.
   const now = Date.now();
   const hot: LeadRowData[] = [];
   const keepContact: LeadRowData[] = [];
@@ -136,13 +141,15 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
   const green: LeadRowData[] = [];
   const bandById = new Map<string, { band: ColorBand; reason: string }>();
   for (const l of rawActiveLeads) {
+    if (l.status === "KEEP_CONTACT") {
+      keepContact.push(l);
+      continue;
+    }
+    const b = computeBand(l, l.interactions.length > 0, now);
+    bandById.set(l.id, b);
     if (l.hotAt) {
       hot.push(l);
-    } else if (l.status === "KEEP_CONTACT") {
-      keepContact.push(l);
     } else {
-      const b = computeBand(l, l.interactions.length > 0, now);
-      bandById.set(l.id, b);
       (b.band === "RED" ? red : b.band === "YELLOW" ? yellow : green).push(l);
     }
   }
@@ -187,7 +194,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
         </div>
       ) : (
         <>
-          <LeadBlockSection title="Hot leads" leads={hot} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
+          <LeadBlockSection title="Hot leads" leads={hot} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
           <LeadBlockSection title="Overdue" dot={BAND_STYLE.RED.dot} leads={red} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
           <LeadBlockSection title="Due soon" dot={BAND_STYLE.YELLOW.dot} leads={yellow} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
           <LeadBlockSection title="On track" dot={BAND_STYLE.GREEN.dot} leads={green} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import {
-  updateLeadStatusFromForm, addLeadNote, assignLead, mergeLeads, updateLeadFollowUp, addCallLog, addEmailLog,
+  addLeadNote, assignLead, mergeLeads, updateLeadFollowUp, addCallLog, addEmailLog,
   resetLeadFollowUpCadenceAction, deleteLeadInteraction,
 } from "../../../actions";
 import { ELEVATED_NO_CONTACT_STATUSES } from "@/lib/actionCenter/rules/crm";
@@ -266,7 +266,6 @@ export default async function LeadDetail({ params }: { params: { id: string } })
           assignAction={assign}
           saveFollowUpAction={saveFollowUp}
           resetFollowUpAction={resetFollowUp}
-          setStatusAction={updateLeadStatusFromForm}
           contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES}
         />
       </div>

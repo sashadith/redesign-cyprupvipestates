@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { StatusBadge } from "@/app/admin/status-badge";
 import { formatWaPhone } from "@/lib/crm/waFormat";
 import GenerateReplyButton from "./GenerateReplyButton";
 import BookingButton from "./BookingButton";
-import StatusChangeForm from "../StatusChangeForm";
+import StatusPopover from "../StatusPopover";
 
 // The Lead Cockpit's hero card (Phase 1 of 4, 2026-07-23; consolidated in the
 // correction batch, 2026-07-23) — a single glance-able summary that now
@@ -140,7 +139,6 @@ export default function CockpitCard({
   assignAction,
   saveFollowUpAction,
   resetFollowUpAction,
-  setStatusAction,
   contactImplyingStatuses,
 }: {
   stageDays: number;
@@ -182,7 +180,6 @@ export default function CockpitCard({
   assignAction: (formData: FormData) => void;
   saveFollowUpAction: (formData: FormData) => void;
   resetFollowUpAction: (formData: FormData) => void;
-  setStatusAction: (formData: FormData) => void;
   contactImplyingStatuses: readonly string[];
 }) {
   return (
@@ -190,7 +187,14 @@ export default function CockpitCard({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-2xl font-semibold">{lead.firstName} {lead.lastName}</h1>
-          <StatusBadge status={lead.status} />
+          <StatusPopover
+            leadId={lead.id}
+            currentStatus={lead.status}
+            viewingScheduledAt={lead.viewingScheduledAt ? lead.viewingScheduledAt.toISOString() : null}
+            hasEmail={!!lead.email}
+            hasPhone={!!lead.phone}
+            contactImplyingStatuses={contactImplyingStatuses}
+          />
           {lead.languagePreference && (
             <span className="inline-flex items-center rounded-full border border-[#E5E7EB] px-2 py-0.5 text-xs font-medium text-[#374151]">
               {LOCALE_LABEL[lead.languagePreference] ?? lead.languagePreference.toUpperCase()}
@@ -204,18 +208,6 @@ export default function CockpitCard({
           <Link href={`/admin/crm/${lead.id}/edit`} className="text-sm text-[#1B4B43] hover:underline">Edit details</Link>
         </div>
       </div>
-
-      {/* Status — prominent and editable right in the header, replacing the
-          old standalone "Status" box further down the page. */}
-      <StatusChangeForm
-        leadId={lead.id}
-        currentStatus={lead.status}
-        viewingScheduledAt={lead.viewingScheduledAt ? lead.viewingScheduledAt.toISOString() : null}
-        hasEmail={!!lead.email}
-        hasPhone={!!lead.phone}
-        contactImplyingStatuses={contactImplyingStatuses}
-        action={setStatusAction}
-      />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm">
         {lead.phone && <a href={`tel:${lead.phone}`} className="text-[#1B4B43] hover:underline">{lead.phone}</a>}
