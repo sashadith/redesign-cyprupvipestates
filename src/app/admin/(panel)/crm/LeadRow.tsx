@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LuFlame } from "react-icons/lu";
 import { COUNTRY_NAME_BY_CODE, countryCodeToFlagEmoji } from "@/lib/countries";
 import DeleteLeadButton from "./DeleteLeadButton";
 import StatusPopover from "./StatusPopover";
@@ -28,10 +29,25 @@ export default function LeadRow({
         </div>
       </td>
       <td className="px-4 py-2.5 text-center" title={l.hotAt ? `Hot since ${new Date(l.hotAt).toLocaleDateString("en-GB")} — click to un-hot` : "Mark as hot"}>
-        <form action={toggleLeadHotAction} className="inline">
+        {/* 2026-08-11 — one SVG shape (lucide's Flame, via react-icons/lu,
+            already a dependency elsewhere in the site) for both states, so
+            toggling never swaps to a differently-shaped glyph (the emoji
+            🔥 previously used for "on" didn't match the "off" dot's shape,
+            and emoji can't be recolored gray anyway). Off: thin gray
+            outline, fill none. On: solid gold fill, matching the existing
+            #C29A5E accent (see CockpitCard's view/favorite counts). Same
+            size both states so nothing shifts on click. */}
+        <form action={toggleLeadHotAction} className="inline-flex">
           <input type="hidden" name="id" value={l.id} />
-          <button type="submit" className="text-base leading-none hover:opacity-70">
-            {l.hotAt ? "🔥" : <span className="text-[#D1D5DB]">◦</span>}
+          <button
+            type="submit"
+            className={`inline-flex leading-none transition-colors ${
+              l.hotAt
+                ? "text-[#C29A5E] fill-[#C29A5E] hover:text-[#8E6B3D] hover:fill-[#8E6B3D]"
+                : "text-[#D1D5DB] fill-none hover:text-[#8E6B3D]"
+            }`}
+          >
+            <LuFlame size={18} />
           </button>
         </form>
       </td>
