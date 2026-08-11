@@ -7,7 +7,14 @@ import { ImageAlt } from "@/types/property";
 
 type ResponsiveMediaProps = {
   title: string;
-  previewImage: ImageAlt;
+  // Typed as required (ImageAlt) everywhere this is threaded through, but not
+  // actually guaranteed at the DB layer — a legacy Project row can have
+  // previewImage: null (confirmed: akamantis-gardens, all 4 locales, still
+  // PUBLISHED — 500'd every request, previewImage.alt on a null value).
+  // Widened here rather than at the type's source, which several other
+  // required-ImageAlt call sites still assume — this component is the one
+  // that actually dereferences it unconditionally.
+  previewImage: ImageAlt | null | undefined;
   videoId?: string;
   videoPreview?: ImageAlt;
 };
@@ -31,6 +38,14 @@ const ResponsiveMedia: FC<ResponsiveMediaProps> = ({
   if (!isMobile && videoId && videoPreview) {
     return <VideoPreview videoId={videoId} videoPreview={videoPreview} />;
   }
+
+  // No image and no video to fall back to — render nothing rather than
+  // crash. Same "quietly empty, never a 500" outcome this codebase already
+  // accepts for an empty projectsSectionBlock (see findEmptyProjectsBlock);
+  // the underlying data gap (a PUBLISHED project with no image) is a
+  // separate, one-off content problem, not something to paper over with an
+  // invented placeholder graphic here.
+  if (!previewImage) return null;
 
   // Иначе отображаем статичное изображение
   return (
