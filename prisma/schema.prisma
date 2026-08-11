@@ -776,6 +776,14 @@ model Lead {
   // pageSource, which could only recover ~66% of existing leads (no
   // recoverable signal at all for manually-imported ones).
   sourceLocale         Locale?
+  // 2026-08-11 — set only when status transitions to VIEWING_SCHEDULED, via
+  // the inline contact-capture row on the status dropdown; retroactive
+  // dates allowed (admin often updates status days after the actual call).
+  // Lets crm.ts's noFollowUp() suppress the stale-follow-up nag until the
+  // appointment itself, then nudge the day after if nothing was logged
+  // since — not the generic 7-day threshold, since post-viewing follow-up
+  // is the single most important moment in a lead's whole lifecycle.
+  viewingScheduledAt   DateTime?
 
   @@index([status])
   @@index([createdAt])

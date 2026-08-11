@@ -3,6 +3,7 @@ import { StatusBadge } from "@/app/admin/status-badge";
 import { formatWaPhone } from "@/lib/crm/waFormat";
 import GenerateReplyButton from "./GenerateReplyButton";
 import BookingButton from "./BookingButton";
+import StatusChangeForm from "./StatusChangeForm";
 
 // The Lead Cockpit's hero card (Phase 1 of 4, 2026-07-23; consolidated in the
 // correction batch, 2026-07-23) — a single glance-able summary that now
@@ -14,7 +15,6 @@ const LOCALE_LABEL: Record<string, string> = { en: "EN", de: "DE", pl: "PL", ru:
 
 const CHANNEL_LABEL: Record<string, string> = { EMAIL: "Email", WHATSAPP: "WhatsApp", PHONE: "Phone" };
 
-const STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"];
 const MAX_AUTO_FOLLOWUPS = 3;
 
 function initials(name: string): string {
@@ -141,6 +141,7 @@ export default function CockpitCard({
   saveFollowUpAction,
   resetFollowUpAction,
   setStatusAction,
+  contactImplyingStatuses,
 }: {
   stageDays: number;
   lead: {
@@ -157,6 +158,7 @@ export default function CockpitCard({
     nextFollowUpAt: Date | null;
     autoFollowUpCount: number;
     assignedTo: { id: string; name: string } | null;
+    viewingScheduledAt: Date | null;
     // Absorbed from the old "Lead details" block:
     budgetMin: number | null;
     budgetMax: number | null;
@@ -181,6 +183,7 @@ export default function CockpitCard({
   saveFollowUpAction: (formData: FormData) => void;
   resetFollowUpAction: (formData: FormData) => void;
   setStatusAction: (formData: FormData) => void;
+  contactImplyingStatuses: readonly string[];
 }) {
   return (
     <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 md:p-6">
@@ -204,13 +207,14 @@ export default function CockpitCard({
 
       {/* Status — prominent and editable right in the header, replacing the
           old standalone "Status" box further down the page. */}
-      <form action={setStatusAction} className="flex flex-wrap items-center gap-2 mt-2">
-        <select name="status" defaultValue={lead.status} className="rounded-md border border-[#E5E7EB] px-2 py-1 text-sm">
-          {STATUSES.map((s) => <option key={s} value={s}>{s.replace(/_/g, " ")}</option>)}
-        </select>
-        <input name="reason" placeholder="Reason / note (optional)" className="rounded-md border border-[#E5E7EB] px-2 py-1 text-sm flex-1 min-w-[160px]" />
-        <button className="rounded-md bg-[#1B4B43] text-white text-xs px-3 py-1.5 hover:bg-[#142E2D]">Save status</button>
-      </form>
+      <StatusChangeForm
+        currentStatus={lead.status}
+        viewingScheduledAt={lead.viewingScheduledAt ? lead.viewingScheduledAt.toISOString() : null}
+        hasEmail={!!lead.email}
+        hasPhone={!!lead.phone}
+        contactImplyingStatuses={contactImplyingStatuses}
+        action={setStatusAction}
+      />
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm">
         {lead.phone && <a href={`tel:${lead.phone}`} className="text-[#1B4B43] hover:underline">{lead.phone}</a>}

@@ -19,6 +19,8 @@ import { listProjectsForPicker as listProjectsForPickerQuery } from "@/sanity/sa
 import { applyFollowUpCadence, resetFollowUpCadence } from "@/lib/crm/followUpCadence";
 import { isManualInteractionType } from "@/lib/crm/interactionHelpers";
 import { findEmptyProjectsBlock } from "@/lib/projectsBlockValidation";
+import { ELEVATED_NO_CONTACT_STATUSES as CONTACT_IMPLYING_STATUSES } from "@/lib/actionCenter/rules/crm";
+import { logWhatsAppSentAction } from "./(panel)/crm/[id]/emailActions";
 
 // Convert every `{__html}` rich-text marker (produced by the block editor) into
 // Portable Text via the shared converter — so all blocks store consistent PT and
@@ -709,11 +711,25 @@ export async function saveBlogAll(id: string, _prev: any, formData: FormData): P
   }
 }
 
-export async function updateLeadStatus(id: string, status: string, reason?: string) {
+export async function updateLeadStatus(
+  id: string,
+  status: string,
+  reason?: string,
+  contact?: { channel: "CALL" | "WHATSAPP" | "EMAIL"; occurredAt: Date },
+  viewingScheduledAt?: Date | null,
+) {
   const session = await requireSession();
   if (!STATUSES.includes(status)) throw new Error("Invalid status");
   const r = String(reason ?? "").trim().slice(0, 500);
-  await prisma.lead.update({ where: { id }, data: { status: status as any } });
+  await prisma.lead.update({
+    where: { id },
+    data: {
+      status: status as any,
+      // 2026-08-11 — only touched when transitioning INTO VIEWING_SCHEDULED;
+      // other status changes must never clear a previously-set viewing date.
+      ...(status === "VIEWING_SCHEDULED" ? { viewingScheduledAt: viewingScheduledAt ?? null } : {}),
+    },
+  });
   const statusContent = `Status changed to ${status.replace(/_/g, " ")}${r ? ` — ${r}` : ""}`;
   await prisma.leadActivity.create({
     data: {
@@ -739,6 +755,22 @@ export async function updateLeadStatus(id: string, status: string, reason?: stri
       createdByName: session.user?.name ?? "admin",
     },
   });
+  // 2026-08-11 — inline contact-capture row on the status dropdown writes a
+  // REAL interaction via the same logging functions the manual +Call/+Email/
+  // +WhatsApp buttons use, so autoFollowUpCount/nextFollowUpAt cadence stays
+  // correct. Never a silent direct write past the timeline. Only offered (and
+  // only honored here) for statuses that structurally imply contact already
+  // happened — see ELEVATED_NO_CONTACT_STATUSES in crm.ts.
+  if (contact && (CONTACT_IMPLYING_STATUSES as readonly string[]).includes(status)) {
+    const note = `Contact logged at status change to ${status.replace(/_/g, " ")}`;
+    if (contact.channel === "CALL") {
+      await addCallLog(id, note, contact.occurredAt);
+    } else if (contact.channel === "WHATSAPP") {
+      await logWhatsAppSentAction(id, { body: note, occurredAt: contact.occurredAt });
+    } else {
+      await addEmailLog(id, { direction: "OUTBOUND", body: note, occurredAt: contact.occurredAt });
+    }
+  }
   revalidatePath(`/admin/crm/${id}`);
   revalidatePath("/admin/crm");
   revalidatePath("/admin");

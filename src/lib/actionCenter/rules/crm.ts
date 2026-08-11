@@ -95,6 +95,7 @@ const isElevatedStatus = (s: string): s is ElevatedStatus => (ELEVATED_NO_CONTAC
 // permanently silence a stale-contact warning just by touching the lead every
 // few days.
 const RECENT_ACTIVITY_TYPES = [...REAL_CONTACT_TYPES, "NOTE"] as const;
+const VIEWING_FOLLOWUP_GRACE_DAYS = 1;
 
 // updateLeadStatus writes metadata.toStatus on every STATUS_CHANGE row going
 // forward; historical rows (written before this batch) have no metadata, so
@@ -120,7 +121,7 @@ async function noFollowUp(): Promise<ActionItem[]> {
   const leads = await prisma.lead.findMany({
     where: { status: { in: [...ACTIVE_LEAD_STATUSES] }, deletedAt: null },
     select: {
-      id: true, firstName: true, lastName: true, createdAt: true, status: true,
+      id: true, firstName: true, lastName: true, createdAt: true, status: true, viewingScheduledAt: true,
       interactions: { where: { type: { in: [...REAL_CONTACT_TYPES] } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true } },
     },
   });
@@ -159,6 +160,43 @@ async function noFollowUp(): Promise<ActionItem[]> {
   for (const l of leads) {
     const lastContact = l.interactions[0]?.occurredAt;
     const statusLabel = STATUS_LABEL[l.status] ?? l.status;
+
+    // Viewing-date-aware checkpoint — an earlier stage of this same rule,
+    // not a separate one: same item id (`lead-followup:`), just a sharper
+    // reference point than "last contact ever"/"lead creation" when the
+    // appointment date is known. A future date fully suppresses (the lead
+    // isn't neglected, they're waiting on the appointment); a past date
+    // with no contact logged since it is the single most important
+    // follow-up moment in the whole lifecycle, so it fires after one day,
+    // not seven.
+    if (l.status === "VIEWING_SCHEDULED" && l.viewingScheduledAt) {
+      const viewingAt = l.viewingScheduledAt;
+      if (viewingAt.getTime() > Date.now()) continue;
+      const contactSinceViewing = lastContact && lastContact.getTime() > viewingAt.getTime() ? lastContact : null;
+      if (contactSinceViewing) {
+        const cutoff = Date.now() - STALE_FOLLOWUP_DAYS * DAY;
+        if (contactSinceViewing.getTime() > cutoff) continue;
+        const days = Math.floor((Date.now() - contactSinceViewing.getTime()) / DAY);
+        items.push({
+          id: `lead-followup:${l.id}`, severity: "ACTION", category: "CRM",
+          title: `No follow-up on ${leadName(l)} for ${days} days`,
+          description: `${statusLabel}. Last contact ${days} days ago.`,
+          deepLink: `/admin/crm/${l.id}`, since: contactSinceViewing,
+        });
+        continue;
+      }
+      const graceCutoff = Date.now() - VIEWING_FOLLOWUP_GRACE_DAYS * DAY;
+      if (viewingAt.getTime() > graceCutoff) continue;
+      const dateLabel = viewingAt.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit" });
+      items.push({
+        id: `lead-followup:${l.id}`, severity: "ACTION", category: "CRM",
+        title: `${leadName(l)}'s viewing was on ${dateLabel} — how did it go?`,
+        description: "No follow-up logged since the viewing.",
+        deepLink: `/admin/crm/${l.id}`, since: viewingAt,
+      });
+      continue;
+    }
+
     if (!lastContact) {
       if (isElevatedStatus(l.status)) {
         const anchor = lastAnyActivity.get(l.id) ?? l.createdAt;

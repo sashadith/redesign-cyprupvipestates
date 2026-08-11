@@ -4,15 +4,17 @@ import { prisma } from "@/lib/prisma";
 import { StatusBadge } from "@/app/admin/status-badge";
 import DeleteLeadButton from "./DeleteLeadButton";
 import CollapsibleLeadsPanel from "./CollapsibleLeadsPanel";
+import LeadBlockRows from "./LeadBlockRows";
 import LeadFilterBar from "./LeadFilterBar";
 import { COUNTRY_NAME_BY_CODE, countryCodeToFlagEmoji } from "@/lib/countries";
 import {
   buildLeadWhere, orderForSort, leadQueryString,
-  LEAD_STATUSES, LEAD_SOURCES, LEAD_LOCALES, LEAD_PAGE_SIZE, type LeadSearchParams,
+  LEAD_STATUSES, LEAD_SOURCES, LEAD_LOCALES, type LeadSearchParams,
 } from "./filters";
 
 const LOST_CAP = 200;
 const CLOSED_CAP = 200;
+const BLOCK_PREVIEW = 6;
 
 export const dynamic = "force-dynamic";
 
@@ -29,17 +31,18 @@ const LAST_CONTACT_LABEL: Record<string, string> = {
   WHATSAPP_IN: "WhatsApp",
 };
 
-// Urgency traffic-light — visually aligned with the Action Center's dot +
-// severity styling (ActionCenterPanel.tsx's DOT_COLOR), extended to 4 bands
-// since leads need a neutral "nothing to do" state the Action Center doesn't.
+// 2026-08-11 lead-list rebuild — urgency now only decides which of the three
+// active COLOR blocks (Red/Yellow/Green) a lead lands in; it's no longer a
+// per-row sort key or a separate "Urgency" dropdown sort (block grouping
+// already conveys that, a redundant sort added no information). HOT and
+// KEEP_CONTACT leads are pulled out of this classification entirely before
+// it's ever called — see the bucketing loop below.
 const DAY_MS = 86_400_000;
-type UrgencyBand = "RED" | "YELLOW" | "GREEN" | "GRAY";
-const URGENCY_RANK: Record<UrgencyBand, number> = { RED: 0, YELLOW: 1, GREEN: 2, GRAY: 3 };
-const URGENCY_STYLE: Record<UrgencyBand, { dot: string; border: string }> = {
+type ColorBand = "RED" | "YELLOW" | "GREEN";
+const BAND_STYLE: Record<ColorBand, { dot: string; border: string }> = {
   RED: { dot: "bg-red-600", border: "border-l-red-600" },
   YELLOW: { dot: "bg-amber-500", border: "border-l-amber-500" },
   GREEN: { dot: "bg-green-600", border: "border-l-green-600" },
-  GRAY: { dot: "bg-[#9CA3AF]", border: "border-l-[#9CA3AF]" },
 };
 
 function agoLabel(ms: number): string {
@@ -47,68 +50,69 @@ function agoLabel(ms: number): string {
   return days <= 0 ? "less than a day" : days === 1 ? "1 day" : `${days} days`;
 }
 
-function computeUrgency(
+function computeBand(
   lead: { status: string; nextFollowUpAt: Date | null; autoFollowUpCount: number; createdAt: Date },
   hasContact: boolean,
   now: number,
-): { band: UrgencyBand; reason: string; sortTime: number } {
-  if (lead.status === "CLOSED" || lead.status === "LOST") {
-    return { band: "GRAY", reason: `${lead.status === "CLOSED" ? "Closed" : "Lost"} — no active follow-up`, sortTime: lead.createdAt.getTime() };
-  }
+): { band: ColorBand; reason: string } {
   if (lead.status === "NEW" && !hasContact) {
     const age = now - lead.createdAt.getTime();
     if (age > DAY_MS) {
-      return { band: "RED", reason: `New lead — first contact overdue by ${agoLabel(age - DAY_MS)}`, sortTime: lead.createdAt.getTime() };
+      return { band: "RED", reason: `New lead — first contact overdue by ${agoLabel(age - DAY_MS)}` };
     }
-    return { band: "YELLOW", reason: "New lead — first contact pending", sortTime: lead.createdAt.getTime() };
+    return { band: "YELLOW", reason: "New lead — first contact pending" };
   }
-  // 2026-08-11 correction — GRAY now means exactly one thing: the deal is
-  // closed (CLOSED/LOST), nothing to act on. These two used to also be
-  // GRAY, but neither is a rest state — both are gaps that need a decision.
   // Cadence-cap → RED: the automatic chain gave up: this is an action item,
   // not neutral, and the Action Center has no rule covering it either (it
-  // never references autoFollowUpCount), so the color was this lead's only
+  // never references autoFollowUpCount), so the color is this lead's only
   // signal that something needs a human. No-date → YELLOW: a lead an admin
   // hasn't yet scheduled anything for — a gap, not a rest state, but not as
   // sharp as an exhausted automatic chain.
   if (lead.autoFollowUpCount >= 3 && lead.nextFollowUpAt && lead.nextFollowUpAt.getTime() <= now) {
-    return { band: "RED", reason: "Automatic follow-ups exhausted — needs your decision", sortTime: lead.nextFollowUpAt.getTime() };
+    return { band: "RED", reason: "Automatic follow-ups exhausted — needs your decision" };
   }
   if (!lead.nextFollowUpAt) {
-    return { band: "YELLOW", reason: "No follow-up scheduled", sortTime: lead.createdAt.getTime() };
+    return { band: "YELLOW", reason: "No follow-up scheduled" };
   }
   const diff = lead.nextFollowUpAt.getTime() - now;
   if (diff < 0) {
-    return { band: "RED", reason: `Follow-up overdue since ${agoLabel(-diff)}`, sortTime: lead.nextFollowUpAt.getTime() };
+    return { band: "RED", reason: `Follow-up overdue since ${agoLabel(-diff)}` };
   }
   if (diff <= DAY_MS) {
-    return { band: "YELLOW", reason: "Due today", sortTime: lead.nextFollowUpAt.getTime() };
+    return { band: "YELLOW", reason: "Due today" };
   }
-  return { band: "GREEN", reason: `Follow-up due in ${Math.ceil(diff / DAY_MS)} days`, sortTime: lead.nextFollowUpAt.getTime() };
+  return { band: "GREEN", reason: `Follow-up due in ${Math.ceil(diff / DAY_MS)} days` };
 }
 
 type LeadRowData = {
-  id: string; firstName: string; lastName: string; email: string | null; phone: string | null;
-  languagePreference: string | null; countryOfResidence: string | null; status: string; createdAt: Date;
+  id: string; firstName: string; lastName: string;
+  languagePreference: string | null; sourceLocale: string | null;
+  countryOfResidence: string | null; status: string; createdAt: Date;
+  hotAt: Date | null; budgetMax: number | null;
   assignedTo: { name: string } | null;
   interactions: { occurredAt: Date; type: string }[];
 };
 
-// Shared row markup for both the active table and the (identical-column)
-// collapsed Lost section. `urgency` is only ever passed for active rows —
-// Lost leads are gray by definition, so the Lost table never shows a dot.
-function LeadRow({ lead: l, urgency, muted }: { lead: LeadRowData; urgency: { band: UrgencyBand; reason: string } | null; muted?: boolean }) {
+const money = (n: number | null) => (n == null ? "—" : `€${n.toLocaleString("en-GB")}`);
+
+// Shared row markup for every block (HOT/color/KEEP_CONTACT/LOST/CLOSED) —
+// `band` is only ever passed for the three color blocks; every other block
+// is visually flat (its own section heading already carries the meaning),
+// same as the old table's `muted` LOST/CLOSED rows.
+function LeadRow({ lead: l, band, muted }: { lead: LeadRowData; band: { band: ColorBand; reason: string } | null; muted?: boolean }) {
   return (
     <tr className={`hover:bg-[#F8F9FA] ${muted ? "bg-[#FAFAFA] text-[#9CA3AF]" : ""}`}>
-      <td className={`pl-3 pr-4 py-2.5 border-l-4 ${urgency ? URGENCY_STYLE[urgency.band].border : "border-l-transparent"}`}>
+      <td className={`pl-3 pr-4 py-2.5 border-l-4 ${band ? BAND_STYLE[band.band].border : "border-l-transparent"}`}>
         <div className="flex items-center gap-2">
-          {urgency && (
-            <span className={`w-2 h-2 rounded-full shrink-0 ${URGENCY_STYLE[urgency.band].dot}`} title={urgency.reason} aria-label={urgency.reason} role="img" />
+          {band && (
+            <span className={`w-2 h-2 rounded-full shrink-0 ${BAND_STYLE[band.band].dot}`} title={band.reason} aria-label={band.reason} role="img" />
           )}
           <Link href={`/admin/crm/${l.id}`} className={`font-medium hover:underline ${muted ? "" : "text-[#1B4B43]"}`}>{l.firstName} {l.lastName}</Link>
         </div>
       </td>
-      <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{l.email ?? "—"}<br />{l.phone}</td>
+      <td className="px-4 py-2.5 text-center text-base" title={l.hotAt ? `Hot since ${new Date(l.hotAt).toLocaleDateString("en-GB")}` : undefined}>
+        {l.hotAt ? "🔥" : ""}
+      </td>
       <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>
         {l.interactions[0] ? (
           <>
@@ -120,13 +124,16 @@ function LeadRow({ lead: l, urgency, muted }: { lead: LeadRowData; urgency: { ba
           "—"
         )}
       </td>
-      <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{l.languagePreference?.toUpperCase() ?? "—"}</td>
+      <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{money(l.budgetMax)}</td>
+      <td className="px-4 py-2.5"><StatusBadge status={l.status} /></td>
       <td className="px-4 py-2.5 text-center text-base" title={l.countryOfResidence ? COUNTRY_NAME_BY_CODE[l.countryOfResidence] ?? l.countryOfResidence : undefined}>
         {l.countryOfResidence ? countryCodeToFlagEmoji(l.countryOfResidence) : ""}
       </td>
-      <td className="px-4 py-2.5"><StatusBadge status={l.status} /></td>
       <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{l.assignedTo?.name ?? "—"}</td>
-      <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>{new Date(l.createdAt).toLocaleDateString("en-GB")}</td>
+      <td className={`px-4 py-2.5 text-xs ${muted ? "" : ""}`}>
+        <div title="Received (site locale at intake)">{l.sourceLocale ? l.sourceLocale.toUpperCase() : "—"}</div>
+        <div className="text-[#9CA3AF]" title="Preferred (editable)">{l.languagePreference ? l.languagePreference.toUpperCase() : "—"}</div>
+      </td>
       <td className="px-4 py-2.5 text-right"><DeleteLeadButton id={l.id} /></td>
     </tr>
   );
@@ -136,32 +143,64 @@ const TABLE_HEAD = (
   <thead className="bg-[#F8F9FA] text-[#6B7280]">
     <tr>
       <th className="text-left font-medium px-4 py-2.5">Name</th>
-      <th className="text-left font-medium px-4 py-2.5">Contact</th>
+      <th className="text-center font-medium px-4 py-2.5">Hot</th>
       <th className="text-left font-medium px-4 py-2.5">Last contact</th>
-      <th className="text-left font-medium px-4 py-2.5">Lang</th>
-      <th className="text-left font-medium px-4 py-2.5">Country</th>
+      <th className="text-left font-medium px-4 py-2.5">Max budget</th>
       <th className="text-left font-medium px-4 py-2.5">Status</th>
+      <th className="text-center font-medium px-4 py-2.5">Country</th>
       <th className="text-left font-medium px-4 py-2.5">Assigned</th>
-      <th className="text-left font-medium px-4 py-2.5">Received</th>
+      <th className="text-left font-medium px-4 py-2.5">Received / Preferred</th>
       <th className="text-right font-medium px-4 py-2.5"></th>
     </tr>
   </thead>
 );
 
+// One block = a heading (with a count) + its own table. Skipped entirely
+// when empty (same "don't render empty sections" rule the old Lost/Closed
+// panels already followed).
+function LeadBlockSection({
+  title, dot, leads, bandById,
+}: {
+  title: string;
+  dot?: string;
+  leads: LeadRowData[];
+  bandById?: Map<string, { band: ColorBand; reason: string }>;
+}) {
+  if (!leads.length) return null;
+  return (
+    <div className="mb-6">
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-[#374151] mb-2">
+        {dot && <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${dot}`} />}
+        {title} <span className="font-normal text-[#9CA3AF]">({leads.length})</span>
+      </h2>
+      <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-hidden">
+        <table className="w-full text-sm">
+          {TABLE_HEAD}
+          <tbody className="divide-y divide-[#E5E7EB]">
+            <LeadBlockRows previewCount={BLOCK_PREVIEW}>
+              {leads.map((l) => (
+                <LeadRow key={l.id} lead={l} band={bandById?.get(l.id) ?? null} />
+              ))}
+            </LeadBlockRows>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export default async function CrmList({ searchParams }: { searchParams: LeadSearchParams }) {
   const orderBy = orderForSort(searchParams);
-  const pageNum = Math.max(1, parseInt(String(searchParams.page ?? "1"), 10) || 1);
   const val = (k: string) => (Array.isArray(searchParams[k]) ? (searchParams[k] as string[])[0] : (searchParams[k] as string)) ?? "";
-  const isUrgencySort = val("sort") === "urgency";
   const statusParam = val("status");
   const hasActiveFilter = !!(val("q") || val("status") || val("source") || val("lang") || val("assignee"));
 
   // LOST and CLOSED leads each live in their own collapsed section (never
-  // the main table), so the shared filters (q/source/lang/assignee) need to
-  // fan out into three status conditions instead of one. Whichever side the
-  // user's explicit status filter doesn't match is skipped entirely (query
-  // -> null -> []) — e.g. filtering status=LOST empties the active table
-  // and the Closed section on purpose (spec).
+  // the main blocks below), so the shared filters (q/source/lang/assignee)
+  // need to fan out into three status conditions instead of one. Whichever
+  // side the user's explicit status filter doesn't match is skipped entirely
+  // (query -> null -> []) — e.g. filtering status=LOST empties every active
+  // block and the Closed section on purpose (spec).
   const baseWhere = buildLeadWhere(searchParams);
   let activeWhere: Prisma.LeadWhereInput | null = null;
   let lostWhere: Prisma.LeadWhereInput | null = null;
@@ -188,37 +227,46 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
     },
   };
 
-  // Urgency isn't a stored column, so it can't be pushed into the DB's
-  // ORDER BY/LIMIT — when sorting by it, fetch every filtered active row and
-  // sort/paginate in JS instead. Fine at this table's scale (low hundreds of
-  // leads); revisit if that changes.
+  // Pagination removed (2026-08-11 spec) — every active lead is fetched and
+  // sorted into its block below; only Lost/Closed keep a hard cap (they're
+  // terminal, already collapsed by default, and can genuinely run into the
+  // thousands over time in a way the active pipeline never should).
   const [activeTotal, rawActiveLeads, lostTotal, rawLostLeads, closedTotal, rawClosedLeads, users] = await Promise.all([
     activeWhere ? prisma.lead.count({ where: activeWhere }) : Promise.resolve(0),
-    !activeWhere
-      ? Promise.resolve([])
-      : isUrgencySort
-        ? prisma.lead.findMany({ where: activeWhere, include: leadInclude })
-        : prisma.lead.findMany({ where: activeWhere, orderBy, skip: (pageNum - 1) * LEAD_PAGE_SIZE, take: LEAD_PAGE_SIZE, include: leadInclude }),
+    activeWhere ? prisma.lead.findMany({ where: activeWhere, orderBy, include: leadInclude }) : Promise.resolve([]),
     lostWhere ? prisma.lead.count({ where: lostWhere }) : Promise.resolve(0),
     lostWhere ? prisma.lead.findMany({ where: lostWhere, orderBy, take: LOST_CAP, include: leadInclude }) : Promise.resolve([]),
     closedWhere ? prisma.lead.count({ where: closedWhere }) : Promise.resolve(0),
     closedWhere ? prisma.lead.findMany({ where: closedWhere, orderBy, take: CLOSED_CAP, include: leadInclude }) : Promise.resolve([]),
     prisma.user.findMany({ where: { isActive: true }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
-  const pages = Math.max(1, Math.ceil(activeTotal / LEAD_PAGE_SIZE));
 
+  // Bucketing order matters and IS the spec: HOT is checked first (a hot
+  // lead appears only there, never duplicated in its color block — see
+  // hotAt's schema comment), then KEEP_CONTACT (its own block, deliberately
+  // outside the urgency cadence — see WARM_CONTACT_STATUSES in crm.ts), and
+  // only leads reaching neither get classified into Red/Yellow/Green.
   const now = Date.now();
-  const withUrgency = rawActiveLeads.map((l) => ({ lead: l, urgency: computeUrgency(l, l.interactions.length > 0, now) }));
-  if (isUrgencySort) {
-    withUrgency.sort((a, b) => URGENCY_RANK[a.urgency.band] - URGENCY_RANK[b.urgency.band] || a.urgency.sortTime - b.urgency.sortTime);
+  const hot: LeadRowData[] = [];
+  const keepContact: LeadRowData[] = [];
+  const red: LeadRowData[] = [];
+  const yellow: LeadRowData[] = [];
+  const green: LeadRowData[] = [];
+  const bandById = new Map<string, { band: ColorBand; reason: string }>();
+  for (const l of rawActiveLeads) {
+    if (l.hotAt) {
+      hot.push(l);
+    } else if (l.status === "KEEP_CONTACT") {
+      keepContact.push(l);
+    } else {
+      const b = computeBand(l, l.interactions.length > 0, now);
+      bandById.set(l.id, b);
+      (b.band === "RED" ? red : b.band === "YELLOW" ? yellow : green).push(l);
+    }
   }
-  const leads = isUrgencySort
-    ? withUrgency.slice((pageNum - 1) * LEAD_PAGE_SIZE, (pageNum - 1) * LEAD_PAGE_SIZE + LEAD_PAGE_SIZE).map((x) => x.lead)
-    : withUrgency.map((x) => x.lead);
-  const urgencyById = new Map(withUrgency.map((x) => [x.lead.id, x.urgency]));
+  const shownActive = hot.length + red.length + yellow.length + green.length + keepContact.length;
   const lostDefaultOpen = hasActiveFilter && lostTotal > 0;
   const closedDefaultOpen = hasActiveFilter && closedTotal > 0;
-  const activeEmptyText = lostTotal > 0 || closedTotal > 0 ? "No active leads match these filters." : "No leads match these filters.";
 
   return (
     <div>
@@ -234,38 +282,35 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
 
       <LeadFilterBar statuses={LEAD_STATUSES} sources={LEAD_SOURCES} locales={LEAD_LOCALES} users={users} />
 
-      {/* 2026-08-11 — the dot's meaning was previously only ever visible via
-          hover (title attribute on the dot itself); this makes the scheme
-          legible without hovering every row. */}
+      {/* 2026-08-11 — legend extended with HOT and KEEP CONTACT; the dot's
+          meaning was previously only ever visible via hover (title attribute
+          on the dot itself), this makes the scheme legible without hovering
+          every row. */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3 text-xs text-[#6B7280]">
-        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${URGENCY_STYLE.RED.dot}`} />Overdue</span>
-        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${URGENCY_STYLE.YELLOW.dot}`} />Due soon / not yet scheduled</span>
-        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${URGENCY_STYLE.GREEN.dot}`} />On track</span>
-        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${URGENCY_STYLE.GRAY.dot}`} />Closed / Lost</span>
+        <span className="flex items-center gap-1.5">🔥 Hot</span>
+        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.RED.dot}`} />Overdue</span>
+        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.YELLOW.dot}`} />Due soon / not yet scheduled</span>
+        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.GREEN.dot}`} />On track</span>
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-500" />Keep contact</span>
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#9CA3AF]" />Lost / Closed</span>
       </div>
 
-      <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-hidden">
-        <table className="w-full text-sm">
-          {TABLE_HEAD}
-          <tbody className="divide-y divide-[#E5E7EB]">
-            {leads.length === 0 ? (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-[#6B7280]">{activeEmptyText}</td></tr>
-            ) : leads.map((l) => (
-              <LeadRow key={l.id} lead={l} urgency={urgencyById.get(l.id)!} />
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination (active table only — the Lost section is a flat, capped list) */}
-      {pages > 1 && (
-        <div className="flex items-center justify-between mt-4 text-sm text-[#6B7280]">
-          <span>Page {pageNum} of {pages} · {activeTotal} leads</span>
-          <div className="flex gap-2">
-            {pageNum > 1 && <Link href={`/admin/crm${leadQueryString(searchParams, { page: String(pageNum - 1) })}`} className="rounded-md border border-[#E5E7EB] px-3 py-1.5 hover:bg-[#F8F9FA]">← Prev</Link>}
-            {pageNum < pages && <Link href={`/admin/crm${leadQueryString(searchParams, { page: String(pageNum + 1) })}`} className="rounded-md border border-[#E5E7EB] px-3 py-1.5 hover:bg-[#F8F9FA]">Next →</Link>}
-          </div>
+      {shownActive === 0 && lostTotal === 0 && closedTotal === 0 ? (
+        <div className="bg-white rounded-lg border border-[#E5E7EB] px-4 py-8 text-center text-[#6B7280] text-sm">
+          No leads match these filters.
         </div>
+      ) : shownActive === 0 ? (
+        <div className="bg-white rounded-lg border border-[#E5E7EB] px-4 py-8 text-center text-[#6B7280] text-sm mb-6">
+          No active leads match these filters.
+        </div>
+      ) : (
+        <>
+          <LeadBlockSection title="Hot leads" leads={hot} />
+          <LeadBlockSection title="Overdue" dot={BAND_STYLE.RED.dot} leads={red} bandById={bandById} />
+          <LeadBlockSection title="Due soon" dot={BAND_STYLE.YELLOW.dot} leads={yellow} bandById={bandById} />
+          <LeadBlockSection title="On track" dot={BAND_STYLE.GREEN.dot} leads={green} bandById={bandById} />
+          <LeadBlockSection title="Keep contact" dot="bg-purple-500" leads={keepContact} />
+        </>
       )}
 
       {lostTotal > 0 && (
@@ -274,7 +319,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
             {TABLE_HEAD}
             <tbody className="divide-y divide-[#E5E7EB]">
               {rawLostLeads.map((l) => (
-                <LeadRow key={l.id} lead={l} urgency={null} muted />
+                <LeadRow key={l.id} lead={l} band={null} muted />
               ))}
             </tbody>
           </table>
@@ -292,7 +337,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
             {TABLE_HEAD}
             <tbody className="divide-y divide-[#E5E7EB]">
               {rawClosedLeads.map((l) => (
-                <LeadRow key={l.id} lead={l} urgency={null} muted />
+                <LeadRow key={l.id} lead={l} band={null} muted />
               ))}
             </tbody>
           </table>

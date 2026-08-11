@@ -6,6 +6,7 @@ import {
   updateLeadStatus, addLeadNote, assignLead, mergeLeads, updateLeadFollowUp, addCallLog, addEmailLog,
   resetLeadFollowUpCadenceAction, deleteLeadInteraction,
 } from "../../../actions";
+import { ELEVATED_NO_CONTACT_STATUSES } from "@/lib/actionCenter/rules/crm";
 import { sendCrmEmailAction, logWhatsAppSentAction } from "./emailActions";
 import { listPresentationLocations } from "./presentationActions";
 import PropertyMatching from "./PropertyMatching";
@@ -164,7 +165,18 @@ export default async function LeadDetail({ params }: { params: { id: string } })
 
   async function setStatus(formData: FormData) {
     "use server";
-    await updateLeadStatus(id, String(formData.get("status")), String(formData.get("reason") ?? ""));
+    const status = String(formData.get("status"));
+    const reason = String(formData.get("reason") ?? "");
+    const viewingScheduledAtRaw = String(formData.get("viewingScheduledAt") ?? "");
+    const viewingScheduledAt = viewingScheduledAtRaw ? new Date(viewingScheduledAtRaw) : null;
+    let contact: { channel: "CALL" | "WHATSAPP" | "EMAIL"; occurredAt: Date } | undefined;
+    if (formData.get("logContact") === "on") {
+      const channel = String(formData.get("contactChannel") ?? "CALL") as "CALL" | "WHATSAPP" | "EMAIL";
+      const occurredAtRaw = String(formData.get("contactOccurredAt") ?? "");
+      const occurredAt = occurredAtRaw && !Number.isNaN(new Date(occurredAtRaw).getTime()) ? new Date(occurredAtRaw) : new Date();
+      contact = { channel, occurredAt };
+    }
+    await updateLeadStatus(id, status, reason, contact, viewingScheduledAt);
   }
   async function assign(formData: FormData) {
     "use server";
@@ -246,6 +258,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
             nextFollowUpAt: lead.nextFollowUpAt,
             autoFollowUpCount: lead.autoFollowUpCount,
             assignedTo: lead.assignedTo,
+            viewingScheduledAt: lead.viewingScheduledAt,
             budgetMin: lead.budgetMin,
             budgetMax: lead.budgetMax,
             timeline: lead.timeline,
@@ -269,6 +282,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
           saveFollowUpAction={saveFollowUp}
           resetFollowUpAction={resetFollowUp}
           setStatusAction={setStatus}
+          contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES}
         />
       </div>
 

@@ -77,7 +77,7 @@ export default function LeadFilterBar({
       </select>
       <select value={val("sort")} onChange={(e) => updateParams({ sort: e.target.value })} className={sel}>
         <option value="">Newest</option><option value="oldest">Oldest</option><option value="updated">Recently updated</option>
-        <option value="name">Name A–Z</option><option value="urgency">Urgency</option>
+        <option value="name">Name A–Z</option>
       </select>
       <button
         type="button"
