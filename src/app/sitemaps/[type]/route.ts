@@ -9,6 +9,13 @@ import { localePrefix, localizedHref } from "@/lib/locale";
 import { prisma } from "@/lib/prisma";
 import { urlFor } from "@/sanity/sanity.client";
 import { NEW_PROJECTS_INDEXABLE } from "@/lib/developmentSeo";
+// GSC audit 2026-08-11: both retired-article and merged-landing-page URLs
+// stayed listed here despite 301ing in middleware.ts, since neither
+// generator had any way to know about a redirect that isn't reflected in the
+// DB `status` field they filter on (both rows are deliberately left
+// PUBLISHED — see legacyRedirectMaps.ts). Same maps middleware.ts applies,
+// imported rather than duplicated so the two can never drift apart.
+import { DE_LANDING_MERGES, RETIRED_BLOG_REDIRECTS } from "@/lib/legacyRedirectMaps";
 
 const websiteUrl = "https://cyprusvipestates.com";
 const langs = ["de", "pl", "en", "ru"] as const;
@@ -238,6 +245,10 @@ async function generateBlogSitemap(): Promise<SitemapPage[]> {
     posts.forEach((post) => {
       const slug = post.slug?.[lang]?.current;
       if (!slug) return;
+      // RETIRED_BLOG_REDIRECTS rows stay PUBLISHED in the DB on purpose (see
+      // that map's own comment) — skip here rather than list a URL that
+      // 301s the instant it's crawled.
+      if (lang === "de" && RETIRED_BLOG_REDIRECTS[`blog/${slug}`]) return;
 
       pages.push({
         route: `${prefix}/blog/${slug}`,
@@ -291,6 +302,12 @@ async function generatePagesSitemap(): Promise<SitemapPage[]> {
 
     allPaths
       .filter((segments) => Array.isArray(segments) && segments.length > 0)
+      // DE_LANDING_MERGES rows stay PUBLISHED in the DB on purpose (thin
+      // wrapper pages consolidated into a canonical target, see that map's
+      // own comment) — skip here rather than list a URL that 301s the
+      // instant it's crawled. Keyed by the same joined segment path
+      // middleware.ts matches against.
+      .filter((segments) => !(lang === "de" && DE_LANDING_MERGES[segments.join("/")]))
       .forEach((segments) => {
         const route = localizedHref(lang, segments);
 
