@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
+import { FaFire } from "react-icons/fa";
 import { prisma } from "@/lib/prisma";
 import { ELEVATED_NO_CONTACT_STATUSES } from "@/lib/actionCenter/rules/crm";
 import CollapsibleLeadsPanel from "./CollapsibleLeadsPanel";
@@ -176,7 +177,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
           on the dot itself), this makes the scheme legible without hovering
           every row. */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3 text-xs text-[#6B7280]">
-        <span className="flex items-center gap-1.5">🔥 Hot</span>
+        <span className="flex items-center gap-1.5"><FaFire size={12} className="text-[#C29A5E]" />Hot</span>
         <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.RED.dot}`} />Overdue</span>
         <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.YELLOW.dot}`} />Due soon / not yet scheduled</span>
         <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.GREEN.dot}`} />On track</span>
