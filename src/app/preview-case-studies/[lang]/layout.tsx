@@ -21,10 +21,15 @@ import LenisProvider from "../../preview-home/anim/LenisProvider";
    the locale for data-fetching + <html lang>; middleware.ts rewrites the
    public /case-studies, /de/case-studies, /pl/case-studies, /ru/case-studies
    (and their /slug children) straight to this tree, so "preview-case-studies"
-   itself is never a URL a visitor sees or types. Still noindex/nofollow for
-   now (unchanged from before this translation work — see the report given
-   before implementing: the EN page went live noindexed and nothing here
-   changes that indexing decision, it's out of scope for a translation task). */
+   itself is never a URL a visitor sees or types.
+
+   noindex removed 2026-08-11 (GSC audit — same leftover-preview-flag pattern
+   /partners carried before its July fix): both page.tsx (listing) and
+   [slug]/page.tsx (detail) already build a correct, complete title/
+   description/canonical/hreflang/OG for the PUBLIC /case-studies path (not
+   this preview-case-studies path) — it was only ever the layout's own robots
+   field and the hardcoded <meta> tag below blocking it. Both removed
+   together; leaving either one in place alone would still noindex the page. */
 
 const display = Fraunces({
   subsets: ["latin", "latin-ext"],
@@ -54,8 +59,7 @@ export const metadata: Metadata = {
   // production because this isolated layout has its own root <html>/<body>
   // and doesn't inherit metadataBase from src/app/[lang]/layout.tsx.
   metadataBase: new URL(SITE_URL),
-  title: "Case Studies — redesign preview",
-  robots: { index: false, follow: false },
+  title: "Case Studies | Cyprus VIP Estates",
 };
 
 export default function CaseStudiesLayout({
@@ -67,9 +71,6 @@ export default function CaseStudiesLayout({
 }) {
   return (
     <html lang={params.lang} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable}`}>
-      <head>
-        <meta name="robots" content="noindex, nofollow" />
-      </head>
       <body>
         <LenisProvider>{children}</LenisProvider>
       </body>

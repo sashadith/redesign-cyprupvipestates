@@ -54,7 +54,7 @@ export type CaseStudiesCopy = {
 
 export const CASE_STUDIES_COPY: Record<string, CaseStudiesCopy> = {
   en: {
-    metaTitle: "Case Studies",
+    metaTitle: "Cyprus Property Success Stories",
     metaDescription: "Real Cyprus property purchases — relocation, investment and lifestyle buyers, and how we helped them find the right home.",
     eyebrow: "Success Stories",
     heroTitlePlain: "Case ",
@@ -139,7 +139,7 @@ export const CASE_STUDIES_COPY: Record<string, CaseStudiesCopy> = {
   },
   pl: {
     metaTitle: "Historie sukcesu",
-    metaDescription: "Prawdziwe transakcje zakupu nieruchomości na Cyprze — klienci przeprowadzający się, inwestujący i szukający stylu życia, oraz jak pomogliśmy im znaleźć odpowiedni dom.",
+    metaDescription: "Prawdziwe transakcje zakupu nieruchomości na Cyprze — klienci przeprowadzający się, inwestujący i szukający stylu życia oraz jak pomogliśmy znaleźć odpowiedni dom.",
     eyebrow: "Historie sukcesu",
     heroTitlePlain: "Historie ",
     heroTitleItalic: "sukcesu",

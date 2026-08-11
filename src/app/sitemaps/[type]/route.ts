@@ -277,6 +277,16 @@ async function generatePagesSitemap(): Promise<SitemapPage[]> {
       alternates: listingAlts("partners"),
     });
 
+    // /faq: same shape as /partners just above — a single fixed page
+    // (preview-faq/[lang]/page.tsx), not Singlepage-backed, added now that
+    // it's indexable (2026-08-11 GSC-audit fix, same noindex-removal pairing).
+    pages.push({
+      route: localizedHref(lang, "faq"),
+      changefreq: "monthly",
+      priority: 0.6,
+      alternates: listingAlts("faq"),
+    });
+
     const allPaths = await getAllPathsForLang(lang);
 
     allPaths

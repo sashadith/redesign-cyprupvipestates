@@ -15,9 +15,15 @@ import LenisProvider from "../../preview-home/anim/LenisProvider";
    the live site's OWN header/footer chrome, a different design system). The
    [lang] segment here is local to preview-faq only, purely to carry the
    locale for data-fetching + <html lang>; "preview-faq" itself is never a URL
-   a visitor sees or types. Still noindex/nofollow — unchanged by this
-   translation work, out of scope for it (see the report given before
-   implementing). */
+   a visitor sees or types.
+
+   noindex removed 2026-08-11 (GSC audit — this had the exact same leftover-
+   preview-flag pattern /partners carried before its July fix): the page-level
+   generateMetadata in ./page.tsx already builds a correct, complete
+   title/description/canonical/hreflang/OG for the PUBLIC /faq path (not this
+   preview-faq path) — it was only ever the layout's own robots field and the
+   hardcoded <meta> tag below blocking it. Both removed together; leaving
+   either one in place alone would still noindex the page. */
 
 const display = Fraunces({
   subsets: ["latin", "latin-ext"],
@@ -45,8 +51,7 @@ export const metadata: Metadata = {
   // so any relative image URL in generateMetadata would otherwise resolve
   // against Next.js's localhost fallback instead of the real domain.
   metadataBase: new URL(SITE_URL),
-  title: "FAQ — redesign preview",
-  robots: { index: false, follow: false },
+  title: "FAQ | Cyprus VIP Estates",
 };
 
 export default function FaqLayout({
@@ -58,9 +63,6 @@ export default function FaqLayout({
 }) {
   return (
     <html lang={params.lang} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable}`}>
-      <head>
-        <meta name="robots" content="noindex, nofollow" />
-      </head>
       <body>
         <LenisProvider>{children}</LenisProvider>
       </body>

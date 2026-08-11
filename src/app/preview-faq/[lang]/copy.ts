@@ -28,7 +28,7 @@ export type FaqCopy = {
 
 export const FAQ_COPY: Record<string, FaqCopy> = {
   en: {
-    metaTitle: "FAQ",
+    metaTitle: "Cyprus Property FAQ for Foreign Buyers",
     metaDescription: "Answers to the questions we hear most from international buyers — foreigner eligibility, costs & VAT, residency, financing, and buying off-plan in Cyprus.",
     eyebrow: "Support",
     heroTitlePart1: "Frequently ",
@@ -65,7 +65,7 @@ export const FAQ_COPY: Record<string, FaqCopy> = {
   },
   pl: {
     metaTitle: "Najczęściej zadawane pytania",
-    metaDescription: "Odpowiedzi na pytania, które najczęściej zadają nam międzynarodowi kupujący — uprawnienia dla cudzoziemców, koszty i VAT, pobyt, finansowanie oraz zakup nieruchomości off-plan na Cyprze.",
+    metaDescription: "Odpowiedzi na najczęstsze pytania międzynarodowych kupujących — uprawnienia dla cudzoziemców, koszty i VAT, pobyt, finansowanie oraz zakup off-plan na Cyprze.",
     eyebrow: "Wsparcie",
     heroTitlePart1: "Najczęściej ",
     heroTitlePart2: "zadawane ",
@@ -83,7 +83,7 @@ export const FAQ_COPY: Record<string, FaqCopy> = {
   },
   ru: {
     metaTitle: "Часто задаваемые вопросы",
-    metaDescription: "Ответы на вопросы, которые чаще всего задают нам иностранные покупатели — право на покупку для иностранцев, расходы и НДС, вид на жительство, финансирование и покупка недвижимости на этапе строительства на Кипре.",
+    metaDescription: "Ответы на частые вопросы иностранных покупателей — право на покупку, расходы и НДС, вид на жительство, финансирование и покупка на этапе строительства на Кипре.",
     eyebrow: "Поддержка",
     heroTitlePart1: "Часто ",
     heroTitlePart2: "задаваемые ",

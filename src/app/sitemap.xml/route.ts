@@ -8,14 +8,16 @@ const websiteUrl = "https://cyprusvipestates.com";
 // src/app/sitemaps/[type]/route.ts), so there's no reason to advertise an
 // always-empty sitemap to crawlers in the meantime.
 //
-// "case-studies" is deliberately NOT listed: every live case-studies page
-// (src/app/preview-case-studies/[lang]/layout.tsx) is hardcoded
-// `robots: {index:false, follow:false}` — submitting noindexed URLs in a
-// sitemap produces "Submitted URL marked 'noindex'" errors in GSC and sends
-// a contradictory signal. Add it back once/if that noindex decision changes.
+// "case-studies" added back 2026-08-11 — its noindex (the reason this was
+// excluded, see git history) is gone: preview-case-studies/[lang]/layout.tsx
+// no longer sets robots:{index:false}, part of the same GSC-audit fix that
+// unblocked /faq. generateCaseStudiesSitemap() (sitemaps/[type]/route.ts) was
+// already written and wired into the dispatcher the whole time — it just
+// never had a reason to be linked from this index before now.
 const sitemaps = [
   "projects",
   "blog",
+  "case-studies",
   "pages",
   "developers",
   ...(NEW_PROJECTS_INDEXABLE ? ["developments"] : []),
