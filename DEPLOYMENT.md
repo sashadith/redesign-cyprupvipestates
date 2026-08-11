@@ -652,6 +652,36 @@ survive the DB changing under it. Confirm the dependent code is already
 deployed, or about to be deployed in the same breath, before the migration
 ever touches the shared DB.
 
+**A third incident (2026-08-10) — the rule above existed only in prose.**
+`prisma migrate deploy` ran directly against the shared DB from
+`fix/crm-status-plausibility`, a branch that was never merged to `main` —
+the DB ended up with `leads.viewingScheduledAt` (migration
+`20260810090000_add_lead_viewing_scheduled_at`) that no migration in
+`main`'s history ever created. Caught the next day, by chance, when a later
+migration tried to add the same column and got "already exists" — not by
+the `diff` check above, which nobody ran by hand in the moment. No data was
+at risk (the column was empty, nothing live reads it) and the exact
+triggering command couldn't be reconstructed (non-interactive SSH sessions
+never write to `.bash_history`), but the shape is the same as the two prior
+incidents: a write against the shared DB that ran ahead of what `main`
+actually contains.
+
+**The fix: `scripts/migrate-deploy-safe.sh` enforces this instead of relying
+on remembering to.** It wraps `migrate deploy`, `migrate resolve`,
+`migrate reset`, and `db push` — every Prisma command that mutates schema or
+migration history — resolves the target database name from `DATABASE_URL`,
+and hard-aborts if it resolves to `cyprusvipestates` (the shared DB) unless
+`CVP_CONFIRM_PROD_MIGRATE=yes` is set for that exact invocation. **Never run
+`npx prisma migrate ...` or `npx prisma db push` directly — always through
+this wrapper.** `deploy-prod.sh`'s `CVP_RUN_MIGRATE=1` path already calls it
+(with the confirmation set automatically, since opting into `RUN_MIGRATE=1`
+at the `deploy-prod.sh` call site already is the deliberate, separate
+confirmation this exists to require). `scripts/assert-not-prod-db.mjs`
+(2026-07-23) was an earlier attempt at the same guard, but as an opt-in
+import only one one-off script ever actually called — nothing stopped a bare
+`prisma migrate deploy` from running straight past it, which is exactly what
+happened here.
+
 **`cp -a` on the live symlink silently writes into the running release
 (2026-07-26).** While building an isolated test copy to verify a fix against
 real feed data, `cp -a /var/www/cyprusvipestates /var/www/tmp-sync-test/xyz`

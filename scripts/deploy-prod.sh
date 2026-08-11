@@ -61,7 +61,9 @@ RUN_INSTALL="${CVP_RUN_INSTALL:-0}"                 # 1 = npm ci --legacy-peer-d
                                                      # peer conflicts. Missed once on 2026-07-23 deploying
                                                      # sanitize-html — build failed with "Module not found",
                                                      # caught before any reload happened.)
-RUN_MIGRATE="${CVP_RUN_MIGRATE:-0}"                 # 1 = npx prisma migrate deploy
+RUN_MIGRATE="${CVP_RUN_MIGRATE:-0}"                 # 1 = migrate via scripts/migrate-deploy-safe.sh
+                                                     # (never a bare `npx prisma migrate deploy` — see
+                                                     # DEPLOYMENT.md's "Shared-database migration discipline")
 HEALTH_URL="${CVP_HEALTH_URL:-https://cyprusvipestates.com/projects}"
 KEEP_RELEASES="${CVP_KEEP_RELEASES:-3}"             # releases kept on top of whichever is currently live
 # ----------------------------------------------------------------------------
@@ -239,7 +241,7 @@ fi
 
 cd "\$RELEASE"
 $([ "$RUN_INSTALL" = 1 ] && echo 'npm ci --legacy-peer-deps' || echo 'echo "· skip npm ci (reusing copied-forward node_modules)"')
-$([ "$RUN_MIGRATE" = 1 ] && echo 'npx prisma migrate deploy' || echo 'echo "· skip prisma migrate"')
+$([ "$RUN_MIGRATE" = 1 ] && echo 'CVP_CONFIRM_PROD_MIGRATE=yes bash scripts/migrate-deploy-safe.sh migrate deploy' || echo 'echo "· skip prisma migrate"')
 
 # Always regenerate the Prisma Client, unconditionally — schema.prisma is
 # rsynced above regardless of RUN_INSTALL, but node_modules is copied
