@@ -838,9 +838,23 @@ async function _getProjectByLang(lang: string, slug: string): Promise<Project | 
 export async function getLegacyProjectRedirect(lang: string, slug: string): Promise<string | null> {
   const row = await prisma.project.findFirst({
     where: { language: lang as any, slug, status: "ARCHIVED" },
-    select: { redirectTarget: { select: { targetPath: true } } },
+    select: {
+      redirectTarget: {
+        select: { targetPath: true, development: { select: { slug: true, publishStatus: true } } },
+      },
+    },
   });
-  return row?.redirectTarget?.targetPath ?? null;
+  const redirect = row?.redirectTarget;
+  if (!redirect) return null;
+  // developmentId-backed redirects resolve the Development's CURRENT slug on
+  // every request instead of replaying the string frozen at archive time —
+  // see the schema comment on LegacyProjectRedirect.developmentId. Falls
+  // back to the frozen targetPath when there's no linked Development (hand-
+  // typed target, /developers/* target) or it's since been unpublished.
+  if (redirect.development?.slug && redirect.development.publishStatus === "published") {
+    return localizedHref(lang, ["projects", redirect.development.slug]);
+  }
+  return redirect.targetPath;
 }
 
 export async function getAllDevelopersByLang(lang: string): Promise<Developer[]> {

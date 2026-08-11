@@ -232,14 +232,26 @@ model Project {
 // sanity.utils.ts, gated on status:"ARCHIVED") — re-activating the project
 // makes this dormant again without needing to delete the row.
 model LegacyProjectRedirect {
-  id         String   @id @default(uuid())
-  projectId  String   @unique
-  targetPath String // server-relative path, e.g. "/projects/slug" or "/de/projects/slug"
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id            String   @id @default(uuid())
+  projectId     String   @unique
+  targetPath    String // server-relative path, e.g. "/projects/slug" or "/de/projects/slug" --
+  // still the source of truth whenever developmentId is null (hand-typed
+  // targets, and the /developers/* case, have no Development to reference).
+  // developmentId (2026-08-11): when the redirect targets a Development
+  // (the common case — see deactivateProjectWithRedirect), resolving the
+  // slug at request time via this FK instead of freezing it into targetPath
+  // means a later Development rename can't orphan the redirect the way it
+  // did for 11 rows discovered via GSC 404s. targetPath is still written
+  // alongside it on every save, so a redirect never depends on this field
+  // being backfilled correctly to keep working.
+  developmentId String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  development Development? @relation(fields: [developmentId], references: [id], onDelete: SetNull)
 
+  @@index([developmentId])
   @@map("legacy_project_redirects")
 }
 
@@ -1053,7 +1065,7 @@ model Development {
   // one-off backfill (scripts/backfill-sold-out-since.mjs) stamped "now" at
   // rollout — that value is a LOWER BOUND ("sold out for at least this long"),
   // never the true sold-out date; always display it as such, never as exact.
-  soldOutSince DateTime?
+  soldOutSince       DateTime?
   // returnedToMarketAt: stamped at the same moment soldOutSince clears —
   // needed because the Action Center's items are computed live on every
   // request, never persisted (see src/lib/actionCenter/), so once
@@ -1100,7 +1112,7 @@ model Development {
   // (same as Development.gallery/plans/DevelopmentOverride.*/DevelopmentUnit.
   // photos/plans) or a sweep will treat them as orphaned and delete images
   // that are one admin click away from being used.
-  newFromFeed Json?
+  newFromFeed          Json?
 
   // rich/nested (JSONB) — feed values; images already mirrored to our storage
   description String? // feed description (plain text)
@@ -1130,6 +1142,7 @@ model Development {
   override           DevelopmentOverride?
   presentationItems  ClientPresentationItem[]
   supersedesProjects Project[]
+  legacyRedirects    LegacyProjectRedirect[]
 
   @@index([developerAccountId])
   @@index([publishStatus])

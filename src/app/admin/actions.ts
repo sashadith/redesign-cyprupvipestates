@@ -521,15 +521,34 @@ export async function deactivateProjectWithRedirect(
   const rows = await projectGroupRows(id);
   if (!rows) throw new Error("Not found");
   const devId = rows.find((r) => r.id === id)?.supersededByDevelopmentId ?? null;
-  const dev = devId ? await prisma.development.findUnique({ where: { id: devId }, select: { slug: true } }) : null;
+  const dev = devId ? await prisma.development.findUnique({ where: { id: devId }, select: { id: true, slug: true } }) : null;
+  // Resolved once, up front, only for the linkedTarget-to-a-Development case
+  // — linkedTarget only carries a slug (from getDeactivateSuggestions()), so
+  // the id needed for the FK has to be looked up. The /developers/* case has
+  // no Development id to store; it stays targetPath-only, same as today.
+  const linkedDev =
+    linkedTarget?.kind === "development" ? await prisma.development.findUnique({ where: { slug: linkedTarget.slug }, select: { id: true } }) : null;
 
   const targets: string[] = [];
   const ops = rows.flatMap((row) => {
     let target: string;
+    let developmentId: string | null = null;
     if (dev?.slug) {
-      target = row.id === id ? (redirectTarget ?? "").trim() : localizedHref(row.language, ["projects", dev.slug]);
+      const autoTarget = localizedHref(row.language, ["projects", dev.slug]);
+      if (row.id === id) {
+        target = (redirectTarget ?? "").trim();
+        // Only attach the FK when the (possibly hand-edited) viewed-row
+        // target still matches what the linked Development would produce —
+        // an admin who typed something else is intentionally overriding it,
+        // and the FK-resolved read path must not silently discard that.
+        if (target === autoTarget) developmentId = dev.id;
+      } else {
+        target = autoTarget;
+        developmentId = dev.id;
+      }
     } else if (linkedTarget) {
       target = localizedHref(row.language, [linkedTarget.kind === "developer" ? "developers" : "projects", linkedTarget.slug]);
+      if (linkedDev) developmentId = linkedDev.id;
     } else {
       target = row.id === id ? (redirectTarget ?? "").trim() : "";
     }
@@ -537,7 +556,11 @@ export async function deactivateProjectWithRedirect(
     return [
       prisma.project.update({ where: { id: row.id }, data: { status: "ARCHIVED" } }),
       target
-        ? prisma.legacyProjectRedirect.upsert({ where: { projectId: row.id }, update: { targetPath: target }, create: { projectId: row.id, targetPath: target } })
+        ? prisma.legacyProjectRedirect.upsert({
+            where: { projectId: row.id },
+            update: { targetPath: target, developmentId },
+            create: { projectId: row.id, targetPath: target, developmentId },
+          })
         : prisma.legacyProjectRedirect.deleteMany({ where: { projectId: row.id } }),
     ];
   });
