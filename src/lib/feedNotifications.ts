@@ -73,6 +73,23 @@ export function buildFeedIncompleteMessage(dev: string, missing: number, total: 
   return { subject: `${label}: feed looks incomplete — nothing changed`, text };
 }
 
+// Drive-sync failure (2026-08-11, Olias incident) — `dev` here is already the
+// DeveloperAccount's own display name (e.g. "Olias Homes (drive)"), not a
+// feed-sync dev-key, so unlike the messages above this does NOT go through
+// devLabel()/DEV_ACCOUNT (that map is keyed by feed-sync's short slugs and
+// wouldn't recognize a Drive developer's name). Throttled by
+// shouldNotifyFailureStreak (src/lib/cronLog.ts) — fires once when the
+// failure starts, then at most weekly while it continues, per developer.
+export function buildDriveSyncFailureMessage(dev: string, message: string): { subject: string; text: string } | null {
+  if (!message) return null;
+  const text = [
+    `🔌 ${dev} — Drive sync failed`,
+    message,
+    `It will keep retrying automatically (daily). You'll only be notified again if it's still failing in a week.`,
+  ].join("\n");
+  return { subject: `${dev}: Drive sync failed`, text };
+}
+
 export async function sendFeedNotification(text: string, subject: string): Promise<void> {
   await sendTelegramMessage(text);
   await sendEmail({ subject, text });

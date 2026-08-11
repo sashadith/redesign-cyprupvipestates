@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncAllDrives } from "@/lib/driveAvailabilitySync";
-import { withCronLog, logCronRun } from "@/lib/cronLog";
+import { withCronLog, logCronRun, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
+import { buildDriveSyncFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -19,10 +20,25 @@ export async function GET(req: NextRequest) {
       "drive-sync",
       () => syncAllDrives(force, content),
       (r) => `${r.length} developer(s), ${r.filter((x) => !x.result.ok).length} failed`,
+      // 2026-08-11 (Olias incident) — syncAllDrives() catches every developer's
+      // error internally and always resolves normally, so without this the
+      // aggregate row logged ok:true even when every developer failed. See
+      // withCronLog's own comment in src/lib/cronLog.ts for the full story.
+      (r) => r.every((x) => x.result.ok),
     );
     // Per-developer rows too — Action Center rule (e) needs "which developer
     // failed", not just "the drive-sync job as a whole had a bad run".
-    for (const r of results) await logCronRun(`drive-sync:${r.developer}`, r.result.ok, r.result.ok ? undefined : r.result.message);
+    for (const r of results) {
+      const job = `drive-sync:${r.developer}`;
+      await logCronRun(job, r.result.ok, r.result.ok ? undefined : r.result.message);
+      if (!r.result.ok && (await shouldNotifyFailureStreak(job))) {
+        const msg = buildDriveSyncFailureMessage(r.developer, r.result.message);
+        if (msg) {
+          await sendFeedNotification(msg.text, msg.subject);
+          await markFailureStreakNotified(job);
+        }
+      }
+    }
     return NextResponse.json({ ok: true, at: new Date().toISOString(), content, force, results });
   } catch (e) {
     return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });

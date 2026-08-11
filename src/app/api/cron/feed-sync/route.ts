@@ -82,6 +82,14 @@ export async function GET(req: NextRequest) {
       "feed-sync",
       () => syncAll({ mirror: true }),
       (r) => `${r.reduce((a, x) => a + x.created + x.updated, 0)} updated, ${r.reduce((a, x) => a + x.failed, 0)} failed across ${r.length} developer(s)`,
+      // 2026-08-11 — same aggregate-blindness fix as drive-sync (see withCronLog's
+      // comment in src/lib/cronLog.ts): syncAll() catches every per-project error
+      // internally and always resolves normally, so without this the aggregate row
+      // logged ok:true regardless of how many projects failed. A blocked developer
+      // (feed-completeness guard) isn't a failure here — it already gets its own
+      // feed-incomplete: job row below — so only a genuine per-project failure
+      // (r.failed > 0) counts against this aggregate.
+      (r) => r.every((x) => x.failed === 0),
     );
     // Per-developer rows — Action Center rule (e) ("Medousa feed failed last
     // sync") needs per-developer status, not just the whole job's outcome.

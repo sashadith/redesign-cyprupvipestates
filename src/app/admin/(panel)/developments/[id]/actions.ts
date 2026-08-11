@@ -16,21 +16,9 @@ import { generateSeoMeta, getSeoPromptTemplate, saveSeoPromptTemplate, type SeoM
 import { getDbProject } from "@/lib/developmentRender";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
 import { localizedHref } from "@/lib/locale";
+import { syncErrorMessage } from "@/lib/syncErrorMessage";
 
 const asArr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
-
-// An uncaught throw inside a Server Action bubbles up as Next's generic redacted
-// production message ("An error occurred in the Server Components render...") —
-// useless for telling a real outage (e.g. the Anthropic account run out of credits)
-// apart from any other failure. Surface the actual cause in the returned message
-// instead of letting it throw.
-function syncErrorMessage(e: unknown): string {
-  const raw = String((e as any)?.message ?? e);
-  if (/credit balance is too low/i.test(raw)) {
-    return "The Anthropic API account has run out of credit — add credits in Plans & Billing, then retry.";
-  }
-  return `Sync failed: ${raw.slice(0, 300)}`;
-}
 
 // "Sync with Drive" on a single development's own page — full re-import (rich data +
 // description + images), but scoped to just this project so its siblings aren't touched.
@@ -325,7 +313,16 @@ export async function importFromPdfs(formData: FormData) {
 
   const emphasize = String(formData.get("emphasize") || "");
   const avoid = String(formData.get("avoid") || "");
-  const data = await extractProjectFromPdfs(pdfs, { emphasize, avoid });
+  let data;
+  try {
+    data = await extractProjectFromPdfs(pdfs, { emphasize, avoid });
+  } catch (e) {
+    // No message slot in this form (see PdfImport.tsx) — surface the real
+    // cause in the server log instead of letting it crash into Next's
+    // redacted digest, same reasoning as syncErrorMessage's callers.
+    console.error(`importFromPdfs(${id}) failed:`, syncErrorMessage(e));
+    return;
+  }
   if (!data) return;
 
   const dev = await prisma.development.findUnique({ where: { id }, include: { override: true } });

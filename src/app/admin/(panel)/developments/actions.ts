@@ -6,13 +6,22 @@ import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { syncAll, syncDeveloper } from "@/lib/feedSync";
 import { syncDeveloperDrive, type DriveSyncResult } from "@/lib/driveAvailabilitySync";
+import { syncErrorMessage } from "@/lib/syncErrorMessage";
 
 // Manual "Sync Drive now" = full content import (rich data + description + images), force.
+// try/catch added 2026-08-11 — DriveSyncButton.tsx's own catch only ever sees Next's
+// generic redacted digest for an uncaught Server Action error (e.g. an expired
+// Google OAuth token); developments/[id]/actions.ts's syncThisDevelopmentAction
+// already guards its own drive-sync button the same way — this one was missed.
 export async function syncDeveloperDriveAction(developerAccountId: string): Promise<DriveSyncResult> {
-  const r = await syncDeveloperDrive(developerAccountId, { force: true, content: true });
-  revalidatePath(`/admin/developments/developers/${developerAccountId}`);
-  revalidatePath("/admin/developments");
-  return r;
+  try {
+    const r = await syncDeveloperDrive(developerAccountId, { force: true, content: true });
+    revalidatePath(`/admin/developments/developers/${developerAccountId}`);
+    revalidatePath("/admin/developments");
+    return r;
+  } catch (e) {
+    return { ok: false, message: syncErrorMessage(e) };
+  }
 }
 
 export async function setDriveSyncInterval(developerAccountId: string, interval: string) {
@@ -37,8 +46,16 @@ export async function setDriveSyncInterval(developerAccountId: string, interval:
 // images included, regardless of publish status.
 export async function runSync(formData: FormData) {
   const dev = String(formData.get("dev") ?? "");
-  if (dev && dev !== "all") await syncDeveloper(dev, { mirror: true, forceMirror: true });
-  else await syncAll({ mirror: true, forceMirror: true });
+  try {
+    if (dev && dev !== "all") await syncDeveloper(dev, { mirror: true, forceMirror: true });
+    else await syncAll({ mirror: true, forceMirror: true });
+  } catch (e) {
+    // No message slot in this plain form (see developments/page.tsx and
+    // developers/[id]/page.tsx) — an uncaught throw here would crash the whole
+    // page render into Next's redacted digest instead of just failing this
+    // sync, so log the real cause server-side and let the page render as-is.
+    console.error(`runSync(${dev || "all"}) failed:`, syncErrorMessage(e));
+  }
   revalidatePath("/admin/developments");
 }
 

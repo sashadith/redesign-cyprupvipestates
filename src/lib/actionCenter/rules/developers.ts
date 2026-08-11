@@ -143,15 +143,25 @@ async function readyToPublishBatch(): Promise<ActionItem[]> {
   }];
 }
 
-// (e) Feed sync failure — per-developer CronRunLog rows written as
+// (e) Feed/Drive sync failure — per-developer CronRunLog rows written as
 // "feed-sync:<devKey>" / "drive-sync:<developerName>" by the cron routes (see
 // src/lib/cronLog.ts). Only the LATEST row per job key matters — an old
 // failure that a later successful run superseded is not a live condition.
+// 2026-08-11 (Olias incident) — this rule's own comment already claimed to
+// cover "drive-sync:" too, but the `where` clause never actually did; that
+// gap, combined with syncAllDrives()'s aggregate row always logging ok:true
+// (see withCronLog in src/lib/cronLog.ts), meant a per-developer Drive sync
+// could fail silently for weeks with NO Action Center item at all. A
+// "notified:*" marker row (src/lib/cronLog.ts's shouldNotifyFailureStreak)
+// is deliberately excluded — it's a Telegram/email throttling bookkeeping
+// row, always ok:true, never a real job outcome.
 async function feedSyncFailures(): Promise<ActionItem[]> {
   const rows = await prisma.cronRunLog.findMany({
-    where: { job: { startsWith: "feed-sync:" } },
+    where: {
+      OR: [{ job: { startsWith: "feed-sync:" } }, { job: { startsWith: "drive-sync:" } }],
+    },
     orderBy: { ranAt: "desc" },
-    take: 500, // per-developer count is small (~9); generous cap, cheap query
+    take: 500, // per-developer count is small (~10 across both); generous cap, cheap query
   });
   const latestByJob = new Map<string, (typeof rows)[number]>();
   for (const r of rows) if (!latestByJob.has(r.job)) latestByJob.set(r.job, r);
@@ -159,12 +169,17 @@ async function feedSyncFailures(): Promise<ActionItem[]> {
   const items: ActionItem[] = [];
   for (const [job, row] of Array.from(latestByJob)) {
     if (row.ok) continue;
-    const devKey = job.slice("feed-sync:".length);
+    const isDrive = job.startsWith("drive-sync:");
+    const devKey = job.slice(job.indexOf(":") + 1);
     items.push({
       id: `sync-fail:${job}`, severity: "URGENT", category: "DEVELOPERS",
-      title: `${devKey} feed failed last sync — check logs`,
+      title: `${devKey} ${isDrive ? "Drive sync" : "feed"} failed last sync — check logs`,
       description: row.message || "No error detail captured.",
-      deepLink: `/admin/developments?dev=${encodeURIComponent(devKey)}`, since: row.ranAt,
+      // Drive developers are keyed by their full display name (spaces/parens),
+      // not a feed-sync devKey the ?dev= filter understands — link to the
+      // developer list instead of a filtered developments view.
+      deepLink: isDrive ? "/admin/developments/developers" : `/admin/developments?dev=${encodeURIComponent(devKey)}`,
+      since: row.ranAt,
     });
   }
   return items;
