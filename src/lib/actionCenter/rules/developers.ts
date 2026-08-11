@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { computeAvailability, availabilityContradiction } from "@/lib/developmentAvailability";
 import { computePublishGate, areaSlugOf } from "@/lib/developmentPublishGate";
 import { SYNCED_DEVS } from "@/lib/feedSync";
-import { ACTIVE_LEAD_STATUSES } from "./crm";
+import { WARM_CONTACT_STATUSES } from "./crm";
 import { developerGroupExists } from "@/lib/developerLink";
 import type { ActionItem } from "../types";
 
@@ -297,9 +297,11 @@ async function feedMissingReminders(): Promise<ActionItem[]> {
 // Project model). That can under-count leads whose page URL pointed at an
 // old, superseded slug — a deliberate simplification for this notification,
 // phrased as "at least N" rather than an exact count. Only non-closed/
-// non-lost leads count as a live "warm" contact (ACTIVE_LEAD_STATUSES,
-// shared with crm.ts's own follow-up rule — one definition, not a second one
-// invented here).
+// non-lost leads count as a live "warm" contact (WARM_CONTACT_STATUSES,
+// shared with crm.ts — one definition, not a second one invented here.
+// Deliberately BROADER than crm.ts's own follow-up rule: a KEEP_CONTACT
+// lead gets no stale-follow-up nag, but should absolutely still hear when
+// their project of interest comes back in stock).
 async function backInStockReminders(): Promise<ActionItem[]> {
   const since = new Date(Date.now() - BACK_IN_STOCK_WINDOW_DAYS * DAY);
   const devs = await prisma.development.findMany({
@@ -313,7 +315,7 @@ async function backInStockReminders(): Promise<ActionItem[]> {
     if (available <= 0) continue; // sold out again within the window — not currently "back in stock"
     const leadCount = d.slug
       ? await prisma.lead.count({
-          where: { pageSource: { contains: `/projects/${d.slug}` }, status: { in: [...ACTIVE_LEAD_STATUSES] }, deletedAt: null },
+          where: { pageSource: { contains: `/projects/${d.slug}` }, status: { in: [...WARM_CONTACT_STATUSES] }, deletedAt: null },
         })
       : 0;
     const leadsClause = leadCount > 0

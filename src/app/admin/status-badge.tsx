@@ -6,6 +6,11 @@ const STATUS_STYLES: Record<string, string> = {
   COMMUNICATING: "bg-teal-100 text-teal-700",
   VIEWING_SCHEDULED: "bg-orange-100 text-orange-700",
   OFFER: "bg-indigo-100 text-indigo-700",
+  // 2026-08-11 — parallel to the funnel, not a stage in it (see LeadStatus
+  // comment in schema.prisma). Purple: the one hue not already claimed by a
+  // neighboring status, so it reads as "a different kind of thing", not
+  // just "further along".
+  KEEP_CONTACT: "bg-purple-100 text-purple-700",
   CLOSED: "bg-green-100 text-green-700",
   LOST: "bg-red-100 text-red-700",
 };

@@ -46,9 +46,17 @@ const leadName = (l: { firstName: string; lastName: string }) => `${l.firstName}
 // or OFFER previously fell out of this rule entirely and could go stale
 // without ever triggering a follow-up nudge again.
 const REAL_CONTACT_TYPES = ["CALL", "EMAIL_OUT", "EMAIL_IN", "WHATSAPP_OUT", "WHATSAPP_IN"] as const;
-// Exported — reused by developers.ts's backInStockReminders() for its lead
-// count, so "warm contact" has exactly one definition across the Action Center.
+// Statuses this rule tracks for stale-follow-up nagging. KEEP_CONTACT is
+// deliberately NOT here (2026-08-11) — it's the one status that means "I'm
+// choosing not to be nagged about this right now", so noFollowUp() must
+// never fire for it.
 export const ACTIVE_LEAD_STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER"] as const;
+// Exported — reused by developers.ts's backInStockReminders() for its "warm
+// contact" lead count. A DIFFERENT set than ACTIVE_LEAD_STATUSES on purpose:
+// a KEEP_CONTACT lead is exactly the kind of person who should hear first
+// when their project of interest comes back in stock — they're not being
+// nagged about follow-up, but they're still a real, current contact.
+export const WARM_CONTACT_STATUSES = [...ACTIVE_LEAD_STATUSES, "KEEP_CONTACT"] as const;
 
 // Status-plausibility split (2026-08-09, Konstantin Brenngold incident): a
 // lead can sit at NEW or CONTACTED purely because an admin flipped the
