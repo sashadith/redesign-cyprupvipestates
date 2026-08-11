@@ -1460,11 +1460,27 @@ model BookingRequest {
   // either been sent OR deliberately skipped (see confirmBookingSlotAction:
   // a meeting confirmed less than 10 minutes before it starts pre-sets BOTH
   // to "now" without ever sending, since there was never a real "1 hour
-  // before" moment for it). The booking-reminders cron only ever scans rows
-  // where at least one of these is still null — this is the sole idempotency
-  // guard, so a re-run or a second concurrent cron tick can't double-send.
+  // before" moment for it) OR given up on after MAX_REMINDER_ATTEMPTS failed
+  // sends (see booking-reminders/route.ts) — SentAt no longer means "actually
+  // delivered", only "stop rescanning this one". The booking-reminders cron
+  // only ever scans rows where at least one of these is still null — this is
+  // the sole idempotency guard, so a re-run or a second concurrent cron tick
+  // can't double-send.
   reminder1hSentAt  DateTime?
   reminder10mSentAt DateTime?
+  // Failed-attempt counters (2026-08-11) — a Telegram outage used to be
+  // invisible: sendReminder() swallowed its own error and the caller set
+  // SentAt unconditionally right after, so a client could miss both
+  // reminders with the DB insisting they went out and nothing ever retried.
+  // Incremented only on a genuine send failure (never on a deliberate skip,
+  // e.g. Telegram not configured on staging — that still counts as handled).
+  // Once a counter hits MAX_REMINDER_ATTEMPTS, the cron gives up and sets
+  // SentAt anyway (an unreachable Telegram for a whole hour isn't going to
+  // fix itself in time for this specific meeting) but sends its own
+  // Telegram+email failure notification first — see sendFailureAlert in
+  // booking-reminders/route.ts.
+  reminder1hAttempts  Int @default(0)
+  reminder10mAttempts Int @default(0)
 
   lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
 
