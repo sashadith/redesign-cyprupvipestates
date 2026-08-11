@@ -11,6 +11,7 @@ import { getDbProjectsByIds } from "@/lib/developmentRender";
 import { normalizeRef } from "@/lib/unitRef";
 import type { MatchFilters } from "@/lib/crm/matching";
 import { asPLocale, COPY, timeOfDayGreeting } from "./copy";
+import { ogHeadline, ogDescription } from "./ogCopy";
 import HeroGreeting from "./HeroGreeting";
 import PresentationBody, { type PresentationDevelopmentVM } from "./PresentationBody";
 import ClosingSection from "./ClosingSection";
@@ -18,14 +19,40 @@ import ViewTracker from "./ViewTracker";
 
 export const dynamic = "force-dynamic";
 
-// No per-token content in the metadata — never leak a client's name or
-// selection into a link preview, browser history entry, or shared screenshot.
-export async function generateMetadata(): Promise<Metadata> {
-  return {
-    title: "Your Property Selection - Cyprus VIP Estates",
-    description: "A personal property selection.",
-    robots: { index: false, follow: false },
-  };
+// 2026-08-11 — reversed from the earlier "no per-token content in metadata"
+// stance: the whole point of opengraph-image.tsx is a personal, expensive-
+// feeling link preview, which the title/description need to match rather
+// than undercut with generic copy right next to a personalized image. Still
+// no pricing/budget anywhere here — see ogCopy.ts. `robots: noindex` is
+// unrelated to this and unchanged: it stops search engines, not link-
+// preview scrapers, which don't consult it at all.
+export async function generateMetadata({ params }: { params: { token: string } }): Promise<Metadata> {
+  const presentation = await prisma.clientPresentation.findUnique({
+    where: { token: params.token },
+    select: { status: true, expiresAt: true, greetingName: true, locale: true, items: { select: { developmentId: true } } },
+  });
+  // Same "usable" gate the page body applies below (and opengraph-image.tsx
+  // mirrors) — an expired/revoked link falls back to the generic, name-less
+  // title rather than continuing to advertise a selection the page itself
+  // now shows as "no longer available".
+  const isExpired = !!presentation?.expiresAt && presentation.expiresAt < new Date();
+  const usable = !!presentation && presentation.status === "active" && !isExpired;
+  const locale = asPLocale(presentation?.locale);
+  const title = ogHeadline(locale, usable ? presentation!.greetingName : null);
+
+  if (!usable) {
+    return { title, robots: { index: false, follow: false } };
+  }
+
+  const devIds = presentation.items.map((i) => i.developmentId);
+  const [validCount, firstDev] = await Promise.all([
+    devIds.length ? prisma.development.count({ where: { id: { in: devIds } } }) : Promise.resolve(0),
+    devIds[0] ? getDbProjectsByIds([devIds[0]], locale).then((m) => m[devIds[0]]) : Promise.resolve(undefined),
+  ]);
+  const place = firstDev?.district || firstDev?.town || null;
+  const description = ogDescription(locale, validCount, place);
+
+  return { title, description, robots: { index: false, follow: false } };
 }
 
 // Large (2560px-capped) hero background photos, one per district — processed

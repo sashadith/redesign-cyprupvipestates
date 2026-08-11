@@ -187,25 +187,33 @@ export const COPY: Record<PLocale, {
   },
 };
 
-/** "N <localized unit noun>" with correct plural form per locale (RU/PL are
- *  3-way: one/few/many with the standard mod-10/mod-100 teen exceptions;
- *  EN/DE are a plain singular/plural binary). */
-export function formatUnitsCount(locale: PLocale, n: number): string {
-  const p = COPY[locale].unitsPlural;
+/** Which plural bucket `n` falls into for a given locale (RU/PL are 3-way:
+ *  one/few/many with the standard mod-10/mod-100 teen exceptions; EN/DE are
+ *  a plain singular/plural binary). Exported so any locale-specific noun —
+ *  not just "units" — can reuse the exact same counting rule instead of
+ *  re-deriving it (see opengraph-image.tsx's "residences" for the reason
+ *  this got pulled out of formatUnitsCount). */
+export function pluralForm(locale: PLocale, n: number): "one" | "few" | "many" {
   const mod10 = n % 10;
   const mod100 = n % 100;
-  let form: "one" | "few" | "many";
   if (locale === "ru") {
-    form = mod10 === 1 && mod100 !== 11 ? "one"
+    return mod10 === 1 && mod100 !== 11 ? "one"
       : mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14) ? "few"
       : "many";
-  } else if (locale === "pl") {
-    form = n === 1 ? "one"
-      : mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14) ? "few"
-      : "many";
-  } else {
-    form = n === 1 ? "one" : "many";
   }
+  if (locale === "pl") {
+    return n === 1 ? "one"
+      : mod10 >= 2 && mod10 <= 4 && !(mod100 >= 12 && mod100 <= 14) ? "few"
+      : "many";
+  }
+  return n === 1 ? "one" : "many";
+}
+
+/** "N <localized unit noun>" with correct plural form per locale — see
+ *  pluralForm() above for the counting rule itself. */
+export function formatUnitsCount(locale: PLocale, n: number): string {
+  const p = COPY[locale].unitsPlural;
+  const form = pluralForm(locale, n);
   const word = (form === "few" ? p.few : undefined) ?? p.many;
   return `${n} ${form === "one" ? p.one : word}`;
 }
