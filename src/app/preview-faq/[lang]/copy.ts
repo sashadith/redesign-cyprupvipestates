@@ -47,7 +47,7 @@ export const FAQ_COPY: Record<string, FaqCopy> = {
   },
   de: {
     metaTitle: "Häufig gestellte Fragen",
-    metaDescription: "Antworten auf die Fragen, die uns internationale Käufer am häufigsten stellen — Berechtigung für Ausländer, Kosten & MwSt., Aufenthalt, Finanzierung und der Kauf von Off-Plan-Immobilien in Zypern.",
+    metaDescription: "Antworten auf die häufigsten Fragen internationaler Käufer: Kaufrecht für Ausländer, Kosten und MwSt., Aufenthalt, Finanzierung und Off-Plan-Kauf auf Zypern.",
     eyebrow: "Support",
     heroTitlePart1: "Häufig ",
     heroTitlePart2: "gestellte ",
