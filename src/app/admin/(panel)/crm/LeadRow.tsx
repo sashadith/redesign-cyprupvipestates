@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LuFlame } from "react-icons/lu";
+import { FaFire } from "react-icons/fa";
 import { COUNTRY_NAME_BY_CODE, countryCodeToFlagEmoji } from "@/lib/countries";
 import DeleteLeadButton from "./DeleteLeadButton";
 import StatusPopover from "./StatusPopover";
@@ -29,25 +29,27 @@ export default function LeadRow({
         </div>
       </td>
       <td className="px-4 py-2.5 text-center" title={l.hotAt ? `Hot since ${new Date(l.hotAt).toLocaleDateString("en-GB")} — click to un-hot` : "Mark as hot"}>
-        {/* 2026-08-11 — one SVG shape (lucide's Flame, via react-icons/lu,
-            already a dependency elsewhere in the site) for both states, so
-            toggling never swaps to a differently-shaped glyph (the emoji
-            🔥 previously used for "on" didn't match the "off" dot's shape,
-            and emoji can't be recolored gray anyway). Off: thin gray
-            outline, fill none. On: solid gold fill, matching the existing
-            #C29A5E accent (see CockpitCard's view/favorite counts). Same
-            size both states so nothing shifts on click. */}
+        {/* 2026-08-11 — one SVG shape (FaFire, react-icons/fa — chosen after
+            comparing IoFlame/FaFire/MdLocalFireDepartment/PiFireFill side by
+            side on staging) for both states, so toggling never swaps to a
+            differently-shaped glyph. FaFire is a true solid-fill glyph
+            (fill=currentColor, no separate stroke), which is why a filled
+            outline icon like lucide's Flame was dropped — it read thin and
+            frayed once colored in. Off: light gray, deliberately lighter
+            than the old #D1D5DB dot since a solid shape reads heavier than
+            a thin outline did; hover hints gold. On: solid gold fill,
+            matching the existing #C29A5E accent (see CockpitCard's view/
+            favorite counts). Same size both states so nothing shifts on
+            click. */}
         <form action={toggleLeadHotAction} className="inline-flex">
           <input type="hidden" name="id" value={l.id} />
           <button
             type="submit"
             className={`inline-flex leading-none transition-colors ${
-              l.hotAt
-                ? "text-[#C29A5E] fill-[#C29A5E] hover:text-[#8E6B3D] hover:fill-[#8E6B3D]"
-                : "text-[#D1D5DB] fill-none hover:text-[#8E6B3D]"
+              l.hotAt ? "text-[#C29A5E] hover:text-[#8E6B3D]" : "text-[#E5E7EB] hover:text-[#D9B978]"
             }`}
           >
-            <LuFlame size={18} />
+            <FaFire size={18} />
           </button>
         </form>
       </td>
