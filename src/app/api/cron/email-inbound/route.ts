@@ -51,6 +51,14 @@ export async function GET(req: NextRequest) {
         );
         return `${results.length} mailbox(es) polled — ${totals.matched} matched, ${totals.skipped} skipped, ${totals.errors} error(s)`;
       },
+      // 2026-08-11/12 — same aggregate-blindness fix as drive-sync/feed-sync/
+      // booking-reminders/psi-sync (see withCronLog's comment in
+      // src/lib/cronLog.ts): pollAllConfiguredMailboxes() catches every
+      // per-mailbox failure internally (ImapNotConfiguredError is skipped
+      // outright, any other error is logged and pushed into the results
+      // array) and always resolves normally, so without this the aggregate
+      // row logged ok:true even if every configured mailbox failed.
+      (results) => results.every((r) => r.ok),
     );
     return NextResponse.json({ ok: true, results: summaries });
   } catch (e) {
