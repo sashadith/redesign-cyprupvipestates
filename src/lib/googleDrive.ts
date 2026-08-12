@@ -135,7 +135,15 @@ export async function collectMedia(
 
 export async function downloadFile(fileId: string, accessToken: string): Promise<Buffer> {
   const r = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`, { headers: { Authorization: "Bearer " + accessToken } });
-  if (!r.ok) throw new Error(`download ${fileId}: ${r.status}`);
+  if (!r.ok) {
+    // Body included (2026-08-12) — a bare status code gave zero signal for a
+    // real intermittent failure (Motive Point's PDF download 401'd 3/3 times
+    // through the live app, 0/4 times via an isolated script running the exact
+    // same request sequence) with no way to tell an expired/invalid-grant token
+    // apart from a per-file access issue apart from something else entirely.
+    const body = await r.text().catch(() => "");
+    throw new Error(`download ${fileId}: ${r.status} ${body.slice(0, 300)}`);
+  }
   return Buffer.from(await r.arrayBuffer());
 }
 
