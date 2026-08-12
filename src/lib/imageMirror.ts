@@ -163,7 +163,7 @@ async function readLocalThumbnail(mirroredUrl: string): Promise<Buffer | null> {
 async function fetchThumbnail(src: string): Promise<Buffer | null> {
   try {
     const large = toLargeVariant(src);
-    const res = await fetch(large, { signal: AbortSignal.timeout(15000) });
+    const res = await fetch(large, { signal: AbortSignal.timeout(15000), cache: "no-store" });
     if (!res.ok || !/image\//i.test(res.headers.get("content-type") ?? "")) return null;
     const buf = Buffer.from(await res.arrayBuffer());
     return await contentThumbnail(buf);
@@ -216,11 +216,11 @@ export async function mirrorImage(src: string, devKey: string): Promise<MirrorRe
   const mediumUrl = `/uploads/developments/${devKey}/${h}_medium.webp`;
   if (await exists(mediumFile)) return { url: mediumUrl, wasNew: false }; // already mirrored → skip download
   try {
-    let res = await fetch(large, { signal: AbortSignal.timeout(20000) });
+    let res = await fetch(large, { signal: AbortSignal.timeout(20000), cache: "no-store" });
     if (!res.ok || !/image\//i.test(res.headers.get("content-type") ?? "")) {
       if (large !== src) {
         console.warn(`[imageMirror] large-variant fetch failed (${res.status}) for ${large} (devKey=${devKey}) — falling back to ${src}`);
-        res = await fetch(src, { signal: AbortSignal.timeout(20000) });
+        res = await fetch(src, { signal: AbortSignal.timeout(20000), cache: "no-store" });
       }
       if (!res.ok) return null;
       if (!/image\//i.test(res.headers.get("content-type") ?? "")) return null; // e.g. Cloudflare HTML

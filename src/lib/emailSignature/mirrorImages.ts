@@ -128,7 +128,7 @@ async function mirrorOne(src: string, userId: string): Promise<string | null> {
     // when the original URL looked external. A legitimate signature-image
     // CDN that redirects just doesn't get mirrored — falls back to the
     // original (external) src, same as any other failure here.
-    const res = await fetch(src, { signal: AbortSignal.timeout(20000), redirect: "manual" });
+    const res = await fetch(src, { signal: AbortSignal.timeout(20000), redirect: "manual", cache: "no-store" });
     if (!res.ok || (res.status >= 300 && res.status < 400)) {
       warn(src, `HTTP ${res.status}`);
       return null;

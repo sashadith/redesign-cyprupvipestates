@@ -42,7 +42,7 @@ export async function fetchCwv(url: string): Promise<CwvReading> {
   if (!apiKey) throw new Error("PSI_API_KEY not configured");
 
   const qs = new URLSearchParams({ url, key: apiKey, strategy: "mobile", category: "performance" });
-  const res = await fetch(`${PSI_ENDPOINT}?${qs.toString()}`);
+  const res = await fetch(`${PSI_ENDPOINT}?${qs.toString()}`, { cache: "no-store" });
   if (!res.ok) throw new Error(`PSI request failed for ${url}: HTTP ${res.status} ${await res.text().catch(() => "")}`);
   const data = (await res.json()) as PsiResponse;
 

@@ -9,7 +9,14 @@ let client: Anthropic | null = null;
 export function anthropic(): Anthropic | null {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return null;
-  if (!client) client = new Anthropic({ apiKey });
+  // cache: "no-store" (2026-08-12) — without it, Next.js's Data Cache stores this
+  // POST response indefinitely (confirmed on prod: a cached /v1/messages call sat in
+  // .next/cache/fetch-cache with revalidate:31536000 — one year — and, since
+  // deploy-prod.sh copies .next/cache forward across releases, would keep replaying
+  // the SAME extraction result on every re-sync of that price list forever, never
+  // re-reading the sheet's actual current content). Every AI call in this codebase
+  // goes through this one client, so fixing it here covers all of them.
+  if (!client) client = new Anthropic({ apiKey, fetchOptions: { cache: "no-store" } });
   return client;
 }
 

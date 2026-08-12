@@ -37,7 +37,7 @@ export async function resolveMapsUrlToGeo(url: string): Promise<{ lat: number; l
   if (direct) return direct;
   if (!/^https?:\/\//i.test(url)) return null;
   try {
-    const res = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(8000) });
+    const res = await fetch(url, { redirect: "follow", signal: AbortSignal.timeout(8000), cache: "no-store" });
     return parseGeoFromText(res.url);
   } catch {
     return null;

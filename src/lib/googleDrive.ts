@@ -22,6 +22,7 @@ export async function getAccessToken(): Promise<string> {
       client_id: process.env.GOOGLE_CLIENT_ID!, client_secret: process.env.GOOGLE_CLIENT_SECRET!,
       refresh_token: process.env.GOOGLE_REFRESH_TOKEN!, grant_type: "refresh_token",
     }),
+    cache: "no-store",
   });
   const t = await res.json();
   if (!t.access_token) throw new Error("Google token refresh failed: " + JSON.stringify(t).slice(0, 200));
@@ -30,10 +31,18 @@ export async function getAccessToken(): Promise<string> {
 
 export type DriveFile = { id: string; name: string; mimeType: string; modifiedTime: string };
 
+// Every fetch() in this file passes `cache: "no-store"` (2026-08-12) — without it,
+// Next.js's Data Cache stores GET responses for a year by default, and since
+// deploy-prod.sh copies .next/cache forward across releases, a stale response (a
+// folder listing, a spreadsheet, even an error) never expires on its own. This is
+// how a single expired-token 401 on Motive Point's PDF download kept getting
+// replayed for days across multiple deploys with fixed tokens and fixed code —
+// the fetch never actually reached Google again. Drive content must always be
+// read fresh regardless: a cached listing/file is stale by definition here.
 export async function listFolder(folderId: string, accessToken: string): Promise<DriveFile[]> {
   const q = encodeURIComponent(`'${folderId}' in parents and trashed=false`);
   const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType,modifiedTime)&pageSize=200&supportsAllDrives=true&includeItemsFromAllDrives=true`;
-  const r = await fetch(url, { headers: { Authorization: "Bearer " + accessToken } });
+  const r = await fetch(url, { headers: { Authorization: "Bearer " + accessToken }, cache: "no-store" });
   const j = await r.json();
   return (j.files ?? []) as DriveFile[];
 }
@@ -134,7 +143,7 @@ export async function collectMedia(
 }
 
 export async function downloadFile(fileId: string, accessToken: string): Promise<Buffer> {
-  const r = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`, { headers: { Authorization: "Bearer " + accessToken } });
+  const r = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`, { headers: { Authorization: "Bearer " + accessToken }, cache: "no-store" });
   if (!r.ok) {
     // Body included (2026-08-12) — a bare status code gave zero signal for a
     // real intermittent failure (Motive Point's PDF download 401'd 3/3 times
@@ -152,10 +161,10 @@ export async function downloadFile(fileId: string, accessToken: string): Promise
 export async function getSpreadsheetText(file: DriveFile, accessToken: string): Promise<string> {
   const H = { Authorization: "Bearer " + accessToken };
   if (file.mimeType === SHEET_MIME) {
-    const r = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}/export?mimeType=text/csv&supportsAllDrives=true`, { headers: H });
+    const r = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}/export?mimeType=text/csv&supportsAllDrives=true`, { headers: H, cache: "no-store" });
     return await r.text();
   }
-  const r = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&supportsAllDrives=true`, { headers: H });
+  const r = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&supportsAllDrives=true`, { headers: H, cache: "no-store" });
   const ab = await r.arrayBuffer();
   const wb = XLSX.read(Buffer.from(ab), { type: "buffer" });
   return wb.SheetNames.map((n) => `### ${n}\n${XLSX.utils.sheet_to_csv(wb.Sheets[n])}`).join("\n");

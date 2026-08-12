@@ -215,6 +215,15 @@ if [ -d "\$CURRENT_REAL/.next/cache" ]; then
   echo "· copying .next/cache forward (preserves incremental build cache)"
   mkdir -p "\$RELEASE/.next"
   cp -a "\$CURRENT_REAL/.next/cache" "\$RELEASE/.next/cache"
+  # fetch-cache (2026-08-12) — this is Next's RUNTIME data cache (API responses,
+  # not compiled build output) and must never persist across releases: it's how
+  # a single expired-token 401 on a Drive download survived two redeploys with
+  # fixed code and a fixed token, replaying the same stale response for days.
+  # Every fetch() that should never be cached now sets cache:"no-store" at the
+  # call site (the real fix), but this copy-forward would otherwise still seed
+  # every new release with whatever staleness a future un-opted-out fetch()
+  # accumulates — dropping it here makes each deploy self-heal instead.
+  rm -rf "\$RELEASE/.next/cache/fetch-cache"
 fi
 
 # .env / secrets — real files live outside the release lifecycle entirely,

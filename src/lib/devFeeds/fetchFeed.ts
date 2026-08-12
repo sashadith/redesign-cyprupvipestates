@@ -105,6 +105,7 @@ export async function safeFetchText(rawUrl: string, opts: SafeFetchOpts): Promis
       redirect: "manual",
       signal: AbortSignal.timeout(timeoutMs),
       headers: { "user-agent": "CVE-FeedAnalyzer/1.0", accept: accept ?? "application/xml,text/xml,application/json,*/*", ...hopHeaders },
+      cache: "no-store",
       ...(body != null && method !== "GET" ? { body } : {}),
     });
 
