@@ -11,12 +11,15 @@ import { join } from "node:path";
    used to draw each glyph, straight from the render pipeline — not a visual/OCR guess.
 
    The actual canvas+pdf.js work runs in scripts/pdf-color-extract-worker.mjs, spawned
-   as a SEPARATE process — not imported here. Reason: `canvas` (native addon) and
-   `sharp` (loaded by src/lib/imageMirror.ts, already in this module's import chain via
-   driveAvailabilitySync.ts) conflict when loaded into the same Node process — confirmed
-   by reproduction: both load individually, but together pdf.js's image-XObject
-   rendering throws inside canvas's own drawImage. Isolating in its own process (same
-   pattern imageMirror.ts already uses for pdftoppm) sidesteps the conflict entirely. */
+   as a SEPARATE process — not imported here. Reason: `canvas` is a native addon
+   (.node binding); keeping it out of the main app's process entirely, same pattern
+   imageMirror.ts already uses for pdftoppm, avoids ever bundling/loading it inside
+   Next.js's server process. (An initial version of this fix mistakenly suspected a
+   conflict with `sharp`, also native and already in this module's import chain via
+   driveAvailabilitySync.ts — ruled out by reproduction: the worker fails identically
+   with sharp never loaded anywhere in the process. The real cause was node-canvas's
+   Linux build throwing inside its own drawImage for this document's one embedded
+   image; see the worker script's own comment for the actual fix.) */
 
 export type ColoredCell = { text: string; x: number; color: string | null };
 export type ColoredRow = { y: number; cells: ColoredCell[] };

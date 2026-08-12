@@ -1,12 +1,8 @@
 #!/usr/bin/env node
 // Standalone worker for src/lib/ai/pdfPricelistColors.ts — spawned as a separate
-// process, NEVER imported into the main app. Reason: `canvas` (native addon) and
-// `sharp` (also native, already loaded by src/lib/imageMirror.ts's import chain)
-// conflict when loaded into the same Node process — confirmed by reproduction,
-// both load fine alone, but together pdf.js's image-XObject rendering throws
-// "TypeError: Image or Canvas expected" inside canvas's own drawImage. Isolating
-// this in its own process (same pattern imageMirror.ts already uses for pdftoppm)
-// sidesteps the conflict entirely rather than working around it in-process.
+// process, NEVER imported into the main app, so `canvas` (a native .node addon)
+// never has to be loaded/bundled inside Next.js's server process — same isolation
+// pattern imageMirror.ts already uses for pdftoppm.
 //
 // Usage: node pdf-color-extract-worker.mjs <path-to-pdf> — prints ColoredRow[] JSON to stdout.
 import { createCanvas } from "canvas";
@@ -31,6 +27,15 @@ async function extractColoredRows(buf) {
     const viewport = page.getViewport({ scale: 2 });
     const canvas = createCanvas(viewport.width, viewport.height);
     const ctx = canvas.getContext("2d");
+    // No-op: this module only reads text position + fill color, never pixels — any
+    // embedded image (e.g. a logo) is irrelevant here, and node-canvas's Linux build
+    // throws inside its own drawImage for at least one real-world case (confirmed:
+    // this exact document's single paintImageXObject call, reproduced with sharp
+    // never loaded anywhere in the process, so it's not the sharp/canvas conflict
+    // this file's own history first suspected — a canvas-on-Linux image-drawing
+    // limitation instead). Skipping the draw entirely sidesteps it with no loss,
+    // since nothing here ever reads the rendered pixels.
+    ctx.drawImage = function () {};
 
     const fillRecords = [];
     const origFill = ctx.fill.bind(ctx);
