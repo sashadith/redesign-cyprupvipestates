@@ -50,11 +50,7 @@ const nextConfig = {
     // bundling this into the route chunk breaks that lookup (ENOENT at build
     // time collecting /api/analytics/track). Keeping it external makes Next
     // require() it from node_modules as-is instead.
-    // canvas (src/lib/ai/pdfPricelistColors.ts, 2026-08-12) is a native addon
-    // (.node binding) — webpack can't bundle that at all. pdfjs-dist alongside
-    // it for the same reason: it dynamically requires its own worker/font data
-    // relative to its own package directory, same failure mode as geoip-lite.
-    serverComponentsExternalPackages: ["geoip-lite", "canvas", "pdfjs-dist"],
+    serverComponentsExternalPackages: ["geoip-lite"],
   },
 };
 
