@@ -146,6 +146,26 @@ async function callTool(client: any, prompt: string, schema: any): Promise<any[]
   return [];
 }
 
+// Per-section unit extraction ONLY — no catalog call, no buildCanonicalMatcher
+// name resolution. Added 2026-08-12 for pdfPricelistExtract.ts, which already
+// knows its own project boundaries deterministically (detected from the PDF's
+// own section headers via real text-color positions, not guessed) and must
+// never route project identity through buildCanonicalMatcher's fuzzy word-overlap
+// scoring — confirmed on real data: "VENARA" and "VENARA VIEW" merged into one
+// project, because a guess that's a strict word-subset of a longer canonical name
+// scores a false 1.0 (full confidence) there. That scoring is shared by every
+// spreadsheet-sourced developer's sync too, so it isn't changed here — this
+// function just gives PDF-sourced projects a way to skip it entirely, using the
+// caller's own already-known project name as ground truth instead of asking the
+// model to guess and reconcile one. Every other extraction step (field parsing,
+// unit normalization) is identical to the section-level pass extractAvailability
+// FromPricelist already runs internally — same prompt, same schema, same model.
+export async function extractUnitsForSection(sectionText: string): Promise<any[]> {
+  const client = anthropic();
+  if (!client) throw new Error("ANTHROPIC_API_KEY not configured");
+  return callTool(client, PROMPT_UNITS + sectionText.slice(0, 30000), SCHEMA_UNITS);
+}
+
 const key = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
 const words = (s: string) => (s || "").toLowerCase().match(/[a-z0-9]+/g) || [];
 

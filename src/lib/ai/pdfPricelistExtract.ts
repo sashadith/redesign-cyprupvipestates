@@ -1,22 +1,42 @@
 import { extractColoredRowsFromPdf, classifyColor, type ColoredRow } from "./pdfPricelistColors";
-import { extractAvailabilityFromPricelist, type ExtractedPricelistProject } from "./pricelistExtract";
+import { extractUnitsForSection, type ExtractedPricelistProject, type ExtractedUnit } from "./pricelistExtract";
 
 /* PDF-native price-list extraction (Motive Point, 2026-08-12) — one combined PDF
    covering multiple projects in one table (section headers, not one-PDF-per-project
-   like importFromPdfs/extractProjectFromPdfs). Deliberately reuses
-   extractAvailabilityFromPricelist unchanged for every SEMANTIC field (ref, type,
-   beds, areas, price, project grouping) by converting the color-extracted table into
-   the same "### Project Name" flattened-text shape getSpreadsheetText already
-   produces for XLSX — all of that function's multi-project splitting, canonical-name
-   matching, and field-parsing machinery is proven and untouched.
+   like importFromPdfs/extractProjectFromPdfs). Reuses extractUnitsForSection
+   (pricelistExtract.ts) per detected project section for every semantic field (ref,
+   type, beds, price, ...) — same prompt/schema/model the spreadsheet path uses.
 
-   The ONE field never trusted to that AI pass is `status` — sold/reserved units are
-   shown only via grey text, and an AI's context-based guess at "does this look sold"
-   is not the same as reading the color the document actually used. Status here comes
-   EXCLUSIVELY from classifyColor() (see pdfPricelistColors.ts) and overwrites
-   whatever extractAvailabilityFromPricelist inferred. Anything the classifier can't
-   resolve to unambiguously black is NEVER written as "available" — it's dropped from
-   the batch entirely (see mergeColorStatus below) rather than guessed at. */
+   TWO fields are never trusted to that AI pass, both replaced with values read
+   deterministically from the PDF's own data:
+
+   1. `status` — sold/reserved units are shown only via grey text, no status column.
+      An AI's context-based guess at "does this look sold" is not the same as
+      reading the color the document actually used (see pdfPricelistColors.ts —
+      eyeballing this exact PDF visually misclassified 4 of 42 units). Status comes
+      EXCLUSIVELY from classifyColor(); anything not unambiguously black is dropped
+      from the batch entirely rather than guessed at (see mergeUnit below).
+
+   2. Project identity — extractAvailabilityFromPricelist's own catalog+
+      buildCanonicalMatcher name resolution is bypassed entirely for PDF sources.
+      Confirmed on this real document: "VENARA" and "VENARA VIEW" got merged into
+      one project, because buildCanonicalMatcher's word-overlap scoring gives a
+      guess that's a strict subset of a longer canonical name a false 1.0 (full
+      confidence) score. That scoring is shared by every spreadsheet-sourced
+      developer's sync, so it isn't touched here — instead, this module detects
+      project boundaries itself (ALL-CAPS section-header rows, positioned via the
+      same real text data pdfPricelistColors.ts already extracts) and uses its own
+      name as ground truth for every unit under it, via extractUnitsForSection
+      (pricelistExtract.ts) which does per-section field extraction only, no name
+      guessing/reconciliation at all.
+
+   Area figures (areaBuilt/areaPlot/areaVeranda/areaVerandaOpen) are ALSO read
+   deterministically, from the same column-position data used for status — not
+   because they're a safety concern, but because the fast model reformats/rounds
+   them inconsistently even when given the exact source text (confirmed: one unit's
+   345.78 came back as "346 m²"). Since the raw text is already unambiguous and
+   already extracted for the color table, using it directly for these fields costs
+   nothing extra and removes AI variability the source data never had. */
 
 export type PdfPricelistResult =
   | { blocked: true; message: string }
@@ -33,29 +53,52 @@ const AMBIGUOUS_ABS_FLOOR = 5;
 const isAllCaps = (s: string) => /[A-Z]/.test(s) && s === s.toUpperCase() && s.trim().length >= 2;
 // A "unit row" starts with something that looks like a reference — a short
 // alphanumeric token (A101, B205, 101, 7) — and has enough cells to be real table
-// data, not a stray label. Deliberately loose (feeds the color map, not the DB) —
-// a false positive here just means an extra unused color-map entry; a false
-// negative means a real unit's color never gets looked up, which the safety net
-// (unresolved -> dropped, never defaulted to available) still catches safely.
+// data, not a stray label. Deliberately loose (feeds the color/column maps, not the
+// DB) — a false positive just means an extra unused map entry; a false negative
+// means a real unit's data never gets looked up, which the safety net (unresolved
+// -> dropped, never defaulted to available) still catches safely.
 const looksLikeRef = (s: string) => /^[A-Za-z]?\d{1,4}[A-Za-z]?$/.test(s.trim());
 
-type FlattenResult = { text: string; colorByRef: Map<string, "black" | "grey" | "unclear">; totalUnitRows: number };
+// Header column label -> ExtractedUnit field, matched in order (first hit wins) so
+// e.g. a document that has BOTH "Internal Size" and "Total Covered" columns uses
+// the more complete "Total Covered" figure for areaBuilt (matches what the AI pass
+// already independently chose for this document's own areaBuilt semantics), only
+// falling back to "Internal Size" for a document that has no combined-total column.
+const AREA_FIELD_PATTERNS: { field: keyof ExtractedUnit; re: RegExp }[] = [
+  { field: "areaBuilt", re: /total\s*covered/i },
+  { field: "areaPlot", re: /plot/i },
+  // Negative lookbehind matters here: "covered veranda" is a literal substring of
+  // "uncovered veranda", so an unanchored /covered\s*veranda/i would match BOTH
+  // headers — it only picked the right one by accident before, because this
+  // document's own column order happens to put "Covered Veranda" ahead of
+  // "Uncovered Veranda" and Array.find() takes the first match.
+  { field: "areaVeranda", re: /(?<!un)covered\s*veranda/i },
+  { field: "areaVerandaOpen", re: /uncovered\s*veranda/i },
+  { field: "areaBuilt", re: /internal\s*size/i }, // fallback only reached if "total covered" never matched for this doc
+];
+const NO_VALUE_RE = /^(n\/?a|-|—|–|)$/i;
 
-// Converts the raw colored table into extractAvailabilityFromPricelist's expected
-// "### Project Name" text shape, AND builds the color-status lookup keyed by the
-// EXACT ref string that ends up in that text — including any block prefix, applied
-// here deterministically rather than left for the AI to reconstruct. This sidesteps
-// the one real risk in reusing that function: PROMPT_UNITS tells the model to
-// "prefix the block" itself from a bare "Block A" marker row, which would make an
-// independently-produced ref hard to match back against this module's own color
-// table. Baking the prefix in before either side ever sees the text means the same
-// string is used for BOTH the AI's input and this module's lookup key — no
-// reconciliation needed, only a defensive fallback (see mergeColorStatus) in case
-// the model still reformats it.
-function flattenToPricelistText(rows: ColoredRow[]): FlattenResult {
-  const lines: string[] = [];
+type Section = { projectName: string; unitRows: { ref: string; cells: string[] }[]; text: string };
+type FlattenResult = {
+  sections: Section[];
+  colorByRef: Map<string, "black" | "grey" | "unclear">;
+  areaByRef: Map<string, Partial<Record<keyof ExtractedUnit, string>>>;
+  totalUnitRows: number;
+};
+
+// Splits the colored row table into per-project sections (project name = ground
+// truth, never re-guessed downstream) and builds the deterministic color-status and
+// area-figure lookups, keyed by the SAME block-prefixed ref string that ends up in
+// each section's flattened text — so extractUnitsForSection's returned `ref` (asked
+// to use "the label as shown") matches this module's own keys by construction, with
+// a token-based fallback (see lookupByRef) if a future document still reformats it.
+function flattenToSections(rows: ColoredRow[]): FlattenResult {
+  const sections: Section[] = [];
   const colorByRef = new Map<string, "black" | "grey" | "unclear">();
+  const areaByRef = new Map<string, Partial<Record<keyof ExtractedUnit, string>>>();
   let currentBlock: string | null = null;
+  let currentSection: Section | null = null;
+  let headerCells: { label: string; x: number }[] = [];
   let totalUnitRows = 0;
 
   for (const row of rows) {
@@ -63,88 +106,135 @@ function flattenToPricelistText(rows: ColoredRow[]): FlattenResult {
     if (!cells.length) continue;
     const first = cells[0].text.trim();
 
+    // The column-header row ("Unit | List Price... | Delivery") — captured once,
+    // reused for every section (columns stay aligned for the whole document), and
+    // also prepended to each section's own text below so every AI call sees it.
+    if (!headerCells.length && /^unit$/i.test(first) && cells.some((c) => /price/i.test(c.text))) {
+      headerCells = cells.map((c) => ({ label: c.text.trim(), x: c.x }));
+      continue;
+    }
+
     if (cells.length <= 2 && isAllCaps(first)) {
-      // New project section. Reset the current block — a block label only ever
-      // applies within the section it appears in.
-      lines.push(`### ${first}`);
+      const fresh: Section = { projectName: first, unitRows: [], text: "" };
+      sections.push(fresh);
+      currentSection = fresh;
       currentBlock = null;
       continue;
     }
     if (cells.length === 1 && !isAllCaps(first)) {
-      // Sub-group label ("Block A", "Block B") — not a project, not a data row.
-      currentBlock = first;
+      currentBlock = first; // "Block A"/"Block B" — sub-group within the CURRENT section, not a new one
       continue;
     }
+    if (currentSection === null) continue; // stray row before the first real section header — ignore
+    const section: Section = currentSection;
 
     const isUnitRow = cells.length > 3 && looksLikeRef(first);
     if (isUnitRow) {
       totalUnitRows++;
       const ref = currentBlock ? `${currentBlock} ${first}` : first;
+      const refKey = ref.toLowerCase();
+
       const rowColors = cells.map((c) => classifyColor(c.color));
       const distinct = new Set(rowColors);
       // Row-level consistency required, same as the verification step: if this
       // row's own cells don't all agree, the unit's status is unresolved — never
       // pick a majority winner for something this safety-critical.
-      const status = distinct.size === 1 ? rowColors[0] : "unclear";
-      colorByRef.set(ref.toLowerCase(), status);
-      lines.push([ref, ...cells.slice(1).map((c) => c.text)].join("\t"));
-    } else {
-      lines.push(cells.map((c) => c.text).join("\t"));
+      colorByRef.set(refKey, distinct.size === 1 ? rowColors[0] : "unclear");
+
+      if (headerCells.length) {
+        const raw: Partial<Record<keyof ExtractedUnit, string>> = {};
+        for (const { field, re } of AREA_FIELD_PATTERNS) {
+          if (raw[field]) continue; // already set by an earlier (preferred) pattern
+          const col = headerCells.find((h) => re.test(h.label));
+          if (!col) continue;
+          const cell = cells.reduce((best, c) => (Math.abs(c.x - col.x) < Math.abs((best?.x ?? Infinity) - col.x) ? c : best), null as (typeof cells)[number] | null);
+          const text = cell?.text.trim();
+          if (text && !NO_VALUE_RE.test(text)) raw[field] = text;
+        }
+        areaByRef.set(refKey, raw);
+      }
+
+      section.unitRows.push({ ref, cells: [ref, ...cells.slice(1).map((c) => c.text)] });
     }
   }
-  return { text: lines.join("\n"), colorByRef, totalUnitRows };
+
+  const headerLine = headerCells.length ? headerCells.map((h) => h.label).join("\t") : "";
+  for (const s of sections) {
+    s.text = [headerLine, ...s.unitRows.map((r) => r.cells.join("\t"))].filter(Boolean).join("\n");
+  }
+  return { sections, colorByRef, areaByRef, totalUnitRows };
 }
 
-// Matches an AI-extracted unit's `ref` back to this module's color table. Primary
-// path is exact match on the lowercased ref (expected, since the flattened text
-// already carries the block-prefixed form and the prompt asks for "the label as
-// shown"). Fallback: the AI reformatted it — accept a match only if the color
-// table's key is fully contained as a token, never a loose substring that could
+// Matches an AI-extracted unit's `ref` back to this module's color/area tables.
+// Primary path is exact match on the lowercased ref (expected, since the flattened
+// text already carries the block-prefixed form and the prompt asks for "the label
+// as shown"). Fallback: the AI reformatted it — accept a match only if the table's
+// key is fully contained as a set of tokens, never a loose substring that could
 // cross-match a different unit (e.g. "1" inside "101").
-function lookupColor(ref: string, colorByRef: Map<string, "black" | "grey" | "unclear">): "black" | "grey" | "unclear" | undefined {
+function lookupByRef<T>(ref: string, table: Map<string, T>): T | undefined {
   const norm = ref.toLowerCase().trim();
-  if (colorByRef.has(norm)) return colorByRef.get(norm);
+  if (table.has(norm)) return table.get(norm);
   const normTokens = norm.split(/[^a-z0-9]+/).filter(Boolean);
-  for (const [key, status] of Array.from(colorByRef.entries())) {
-    const keyTokens = key.split(/[^a-z0-9]+/).filter(Boolean);
-    if (keyTokens.length && keyTokens.every((t) => normTokens.includes(t))) return status;
+  for (const [k, v] of Array.from(table.entries())) {
+    const keyTokens = k.split(/[^a-z0-9]+/).filter(Boolean);
+    if (keyTokens.length && keyTokens.every((t) => normTokens.includes(t))) return v;
   }
   return undefined;
 }
 
-export async function extractPricelistFromPdf(buf: Buffer, full: boolean): Promise<PdfPricelistResult> {
+export async function extractPricelistFromPdf(buf: Buffer, _full: boolean): Promise<PdfPricelistResult> {
   const rows = await extractColoredRowsFromPdf(buf);
-  const { text, colorByRef, totalUnitRows } = flattenToPricelistText(rows);
+  const { sections, colorByRef, areaByRef, totalUnitRows } = flattenToSections(rows);
   if (!totalUnitRows) return { blocked: true, message: "No unit rows recognized in the PDF (color-table extraction found nothing to parse)." };
-
-  const projects = await extractAvailabilityFromPricelist(text, full);
-  if (!projects.length) return { blocked: true, message: "Could not extract any projects from the PDF price list." };
 
   let totalUnits = 0, unresolvedUnits = 0;
   const resultProjects: ExtractedPricelistProject[] = [];
-  for (const p of projects) {
-    const keptUnits = [];
-    for (const u of p.units) {
+
+  for (const section of sections) {
+    if (!section.unitRows.length) continue;
+    const items = await extractUnitsForSection(section.text);
+    const keptUnits: ExtractedUnit[] = [];
+    for (const u of items) {
+      if (!u?.ref) continue;
       totalUnits++;
-      const colorStatus = lookupColor(u.ref, colorByRef);
-      if (colorStatus === "black") {
-        keptUnits.push({ ...u, status: "available" as const });
-      } else if (colorStatus === "grey") {
+      const colorStatus = lookupByRef(String(u.ref), colorByRef);
+      if (colorStatus !== "black" && colorStatus !== "grey") {
+        // "unclear" or no match at all — never default to available. Drop the
+        // unit rather than guess.
+        unresolvedUnits++;
+        continue;
+      }
+      const areaOverrides = lookupByRef(String(u.ref), areaByRef) ?? {};
+      keptUnits.push({
+        ref: String(u.ref),
+        bedrooms: u.bedrooms || undefined,
+        bathrooms: u.bathrooms || undefined,
+        areaGroundFloor: u.areaGroundFloor || undefined,
+        areaUpperFloor: u.areaUpperFloor || undefined,
+        parking: u.parking || undefined,
+        storage: u.storage || undefined,
+        pool: u.pool || undefined,
+        extras: u.extras || undefined,
+        // Deterministic column reads win whenever available; the AI's own value is
+        // only ever a fallback for a field this document's header didn't have a
+        // recognizable column for.
+        areaBuilt: areaOverrides.areaBuilt ?? u.areaBuilt ?? undefined,
+        areaPlot: areaOverrides.areaPlot ?? u.areaPlot ?? undefined,
+        areaVeranda: areaOverrides.areaVeranda ?? u.areaVeranda ?? undefined,
+        areaVerandaOpen: areaOverrides.areaVerandaOpen ?? u.areaVerandaOpen ?? undefined,
+        price: colorStatus === "black" ? (typeof u.price === "number" ? u.price : null) : null,
+        status: colorStatus === "black" ? "available" : "sold",
         // Grey means "not available" — sold vs reserved can't be told apart by
         // color alone; "sold" is the far more common real-world meaning of a
-        // greyed-out price-list row (see the investigation report). Neither
-        // value can ever surface as buyable, which is the actual safety
-        // requirement — this default is a labeling judgment call, not a safety
-        // one, and is called out explicitly for review.
-        keptUnits.push({ ...u, status: "sold" as const, price: null });
-      } else {
-        // colorStatus is "unclear" or undefined (no match at all) — never
-        // default to available. Drop the unit rather than guess.
-        unresolvedUnits++;
-      }
+        // greyed-out price-list row. Neither value can ever surface as buyable,
+        // which is the actual safety requirement — this default is a labeling
+        // judgment call, not a safety one.
+      });
     }
-    if (keptUnits.length) resultProjects.push({ ...p, units: keptUnits });
+    if (keptUnits.length) resultProjects.push({ project: section.projectName, units: keptUnits });
   }
+
+  if (!resultProjects.length) return { blocked: true, message: "Could not extract any projects from the PDF price list." };
 
   const ambiguousPct = totalUnits > 0 ? unresolvedUnits / totalUnits : 0;
   if (unresolvedUnits > AMBIGUOUS_ABS_FLOOR && ambiguousPct > AMBIGUOUS_PCT) {
