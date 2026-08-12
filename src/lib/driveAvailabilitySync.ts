@@ -88,7 +88,7 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
   // fallback right below, the info-document description source further down, and
   // images/plans at the end. `findSubfolder` only reads the already-fetched `files`
   // listing (no extra API call), so resolving it this early costs nothing.
-  const subId = content ? findSubfolder(files, p.project)?.id ?? null : null;
+  const subId = content ? (await findSubfolder(files, p.project, at))?.id ?? null : null;
 
   // The price list's "Location:" row is often a goo.gl/maps.app shortlink that
   // doesn't carry coordinates itself — resolve it via redirect so the map location
@@ -332,7 +332,7 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
       where: { developerAccountId, feedProjectId: opts.onlyFeedProjectId },
       select: { publicName: true, driveFolderId: true },
     });
-    const subId = existingDev?.driveFolderId || findSubfolder(files, existingDev?.publicName ?? "")?.id || null;
+    const subId = existingDev?.driveFolderId || (await findSubfolder(files, existingDev?.publicName ?? "", at))?.id || null;
     if (subId) {
       const subFiles = await listFolder(subId, at);
       price = findPriceFile(subFiles);
