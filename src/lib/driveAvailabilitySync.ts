@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { driveConfigured, folderIdFromUrl, getAccessToken, listFolder, findPriceFile, getSpreadsheetText, findSubfolder, findInfoDocuments, collectMedia, downloadFile, type DriveFile } from "./googleDrive";
 import { extractAvailabilityFromPricelist, buildCanonicalMatcher, type ExtractedPricelistProject } from "./ai/pricelistExtract";
+import { extractPricelistFromPdf } from "./ai/pdfPricelistExtract";
 import { generateProjectDescription } from "./ai/projectDescription";
 import { extractTextFromDocx, extractTextFromPdf } from "./ai/projectInfoExtract";
 import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart } from "./imageMirror";
@@ -344,11 +345,24 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
     return { ok: true, skipped: true, message: `Unchanged since last sync (${price.name}).` };
   }
 
-  const text = await getSpreadsheetText(price, at);
   // The extra project-level calls (location/mapsUrl/type/completion/amenities/notes)
   // only read the same spreadsheet text — no media involved — so run them for the
   // units-only sync too, not just a full import.
-  const extracted = await extractAvailabilityFromPricelist(text, !!opts.content || !!opts.richUnits);
+  const richness = !!opts.content || !!opts.richUnits;
+  let extracted: ExtractedPricelistProject[];
+  if (price.mimeType === "application/pdf") {
+    // PDF price list (2026-08-12, Motive Point) — status comes from the document's
+    // own text color, never from AI reading; see pdfPricelistExtract.ts's doc
+    // comment. A blocked result means too many units had unresolvable color —
+    // nothing gets written, same as the "no price-list found" case below.
+    const buf = await downloadFile(price.id, at);
+    const result = await extractPricelistFromPdf(buf, richness);
+    if (result.blocked) return { ok: false, message: result.message };
+    extracted = result.projects;
+  } else {
+    const text = await getSpreadsheetText(price, at);
+    extracted = await extractAvailabilityFromPricelist(text, richness);
+  }
   if (!extracted.length) return { ok: false, message: "Could not extract any projects from the price list." };
 
   // Extra stability layer: once a project has been synced before, its stored

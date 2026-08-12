@@ -40,15 +40,31 @@ export async function listFolder(folderId: string, accessToken: string): Promise
 
 const SHEET_MIME = "application/vnd.google-apps.spreadsheet";
 const XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+const PDF_MIME_FOR_PRICELIST = "application/pdf";
 
 // The price list = a spreadsheet whose name looks like one, else the most recently
-// modified spreadsheet in the folder.
+// modified spreadsheet in the folder. Spreadsheets are strictly preferred — a
+// developer who provides both keeps using the more reliable source.
+//
+// PDF (2026-08-12, Motive Point) — some developers only ever export a combined PDF,
+// no spreadsheet at all. A PDF candidate is ONLY ever considered when its name also
+// matches the same price-list pattern (never "any PDF in the folder" — a folder can
+// easily hold an unrelated brochure/spec PDF at root level, see e.g. Olias Homes'
+// "Payment Schedule…docx" sitting right next to its real price list). Downstream,
+// syncDeveloperDrive branches on the returned file's mimeType and routes a PDF match
+// through pdfPricelistExtract.ts instead of getSpreadsheetText — see that module's
+// doc comment for why status is never read from the PDF text itself.
 export function findPriceFile(files: DriveFile[]): DriveFile | null {
+  const NAME_RE = /price\s*list|pricelist|availab|sales/i;
   const sheets = files.filter((f) => f.mimeType === SHEET_MIME || f.mimeType === XLSX_MIME);
-  if (!sheets.length) return null;
-  const named = sheets.filter((f) => /price\s*list|pricelist|availab|sales/i.test(f.name));
-  const pool = named.length ? named : sheets;
-  return pool.sort((a, b) => (a.modifiedTime < b.modifiedTime ? 1 : -1))[0];
+  const namedSheets = sheets.filter((f) => NAME_RE.test(f.name));
+  const sheetPool = namedSheets.length ? namedSheets : sheets;
+  if (sheetPool.length) return sheetPool.sort((a, b) => (a.modifiedTime < b.modifiedTime ? 1 : -1))[0];
+
+  const namedPdfs = files.filter((f) => f.mimeType === PDF_MIME_FOR_PRICELIST && NAME_RE.test(f.name));
+  if (namedPdfs.length) return namedPdfs.sort((a, b) => (a.modifiedTime < b.modifiedTime ? 1 : -1))[0];
+
+  return null;
 }
 
 const FOLDER_MIME = "application/vnd.google-apps.folder";
