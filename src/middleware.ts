@@ -52,6 +52,20 @@ const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
   "blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern": "/de/blog/immobilien-zypern-mit-garantierten-mieteinnahmen",
 };
 
+// English (unprefixed) landing-page merges — same shape/mechanism as
+// DE_LANDING_MERGES above, kept separate because DE_LANDING_MERGES is only
+// ever checked under the /de/ prefix. First entry (2026-08-12):
+// villas-limassol merged into houses-in-limassol — confirmed duplicate via
+// the landing-page type-filter investigation: both resolve to the identical
+// Limassol+Villa filtered inventory once each is correctly configured, and
+// villas-limassol has no locale siblings of its own (EN-only page, separate
+// translationGroupId from the houses-in-limassol group). Same unconditional-
+// on-DB-status behavior as RETIRED_BLOG_REDIRECTS — ships ahead of the
+// unpublish so there's no 404 gap.
+const EN_LANDING_MERGES: Record<string, string> = {
+  "villas-limassol": "/houses-in-cyprus/houses-in-limassol",
+};
+
 export default async function middleware(request: NextRequest) {
   const deMergeMatch = request.nextUrl.pathname.match(/^\/de\/(.+)$/);
   if (deMergeMatch && DE_LANDING_MERGES[deMergeMatch[1]]) {
@@ -63,6 +77,13 @@ export default async function middleware(request: NextRequest) {
   if (deMergeMatch && RETIRED_BLOG_REDIRECTS[deMergeMatch[1]]) {
     const url = request.nextUrl.clone();
     url.pathname = RETIRED_BLOG_REDIRECTS[deMergeMatch[1]];
+    url.search = "";
+    return NextResponse.redirect(url, 301);
+  }
+  const enMergeMatch = request.nextUrl.pathname.match(/^\/([^/]+)$/);
+  if (enMergeMatch && EN_LANDING_MERGES[enMergeMatch[1]]) {
+    const url = request.nextUrl.clone();
+    url.pathname = EN_LANDING_MERGES[enMergeMatch[1]];
     url.search = "";
     return NextResponse.redirect(url, 301);
   }
