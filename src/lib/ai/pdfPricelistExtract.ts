@@ -78,24 +78,31 @@ const AREA_FIELD_PATTERNS: { field: keyof ExtractedUnit; re: RegExp }[] = [
 ];
 const NO_VALUE_RE = /^(n\/?a|-|—|–|)$/i;
 
-type Section = { projectName: string; unitRows: { ref: string; cells: string[] }[]; text: string };
-type FlattenResult = {
-  sections: Section[];
+type Section = {
+  projectName: string;
+  unitRows: { ref: string; cells: string[] }[];
+  text: string;
+  // Scoped PER SECTION, not document-wide — confirmed necessary, not just tidy:
+  // extractUnitsForSection sometimes (non-deterministically — the fast model isn't
+  // temperature-0) echoes a unit's ref WITHOUT its block prefix ("A101" instead of
+  // "Block A A101"), even though the prompt asks for "the label as shown" and the
+  // flattened text it was given has the prefix on every row. Section-scoping is
+  // defense in depth against a short reformatted ref (e.g. a bare "1") ever
+  // cross-matching a same-named unit in a DIFFERENT project's own table — this
+  // document's sections don't actually collide that way, but nothing should rely
+  // on that staying true for every future price list.
   colorByRef: Map<string, "black" | "grey" | "unclear">;
   areaByRef: Map<string, Partial<Record<keyof ExtractedUnit, string>>>;
-  totalUnitRows: number;
 };
 
 // Splits the colored row table into per-project sections (project name = ground
-// truth, never re-guessed downstream) and builds the deterministic color-status and
-// area-figure lookups, keyed by the SAME block-prefixed ref string that ends up in
-// each section's flattened text — so extractUnitsForSection's returned `ref` (asked
-// to use "the label as shown") matches this module's own keys by construction, with
-// a token-based fallback (see lookupByRef) if a future document still reformats it.
-function flattenToSections(rows: ColoredRow[]): FlattenResult {
+// truth, never re-guessed downstream) and builds each section's own deterministic
+// color-status and area-figure lookups, keyed by the SAME block-prefixed ref string
+// that ends up in that section's flattened text — so extractUnitsForSection's
+// returned `ref` matches by construction when the model echoes it as given, with a
+// token-subset fallback (see lookupByRef) for when it doesn't.
+function flattenToSections(rows: ColoredRow[]): { sections: Section[]; totalUnitRows: number } {
   const sections: Section[] = [];
-  const colorByRef = new Map<string, "black" | "grey" | "unclear">();
-  const areaByRef = new Map<string, Partial<Record<keyof ExtractedUnit, string>>>();
   let currentBlock: string | null = null;
   let currentSection: Section | null = null;
   let headerCells: { label: string; x: number }[] = [];
@@ -115,7 +122,7 @@ function flattenToSections(rows: ColoredRow[]): FlattenResult {
     }
 
     if (cells.length <= 2 && isAllCaps(first)) {
-      const fresh: Section = { projectName: first, unitRows: [], text: "" };
+      const fresh: Section = { projectName: first, unitRows: [], text: "", colorByRef: new Map(), areaByRef: new Map() };
       sections.push(fresh);
       currentSection = fresh;
       currentBlock = null;
@@ -139,7 +146,7 @@ function flattenToSections(rows: ColoredRow[]): FlattenResult {
       // Row-level consistency required, same as the verification step: if this
       // row's own cells don't all agree, the unit's status is unresolved — never
       // pick a majority winner for something this safety-critical.
-      colorByRef.set(refKey, distinct.size === 1 ? rowColors[0] : "unclear");
+      section.colorByRef.set(refKey, distinct.size === 1 ? rowColors[0] : "unclear");
 
       if (headerCells.length) {
         const raw: Partial<Record<keyof ExtractedUnit, string>> = {};
@@ -151,7 +158,7 @@ function flattenToSections(rows: ColoredRow[]): FlattenResult {
           const text = cell?.text.trim();
           if (text && !NO_VALUE_RE.test(text)) raw[field] = text;
         }
-        areaByRef.set(refKey, raw);
+        section.areaByRef.set(refKey, raw);
       }
 
       section.unitRows.push({ ref, cells: [ref, ...cells.slice(1).map((c) => c.text)] });
@@ -162,29 +169,32 @@ function flattenToSections(rows: ColoredRow[]): FlattenResult {
   for (const s of sections) {
     s.text = [headerLine, ...s.unitRows.map((r) => r.cells.join("\t"))].filter(Boolean).join("\n");
   }
-  return { sections, colorByRef, areaByRef, totalUnitRows };
+  return { sections, totalUnitRows };
 }
 
-// Matches an AI-extracted unit's `ref` back to this module's color/area tables.
+// Matches an AI-extracted unit's `ref` back to this section's color/area tables.
 // Primary path is exact match on the lowercased ref (expected, since the flattened
 // text already carries the block-prefixed form and the prompt asks for "the label
-// as shown"). Fallback: the AI reformatted it — accept a match only if the table's
-// key is fully contained as a set of tokens, never a loose substring that could
-// cross-match a different unit (e.g. "1" inside "101").
+// as shown"). Fallback: the model dropped part of it (observed: "Block A A101"
+// echoed back as bare "A101") — accept a match only if EVERY token in the model's
+// ref also appears in one table key (the ref is a reduced subset of the full key,
+// never the other way around: a short ref like "1" must not match a longer key like
+// "block a a101" just because "1" isn't literally one of the key's own tokens).
 function lookupByRef<T>(ref: string, table: Map<string, T>): T | undefined {
   const norm = ref.toLowerCase().trim();
   if (table.has(norm)) return table.get(norm);
   const normTokens = norm.split(/[^a-z0-9]+/).filter(Boolean);
+  if (!normTokens.length) return undefined;
   for (const [k, v] of Array.from(table.entries())) {
-    const keyTokens = k.split(/[^a-z0-9]+/).filter(Boolean);
-    if (keyTokens.length && keyTokens.every((t) => normTokens.includes(t))) return v;
+    const keyTokens = new Set(k.split(/[^a-z0-9]+/).filter(Boolean));
+    if (normTokens.every((t) => keyTokens.has(t))) return v;
   }
   return undefined;
 }
 
 export async function extractPricelistFromPdf(buf: Buffer, _full: boolean): Promise<PdfPricelistResult> {
   const rows = await extractColoredRowsFromPdf(buf);
-  const { sections, colorByRef, areaByRef, totalUnitRows } = flattenToSections(rows);
+  const { sections, totalUnitRows } = flattenToSections(rows);
   if (!totalUnitRows) return { blocked: true, message: "No unit rows recognized in the PDF (color-table extraction found nothing to parse)." };
 
   let totalUnits = 0, unresolvedUnits = 0;
@@ -197,14 +207,14 @@ export async function extractPricelistFromPdf(buf: Buffer, _full: boolean): Prom
     for (const u of items) {
       if (!u?.ref) continue;
       totalUnits++;
-      const colorStatus = lookupByRef(String(u.ref), colorByRef);
+      const colorStatus = lookupByRef(String(u.ref), section.colorByRef);
       if (colorStatus !== "black" && colorStatus !== "grey") {
         // "unclear" or no match at all — never default to available. Drop the
         // unit rather than guess.
         unresolvedUnits++;
         continue;
       }
-      const areaOverrides = lookupByRef(String(u.ref), areaByRef) ?? {};
+      const areaOverrides = lookupByRef(String(u.ref), section.areaByRef) ?? {};
       keptUnits.push({
         ref: String(u.ref),
         bedrooms: u.bedrooms || undefined,
