@@ -11,6 +11,7 @@ import { getDbProjectsByIds } from "@/lib/developmentRender";
 import { resolveDevelopmentPrice, toDeliveryQuarter } from "@/lib/developmentCard";
 import { normalizeRef } from "@/lib/unitRef";
 import type { MatchFilters } from "@/lib/crm/matching";
+import { SITE_URL } from "@/lib/seo";
 import { asPLocale, COPY, timeOfDayGreeting } from "./copy";
 import HeroGreeting from "./HeroGreeting";
 import PresentationBody, { type PresentationDevelopmentVM } from "./PresentationBody";
@@ -19,6 +20,13 @@ import ViewTracker from "./ViewTracker";
 
 export const dynamic = "force-dynamic";
 
+// No openGraph.images set previously — WhatsApp/Facebook's crawler fell back
+// to apple-icon.png (the homescreen bookmark icon, not meant as a share
+// thumbnail). Explicit image here (2026-08-13, Sascha's request) stops that
+// silent fallback for this route specifically, without touching the actual
+// site-wide apple-icon.
+const PRESENTATION_OG_IMAGE = `${SITE_URL}/og/presentation-1000x1000.jpg`;
+
 // No per-token content in the metadata — never leak a client's name or
 // selection into a link preview, browser history entry, or shared screenshot.
 export async function generateMetadata(): Promise<Metadata> {
@@ -26,6 +34,11 @@ export async function generateMetadata(): Promise<Metadata> {
     title: "Your Property Selection - Cyprus VIP Estates",
     description: "A personal property selection.",
     robots: { index: false, follow: false },
+    openGraph: {
+      title: "Your Property Selection - Cyprus VIP Estates",
+      description: "A personal property selection.",
+      images: [{ url: PRESENTATION_OG_IMAGE, width: 1000, height: 1000 }],
+    },
   };
 }
 
