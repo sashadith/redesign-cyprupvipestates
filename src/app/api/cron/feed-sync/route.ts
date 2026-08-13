@@ -102,7 +102,13 @@ export async function GET(req: NextRequest) {
         await logCronRun(`feed-incomplete:${r.dev}`, false, r.blockedMessage);
         continue;
       }
-      await logCronRun(`feed-sync:${r.dev}`, r.failed === 0, r.failed === 0 ? undefined : `${r.failed}/${r.found} project(s) failed`);
+      // 2026-08-13 (GROSSER AUFTRAG Teil 5) — was undefined on success, so the
+      // morning summary (action-digest) had nothing to show per developer
+      // beyond a bare checkmark. found/created/updated are already computed.
+      const message = r.failed === 0
+        ? `${r.found} project(s), ${r.created} new, ${r.updated} updated`
+        : `${r.failed}/${r.found} project(s) failed`;
+      await logCronRun(`feed-sync:${r.dev}`, r.failed === 0, message);
     }
     // Status-only sync for manual developments — the normal syncAll() above
     // skips them entirely (any manual unit locks the whole Development out
