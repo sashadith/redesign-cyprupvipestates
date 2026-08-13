@@ -377,7 +377,13 @@ export async function writeKuutioDraft(developerAccountId: string): Promise<Kuut
         ...(gallery.length ? { gallery } : {}),
         ...(plans.length ? { plans } : {}),
       },
-      update: { unitsTotal: r.units.length, unitsAvailable: avail, syncedAt: new Date() },
+      update: {
+        unitsTotal: r.units.length, unitsAvailable: avail, syncedAt: new Date(),
+        ...(geo ? { latitude: geo.lat, longitude: geo.lng } : {}),
+        ...(amenities.length ? { amenities } : {}),
+        ...(gallery.length ? { gallery } : {}),
+        ...(plans.length ? { plans } : {}),
+      },
     });
     await recomputeDevelopmentDistances(dev.id);
 

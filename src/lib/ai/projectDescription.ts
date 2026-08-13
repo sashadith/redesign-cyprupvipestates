@@ -64,32 +64,44 @@ Rules:
 - Vary sentence length and rhythm; write like a human editor, not a template. It must read as original and NOT machine-generated.
 - Structure the copy as 2–3 short paragraphs separated by a blank line (a real double newline "\n\n"). Suggested flow: location & setting · the development, units & amenities · interiors and who it suits.
 - Write FULLY in each target language — never leave English terms untranslated (e.g. "off plan" → DE "im Vorverkauf" / PL "w przedsprzedaży" / RU "на стадии строительства"; "en-suite", "BBQ" etc. likewise).
+- The source text above may itself be written in, or mixed with, a language other than English (e.g. Russian marketing copy). Translate its meaning only — never let a word or phrase from the source's own language leak into any of the four output fields. Each field must be 100% in its own target language, with zero exceptions.
 - Use proper typographic dashes ("–"), never a spaced hyphen (" - ").
 - Return the SAME description written natively (not translated word-for-word) in four languages.
 
 Return via the description tool.` + tuningBlock({ emphasize: ctx.emphasize, avoid: ctx.avoid });
 
-  const msg = await client.messages.create({
-    model: AI_MODEL,
-    max_tokens: 3000,
-    tools: [
-      {
-        name: "description",
-        description: "The property description in four native languages.",
-        input_schema: {
-          type: "object",
-          properties: { en: { type: "string" }, de: { type: "string" }, pl: { type: "string" }, ru: { type: "string" } },
-          required: ["en", "de", "pl", "ru"],
-        } as any,
-      },
-    ],
-    tool_choice: { type: "tool", name: "description" },
-    messages: [{ role: "user", content: prompt }],
-  });
+  const CYRILLIC_RE = /[Ѐ-ӿ]/;
+  const hasLeakedCyrillic = (out: FourLang) => CYRILLIC_RE.test(out.en) || CYRILLIC_RE.test(out.de) || CYRILLIC_RE.test(out.pl);
 
-  const tool = msg.content.find((b: any) => b.type === "tool_use") as any;
-  const p = (tool?.input ?? {}) as Partial<FourLang>;
-  const out = { en: p.en ?? "", de: p.de ?? "", pl: p.pl ?? "", ru: p.ru ?? "" };
-  if (!out.en && !out.de && !out.pl && !out.ru) throw new Error(`No content (stop: ${msg.stop_reason})`);
-  return out;
+  const attempt = async (): Promise<FourLang> => {
+    const msg = await client.messages.create({
+      model: AI_MODEL,
+      max_tokens: 3000,
+      tools: [
+        {
+          name: "description",
+          description: "The property description in four native languages.",
+          input_schema: {
+            type: "object",
+            properties: { en: { type: "string" }, de: { type: "string" }, pl: { type: "string" }, ru: { type: "string" } },
+            required: ["en", "de", "pl", "ru"],
+          } as any,
+        },
+      ],
+      tool_choice: { type: "tool", name: "description" },
+      messages: [{ role: "user", content: prompt }],
+    });
+
+    const tool = msg.content.find((b: any) => b.type === "tool_use") as any;
+    const p = (tool?.input ?? {}) as Partial<FourLang>;
+    const out = { en: p.en ?? "", de: p.de ?? "", pl: p.pl ?? "", ru: p.ru ?? "" };
+    if (!out.en && !out.de && !out.pl && !out.ru) throw new Error(`No content (stop: ${msg.stop_reason})`);
+    return out;
+  };
+
+  const first = await attempt();
+  if (!hasLeakedCyrillic(first)) return first;
+  // Non-target-language leak into en/de/pl (source text was itself multilingual) — retry once.
+  const second = await attempt();
+  return hasLeakedCyrillic(second) ? first : second;
 }
