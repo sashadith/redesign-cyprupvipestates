@@ -117,20 +117,30 @@ async function morningSyncSummaryLines(): Promise<string[]> {
   const rows = await prisma.cronRunLog.findMany({
     where: {
       ranAt: { gte: since },
-      OR: [{ job: { in: ["feed-sync", "drive-sync"] } }, { job: { startsWith: "feed-sync:" } }, { job: { startsWith: "drive-sync:" } }],
+      OR: [
+        { job: { in: ["feed-sync", "drive-sync", "kuutio-sync"] } },
+        { job: { startsWith: "feed-sync:" } },
+        { job: { startsWith: "drive-sync:" } },
+      ],
     },
     orderBy: { ranAt: "desc" },
   });
   const aggFeed = rows.find((r) => r.job === "feed-sync");
   const aggDrive = rows.find((r) => r.job === "drive-sync");
+  // kuutio-sync isn't on a schedule yet (manual-trigger only — see that
+  // route's own comment), so unlike feed-sync/drive-sync it only gets a line
+  // when it actually ran, never a "did not run" warning for an interval
+  // that doesn't exist.
+  const aggKuutio = rows.find((r) => r.job === "kuutio-sync");
 
   const lines = ["", "<b>🌅 Morning sync summary</b>"];
-  if (!aggFeed && !aggDrive) {
+  if (!aggFeed && !aggDrive && !aggKuutio) {
     lines.push(`⚠️ Neither feed-sync nor drive-sync ran in the last ${MORNING_SUMMARY_WINDOW_HOURS}h — the cron itself may not have fired.`);
     return lines;
   }
   lines.push(aggFeed ? `Feed sync: ${aggFeed.ok ? "✅" : "❌"} ${escapeHtml(aggFeed.message ?? "")}` : "Feed sync: ⚠️ did not run");
   lines.push(aggDrive ? `Drive sync: ${aggDrive.ok ? "✅" : "❌"} ${escapeHtml(aggDrive.message ?? "")}` : "Drive sync: ⚠️ did not run");
+  if (aggKuutio) lines.push(`Kuutio sync: ${aggKuutio.ok ? "✅" : "❌"} ${escapeHtml(aggKuutio.message ?? "")}`);
 
   const seen = new Set<string>();
   const perDev = rows
