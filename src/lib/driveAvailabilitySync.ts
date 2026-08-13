@@ -360,7 +360,7 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
     } catch { /* media is best-effort */ }
   }
 
-  return { avail, mediaChanged };
+  return { avail, mediaChanged, ...(pruneBlocked ? { pruneBlocked } : {}) };
 }
 
 export async function syncDeveloperDrive(developerAccountId: string, opts: { force?: boolean; content?: boolean; richUnits?: boolean; onlyFeedProjectId?: string } = {}): Promise<DriveSyncResult> {
