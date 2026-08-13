@@ -84,6 +84,36 @@ Belege aus der Praxis:
 
 ## §4 Nicht-Bild-Regeln
 
+- **Projektnamen: Title Case, nie Versalien — unabhängig von der Quelle.**
+  Jedes Wort beginnt groß, der Rest klein: "Trees Residences", nie "TREES
+  RESIDENCES". Gilt für JEDE Quelle — Dropbox-/Drive-Ordnernamen, XML-Feeds,
+  PDF-Überschriften, KI-Extraktion — egal wie die Quelle es liefert.
+  Gemeinsame Funktion: `toTitleCaseName()` in `src/lib/textCase.ts`, genutzt
+  von jedem Adapter in `src/app/preview-project/feeds.ts` sowie von
+  `pricelistExtract.ts`/`pdfPricelistExtract.ts` (Drive/PDF-KI-Extraktion).
+  Immer an der Stelle anwenden, wo der Anzeigename erstmals aus Rohtext
+  entsteht, VOR einem `OVERRIDES`-Lookup — ein von Hand gesetzter
+  Override-Name ist eine bewusste Entscheidung und wird nie neu
+  großgeschrieben. Kein Ausnahme-Wortkatalog (kein "of"/"and"/"the" klein) —
+  jedes Wort wird großgeschrieben, exakt wie die Regel lautet. Neuer
+  Bauträger, neue Quelle: `toTitleCaseName()` importieren und an der Stelle
+  anwenden, an der der Projektname zum ersten Mal aus der Quelle kommt —
+  nicht neu erfinden.
+  Wichtig: Bei bereits veröffentlichten Projekten greift das nicht rückwirkend
+  — `publicName` ist für published-Projekte eingefroren (siehe §3). Ein
+  bestehender Versalien-Name bleibt bestehen, bis er von Hand korrigiert
+  oder gezielt nachgezogen wird.
+- **Zuordnung von Quell-Ordnern/-Einträgen zu Datensätzen bleibt strikt pro
+  Bauträger.** `buildCanonicalMatcher()` (`pricelistExtract.ts`) darf NIE mit
+  Namen aus mehreren Bauträgern gleichzeitig aufgerufen werden — beide
+  bestehenden Aufrufstellen sind bereits so gebaut (gescoped auf eine
+  `developerAccountId` bzw. ein einzelnes Preislisten-Dokument). Nicht wegen
+  Namensüberschneidungen (die sind unwahrscheinlich), sondern strukturell:
+  ein Ordner/Eintrag darf nie versehentlich das Projekt eines ANDEREN
+  Bauträgers treffen — das ist dieselbe Fehlerklasse wie der
+  Venara/Venara-View-Bug (2026-08-13), nur eine Ebene höher (Bauträger statt
+  Projekt). Jeder neue Adapter, der eine Zuordnungs-/Matching-Funktion
+  braucht, muss sie genauso scopen.
 - **Verschwundene Units werden `unlisted`, nie `sold`.** "Fehlt im Feed" ist
   kein Beleg für "verkauft" — ein Feed-Fehler oder eine Datenlücke sieht
   identisch aus. Konkreter Fall: Salt war aus dem Feed verschwunden, wurde

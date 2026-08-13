@@ -1,6 +1,7 @@
 import { parseStringPromise } from "xml2js";
 import type { UnitVM } from "./UnitsView";
 import { sizeKey, sizeOf } from "./imageSize";
+import { toTitleCaseName } from "@/lib/textCase";
 
 /* Developer-agnostic feed adapters → one canonical ProjectVM the preview page
    renders. Each adapter maps a raw feed (Island Blue XML, Qubehub API, …) to the
@@ -256,7 +257,7 @@ async function islandBlue(id = "76"): Promise<ProjectVM | null> {
   });
   const center = units.find((u) => u.coords)?.coords ?? null;
   const ov = OVERRIDES[`island-blue:${id}`] ?? {};
-  const developerName = txt(project.Name);
+  const developerName = toTitleCaseName(txt(project.Name));
   const publicName = ov.name ?? developerName;
   const renders = arr(project?.ArtistImpressions?.ArtistImpression).map(txt).filter(Boolean).map(secure);
   const photos = arr(project?.Photos?.Photo).map(txt).filter(Boolean).map(secure);
@@ -325,7 +326,7 @@ async function qubehub(dev: string, id = "1"): Promise<ProjectVM | null> {
   const lat = Number(txt(loc.latitude)), lng = Number(txt(loc.longitude));
   const center = Number.isFinite(lat) && Number.isFinite(lng) && lat ? { lat, lng } : null;
   const ov = OVERRIDES[`${dev}:${id}`] ?? {};
-  const developerName = stripLeadingColon(txt(project.name));
+  const developerName = toTitleCaseName(stripLeadingColon(txt(project.name)));
   const publicName = ov.name ?? developerName;
   const stage = STAGE_LABEL[txt(project.stage).toLowerCase()] ?? txt(project.stage);
   // location levels: District (from coords) · Town (city, if distinct) · Area
@@ -401,7 +402,7 @@ async function aristo(id: string): Promise<ProjectVM | null> {
 
   const center = units.find((u) => u.coords)?.coords ?? null;
   const ov = OVERRIDES[`aristo:${id}`] ?? {};
-  const developerName = id, publicName = ov.name ?? developerName;
+  const developerName = toTitleCaseName(id), publicName = ov.name ?? developerName;
   const area = ov.area ?? txt(first.Area);
   const district = districtFor(center?.lng) || districtFromText(area) || districtFromText(naClean(first.Location));
   const stage = txt(first.Construction_Stage), energy = energyGrade(first.Energy_Efficient_Content);
@@ -560,7 +561,7 @@ async function xml2u(dev: string, id: string): Promise<ProjectVM | null> {
   const lat = Number(txt(first?.Address?.latitude)), lng = Number(txt(first?.Address?.longitude));
   const center = Number.isFinite(lat) && Number.isFinite(lng) && lat ? { lat, lng } : null;
   const ov = OVERRIDES[`${dev}:${id}`] ?? {};
-  const developerName = id, publicName = ov.name ?? id;
+  const developerName = toTitleCaseName(id), publicName = ov.name ?? developerName;
   const area = ov.area ?? txt(first?.Address?.location);
   const district = districtFor(center?.lng) || districtFromText(area) || districtFromText(clean(first?.Address?.region)) || districtFromText(clean(first?.Address?.subRegion));
   const d0 = first.Description ?? {};
@@ -685,7 +686,7 @@ async function medousa(id: string): Promise<ProjectVM | null> {
   });
 
   const ov = OVERRIDES[`medousa:${ref}`] ?? {};
-  const developerName = clean(project.name) || ref, publicName = ov.name ?? developerName;
+  const developerName = toTitleCaseName(clean(project.name) || ref), publicName = ov.name ?? developerName;
   const district = clean(loc.district) || clean(loc.city) || "";
   const town = clean(loc.city);
   const area = ov.area ?? "";
@@ -731,7 +732,6 @@ async function medousa(id: string): Promise<ProjectVM | null> {
 // ==================================================================
 const SQUAREONE_URL = "https://admin.squareone.com.cy/api/project/projects/xml/";
 const projectSlugFrom = (url: any) => txt(url).match(/projects\/([^/?#]+)/i)?.[1] ?? "";
-const titleCase = (s: string) => s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 
 async function squareOne(id: string): Promise<ProjectVM | null> {
   const all = arr((await cachedParse(SQUAREONE_URL))?.kyero?.property);
@@ -762,7 +762,7 @@ async function squareOne(id: string): Promise<ProjectVM | null> {
   const ov = OVERRIDES[`squareone:${id}`] ?? {};
   const descRaw = tidyDesc(txt(first?.desc?.en));
   const bracket = descRaw.match(/^\[\s*(.+?)\s*\]/)?.[1] ?? id;
-  const developerName = titleCase(bracket);
+  const developerName = toTitleCaseName(bracket);
   const publicName = ov.name ?? developerName;
   const descBody = descRaw.replace(/^\[\s*.+?\s*\]\s*/, "");
   const district = districtFor(center?.lng) || districtFromText(clean(first.province)) || districtFromText(clean(first.town)) || clean(first.province);
