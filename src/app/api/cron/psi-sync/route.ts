@@ -91,6 +91,13 @@ export async function GET(req: NextRequest) {
       "psi-sync",
       runSync,
       (r) => (r.skipped ? `skipped: ${r.reason}` : `${r.ok}/${r.total} URLs synced, purged ${r.purge?.purged ?? 0}`),
+      // 2026-08-11/12 — same aggregate-blindness fix as drive-sync/feed-sync/
+      // booking-reminders (see withCronLog's comment in src/lib/cronLog.ts):
+      // runSync() catches every per-URL fetchCwv() failure internally and
+      // always resolves normally, so without this the aggregate row logged
+      // ok:true even if every single URL failed. "skipped" (PSI_API_KEY
+      // unset) is a deliberate no-op, not a failure.
+      (r) => r.skipped || r.failed === 0,
     );
     return NextResponse.json({ ok: true, at: new Date().toISOString(), ...result });
   } catch (e) {
