@@ -125,11 +125,14 @@ async function gatherSourceText(shareUrl: string, rootFiles: DropboxFile[], at: 
   const brochureFolder = rootFiles.find((f) => /brochure/i.test(f.name) && f.mimeType.includes("folder"));
   if (brochureFolder) {
     const inner = await listSharedFolder(shareUrl, brochureFolder.id, at);
-    const pdf = inner.find((f) => f.mimeType === "application/pdf");
-    if (pdf) {
+    // Try every PDF in the folder, not just the first — confirmed on real
+    // data (Atrium) that a folder can hold more than one (a full booklet +
+    // a shorter preview), and the extractor can legitimately come back
+    // empty for one (image-heavy/scanned layout) while another works fine.
+    for (const pdf of inner.filter((f) => f.mimeType === "application/pdf")) {
       const buf = await downloadSharedFile(shareUrl, pdf.id, at);
       const text = await extractTextFromPdf(buf.toString("base64"));
-      if (text) parts.push(text);
+      if (text) { parts.push(text); break; }
     }
   }
   const descFolder = rootFiles.find((f) => /description/i.test(f.name) && f.mimeType.includes("folder"));
@@ -287,7 +290,17 @@ export async function writeKuutioDraft(developerAccountId: string): Promise<Kuut
     const feedKey = `dropbox:${developerAccountId}:${projSlug}`;
     const avail = r.units.filter((u) => u.status === "available").length;
     const prices = r.units.map((u) => u.price).filter((x): x is number => typeof x === "number");
-    const isNewDev = !(await prisma.development.findUnique({ where: { feedKey }, select: { id: true } }));
+    // "Needs content gathering" — NOT simply "row doesn't exist yet". The
+    // very first version of this sync (2026-08-13, deployed and run before
+    // this rich-content pass existed) already created these 6 rows with
+    // units/price only; a plain existence check would see them as
+    // "already synced" and skip content forever. Gallery emptiness is the
+    // right proxy: once a project has real photos, this run is done with
+    // it (matches "published = frozen" for every other developer) — an
+    // empty gallery means content was never gathered, regardless of
+    // whether the Development row itself is new.
+    const existingRow = await prisma.development.findUnique({ where: { feedKey }, select: { id: true, gallery: true } });
+    const isNewDev = !existingRow || !(existingRow.gallery as string[] | null)?.length;
 
     // Rich content — gathered once per NEW project only (re-syncing an
     // already-created dropbox project on a future run only needs to touch
