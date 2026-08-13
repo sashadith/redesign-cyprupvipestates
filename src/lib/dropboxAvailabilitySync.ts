@@ -3,7 +3,7 @@ import * as XLSX from "xlsx";
 import mammoth from "mammoth";
 import { prisma } from "@/lib/prisma";
 import { dropboxConfigured, getDropboxAccessToken, listSharedFolder, findPriceFile, downloadSharedFile, type DropboxFile } from "./dropbox";
-import { extractUnitsForSection, buildCanonicalMatcher, type ExtractedUnit } from "./ai/pricelistExtract";
+import { extractUnitsForSection, extractAmenitiesForSection, buildCanonicalMatcher, type ExtractedUnit } from "./ai/pricelistExtract";
 import { extractColoredRowsFromPdf } from "./ai/pdfPricelistColors";
 import { extractTextFromPdf } from "./ai/projectInfoExtract";
 import { generateProjectDescription } from "./ai/projectDescription";
@@ -15,8 +15,34 @@ import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { resolveMapsUrlToGeo } from "./mapsGeo";
 import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart } from "./imageMirror";
 
-const MAX_IMAGES = 10;
-const MAX_PLANS = 12;
+// Higher than driveAvailabilitySync.ts's MAX_IMAGES=10 — Kuutio's Dropbox
+// folders are the developer's own curated marketing set (not a mixed bag of
+// site-visit snapshots), and real folders run past 10 (Atrium: 35) with no
+// junk observed among them, confirmed 2026-08-13.
+const MAX_IMAGES = 40;
+const MAX_PLANS = 20;
+
+// Maps a Dropbox folder's trailing "(...)" tag (e.g. "ATRIUM (UNDER
+// CONSTRUCTION)") to Development.stage's controlled vocabulary
+// (developmentCopy.ts's `stage` Record) — deterministic, no AI needed.
+// Matched by keyword, not exact string — confirmed on real data the tag can
+// carry extra text (e.g. "GALLERY (OFFPLAN CHLORAKA)" tacks a town name onto
+// the stage word). Anything that doesn't match a known keyword is left
+// unset rather than guessed, since an unrecognized value would just render
+// blank everywhere stage is displayed.
+const STAGE_TAG_PATTERNS: [RegExp, string][] = [
+  [/under\s*construction/, "under construction"],
+  [/off[\s-]?plan/, "off-plan"],
+  [/key\s*ready|^ready\b/, "key-ready"],
+  [/sold\s*out/, "sold"],
+  [/completed/, "completed"],
+];
+function stageFromFolderName(folderName: string): string | null {
+  const m = folderName.match(/\(([^)]+)\)\s*$/);
+  if (!m) return null;
+  const tag = m[1].trim().toLowerCase();
+  return STAGE_TAG_PATTERNS.find(([re]) => re.test(tag))?.[1] ?? null;
+}
 const IMG_MIME_RE = /^image\/(jpe?g|png|webp)$/i;
 
 /* Dropbox availability sync (2026-08-13, Kuutio) — parallel to
@@ -179,6 +205,7 @@ export type KuutioProjectResult = {
   folderId: string; // path relative to the share root — re-list target for content gathering
   projectName: string; // Title Case
   sourceFile: string;
+  sectionText: string; // this project's own price-list text — reused for amenities extraction, no re-fetch
   units: ExtractedUnit[];
   matchedExisting: { id: string; publicName: string; dev: string; publishStatus: string } | null;
 };
@@ -223,10 +250,10 @@ export async function previewKuutioSync(developerAccountId: string): Promise<Kuu
     const projectName = toTitleCaseName(stripTag(folder.name));
     const inner = await listSharedFolder(shareUrl, folder.id, at);
     const priceFolder = inner.find((i) => /price\s*list|pricelist/i.test(i.name) && i.mimeType.includes("folder"));
-    if (!priceFolder) { results.push({ folder: folder.name, folderId: folder.id, projectName, sourceFile: "(no price-list subfolder)", units: [], matchedExisting: null }); continue; }
+    if (!priceFolder) { results.push({ folder: folder.name, folderId: folder.id, projectName, sourceFile: "(no price-list subfolder)", sectionText: "", units: [], matchedExisting: null }); continue; }
     const priceContents = await listSharedFolder(shareUrl, priceFolder.id, at);
     const priceFile = findPriceFile(priceContents);
-    if (!priceFile) { results.push({ folder: folder.name, folderId: folder.id, projectName, sourceFile: "(no price file inside)", units: [], matchedExisting: null }); continue; }
+    if (!priceFile) { results.push({ folder: folder.name, folderId: folder.id, projectName, sourceFile: "(no price file inside)", sectionText: "", units: [], matchedExisting: null }); continue; }
 
     let sectionText: string | null = null;
     if (priceFile.mimeType === "application/pdf") {
@@ -248,6 +275,7 @@ export async function previewKuutioSync(developerAccountId: string): Promise<Kuu
       folderId: folder.id,
       projectName,
       sourceFile: priceFile.name,
+      sectionText: sectionText || "",
       units,
       matchedExisting: matchedExisting ? { id: matchedExisting.id, publicName: matchedExisting.publicName, dev: matchedExisting.dev, publishStatus: matchedExisting.publishStatus } : null,
     });
@@ -267,7 +295,7 @@ export type KuutioWriteResult = {
 // doesn't rely on that staying true). A folder with zero extracted units
 // writes nothing for that folder — structural, not a threshold: no result
 // is not the same as "this project has no units".
-export async function writeKuutioDraft(developerAccountId: string): Promise<KuutioWriteResult> {
+export async function writeKuutioDraft(developerAccountId: string, opts: { force?: boolean } = {}): Promise<KuutioWriteResult> {
   const acct = await prisma.developerAccount.findUnique({ where: { id: developerAccountId } });
   if (!acct?.driveFolderUrl) throw new Error("Developer account or its Dropbox link not found");
   const shareUrl = acct.driveFolderUrl;
@@ -310,7 +338,7 @@ export async function writeKuutioDraft(developerAccountId: string): Promise<Kuut
     // empty gallery means content was never gathered, regardless of
     // whether the Development row itself is new.
     const existingRow = await prisma.development.findUnique({ where: { feedKey }, select: { id: true, gallery: true } });
-    const isNewDev = !existingRow || !(existingRow.gallery as string[] | null)?.length;
+    const isNewDev = opts.force || !existingRow || !(existingRow.gallery as string[] | null)?.length;
 
     // Rich content — gathered once per NEW project only (re-syncing an
     // already-created dropbox project on a future run only needs to touch
@@ -323,14 +351,23 @@ export async function writeKuutioDraft(developerAccountId: string): Promise<Kuut
     let amenities: string[] = [];
     let gallery: string[] = [];
     let plans: string[] = [];
+    const stage = stageFromFolderName(r.folder);
     if (isNewDev) {
       const rootFiles = await listSharedFolder(shareUrl, r.folderId, at);
-      [mapsUrl, sourceText] = await Promise.all([
+      let priceListAmenities: string[] = [];
+      [mapsUrl, sourceText, priceListAmenities] = await Promise.all([
         findMapsUrl(shareUrl, { id: r.folderId, name: r.folder, mimeType: "application/vnd.dropbox.folder", modifiedTime: "" }, rootFiles, at),
         gatherSourceText(shareUrl, rootFiles, at),
+        r.sectionText.trim() ? extractAmenitiesForSection(r.sectionText).then((a) => a.amenities) : Promise.resolve([]),
       ]);
       if (mapsUrl) geo = await resolveMapsUrlToGeo(mapsUrl);
-      amenities = await extractAmenitiesFromText(sourceText);
+      const brochureAmenities = await extractAmenitiesFromText(sourceText);
+      // Price list's own Facilities/Notes list is the more structured,
+      // authoritative source (confirmed on Atrium: brochure text didn't
+      // carry its facilities at all, they're only in the price list) —
+      // brochure-derived amenities fill in anything the price list missed.
+      const seen = new Set(priceListAmenities.map((a) => a.toLowerCase()));
+      amenities = [...priceListAmenities, ...brochureAmenities.filter((a) => !seen.has(a.toLowerCase()))];
 
       const devKey = devKeyFor(feedKey);
       const photos = (await findPhotos(shareUrl, rootFiles, at)).slice(0, MAX_IMAGES);
@@ -376,6 +413,7 @@ export async function writeKuutioDraft(developerAccountId: string): Promise<Kuut
         ...(amenities.length ? { amenities } : {}),
         ...(gallery.length ? { gallery } : {}),
         ...(plans.length ? { plans } : {}),
+        ...(stage ? { stage } : {}),
       },
       update: {
         unitsTotal: r.units.length, unitsAvailable: avail, syncedAt: new Date(),
@@ -383,6 +421,7 @@ export async function writeKuutioDraft(developerAccountId: string): Promise<Kuut
         ...(amenities.length ? { amenities } : {}),
         ...(gallery.length ? { gallery } : {}),
         ...(plans.length ? { plans } : {}),
+        ...(stage ? { stage } : {}),
       },
     });
     await recomputeDevelopmentDistances(dev.id);
@@ -412,6 +451,7 @@ export async function writeKuutioDraft(developerAccountId: string): Promise<Kuut
       const k = refKey(ref, r.projectName);
       const data = {
         ref,
+        type: nn(u.type),
         price: typeof u.price === "number" ? Math.round(u.price) : null,
         status: u.status,
         beds: nn(u.bedrooms),

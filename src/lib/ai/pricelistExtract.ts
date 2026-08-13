@@ -8,6 +8,7 @@ import { toTitleCaseName } from "@/lib/textCase";
 
 export type ExtractedUnit = {
   ref: string;
+  type?: string;            // property type per unit, e.g. "Apartment" / "Townhouse" / "Villa"
   bedrooms?: string;
   bathrooms?: string;
   areaBuilt?: string;       // total built/internal area, when given as one figure
@@ -43,6 +44,7 @@ const flatSchema = (itemProps: Record<string, any>, required: string[]) => ({
 const SCHEMA_UNITS = flatSchema({
   project: { type: "string" },
   ref: { type: "string" },
+  type: { type: "string" },
   bedrooms: { type: "string" },
   bathrooms: { type: "string" },
   areaBuilt: { type: "string" },
@@ -95,6 +97,7 @@ PRICE LIST:
 const PROMPT_UNITS = `You are given ONE section of a developer's master PRICE LIST (spreadsheet flattened to text) — it covers exactly ONE project, named in its own first row/title. Return a FLAT list "items" of EVERY sellable unit in this section — one item per unit:
 - project: the SAME project name for every single item, taken from this section's own title/first row. A section is often internally divided into sub-groups (e.g. "Block A", "Block B", a separate "Villa Number" table, apartments vs villas) — those are NOT separate projects, they are all part of THIS ONE project. Never invent a per-block or per-subtable project name; use one identical string for all items.
 - ref: the unit / villa / apartment label EXACTLY as its own cell/row shows it, verbatim — copy it whole, never trim, shorten, or drop any part of it (including a "Block X" prefix already present in that cell's own text).
+- type: the property type for THIS unit, ONLY when the sheet has its own dedicated column for it (e.g. "Apartment" / "Townhouse" / "Villa" / "Maisonette") — leave blank if there's no such column, never infer it from the ref or area figures.
 - bedrooms, bathrooms: as given.
 - areaBuilt: the total built/internal area, ONLY when the sheet gives ONE such figure.
 - areaGroundFloor, areaUpperFloor: when the sheet instead SPLITS internal area by floor (e.g. "Ground Floor (m²)" + "Lower Floor (m²)" / "First Floor (m²)") — fill these two instead of areaBuilt.
@@ -124,11 +127,52 @@ PRICE LIST:
 
 const PROMPT_AMEN = `You are given a developer's master PRICE LIST (flattened text). Return a FLAT list "items" with ONE item per PROJECT:
 - project: the project name.
-- amenities: the included features from the "Notes: In the prices we include …" / "Features INCLUDED" rows (e.g. "VRV cooling", "Underfloor heating", "Photovoltaic system", "Alarm system", "Swimming pool", "Electric car charger", "Children's playground"). Split combined sentences into separate items; drop prices and furniture-package lines.
+- amenities: the included features from the "Notes: In the prices we include …" / "Features INCLUDED" / "Facilities" rows (e.g. "VRV cooling", "Underfloor heating", "Photovoltaic system", "Alarm system", "Swimming pool", "Electric car charger", "Children's playground"). Split combined sentences into separate items; drop prices and furniture-package lines.
 - notes: the FULL "Notes: …" sentence(s) verbatim, exactly as written (including any furniture-package price mentioned) — this is used as authentic source text, not just tags. Empty string if there's no notes row.
 
 PRICE LIST:
 `;
+
+// Same extraction as PROMPT_AMEN's per-project pass, but scoped to ONE
+// section whose project boundary is already known (Kuutio's per-project
+// sheets/PDFs, same reasoning as extractUnitsForSection above) — confirmed
+// on real data that the amenities list isn't always a "Notes: …" sentence;
+// some projects (e.g. Atrium) instead have a bare "Facilities" row followed
+// by one item per row beneath it, which the broadened wording above covers.
+const PROMPT_AMEN_SECTION = `You are given ONE section of a developer's master PRICE LIST (spreadsheet flattened to text) covering exactly one project. Look for an included-features list — it may appear as a "Notes: In the prices we include …" sentence, a "Features INCLUDED" table, or a bare "Facilities" row followed by one item per row beneath it. Return via the tool:
+- amenities: the included features/facilities as short noun phrases (e.g. "VRV cooling", "Underfloor heating", "Outdoor children's playground", "Indoor gym", "Underground parking", "Communal pool", "Sauna"). Split combined sentences into separate items; drop prices and furniture-package lines. Empty list if genuinely none found — never invent.
+- notes: the FULL "Notes: …" sentence(s) verbatim if present, else empty string.
+
+SECTION:
+`;
+
+const SCHEMA_AMEN_SECTION = {
+  type: "object",
+  properties: { amenities: { type: "array", items: { type: "string" } }, notes: { type: "string" } },
+  required: ["amenities"],
+} as any;
+
+export async function extractAmenitiesForSection(sectionText: string): Promise<{ amenities: string[]; notes: string }> {
+  const client = anthropic();
+  if (!client) return { amenities: [], notes: "" };
+  try {
+    const msg = await client.messages.create({
+      model: AI_MODEL_FAST,
+      max_tokens: 800,
+      tools: [{ name: "data", description: "Extracted amenities.", input_schema: SCHEMA_AMEN_SECTION }],
+      tool_choice: { type: "tool", name: "data" },
+      messages: [{ role: "user", content: PROMPT_AMEN_SECTION + sectionText.slice(0, 20000) }],
+    });
+    const tool = msg.content.find((b: any) => b.type === "tool_use") as any;
+    const list = tool?.input?.amenities;
+    return {
+      amenities: Array.isArray(list) ? list.filter((x) => typeof x === "string" && x.trim()) : [],
+      notes: typeof tool?.input?.notes === "string" ? tool.input.notes : "",
+    };
+  } catch {
+    return { amenities: [], notes: "" };
+  }
+}
 
 async function callTool(client: any, prompt: string, schema: any): Promise<any[]> {
   for (let attempt = 0; attempt < 3; attempt++) {
