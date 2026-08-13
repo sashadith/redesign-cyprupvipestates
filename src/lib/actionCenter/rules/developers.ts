@@ -543,10 +543,42 @@ async function imageDriftPending(): Promise<ActionItem[]> {
   });
 }
 
+// (n) Feed-created project that has never once had any units — 2026-08-13
+// (GROSSER AUFTRAG Teil 3/4, Island Blue: Avalon Park/Avalon Valley/Bluvia/
+// Pafia City 3 sit in the projects-feed with zero rows in the units-feed).
+// A structurally different gap than feedMissingReminders() below: that rule
+// only looks at PUBLISHED/READY projects that USED to sync successfully and
+// then stopped; this one catches projects that synced fine but never had any
+// units to begin with, so they stay "draft" forever and age out of
+// newUnpublished()'s 7-day window unnoticed. This isn't something our sync
+// can fix (there's nothing in the developer's own feed to import) — it's a
+// standing awareness reminder, ACTION not URGENT, same weekly-reminder cadence
+// as everything else once it reaches the digest (see digestNotify.ts).
+async function emptyDraftReminders(): Promise<ActionItem[]> {
+  const devs = await prisma.development.findMany({
+    where: { dev: { in: SYNCED_DEVS }, publishStatus: "draft" },
+    select: { id: true, publicName: true, developer: true, dev: true, syncedAt: true, createdAt: true, units: { select: { id: true } } },
+  });
+  const items: ActionItem[] = [];
+  for (const d of devs) {
+    if (d.units.length) continue;
+    const anchor = d.syncedAt ?? d.createdAt;
+    if (daysSinceCalendar(anchor) < FEED_MISSING_GRACE_DAYS) continue;
+    items.push({
+      id: `empty-draft:${d.id}`, severity: "ACTION", category: "DEVELOPERS",
+      title: `${d.developer || d.dev} — ${d.publicName} has no units in the feed`,
+      description: `Synced from the ${d.dev} feed but has never had any units — the project itself exists in the developer's feed, but nothing for it in their unit/pricing data. Not fixable on our side.`,
+      deepLink: `/admin/developments/${d.id}`, since: anchor,
+    });
+  }
+  return items;
+}
+
 export async function developerRules(): Promise<ActionItem[]> {
-  const [a, b, c, d, e, f, g, h, i, j, k, l, m] = await Promise.all([
+  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n] = await Promise.all([
     soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(), backInStockReminders(),
     developerNoPageReminders(), developerLinkBrokenReminders(), overlapCandidatesPending(), developerLinkCollisions(), feedIncompleteWarnings(), imageDriftPending(),
+    emptyDraftReminders(),
   ]);
-  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l, ...m];
+  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l, ...m, ...n];
 }
