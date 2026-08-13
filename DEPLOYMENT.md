@@ -823,6 +823,49 @@ Read-only queries against the real DB (checking current state, sampling a
 feed) don't need this — the testbed exists for the write side specifically,
 where a mistake is otherwise hard to undo.
 
+### Isolated-script DB safety — never a blanket `source shared/.env` (2026-08-12 incident)
+
+A verification script needed both the testbed DB and shared API keys
+(`GOOGLE_*`, `ANTHROPIC_API_KEY`) in one run, and did the obvious-looking
+thing: `source .env.testbed; source /var/www/shared/.env`. `shared/.env`
+*also* defines `DATABASE_URL` and, sourced second, silently overwrote the
+testbed one — the script then ran a real Drive sync against the live
+**production** database instead of the disposable testbed copy. The result
+happened to be harmless (draft rows, correct data), but the isolation
+property held that day by luck, not by anything enforcing it. This is the
+same root mistake the policy two sections up already warns against
+("secrets stay out by policy... a deliberate decision to make explicitly,
+not something a setup script copies in by default") — it just hadn't been
+made hard to get wrong yet.
+
+**Two enforced layers, not one more rule to remember:**
+
+1. **`/opt/cvp-testbed/with-shared-secret.sh VAR1 [VAR2 ...] -- <command>`**
+   — the only sanctioned way to add shared secrets to a testbed run. Sources
+   `.env.testbed` *first*, then pulls **only the explicitly named
+   variables** out of `shared/.env` — never a blanket source, and it refuses
+   outright if `DATABASE_URL` is ever named. Structurally, nothing extracted
+   this way can shadow the testbed's own `DATABASE_URL`, regardless of what
+   order anyone writes the commands in.
+   ```bash
+   /opt/cvp-testbed/with-shared-secret.sh GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET GOOGLE_REFRESH_TOKEN ANTHROPIC_API_KEY \
+     -- npx tsx scripts/some-verification.mts
+   ```
+2. **`scripts/assert-not-prod-db.mjs`** — a final guard, run automatically by
+   the wrapper above (and importable directly — `import
+   "../scripts/assert-not-prod-db.mjs"` — at the top of any ad-hoc write
+   script) that refuses to proceed at all if `DATABASE_URL` matches the real
+   prod DB/role, unless `CVP_ALLOW_PROD_DB=1` is set explicitly for a
+   deliberate, disclosed, **read-only** query. Belt-and-suspenders: even if
+   some future path still manages to leak a prod `DATABASE_URL` into an
+   isolated run, this stops it before any query executes.
+
+`with-shared-secret.sh` lives in `/opt/cvp-testbed/` itself (VPS-local
+tooling, same as `refresh.sh`/`db-testbed-up.sh`/`db-testbed-down.sh` —
+never rsynced from a release); `assert-not-prod-db.mjs` lives in this repo's
+`scripts/` so it's version-controlled and travels with every checkout,
+including the testbed's own `git clone`.
+
 ## Staging is not a write sandbox — shared DB (2026-07-27/28 incident)
 
 While reviewing the sync-control-panel feature (read-only editor, Force-Sync,

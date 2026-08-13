@@ -170,10 +170,21 @@ const key = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
 const words = (s: string) => (s || "").toLowerCase().match(/[a-z0-9]+/g) || [];
 
 // Resolve a per-call project-name guess to one canonical name from the catalogue,
-// by word overlap (normalized by the SHORTER word-list so an abbreviated guess like
-// "Lazzero" or "Grato 2" — or a guess a section-level call polluted with an internal
-// sub-group like "Arbeo Park - Block A" — still matches its one true project). Falls
-// back to the guess itself when nothing scores above the threshold, so we never drop data.
+// by word overlap (normalized so an abbreviated guess like "Lazzero" or "Grato 2" —
+// or a guess a section-level call polluted with an internal sub-group like "Arbeo
+// Park - Block A" — still matches its one true project). Falls back to the guess
+// itself when nothing scores above the threshold, so we never drop data.
+//
+// Normalized by the LARGER of the two word-counts (2026-08-12; was the SMALLER) —
+// confirmed on real data: with the old normalization, a guess that's a strict
+// word-subset of a longer canonical name always scored a false 1.0 (e.g. "VENARA"
+// vs "VENARA VIEW": hit=1, min(1,2)=1 → 1.0), tying it with (and, via the
+// tie-break's longer-name preference below, actually BEATING) the true exact match
+// against a separate "VENARA" catalog entry — merging 27 real VENARA units into
+// VENARA VIEW. Dividing by the larger count instead means a strict subset can score
+// at most shorter/longer < 1.0, so an exact match always outranks a same-prefix
+// subset match; the "Lazzero" → "Lazzero Park" abbreviation case is unaffected
+// (still the only catalogue entry sharing that word, still clears the threshold).
 export function buildCanonicalMatcher(names: string[]) {
   const entries = names.map((n) => ({ name: n, w: new Set(words(n)) }));
   const cache = new Map<string, { name: string; matched: boolean }>();
@@ -186,7 +197,7 @@ export function buildCanonicalMatcher(names: string[]) {
     for (const e of entries) {
       if (!e.w.size) continue;
       const hit = gw.filter((w) => e.w.has(w)).length;
-      const score = hit / Math.min(gw.length || 1, e.w.size);
+      const score = hit / Math.max(gw.length || 1, e.w.size);
       if (hit > 0 && (!best || score > best.score || (score === best.score && e.name.length > best.name.length))) best = { name: e.name, score };
     }
     const result = best && best.score >= 0.5 ? { name: best.name, matched: true } : { name: guess, matched: false };
