@@ -120,7 +120,7 @@ async function findPlans(shareUrl: string, rootFiles: DropboxFile[], at: string)
 // marketing-text sources confirmed across all 9 projects. PDFs go through
 // the existing marketing-text-only extractor (ignores price tables/legal
 // boilerplate by design); docx is used raw, mammoth already strips markup.
-async function gatherSourceText(shareUrl: string, rootFiles: DropboxFile[], at: string): Promise<string> {
+export async function gatherSourceText(shareUrl: string, rootFiles: DropboxFile[], at: string): Promise<string> {
   const parts: string[] = [];
   const brochureFolder = rootFiles.find((f) => /brochure/i.test(f.name) && f.mimeType.includes("folder"));
   if (brochureFolder) {
@@ -154,7 +154,7 @@ async function gatherSourceText(shareUrl: string, rootFiles: DropboxFile[], at: 
 // own "Notes: In the prices we include…" row (pricelistExtract.ts's
 // PROMPT_AMEN), which Kuutio's sheet doesn't have — this is the free-text
 // equivalent of that same extraction, same model, same "don't invent" rule.
-async function extractAmenitiesFromText(sourceText: string): Promise<string[]> {
+export async function extractAmenitiesFromText(sourceText: string): Promise<string[]> {
   if (!sourceText.trim()) return [];
   const client = anthropic();
   if (!client) return [];
