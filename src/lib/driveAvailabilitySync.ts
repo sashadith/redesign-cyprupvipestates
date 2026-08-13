@@ -75,15 +75,6 @@ export type DriveSyncResult = {
   blockedProjects?: { project: string; message: string; missing: number; total: number }[];
 };
 
-// Same threshold as feedSync.ts's checkFeedCompleteness (15% + 20-unit floor,
-// see that file's comment for how the floor/pct split was validated against
-// real per-developer unit counts) — reused here rather than re-derived, since
-// the underlying question is identical: is this fresh pull thin enough that
-// treating what it's missing as "gone" would misrepresent a bad read as real
-// inventory loss.
-const PRUNE_INCOMPLETE_PCT = 0.15;
-const PRUNE_INCOMPLETE_ABS_FLOOR = 20;
-
 async function writeProject(developerAccountId: string, accountName: string, p: ExtractedPricelistProject, content: boolean, files: DriveFile[], at: string, richUnits: boolean = content): Promise<{ avail: number; mediaChanged: boolean; pruneBlocked?: { message: string; missing: number; total: number } }> {
   // Project-level fields sourced straight from the price-list TEXT (category, completion,
   // amenities, area, map link) cost nothing extra to refresh — no image download, no PDF
@@ -214,40 +205,40 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
   }
   if (p.units.length) await recomputeDevelopmentDerivedState(dev.id);
 
-  // Guarded pruning of stale units (2026-08-13) — the ref an AI extraction
-  // echoes back isn't fully byte-stable across syncs (see unitRef.ts), and
-  // before this, writeProject only ever updated-or-created: a unit whose ref
-  // format drifted between two syncs left the OLD row sitting forever instead
-  // of being replaced, since nothing here ever deleted anything. Confirmed on
-  // real data (Motive Point, 2026-08-13): VENARA and VENARA VIEW accumulated
-  // duplicate rows for the same physical units across several re-syncs this
-  // way. Three hard guards, all required before any delete can happen:
-  //  a) source:"manual" units are never candidates — curated rows, explicitly
-  //     protected from every sync path (Celestia's bulk-imported photos/
-  //     amenities/specs hang off these).
-  //  b) threshold-guarded exactly like feedSync's checkFeedCompleteness (same
-  //     15%/20-unit constants, see above) — if what WOULD be pruned this run
-  //     is too large a share of what's stored, prune NOTHING and report a
-  //     blocked result instead; an incomplete extraction must never look like
-  //     "everything else sold out".
-  //  c) only unit rows this project's OWN fresh extraction didn't touch are
-  //     ever candidates — an empty/failed extraction never reaches this line
-  //     at all (syncDeveloperDrive's loop skips `!p.units?.length` before
-  //     writeProject is ever called), so there is nothing to guard there.
-  let pruneBlocked: { message: string; missing: number; total: number } | undefined;
+  // Pruning DISABLED (2026-08-13 incident) — the guarded-deletion mechanism
+  // below was deployed, ran exactly once against real production data, and
+  // deleted 75 real units across 7 Olias projects (Alder Park, Arbeo Park,
+  // Grato Homes 2, Nexus House, Olivelia Homes, Pine Park, Roble Park) that
+  // an incomplete extraction had simply failed to re-match — restored from
+  // backup the same day. Root cause: the 15%/20-unit threshold was copied
+  // verbatim from feedSync's checkFeedCompleteness, which guards a whole
+  // DEVELOPER's feed (hundreds of units, so a 20-unit floor is a sane
+  // backstop) — this guard runs per PROJECT instead, and several of these
+  // projects have fewer than 20 units total, so a severe proportional loss
+  // (Olivelia: 17 of 20 missing, 85%) sailed straight past the absolute
+  // floor with zero protection. Never deployed a threshold-tuning fix
+  // without first understanding WHY extractions were coming back thin
+  // across seven+ projects simultaneously — until that's root-caused,
+  // deletion stays off entirely. Stale duplicate rows (the ref-instability
+  // problem this was originally built for) are the lesser evil versus
+  // silently vanishing real inventory: duplicates are visible and annoying,
+  // missing units are invisible and dangerous.
+  //
+  // `prunable` is still computed and reported (diagnostic only, useful for
+  // finding the root cause) — `deleteMany` is not called under any
+  // condition. Do not re-enable without redesigning the threshold for
+  // per-project scope (a percentage-only rule with no absolute floor was
+  // the standing proposal, but is deliberately not yet implemented).
   const prunable = existingUnits.filter((eu) => eu.source !== "manual" && !touchedIds.has(eu.id));
+  let pruneBlocked: { message: string; missing: number; total: number } | undefined;
   if (prunable.length) {
     const autoBefore = existingUnits.filter((eu) => eu.source !== "manual").length;
     const missing = prunable.length;
     const missingPct = autoBefore > 0 ? missing / autoBefore : 0;
-    if (autoBefore > 0 && missing > PRUNE_INCOMPLETE_ABS_FLOOR && missingPct > PRUNE_INCOMPLETE_PCT) {
-      pruneBlocked = {
-        message: `${missing} of ${autoBefore} units are missing from this extraction (${Math.round(missingPct * 100)}%) — nothing was deleted, check the source before the next sync.`,
-        missing, total: autoBefore,
-      };
-    } else {
-      await prisma.developmentUnit.deleteMany({ where: { id: { in: prunable.map((u) => u.id) } } });
-    }
+    pruneBlocked = {
+      message: `${missing} of ${autoBefore} units in this extraction weren't matched (${Math.round(missingPct * 100)}%) — pruning is disabled, nothing was deleted or changed.`,
+      missing, total: autoBefore,
+    };
   }
 
 
