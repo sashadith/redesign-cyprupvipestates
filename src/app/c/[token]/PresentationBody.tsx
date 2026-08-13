@@ -119,6 +119,8 @@ export default function PresentationBody({
         amenities={open?.amenities ?? []}
         units={open?.units ?? []}
         distances={open?.distances ?? null}
+        slug={open?.slug ?? null}
+        publishStatus={open?.publishStatus ?? null}
         locale={locale}
       />
     </>

@@ -172,6 +172,8 @@
   box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.55);
   border-color: transparent;
 }
+.cp-card--clickable { cursor: pointer; }
+.cp-card--clickable:focus-visible { outline: 2px solid var(--champagne); outline-offset: 2px; }
 .cp-card__media { position: relative; aspect-ratio: 4 / 3; background: rgba(255, 255, 255, 0.04); overflow: hidden; }
 /* No more card-level lift on hover — the picture itself zooms in tight
    instead, clipped by .cp-card's own overflow: hidden. */
@@ -322,9 +324,17 @@
 .cp-overlay__dot { width: 6px; height: 6px; border-radius: 999px; background: rgba(239, 233, 219, 0.35); }
 .cp-overlay__dot.is-on { background: var(--champagne); }
 .cp-overlay__body { padding: 1.5rem clamp(1.25rem, 4vw, 2.5rem) 2.5rem; }
-.cp-overlay__title { font-family: var(--font-display), var(--font-display-cyr), Georgia, serif; font-size: 1.85rem; font-weight: 400; margin: 0 0 1rem; }
-.cp-overlay__desc { font-size: 1.1rem; color: rgba(239, 233, 219, 0.85); line-height: 1.7; margin: 0 0 1rem; }
-.cp-overlay__amenities { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+.cp-overlay__titlerow { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem 1rem; margin: 0 0 1.5rem; }
+.cp-overlay__title { font-family: var(--font-display), var(--font-display-cyr), Georgia, serif; font-size: 1.85rem; font-weight: 400; margin: 0; }
+.cp-overlay__sitelink {
+  display: inline-flex; align-items: center; gap: 0.4rem; flex-shrink: 0;
+  font-size: 0.8rem; letter-spacing: 0.02em; color: var(--champagne);
+  border: 1px solid var(--hairline-strong); border-radius: 999px; padding: 0.4rem 0.9rem;
+  text-decoration: none; transition: background 0.2s, color 0.2s;
+}
+.cp-overlay__sitelink:hover { background: var(--champagne); color: var(--sea-deep); }
+.cp-overlay__desc { font-size: 1.1rem; color: rgba(239, 233, 219, 0.85); line-height: 1.7; margin: 0 0 1.25rem; }
+.cp-overlay__amenities { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0 0 2rem; }
 /* Same icon mapping as the public site's .pp-benefit pills (src/app/preview-
    project/amenityIcons.tsx) — themed for this dark surface: champagne icon,
    ivory label, vertically centered. */
@@ -335,7 +345,11 @@
 }
 .cp-overlay__amenity-ic { display: inline-flex; flex-shrink: 0; width: 16px; height: 16px; color: var(--champagne); }
 .cp-overlay__amenity-ic svg { width: 100%; height: 100%; }
-.cp-overlay__units { margin-top: 1.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+/* DistancesStrip renders with no margin of its own (shared component, also
+   used un-margined on the full detail page where its section wrapper
+   already spaces it) — space it out here, scoped to the overlay only. */
+.cp-overlay__body > .dist-strip { margin: 0 0 2rem; }
+.cp-overlay__units { margin-top: 2.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .cp-overlay__units h3 { font-family: var(--font-display), var(--font-display-cyr), Georgia, serif; font-weight: 400; font-size: 1.1rem; margin: 0 0 0.75rem; }
 .cp-overlay__units table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 .cp-overlay__units th { text-align: left; color: rgba(239, 233, 219, 0.5); font-weight: 400; padding: 0.4rem 0.5rem; border-bottom: 1px solid var(--hairline); }

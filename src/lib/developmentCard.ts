@@ -145,6 +145,31 @@ export function matchesPropertyTypeFilter(resolvedType: string, filterValue: str
 // card-DTO boundary only. The DB storage shape and the new DistancesStrip
 // component both keep the "golf"/number shape — only this one adapter exists,
 // so the two shapes can't silently drift back together wrong.
+// Development.completion is a free-text string (adapter-dependent — sampled
+// real values include both "Q3 2028" already-quarter and "November 2028"
+// month-name forms). Used by the Personal Selection card's delivery line
+// (2026-08-13) — only ever shows a value it's confident about; anything it
+// can't parse into a clean "QN YYYY" is treated the same as no date at all
+// (omitted), never guessed or shown malformed.
+const MONTH_TO_QUARTER: Record<string, number> = {
+  january: 1, february: 1, march: 1,
+  april: 2, may: 2, june: 2,
+  july: 3, august: 3, september: 3,
+  october: 4, november: 4, december: 4,
+};
+export function toDeliveryQuarter(completion: string | null | undefined): string | null {
+  const s = (completion ?? "").trim();
+  if (!s) return null;
+  const direct = s.match(/^Q([1-4])\s+(\d{4})$/i);
+  if (direct) return `Q${direct[1]} ${direct[2]}`;
+  const monthYear = s.match(/^([A-Za-z]+)\s+(\d{4})$/);
+  if (monthYear) {
+    const q = MONTH_TO_QUARTER[monthYear[1].toLowerCase()];
+    if (q) return `Q${q} ${monthYear[2]}`;
+  }
+  return null;
+}
+
 export function toCardDistances(distances: Record<string, number> | null | undefined): Record<string, string> | null {
   if (!distances) return null;
   const out: Record<string, string> = {};

@@ -17,6 +17,9 @@ export type PresentationItemVM = {
   currency: string;
   unitsAvailable: number;
   unitsTotal: number;
+  deliveryQuarter: string | null;
+  slug: string | null;
+  publishStatus: string;
   mainImage: string | null;
   advisorComment: string | null;
   isFavorited: boolean;
@@ -67,7 +70,15 @@ export default function PropertyCard({
   const locationParts = area && district && area.toLowerCase() === district.toLowerCase() ? [district] : [district, area].filter(Boolean);
 
   return (
-    <div id={`cp-card-${item.developmentId}`} className="cp-card cp-goldring cp-goldring--hover" data-fx="card">
+    <div
+      id={`cp-card-${item.developmentId}`}
+      className="cp-card cp-goldring cp-goldring--hover cp-card--clickable"
+      data-fx="card"
+      role="button"
+      tabIndex={0}
+      onClick={onViewDetails}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onViewDetails(); } }}
+    >
       <div className="cp-card__media">
         {item.mainImage ? <img src={item.mainImage} alt={item.publicName} className="cp-card__img" data-fx="cardimg" loading="lazy" /> : <div className="cp-card__img cp-card__img--empty" />}
         <div className="cp-card__badges">
@@ -76,7 +87,14 @@ export default function PropertyCard({
             ? <span className="cp-card__soldbadge">{COPY[locale].soldOut}</span>
             : <ScarcityBanner available={item.unitsAvailable} total={item.unitsTotal} locale={locale} seedKey={item.developmentId} />}
         </div>
-        <button type="button" className={`cp-card__heart${favorited ? " is-on" : ""}`} onClick={toggleFavorite} disabled={busy} aria-pressed={favorited} aria-label="Favorite">
+        <button
+          type="button"
+          className={`cp-card__heart${favorited ? " is-on" : ""}`}
+          onClick={(e) => { e.stopPropagation(); toggleFavorite(); }}
+          disabled={busy}
+          aria-pressed={favorited}
+          aria-label="Favorite"
+        >
           <svg viewBox="0 0 24 24" width="18" height="18" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth={favorited ? "0" : "1.8"}>
             <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733C11.285 4.876 9.623 3.75 7.688 3.75 5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
           </svg>
@@ -90,9 +108,15 @@ export default function PropertyCard({
           <span className="cp-card__vat">{COPY[locale].vatLabel}</span>
           <span aria-hidden="true">·</span>
           <span>{soldOut ? COPY[locale].soldOut : formatUnitsCount(locale, item.unitsAvailable)}</span>
+          {item.deliveryQuarter && (
+            <>
+              <span aria-hidden="true">·</span>
+              <span>{COPY[locale].delivery}: {item.deliveryQuarter}</span>
+            </>
+          )}
         </p>
         {item.advisorComment && <p className="cp-card__note">{item.advisorComment}</p>}
-        <button type="button" className="cp-card__cta" onClick={onViewDetails}>{viewDetailsLabel}</button>
+        <button type="button" className="cp-card__cta" onClick={(e) => { e.stopPropagation(); onViewDetails(); }}>{viewDetailsLabel}</button>
       </div>
     </div>
   );

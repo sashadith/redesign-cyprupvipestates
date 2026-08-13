@@ -8,6 +8,7 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getDbProjectsByIds } from "@/lib/developmentRender";
+import { resolveDevelopmentPrice, toDeliveryQuarter } from "@/lib/developmentCard";
 import { normalizeRef } from "@/lib/unitRef";
 import type { MatchFilters } from "@/lib/crm/matching";
 import { asPLocale, COPY, timeOfDayGreeting } from "./copy";
@@ -114,7 +115,17 @@ export default async function ClientPresentationPage({ params }: { params: { tok
       } else {
         units = allUnits.filter((u) => u.status === "available");
       }
-      const availableCount = vm.units.filter((u) => u.status === "available").length;
+      // Price and available-count both driven by THIS presentation item's own
+      // selection (`units` above), not the whole project — a client asked for
+      // 3-bed apartments shouldn't see a studio's price just because it's the
+      // project's cheapest unit. `resolveDevelopmentPrice` is called with null
+      // devPriceFrom/devPriceTo so it never falls back to Development.priceFrom
+      // (the whole-project scalar); when `units` is the null-selection fallback
+      // (all available units, see above) this naturally reproduces the old
+      // whole-project behavior anyway — no special-casing needed for the
+      // pre-fix presentations that still have unitRefs = null.
+      const { priceFrom } = resolveDevelopmentPrice(null, null, units);
+      const availableCount = units.filter((u) => u.status === "available").length;
       return {
         developmentId: it.developmentId,
         // Presentation-item alias wins over the development's own override.alias
@@ -126,10 +137,13 @@ export default async function ClientPresentationPage({ params }: { params: { tok
         district: vm.district || null,
         area: vm.area || null,
         vatApplies: vm.vatApplies ?? null,
-        priceFrom: vm.priceFrom ?? null,
+        priceFrom,
         currency: vm.currency || "EUR",
         unitsAvailable: availableCount,
         unitsTotal: vm.units.length,
+        deliveryQuarter: toDeliveryQuarter(vm.completion),
+        slug: vm.slug,
+        publishStatus: vm.publishStatus,
         mainImage: vm.gallery[0] ?? null,
         advisorComment: it.advisorComment,
         isFavorited: it.isFavorited,

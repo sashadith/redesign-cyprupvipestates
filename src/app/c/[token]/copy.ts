@@ -56,6 +56,8 @@ export const COPY: Record<PLocale, {
   privacyPolicy: string;
   priceFrom: string;
   units: string;
+  delivery: string;
+  viewOnSite: string;
 }> = {
   en: {
     eyebrowTag: "YOUR PERSONAL SELECTION",
@@ -88,6 +90,8 @@ export const COPY: Record<PLocale, {
     privacyPolicy: "Privacy policy",
     priceFrom: "from",
     units: "units",
+    delivery: "Delivery",
+    viewOnSite: "View on site",
   },
   de: {
     eyebrowTag: "IHRE PERSÖNLICHE AUSWAHL",
@@ -120,6 +124,8 @@ export const COPY: Record<PLocale, {
     privacyPolicy: "Datenschutzerklärung",
     priceFrom: "ab",
     units: "Einheiten",
+    delivery: "Fertigstellung",
+    viewOnSite: "Auf der Website ansehen",
   },
   pl: {
     eyebrowTag: "TWÓJ INDYWIDUALNY WYBÓR",
@@ -152,6 +158,8 @@ export const COPY: Record<PLocale, {
     privacyPolicy: "Polityka prywatności",
     priceFrom: "od",
     units: "lokali",
+    delivery: "Termin oddania",
+    viewOnSite: "Zobacz na stronie",
   },
   ru: {
     eyebrowTag: "ВАШ ИНДИВИДУАЛЬНЫЙ ПОДБОР",
@@ -184,6 +192,8 @@ export const COPY: Record<PLocale, {
     privacyPolicy: "Политика конфиденциальности",
     priceFrom: "от",
     units: "объектов",
+    delivery: "Срок сдачи",
+    viewOnSite: "Смотреть на сайте",
   },
 };
 

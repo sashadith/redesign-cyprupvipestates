@@ -16,7 +16,7 @@ export type OverlayUnit = {
 };
 
 export default function PropertyOverlay({
-  open, onClose, publicName, gallery, description, amenities, units, distances, locale,
+  open, onClose, publicName, gallery, description, amenities, units, distances, slug, publishStatus, locale,
 }: {
   open: boolean;
   onClose: () => void;
@@ -26,6 +26,13 @@ export default function PropertyOverlay({
   amenities: string[];
   units: OverlayUnit[];
   distances?: Record<string, number> | null;
+  // "View on site" only ever renders for a project a visitor could actually
+  // reach live — draft/archived Developments (Motive Point and Kuutio both
+  // currently have a dozen mid-import) have no public page yet, and slug is
+  // only ever set on publish (see prisma/schema.prisma's Development.slug
+  // comment), so both conditions together are the correct, sufficient gate.
+  slug?: string | null;
+  publishStatus?: string | null;
   locale: PLocale;
 }) {
   const c = COPY[locale];
@@ -69,7 +76,25 @@ export default function PropertyOverlay({
         <OverlayGallery gallery={gallery} alt={publicName} onOpen={setLbIndex} />
 
         <div className="cp-overlay__body">
-          <h2 className="cp-overlay__title">{publicName}</h2>
+          <div className="cp-overlay__titlerow">
+            <h2 className="cp-overlay__title">{publicName}</h2>
+            {publishStatus === "published" && slug && (
+              <a
+                href={`/${locale}/projects/${slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="cp-overlay__sitelink"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {c.viewOnSite}
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  <path d="M15 3h6v6" />
+                  <path d="M10 14 21 3" />
+                </svg>
+              </a>
+            )}
+          </div>
           {description && splitDescriptionParagraphs(description).map((lines, i) => (
             <p key={i} className="cp-overlay__desc">
               {lines.map((line, j) => (
