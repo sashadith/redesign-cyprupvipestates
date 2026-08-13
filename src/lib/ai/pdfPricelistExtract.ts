@@ -1,5 +1,6 @@
 import { extractColoredRowsFromPdf, classifyColor, type ColoredRow } from "./pdfPricelistColors";
 import { extractUnitsForSection, type ExtractedPricelistProject, type ExtractedUnit } from "./pricelistExtract";
+import { toTitleCaseName } from "@/lib/textCase";
 
 /* PDF-native price-list extraction (Motive Point, 2026-08-12) — one combined PDF
    covering multiple projects in one table (section headers, not one-PDF-per-project
@@ -254,7 +255,11 @@ export async function extractPricelistFromPdf(buf: Buffer, _full: boolean): Prom
         // judgment call, not a safety one.
       });
     }
-    if (keptUnits.length) resultProjects.push({ project: section.projectName, units: keptUnits });
+    // Title Case — section.projectName is read verbatim off an ALL-CAPS PDF
+    // header (that's literally the detection signal, isAllCaps() above), and
+    // the display name must never be all-caps regardless of source
+    // (GROSSER AUFTRAG / Kuutio decision, 2026-08-13).
+    if (keptUnits.length) resultProjects.push({ project: toTitleCaseName(section.projectName), units: keptUnits });
   }
 
   if (!resultProjects.length) return { blocked: true, message: "Could not extract any projects from the PDF price list." };

@@ -1,4 +1,5 @@
 import { anthropic, AI_MODEL_FAST } from "./anthropic";
+import { toTitleCaseName } from "@/lib/textCase";
 
 /* Extract project + per-unit data from a developer's master price list (a flattened
    spreadsheet / CSV / PDF text). To avoid the model intermittently mis-formatting a
@@ -262,8 +263,15 @@ export async function extractAvailabilityFromPricelist(text: string, full = fals
   const byProject = new Map<string, ExtractedPricelistProject>();
   for (const u of unitItems) {
     if (!u?.project || !u?.ref) continue;
-    const { name: project, matched } = toCanonical(u.project);
+    const { name: matchedName, matched } = toCanonical(u.project);
     if (canonicalNames.length && !matched) continue;
+    // Title Case regardless of how the source (spreadsheet header, PDF title)
+    // delivered it — GROSSER AUFTRAG / Kuutio decision, 2026-08-13. Applied
+    // here, once, so every downstream consumer (canonical matching against
+    // existing DB names, mergedBySlug grouping, writeProject) sees the
+    // already-cased name — matching itself stays on matchedName/key(), which
+    // don't care about case.
+    const project = toTitleCaseName(matchedName);
     const k = key(project);
     if (!byProject.has(k)) byProject.set(k, { project, units: [] });
     byProject.get(k)!.units.push({
