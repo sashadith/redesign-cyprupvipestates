@@ -68,9 +68,23 @@ export type DriveSyncResult = {
   message: string;
   projects?: number;
   unitsAvailable?: number;
+  // Per-project pruning guard trips (see writeProject's pruneBlocked doc
+  // comment) — a sync can still be `ok: true` overall (the projects it COULD
+  // safely write, it did) while individual projects sit here needing a human
+  // look before the next run prunes them for real.
+  blockedProjects?: { project: string; message: string; missing: number; total: number }[];
 };
 
-async function writeProject(developerAccountId: string, accountName: string, p: ExtractedPricelistProject, content: boolean, files: DriveFile[], at: string, richUnits: boolean = content): Promise<{ avail: number; mediaChanged: boolean }> {
+// Same threshold as feedSync.ts's checkFeedCompleteness (15% + 20-unit floor,
+// see that file's comment for how the floor/pct split was validated against
+// real per-developer unit counts) — reused here rather than re-derived, since
+// the underlying question is identical: is this fresh pull thin enough that
+// treating what it's missing as "gone" would misrepresent a bad read as real
+// inventory loss.
+const PRUNE_INCOMPLETE_PCT = 0.15;
+const PRUNE_INCOMPLETE_ABS_FLOOR = 20;
+
+async function writeProject(developerAccountId: string, accountName: string, p: ExtractedPricelistProject, content: boolean, files: DriveFile[], at: string, richUnits: boolean = content): Promise<{ avail: number; mediaChanged: boolean; pruneBlocked?: { message: string; missing: number; total: number } }> {
   // Project-level fields sourced straight from the price-list TEXT (category, completion,
   // amenities, area, map link) cost nothing extra to refresh — no image download, no PDF
   // conversion, no document analysis — so they should update on a fast units-only sync too,
@@ -150,7 +164,7 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
   // content fields, so a thin re-extraction can't blank out previously-captured detail).
   const existingUnits = await prisma.developmentUnit.findMany({
     where: { developmentId: dev.id },
-    select: { id: true, ref: true, beds: true, baths: true, areaBuilt: true, areaPlot: true, areaVeranda: true, areaVerandaOpen: true, attrs: true, amenities: true },
+    select: { id: true, ref: true, source: true, beds: true, baths: true, areaBuilt: true, areaPlot: true, areaVeranda: true, areaVerandaOpen: true, attrs: true, amenities: true },
   });
   const existingByKey = new Map<string, (typeof existingUnits)[number]>();
   for (const eu of existingUnits) if (eu.ref) existingByKey.set(refKey(eu.ref, p.project), eu);
@@ -165,6 +179,7 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
   // the light nightly sync where no extraction of amenities happens at all.
   const projectAmenities = ((dev.amenities as string[] | null) ?? []).filter(Boolean);
 
+  const touchedIds = new Set<string>();
   for (const u of p.units) {
     const ref = String(u.ref || "").trim();
     if (!ref) continue;
@@ -189,13 +204,51 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
         : { ...base, ...fresh, amenities: projectAmenities };
     }
     if (existing) {
+      touchedIds.add(existing.id);
       await prisma.developmentUnit.update({ where: { id: existing.id }, data });
     } else {
       const created = await prisma.developmentUnit.create({ data: { developmentId: dev.id, ...data } });
-      existingByKey.set(k, { id: created.id, ref: created.ref, beds: created.beds, baths: created.baths, areaBuilt: created.areaBuilt, areaPlot: created.areaPlot, areaVeranda: created.areaVeranda, areaVerandaOpen: created.areaVerandaOpen, attrs: created.attrs as any, amenities: created.amenities as any });
+      touchedIds.add(created.id);
+      existingByKey.set(k, { id: created.id, ref: created.ref, source: created.source, beds: created.beds, baths: created.baths, areaBuilt: created.areaBuilt, areaPlot: created.areaPlot, areaVeranda: created.areaVeranda, areaVerandaOpen: created.areaVerandaOpen, attrs: created.attrs as any, amenities: created.amenities as any });
     }
   }
   if (p.units.length) await recomputeDevelopmentDerivedState(dev.id);
+
+  // Guarded pruning of stale units (2026-08-13) — the ref an AI extraction
+  // echoes back isn't fully byte-stable across syncs (see unitRef.ts), and
+  // before this, writeProject only ever updated-or-created: a unit whose ref
+  // format drifted between two syncs left the OLD row sitting forever instead
+  // of being replaced, since nothing here ever deleted anything. Confirmed on
+  // real data (Motive Point, 2026-08-13): VENARA and VENARA VIEW accumulated
+  // duplicate rows for the same physical units across several re-syncs this
+  // way. Three hard guards, all required before any delete can happen:
+  //  a) source:"manual" units are never candidates — curated rows, explicitly
+  //     protected from every sync path (Celestia's bulk-imported photos/
+  //     amenities/specs hang off these).
+  //  b) threshold-guarded exactly like feedSync's checkFeedCompleteness (same
+  //     15%/20-unit constants, see above) — if what WOULD be pruned this run
+  //     is too large a share of what's stored, prune NOTHING and report a
+  //     blocked result instead; an incomplete extraction must never look like
+  //     "everything else sold out".
+  //  c) only unit rows this project's OWN fresh extraction didn't touch are
+  //     ever candidates — an empty/failed extraction never reaches this line
+  //     at all (syncDeveloperDrive's loop skips `!p.units?.length` before
+  //     writeProject is ever called), so there is nothing to guard there.
+  let pruneBlocked: { message: string; missing: number; total: number } | undefined;
+  const prunable = existingUnits.filter((eu) => eu.source !== "manual" && !touchedIds.has(eu.id));
+  if (prunable.length) {
+    const autoBefore = existingUnits.filter((eu) => eu.source !== "manual").length;
+    const missing = prunable.length;
+    const missingPct = autoBefore > 0 ? missing / autoBefore : 0;
+    if (autoBefore > 0 && missing > PRUNE_INCOMPLETE_ABS_FLOOR && missingPct > PRUNE_INCOMPLETE_PCT) {
+      pruneBlocked = {
+        message: `${missing} of ${autoBefore} units are missing from this extraction (${Math.round(missingPct * 100)}%) — nothing was deleted, check the source before the next sync.`,
+        missing, total: autoBefore,
+      };
+    } else {
+      await prisma.developmentUnit.deleteMany({ where: { id: { in: prunable.map((u) => u.id) } } });
+    }
+  }
 
 
   // Generate a description on FULL import, but only when none exists yet.
@@ -389,11 +442,13 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
   const richUnits = !!opts.content || !!opts.richUnits;
   let totalAvail = 0;
   let mediaChanged = false;
+  const blockedProjects: { project: string; message: string; missing: number; total: number }[] = [];
   for (const p of projects) {
     if (!p.project || !p.units?.length) continue;
     const r = await writeProject(developerAccountId, acct.name, p, !!opts.content, files, at, richUnits);
     totalAvail += r.avail;
     if (r.mediaChanged) mediaChanged = true;
+    if (r.pruneBlocked) blockedProjects.push({ project: p.project, ...r.pruneBlocked });
   }
 
   // Only the whole-developer sync (no single-project scope) tracks the price
@@ -409,7 +464,12 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
   // New images/plans were mirrored → restart so Next serves them (best-effort).
   if (mediaChanged) scheduleAppRestart();
 
-  return { ok: true, message: `${opts.content ? "Imported" : "Synced"} ${projects.length} project${projects.length === 1 ? "" : "s"} from “${price.name}”.`, projects: projects.length, unitsAvailable: totalAvail };
+  return {
+    ok: true,
+    message: `${opts.content ? "Imported" : "Synced"} ${projects.length} project${projects.length === 1 ? "" : "s"} from “${price.name}”.`,
+    projects: projects.length, unitsAvailable: totalAvail,
+    ...(blockedProjects.length ? { blockedProjects } : {}),
+  };
 }
 
 // Every developer with a Drive link. Daily cron uses content=false (availability

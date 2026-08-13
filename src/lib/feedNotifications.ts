@@ -90,6 +90,21 @@ export function buildDriveSyncFailureMessage(dev: string, message: string): { su
   return { subject: `${dev}: Drive sync failed`, text };
 }
 
+// Drive-sync stale-unit pruning guard tripped (2026-08-13, see writeProject's
+// pruneBlocked doc comment in driveAvailabilitySync.ts) — `dev` is the
+// DeveloperAccount's display name, same as buildDriveSyncFailureMessage above
+// (not a feed-sync dev-key), and `project` names the ONE project within that
+// developer whose extraction looked too thin to safely prune. Not throttled
+// like the failure message — this fires every time it trips, since (unlike a
+// sync failure that just keeps retrying unattended) a human needs to actually
+// look at the source before the next run, and a missed notification here
+// means stale duplicate rows keep sitting in the catalogue indefinitely.
+export function buildDriveIncompleteMessage(dev: string, project: string, message: string): { subject: string; text: string } | null {
+  if (!message) return null;
+  const text = [`⚠️ ${dev} — ${project}: extraction looks incomplete`, message].join("\n");
+  return { subject: `${dev}: ${project} — extraction looks incomplete`, text };
+}
+
 export async function sendFeedNotification(text: string, subject: string): Promise<void> {
   await sendTelegramMessage(text);
   await sendEmail({ subject, text });

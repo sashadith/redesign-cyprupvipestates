@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncAllDrives } from "@/lib/driveAvailabilitySync";
 import { withCronLog, logCronRun, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
-import { buildDriveSyncFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
+import { buildDriveSyncFailureMessage, buildDriveIncompleteMessage, sendFeedNotification } from "@/lib/feedNotifications";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -37,6 +37,17 @@ export async function GET(req: NextRequest) {
           await sendFeedNotification(msg.text, msg.subject);
           await markFailureStreakNotified(job);
         }
+      }
+      // Per-project pruning-guard trips (writeProject's pruneBlocked, see
+      // driveAvailabilitySync.ts) — a sync can be ok:true overall while one
+      // project's extraction was too thin to safely prune. Own job-key
+      // namespace, not throttled (a human needs to look before the next run
+      // prunes for real, unlike a failure that just keeps retrying unattended).
+      for (const bp of r.result.blockedProjects ?? []) {
+        const incompleteJob = `drive-incomplete:${r.developer}:${bp.project}`;
+        await logCronRun(incompleteJob, false, bp.message);
+        const msg = buildDriveIncompleteMessage(r.developer, bp.project, bp.message);
+        if (msg) await sendFeedNotification(msg.text, msg.subject);
       }
     }
     return NextResponse.json({ ok: true, at: new Date().toISOString(), content, force, results });

@@ -138,7 +138,20 @@ function flattenToSections(rows: ColoredRow[]): { sections: Section[]; totalUnit
     const isUnitRow = cells.length > 3 && looksLikeRef(first);
     if (isUnitRow) {
       totalUnitRows++;
-      const ref = currentBlock ? `${currentBlock} ${first}` : first;
+      // Don't prepend the block name when the unit's own label already starts
+      // with that block's letter (2026-08-13, confirmed on this real document:
+      // "Block A" + "A101" — the label itself redundantly repeats the block
+      // letter). Prepending it anyway is what fed the AI an inconsistent input
+      // to echo back ("Block A A101" one call, trimmed to "A101" the next,
+      // non-deterministically) — this is the actual root cause of duplicate
+      // DB rows for the same physical unit across re-syncs, fixed here at the
+      // source rather than papered over downstream. A block whose units do NOT
+      // redundantly repeat the letter (e.g. "Block A" + "101" — confirmed real
+      // on two other developers in this DB) still gets prefixed normally,
+      // since there the block letter carries real, non-redundant meaning.
+      const blockLetter = currentBlock ? /^block\s+([a-z])\b/i.exec(currentBlock)?.[1] : null;
+      const alreadyHasBlockLetter = blockLetter && new RegExp(`^${blockLetter}`, "i").test(first);
+      const ref = currentBlock && !alreadyHasBlockLetter ? `${currentBlock} ${first}` : first;
       const refKey = ref.toLowerCase();
 
       const rowColors = cells.map((c) => classifyColor(c.color));

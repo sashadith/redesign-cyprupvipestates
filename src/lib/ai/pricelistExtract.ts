@@ -93,7 +93,7 @@ PRICE LIST:
 
 const PROMPT_UNITS = `You are given ONE section of a developer's master PRICE LIST (spreadsheet flattened to text) — it covers exactly ONE project, named in its own first row/title. Return a FLAT list "items" of EVERY sellable unit in this section — one item per unit:
 - project: the SAME project name for every single item, taken from this section's own title/first row. A section is often internally divided into sub-groups (e.g. "Block A", "Block B", a separate "Villa Number" table, apartments vs villas) — those are NOT separate projects, they are all part of THIS ONE project. Never invent a per-block or per-subtable project name; use one identical string for all items.
-- ref: the unit / villa / apartment label as shown (prefix the block, e.g. "Block A 201").
+- ref: the unit / villa / apartment label EXACTLY as its own cell/row shows it, verbatim — copy it whole, never trim, shorten, or drop any part of it (including a "Block X" prefix already present in that cell's own text).
 - bedrooms, bathrooms: as given.
 - areaBuilt: the total built/internal area, ONLY when the sheet gives ONE such figure.
 - areaGroundFloor, areaUpperFloor: when the sheet instead SPLITS internal area by floor (e.g. "Ground Floor (m²)" + "Lower Floor (m²)" / "First Floor (m²)") — fill these two instead of areaBuilt.
