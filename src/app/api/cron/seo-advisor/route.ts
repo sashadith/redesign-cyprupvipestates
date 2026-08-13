@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withCronLog } from "@/lib/cronLog";
+import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
 import { runSeoAdvisor } from "@/lib/seoAdvisor/run";
 import { aiConfigured } from "@/lib/ai/anthropic";
+import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
@@ -31,6 +32,15 @@ export async function GET(req: NextRequest) {
     );
     return NextResponse.json({ ok: true, at: new Date().toISOString(), ...result });
   } catch (e) {
-    return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
+    const message = e instanceof Error ? e.message : String(e);
+    // 2026-08-13 (GROSSER AUFTRAG Teil 4) — the doc comment above only
+    // covers the SUCCESS reporting path (piggybacks onto action-digest);
+    // a failure here had no alerting at all until now.
+    if (await shouldNotifyFailureStreak("seo-advisor")) {
+      const msg = buildCronFailureMessage("seo-advisor", message);
+      await sendFeedNotification(msg.text, msg.subject);
+      await markFailureStreakNotified("seo-advisor");
+    }
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }

@@ -6,10 +6,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import crypto from "node:crypto";
-import { withCronLog } from "@/lib/cronLog";
+import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
 import { localizedHref } from "@/lib/locale";
 import { findEmptyProjectsBlock } from "@/lib/projectsBlockValidation";
+import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -97,7 +98,16 @@ export async function GET(req: NextRequest) {
     );
     return NextResponse.json({ ok: true, ...result });
   } catch (e) {
-    return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
+    const message = e instanceof Error ? e.message : String(e);
+    // 2026-08-13 (GROSSER AUFTRAG Teil 4) — this cron runs every few minutes;
+    // a crash here means scheduled content silently stops publishing on
+    // time, previously with zero alerting at all.
+    if (await shouldNotifyFailureStreak("publish-scheduled")) {
+      const msg = buildCronFailureMessage("publish-scheduled", message);
+      await sendFeedNotification(msg.text, msg.subject);
+      await markFailureStreakNotified("publish-scheduled");
+    }
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
 export const POST = GET;

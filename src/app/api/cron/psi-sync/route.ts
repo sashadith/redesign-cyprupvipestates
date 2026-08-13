@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withCronLog } from "@/lib/cronLog";
+import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
 import { isPsiConfigured, fetchCwv, sleep } from "@/lib/psi/client";
+import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 200;
@@ -86,6 +87,7 @@ export async function GET(req: NextRequest) {
   if (!process.env.CRON_SECRET || key !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  const okFrom = (r: Awaited<ReturnType<typeof runSync>>) => r.skipped || r.failed === 0;
   try {
     const result = await withCronLog(
       "psi-sync",
@@ -97,10 +99,24 @@ export async function GET(req: NextRequest) {
       // always resolves normally, so without this the aggregate row logged
       // ok:true even if every single URL failed. "skipped" (PSI_API_KEY
       // unset) is a deliberate no-op, not a failure.
-      (r) => r.skipped || r.failed === 0,
+      okFrom,
     );
+    // 2026-08-13 (GROSSER AUFTRAG Teil 4) — runSync() catches per-URL
+    // failures internally and resolves normally, so a partial/total failure
+    // never reaches the outer catch below; check okFrom explicitly here too.
+    if (!okFrom(result) && (await shouldNotifyFailureStreak("psi-sync"))) {
+      const msg = buildCronFailureMessage("psi-sync", `${result.failed}/${result.total} URL(s) failed`);
+      await sendFeedNotification(msg.text, msg.subject);
+      await markFailureStreakNotified("psi-sync");
+    }
     return NextResponse.json({ ok: true, at: new Date().toISOString(), ...result });
   } catch (e) {
-    return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
+    const message = e instanceof Error ? e.message : String(e);
+    if (await shouldNotifyFailureStreak("psi-sync")) {
+      const msg = buildCronFailureMessage("psi-sync", message);
+      await sendFeedNotification(msg.text, msg.subject);
+      await markFailureStreakNotified("psi-sync");
+    }
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }

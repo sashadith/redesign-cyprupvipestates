@@ -90,6 +90,21 @@ export function buildDriveSyncFailureMessage(dev: string, message: string): { su
   return { subject: `${dev}: Drive sync failed`, text };
 }
 
+// Generic per-cron-job failure notification (2026-08-13, GROSSER AUFTRAG
+// Teil 4) — for cron routes with a single linear pipeline or a simple
+// partial-failure summary, where a bespoke per-developer message (like
+// buildDriveSyncFailureMessage's) isn't worth the extra code. Same throttle
+// contract as every other failure message here: caller checks
+// shouldNotifyFailureStreak first, calls markFailureStreakNotified after.
+export function buildCronFailureMessage(job: string, message: string): { subject: string; text: string } {
+  const text = [
+    `⚠️ ${job} — cron failed`,
+    message,
+    `It will keep retrying automatically on its normal schedule. You'll only be notified again if it's still failing in a week.`,
+  ].join("\n");
+  return { subject: `${job}: cron failed`, text };
+}
+
 export async function sendFeedNotification(text: string, subject: string): Promise<void> {
   await sendTelegramMessage(text);
   await sendEmail({ subject, text });
