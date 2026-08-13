@@ -68,14 +68,13 @@ export type DriveSyncResult = {
   message: string;
   projects?: number;
   unitsAvailable?: number;
-  // Per-project pruning guard trips (see writeProject's pruneBlocked doc
-  // comment) — a sync can still be `ok: true` overall (the projects it COULD
-  // safely write, it did) while individual projects sit here needing a human
-  // look before the next run prunes them for real.
-  blockedProjects?: { project: string; message: string; missing: number; total: number }[];
+  // Per-project deletion counts from this run's pruning (see writeProject's
+  // doc comment on the prunable block) — how many stale units were removed
+  // and how many remain, per project, for post-sync review.
+  pruned?: { project: string; deleted: number; remaining: number }[];
 };
 
-async function writeProject(developerAccountId: string, accountName: string, p: ExtractedPricelistProject, content: boolean, files: DriveFile[], at: string, richUnits: boolean = content): Promise<{ avail: number; mediaChanged: boolean; pruneBlocked?: { message: string; missing: number; total: number } }> {
+async function writeProject(developerAccountId: string, accountName: string, p: ExtractedPricelistProject, content: boolean, files: DriveFile[], at: string, richUnits: boolean = content): Promise<{ avail: number; mediaChanged: boolean; pruned?: { deleted: number; remaining: number } }> {
   // Project-level fields sourced straight from the price-list TEXT (category, completion,
   // amenities, area, map link) cost nothing extra to refresh — no image download, no PDF
   // conversion, no document analysis — so they should update on a fast units-only sync too,
@@ -205,40 +204,35 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
   }
   if (p.units.length) await recomputeDevelopmentDerivedState(dev.id);
 
-  // Pruning DISABLED (2026-08-13 incident) — the guarded-deletion mechanism
-  // below was deployed, ran exactly once against real production data, and
-  // deleted 75 real units across 7 Olias projects (Alder Park, Arbeo Park,
-  // Grato Homes 2, Nexus House, Olivelia Homes, Pine Park, Roble Park) that
-  // an incomplete extraction had simply failed to re-match — restored from
-  // backup the same day. Root cause: the 15%/20-unit threshold was copied
-  // verbatim from feedSync's checkFeedCompleteness, which guards a whole
-  // DEVELOPER's feed (hundreds of units, so a 20-unit floor is a sane
-  // backstop) — this guard runs per PROJECT instead, and several of these
-  // projects have fewer than 20 units total, so a severe proportional loss
-  // (Olivelia: 17 of 20 missing, 85%) sailed straight past the absolute
-  // floor with zero protection. Never deployed a threshold-tuning fix
-  // without first understanding WHY extractions were coming back thin
-  // across seven+ projects simultaneously — until that's root-caused,
-  // deletion stays off entirely. Stale duplicate rows (the ref-instability
-  // problem this was originally built for) are the lesser evil versus
-  // silently vanishing real inventory: duplicates are visible and annoying,
-  // missing units are invisible and dangerous.
-  //
-  // `prunable` is still computed and reported (diagnostic only, useful for
-  // finding the root cause) — `deleteMany` is not called under any
-  // condition. Do not re-enable without redesigning the threshold for
-  // per-project scope (a percentage-only rule with no absolute floor was
-  // the standing proposal, but is deliberately not yet implemented).
+  // Pruning (2026-08-13, redesigned after an incident) — the database should
+  // mirror the developer's CURRENT price list exactly, nothing more: a unit
+  // no longer present gets deleted, not soft-flagged. Exactly two absolute
+  // conditions, no percentage/floor threshold (an earlier version copied
+  // feedSync's 15%/20-unit guard verbatim, which deleted 75 real units on
+  // its first live run — the projects it hit had FEWER than 20 units total,
+  // so severe proportional loss sailed past the absolute floor unprotected;
+  // full incident + root cause in git history). The threshold approach is
+  // deliberately not replaced with a retuned one: verified on real data that
+  // "thin" extractions were the developer's OWN spreadsheet edits (Olias
+  // deleted already-sold rows across several tabs), not extraction failures
+  // — a genuinely smaller list IS the correct new state, not a signal to
+  // distrust.
+  //  a) source:"manual" units are never deleted — curated rows, explicitly
+  //     protected from every sync path (Celestia's bulk-imported photos/
+  //     amenities/specs hang off these).
+  //  b) an empty or failed extraction writes NOTHING, for this project or
+  //     any other — "no result" is not the same as "an empty list is the
+  //     real state". Structural, not a check here: syncDeveloperDrive's loop
+  //     skips `!p.units?.length` before writeProject is ever called, and a
+  //     thrown extraction error fails the whole developer (syncAllDrives'
+  //     per-developer try/catch) before any writeProject call happens for
+  //     it at all. Only a genuinely non-empty fresh extraction ever reaches
+  //     this line, so deletion here is unconditional once reached.
   const prunable = existingUnits.filter((eu) => eu.source !== "manual" && !touchedIds.has(eu.id));
-  let pruneBlocked: { message: string; missing: number; total: number } | undefined;
+  let pruned: { deleted: number; remaining: number } | undefined;
   if (prunable.length) {
-    const autoBefore = existingUnits.filter((eu) => eu.source !== "manual").length;
-    const missing = prunable.length;
-    const missingPct = autoBefore > 0 ? missing / autoBefore : 0;
-    pruneBlocked = {
-      message: `${missing} of ${autoBefore} units in this extraction weren't matched (${Math.round(missingPct * 100)}%) — pruning is disabled, nothing was deleted or changed.`,
-      missing, total: autoBefore,
-    };
+    await prisma.developmentUnit.deleteMany({ where: { id: { in: prunable.map((u) => u.id) } } });
+    pruned = { deleted: prunable.length, remaining: existingUnits.length - prunable.length };
   }
 
 
@@ -351,7 +345,7 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
     } catch { /* media is best-effort */ }
   }
 
-  return { avail, mediaChanged, ...(pruneBlocked ? { pruneBlocked } : {}) };
+  return { avail, mediaChanged, ...(pruned ? { pruned } : {}) };
 }
 
 export async function syncDeveloperDrive(developerAccountId: string, opts: { force?: boolean; content?: boolean; richUnits?: boolean; onlyFeedProjectId?: string } = {}): Promise<DriveSyncResult> {
@@ -433,13 +427,13 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
   const richUnits = !!opts.content || !!opts.richUnits;
   let totalAvail = 0;
   let mediaChanged = false;
-  const blockedProjects: { project: string; message: string; missing: number; total: number }[] = [];
+  const pruned: { project: string; deleted: number; remaining: number }[] = [];
   for (const p of projects) {
     if (!p.project || !p.units?.length) continue;
     const r = await writeProject(developerAccountId, acct.name, p, !!opts.content, files, at, richUnits);
     totalAvail += r.avail;
     if (r.mediaChanged) mediaChanged = true;
-    if (r.pruneBlocked) blockedProjects.push({ project: p.project, ...r.pruneBlocked });
+    if (r.pruned) pruned.push({ project: p.project, ...r.pruned });
   }
 
   // Only the whole-developer sync (no single-project scope) tracks the price
@@ -459,7 +453,7 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
     ok: true,
     message: `${opts.content ? "Imported" : "Synced"} ${projects.length} project${projects.length === 1 ? "" : "s"} from “${price.name}”.`,
     projects: projects.length, unitsAvailable: totalAvail,
-    ...(blockedProjects.length ? { blockedProjects } : {}),
+    ...(pruned.length ? { pruned } : {}),
   };
 }
 

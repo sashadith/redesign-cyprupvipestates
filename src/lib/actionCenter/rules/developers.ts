@@ -215,37 +215,6 @@ async function feedIncompleteWarnings(): Promise<ActionItem[]> {
   return items;
 }
 
-// (e3) Drive-sync pruning guard tripped for one project (see writeProject's
-// pruneBlocked doc comment, driveAvailabilitySync.ts) — that PROJECT's own
-// extraction looked too thin to safely delete its stale/orphaned unit rows,
-// so nothing was deleted this run. Own job-key namespace ("drive-incomplete:"),
-// same "latest row per job" pattern as feedIncompleteWarnings above, scoped
-// per developer+project (job key carries both) since a Drive sync writes
-// several independent projects per run, unlike feed-sync's whole-developer
-// completeness guard.
-async function driveIncompleteWarnings(): Promise<ActionItem[]> {
-  const rows = await prisma.cronRunLog.findMany({
-    where: { job: { startsWith: "drive-incomplete:" } },
-    orderBy: { ranAt: "desc" },
-    take: 500,
-  });
-  const latestByJob = new Map<string, (typeof rows)[number]>();
-  for (const r of rows) if (!latestByJob.has(r.job)) latestByJob.set(r.job, r);
-
-  const items: ActionItem[] = [];
-  for (const [job, row] of Array.from(latestByJob)) {
-    if (row.ok) continue; // a later, complete sync superseded the block — not a live condition
-    const key = job.slice("drive-incomplete:".length); // "<developer>:<project>"
-    items.push({
-      id: `drive-incomplete:${job}`, severity: "URGENT", category: "DEVELOPERS",
-      title: `${key} — extraction looks incomplete, nothing pruned`,
-      description: row.message || "A large share of this project's known units are missing from the latest extraction. Nothing was deleted; check the source before the next sync.",
-      deepLink: `/admin/developments`, since: row.ranAt,
-    });
-  }
-  return items;
-}
-
 // (f) Published/ready development whose source feed no longer lists it.
 // syncedAt only advances when the sync loop actually visits a project (see
 // feedSync.ts's developmentRow() — it's set unconditionally on every
@@ -575,10 +544,9 @@ async function imageDriftPending(): Promise<ActionItem[]> {
 }
 
 export async function developerRules(): Promise<ActionItem[]> {
-  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n] = await Promise.all([
+  const [a, b, c, d, e, f, g, h, i, j, k, l, m] = await Promise.all([
     soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(), backInStockReminders(),
     developerNoPageReminders(), developerLinkBrokenReminders(), overlapCandidatesPending(), developerLinkCollisions(), feedIncompleteWarnings(), imageDriftPending(),
-    driveIncompleteWarnings(),
   ]);
-  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l, ...m, ...n];
+  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l, ...m];
 }

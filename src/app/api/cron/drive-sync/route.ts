@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { syncAllDrives } from "@/lib/driveAvailabilitySync";
 import { withCronLog, logCronRun, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
-import { buildDriveSyncFailureMessage, buildDriveIncompleteMessage, sendFeedNotification } from "@/lib/feedNotifications";
+import { buildDriveSyncFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -38,16 +38,14 @@ export async function GET(req: NextRequest) {
           await markFailureStreakNotified(job);
         }
       }
-      // Per-project pruning-guard trips (writeProject's pruneBlocked, see
-      // driveAvailabilitySync.ts) — a sync can be ok:true overall while one
-      // project's extraction was too thin to safely prune. Own job-key
-      // namespace, not throttled (a human needs to look before the next run
-      // prunes for real, unlike a failure that just keeps retrying unattended).
-      for (const bp of r.result.blockedProjects ?? []) {
-        const incompleteJob = `drive-incomplete:${r.developer}:${bp.project}`;
-        await logCronRun(incompleteJob, false, bp.message);
-        const msg = buildDriveIncompleteMessage(r.developer, bp.project, bp.message);
-        if (msg) await sendFeedNotification(msg.text, msg.subject);
+      // Per-project pruning summary (writeProject's `pruned`, see
+      // driveAvailabilitySync.ts) — informational only, not an alert: the DB
+      // is meant to mirror the developer's current list exactly, so a
+      // deletion here is the intended, correct behavior, not a failure.
+      // Logged (ok:true) purely so a sync's deletions are traceable after
+      // the fact without needing to diff a DB backup by hand.
+      for (const pr of r.result.pruned ?? []) {
+        await logCronRun(`drive-prune:${r.developer}:${pr.project}`, true, `${pr.deleted} unit(s) removed, ${pr.remaining} remain`);
       }
     }
     return NextResponse.json({ ok: true, at: new Date().toISOString(), content, force, results });
