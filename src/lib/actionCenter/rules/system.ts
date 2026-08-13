@@ -22,6 +22,16 @@ const JOBS: { job: string; label: string; expectedMs: number }[] = [
   // was watching — see DEPLOYMENT.md's tar-over-symlink entry).
   { job: "db-backup", label: "db-backup", expectedMs: 24 * HOUR },
   { job: "uploads-backup", label: "uploads-backup", expectedMs: 7 * 24 * HOUR },
+  // 2026-08-13 (GROSSER AUFTRAG Teil 4) — the rest of the crontab was never
+  // added here, so a job that stopped firing entirely (as opposed to firing
+  // and failing) had no "cron didn't run at all" detection the way
+  // feed-sync/drive-sync/the backups already did.
+  { job: "action-digest", label: "action-digest", expectedMs: 24 * HOUR },
+  { job: "gsc-sync", label: "gsc-sync", expectedMs: 24 * HOUR },
+  { job: "psi-sync", label: "psi-sync", expectedMs: 24 * HOUR },
+  { job: "seo-advisor", label: "seo-advisor", expectedMs: 7 * 24 * HOUR },
+  { job: "email-inbound", label: "email-inbound", expectedMs: 5 * MIN },
+  { job: "booking-reminders", label: "booking-reminders", expectedMs: 5 * MIN },
 ];
 
 // 2026-08-11 (analytics bot-traffic incident) — two exact user-agent strings

@@ -99,6 +99,50 @@ async function todaysAppointmentLines(): Promise<string[]> {
   ];
 }
 
+// GROSSER AUFTRAG Teil 5 (2026-08-13) — daily confirmation of the 4am sync
+// batch (feed-sync 04:00, drive-sync 04:30), sent even when everything went
+// fine (that's the point — a silent night currently looks identical to a
+// cron that never fired at all). Piggybacks onto this existing 05:00 digest
+// rather than a new crontab entry, same pattern as the SEO Advisor/
+// appointments sections below. Reads CronRunLog directly — both aggregate
+// rows (job "feed-sync"/"drive-sync") AND their per-developer sub-rows
+// (job "feed-sync:<dev>"/"drive-sync:<dev>", written by those routes
+// themselves) — so this doubles as "did the sync even run" detection: if
+// neither aggregate row exists in the lookback window, that's surfaced
+// explicitly rather than the summary just silently having nothing to say.
+const MORNING_SUMMARY_WINDOW_HOURS = 4;
+
+async function morningSyncSummaryLines(): Promise<string[]> {
+  const since = new Date(Date.now() - MORNING_SUMMARY_WINDOW_HOURS * 3_600_000);
+  const rows = await prisma.cronRunLog.findMany({
+    where: {
+      ranAt: { gte: since },
+      OR: [{ job: { in: ["feed-sync", "drive-sync"] } }, { job: { startsWith: "feed-sync:" } }, { job: { startsWith: "drive-sync:" } }],
+    },
+    orderBy: { ranAt: "desc" },
+  });
+  const aggFeed = rows.find((r) => r.job === "feed-sync");
+  const aggDrive = rows.find((r) => r.job === "drive-sync");
+
+  const lines = ["", "<b>🌅 Morning sync summary</b>"];
+  if (!aggFeed && !aggDrive) {
+    lines.push(`⚠️ Neither feed-sync nor drive-sync ran in the last ${MORNING_SUMMARY_WINDOW_HOURS}h — the cron itself may not have fired.`);
+    return lines;
+  }
+  lines.push(aggFeed ? `Feed sync: ${aggFeed.ok ? "✅" : "❌"} ${escapeHtml(aggFeed.message ?? "")}` : "Feed sync: ⚠️ did not run");
+  lines.push(aggDrive ? `Drive sync: ${aggDrive.ok ? "✅" : "❌"} ${escapeHtml(aggDrive.message ?? "")}` : "Drive sync: ⚠️ did not run");
+
+  const seen = new Set<string>();
+  const perDev = rows
+    .filter((r) => (r.job.startsWith("feed-sync:") || r.job.startsWith("drive-sync:")) && !seen.has(r.job) && seen.add(r.job))
+    .sort((a, b) => a.job.localeCompare(b.job));
+  for (const r of perDev) {
+    const name = r.job.replace(/^(feed-sync|drive-sync):/, "");
+    lines.push(`${r.ok ? "✅" : "❌"} ${escapeHtml(name)}: ${escapeHtml((r.message ?? "").slice(0, 150))}`);
+  }
+  return lines;
+}
+
 // 2026-08-13 — was: top-10-by-oldest-first, everything else folded into an
 // unreadable "...and N more". With 50-86 open URGENT/ACTION items on a given
 // day (a real, persistent backlog) and oldest-first sorting, a genuinely NEW
@@ -118,8 +162,13 @@ async function runDigest() {
   const { fresh, recurring, quiet } = await classifyForDigest(items);
   const advisorLines = await maybeAppendAdvisorSummary();
   const appointmentLines = await todaysAppointmentLines();
+  const morningSyncLines = await morningSyncSummaryLines();
 
-  if (!fresh.length && !recurring.length && !advisorLines.length && !appointmentLines.length) {
+  // morningSyncLines is non-empty on every real day (Teil 5: a confirmation
+  // every morning, success or not), so in practice this only stays false if
+  // CronRunLog itself is unreachable — that already surfaces via the outer
+  // catch/withCronLog, not silently here.
+  if (!fresh.length && !recurring.length && !advisorLines.length && !appointmentLines.length && !morningSyncLines.length) {
     return { sent: false, count: 0, fresh: 0, recurring: 0, quiet };
   }
 
@@ -132,6 +181,7 @@ async function runDigest() {
     quiet > 0 ? `\n${quiet} other known issue${quiet === 1 ? "" : "s"} still open (reminded within the last ${REMINDER_THROTTLE_DAYS} days, not repeated today).` : "",
     ...advisorLines,
     ...appointmentLines,
+    ...morningSyncLines,
     "",
     `<a href="${siteUrl}/admin">Open Action Center</a>`,
   ].filter(Boolean);
@@ -158,6 +208,7 @@ async function runDigest() {
     quiet > 0 ? `\n${quiet} other known issue(s) still open (not repeated today).` : "",
     ...(advisorLines.length ? ["", "SEO Advisor:", ...advisorLines.map(stripHtml)] : []),
     ...(appointmentLines.length ? ["", "Today's appointments:", ...appointmentLines.map(stripHtml)] : []),
+    ...morningSyncLines.map(stripHtml),
     "",
     `${siteUrl}/admin`,
   ].filter(Boolean).join("\n");

@@ -30,7 +30,11 @@ export async function GET(req: NextRequest) {
     // failed", not just "the drive-sync job as a whole had a bad run".
     for (const r of results) {
       const job = `drive-sync:${r.developer}`;
-      await logCronRun(job, r.result.ok, r.result.ok ? undefined : r.result.message);
+      // 2026-08-13 (GROSSER AUFTRAG Teil 5) — result.message already carries a
+      // real summary on success too ("Imported N projects from ..."), was
+      // discarded here so the morning summary had nothing to show per
+      // developer beyond a bare checkmark.
+      await logCronRun(job, r.result.ok, r.result.message);
       if (!r.result.ok && (await shouldNotifyFailureStreak(job))) {
         const msg = buildDriveSyncFailureMessage(r.developer, r.result.message);
         if (msg) {
