@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withCronLog } from "@/lib/cronLog";
+import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
 import { pollInboundEmailForUser, ImapNotConfiguredError } from "@/lib/emailInbound/processInbound";
+import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -40,6 +41,7 @@ export async function GET(req: NextRequest) {
   if (!process.env.CRON_SECRET || key !== process.env.CRON_SECRET) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
+  const okFrom = (results: UserSummary[]) => results.every((r) => r.ok);
   try {
     const summaries = await withCronLog(
       "email-inbound",
@@ -58,10 +60,24 @@ export async function GET(req: NextRequest) {
       // outright, any other error is logged and pushed into the results
       // array) and always resolves normally, so without this the aggregate
       // row logged ok:true even if every configured mailbox failed.
-      (results) => results.every((r) => r.ok),
+      okFrom,
     );
+    // 2026-08-13 (GROSSER AUFTRAG Teil 4) — same reasoning as psi-sync: a
+    // partial/total mailbox failure never throws, so check okFrom explicitly.
+    if (!okFrom(summaries) && (await shouldNotifyFailureStreak("email-inbound"))) {
+      const failed = summaries.filter((r) => !r.ok).map((r) => r.error || r.userId);
+      const msg = buildCronFailureMessage("email-inbound", `${failed.length} mailbox(es) failed: ${failed.slice(0, 5).join("; ")}`);
+      await sendFeedNotification(msg.text, msg.subject);
+      await markFailureStreakNotified("email-inbound");
+    }
     return NextResponse.json({ ok: true, results: summaries });
   } catch (e) {
-    return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
+    const message = e instanceof Error ? e.message : String(e);
+    if (await shouldNotifyFailureStreak("email-inbound")) {
+      const msg = buildCronFailureMessage("email-inbound", message);
+      await sendFeedNotification(msg.text, msg.subject);
+      await markFailureStreakNotified("email-inbound");
+    }
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }

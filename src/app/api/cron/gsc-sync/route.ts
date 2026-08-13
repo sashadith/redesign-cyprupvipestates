@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { withCronLog } from "@/lib/cronLog";
+import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
 import { isGscConfigured, fetchPageLevelMetrics, fetchQueryLevelMetrics, type PageLevelRow, type QueryLevelRow } from "@/lib/gsc/client";
 import { maybeSendTitleSweepTelegram } from "@/lib/seo/titleSweepRemeasure";
+import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -121,6 +122,16 @@ export async function GET(req: NextRequest) {
     );
     return NextResponse.json({ ok: true, at: new Date().toISOString(), ...result });
   } catch (e) {
-    return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
+    const message = e instanceof Error ? e.message : String(e);
+    // 2026-08-13 (GROSSER AUFTRAG Teil 4) — gsc-sync is a linear pipeline
+    // (no partial-failure shape, unlike psi-sync/email-inbound), so a crash
+    // here is the only failure mode; withCronLog already logs it correctly,
+    // this only adds the Telegram/email side that was missing entirely.
+    if (await shouldNotifyFailureStreak("gsc-sync")) {
+      const msg = buildCronFailureMessage("gsc-sync", message);
+      await sendFeedNotification(msg.text, msg.subject);
+      await markFailureStreakNotified("gsc-sync");
+    }
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }
