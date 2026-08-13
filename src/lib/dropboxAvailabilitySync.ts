@@ -1,13 +1,23 @@
 import crypto from "node:crypto";
 import * as XLSX from "xlsx";
+import mammoth from "mammoth";
 import { prisma } from "@/lib/prisma";
 import { dropboxConfigured, getDropboxAccessToken, listSharedFolder, findPriceFile, downloadSharedFile, type DropboxFile } from "./dropbox";
 import { extractUnitsForSection, buildCanonicalMatcher, type ExtractedUnit } from "./ai/pricelistExtract";
 import { extractColoredRowsFromPdf } from "./ai/pdfPricelistColors";
+import { extractTextFromPdf } from "./ai/projectInfoExtract";
+import { generateProjectDescription } from "./ai/projectDescription";
+import { anthropic, AI_MODEL_FAST } from "./ai/anthropic";
 import { toTitleCaseName } from "@/lib/textCase";
 import { normalizeRef } from "./unitRef";
 import { recomputeDevelopmentDistances } from "./developmentDistances";
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
+import { resolveMapsUrlToGeo } from "./mapsGeo";
+import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart } from "./imageMirror";
+
+const MAX_IMAGES = 10;
+const MAX_PLANS = 12;
+const IMG_MIME_RE = /^image\/(jpe?g|png|webp)$/i;
 
 /* Dropbox availability sync (2026-08-13, Kuutio) — parallel to
    driveAvailabilitySync.ts, NOT a shared/refactored code path with it (that
@@ -56,8 +66,114 @@ function splitBySheet(fullText: string): Map<string, string> {
   return out;
 }
 
+// Google Maps short/long link — same set of hosts resolveMapsUrlToGeo
+// (mapsGeo.ts) already handles for every other developer.
+const MAPS_URL_RE = /https?:\/\/(?:maps\.app\.goo\.gl|goo\.gl\/maps|(?:www\.)?google\.[a-z.]+\/maps)\S*/i;
+
+// A project's own Location .docx — confirmed on real data (2026-08-13) to
+// sit either directly in the project's root folder ("NOBLE LOCATION.docx")
+// or inside its own "LOCATION"-named subfolder (Villa A, Elpez) — check
+// both, one level deep only (matches every other per-project subfolder
+// convention already confirmed: Photos/Floor plan/Masterplan/Brochure).
+async function findMapsUrl(shareUrl: string, projectFolder: DropboxFile, rootFiles: DropboxFile[], at: string): Promise<string | null> {
+  const isLocDocx = (f: DropboxFile) => /location/i.test(f.name) && f.mimeType.includes("wordprocessingml");
+  const direct = rootFiles.find(isLocDocx);
+  const candidates: DropboxFile[] = direct ? [direct] : [];
+  if (!candidates.length) {
+    const locFolder = rootFiles.find((f) => /location/i.test(f.name) && f.mimeType.includes("folder"));
+    if (locFolder) {
+      const inner = await listSharedFolder(shareUrl, locFolder.id, at);
+      const found = inner.find(isLocDocx);
+      if (found) candidates.push(found);
+    }
+  }
+  if (!candidates.length) return null;
+  const buf = await downloadSharedFile(shareUrl, candidates[0].id, at);
+  const { value } = await mammoth.extractRawText({ buffer: buf });
+  return value.match(MAPS_URL_RE)?.[0] ?? null;
+}
+
+// Photos: whatever the "3.Photos"-style subfolder actually holds, image
+// files only (that folder can also contain videos — confirmed on real data,
+// Baia/Atrium both had .mp4 files sitting alongside the photos).
+async function findPhotos(shareUrl: string, rootFiles: DropboxFile[], at: string): Promise<DropboxFile[]> {
+  const folder = rootFiles.find((f) => /photo/i.test(f.name) && f.mimeType.includes("folder"));
+  if (!folder) return [];
+  const inner = await listSharedFolder(shareUrl, folder.id, at);
+  return inner.filter((f) => IMG_MIME_RE.test(f.mimeType)).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// Floor plans + masterplan folded together (same as googleDrive.ts's
+// collectMedia: anything under a "draw/plan/floor"-named folder is a plan,
+// covers "1. Masterplan" and "2. Floor plan" both via the same regex).
+async function findPlans(shareUrl: string, rootFiles: DropboxFile[], at: string): Promise<DropboxFile[]> {
+  const folders = rootFiles.filter((f) => /draw|plan|floor/i.test(f.name) && f.mimeType.includes("folder"));
+  const out: DropboxFile[] = [];
+  for (const folder of folders) {
+    const inner = await listSharedFolder(shareUrl, folder.id, at);
+    out.push(...inner.filter((f) => IMG_MIME_RE.test(f.mimeType) || f.mimeType === "application/pdf"));
+  }
+  return out.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// Brochure + (when present) a "Description & Specs" doc — the two real
+// marketing-text sources confirmed across all 9 projects. PDFs go through
+// the existing marketing-text-only extractor (ignores price tables/legal
+// boilerplate by design); docx is used raw, mammoth already strips markup.
+async function gatherSourceText(shareUrl: string, rootFiles: DropboxFile[], at: string): Promise<string> {
+  const parts: string[] = [];
+  const brochureFolder = rootFiles.find((f) => /brochure/i.test(f.name) && f.mimeType.includes("folder"));
+  if (brochureFolder) {
+    const inner = await listSharedFolder(shareUrl, brochureFolder.id, at);
+    const pdf = inner.find((f) => f.mimeType === "application/pdf");
+    if (pdf) {
+      const buf = await downloadSharedFile(shareUrl, pdf.id, at);
+      const text = await extractTextFromPdf(buf.toString("base64"));
+      if (text) parts.push(text);
+    }
+  }
+  const descFolder = rootFiles.find((f) => /description/i.test(f.name) && f.mimeType.includes("folder"));
+  if (descFolder) {
+    const inner = await listSharedFolder(shareUrl, descFolder.id, at);
+    const docx = inner.find((f) => f.mimeType.includes("wordprocessingml"));
+    if (docx) {
+      const buf = await downloadSharedFile(shareUrl, docx.id, at);
+      const { value } = await mammoth.extractRawText({ buffer: buf });
+      if (value.trim()) parts.push(value.trim());
+    }
+  }
+  return parts.join("\n\n");
+}
+
+// Short amenities bullet list from the same marketing text — generateProjectDescription
+// takes amenities as an INPUT (see projectDescription.ts), it doesn't derive
+// them itself; every other developer sources this from their price list's
+// own "Notes: In the prices we include…" row (pricelistExtract.ts's
+// PROMPT_AMEN), which Kuutio's sheet doesn't have — this is the free-text
+// equivalent of that same extraction, same model, same "don't invent" rule.
+async function extractAmenitiesFromText(sourceText: string): Promise<string[]> {
+  if (!sourceText.trim()) return [];
+  const client = anthropic();
+  if (!client) return [];
+  try {
+    const msg = await client.messages.create({
+      model: AI_MODEL_FAST,
+      max_tokens: 500,
+      tools: [{ name: "data", description: "Extracted amenities.", input_schema: { type: "object", properties: { amenities: { type: "array", items: { type: "string" } } }, required: ["amenities"] } }],
+      tool_choice: { type: "tool", name: "data" },
+      messages: [{ role: "user", content: `Extract a short list of real included amenities/features from this marketing text (e.g. "Infinity pool", "Underfloor heating", "Concealed A/C", "Private parking"). Short noun phrases, no sentences. Empty list if none found — never invent.\n\n${sourceText.slice(0, 8000)}` }],
+    });
+    const tool = msg.content.find((b: any) => b.type === "tool_use") as any;
+    const list = tool?.input?.amenities;
+    return Array.isArray(list) ? list.filter((x) => typeof x === "string" && x.trim()).slice(0, 15) : [];
+  } catch {
+    return [];
+  }
+}
+
 export type KuutioProjectResult = {
   folder: string;
+  folderId: string; // path relative to the share root — re-list target for content gathering
   projectName: string; // Title Case
   sourceFile: string;
   units: ExtractedUnit[];
@@ -104,10 +220,10 @@ export async function previewKuutioSync(developerAccountId: string): Promise<Kuu
     const projectName = toTitleCaseName(stripTag(folder.name));
     const inner = await listSharedFolder(shareUrl, folder.id, at);
     const priceFolder = inner.find((i) => /price\s*list|pricelist/i.test(i.name) && i.mimeType.includes("folder"));
-    if (!priceFolder) { results.push({ folder: folder.name, projectName, sourceFile: "(no price-list subfolder)", units: [], matchedExisting: null }); continue; }
+    if (!priceFolder) { results.push({ folder: folder.name, folderId: folder.id, projectName, sourceFile: "(no price-list subfolder)", units: [], matchedExisting: null }); continue; }
     const priceContents = await listSharedFolder(shareUrl, priceFolder.id, at);
     const priceFile = findPriceFile(priceContents);
-    if (!priceFile) { results.push({ folder: folder.name, projectName, sourceFile: "(no price file inside)", units: [], matchedExisting: null }); continue; }
+    if (!priceFile) { results.push({ folder: folder.name, folderId: folder.id, projectName, sourceFile: "(no price file inside)", units: [], matchedExisting: null }); continue; }
 
     let sectionText: string | null = null;
     if (priceFile.mimeType === "application/pdf") {
@@ -126,6 +242,7 @@ export async function previewKuutioSync(developerAccountId: string): Promise<Kuu
     const matchedExisting = matched ? existing.find((e) => e.publicName === name) ?? null : null;
     results.push({
       folder: folder.name,
+      folderId: folder.id,
       projectName,
       sourceFile: priceFile.name,
       units,
@@ -149,12 +266,15 @@ export type KuutioWriteResult = {
 // is not the same as "this project has no units".
 export async function writeKuutioDraft(developerAccountId: string): Promise<KuutioWriteResult> {
   const acct = await prisma.developerAccount.findUnique({ where: { id: developerAccountId } });
-  if (!acct) throw new Error("Developer account not found");
+  if (!acct?.driveFolderUrl) throw new Error("Developer account or its Dropbox link not found");
+  const shareUrl = acct.driveFolderUrl;
+  const at = await getDropboxAccessToken();
   const results = await previewKuutioSync(developerAccountId);
 
   const created: { project: string; units: number }[] = [];
   const skippedExisting: { project: string; reason: string }[] = [];
   const skippedEmpty: string[] = [];
+  let mediaChanged = false;
 
   for (const r of results) {
     if (r.matchedExisting) {
@@ -167,6 +287,59 @@ export async function writeKuutioDraft(developerAccountId: string): Promise<Kuut
     const feedKey = `dropbox:${developerAccountId}:${projSlug}`;
     const avail = r.units.filter((u) => u.status === "available").length;
     const prices = r.units.map((u) => u.price).filter((x): x is number => typeof x === "number");
+    const isNewDev = !(await prisma.development.findUnique({ where: { feedKey }, select: { id: true } }));
+
+    // Rich content — gathered once per NEW project only (re-syncing an
+    // already-created dropbox project on a future run only needs to touch
+    // units/price above; content stays as first imported, same
+    // "published = frozen" precedent as every other developer, applied here
+    // from creation since this whole first pass is draft/first-import only).
+    let mapsUrl: string | null = null;
+    let geo: { lat: number; lng: number } | null = null;
+    let sourceText = "";
+    let amenities: string[] = [];
+    let gallery: string[] = [];
+    let plans: string[] = [];
+    if (isNewDev) {
+      const rootFiles = await listSharedFolder(shareUrl, r.folderId, at);
+      [mapsUrl, sourceText] = await Promise.all([
+        findMapsUrl(shareUrl, { id: r.folderId, name: r.folder, mimeType: "application/vnd.dropbox.folder", modifiedTime: "" }, rootFiles, at),
+        gatherSourceText(shareUrl, rootFiles, at),
+      ]);
+      if (mapsUrl) geo = await resolveMapsUrlToGeo(mapsUrl);
+      amenities = await extractAmenitiesFromText(sourceText);
+
+      const devKey = devKeyFor(feedKey);
+      const photos = (await findPhotos(shareUrl, rootFiles, at)).slice(0, MAX_IMAGES);
+      for (const p of photos) {
+        try {
+          const buf = await downloadSharedFile(shareUrl, p.id, at);
+          const url = await storeUploadedImage(buf, devKey);
+          if (url) { gallery.push(url); mediaChanged = true; }
+        } catch { /* skip one photo */ }
+      }
+      const planFiles = (await findPlans(shareUrl, rootFiles, at)).slice(0, MAX_PLANS);
+      for (const pf of planFiles) {
+        try {
+          const buf = await downloadSharedFile(shareUrl, pf.id, at);
+          if (pf.mimeType === "application/pdf") {
+            const pages = await pdfPagesToJpegs(buf);
+            for (const pg of pages) { const url = await storeUploadedImage(pg, devKey); if (url) { plans.push(url); mediaChanged = true; } }
+          } else {
+            const url = await storeUploadedImage(buf, devKey);
+            if (url) { plans.push(url); mediaChanged = true; }
+          }
+        } catch { /* skip one plan */ }
+      }
+    }
+
+    const descCtx = isNewDev ? {
+      district: "", town: "", area: "",
+      projectAmenities: amenities, unitAmenities: [],
+      unitSummary: `${r.units.length} units, ${avail} available`,
+      sourceText, words: 120,
+    } : null;
+    const description = descCtx && sourceText ? await generateProjectDescription(descCtx).catch(() => null) : null;
 
     const dev = await prisma.development.upsert({
       where: { feedKey },
@@ -176,6 +349,11 @@ export async function writeKuutioDraft(developerAccountId: string): Promise<Kuut
         publishStatus: "draft", unitsTotal: r.units.length, unitsAvailable: avail,
         priceFrom: prices.length ? Math.min(...prices) : null,
         syncedAt: new Date(),
+        ...(geo ? { latitude: geo.lat, longitude: geo.lng } : {}),
+        ...(amenities.length ? { amenities } : {}),
+        ...(gallery.length ? { gallery } : {}),
+        ...(plans.length ? { plans } : {}),
+        ...(description ? { descriptionEN: description.en, descriptionDE: description.de, descriptionPL: description.pl, descriptionRU: description.ru } : {}),
       },
       update: { unitsTotal: r.units.length, unitsAvailable: avail, syncedAt: new Date() },
     });
@@ -225,6 +403,12 @@ export async function writeKuutioDraft(developerAccountId: string): Promise<Kuut
 
     created.push({ project: r.projectName, units: r.units.length });
   }
+
+  // New images/plans were mirrored under public/uploads — Next must restart
+  // to serve them (see scheduleAppRestart's own doc comment in
+  // imageMirror.ts; googleDrive-sourced syncs hit the exact same
+  // requirement).
+  if (mediaChanged) scheduleAppRestart();
 
   return { created, skippedExisting, skippedEmpty };
 }
