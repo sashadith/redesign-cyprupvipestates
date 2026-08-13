@@ -13,6 +13,7 @@ const READY_TO_PUBLISH_MIN_AGE_DAYS = 3;
 const FEED_MISSING_GRACE_DAYS = 2; // 0-1 days is grace (transient feed hiccups happen); alert from day 2
 const FEED_MISSING_ARCHIVE_REMINDER_DAYS = 7; // escalate to ACTION only once real available inventory has been stale this long
 const BACK_IN_STOCK_WINDOW_DAYS = 14; // rolling live-query window — see backInStockReminders() below
+const MANUAL_STALE_DAYS = 30; // Sascha's own figure for price/availability drift risk (2026-08-13, AGG decision)
 
 const arr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
 // Calendar-day difference (not a rolling 24h interval) — matches how "day 2"
@@ -579,11 +580,42 @@ async function emptyDraftReminders(): Promise<ActionItem[]> {
   return items;
 }
 
+// (o) Manually-maintained (dev: "manual") published/ready project whose
+// price/availability data hasn't been touched in a while — 2026-08-13 (AGG
+// decision: "wenn AGG-Daten manuell sind, veralten sie unbemerkt"). Applies
+// to every hand-entered developer, not just AGG (Luma, and any future one)
+// — a feed can't silently go stale on its own (feedMissingReminders() below
+// already covers that), but a human forgetting to revisit a manual listing
+// absolutely can. Anchor is the LATEST of the Development row's own
+// updatedAt and every one of its units' updatedAt — editing a unit's price/
+// status bumps only that unit's own updatedAt, never its parent Development
+// row, so using Development.updatedAt alone would miss exactly the edits
+// this rule cares about most.
+async function manualDataStaleReminders(): Promise<ActionItem[]> {
+  const devs = await prisma.development.findMany({
+    where: { dev: "manual", publishStatus: { in: ["published", "ready"] } },
+    select: { id: true, publicName: true, developer: true, updatedAt: true, units: { select: { updatedAt: true } } },
+  });
+  const items: ActionItem[] = [];
+  for (const d of devs) {
+    const latest = d.units.reduce((max, u) => (u.updatedAt > max ? u.updatedAt : max), d.updatedAt);
+    const days = daysSinceCalendar(latest);
+    if (days < MANUAL_STALE_DAYS) continue;
+    items.push({
+      id: `manual-stale:${d.id}`, severity: "ACTION", category: "DEVELOPERS",
+      title: `${d.developer}: ${d.publicName} not updated in ${days} days`,
+      description: `Manually maintained (no feed) — prices/availability haven't been touched in ${days} days. Worth a quick check that they're still current.`,
+      deepLink: `/admin/developments/${d.id}`, since: latest,
+    });
+  }
+  return items;
+}
+
 export async function developerRules(): Promise<ActionItem[]> {
-  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n] = await Promise.all([
+  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o] = await Promise.all([
     soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(), backInStockReminders(),
     developerNoPageReminders(), developerLinkBrokenReminders(), overlapCandidatesPending(), developerLinkCollisions(), feedIncompleteWarnings(), imageDriftPending(),
-    emptyDraftReminders(),
+    emptyDraftReminders(), manualDataStaleReminders(),
   ]);
-  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l, ...m, ...n];
+  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l, ...m, ...n, ...o];
 }

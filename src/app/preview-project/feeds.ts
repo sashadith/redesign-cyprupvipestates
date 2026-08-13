@@ -122,7 +122,6 @@ const OVERRIDES: Record<string, Ov> = {
   "aristo:Pelagos Beachfront Villas": { name: "Azure Beachfront Villas", area: "Chloraka" },
   "pafilia:Elysia Blu": { name: "Elysia Blu Residences", area: "Kato Paphos" },
   "domenica:cirvis": { name: "Cirvis Residences" },
-  "agg:vasileon": { name: "Vasileon Signature Residences" },
 
   // bbf feed data-quality fix (2026-07-31): these 35 arrive with a stray
   // leading ":" AND all-lowercase (e.g. ":balance") — confirmed via BBF's
@@ -718,49 +717,10 @@ async function medousa(id: string): Promise<ProjectVM | null> {
   };
 }
 
-// ==================================================================
-// AGG Luxury Homes (agcyprus.com) — Cloudflare-protected HTML, NO feed.
-// One-time data extracted via the Claude-in-Chrome browser (proof of concept).
-// Development listings (no per-unit availability).
-// ==================================================================
-type AggFixture = { name: string; area: string; center: { lat: number; lng: number }; priceFrom: number | null; type: string; completion: string; status: string; beds: string; baths: string; description: string; amenities: string[]; images: string[]; video?: string };
-const AGG_FIXTURES: Record<string, AggFixture> = {
-  vasileon: {
-    name: "VASILEON SIGNATURE RESIDENCES", area: "Tombs of the Kings", center: { lat: 34.7767662, lng: 32.4082053 },
-    priceFrom: 305000, type: "Apartments", completion: "Q2 2030", status: "Upcoming", beds: "up to 3", baths: "3",
-    description: "Vasileon Signature Residences is an exclusive lifestyle and investment development in Paphos, just 200 metres from the beach and promenade — a frontline position on Tombs of the Kings Road, opposite a UNESCO World Heritage Site and one of Paphos' most iconic locations. The development offers contemporary studios, one-, two- and three-bedroom apartments and penthouses, most enjoying panoramic sea views.",
-    amenities: ["Gated community", "3 outdoor swimming pools", "Adults-only pool zone", "Gym", "Spa & wellness centre", "Restaurant", "Lobby services", "Laundry services", "Sea view", "Concealed A/C", "Private parking", "Optional furniture package"],
-    images: [
-      "https://www.agcyprus.com/wp-content/uploads/2026/07/03.-Birds_Eye-scaled.jpg",
-      "https://www.agcyprus.com/wp-content/uploads/2026/07/Vasileon-23.-In-Pool-5K-scaled.jpg",
-      "https://www.agcyprus.com/wp-content/uploads/2026/07/04.-Top-View-6K-scaled.jpg",
-      "https://www.agcyprus.com/wp-content/uploads/2026/07/05.-To-the-heart-6K-scaled.jpeg",
-    ],
-    video: "https://www.youtube.com/embed/GIl1RcJu5dY",
-  },
-};
-
-async function agg(id: string): Promise<ProjectVM | null> {
-  const f = AGG_FIXTURES[id] ?? Object.values(AGG_FIXTURES)[0];
-  if (!f) return null;
-  const ov = OVERRIDES[`agg:${id}`] ?? {};
-  const district = districtFor(f.center?.lng);
-  const area = ov.area ?? f.area;
-  const extraFacts = [
-    f.type ? { label: "Property type", value: f.type } : null,
-    f.beds ? { label: "Bedrooms", value: f.beds } : null,
-    f.baths ? { label: "Bathrooms", value: f.baths } : null,
-  ].filter(Boolean) as { label: string; value: string }[];
-  return {
-    id, dev: "agg", publicName: ov.name ?? f.name, developerName: f.name, developer: "AGG Luxury Homes",
-    area, district, town: "", location: joinLoc(district, area),
-    status: f.status || "Available", category: "Residential", completion: f.completion || "", energy: "",
-    description: f.description || "",
-    gallery: f.images.map(secure), plans: [], renders: [], amenities: f.amenities, extraFacts,
-    heroVideo: ov.heroVideo, center: f.center ?? null, units: [],
-    priceFrom: f.priceFrom ?? null, priceTo: null, currency: "EUR",
-  };
-}
+// AGG Luxury Homes had a one-time Cloudflare-scrape fixture here
+// (2026-07-12 -> 2026-08-13) — retired 2026-08-13, AGG is now maintained
+// manually (dev: "manual") like any other hand-entered development. See
+// DEPLOYMENT.md / git history around 2026-08-13 for the removal.
 
 // ==================================================================
 // Square One (Kyero-standard XML): flat <property> list, one per unit, with
@@ -830,7 +790,6 @@ const DEVELOPERS: Record<string, { label: string; default: string }> = {
   pafilia: { label: "Pafilia", default: "Elysia Blu" },
   domenica: { label: "Domenica", default: "cirvis" },
   medousa: { label: "Medousa", default: "PRJ-10034" },
-  agg: { label: "AGG", default: "vasileon" },
   squareone: { label: "Square One", default: "neon" },
 };
 export const DEV_LIST = Object.entries(DEVELOPERS).map(([id, d]) => ({ id, ...d }));
@@ -854,7 +813,6 @@ export async function listProjectIds(dev: string): Promise<string[]> {
     try { return uniq(arr((await cachedParse(MEDOUSA_URL))?.feed?.projects?.project).map((p: any) => txt(p?.$?.ref))); }
     catch { return []; }
   }
-  if (dev === "agg") return Object.keys(AGG_FIXTURES);
   if (dev === "squareone") return uniq(arr((await cachedParse(SQUAREONE_URL))?.kyero?.property).map((p: any) => projectSlugFrom(p.url)));
   return [];
 }
@@ -865,7 +823,6 @@ export async function getPreviewProject(dev = "island-blue", id?: string): Promi
   if (dev === "aristo") return aristo(target);
   if (dev === "pafilia" || dev === "domenica") return xml2u(dev, target);
   if (dev === "medousa") return medousa(target);
-  if (dev === "agg") return agg(target);
   if (dev === "squareone") return squareOne(target);
   return islandBlue(target);
 }
