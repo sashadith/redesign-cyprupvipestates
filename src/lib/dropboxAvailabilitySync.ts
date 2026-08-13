@@ -280,7 +280,17 @@ export async function writeKuutioDraft(developerAccountId: string): Promise<Kuut
   let mediaChanged = false;
 
   for (const r of results) {
-    if (r.matchedExisting) {
+    // "Never touch" applies to a match against a FOREIGN row (anything not
+    // dev:"dropbox" — Noble/Quatrro/Aion's manual entries today, but this
+    // doesn't hardcode "manual" specifically). A match against our OWN
+    // previously-created dropbox row is the normal re-sync case, not an
+    // anomaly — confirmed necessary on real data: once these 6 projects
+    // exist, previewKuutioSync's own matcher naturally matches each folder
+    // against its own already-created row, and treating THAT as "foreign"
+    // would permanently freeze every dropbox-sourced project after its
+    // first sync, including the very re-run meant to backfill content this
+    // first version didn't gather yet.
+    if (r.matchedExisting && r.matchedExisting.dev !== "dropbox") {
       skippedExisting.push({ project: r.projectName, reason: `matches existing "${r.matchedExisting.publicName}" (dev:${r.matchedExisting.dev}) — never overwritten` });
       continue;
     }
