@@ -557,18 +557,23 @@ async function imageDriftPending(): Promise<ActionItem[]> {
 async function emptyDraftReminders(): Promise<ActionItem[]> {
   const devs = await prisma.development.findMany({
     where: { dev: { in: SYNCED_DEVS }, publishStatus: "draft" },
-    select: { id: true, publicName: true, developer: true, dev: true, syncedAt: true, createdAt: true, units: { select: { id: true } } },
+    select: { id: true, publicName: true, developer: true, dev: true, createdAt: true, units: { select: { id: true } } },
   });
   const items: ActionItem[] = [];
   for (const d of devs) {
     if (d.units.length) continue;
-    const anchor = d.syncedAt ?? d.createdAt;
-    if (daysSinceCalendar(anchor) < FEED_MISSING_GRACE_DAYS) continue;
+    // createdAt, NOT syncedAt: every daily sync re-touches syncedAt on this
+    // row even though it finds nothing (the project itself is still present
+    // in the feed, just permanently empty), so syncedAt would always read as
+    // "just synced" and this project would never cross the grace period —
+    // createdAt ("how long has this sat empty since it first appeared") is
+    // the only timestamp on this row that actually moves.
+    if (daysSinceCalendar(d.createdAt) < FEED_MISSING_GRACE_DAYS) continue;
     items.push({
       id: `empty-draft:${d.id}`, severity: "ACTION", category: "DEVELOPERS",
       title: `${d.developer || d.dev} — ${d.publicName} has no units in the feed`,
       description: `Synced from the ${d.dev} feed but has never had any units — the project itself exists in the developer's feed, but nothing for it in their unit/pricing data. Not fixable on our side.`,
-      deepLink: `/admin/developments/${d.id}`, since: anchor,
+      deepLink: `/admin/developments/${d.id}`, since: d.createdAt,
     });
   }
   return items;
