@@ -139,8 +139,16 @@ export default async function ClientPresentationPage({ params }: { params: { tok
         vatApplies: vm.vatApplies ?? null,
         priceFrom,
         currency: vm.currency || "EUR",
+        // unitsTotal must stay scoped to the SAME population as
+        // unitsAvailable above (the selection, not vm.units) — ScarcityBanner's
+        // resolveScarcity() computes a sold-ratio from this pair, and mixing a
+        // selection-scoped available with a whole-project total breaks that
+        // ratio's meaning (confirmed on real data, 2026-08-13: Andriana Court
+        // selected down to 3 units, all 3 available, but its "Only 3 units
+        // left" badge silently disappeared because unitsTotal was still the
+        // project's full count).
         unitsAvailable: availableCount,
-        unitsTotal: vm.units.length,
+        unitsTotal: units.length,
         deliveryQuarter: toDeliveryQuarter(vm.completion),
         slug: vm.slug,
         publishStatus: vm.publishStatus,

@@ -30,10 +30,16 @@ export type ScarcityResult = { tier: "last" | "left"; count: number } | null;
 // available/total come straight from the unit counts already loaded for the
 // card DTO — no extra query. Sold-out (available === 0) is a separate concern
 // (not this banner's job) and total === 0 means no unit data at all.
+//
+// Pure absolute scarcity (2026-08-13, Sascha's decision) — badge triggers on
+// available <= 5 alone. Previously also required at least half the project
+// sold (soldRatio >= 0.5), which hid the badge for a small brand-new project
+// with nothing sold yet — confirmed on real data: Andriana Court is a
+// 3-unit building, all 3 still available, that's genuinely "only 3 left"
+// regardless of how many (zero) have sold so far. Shared by /projects and
+// every presentation card, so this changes both surfaces identically.
 export function resolveScarcity(available: number, total: number): ScarcityResult {
   if (!total || available <= 0 || available > 5) return null;
-  const soldRatio = (total - available) / total;
-  if (soldRatio < 0.5) return null;
   return { tier: available === 1 ? "last" : "left", count: available };
 }
 
