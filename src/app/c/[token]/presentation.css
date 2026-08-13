@@ -226,9 +226,12 @@
    (--font-display-cyr) for the Cyrillic "от" prefix — same stack as
    .cp-card__title. An explicit line-height keeps the two fonts' differing
    metrics from shifting the line's baseline. */
+/* margin-top: the .cp-card__body flex gap (0.4rem) alone governed this
+   space before; +0.2rem here brings the loc-to-price gap specifically to
+   0.6rem (+50%, 2026-08-13) without widening every other row's gap too. */
 .cp-card__price {
   font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
-  font-size: 1.35rem; font-weight: 500; line-height: 1.15; color: var(--champagne); margin: 0;
+  font-size: 1.35rem; font-weight: 500; line-height: 1.15; color: var(--champagne); margin: 0.2rem 0 0;
 }
 .cp-card__meta { font-size: 0.8rem; font-weight: 400; color: rgba(239, 233, 219, 0.55); margin: 0; display: flex; align-items: baseline; gap: 0.35rem; }
 .cp-card__note {
@@ -282,11 +285,22 @@
 @media (min-width: 640px) {
   .cp-overlay__panel { max-height: 90vh; border-radius: 16px; }
 }
+/* 2.25rem -> 2.925rem (+30%, 2026-08-13, Sascha's staging feedback). */
 .cp-overlay__close {
   position: absolute; top: 1rem; right: 1rem; z-index: 2;
-  width: 2.25rem; height: 2.25rem; border-radius: 999px;
+  width: 2.925rem; height: 2.925rem; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
   background: rgba(8, 21, 18, 0.6); color: var(--ivory); border: none; cursor: pointer;
 }
+/* Same size as the close button, immediately to its left (2026-08-13). */
+.cp-overlay__heart {
+  position: absolute; top: 1rem; right: calc(1rem + 2.925rem + 0.5rem); z-index: 2;
+  width: 2.925rem; height: 2.925rem; border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(8, 21, 18, 0.6); color: var(--ivory); border: none; cursor: pointer;
+}
+.cp-overlay__heart svg { width: 23px; height: 23px; }
+.cp-overlay__heart.is-on { color: var(--champagne); }
 /* Swipeable hero gallery — a native horizontally-scrollable snap track (no JS
    gesture library) so touch drag feels native and page vertical scroll is
    untouched; a tap that didn't scroll the track opens the full lightbox. */

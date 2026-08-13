@@ -254,15 +254,20 @@
 .pp-lb__thumb.is-on { opacity: 1; border-color: var(--accent); }
 
 /* facts */
-/* Container background shows through any unfilled trailing grid cell (a row
-   that doesn't divide evenly into the item count) as well as the 1px item
-   gaps — was --hairline (a light, semi-transparent tint), which read as a
-   visibly lighter fill than the dark --sea-deep items next to it. Sea Deep
-   here so an incomplete last row blends with the filled cells instead of
-   standing out (2026-08-13, same fix applied to .dist-strip below). */
-.pp-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; background: var(--sea-deep);
+/* Container background used to double as the divider color, shown through
+   the 1px item gap — was --hairline, so an unfilled trailing grid cell (a
+   row that doesn't divide evenly into the item count) read as a visibly
+   lighter fill than the dark --sea-deep items. Switched to --sea-deep
+   (2026-08-13) so an incomplete row blends in — but that made the dividers
+   between FILLED items vanish too (both sides of the 1px gap became the same
+   color). Fixed by moving the divider onto each item's own border instead of
+   relying on the gap reveal, so the two concerns (empty-cell fill color,
+   item-to-item divider) are independent again (2026-08-13, same pattern
+   applied to .dist-strip below). */
+.pp-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0; background: var(--sea-deep);
   border: 1px solid var(--hairline); border-radius: var(--r-ui); overflow: hidden; }
-.pp-fact { background: var(--sea-deep); padding: 18px 20px; display: flex; flex-direction: column; gap: 5px; }
+.pp-fact { background: var(--sea-deep); padding: 18px 20px; display: flex; flex-direction: column; gap: 5px;
+  border-right: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); }
 .pp-fact span { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }
 .pp-fact b { font-family: var(--font-body); font-weight: 600; color: var(--ivory); font-size: 1.02rem; }
 
@@ -420,9 +425,10 @@
 /* distances strip (src/app/components/DistancesStrip) — full 8-category variant
    on the detail page; same grid, smaller everything for the presentation
    overlay's compact variant (see .cp-overlay .dist-strip in presentation.css). */
-.dist-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px;
+.dist-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0;
   background: var(--sea-deep); border: 1px solid var(--hairline); border-radius: var(--r-ui); overflow: hidden; }
-.dist-strip__item { background: var(--sea-deep); padding: 16px 18px; display: flex; align-items: center; gap: 12px; }
+.dist-strip__item { background: var(--sea-deep); padding: 16px 18px; display: flex; align-items: center; gap: 12px;
+  border-right: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); }
 .dist-strip__ic { flex: none; color: var(--champagne); }
 .dist-strip__text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .dist-strip__label { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-faint); }

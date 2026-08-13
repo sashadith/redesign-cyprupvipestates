@@ -16,7 +16,8 @@ export type OverlayUnit = {
 };
 
 export default function PropertyOverlay({
-  open, onClose, publicName, gallery, description, amenities, units, distances, slug, publishStatus, locale,
+  open, onClose, publicName, gallery, description, amenities, units, distances, slug, publishStatus,
+  favorited, favoriteBusy, onToggleFavorite, locale,
 }: {
   open: boolean;
   onClose: () => void;
@@ -33,6 +34,11 @@ export default function PropertyOverlay({
   // comment), so both conditions together are the correct, sufficient gate.
   slug?: string | null;
   publishStatus?: string | null;
+  // Same lifted state as the card's own heart button (see PresentationBody) —
+  // whichever one a visitor toggles, the other reflects it immediately.
+  favorited: boolean;
+  favoriteBusy: boolean;
+  onToggleFavorite: () => void;
   locale: PLocale;
 }) {
   const c = COPY[locale];
@@ -71,6 +77,18 @@ export default function PropertyOverlay({
   return createPortal(
     <div className="cp-overlay" role="dialog" aria-modal="true" onClick={onClose}>
       <div className="cp-overlay__panel" onClick={(e) => e.stopPropagation()}>
+        <button
+          type="button"
+          className={`cp-overlay__heart${favorited ? " is-on" : ""}`}
+          onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+          disabled={favoriteBusy}
+          aria-pressed={favorited}
+          aria-label="Favorite"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth={favorited ? "0" : "1.8"}>
+            <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733C11.285 4.876 9.623 3.75 7.688 3.75 5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+          </svg>
+        </button>
         <button type="button" className="cp-overlay__close" onClick={onClose} aria-label="Close">✕</button>
 
         <OverlayGallery gallery={gallery} alt={publicName} onOpen={setLbIndex} />
@@ -125,7 +143,7 @@ export default function PropertyOverlay({
               <table>
                 <thead>
                   <tr>
-                    <th>{c.unitsTable.ref}</th>
+                    <th>{c.unitsTable.unit}</th>
                     <th>{c.unitsTable.type}</th>
                     <th>{c.unitsTable.beds} / {c.unitsTable.area}</th>
                     <th>{c.unitsTable.price} / {c.unitsTable.status}</th>
@@ -134,7 +152,14 @@ export default function PropertyOverlay({
                 <tbody>
                   {units.map((u) => (
                     <tr key={u.id}>
-                      <td>{u.ref || u.label || "-"}</td>
+                      {/* u.ref is the feed's own dedup key (often a concatenated
+                          "<ref><project-name>" string, not fit for display —
+                          confirmed on real data, e.g. Amelia's unit 201 has
+                          ref "201AmeliaLuxuryApartmentsPaphosCityCentre" while
+                          its label is the clean "Apartment 201"). label is the
+                          human-facing name; ref is only a last-resort fallback
+                          for a unit that genuinely has no label. */}
+                      <td>{u.label || u.ref || "-"}</td>
                       <td>{u.type || "-"}</td>
                       <td>
                         <div className="cp-overlay__stack">

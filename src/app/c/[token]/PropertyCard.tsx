@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import type { PLocale } from "./copy";
 import { COPY, formatUnitsCount } from "./copy";
 import ScarcityBanner from "@/app/components/ScarcityBanner/ScarcityBanner";
@@ -30,37 +29,22 @@ const fmtPrice = (n: number | null, cur: string, prefix: string) =>
   n == null ? null : `${prefix} ${cur === "EUR" ? "€" : cur + " "}${n.toLocaleString("en-US")}`;
 
 export default function PropertyCard({
-  token, item, viewDetailsLabel, locale, priceFromLabel, newForYouLabel, onViewDetails,
+  item, viewDetailsLabel, locale, priceFromLabel, newForYouLabel, onViewDetails, favorited, favoriteBusy, onToggleFavorite,
 }: {
-  token: string;
   item: PresentationItemVM;
   viewDetailsLabel: string;
   locale: PLocale;
   priceFromLabel: string;
   newForYouLabel: string;
   onViewDetails: () => void;
+  // Favorite state lifted to PresentationBody (2026-08-13) — the same
+  // development can be favorited from either the card or the overlay's own
+  // heart button, and two independent useState copies would let one go
+  // stale the moment the other one's toggled.
+  favorited: boolean;
+  favoriteBusy: boolean;
+  onToggleFavorite: () => void;
 }) {
-  const [favorited, setFavorited] = useState(item.isFavorited);
-  const [busy, setBusy] = useState(false);
-
-  async function toggleFavorite() {
-    const next = !favorited;
-    setFavorited(next); // optimistic
-    setBusy(true);
-    try {
-      const res = await fetch(`/api/c/${token}/favorite`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ developmentId: item.developmentId, favorited: next }),
-      });
-      if (!res.ok) setFavorited(!next); // revert on failure
-    } catch {
-      setFavorited(!next);
-    } finally {
-      setBusy(false);
-    }
-  }
-
   const soldOut = soldOutFromCounts(item.unitsAvailable, item.unitsTotal);
   const price = fmtPrice(item.priceFrom, item.currency, priceFromLabel);
   // "Paphos · Paphos" when the area override happens to equal the district —
@@ -90,8 +74,8 @@ export default function PropertyCard({
         <button
           type="button"
           className={`cp-card__heart${favorited ? " is-on" : ""}`}
-          onClick={(e) => { e.stopPropagation(); toggleFavorite(); }}
-          disabled={busy}
+          onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
+          disabled={favoriteBusy}
           aria-pressed={favorited}
           aria-label="Favorite"
         >

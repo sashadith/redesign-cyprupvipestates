@@ -34,6 +34,30 @@ export default function PresentationBody({
   const cardsWrapRef = useRef<HTMLDivElement>(null);
   const mapSectionRef = useRef<HTMLElement>(null);
 
+  // Lifted here (not per-card local state) so the card's heart button and
+  // the overlay's own heart button — same development, two different DOM
+  // locations — always agree, whichever one a visitor toggles.
+  const [favorites, setFavorites] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(items.map((i) => [i.developmentId, i.isFavorited]))
+  );
+  const [favoriteBusy, setFavoriteBusy] = useState<Record<string, boolean>>({});
+
+  const toggleFavorite = useCallback((developmentId: string) => {
+    setFavorites((prev) => {
+      const next = !prev[developmentId];
+      setFavoriteBusy((b) => ({ ...b, [developmentId]: true }));
+      fetch(`/api/c/${token}/favorite`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ developmentId, favorited: next }),
+      })
+        .then((res) => { if (!res.ok) setFavorites((f) => ({ ...f, [developmentId]: !next })); })
+        .catch(() => setFavorites((f) => ({ ...f, [developmentId]: !next })))
+        .finally(() => setFavoriteBusy((b) => ({ ...b, [developmentId]: false })));
+      return { ...prev, [developmentId]: next };
+    });
+  }, [token]);
+
   const markers = items.filter((i): i is PresentationDevelopmentVM & { lat: number; lng: number } => i.lat != null && i.lng != null).map((i) => ({
     id: i.developmentId, lat: i.lat, lng: i.lng, name: i.publicName,
     image: i.mainImage, price: i.priceFrom, currency: i.currency,
@@ -92,13 +116,15 @@ export default function PresentationBody({
           {items.map((item) => (
             <PropertyCard
               key={item.developmentId}
-              token={token}
               item={item}
               viewDetailsLabel={c.viewDetails}
               locale={locale}
               priceFromLabel={c.priceFrom}
               newForYouLabel={c.newForYou}
               onViewDetails={() => openDetails(item.developmentId)}
+              favorited={favorites[item.developmentId] ?? item.isFavorited}
+              favoriteBusy={!!favoriteBusy[item.developmentId]}
+              onToggleFavorite={() => toggleFavorite(item.developmentId)}
             />
           ))}
         </section>
@@ -121,6 +147,9 @@ export default function PresentationBody({
         distances={open?.distances ?? null}
         slug={open?.slug ?? null}
         publishStatus={open?.publishStatus ?? null}
+        favorited={open ? (favorites[open.developmentId] ?? open.isFavorited) : false}
+        favoriteBusy={open ? !!favoriteBusy[open.developmentId] : false}
+        onToggleFavorite={() => open && toggleFavorite(open.developmentId)}
         locale={locale}
       />
     </>

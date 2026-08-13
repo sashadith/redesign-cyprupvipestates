@@ -28,7 +28,7 @@ export const COPY: Record<PLocale, {
   bedroomLabels: Record<string, string>; // keyed "0".."5" — 0 = studio, 5 = "5+"
   viewDetails: string;
   availableUnits: string;
-  unitsTable: { ref: string; type: string; beds: string; area: string; price: string; status: string };
+  unitsTable: { unit: string; type: string; beds: string; area: string; price: string; status: string };
   // Keyed by DevelopmentUnit.status (a plain string, not an enum — see
   // prisma/schema.prisma). Must cover "available"/"reserved"/"sold" plus
   // "unlisted" — the one status a hand-picked unit can carry that a live feed
@@ -69,7 +69,7 @@ export const COPY: Record<PLocale, {
     bedroomLabels: { "0": "Studio", "1": "1 bedroom", "2": "2 bedrooms", "3": "3 bedrooms", "4": "4 bedrooms", "5": "5+ bedrooms" },
     viewDetails: "View details",
     availableUnits: "Available units",
-    unitsTable: { ref: "Ref", type: "Type", beds: "Beds", area: "Area", price: "Price", status: "Status" },
+    unitsTable: { unit: "Unit", type: "Type", beds: "Beds", area: "Area", price: "Price", status: "Status" },
     statusLabel: { available: "Available", reserved: "Reserved", sold: "Sold", unlisted: "No longer available" },
     advisorTitle: "Your personal advisor",
     unitsPlural: { one: "unit", many: "units" },
@@ -103,7 +103,7 @@ export const COPY: Record<PLocale, {
     bedroomLabels: { "0": "Studio", "1": "1 Schlafzimmer", "2": "2 Schlafzimmer", "3": "3 Schlafzimmer", "4": "4 Schlafzimmer", "5": "5+ Schlafzimmer" },
     viewDetails: "Details ansehen",
     availableUnits: "Verfügbare Einheiten",
-    unitsTable: { ref: "Ref.", type: "Typ", beds: "Zimmer", area: "Fläche", price: "Preis", status: "Status" },
+    unitsTable: { unit: "Einheit", type: "Typ", beds: "Zimmer", area: "Fläche", price: "Preis", status: "Status" },
     statusLabel: { available: "Verfügbar", reserved: "Reserviert", sold: "Verkauft", unlisted: "Nicht mehr verfügbar" },
     advisorTitle: "Ihr persönlicher Berater",
     unitsPlural: { one: "Objekt", many: "Objekte" },
@@ -137,7 +137,7 @@ export const COPY: Record<PLocale, {
     bedroomLabels: { "0": "Kawalerka", "1": "1 sypialnia", "2": "2 sypialnie", "3": "3 sypialnie", "4": "4 sypialnie", "5": "5+ sypialni" },
     viewDetails: "Zobacz szczegóły",
     availableUnits: "Dostępne lokale",
-    unitsTable: { ref: "Nr", type: "Typ", beds: "Sypialnie", area: "Powierzchnia", price: "Cena", status: "Status" },
+    unitsTable: { unit: "Lokal", type: "Typ", beds: "Sypialnie", area: "Powierzchnia", price: "Cena", status: "Status" },
     statusLabel: { available: "Dostępne", reserved: "Zarezerwowane", sold: "Sprzedane", unlisted: "Już niedostępne" },
     advisorTitle: "Państwa osobisty doradca",
     unitsPlural: { one: "obiekt", few: "obiekty", many: "obiektów" },
@@ -171,7 +171,7 @@ export const COPY: Record<PLocale, {
     bedroomLabels: { "0": "Студия", "1": "1 спальня", "2": "2 спальни", "3": "3 спальни", "4": "4 спальни", "5": "5+ спален" },
     viewDetails: "Подробнее",
     availableUnits: "Доступные объекты",
-    unitsTable: { ref: "№", type: "Тип", beds: "Спальни", area: "Площадь", price: "Цена", status: "Статус" },
+    unitsTable: { unit: "Объект", type: "Тип", beds: "Спальни", area: "Площадь", price: "Цена", status: "Статус" },
     statusLabel: { available: "Доступно", reserved: "Забронировано", sold: "Продано", unlisted: "Больше не доступно" },
     advisorTitle: "Ваш персональный консультант",
     unitsPlural: { one: "объект", few: "объекта", many: "объектов" },
