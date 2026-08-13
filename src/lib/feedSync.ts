@@ -129,11 +129,13 @@ export type SyncResult = {
 // separate sync mechanism, SyncWithDriveButton) and "manual" (no feed at
 // all) are deliberately excluded — there is no automated process that would
 // ever silently overwrite their units, so there's nothing to guard against.
-export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "agg", "squareone"];
+// "agg" removed 2026-08-13 — was never a real feed (a one-time Cloudflare-
+// scrape fixture), AGG is now maintained manually like Luma and every other
+// hand-entered developer (dev: "manual").
+export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone"];
 // Subset with a real, individually-triggerable feed worth an on-demand pull
-// (the admin Force-Sync button, Teil 2). "agg" is excluded — hardcoded
-// fixture data, not a live feed; nothing to "pull fresh".
-export const FORCE_SYNC_DEVS = SYNCED_DEVS.filter((d) => d !== "agg");
+// (the admin Force-Sync button, Teil 2).
+export const FORCE_SYNC_DEVS = SYNCED_DEVS;
 
 type ProjectSyncOutcome = {
   ok: boolean; created: boolean; unitsWritten: number; skippedManual: boolean; mirroredNewFiles: boolean;
