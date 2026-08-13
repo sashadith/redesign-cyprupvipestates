@@ -232,7 +232,13 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
   let pruned: { deleted: number; remaining: number } | undefined;
   if (prunable.length) {
     await prisma.developmentUnit.deleteMany({ where: { id: { in: prunable.map((u) => u.id) } } });
-    pruned = { deleted: prunable.length, remaining: existingUnits.length - prunable.length };
+    // Queried fresh rather than computed from existingUnits/touchedIds
+    // bookkeeping — this run's upsert loop above can also have CREATED new
+    // rows (a genuinely new ref with no prior match), which existingUnits
+    // never counted; the true post-prune total is only ever accurate read
+    // back from the DB.
+    const remaining = await prisma.developmentUnit.count({ where: { developmentId: dev.id } });
+    pruned = { deleted: prunable.length, remaining };
   }
 
 
