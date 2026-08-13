@@ -271,7 +271,30 @@ BUILD_DB_URL="\${DB_URL_LINE}&connection_limit=5&pool_timeout=30"
 # longer safety-critical the way the in-place build was — but the 2 live
 # instances still share these 2 CPUs with the build, so keep them favored.
 echo "· building (nice -n 19, ionice idle class)"
-nice -n 19 ionice -c3 env DATABASE_URL="\$BUILD_DB_URL" NODE_OPTIONS=--max_old_space_size=5120 npm run build
+# Retry up to 3 attempts total — recurring failure mode (2026-08-13, hit 4x
+# in one session): Next's Google Fonts loader throws "Cannot read properties
+# of null (reading '1')" on a transient/rate-limited font-CSS fetch, always
+# for a cyrillic-subset font, always mid-build. A plain retry has cleared it
+# every time observed so far; clearing .next/cache/webpack between attempts
+# too since a poisoned cache from a prior failed build was the same symptom
+# on earlier occasions and costs nothing to also clear here.
+BUILD_OK=0
+for attempt in 1 2 3; do
+  if nice -n 19 ionice -c3 env DATABASE_URL="\$BUILD_DB_URL" NODE_OPTIONS=--max_old_space_size=5120 npm run build; then
+    BUILD_OK=1
+    break
+  fi
+  echo "⚠ build attempt \$attempt/3 failed"
+  if [ "\$attempt" -lt 3 ]; then
+    rm -rf "\$RELEASE/.next/cache/webpack"
+    echo "  clearing .next/cache/webpack and retrying in 10s..."
+    sleep 10
+  fi
+done
+if [ "\$BUILD_OK" -ne 1 ]; then
+  echo "BUILD FAILED after 3 attempts — aborting before swap"
+  exit 1
+fi
 
 # Gate 1: BUILD_ID must exist. Simpler than the old in-place check (no
 # prev-vs-new comparison needed — \$RELEASE is always freshly created, so
