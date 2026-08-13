@@ -9,12 +9,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActionCenterItems } from "@/lib/actionCenter";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { sendEmail } from "@/lib/sendEmail";
 import { withCronLog } from "@/lib/cronLog";
 import { prisma } from "@/lib/prisma";
 import type { StoredSuggestion } from "@/lib/seoAdvisor/types";
 import { mdInlineToTelegramHtml } from "@/lib/telegramFormat";
 import { flagHyperactiveSessions } from "@/lib/analyticsBotDetect";
 import { formatInZone, cyprusWallTimeToUtc, CYPRUS_TZ } from "@/lib/booking/timezone";
+import { classifyForDigest, chunkLines, REMINDER_THROTTLE_DAYS } from "@/lib/actionCenter/digestNotify";
 
 // Piggybacks on this existing daily cron, same pattern as feed-sync's
 // purgeOldTrash/purgeOldCronLogs — best-effort, never blocks the digest.
@@ -32,7 +34,6 @@ async function runBotCleanup() {
 
 export const dynamic = "force-dynamic";
 
-const MAX_ITEMS = 10;
 const SEVERITY_EMOJI: Record<string, string> = { URGENT: "🔴", ACTION: "🟠" };
 
 function escapeHtml(s: string) {
@@ -98,30 +99,72 @@ async function todaysAppointmentLines(): Promise<string[]> {
   ];
 }
 
+// 2026-08-13 — was: top-10-by-oldest-first, everything else folded into an
+// unreadable "...and N more". With 50-86 open URGENT/ACTION items on a given
+// day (a real, persistent backlog) and oldest-first sorting, a genuinely NEW
+// problem always sorted to the bottom of its severity tier and could sit
+// buried for weeks (confirmed: this is exactly how Salt's missing-from-feed
+// alert and 3 stale Aristo projects went unseen). Now: every item that has
+// NEVER been shown in a digest before goes out in full, uncapped, the same
+// day it appears. Items already shown before only repeat as a weekly
+// reminder (classifyForDigest's REMINDER_THROTTLE_DAYS) — silently-recurring
+// noise doesn't get re-announced daily, but nothing genuinely open can ever
+// go permanently unmentioned again. Telegram's 4096-char limit means a large
+// batch (notably the first run after this deploy, when the whole existing
+// backlog counts as "fresh" once) may need more than one message — chunkLines
+// handles that; email has no such limit so always goes out as one message.
 async function runDigest() {
   const items = (await getActionCenterItems()).filter((i) => i.severity === "URGENT" || i.severity === "ACTION");
+  const { fresh, recurring, quiet } = await classifyForDigest(items);
   const advisorLines = await maybeAppendAdvisorSummary();
   const appointmentLines = await todaysAppointmentLines();
-  if (!items.length && !advisorLines.length && !appointmentLines.length) return { sent: false, count: 0 };
+
+  if (!fresh.length && !recurring.length && !advisorLines.length && !appointmentLines.length) {
+    return { sent: false, count: 0, fresh: 0, recurring: 0, quiet };
+  }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
-  const shown = items.slice(0, MAX_ITEMS);
-  const lines = shown.map((i) => `${SEVERITY_EMOJI[i.severity]} ${escapeHtml(i.title)}`);
-  const more = items.length - shown.length;
+  const freshLines = fresh.map((i) => `🆕 ${SEVERITY_EMOJI[i.severity]} ${escapeHtml(i.title)}`);
+  const recurringLines = recurring.map((i) => `🔁 ${SEVERITY_EMOJI[i.severity]} ${escapeHtml(i.title)}`);
+  const itemLines = [...freshLines, ...recurringLines];
 
-  const text = [
-    "<b>📋 Daily Action Center Digest</b>",
-    "",
-    ...(lines.length ? lines : ["No URGENT/ACTION items today."]),
-    more > 0 ? `\n…and ${more} more.` : "",
+  const footerLines = [
+    quiet > 0 ? `\n${quiet} other known issue${quiet === 1 ? "" : "s"} still open (reminded within the last ${REMINDER_THROTTLE_DAYS} days, not repeated today).` : "",
     ...advisorLines,
     ...appointmentLines,
     "",
     `<a href="${siteUrl}/admin">Open Action Center</a>`,
-  ].filter(Boolean).join("\n");
+  ].filter(Boolean);
 
-  const tgResult = await sendTelegramMessage(text);
-  return { sent: !!tgResult, count: items.length + advisorLines.length + appointmentLines.length };
+  const header = "<b>📋 Daily Action Center Digest</b>";
+  const chunks = itemLines.length ? chunkLines(header, itemLines) : [header];
+  chunks[chunks.length - 1] = [chunks[chunks.length - 1], ...footerLines].join("\n");
+
+  let anySent = false;
+  for (const chunk of chunks) {
+    const r = await sendTelegramMessage(chunk);
+    if (r) anySent = true;
+  }
+
+  const plainItemLines = [
+    ...fresh.map((i) => `NEW — ${i.severity} — ${i.title}`),
+    ...recurring.map((i) => `REMINDER — ${i.severity} — ${i.title}`),
+  ];
+  const stripHtml = (s: string) => s.replace(/<[^>]+>/g, "");
+  const emailText = [
+    "Daily Action Center Digest",
+    "",
+    ...(plainItemLines.length ? plainItemLines : ["No URGENT/ACTION items today."]),
+    quiet > 0 ? `\n${quiet} other known issue(s) still open (not repeated today).` : "",
+    ...(advisorLines.length ? ["", "SEO Advisor:", ...advisorLines.map(stripHtml)] : []),
+    ...(appointmentLines.length ? ["", "Today's appointments:", ...appointmentLines.map(stripHtml)] : []),
+    "",
+    `${siteUrl}/admin`,
+  ].filter(Boolean).join("\n");
+  await sendEmail({ subject: `Action Center Digest — ${fresh.length} new, ${recurring.length} reminder(s)`, text: emailText })
+    .catch((e) => console.error("action-digest email failed:", e));
+
+  return { sent: anySent, count: fresh.length + recurring.length, fresh: fresh.length, recurring: recurring.length, quiet };
 }
 
 export async function GET(req: NextRequest) {
