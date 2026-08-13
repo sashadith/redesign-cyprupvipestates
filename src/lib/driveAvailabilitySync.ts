@@ -424,6 +424,29 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
     }
   }
 
+  // Merge entries that now share the same canonical project (2026-08-13
+  // incident) — the extraction can non-deterministically split one real
+  // project into two separate result entries within a single run (confirmed
+  // on real data: Olivelia Homes fragmented into a 20-unit and a handful-
+  // unit entry in the same sync), and the reconciliation pass above only
+  // reassigns each entry's OWN `.project` string — it never merges the
+  // underlying unit arrays. Two entries that still share a name after that
+  // pass would otherwise both call writeProject() independently for the
+  // SAME feedKey/Development row below, each treating its own partial list
+  // as "the complete fresh extraction" — the second call then prunes
+  // everything the first call had just correctly written, since neither
+  // knows the other exists. Grouping by the exact same slug() used for
+  // feedKey guarantees this structurally: anything that would ever target
+  // the same Development row is combined into one entry before any write.
+  const mergedBySlug = new Map<string, ExtractedPricelistProject>();
+  for (const p of extracted) {
+    const k = slug(p.project);
+    const existingEntry = mergedBySlug.get(k);
+    if (existingEntry) existingEntry.units.push(...p.units);
+    else mergedBySlug.set(k, p);
+  }
+  extracted = Array.from(mergedBySlug.values());
+
   // Scope to a single project (its own "Sync with Drive" button) — the whole sheet
   // still has to be extracted (the AI reads it as one document), but only this
   // project's Development/units get written, leaving its siblings untouched.
