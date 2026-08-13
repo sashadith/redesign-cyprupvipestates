@@ -353,11 +353,22 @@ export async function writeKuutioDraft(developerAccountId: string): Promise<Kuut
         ...(amenities.length ? { amenities } : {}),
         ...(gallery.length ? { gallery } : {}),
         ...(plans.length ? { plans } : {}),
-        ...(description ? { descriptionEN: description.en, descriptionDE: description.de, descriptionPL: description.pl, descriptionRU: description.ru } : {}),
       },
       update: { unitsTotal: r.units.length, unitsAvailable: avail, syncedAt: new Date() },
     });
     await recomputeDevelopmentDistances(dev.id);
+
+    // Four-language description lives on DevelopmentOverride, not
+    // Development itself — same table driveAvailabilitySync.ts's own
+    // description-generation step writes to (see its `content &&
+    // !dev.override?.descriptionEN?.trim()` guard/upsert).
+    if (description) {
+      await prisma.developmentOverride.upsert({
+        where: { developmentId: dev.id },
+        create: { developmentId: dev.id, descriptionEN: description.en, descriptionDE: description.de, descriptionPL: description.pl, descriptionRU: description.ru },
+        update: { descriptionEN: description.en, descriptionDE: description.de, descriptionPL: description.pl, descriptionRU: description.ru },
+      });
+    }
 
     const existingUnits = await prisma.developmentUnit.findMany({
       where: { developmentId: dev.id },
