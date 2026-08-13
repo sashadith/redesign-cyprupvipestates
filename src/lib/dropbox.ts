@@ -16,6 +16,37 @@ export function dropboxConfigured(): boolean {
   return !!(process.env.DROPBOX_APP_KEY && process.env.DROPBOX_APP_SECRET && process.env.DROPBOX_REFRESH_TOKEN);
 }
 
+// A rate-limited/edge-blocked request can come back as plain text or an HTML
+// error page instead of JSON (confirmed 2026-08-13: a burst of calls during
+// a force re-sync hit this, and the previous bare `res.json()` surfaced only
+// "Unexpected token 'u', "unexpected"... is not valid JSON" — no status
+// code, no indication it was even Dropbox's response body that broke).
+// Reads the body as text first so a parse failure can report both.
+async function safeJson(res: Response, context: string): Promise<any> {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Dropbox ${context}: non-JSON response (status ${res.status}): ${text.slice(0, 300)}`);
+  }
+}
+
+// A force re-sync's higher photo/plan caps (2026-08-13) mean far more calls
+// in a short window than the original units-only pass ever made — retry on
+// 429 (honoring Retry-After when Dropbox sends one) so a burst that trips
+// their rate limit self-heals instead of aborting the whole sync partway
+// through. 3 attempts, capped backoff — this is a background sync job, not
+// a user-facing request, so a slower success beats a fast failure here.
+async function fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    const r = await fetch(url, init);
+    if (r.status !== 429 || attempt >= 2) return r;
+    const retryAfter = Number(r.headers.get("Retry-After"));
+    const waitMs = (Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : 2000 * (attempt + 1));
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+  }
+}
+
 export async function getDropboxAccessToken(): Promise<string> {
   const res = await fetch("https://api.dropboxapi.com/oauth2/token", {
     method: "POST",
@@ -28,7 +59,7 @@ export async function getDropboxAccessToken(): Promise<string> {
     }),
     cache: "no-store",
   });
-  const t = await res.json();
+  const t = await safeJson(res, "oauth2/token");
   if (!t.access_token) throw new Error("Dropbox token refresh failed: " + JSON.stringify(t).slice(0, 200));
   return t.access_token as string;
 }
@@ -72,13 +103,13 @@ export async function listSharedFolder(shareUrl: string, path = "", accessToken:
       ? { cursor }
       : { path, shared_link: { url: shareUrl } };
     const endpoint: string = cursor ? "files/list_folder/continue" : "files/list_folder";
-    const r: Response = await fetch(`https://api.dropboxapi.com/2/${endpoint}`, {
+    const r: Response = await fetchWithRetry(`https://api.dropboxapi.com/2/${endpoint}`, {
       method: "POST",
       headers: { Authorization: "Bearer " + accessToken, "Content-Type": "application/json" },
       body: JSON.stringify(body),
       cache: "no-store",
     });
-    const j: any = await r.json();
+    const j: any = await safeJson(r, `list_folder(${path || "/"})`);
     if (!r.ok) throw new Error(`Dropbox list_folder(${path || "/"}): ${r.status} ${JSON.stringify(j).slice(0, 300)}`);
     for (const e of j.entries ?? []) {
       const isFolder = e[".tag"] === "folder";
@@ -201,7 +232,7 @@ export async function collectMedia(
 // against Kuutio's real price-list file before writing this.
 export async function downloadSharedFile(shareUrl: string, path: string, accessToken: string): Promise<Buffer> {
   const arg = JSON.stringify({ url: shareUrl, path });
-  const r = await fetch("https://content.dropboxapi.com/2/sharing/get_shared_link_file", {
+  const r = await fetchWithRetry("https://content.dropboxapi.com/2/sharing/get_shared_link_file", {
     method: "POST",
     headers: { Authorization: "Bearer " + accessToken, "Dropbox-API-Arg": arg },
     cache: "no-store",
