@@ -47,13 +47,16 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   // presentation ever been viewed, and on how many distinct earlier days.
   const priorViews = await prisma.presentationView.findMany({
     where: { presentationId: presentation.id },
-    select: { createdAt: true },
+    select: { createdAt: true, developmentId: true },
   });
   const isFirstViewEver = priorViews.length === 0;
   const today = todayUTC();
   const priorDays = new Set(priorViews.map((v) => v.createdAt.toISOString().slice(0, 10)));
   const isFirstViewToday = !priorDays.has(today);
-  const distinctEarlierDays = new Set(Array.from(priorDays).filter((d) => d !== today)).size;
+  // Page-level visit count (developmentId null — excludes per-project detail
+  // opens, which POST here too but aren't "the client came back to their
+  // page"). Used for the Telegram visit-number below.
+  const priorPageVisits = priorViews.filter((v) => v.developmentId == null).length;
 
   const ip = clientIpFromHeaders(req.headers);
   const ua = req.headers.get("user-agent") ?? "";
@@ -76,14 +79,22 @@ export async function POST(req: NextRequest, { params }: { params: { token: stri
   const name = escapeHtml(presentation.greetingName);
 
   // Alerts are mutually exclusive and best-effort — never let a Telegram hiccup
-  // break the page for the client.
+  // break the page for the client. Sascha's call (2026-08-14, overriding the
+  // earlier first-view/3rd-day throttle): notify on EVERY page-level visit,
+  // not just the first ever + every 3rd distinct day. Scoped to developmentId
+  // === null (ViewTracker's own page-mount POST) — a client clicking through
+  // several project cards in one sitting also POSTs here per project, and
+  // that's "looking at a listing", not "came back to their page"; pinging
+  // Telegram for each of those would be the exact spam this was designed to
+  // avoid, just moved to a different trigger.
   try {
-    if (isFirstViewEver) {
-      await sendTelegramMessage(`👀 ${name} opened their personal page — <a href="${crmLink}">CRM</a>`);
-    } else if (isFirstViewToday && distinctEarlierDays >= 2) {
-      // Guarded to at most one per presentation per day by isFirstViewToday itself.
-      const visitNumber = distinctEarlierDays + 1;
-      await sendTelegramMessage(`🔥 ${name} is back on their page (visit #${visitNumber})`);
+    if (developmentId == null) {
+      if (isFirstViewEver) {
+        await sendTelegramMessage(`👀 ${name} opened their personal page — <a href="${crmLink}">CRM</a>`);
+      } else {
+        const visitNumber = priorPageVisits + 1;
+        await sendTelegramMessage(`🔁 ${name} is back on their page (visit #${visitNumber})`);
+      }
     }
   } catch (e) { console.error("Presentation view Telegram alert failed:", e); }
 
