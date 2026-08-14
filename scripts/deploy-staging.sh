@@ -72,7 +72,30 @@ DB_URL_LINE="\$(grep '^DATABASE_URL=' .env | cut -d= -f2-)"
 DB_URL_LINE="\${DB_URL_LINE%\\"}"
 DB_URL_LINE="\${DB_URL_LINE#\\"}"
 BUILD_DB_URL="\${DB_URL_LINE}&connection_limit=5&pool_timeout=30"
-DATABASE_URL="\$BUILD_DB_URL" NODE_OPTIONS=--max_old_space_size=4096 npm run build
+
+# Retry up to 3 attempts total — same recurring failure as deploy-prod.sh
+# (see that script's own comment): Next's Google Fonts loader throws
+# "Cannot read properties of null (reading '1')" mid-build, always on a
+# transient/rate-limited font-CSS fetch, different font each time (Bodoni
+# Moda / Manrope / Mulish / Playfair Display all seen). Plain retry has
+# cleared it every time observed so far.
+BUILD_OK=0
+for attempt in 1 2 3; do
+  if DATABASE_URL="\$BUILD_DB_URL" NODE_OPTIONS=--max_old_space_size=4096 npm run build; then
+    BUILD_OK=1
+    break
+  fi
+  echo "⚠ build attempt \$attempt/3 failed"
+  if [ "\$attempt" -lt 3 ]; then
+    rm -rf .next/cache/webpack
+    echo "  clearing .next/cache/webpack and retrying in 10s..."
+    sleep 10
+  fi
+done
+if [ "\$BUILD_OK" -ne 1 ]; then
+  echo "BUILD FAILED after 3 attempts"
+  exit 1
+fi
 
 # Hard gate: verify every known runtime-only asset (files read via fs at
 # request time, invisible to the build itself) exists in \$DIR BEFORE the
