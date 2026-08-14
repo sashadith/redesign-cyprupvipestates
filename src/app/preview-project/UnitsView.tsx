@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { atSize } from "./imageSize";
 import Lightbox from "./Lightbox";
 import { developmentCopy, type DevelopmentStrings } from "@/lib/developmentCopy";
+import { roundArea } from "@/lib/formatArea";
 
 export type UnitVM = {
   id?: string; // DevelopmentUnit.id — only populated by the DB-backed path (developmentRender.ts); optional so the live-feed adapters (feeds.ts), which have no DB row yet, are unaffected
@@ -133,7 +134,9 @@ function UnitCard({ u, t, open, onToggle }: { u: UnitVM; t: DevelopmentStrings; 
   // figure. Only shown when a veranda figure actually exists (Domenica/
   // Pafilia/Square One have none) — no "+0 m²" line otherwise.
   const builtNum = areaNum(u.areaBuilt), verandaNum = areaNum(u.areaVeranda);
-  const covered = builtNum != null && verandaNum != null ? builtNum + verandaNum : null;
+  // roundArea guards against IEEE 754 drift in the sum (e.g. 125.6 + 9.7 ===
+  // 135.29999999999998 in JS) — see src/lib/formatArea.ts.
+  const covered = builtNum != null && verandaNum != null ? roundArea(builtNum + verandaNum) : null;
   const facts = [
     u.beds && { k: t.factBeds, v: u.beds },
     u.baths && { k: t.factBaths, v: u.baths },
