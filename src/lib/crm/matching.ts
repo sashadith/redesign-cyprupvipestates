@@ -160,7 +160,50 @@ export async function matchDevelopmentsForLead(lead: LeadLike, filters: MatchFil
     // existing presentations that already contain one are untouched, this
     // only gates what can be newly matched/added.
     if (soldOutFromCounts(available.length, d.units.length)) continue;
-    if (filters.onlyAvailable && available.length === 0) continue;
+
+    const toMatchedUnit = (u: (typeof available)[number]): MatchedUnit => ({
+      id: u.id, ref: u.ref, label: u.label, type: u.type, beds: u.beds, areaBuilt: u.areaBuilt, price: u.price, status: u.status ?? "available",
+    });
+    const byPrice = (a: MatchedUnit, b: MatchedUnit) => (a.price ?? Infinity) - (b.price ?? Infinity);
+
+    // matchedUnits: EXACT UNIT-LEVEL criterion match (budget/beds/type —
+    // location is development-level, not unit-level, so it's not applied
+    // here). 2026-08-11 correction — this used to reuse the SAME ±1 bedroom /
+    // ±10% budget tolerance as the score above, which is right for "is this
+    // project worth showing at all" but wrong for "which units get
+    // preselected into a client's presentation" — a near-miss studio was
+    // landing pre-checked next to genuinely matching units with no visual
+    // distinction. Tolerance stays exclusively in the score block below;
+    // this list is deliberately exact, since it drives both the checkbox
+    // default AND (once explicitly persisted, see PropertyMatching.tsx's
+    // generate()) exactly what the client sees. Computed here, before the
+    // onlyAvailable check below, so that check can gate on it directly —
+    // moved 2026-08-14 after confirming on real data (Emerald Park, The
+    // King Residences) that gating on raw `available.length` let a
+    // development through "Only with available units" while every one of
+    // its available units fell outside the active budget/bedrooms/type
+    // filters, showing "0" and "—" in the table despite the checkbox.
+    const matchedUnits: MatchedUnit[] = available
+      .filter((u) => {
+        if (hasBudget) {
+          if (u.price == null) return false; // can't confirm a budget match without a price
+          if (budgetMin != null && u.price < budgetMin) return false;
+          if (budgetMax != null && u.price > budgetMax) return false;
+        }
+        if (hasBedCriteria) {
+          const b = parseBeds(u.beds);
+          if (b == null || !bedrooms.includes(b)) return false;
+        }
+        if (hasTypeCriteria) {
+          const t = normalizeType(u.type);
+          if (!t || !propertyTypes.includes(t)) return false;
+        }
+        return true;
+      })
+      .map(toMatchedUnit)
+      .sort(byPrice);
+
+    if (filters.onlyAvailable && matchedUnits.length === 0) continue;
 
     // ---- BUDGET (40) ----
     let budgetScore = 0;
@@ -216,42 +259,6 @@ export async function matchDevelopmentsForLead(lead: LeadLike, filters: MatchFil
     }
 
     const score = budgetScore + bedroomScore + locationScore + typeScore;
-
-    const toMatchedUnit = (u: (typeof available)[number]): MatchedUnit => ({
-      id: u.id, ref: u.ref, label: u.label, type: u.type, beds: u.beds, areaBuilt: u.areaBuilt, price: u.price, status: u.status ?? "available",
-    });
-    const byPrice = (a: MatchedUnit, b: MatchedUnit) => (a.price ?? Infinity) - (b.price ?? Infinity);
-
-    // matchedUnits: EXACT UNIT-LEVEL criterion match (budget/beds/type —
-    // location is development-level, not unit-level, so it's not applied
-    // here). 2026-08-11 correction — this used to reuse the SAME ±1 bedroom /
-    // ±10% budget tolerance as the score above, which is right for "is this
-    // project worth showing at all" but wrong for "which units get
-    // preselected into a client's presentation" — a near-miss studio was
-    // landing pre-checked next to genuinely matching units with no visual
-    // distinction. Tolerance stays exclusively in the score block above;
-    // this list is deliberately exact, since it drives both the checkbox
-    // default AND (once explicitly persisted, see PropertyMatching.tsx's
-    // generate()) exactly what the client sees.
-    const matchedUnits: MatchedUnit[] = available
-      .filter((u) => {
-        if (hasBudget) {
-          if (u.price == null) return false; // can't confirm a budget match without a price
-          if (budgetMin != null && u.price < budgetMin) return false;
-          if (budgetMax != null && u.price > budgetMax) return false;
-        }
-        if (hasBedCriteria) {
-          const b = parseBeds(u.beds);
-          if (b == null || !bedrooms.includes(b)) return false;
-        }
-        if (hasTypeCriteria) {
-          const t = normalizeType(u.type);
-          if (!t || !propertyTypes.includes(t)) return false;
-        }
-        return true;
-      })
-      .map(toMatchedUnit)
-      .sort(byPrice);
 
     const allAvailableUnits: MatchedUnit[] = available.map(toMatchedUnit).sort(byPrice);
 

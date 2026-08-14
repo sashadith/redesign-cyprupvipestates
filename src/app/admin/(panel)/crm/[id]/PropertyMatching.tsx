@@ -128,7 +128,14 @@ export default function PropertyMatching({
   // re-triggered when the admin un/re-checks a box directly (toggleDev's job).
   useEffect(() => {
     if (!results.length) return;
-    const hundredIds = new Set(results.filter((m) => m.score === 100).map((m) => m.development.id));
+    // score alone isn't enough — it's computed per-dimension with tolerance
+    // (±10-20% budget, ±1 "near" bedroom), so a development can score 100%
+    // with zero units that actually satisfy every filter together. Also
+    // requiring unitsAvailable > 0 (== matchedUnits.length, the same exact
+    // count the table itself shows) stops a 0-match development — like
+    // Emerald Park / The King Residences, confirmed on real data 2026-08-14
+    // — from auto-checking itself into the presentation.
+    const hundredIds = new Set(results.filter((m) => m.score === 100 && m.development.unitsAvailable > 0).map((m) => m.development.id));
     setSelectedDevs((prev) => {
       const next = new Set(prev);
       autoSelected.forEach((id) => { if (!hundredIds.has(id)) next.delete(id); }); // fell below 100% — retract the auto-check
