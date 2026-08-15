@@ -16,6 +16,24 @@ export function dropboxConfigured(): boolean {
   return !!(process.env.DROPBOX_APP_KEY && process.env.DROPBOX_APP_SECRET && process.env.DROPBOX_REFRESH_TOKEN);
 }
 
+// DeveloperAccount has no dedicated provider column — Dropbox reuses the
+// same driveFolderUrl field Google Drive already had (see this file's own
+// header comment). syncAllDrives() (driveAvailabilitySync.ts) needs to tell
+// the two apart by URL alone so it can skip Dropbox accounts rather than
+// hand them to folderIdFromUrl(), which only understands Drive URLs and
+// fails with "Could not read a folder id from the Drive link." — confirmed
+// as the exact cause of Kuutio's 2026-08-14 scheduled-cron failure: its
+// account is still named/typed "drive" from before yesterday's Dropbox
+// build, so the general cron picked it up and choked on its Dropbox link.
+export function isDropboxShareUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  try {
+    return /(^|\.)dropbox\.com$/i.test(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+}
+
 // A rate-limited/edge-blocked request can come back as plain text or an HTML
 // error page instead of JSON (confirmed 2026-08-13: a burst of calls during
 // a force re-sync hit this, and the previous bare `res.json()` surfaced only

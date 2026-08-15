@@ -9,6 +9,7 @@ import { resolveMapsUrlToGeo } from "./mapsGeo";
 import { normalizeRef } from "./unitRef";
 import { recomputeDevelopmentDistances } from "./developmentDistances";
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
+import { isDropboxShareUrl } from "./dropbox";
 import type { ExtractedUnit } from "./ai/pricelistExtract";
 
 const MAX_IMAGES = 10;
@@ -358,6 +359,14 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
   if (!driveConfigured()) return { ok: false, message: "Google Drive is not configured (GOOGLE_* env vars)." };
   const acct = await prisma.developerAccount.findUnique({ where: { id: developerAccountId } });
   if (!acct?.driveFolderUrl) return { ok: false, message: "No Drive folder link set for this developer." };
+  // Guarded here too, not just in syncAllDrives()'s batch loop — the admin
+  // panel's "Sync now" buttons (developments/actions.ts, developments/[id]/
+  // actions.ts) call this directly with a specific developerAccountId,
+  // bypassing that filter. A clear message beats the confusing "Could not
+  // read a folder id" this would otherwise throw for any Dropbox account.
+  if (isDropboxShareUrl(acct.driveFolderUrl)) {
+    return { ok: false, message: "This developer uses Dropbox, not Google Drive — sync via the Kuutio Dropbox sync route instead." };
+  }
   const folderId = folderIdFromUrl(acct.driveFolderUrl);
   if (!folderId) return { ok: false, message: "Could not read a folder id from the Drive link." };
 
@@ -494,10 +503,19 @@ const intervalMs = (i: string | null | undefined) =>
 export async function syncAllDrives(force = false, content = false): Promise<{ developer: string; result: DriveSyncResult }[]> {
   const devs = await prisma.developerAccount.findMany({
     where: { NOT: { driveFolderUrl: null } },
-    select: { id: true, name: true, driveSyncInterval: true, driveSyncedAt: true },
+    select: { id: true, name: true, driveFolderUrl: true, driveSyncInterval: true, driveSyncedAt: true },
   });
   const out: { developer: string; result: DriveSyncResult }[] = [];
   for (const d of devs) {
+    // DeveloperAccount has no dedicated provider column — a Dropbox-based
+    // developer (Kuutio, 2026-08-13) reuses this same driveFolderUrl field
+    // for its Dropbox share link, and has its own dedicated sync route
+    // (api/cron/kuutio-sync) rather than going through here. Skip by URL
+    // rather than by name/account, so this stays correct for any future
+    // Dropbox developer too — without this, folderIdFromUrl() below throws
+    // "Could not read a folder id from the Drive link." every scheduled run
+    // (confirmed root cause of Kuutio's 2026-08-14 digest failure).
+    if (isDropboxShareUrl(d.driveFolderUrl)) continue;
     // Respect the per-developer interval for the scheduled (non-forced) availability run.
     if (!force && !content) {
       const iv = intervalMs(d.driveSyncInterval);
