@@ -8,6 +8,7 @@
 // Expected schedule: daily at 08:00 Cyprus time (see DEPLOYMENT.md).
 import { NextRequest, NextResponse } from "next/server";
 import { getActionCenterItems } from "@/lib/actionCenter";
+import type { ActionItem, Category } from "@/lib/actionCenter/types";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { sendEmail } from "@/lib/sendEmail";
 import { withCronLog } from "@/lib/cronLog";
@@ -133,7 +134,10 @@ async function morningSyncSummaryLines(): Promise<string[]> {
   // that doesn't exist.
   const aggKuutio = rows.find((r) => r.job === "kuutio-sync");
 
-  const lines = ["", "<b>🌅 Morning sync summary</b>"];
+  // No own section header (2026-08-15 digest restructure) — the caller now
+  // nests this directly under its own "🔧 SYSTEM & SYNCS" header, right at
+  // the top of the message. See runDigest().
+  const lines: string[] = [];
   if (!aggFeed && !aggDrive && !aggKuutio) {
     lines.push(`⚠️ Neither feed-sync nor drive-sync ran in the last ${MORNING_SUMMARY_WINDOW_HOURS}h — the cron itself may not have fired.`);
     return lines;
@@ -167,6 +171,39 @@ async function morningSyncSummaryLines(): Promise<string[]> {
 // batch (notably the first run after this deploy, when the whole existing
 // backlog counts as "fresh" once) may need more than one message — chunkLines
 // handles that; email has no such limit so always goes out as one message.
+// 2026-08-15 restructure (Sascha: "sechzig Zeilen liest niemand jeden
+// Morgen") — items now group by category instead of one flat list, capped
+// at CATEGORY_CAP each with an "…and N more" link to the rest, and the
+// morning sync summary moves to the very top (merged into its own "SYSTEM &
+// SYNCS" category block) instead of buried in the footer. Order: SYSTEM &
+// SYNCS, DEVELOPERS & PROJECTS, CRM, SEO — chosen for the digest
+// specifically; the admin dashboard's own CATEGORY_ORDER (CRM-first, see
+// src/lib/actionCenter/index.ts) is a separate, unrelated ordering and
+// stays untouched. Items arrive already severity+age sorted (getActionCenterItems's
+// sortItems()), so bucketing by category below preserves that order with no
+// re-sort needed.
+const CATEGORY_CAP = 5;
+// Aggregate cron-health items are already fully covered — with real
+// per-developer detail — by the morning sync summary lines above; showing
+// them again here would just repeat the same fact ("drive-sync cron
+// failed") twice in one message.
+const SUPPRESSED_SYSTEM_IDS = new Set(["cron-health:feed-sync", "cron-health:drive-sync", "cron-health:kuutio-sync"]);
+
+type TaggedItem = { item: ActionItem; fresh: boolean };
+
+function formatItemLine(t: TaggedItem): string {
+  return `${t.fresh ? "🆕" : "🔁"} ${SEVERITY_EMOJI[t.item.severity]} ${escapeHtml(t.item.title)}`;
+}
+
+function buildCategorySection(label: string, items: TaggedItem[], siteUrl: string): string[] {
+  if (!items.length) return [];
+  const shown = items.slice(0, CATEGORY_CAP);
+  const rest = items.length - shown.length;
+  const lines = ["", `<b>${label} (${items.length})</b>`, ...shown.map(formatItemLine)];
+  if (rest > 0) lines.push(`… and ${rest} more → <a href="${siteUrl}/admin">Action Center</a>`);
+  return lines;
+}
+
 async function runDigest() {
   const items = (await getActionCenterItems()).filter((i) => i.severity === "URGENT" || i.severity === "ACTION");
   const { fresh, recurring, quiet } = await classifyForDigest(items);
@@ -183,21 +220,39 @@ async function runDigest() {
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
-  const freshLines = fresh.map((i) => `🆕 ${SEVERITY_EMOJI[i.severity]} ${escapeHtml(i.title)}`);
-  const recurringLines = recurring.map((i) => `🔁 ${SEVERITY_EMOJI[i.severity]} ${escapeHtml(i.title)}`);
-  const itemLines = [...freshLines, ...recurringLines];
+
+  const byCategory = new Map<Category, TaggedItem[]>();
+  const tagged: TaggedItem[] = [...fresh.map((item) => ({ item, fresh: true })), ...recurring.map((item) => ({ item, fresh: false }))];
+  for (const t of tagged) {
+    if (t.item.category === "SYSTEM" && SUPPRESSED_SYSTEM_IDS.has(t.item.id)) continue;
+    const cat: Category = t.item.category === "SEO_ADVISOR" ? "SEO" : t.item.category;
+    byCategory.set(cat, [...(byCategory.get(cat) ?? []), t]);
+  }
+
+  const systemExtra = byCategory.get("SYSTEM") ?? [];
+  const systemShown = systemExtra.slice(0, CATEGORY_CAP);
+  const systemRest = systemExtra.length - systemShown.length;
+  const lines: string[] = [
+    "",
+    "<b>🔧 SYSTEM & SYNCS</b>",
+    ...morningSyncLines,
+    ...systemShown.map(formatItemLine),
+    ...(systemRest > 0 ? [`… and ${systemRest} more → <a href="${siteUrl}/admin">Action Center</a>`] : []),
+    ...buildCategorySection("🏗 DEVELOPERS & PROJECTS", byCategory.get("DEVELOPERS") ?? [], siteUrl),
+    ...buildCategorySection("👤 CRM", byCategory.get("CRM") ?? [], siteUrl),
+    ...appointmentLines,
+    ...buildCategorySection("📈 SEO", byCategory.get("SEO") ?? [], siteUrl),
+    ...advisorLines,
+  ];
 
   const footerLines = [
     quiet > 0 ? `\n${quiet} other known issue${quiet === 1 ? "" : "s"} still open (reminded within the last ${REMINDER_THROTTLE_DAYS} days, not repeated today).` : "",
-    ...advisorLines,
-    ...appointmentLines,
-    ...morningSyncLines,
     "",
     `<a href="${siteUrl}/admin">Open Action Center</a>`,
   ].filter(Boolean);
 
   const header = "<b>📋 Daily Action Center Digest</b>";
-  const chunks = itemLines.length ? chunkLines(header, itemLines) : [header];
+  const chunks = lines.length ? chunkLines(header, lines) : [header];
   chunks[chunks.length - 1] = [chunks[chunks.length - 1], ...footerLines].join("\n");
 
   let anySent = false;
@@ -206,19 +261,15 @@ async function runDigest() {
     if (r) anySent = true;
   }
 
-  const plainItemLines = [
-    ...fresh.map((i) => `NEW — ${i.severity} — ${i.title}`),
-    ...recurring.map((i) => `REMINDER — ${i.severity} — ${i.title}`),
-  ];
+  // Same structure as Telegram, reusing the exact same `lines` (a plain-text
+  // strip of the HTML version) so the two can never drift apart — replaces
+  // a separately hand-built plain-text version that duplicated all of the
+  // section-building logic above.
   const stripHtml = (s: string) => s.replace(/<[^>]+>/g, "");
   const emailText = [
     "Daily Action Center Digest",
-    "",
-    ...(plainItemLines.length ? plainItemLines : ["No URGENT/ACTION items today."]),
+    ...lines.map(stripHtml),
     quiet > 0 ? `\n${quiet} other known issue(s) still open (not repeated today).` : "",
-    ...(advisorLines.length ? ["", "SEO Advisor:", ...advisorLines.map(stripHtml)] : []),
-    ...(appointmentLines.length ? ["", "Today's appointments:", ...appointmentLines.map(stripHtml)] : []),
-    ...morningSyncLines.map(stripHtml),
     "",
     `${siteUrl}/admin`,
   ].filter(Boolean).join("\n");
