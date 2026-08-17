@@ -132,11 +132,9 @@ const TEXT_CASES = [
   ["Neapolis", ""],
   // \blatsi\b must not fire inside "Latsia" (a Nicosia suburb)
   ["Latsia", ""],
-  // ordering invariant — every case above is a bare single token, so all of
-  // them would still pass even if DISTRICT_TOWNS were reordered to put
-  // Paphos first. feeds.ts feeds this function "Area, District"-shaped
-  // strings in practice; these four pin the FIRST-match ordering against
-  // that realistic input shape, not just against isolated tokens.
+  // Ordering invariants. The ", Paphos"-shaped cases pin Polis/Kouklia before
+  // Paphos; "Kato Pyrgos" pins Polis before Limassol ("kato pyrgos" vs the
+  // generic "pyrgos"). Reordering DISTRICT_TOWNS breaks these and nothing else.
   ["Kouklia, Paphos", "Kouklia"],
   ["Venus Rock, Paphos", "Kouklia"],
   ["Polis Chrysochous, Paphos", "Polis"],
@@ -168,8 +166,11 @@ function selfTest() {
 // client are touched: dotenv.config() would otherwise print an "injected env"
 // banner for the production .env.local on every pure self-test run, and
 // `new PrismaClient()` throws outright on a checkout where `prisma generate`
-// hasn't run yet. Anything added below this guard — the main() Task 2 will
-// add — must stay below it, never run ahead of it.
+// hasn't run yet. Anything added below this guard must stay below it, never
+// run ahead of it — and note that a *static* `import ... from "@prisma/client"`
+// added at the top of the file would silently re-break this guard regardless
+// of where it appears in source order, since static imports are hoisted and
+// run before this line executes. Any future Prisma import must stay dynamic.
 if (process.argv.includes("--self-test")) {
   process.exit(selfTest() ? 0 : 1);
 }
@@ -181,3 +182,60 @@ dotenv.config({ path: ".env.local" });
 
 const { PrismaClient } = await import("@prisma/client");
 const prisma = new PrismaClient();
+
+// ---------- backfill ----------
+
+// Which text the rule sees for a coordinate-less row. town then area, matching
+// the precedence the feed adapters use. publicName is deliberately EXCLUDED —
+// a project merely named "Polis Gardens" in Limassol must not be reclassified
+// by its marketing name.
+function textFor(row) {
+  const town = row.override?.town || row.town || "";
+  const area = row.override?.area || row.area || "";
+  return `${town} ${area}`.trim();
+}
+
+async function main() {
+  const apply = process.argv.includes("--apply");
+  const rows = await prisma.development.findMany({
+    select: {
+      id: true, publicName: true, district: true, town: true, area: true,
+      latitude: true, longitude: true, publishStatus: true,
+      override: { select: { district: true, town: true, area: true } },
+    },
+  });
+
+  const changes = [];
+  for (const r of rows) {
+    // An existing override is a deliberate admin decision and already wins at
+    // read time — never second-guess it here.
+    if (r.override?.district) continue;
+    const geo = districtFromGeo(r.latitude, r.longitude);
+    const next = geo || districtFromText(textFor(r));
+    if (!next || next === r.district) continue;
+    changes.push({ ...r, next, source: geo ? "geo" : "text" });
+  }
+
+  changes.sort((a, b) => a.publicName.localeCompare(b.publicName));
+  for (const c of changes)
+    console.log(`  ${c.publicName} | ${c.district ?? "(none)"} -> ${c.next} | ${c.source} | ${c.publishStatus}`);
+
+  console.log(`\n${changes.length} of ${rows.length} developments would change.`);
+
+  if (!apply) {
+    console.log("DRY RUN — nothing written. Re-run with --apply to write.");
+    return;
+  }
+  for (const c of changes)
+    await prisma.development.update({ where: { id: c.id }, data: { district: c.next } });
+  console.log(`APPLIED: ${changes.length} rows updated.`);
+}
+
+try {
+  await main();
+} catch (e) {
+  console.error(e);
+  process.exitCode = 1;
+} finally {
+  await prisma.$disconnect();
+}
