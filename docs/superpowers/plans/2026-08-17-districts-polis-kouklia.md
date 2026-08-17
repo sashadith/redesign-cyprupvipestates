@@ -22,6 +22,39 @@ The duplicated rule creates a real drift risk between `feeds.ts` (TypeScript) an
 
 ---
 
+## Deployment path — staging is code-only
+
+The normal flow is unchanged (`DEPLOYMENT.md:72`):
+
+```
+feature branch → deploy-staging.sh → verify on staging → merge to main → deploy-prod.sh
+```
+
+**But staging is not a data sandbox, and must not be treated as a third option
+for Task 4.** There is only ONE Postgres database — `cve-staging` and
+production both connect to the same `cyprusvipestates` DB (`DEPLOYMENT.md:605`).
+Running the backfill "on staging" would be running it on production.
+
+What that means per change in this plan:
+
+| Change | Staging | Notes |
+|---|---|---|
+| `feeds.ts` classifier (Task 3) | ✅ Deploy and review there | Code-only. Staging has no crons (`DEPLOYMENT.md:20`), so nothing auto-syncs. |
+| Backfill `--apply` (Task 4) | ❌ Never | Writes to the shared production DB. |
+| Force-sync verification (Task 5) | ❌ Never | A sync button clicked through to completion on staging is a real production write — this is precisely the 2026-07-27 incident that destroyed 17 curated units (`DEPLOYMENT.md:869`). |
+
+Staging is for **looking**, not for **doing**. Every write step in this plan
+belongs in the isolated testbed (`/opt/cvp-testbed/`) against its disposable
+database, or in an explicitly authorized production run.
+
+One interaction worth stating plainly: **deploying Task 3 to production is
+itself a partial backfill.** The nightly feed sync writes `Development.district`
+from the classifier, so every re-synced project picks up its new district with
+or without Task 4. Task 4 exists to catch the rows a sync would not reach —
+drafts, archived rows, and anything whose feed entry has gone stale.
+
+---
+
 ## File structure
 
 | File | Responsibility |
@@ -458,6 +491,7 @@ One of:
 - **Testbed** — run on the VPS against the disposable copy via
   `/opt/cvp-testbed/`, per DEPLOYMENT.md's "Isolated-script DB safety"
   (`DEPLOYMENT.md:826`). Preferred: it exercises the whole path with zero risk.
+  **Staging is not a substitute** — it shares production's database.
 - **Production, deliberately and disclosed** — only with the operator's explicit
   go-ahead in this session, and only after a fresh backup of the `developments`
   table. 12 rows, one column, fully reversible from the dry-run output.
@@ -529,9 +563,14 @@ This is the task that closes the TS-vs-JS drift risk. Without it the approach is
 
 **Files:** none modified.
 
+> **Run this on the isolated testbed only.** A force-sync is a write, and both
+> staging and production point at the live database. Clicking a sync button
+> through to completion on staging is functionally identical to doing it in
+> production — see `DEPLOYMENT.md:869`.
+
 - [ ] **Step 1: Re-sync one affected published project**
 
-Use the admin UI: Developments → **Royal Residences** (aristo, geo-matched, published) → force a sync. If a CLI path is preferred, call the same `syncOneProject` entry point `src/lib/feedSync.ts` exposes.
+On the testbed, admin UI: Developments → **Royal Residences** (aristo, geo-matched, published) → force a sync. If a CLI path is preferred, call the same `syncOneProject` entry point `src/lib/feedSync.ts` exposes.
 
 - [ ] **Step 2: Confirm the district survived the sync**
 
