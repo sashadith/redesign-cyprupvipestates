@@ -121,7 +121,7 @@ function districtFromText(s) {
 // ---------- self-test ----------
 
 const GEO_CASES = [
-  // the 12 rows that must move
+  // the 10 rows the boxes must move (2 more move by text — see TEXT_CASES)
   ["Prodromi Gardens", 35.02572773022013, 32.41232275581868, "Polis"],
   ["Beachside Villas", 35.0885, 32.4948, "Polis"],
   ["Argaka Village 6", 35.0785222, 32.4866528, "Polis"],
@@ -203,7 +203,9 @@ Replace the two empty constants (`SUB_REGIONS`, `DISTRICT_TOWNS`) and the two st
 // Paphos/Limassol boundary (which is exactly why Villa Infinity and Ridge
 // Residences, both in Venus Rock, were labelled Limassol). Both boxes are
 // two-sided so a Nicosia or Kyrenia coordinate can never fall into one.
-// Validated against all 244 developments: 12 matches, no false positives.
+// Validated against all 244 developments: 10 geo matches (4 Polis, 6 Kouklia),
+// no false positives. Two further affected rows, Grigio Court and Trinity
+// Residences, carry no coordinates and are classified by text instead.
 const SUB_REGIONS = [
   { name: "Polis", latMin: 34.95, latMax: 36.0, lngMin: 32.0, lngMax: 32.6 },
   { name: "Kouklia", latMin: 34.65, latMax: 34.75, lngMin: 32.55, lngMax: 32.7 },
@@ -376,7 +378,9 @@ git commit -m "Add Development.district backfill with dry-run default"
 // Paphos/Limassol boundary (which is exactly why Villa Infinity and Ridge
 // Residences, both in Venus Rock, were labelled Limassol). Both boxes are
 // two-sided so a Nicosia or Kyrenia coordinate can never fall into one.
-// Validated against all 244 developments: 12 matches, no false positives.
+// Validated against all 244 developments: 10 geo matches (4 Polis, 6 Kouklia),
+// no false positives. Two further affected rows, Grigio Court and Trinity
+// Residences, carry no coordinates and are classified by text instead.
 // MIRRORED in scripts/backfill-development-districts.mjs — change both.
 // See docs/DISTRICTS-POLIS-KOUKLIA.md.
 const SUB_REGIONS = [
