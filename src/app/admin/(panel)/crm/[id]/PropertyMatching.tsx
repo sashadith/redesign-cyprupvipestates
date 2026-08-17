@@ -407,7 +407,22 @@ export default function PropertyMatching({
                     <td className="px-3 py-2">
                       {d.mainImage ? <img src={d.mainImage} alt="" className="w-12 h-9 object-cover rounded" /> : <div className="w-12 h-9 rounded bg-[#F3F4F6]" />}
                     </td>
-                    <td className="px-3 py-2 font-medium text-[#111827]">{d.publicName}</td>
+                    <td className="px-3 py-2 font-medium text-[#111827]">
+                      {d.publishStatus === "published" && d.slug ? (
+                        <a
+                          href={`/en/projects/${d.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="hover:underline"
+                        >
+                          {d.publicName}
+                        </a>
+                      ) : (
+                        d.publicName
+                      )}
+                      {d.developer && <span className="ml-1.5 font-normal text-[#9CA3AF]">{d.developer}</span>}
+                    </td>
                     <td className="px-3 py-2 text-[#6B7280]">{[d.district || d.town, d.area].filter(Boolean).join(" · ") || "—"}</td>
                     <td className="px-3 py-2 text-[#6B7280]">{fmtPrice(priceFromSelection)}</td>
                     <td className="px-3 py-2 text-right text-[#6B7280]">{d.unitsAvailable}</td>

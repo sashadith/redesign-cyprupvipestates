@@ -54,6 +54,12 @@ export type MatchedDevelopment = {
   priceTo: number | null;
   currency: string;
   mainImage: string | null;
+  // For the admin matching table only (developer label + "view on site" link)
+  // — same publishStatus+slug gate PropertyOverlay.tsx already uses for its
+  // own "View on site" button, since slug is only ever set on publish.
+  developer: string | null;
+  slug: string | null;
+  publishStatus: string | null;
   // 2026-08-11 correction — used to be every available unit regardless of
   // match; now the count of units that actually satisfy the active filters
   // (same set as `matchedUnits` below), so the admin table's "Available"
@@ -273,6 +279,7 @@ export async function matchDevelopmentsForLead(lead: LeadLike, filters: MatchFil
         id: d.id, publicName: ov?.alias || d.publicName, town, district, area,
         priceFrom, priceTo: d.priceTo, currency: d.currency || "EUR",
         mainImage, unitsAvailable: matchedUnits.length, unitsAvailableAll: available.length, unitsTotal: d.units.length,
+        developer: d.developer, slug: d.slug, publishStatus: d.publishStatus,
       },
       score,
       matchedUnits,
