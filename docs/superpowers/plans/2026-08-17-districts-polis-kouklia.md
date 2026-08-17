@@ -202,12 +202,19 @@ Replace the two empty constants (`SUB_REGIONS`, `DISTRICT_TOWNS`) and the two st
 // longitude as Paphos city but 40 km north, and Kouklia straddles the 32.6
 // Paphos/Limassol boundary (which is exactly why Villa Infinity and Ridge
 // Residences, both in Venus Rock, were labelled Limassol). Both boxes are
-// two-sided so a Nicosia or Kyrenia coordinate can never fall into one.
+// bounded on the east by their longitude caps, which is what keeps Nicosia,
+// Morphou and Kyrenia out.
 // Validated against all 244 developments: 10 geo matches (4 Polis, 6 Kouklia),
 // no false positives. Two further affected rows, Grigio Court and Trinity
 // Residences, carry no coordinates and are classified by text instead.
 const SUB_REGIONS = [
+  // Chrysochou bay and Polis Chrysochous proper.
   { name: "Polis", latMin: 34.95, latMax: 36.0, lngMin: 32.0, lngMax: 32.6 },
+  // The Tillyria strip (Pomos → Pachyammos → Kato Pyrgos) runs further east as
+  // the coast turns; without this, `kato pyrgos` in the text rule below could
+  // never fire, because geo is consulted first and would answer "Limassol".
+  // Capped at 32.75 so Morphou (32.99) and all of Kyrenia stay outside.
+  { name: "Polis", latMin: 35.0, latMax: 36.0, lngMin: 32.6, lngMax: 32.75 },
   { name: "Kouklia", latMin: 34.65, latMax: 34.75, lngMin: 32.55, lngMax: 32.7 },
 ];
 
@@ -217,7 +224,7 @@ const SUB_REGIONS = [
 // rock as Paphos towns). "kato pyrgos" sits in Polis ahead of Limassol's
 // "pyrgos" so the Limassol entry can't claim it.
 const DISTRICT_TOWNS = {
-  Polis: /\bpolis\b|prodromi|latchi|latsi|neo chorio|argaka|pomos|kato pyrgos|chrysochou/i,
+  Polis: /\bpolis\b|prodromi|latchi|\blatsi\b|neo chorio|argaka|pomos|kato pyrgos|chrysochou/i,
   Kouklia: /kouklia|venus rock|secret valley|aphrodite hills|petra tou romiou/i,
   Paphos: /paphos|pafos|chloraka|peyia|pegeia|coral bay|geroskipou|yeroskipou|anavargos|emba|empa|konia|tala|mesogi|mesoyi|kissonerga|tombs of the kings/i,
   Limassol: /limassol|lemesos|agios athanasios|agia fyla|germasogeia|agios nikolaos|mesa geitonia|polemidia|katholiki|tsiflikoudia|petrou kai pavlou|agios tychonas|parekklisia|erimi|pyrgos/i,
@@ -377,14 +384,21 @@ git commit -m "Add Development.district backfill with dry-run default"
 // longitude as Paphos city but 40 km north, and Kouklia straddles the 32.6
 // Paphos/Limassol boundary (which is exactly why Villa Infinity and Ridge
 // Residences, both in Venus Rock, were labelled Limassol). Both boxes are
-// two-sided so a Nicosia or Kyrenia coordinate can never fall into one.
+// bounded on the east by their longitude caps, which is what keeps Nicosia,
+// Morphou and Kyrenia out.
 // Validated against all 244 developments: 10 geo matches (4 Polis, 6 Kouklia),
 // no false positives. Two further affected rows, Grigio Court and Trinity
 // Residences, carry no coordinates and are classified by text instead.
 // MIRRORED in scripts/backfill-development-districts.mjs — change both.
 // See docs/DISTRICTS-POLIS-KOUKLIA.md.
 const SUB_REGIONS = [
+  // Chrysochou bay and Polis Chrysochous proper.
   { name: "Polis", latMin: 34.95, latMax: 36.0, lngMin: 32.0, lngMax: 32.6 },
+  // The Tillyria strip (Pomos → Pachyammos → Kato Pyrgos) runs further east as
+  // the coast turns; without this, `kato pyrgos` in the text rule below could
+  // never fire, because geo is consulted first and would answer "Limassol".
+  // Capped at 32.75 so Morphou (32.99) and all of Kyrenia stay outside.
+  { name: "Polis", latMin: 35.0, latMax: 36.0, lngMin: 32.6, lngMax: 32.75 },
   { name: "Kouklia", latMin: 34.65, latMax: 34.75, lngMin: 32.55, lngMax: 32.7 },
 ];
 const districtFor = (center?: { lat: number; lng: number } | null): string => {
@@ -402,7 +416,7 @@ const districtFor = (center?: { lat: number; lng: number } | null): string => {
 // Paphos regex (it previously listed polis/latchi/latsi/venus rock as Paphos
 // towns). "kato pyrgos" sits in Polis ahead of Limassol's "pyrgos".
 const DISTRICT_TOWNS: Record<string, RegExp> = {
-  Polis: /\bpolis\b|prodromi|latchi|latsi|neo chorio|argaka|pomos|kato pyrgos|chrysochou/i,
+  Polis: /\bpolis\b|prodromi|latchi|\blatsi\b|neo chorio|argaka|pomos|kato pyrgos|chrysochou/i,
   Kouklia: /kouklia|venus rock|secret valley|aphrodite hills|petra tou romiou/i,
   Paphos: /paphos|pafos|chloraka|peyia|pegeia|coral bay|geroskipou|yeroskipou|anavargos|emba|empa|konia|tala|mesogi|mesoyi|kissonerga|tombs of the kings/i,
   Limassol: /limassol|lemesos|agios athanasios|agia fyla|germasogeia|agios nikolaos|mesa geitonia|polemidia|katholiki|tsiflikoudia|petrou kai pavlou|agios tychonas|parekklisia|erimi|pyrgos/i,

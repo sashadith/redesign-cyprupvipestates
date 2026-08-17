@@ -81,8 +81,17 @@ landing in Paphos forever.
 
 | Region | Bounding box |
 |---|---|
-| Polis | `lat ≥ 34.95` ∧ `lng ≤ 32.60` |
+| Polis (Chrysochou bay) | `lat 34.95–36.0` ∧ `lng 32.0–32.60` |
+| Polis (Tillyria strip) | `lat 35.0–36.0` ∧ `lng 32.60–32.75` |
 | Kouklia | `lat 34.65–34.75` ∧ `lng 32.55–32.70` |
+
+The second Polis box was added after the Task 1 code review (2026-08-17). The
+coast turns east past Pomos, so Kato Pyrgos sits at `lng 32.690` — outside the
+first box. Without the strip, geo would answer `Limassol` for it and the
+`kato pyrgos` text token could never fire, since geo is consulted first. Capped
+at 32.75 so Morphou (32.99) and Kyrenia stay outside. Verified against all 244
+developments: the added strip contains zero rows, so it changes no existing
+classification.
 
 Validated against all 244 developments: 4 rows match Polis, 6 match Kouklia,
 zero false positives. Specifically excluded by construction:
@@ -98,13 +107,17 @@ zero false positives. Specifically excluded by construction:
 New `DISTRICT_TOWNS` entries, ordered **before** `Paphos` — `districtFromText`
 returns on first match, so order is load-bearing:
 
-- **Polis:** `\bpolis\b`, `polis chrysochous`, `prodromi`, `latchi`, `latsi`,
-  `neo chorio`, `argaka`, `pomos`, `chrysochou`
+- **Polis:** `\bpolis\b`, `prodromi`, `latchi`, `\blatsi\b`, `neo chorio`,
+  `argaka`, `pomos`, `kato pyrgos`, `chrysochou`
 - **Kouklia:** `kouklia`, `venus rock`, `secret valley`, `aphrodite hills`,
   `petra tou romiou`
 
 `\bpolis\b` uses word boundaries deliberately, so it cannot match `Neapolis`
-(Neapolis University Paphos) or similar substrings.
+(Neapolis University Paphos) or `Akropolis`. `\blatsi\b` is anchored for the
+same reason — added after the Task 1 code review, which caught that a bare
+`latsi` matches **Latsia**, a large Nicosia municipality nowhere near Polis.
+`kato pyrgos` sits in the Polis entry ahead of Limassol's `pyrgos` (which
+legitimately serves Pyrgos Lemesou) so the Limassol entry cannot claim it.
 
 The same tokens must be **removed** from the `Paphos` entry, otherwise Paphos
 still wins for any adapter that reaches the text path.
