@@ -16,14 +16,6 @@
 //
 // See docs/DISTRICTS-POLIS-KOUKLIA.md.
 import dotenv from "dotenv";
-import { PrismaClient } from "@prisma/client";
-
-// Loaded explicitly rather than via `node -r dotenv/config`: plain `node` does
-// not read .env.local, and a missing file here is a silent no-op that correctly
-// falls through to the real environment on the VPS.
-dotenv.config({ path: ".env.local" });
-
-const prisma = new PrismaClient();
 
 // ---------- classification rule (mirror of feeds.ts) ----------
 
@@ -31,13 +23,24 @@ const prisma = new PrismaClient();
 // band alone cannot separate them: Polis Chrysochous sits at roughly the same
 // longitude as Paphos city but 40 km north, and Kouklia straddles the 32.6
 // Paphos/Limassol boundary (which is exactly why Villa Infinity and Ridge
-// Residences, both in Venus Rock, were labelled Limassol). Both boxes are
-// two-sided so a Nicosia or Kyrenia coordinate can never fall into one.
+// Residences, both in Venus Rock, were labelled Limassol). The exclusion of
+// Nicosia/Kyrenia coordinates isn't from being "two-sided" — it's the lngMax
+// caps (32.6 and 32.75 below) doing the work, since Nicosia/Kyrenia sit at
+// lng ~33.3+; latMax/lngMin merely bound the boxes to the island's coastline.
 // Validated against all 244 developments: 10 geo matches (4 Polis, 6 Kouklia),
 // no false positives. Two further affected rows, Grigio Court and Trinity
 // Residences, carry no coordinates and are classified by text instead.
 const SUB_REGIONS = [
+  // Chrysochou bay and Polis Chrysochous proper.
   { name: "Polis", latMin: 34.95, latMax: 36.0, lngMin: 32.0, lngMax: 32.6 },
+  // The Tillyria strip (Pomos → Pachyammos → Kato Pyrgos) runs further east as
+  // the coast turns; without this box, "kato pyrgos" in the text rule below
+  // could never fire for a coordinate-bearing row, because geo is consulted
+  // first and would otherwise answer "Limassol" (Kato Pyrgos sits at lng
+  // ~32.69, past the main Polis box's 32.6 cap). Capped at 32.75 so Morphou
+  // (32.99) and all of Kyrenia stay outside. Zero of the 244 developments
+  // fall in this strip today, so adding it changes no existing row.
+  { name: "Polis", latMin: 35.0, latMax: 36.0, lngMin: 32.6, lngMax: 32.75 },
   { name: "Kouklia", latMin: 34.65, latMax: 34.75, lngMin: 32.55, lngMax: 32.7 },
 ];
 
@@ -45,9 +48,11 @@ const SUB_REGIONS = [
 // Kouklia must precede Paphos. Their town names were removed from the Paphos
 // regex for the same reason (it previously listed polis/latchi/latsi/venus
 // rock as Paphos towns). "kato pyrgos" sits in Polis ahead of Limassol's
-// "pyrgos" so the Limassol entry can't claim it.
+// "pyrgos" so the Limassol entry can't claim it. `\blatsi\b` is anchored on
+// both sides — unanchored, "latsi" also matches inside "Latsia", a Nicosia
+// suburb with no relation to Polis's Latsi/Latsi Beach.
 const DISTRICT_TOWNS = {
-  Polis: /\bpolis\b|prodromi|latchi|latsi|neo chorio|argaka|pomos|kato pyrgos|chrysochou/i,
+  Polis: /\bpolis\b|prodromi|latchi|\blatsi\b|neo chorio|argaka|pomos|kato pyrgos|chrysochou/i,
   Kouklia: /kouklia|venus rock|secret valley|aphrodite hills|petra tou romiou/i,
   Paphos: /paphos|pafos|chloraka|peyia|pegeia|coral bay|geroskipou|yeroskipou|anavargos|emba|empa|konia|tala|mesogi|mesoyi|kissonerga|tombs of the kings/i,
   Limassol: /limassol|lemesos|agios athanasios|agia fyla|germasogeia|agios nikolaos|mesa geitonia|polemidia|katholiki|tsiflikoudia|petrou kai pavlou|agios tychonas|parekklisia|erimi|pyrgos/i,
@@ -92,6 +97,22 @@ const GEO_CASES = [
   // known-remaining, documented as out of scope: lng 33.35 < 33.4 keeps this
   // Nicosia project on Limassol. Pinned so we notice if it ever changes.
   ["Legacy (Nicosia coords)", 35.174608, 33.35454, "Limassol"],
+  // Tillyria strip — the second Polis box added to fix the geo/text
+  // contradiction where "kato pyrgos" could never win in districtFromText
+  // because districtFromGeo (consulted first) answered "Limassol" for it.
+  ["Kato Pyrgos", 35.178, 32.69, "Polis"],
+  ["Pachyammos", 35.148, 32.632, "Polis"],
+  ["Morphou (outside)", 35.2, 32.99, "Limassol"],
+  // null/NaN guard — Development.lat/lng are nullable Postgres columns, and
+  // this is the one branch of districtFromGeo that runs against that reality.
+  ["null lat", null, 32.5, ""],
+  ["null lng", 34.7, null, ""],
+  ["NaN lat", NaN, 32.5, ""],
+  // boundary cases — both invert on a single `<` vs `<=` edit, and the two
+  // Venus Rock rows at exactly 32.600/32.614 are the whole reason the Kouklia
+  // box exists.
+  ["lng exactly 32.6, low lat", 34.5, 32.6, "Limassol"],
+  ["lng exactly 33.4", 34.8, 33.4, "Larnaca"],
 ];
 
 const TEXT_CASES = [
@@ -109,9 +130,26 @@ const TEXT_CASES = [
   ["Geroskipou", "Paphos"],
   // \bpolis\b must not fire inside a longer word
   ["Neapolis", ""],
+  // \blatsi\b must not fire inside "Latsia" (a Nicosia suburb)
+  ["Latsia", ""],
+  // ordering invariant — every case above is a bare single token, so all of
+  // them would still pass even if DISTRICT_TOWNS were reordered to put
+  // Paphos first. feeds.ts feeds this function "Area, District"-shaped
+  // strings in practice; these four pin the FIRST-match ordering against
+  // that realistic input shape, not just against isolated tokens.
+  ["Kouklia, Paphos", "Kouklia"],
+  ["Venus Rock, Paphos", "Kouklia"],
+  ["Polis Chrysochous, Paphos", "Polis"],
+  ["Kato Pyrgos", "Polis"],
 ];
 
 function selfTest() {
+  // An emptied case table would otherwise report "SELF-TEST PASS (0 cases)" —
+  // a vacuous green that proves nothing ran. Treat it as a failure.
+  if (GEO_CASES.length === 0 || TEXT_CASES.length === 0) {
+    console.error("SELF-TEST FAIL: empty case table (GEO_CASES or TEXT_CASES has 0 entries)");
+    return false;
+  }
   let failed = 0;
   for (const [name, lat, lng, want] of GEO_CASES) {
     const got = districtFromGeo(lat, lng);
@@ -126,6 +164,20 @@ function selfTest() {
   return failed === 0;
 }
 
+// `--self-test` is checked immediately, before dotenv.config() or the Prisma
+// client are touched: dotenv.config() would otherwise print an "injected env"
+// banner for the production .env.local on every pure self-test run, and
+// `new PrismaClient()` throws outright on a checkout where `prisma generate`
+// hasn't run yet. Anything added below this guard — the main() Task 2 will
+// add — must stay below it, never run ahead of it.
 if (process.argv.includes("--self-test")) {
   process.exit(selfTest() ? 0 : 1);
 }
+
+// Loaded explicitly rather than via `node -r dotenv/config`: plain `node` does
+// not read .env.local, and a missing file here is a silent no-op that correctly
+// falls through to the real environment on the VPS.
+dotenv.config({ path: ".env.local" });
+
+const { PrismaClient } = await import("@prisma/client");
+const prisma = new PrismaClient();
