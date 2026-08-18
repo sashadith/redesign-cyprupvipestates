@@ -278,12 +278,37 @@ not mistaken for CRM-only.
    check that proves the classifier and the backfill agree — without it the
    whole approach is unverified.
 
+## Corrections to this branch's history
+
+- The commit message of `9f6bb2f` claims the override-coordinate fix "fixes a
+  real miss". It does not. Verified across all 244 rows by computing the result
+  both ways: **11 rows change classification mechanism** (text → geo), **0
+  change district**. Every one lands on the same answer by either route. The fix
+  stays — it aligns this script with the eight other override-first read paths
+  in the repo and removes a latent hazard where a corrected map pin and stale
+  feed coordinates disagree — but it corrected no data.
+
 ## Known remaining, not addressed here
 
 Other misclassifications surfaced while surveying the data, left alone to keep
 this change reviewable:
 
 - `Berengaria`, `Blackpine` — Troodos/Prodromos, filed under Limassol.
-- `Legacy` — `town=Nicosia`, filed under Limassol.
+- **The Nicosia band gap.** The coarse band has no Nicosia region: `lng < 33.4`
+  answers `Limassol`, so Nicosia coordinates are misfiled. Two rows are
+  affected, **both archived**, neither published or client-facing:
+  - `Engomi Plots` — protected. Its `override.district = "Nicosia"` is correct
+    and the backfill refuses to touch it. This is the clearest validation we
+    have of the never-write-overrides policy: a write-overrides design would
+    have overwritten a correct value with a wrong one.
+  - `Legacy` — **unprotected**. `base.district = Limassol`, text says
+    `"Nicosia, City centre"`, no override. Already wrong today; `--apply`
+    cannot worsen it, since `next === r.district` skips it.
+
+  `GEO_CASES` pins `Legacy`'s coordinates to `"Limassol"`. Read that pin as
+  "what we currently produce", **not** "what is correct". Closing the gap means
+  adding a Nicosia box in the 33.29–33.36 longitude range, which carries the
+  same false-positive risk the Polis/Kouklia boxes were validated against — its
+  own piece of work with its own validation burden, not a rider on this one.
 - 53 developments with no district at all (all draft/archived). The backfill
   will assign whichever of them the rules can resolve; the rest stay empty.
