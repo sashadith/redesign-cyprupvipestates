@@ -211,6 +211,7 @@ function textFor(row) {
 async function main() {
   const apply = process.argv.includes("--apply");
   const rows = await prisma.development.findMany({
+    orderBy: { publicName: "asc" },
     select: {
       id: true, publicName: true, district: true, town: true, area: true,
       latitude: true, longitude: true, publishStatus: true,
@@ -234,15 +235,17 @@ async function main() {
     // read time — never second-guess it here by writing over it. But a script
     // whose whole purpose is fixing rows like these must not go silent on
     // them either: collect every override whose district contradicts what the
-    // rule computes, and flag whether the override's OWN town/area already
-    // agrees with the rule. That agreement is the damning case — an override
-    // whose town says "Kouklia" while its district says "Paphos" is
-    // self-contradictory within a single admin record, not just a
-    // disagreement between the rule and an admin.
+    // rule computes. townAgrees checks ONLY the override's own town/area
+    // (never textFor(r), which falls back to the base row's town/area when
+    // the override doesn't set them) — it has to, because the claim it backs
+    // is "this single admin record contradicts itself", which is a stronger
+    // and different claim than "the rule disagrees with the admin".
     if (r.override?.district) {
-      if (next && next !== r.override.district)
-        blocked.push({ ...r, next, source: geo ? "geo" : "text",
-                       townAgrees: districtFromText(textFor(r)) === next });
+      if (next && next !== r.override.district) {
+        const ovText = [r.override?.town, r.override?.area].filter(Boolean).join(", ");
+        blocked.push({ ...r, next, source: geo ? "geo" : "text", ovText,
+                       townAgrees: !!ovText && districtFromText(ovText) === next });
+      }
       continue;
     }
 
@@ -250,16 +253,36 @@ async function main() {
     changes.push({ ...r, next, source: geo ? "geo" : "text" });
   }
 
+  blocked.sort((a, b) => a.publicName.localeCompare(b.publicName));
   if (blocked.length) {
-    console.log(`${blocked.length} row(s) BLOCKED by a contradicting override (district left unchanged — override wins at read time):`);
-    for (const b of blocked) {
-      const detail = b.source === "text" ? ` (town="${b.town ?? ""}", area="${b.area ?? ""}")` : "";
-      const flag = b.townAgrees
-        ? "SELF-CONTRADICTING: override.town/area already agrees with the rule, override.district does not"
-        : "override.town/area does not confirm the rule either";
-      console.log(`  ${b.publicName} | override.district=${b.override.district} but rule says ${b.next} | ${b.source}${detail} | ${flag}`);
+    // Two buckets that call for OPPOSITE operator actions — mixing them under
+    // one heading invites reading a correct override as one to "fix". Stale:
+    // the override's own town/area already independently agrees with what
+    // the rule computes, only its district field lags — safe to say the
+    // override is outdated. No corroboration: the rule and the override
+    // simply disagree with nothing in the override itself to confirm either
+    // side — the override may well be the one that's right (the classifier
+    // has a known Nicosia gap: districtFromGeo has no Nicosia band, so a
+    // Nicosia-coordinate row always falls through to Limassol/Larnaca by
+    // longitude alone; see the GEO_CASES "Legacy (Nicosia coords)" pin).
+    const stale = blocked.filter((b) => b.townAgrees);
+    const gap = blocked.filter((b) => !b.townAgrees);
+
+    if (stale.length) {
+      console.log("OVERRIDE LOOKS STALE — override.town/area already agrees with the rule, only district disagrees.");
+      console.log("Action: update the override, or clear its district so the base column wins again.");
+      for (const b of stale)
+        console.log(`  ${b.publicName} | override.district=${b.override.district}, rule says ${b.next} | ${b.source} | ov="${b.ovText}" | ${b.publishStatus}`);
+      console.log("");
     }
-    console.log("");
+
+    if (gap.length) {
+      console.log("RULE AND OVERRIDE DISAGREE, no corroboration — the override may well be correct.");
+      console.log('Action: review by hand. The classifier has a known Nicosia band gap (see the GEO_CASES "Legacy" pin).');
+      for (const b of gap)
+        console.log(`  ${b.publicName} | override.district=${b.override.district}, rule says ${b.next} | ${b.source} | ov="${b.ovText || "(none)"}" | ${b.publishStatus}`);
+      console.log("");
+    }
   }
 
   changes.sort((a, b) => a.publicName.localeCompare(b.publicName));
@@ -271,11 +294,11 @@ async function main() {
   console.log(`\n${changes.length} of ${rows.length} developments would change.`);
   const tally = new Map();
   for (const c of changes) {
-    const key = `${c.district || "(none)"} → ${c.next}`;
+    const key = `${c.district || "(none)"} -> ${c.next}`;
     tally.set(key, (tally.get(key) || 0) + 1);
   }
   if (tally.size) console.log([...tally].map(([k, n]) => `${n}× ${k}`).join(", "));
-  console.log(`${blocked.length} row(s) blocked by contradicting overrides.`);
+  console.log(`${blocked.length} row(s) blocked by contradicting overrides (listed above).`);
 
   if (!apply) {
     console.log("DRY RUN — nothing written. Re-run with --apply to write.");
