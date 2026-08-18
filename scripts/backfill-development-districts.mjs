@@ -185,14 +185,27 @@ const prisma = new PrismaClient();
 
 // ---------- backfill ----------
 
-// Which text the rule sees for a coordinate-less row. town then area, matching
-// the precedence the feed adapters use. publicName is deliberately EXCLUDED —
-// a project merely named "Polis Gardens" in Limassol must not be reclassified
-// by its marketing name.
+// Which text the rule sees for a coordinate-less row: town and area joined as
+// "Town, Area". The comma matters — no DISTRICT_TOWNS pattern contains one, so
+// a match can never form across the town/area boundary (a bare space join
+// could otherwise manufacture e.g. town "Kato" + area "Pyrgos" into "Kato
+// Pyrgos" -> Polis, a ~100km error, indistinguishable from a real match), and
+// it produces exactly the "Area, District"-shape the ordering TEXT_CASES
+// already pin. publicName is deliberately EXCLUDED — a project merely named
+// "Polis Gardens" in Limassol must not be reclassified by its marketing name.
+//
+// This join is a DELIBERATE DIVERGENCE from feeds.ts, not an oversight to
+// "fix" back to matching it: feeds.ts evaluates town and area as two SEPARATE
+// strings and lets town win outright (districtFromText(city) ||
+// districtFromText(area)). Joining them into one string here instead lets a
+// more specific AREA outrank a coarser TOWN via DISTRICT_TOWNS's match order —
+// e.g. town "Paphos" + area "Venus Rock" must resolve to Kouklia, which a
+// town-first rule would get wrong. Restoring town-first precedence here would
+// silently reclassify rows like that one back to the coarser district.
 function textFor(row) {
   const town = row.override?.town || row.town || "";
   const area = row.override?.area || row.area || "";
-  return `${town} ${area}`.trim();
+  return [town, area].filter(Boolean).join(", ");
 }
 
 async function main() {
@@ -201,33 +214,81 @@ async function main() {
     select: {
       id: true, publicName: true, district: true, town: true, area: true,
       latitude: true, longitude: true, publishStatus: true,
-      override: { select: { district: true, town: true, area: true } },
+      override: { select: { district: true, town: true, area: true, latitude: true, longitude: true } },
     },
   });
 
   const changes = [];
+  const blocked = [];
   for (const r of rows) {
-    // An existing override is a deliberate admin decision and already wins at
-    // read time — never second-guess it here.
-    if (r.override?.district) continue;
-    const geo = districtFromGeo(r.latitude, r.longitude);
+    // Override coordinates win over the base row's (documented in
+    // prisma/schema.prisma as "admin-set map coordinates (win over feed)",
+    // and honoured override-first by every other read path in this repo,
+    // e.g. scripts/backfill-development-distances.mjs). Reading r.latitude
+    // bare here would miss rows where the base row has no coordinates but the
+    // override does — geo would silently return "" and fall through to text.
+    const geo = districtFromGeo(r.override?.latitude ?? r.latitude, r.override?.longitude ?? r.longitude);
     const next = geo || districtFromText(textFor(r));
+
+    // An existing override is a deliberate admin decision and already wins at
+    // read time — never second-guess it here by writing over it. But a script
+    // whose whole purpose is fixing rows like these must not go silent on
+    // them either: collect every override whose district contradicts what the
+    // rule computes, and flag whether the override's OWN town/area already
+    // agrees with the rule. That agreement is the damning case — an override
+    // whose town says "Kouklia" while its district says "Paphos" is
+    // self-contradictory within a single admin record, not just a
+    // disagreement between the rule and an admin.
+    if (r.override?.district) {
+      if (next && next !== r.override.district)
+        blocked.push({ ...r, next, source: geo ? "geo" : "text",
+                       townAgrees: districtFromText(textFor(r)) === next });
+      continue;
+    }
+
     if (!next || next === r.district) continue;
     changes.push({ ...r, next, source: geo ? "geo" : "text" });
   }
 
+  if (blocked.length) {
+    console.log(`${blocked.length} row(s) BLOCKED by a contradicting override (district left unchanged — override wins at read time):`);
+    for (const b of blocked) {
+      const detail = b.source === "text" ? ` (town="${b.town ?? ""}", area="${b.area ?? ""}")` : "";
+      const flag = b.townAgrees
+        ? "SELF-CONTRADICTING: override.town/area already agrees with the rule, override.district does not"
+        : "override.town/area does not confirm the rule either";
+      console.log(`  ${b.publicName} | override.district=${b.override.district} but rule says ${b.next} | ${b.source}${detail} | ${flag}`);
+    }
+    console.log("");
+  }
+
   changes.sort((a, b) => a.publicName.localeCompare(b.publicName));
-  for (const c of changes)
-    console.log(`  ${c.publicName} | ${c.district ?? "(none)"} -> ${c.next} | ${c.source} | ${c.publishStatus}`);
+  for (const c of changes) {
+    const detail = c.source === "text" ? ` (town="${c.town ?? ""}", area="${c.area ?? ""}")` : "";
+    console.log(`  ${c.publicName} | ${c.district || "(none)"} -> ${c.next} | ${c.source}${detail} | ${c.publishStatus}`);
+  }
 
   console.log(`\n${changes.length} of ${rows.length} developments would change.`);
+  const tally = new Map();
+  for (const c of changes) {
+    const key = `${c.district || "(none)"} → ${c.next}`;
+    tally.set(key, (tally.get(key) || 0) + 1);
+  }
+  if (tally.size) console.log([...tally].map(([k, n]) => `${n}× ${k}`).join(", "));
+  console.log(`${blocked.length} row(s) blocked by contradicting overrides.`);
 
   if (!apply) {
     console.log("DRY RUN — nothing written. Re-run with --apply to write.");
     return;
   }
-  for (const c of changes)
+  // Idempotent by construction: the `next === r.district` guard above means a
+  // re-run only ever touches rows not yet written, so if a write throws
+  // partway through, re-running the script (once the underlying issue is
+  // fixed) is the documented recovery path — no manual cleanup needed.
+  for (const c of changes) {
     await prisma.development.update({ where: { id: c.id }, data: { district: c.next } });
+    console.log(`  ✓ ${c.publicName}`);
+  }
   console.log(`APPLIED: ${changes.length} rows updated.`);
 }
 
