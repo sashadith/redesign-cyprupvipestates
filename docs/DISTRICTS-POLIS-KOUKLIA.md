@@ -1,6 +1,8 @@
 # Districts: Polis and Kouklia
 
-Design spec — 2026-08-17. Status: approved, not yet implemented.
+Design spec — 2026-08-17. Status: in implementation on branch
+`feat/districts-polis-kouklia`. Amended 2026-08-18 after the Task 2 review —
+see "Override-blocked rows".
 
 ## Goal
 
@@ -173,13 +175,13 @@ convention of `scripts/backfill-development-distances.mjs`:
 |---|---|---|---|---|
 | Prodromi Gardens | Paphos | Polis | geo | draft |
 | Beachside Villas | Paphos | Polis | geo | draft |
-| Argaka Village 6 | Paphos | Polis | geo | published |
+| Argaka Village 6 | Paphos | Polis | geo | published — **override-blocked** |
 | Agnades Village 1 | Paphos | Polis | geo | published |
-| Grigio Court | Paphos | Polis | text (`town=Polis`) | published |
+| Grigio Court | Paphos | Polis | text (`town=Polis`) | published — **override-blocked** |
 | Villa Oasis | Paphos | Kouklia | geo | published |
-| Royal Residences | Paphos | Kouklia | geo | published |
+| Royal Residences | Paphos | Kouklia | geo | published — **override-blocked** |
 | Premier Residences | Paphos | Kouklia | geo | published |
-| Imperial Residences | Paphos | Kouklia | geo | published |
+| Imperial Residences | Paphos | Kouklia | geo | published — **override-blocked** |
 | **Villa Infinity** | **Limassol** | Kouklia | geo | published |
 | **Ridge Residences** | **Limassol** | Kouklia | geo | published |
 | Trinity Residences | Paphos | Kouklia | text (`area=Venus Rock`) | published |
@@ -191,6 +193,38 @@ bound, and were therefore labelled Limassol. Fixed as a side effect.
 Resulting CRM district list: Paphos 124 → 114, Limassol 63 → 61, plus
 **Polis** (5 — areas Prodromi, Argaka, Neo Chorio) and **Kouklia** (7 — area
 Venus Rock). Larnaca (3) and Nicosia (1) unchanged.
+
+Those totals are the *intended* end state. Four of them are not reachable by
+the backfill alone — see below.
+
+### Override-blocked rows (discovered 2026-08-18)
+
+Four of the twelve carry a `DevelopmentOverride` row with `district: "Paphos"`.
+The override wins at read time and the backfill refuses to touch it, so these
+four stay under Paphos no matter how often the classifier runs:
+
+| Development | `base.district` | `override.district` | `override.town` |
+|---|---|---|---|
+| Argaka Village 6 | Paphos | Paphos | **Polis** |
+| Grigio Court | Paphos | Paphos | **Polis** |
+| Imperial Residences | Limassol | Paphos | **Kouklia** |
+| Royal Residences | Limassol | Paphos | **Kouklia** |
+
+The `town` column is the tell: each override already records the correct
+locality while pinning `district` to Paphos — consistent with having been
+written when Polis and Kouklia did not exist as districts. Note this is
+inference, not record: the admin district field is free text, not a constrained
+select (`src/app/admin/(panel)/developments/[id]/page.tsx:194`), and
+`DevelopmentOverride` has no `createdAt` to date the row against.
+
+**Decision still open.** The backfill reports these rows and refuses to write
+them. Whether they are then corrected by hand in the admin UI, or the override
+`district` is cleared so the base column resumes winning, is an operator call —
+and the two are not equivalent: clearing keeps the row tracking the rule as it
+evolves, while setting Polis/Kouklia pins it forever. 19 overrides set a
+`district` in total, so this is a pattern, not a one-off.
+
+Until it is resolved, the CRM shows **Polis 3** and **Kouklia 5**, not 5 and 7.
 
 ## Side effects
 
@@ -228,13 +262,19 @@ not mistaken for CRM-only.
 1. **Unit-level:** table-driven test of the classifier over the 12 affected
    rows plus the near-miss guards (Troodos, Mandria, Sea Caves, Peyia) — all
    must keep their current district.
-2. **Backfill dry-run** must list exactly the 12 rows above and nothing else.
-   A 13th row is a defect in the rule, not an acceptable surprise.
+2. **Backfill dry-run.** Superseded 2026-08-18 — see "Override-blocked rows"
+   below. Expect **8** reclassifications (`X -> Y`), plus first-time fills
+   (`(none) -> X`) for districtless drafts/archives, plus a blocked-override
+   report naming the 4 rows the script refuses to write. The invariant that
+   still holds: **no unexpected `Paphos -> X` row**. A reclassification not in
+   the table above is a defect in the rule, not an acceptable surprise.
 3. **After apply:** re-run the `listPresentationLocations()` query and assert
    Paphos contains no Prodromi / Argaka / Neo Chorio / Venus Rock area, and
    that Polis and Kouklia appear with the expected areas.
 4. **Sync durability:** re-run a sync for one affected published project (e.g.
-   Royal Residences, aristo) and confirm the district survives. This is the
+   Villa Oasis, aristo) and confirm the district survives. NOT Royal
+   Residences — it carries an override pinning Paphos, so it would show no
+   change and read as a classifier failure. This is the
    check that proves the classifier and the backfill agree — without it the
    whole approach is unverified.
 
