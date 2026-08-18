@@ -58,9 +58,10 @@ const areaM2 = (v: any): string => { const n = toNum(v); return n ? `${n}\u00A0m
 // band alone cannot separate them: Polis Chrysochous sits at roughly the same
 // longitude as Paphos city but 40 km north, and Kouklia straddles the 32.6
 // Paphos/Limassol boundary (which is exactly why Villa Infinity and Ridge
-// Residences, both in Venus Rock, were labelled Limassol). Both boxes are
-// bounded on the east by their longitude caps, which is what keeps Nicosia,
-// Morphou and Kyrenia out.
+// Residences, both in Venus Rock, were labelled Limassol).
+// The two Polis boxes are bounded on the east by their longitude caps, which is
+// what keeps Nicosia, Morphou and Kyrenia out; Kouklia is bounded instead by
+// its latitude range, all three of those lying far north of 34.75.
 // Validated against all 244 developments: 10 geo matches (4 Polis, 6 Kouklia),
 // no false positives. Two further affected rows, Grigio Court and Trinity
 // Residences, carry no coordinates in the feed and are classified by text here.
@@ -70,9 +71,14 @@ const SUB_REGIONS = [
   // Chrysochou bay and Polis Chrysochous proper.
   { name: "Polis", latMin: 34.95, latMax: 36.0, lngMin: 32.0, lngMax: 32.6 },
   // The Tillyria strip (Pomos → Pachyammos → Kato Pyrgos) runs further east as
-  // the coast turns; without this, `kato pyrgos` in the text rule below could
-  // never fire, because geo is consulted first and would answer "Limassol".
-  // Capped at 32.75 so Morphou (32.99) and all of Kyrenia stay outside.
+  // the coast turns. Without this box a coordinate-bearing Kato Pyrgos project
+  // (lng ~32.69, past the main box's 32.6 cap) would be labelled Limassol by
+  // the coarse band, contradicting the `kato pyrgos` entry in the text rule.
+  // The box does NOT make that token reachable — geo short-circuits the text
+  // fallback whenever coordinates exist — it makes the geo answer agree with
+  // the token instead of contradicting it. Capped at 32.75 so Morphou (32.99)
+  // and all of Kyrenia stay outside. Zero of the 244 developments fall in this
+  // strip today, so adding it changed no existing row.
   { name: "Polis", latMin: 35.0, latMax: 36.0, lngMin: 32.6, lngMax: 32.75 },
   { name: "Kouklia", latMin: 34.65, latMax: 34.75, lngMin: 32.55, lngMax: 32.7 },
 ];
