@@ -137,6 +137,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
   const now = Date.now();
   const hot: LeadRowData[] = [];
   const keepContact: LeadRowData[] = [];
+  const partner: LeadRowData[] = [];
   const red: LeadRowData[] = [];
   const yellow: LeadRowData[] = [];
   const green: LeadRowData[] = [];
@@ -150,11 +151,20 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
     bandById.set(l.id, b);
     if (l.hotAt) {
       hot.push(l);
+    } else if (l.source === "PARTNER") {
+      // Partner leads get their own block rather than scattering across the
+      // colour bands — same exclusivity rule as HOT and KEEP_CONTACT above.
+      // Placed AFTER the hotAt check on purpose: hot is the stronger signal,
+      // so a hot partner lead still surfaces at the top of the page. Urgency
+      // is still computed and the dot still rendered (bandById above), so an
+      // overdue partner lead is visibly overdue inside this block instead of
+      // silently dropping out of "Overdue".
+      partner.push(l);
     } else {
       (b.band === "RED" ? red : b.band === "YELLOW" ? yellow : green).push(l);
     }
   }
-  const shownActive = hot.length + red.length + yellow.length + green.length + keepContact.length;
+  const shownActive = hot.length + red.length + yellow.length + green.length + partner.length + keepContact.length;
   const lostDefaultOpen = hasActiveFilter && lostTotal > 0;
   const closedDefaultOpen = hasActiveFilter && closedTotal > 0;
 
@@ -181,6 +191,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
         <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.RED.dot}`} />Overdue</span>
         <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.YELLOW.dot}`} />Due soon / not yet scheduled</span>
         <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.GREEN.dot}`} />On track</span>
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500" />Partner lead</span>
         <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-500" />Keep contact</span>
         <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#9CA3AF]" />Lost / Closed</span>
       </div>
@@ -199,6 +210,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
           <LeadBlockSection title="Overdue" dot={BAND_STYLE.RED.dot} leads={red} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
           <LeadBlockSection title="Due soon" dot={BAND_STYLE.YELLOW.dot} leads={yellow} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
           <LeadBlockSection title="On track" dot={BAND_STYLE.GREEN.dot} leads={green} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
+          <LeadBlockSection title="Partner leads" dot="bg-blue-500" leads={partner} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
           <LeadBlockSection title="Keep contact" dot="bg-purple-500" leads={keepContact} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
         </>
       )}
