@@ -23,10 +23,30 @@ and Aphrodite Hills all sit inside it.
 **In scope:** the Admin/CRM surface — Property Matching panel and the
 Presentation editor's location filter.
 
-**Out of scope:** the public projects filter
-(`src/app/components/StyledProjectFilters/StyledProjectFilters.tsx`). It runs on
-a different model (`Project.city`, not `Development`) with a hardcoded
-four-language city list. Deliberately deferred to a separate piece of work.
+**Out of scope:** *adding* Polis and Kouklia to the public projects filter
+dropdown (`src/app/components/StyledProjectFilters/StyledProjectFilters.tsx`),
+which is a hardcoded four-language list. Deliberately deferred.
+
+**Corrected 2026-08-18 — the public filter IS affected.** This section
+previously claimed it was not, on the grounds that it runs on `Project.city`
+rather than `Development`. That was wrong: the public listing merges Sanity
+projects *and* developments, and developments are matched by exact string
+against `_matchLocations` (`src/sanity/sanity.utils.ts:1208`), built from
+`town`/`district`/`area`. Splitting the districts would have dropped **10
+published projects** out of the public city filter, reachable only via "All
+cities" — found only because the operator went looking for Polis on
+`/projects` during the staging review.
+
+Fix: `districtWithParent()` (`src/lib/developmentCard.ts`) returns the fine
+district plus its administrative parent for the public match list, since Polis
+Chrysochous and Kouklia both sit inside the Paphos district. Public behaviour
+is unchanged for the 8 projects already under Paphos; Villa Infinity and Ridge
+Residences move Limassol → Paphos, which is a correction (both are in Venus
+Rock) and was explicitly confirmed as wanted. Verified over the 129 publicly
+visible developments: paphos 90 → 92, limassol 36 → 34, larnaca 3 → 3.
+
+The CRM district list reads `Development.district` directly and must **not**
+use that helper, or Polis and Kouklia would collapse back into Paphos.
 
 ## Why the CRM needs no UI change
 
