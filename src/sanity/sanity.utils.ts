@@ -9,7 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
 import { localizedHref } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
-import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances } from "@/lib/developmentCard";
+import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances, districtWithParent } from "@/lib/developmentCard";
 import { soldOutFromCounts, computeAvailability } from "@/lib/developmentAvailability";
 import { isNewStyleProjectsBlock, projectsBlockHasCriteria } from "@/lib/projectsBlockValidation";
 import { Homepage } from "@/types/homepage";
@@ -1205,7 +1205,7 @@ export function mapDevelopmentRowToCard(d: any) {
     // Compact-4 card footer (Beach/School/Golf/Airport) — reuses the
     // legacy renderer as-is; see toCardDistances for the shape adapter.
     distances: toCardDistances(d.distances as Record<string, number> | null),
-    _matchLocations: [town, district, area].map((v) => v.toLowerCase()),
+    _matchLocations: [town, ...districtWithParent(district), area].map((v) => v.toLowerCase()),
     _searchText: `${d.publicName} ${ov?.alias ?? ""}`.toLowerCase(),
     _priceFrom: devPriceFrom, _priceTo: devPriceTo,
     _source: "development" as const,

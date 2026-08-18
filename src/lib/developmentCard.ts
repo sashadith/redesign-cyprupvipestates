@@ -99,6 +99,28 @@ export function resolveBuildAreaRange(units: UnitLike[]): string {
 // order) with the same " · " separator used everywhere else location text
 // is composed. Case-insensitive dedupe: a feed that repeats the same name in
 // two of the three fields (e.g. town === area) shouldn't show it twice.
+// Polis Chrysochous and Kouklia are their own districts internally (see
+// docs/DISTRICTS-POLIS-KOUKLIA.md), but administratively both sit INSIDE the
+// Paphos district. The public projects filter only offers Paphos/Limassol/
+// Larnaca, and matches a development by exact string against its location
+// list — so without the parent, the 10 published Venus Rock / Polis projects
+// would answer to neither "Paphos" nor "Limassol" and be reachable only via
+// "All cities". Returning both keeps the public filter behaving exactly as it
+// does today while the CRM gets the finer split.
+//
+// This is a PUBLIC-FILTER concern only. The CRM district list is built from
+// Development.district directly and must NOT go through here, or Polis and
+// Kouklia would collapse back into Paphos and the whole split would be undone.
+const PARENT_DISTRICT: Record<string, string> = { polis: "Paphos", kouklia: "Paphos" };
+
+/** A district plus its administrative parent, if it has one. Public filter use only. */
+export function districtWithParent(district: string | null | undefined): string[] {
+  const d = (district ?? "").trim();
+  if (!d) return [];
+  const parent = PARENT_DISTRICT[d.toLowerCase()];
+  return parent && parent.toLowerCase() !== d.toLowerCase() ? [d, parent] : [d];
+}
+
 export function resolveDevelopmentLocation(...parts: (string | null | undefined)[]): string {
   const seen = new Set<string>();
   const out: string[] = [];
