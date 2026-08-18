@@ -3,7 +3,9 @@
 // Venus Rock projects sitting just past the lng<32.6 boundary, Limassol).
 //
 //   node scripts/backfill-development-districts.mjs              # dry run
-//   node scripts/backfill-development-districts.mjs --apply      # write
+//   node scripts/backfill-development-districts.mjs --apply --only=reclass
+//   node scripts/backfill-development-districts.mjs --apply --only=fills
+//   node scripts/backfill-development-districts.mjs --apply --only=all
 //   node scripts/backfill-development-districts.mjs --self-test  # rule check only
 //
 // The classification rule below is a deliberate, small duplicate of
@@ -223,8 +225,28 @@ function textFor(row) {
   return [town, area].filter(Boolean).join(", ");
 }
 
+// Which class of change to write. Reclassifications (X -> Y) are the point of
+// this script; first-time fills ((none) -> X) are a useful side effect for
+// districtless drafts but are unrelated to the Polis/Kouklia split, so they
+// are separable. --only is REQUIRED with --apply: at production scale the
+// difference is 12 rows versus 59, and that must be a deliberate choice rather
+// than a default someone inherits.
+function resolveScope(apply) {
+  const arg = process.argv.find((a) => a.startsWith("--only="));
+  const scope = arg ? arg.slice("--only=".length) : null;
+  if (scope && !["reclass", "fills", "all"].includes(scope))
+    throw new Error(`--only must be reclass|fills|all, got "${scope}"`);
+  if (apply && !scope)
+    throw new Error("--apply requires --only=reclass|fills|all (reclass = the X -> Y moves, fills = the (none) -> X first-time fills)");
+  return scope ?? "all";
+}
+
+const inScope = (c, scope) =>
+  scope === "all" || (scope === "reclass" ? !!c.district : !c.district);
+
 async function main() {
   const apply = process.argv.includes("--apply");
+  const scope = resolveScope(apply);
   const rows = await prisma.development.findMany({
     orderBy: { publicName: "asc" },
     select: {
@@ -301,12 +323,15 @@ async function main() {
   }
 
   changes.sort((a, b) => a.publicName.localeCompare(b.publicName));
+  const selected = changes.filter((c) => inScope(c, scope));
   for (const c of changes) {
     const detail = c.source === "text" ? ` (town="${c.town ?? ""}", area="${c.area ?? ""}")` : "";
     console.log(`  ${c.publicName} | ${c.district || "(none)"} -> ${c.next} | ${c.source}${detail} | ${c.publishStatus}`);
   }
 
   console.log(`\n${changes.length} of ${rows.length} developments would change.`);
+  if (scope !== "all")
+    console.log(`--only=${scope} selects ${selected.length} of those; the other ${changes.length - selected.length} are left untouched.`);
   const tally = new Map();
   for (const c of changes) {
     const key = `${c.district || "(none)"} -> ${c.next}`;
@@ -323,11 +348,11 @@ async function main() {
   // re-run only ever touches rows not yet written, so if a write throws
   // partway through, re-running the script (once the underlying issue is
   // fixed) is the documented recovery path — no manual cleanup needed.
-  for (const c of changes) {
+  for (const c of selected) {
     await prisma.development.update({ where: { id: c.id }, data: { district: c.next } });
-    console.log(`  ✓ ${c.publicName}`);
+    console.log(`  ✓ ${c.publicName} | ${c.district || "(none)"} -> ${c.next}`);
   }
-  console.log(`APPLIED: ${changes.length} rows updated.`);
+  console.log(`APPLIED (--only=${scope}): ${selected.length} rows updated.`);
 }
 
 try {
