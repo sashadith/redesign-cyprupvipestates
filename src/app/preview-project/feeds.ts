@@ -54,12 +54,46 @@ const clean = (v: any): string => { const s = txt(v).trim(); return s && s.toLow
 // titles/URLs). Strips it so it can't leak into new projects going forward.
 export const stripLeadingColon = (s: string): string => s.replace(/^:\s*/, "");
 const areaM2 = (v: any): string => { const n = toNum(v); return n ? `${n}\u00A0m²` : ""; }; // nbsp keeps "105 m²" on one line
-const districtFor = (lng?: number | null) => (lng == null ? "" : lng < 32.6 ? "Paphos" : lng < 33.4 ? "Limassol" : "Larnaca");
+// Sub-regions of the coarse longitude band below, checked FIRST because the
+// band alone cannot separate them: Polis Chrysochous sits at roughly the same
+// longitude as Paphos city but 40 km north, and Kouklia straddles the 32.6
+// Paphos/Limassol boundary (which is exactly why Villa Infinity and Ridge
+// Residences, both in Venus Rock, were labelled Limassol). Both boxes are
+// bounded on the east by their longitude caps, which is what keeps Nicosia,
+// Morphou and Kyrenia out.
+// Validated against all 244 developments: 10 geo matches (4 Polis, 6 Kouklia),
+// no false positives. Two further affected rows, Grigio Court and Trinity
+// Residences, carry no coordinates in the feed and are classified by text here.
+// MIRRORED in scripts/backfill-development-districts.mjs — change both.
+// See docs/DISTRICTS-POLIS-KOUKLIA.md.
+const SUB_REGIONS = [
+  // Chrysochou bay and Polis Chrysochous proper.
+  { name: "Polis", latMin: 34.95, latMax: 36.0, lngMin: 32.0, lngMax: 32.6 },
+  // The Tillyria strip (Pomos → Pachyammos → Kato Pyrgos) runs further east as
+  // the coast turns; without this, `kato pyrgos` in the text rule below could
+  // never fire, because geo is consulted first and would answer "Limassol".
+  // Capped at 32.75 so Morphou (32.99) and all of Kyrenia stay outside.
+  { name: "Polis", latMin: 35.0, latMax: 36.0, lngMin: 32.6, lngMax: 32.75 },
+  { name: "Kouklia", latMin: 34.65, latMax: 34.75, lngMin: 32.55, lngMax: 32.7 },
+];
+const districtFor = (center?: { lat: number; lng: number } | null): string => {
+  if (!center) return "";
+  const { lat, lng } = center;
+  for (const r of SUB_REGIONS)
+    if (lat >= r.latMin && lat <= r.latMax && lng >= r.lngMin && lng <= r.lngMax) return r.name;
+  return lng < 32.6 ? "Paphos" : lng < 33.4 ? "Limassol" : "Larnaca";
+};
 // Fallback for projects with no coordinates at all (some Aristo units carry no
 // Latitude/Longitude) — match the feed's own area/town text against known towns
 // per district, so district isn't silently blank just because geo is missing.
+// Order is load-bearing: districtFromText returns on FIRST match, so Polis and
+// Kouklia must precede Paphos, and their town names were removed from the
+// Paphos regex (it previously listed polis/latchi/latsi/venus rock as Paphos
+// towns). "kato pyrgos" sits in Polis ahead of Limassol's "pyrgos".
 const DISTRICT_TOWNS: Record<string, RegExp> = {
-  Paphos: /paphos|pafos|chloraka|peyia|pegeia|coral bay|polis|latchi|latsi|venus rock|geroskipou|yeroskipou|anavargos|emba|empa|konia|tala|mesogi|mesoyi|kissonerga|tombs of the kings/i,
+  Polis: /\bpolis\b|prodromi|latchi|\blatsi\b|neo chorio|argaka|pomos|kato pyrgos|chrysochou/i,
+  Kouklia: /kouklia|venus rock|secret valley|aphrodite hills|petra tou romiou/i,
+  Paphos: /paphos|pafos|chloraka|peyia|pegeia|coral bay|geroskipou|yeroskipou|anavargos|emba|empa|konia|tala|mesogi|mesoyi|kissonerga|tombs of the kings/i,
   Limassol: /limassol|lemesos|agios athanasios|agia fyla|germasogeia|agios nikolaos|mesa geitonia|polemidia|katholiki|tsiflikoudia|petrou kai pavlou|agios tychonas|parekklisia|erimi|pyrgos/i,
   Larnaca: /larnaca|larnaka|oroklini|pyla|livadia|dhekelia|aradippou/i,
   Nicosia: /nicosia|lefkosia|strovolos|engomi|aglantzia/i,
@@ -264,10 +298,12 @@ async function islandBlue(id = "76"): Promise<ProjectVM | null> {
   const rawGallery = [...renders, ...photos];
   const main = ov.mainImage ? secure(ov.mainImage) : null;
   const gallery = main ? [main, ...rawGallery.filter((u) => u !== main)] : rawGallery;
+  const ibArea = ov.area ?? txt(project.Location);
+  const ibDistrict = districtFor(center) || districtFromText(ibArea);
   return {
     id, dev: "island-blue", publicName, developerName, developer: "Island Blue",
-    area: ov.area ?? txt(project.Location), district: districtFor(center?.lng), town: "",
-    location: joinLoc(districtFor(center?.lng), ov.area ?? txt(project.Location)),
+    area: ibArea, district: ibDistrict, town: "",
+    location: joinLoc(ibDistrict, ibArea),
     status: txt(project.Status),
     description: anonymize(txt(project.DescriptionEnglish), developerName, publicName),
     gallery, plans: arr(project?.FloorPlans?.FloorPlan).map(txt).filter(Boolean).map(secure), renders,
@@ -330,7 +366,7 @@ async function qubehub(dev: string, id = "1"): Promise<ProjectVM | null> {
   const publicName = ov.name ?? developerName;
   const stage = STAGE_LABEL[txt(project.stage).toLowerCase()] ?? txt(project.stage);
   // location levels: District (from coords) · Town (city, if distinct) · Area
-  const district = districtFor(center?.lng) || districtFromText(clean(loc.city)) || districtFromText(clean(loc.area)) || clean(loc.city);
+  const district = districtFor(center) || districtFromText(clean(loc.city)) || districtFromText(clean(loc.area)) || clean(loc.city);
   const areaName = ov.area ?? clean(loc.area);
   const cityTown = clean(loc.city);
   const town = cityTown && cityTown.toLowerCase() !== district.toLowerCase() && cityTown.toLowerCase() !== areaName.toLowerCase() ? cityTown : "";
@@ -404,7 +440,7 @@ async function aristo(id: string): Promise<ProjectVM | null> {
   const ov = OVERRIDES[`aristo:${id}`] ?? {};
   const developerName = toTitleCaseName(id), publicName = ov.name ?? developerName;
   const area = ov.area ?? txt(first.Area);
-  const district = districtFor(center?.lng) || districtFromText(area) || districtFromText(naClean(first.Location));
+  const district = districtFor(center) || districtFromText(area) || districtFromText(naClean(first.Location));
   const stage = txt(first.Construction_Stage), energy = energyGrade(first.Energy_Efficient_Content);
   const gallery0 = Array.from(new Set(group.flatMap((u: any) => arr(u?.gallery?.image).map(aristoImg)))).filter(Boolean);
   const main = ov.mainImage ? secure(ov.mainImage) : null;
@@ -563,7 +599,7 @@ async function xml2u(dev: string, id: string): Promise<ProjectVM | null> {
   const ov = OVERRIDES[`${dev}:${id}`] ?? {};
   const developerName = toTitleCaseName(id), publicName = ov.name ?? developerName;
   const area = ov.area ?? txt(first?.Address?.location);
-  const district = districtFor(center?.lng) || districtFromText(area) || districtFromText(clean(first?.Address?.region)) || districtFromText(clean(first?.Address?.subRegion));
+  const district = districtFor(center) || districtFromText(area) || districtFromText(clean(first?.Address?.region)) || districtFromText(clean(first?.Address?.subRegion));
   const d0 = first.Description ?? {};
   const descText = tidyDesc(fullDescriptionText(d0.description) || clean(d0.shortDescription));
   // EPC/GEC (energy performance / green energy cert) — both always empty
@@ -765,7 +801,7 @@ async function squareOne(id: string): Promise<ProjectVM | null> {
   const developerName = toTitleCaseName(bracket);
   const publicName = ov.name ?? developerName;
   const descBody = descRaw.replace(/^\[\s*.+?\s*\]\s*/, "");
-  const district = districtFor(center?.lng) || districtFromText(clean(first.province)) || districtFromText(clean(first.town)) || clean(first.province);
+  const district = districtFor(center) || districtFromText(clean(first.province)) || districtFromText(clean(first.town)) || clean(first.province);
   const town = clean(first.town);
   const area = ov.area ?? (town && town.toLowerCase() !== district.toLowerCase() ? town : "");
   const gallery = sizedImages(Array.from(new Set(group.flatMap((p: any) => arr(p?.images?.image).map((im: any) => txt(im?.url))))).filter(Boolean));
