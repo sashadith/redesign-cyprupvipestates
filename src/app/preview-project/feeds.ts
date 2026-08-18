@@ -68,19 +68,26 @@ const areaM2 = (v: any): string => { const n = toNum(v); return n ? `${n}\u00A0m
 // MIRRORED in scripts/backfill-development-districts.mjs — change both.
 // See docs/DISTRICTS-POLIS-KOUKLIA.md.
 const SUB_REGIONS = [
-  // Chrysochou bay and Polis Chrysochous proper.
-  { name: "Polis", latMin: 34.95, latMax: 36.0, lngMin: 32.0, lngMax: 32.6 },
-  // The Tillyria strip (Pomos → Pachyammos → Kato Pyrgos) runs further east as
-  // the coast turns. Without this box a coordinate-bearing Kato Pyrgos project
-  // (lng ~32.69, past the main box's 32.6 cap) would be labelled Limassol by
-  // the coarse band, contradicting the `kato pyrgos` entry in the text rule.
-  // The box does NOT make that token reachable — geo short-circuits the text
-  // fallback whenever coordinates exist — it makes the geo answer agree with
-  // the token instead of contradicting it. Capped at 32.75 so Morphou (32.99)
-  // and all of Kyrenia stay outside. Zero of the 244 developments fall in this
-  // strip today, so adding it changed no existing row.
-  { name: "Polis", latMin: 35.0, latMax: 36.0, lngMin: 32.6, lngMax: 32.75 },
-  { name: "Kouklia", latMin: 34.65, latMax: 34.75, lngMin: 32.55, lngMax: 32.7 },
+  // Polis Chrysochous: Chrysochou bay plus the Tillyria strip (Pomos →
+  // Pachyammos → Kato Pyrgos), which runs further east as the coast turns.
+  // One box, not two: once the latitude floor moved to 35.0 (below) both
+  // halves shared the same band, so they merged.
+  //   lngMax 32.75 keeps Morphou (32.99) and all of Kyrenia outside, while
+  //     still admitting Kato Pyrgos at ~32.69 — without which a
+  //     coordinate-bearing row there would be labelled Limassol by the coarse
+  //     band, contradicting the `kato pyrgos` entry in the text rule. (The box
+  //     does not make that token reachable — geo short-circuits the text
+  //     fallback whenever coordinates exist — it makes the geo answer agree
+  //     with the token instead of contradicting it.)
+  //   latMin 35.0 keeps Drouseia (34.964) and Lara Bay (34.956) in Paphos,
+  //     where they belong. Raised from 34.95 in the Task 3 review; our
+  //     northernmost Polis row sits at 35.0245, so the margin is 0.024.
+  { name: "Polis", latMin: 35.0, latMax: 36.0, lngMin: 32.0, lngMax: 32.75 },
+  // Kouklia / Venus Rock. lngMax lowered from 32.7 to 32.65 in the Task 3
+  // review: Pissouri Bay (34.660/32.693) is a real Limassol property market
+  // and sat inside the old box. Our easternmost Kouklia row is at 32.6136, so
+  // the margin is 0.036 on our side and 0.043 to Pissouri.
+  { name: "Kouklia", latMin: 34.65, latMax: 34.75, lngMin: 32.55, lngMax: 32.65 },
 ];
 const districtFor = (center?: { lat: number; lng: number } | null): string => {
   if (!center) return "";
