@@ -140,6 +140,7 @@ echo "   ✓ $DIR identifies as cyprusvipestates"
 #    secrets/uploads are shared-state symlinks, never rsynced content).
 RSYNC_OPTS=(-rlptDz
   --exclude node_modules --exclude .next --exclude .git --exclude .local-db
+  --exclude .claude --exclude .codebase-memory
   --exclude '.env' --exclude '.env.local' --exclude 'scripts/images' --exclude 'public/uploads' --exclude secrets)
 [ "$DRY" = 1 ] && RSYNC_OPTS+=(--dry-run -v)
 

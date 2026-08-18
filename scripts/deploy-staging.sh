@@ -28,6 +28,7 @@ REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 echo "→ rsync source ($REPO_ROOT) to $HOST:$DIR"
 rsync -az \
   --exclude node_modules --exclude .next --exclude .git --exclude .local-db \
+  --exclude .claude --exclude .codebase-memory \
   --exclude '.env' --exclude '.env.local' --exclude 'scripts/images' --exclude 'public/uploads' \
   -e "ssh -i $KEY" "$REPO_ROOT/" "$HOST:$DIR/"
 
