@@ -1,0 +1,1466 @@
+[
+ {
+  "id": "7b4d6439-d757-4315-9ea2-d2dbe93278ea",
+  "publicName": "Abiete 1",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "b169d7c6-bf4e-458d-84ee-2421827617ef",
+  "publicName": "Abiete 2",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "daf6b599-ca33-49c1-962d-28fa29932f93",
+  "publicName": "Achilleas",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "b82ba741-ad7b-4f11-8ab7-ec3165039312",
+  "publicName": "Aether",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "022728f9-66df-4ab8-974c-d0e906e6f11a",
+  "publicName": "Agnades Village 1",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "5aaaf82c-8b76-415d-af28-f32f3051c55f",
+  "publicName": "Agora Residences 1",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "ce104261-ae80-48ba-9d63-1b6efc6c3f95",
+  "publicName": "Agora Residences 2",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "37d32b3c-ed09-49e5-a5d1-494ae870accc",
+  "publicName": "Aion",
+  "district": null,
+  "publishStatus": "published"
+ },
+ {
+  "id": "2c51a6f7-38ff-489d-a05b-824d6c6fb694",
+  "publicName": "Alder Park",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "24a21d56-e4c3-405a-b0b7-0d39277a78de",
+  "publicName": "Aldo Residences",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "f3822082-bdf6-4e97-9a83-9b706091e751",
+  "publicName": "Almond Tree Villas",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "20c6a391-6ca9-49e2-a95c-06732db9460f",
+  "publicName": "Amelia Luxury Apartments",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "83ff60c2-6c65-4dd7-8a89-e83260bd8f33",
+  "publicName": "Amore Hills",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "6d18c046-7c71-43cb-b200-d8ce56d04f37",
+  "publicName": "Andriana Court",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "b5c062f9-7afa-4977-a8fd-fb0984858c2b",
+  "publicName": "Apartments In Paphos",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "0888ea3b-c637-419f-bc0c-931a5e36efa8",
+  "publicName": "Apex",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "6784712c-7cb2-4609-ad7f-b72497c64262",
+  "publicName": "Aphrodite Court",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "a408f7d2-ae77-4ab8-a7a7-4d9650065923",
+  "publicName": "Aphrodite Gardens",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "918b685f-3a78-4f67-b38d-aa660a935ce3",
+  "publicName": "Apollo",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "b4f28246-9b33-4c5b-8b4d-27073911fa54",
+  "publicName": "Aquamarine Coastal Villas",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "ec717de8-9d45-48e6-9b3e-d0315bcfced8",
+  "publicName": "Arbeo Park",
+  "district": null,
+  "publishStatus": "published"
+ },
+ {
+  "id": "a78d9c7b-6cf5-4716-8e24-5bc32c9cf715",
+  "publicName": "Argaka Village 6",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "0aed7206-0117-4009-89bd-7fce350931c0",
+  "publicName": "Arkadia Residences 1",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "a9edb55d-ce6d-48d9-a92f-e61ff17449f9",
+  "publicName": "Arkadia Residences 2",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "463d53a8-35be-4584-a062-5d6e04854aa7",
+  "publicName": "Arkadia Residences 3",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "99d8b15e-f8d4-474a-abdf-a35411e5873b",
+  "publicName": "Arkadia Residences 4",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "ba8f25f4-7ff6-4697-9a00-62445c771aa8",
+  "publicName": "Atrium",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "a1528966-11d5-4082-b2c8-f60c1182599e",
+  "publicName": "Aura Residences",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "a3c8261c-269f-4e91-97e2-939ce68db952",
+  "publicName": "Aurelia Homes",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "9dbcb817-0ab3-4c12-98ff-fd6aa155090c",
+  "publicName": "Aurora A",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "cbbe5fbb-9f0d-46c3-8c87-98972ff994e6",
+  "publicName": "Aurora B",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "b17aa251-fff8-49ce-9604-2e2424094791",
+  "publicName": "Avalon 3",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "762c12d8-7ca4-49c7-bc45-9cca20ca68cc",
+  "publicName": "Avalon Gardens",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "f99e1b85-dad1-4518-9a81-0e997944b049",
+  "publicName": "Avalon Gardens 2",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "41c67ef3-aa45-4b1b-88a4-cf3f17364eb6",
+  "publicName": "Avalon Park",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "6763d260-2055-4354-80fd-93ac3b0c0dd7",
+  "publicName": "Avalon Residences",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "2c5d966a-4f10-4806-b6b9-bdfd65ebd304",
+  "publicName": "Avalon Resort 1",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "dfa9d2d5-4995-452b-9639-b545a9ef8446",
+  "publicName": "Avalon Resort 2",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "e1a52a22-40e6-45fd-b46b-c5cbc80c0845",
+  "publicName": "Avalon Valley",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "980baa39-6325-4954-8121-46d25c107473",
+  "publicName": "Avenue",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "f2de99dd-311d-48b6-b342-348d73cd671b",
+  "publicName": "Avora Court",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "c6e810a1-6222-4b8c-b4cb-c8edf782f235",
+  "publicName": "Azalea Villas",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "793fac4f-a1a7-4331-85ce-1e808884d9da",
+  "publicName": "Azor Residences",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "0469549c-5800-405b-b94a-c9dee73791de",
+  "publicName": "Azure Beachfront Villas",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "3315760f-b37c-4194-aa55-f13c35d45454",
+  "publicName": "Azure Living",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "b2360635-b5f5-4e95-ae7b-99bb7bb84e3f",
+  "publicName": "Baia",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "18275ba2-1c5f-427d-a72f-32ef75a9a098",
+  "publicName": "Balance",
+  "district": "Larnaca",
+  "publishStatus": "published"
+ },
+ {
+  "id": "7448ce1a-a76d-4906-8c99-2489ee1b2eb3",
+  "publicName": "Beachside Villas",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "5c878e2e-ffab-4190-8853-1a5a6bb65836",
+  "publicName": "Berengaria",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "9c854291-ed6f-4e3f-9cbc-b9f2aecff995",
+  "publicName": "Blackpine",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "94518c5c-c5a6-42aa-810f-c34e6d14f1c2",
+  "publicName": "Blossom Park",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "0b1ecd57-a153-4133-9738-d7fff9dcb1c2",
+  "publicName": "Bluvia Residences",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "16eff08b-19ea-4cb2-a572-59268258a592",
+  "publicName": "Business Centre (MBC)",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "b3016461-71ec-41da-8294-a3bf00a06f90",
+  "publicName": "Capri House",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "c87ce074-e8e0-4a46-a1fa-759175814abd",
+  "publicName": "Celestia",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "a9f99588-916d-4931-90a8-2067f8fb9872",
+  "publicName": "Cirvis Residences",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "e1c23f00-c415-4380-a40d-88e83e6e98bb",
+  "publicName": "City View",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "375fa48a-25c6-4dd0-8668-a906243024ef",
+  "publicName": "Cityscape Residneces",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "0fa914c5-bea5-4051-aa2f-2e43ca66e8da",
+  "publicName": "Coral Vista",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "731a7cbe-a366-43f1-bb46-d65feaaa42c5",
+  "publicName": "Cypress",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "aead47c8-8f45-443e-b110-4b52fb3b585b",
+  "publicName": "Cypress Grove",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "36de3bc6-e5e3-467f-b4e8-82a8e0e3b601",
+  "publicName": "Cypress Park Living",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "d0a7672d-9fd1-4676-ac25-c4f9697d44a9",
+  "publicName": "DIAMOND",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "a0372de4-2901-4c2b-9fb3-db62f62e8652",
+  "publicName": "Deloma Residences",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "3fd5418f-1193-4358-8b8c-f98b01b0ba58",
+  "publicName": "Design City Residences",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "c8189a7b-bcab-4b70-a28d-15c18e8d74cd",
+  "publicName": "Domus",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "f99fa564-cb9e-4575-9773-f87d425f44f9",
+  "publicName": "Down Town",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "84de9b88-845c-4334-8a68-4757eb967e6e",
+  "publicName": "Dream Tower",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "ce1fddd0-c4ee-4291-b820-013c48c8a1f3",
+  "publicName": "Edem",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "08afb1b1-7977-40a8-b4be-88c6b9adc0c0",
+  "publicName": "Eden Bay",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "521490c0-8483-4fe2-9f9b-08e63aaacf10",
+  "publicName": "Eden Coast",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "187664ef-7bed-46c7-9b4c-334cdf45a1ac",
+  "publicName": "Eden Golf",
+  "district": null,
+  "publishStatus": "published"
+ },
+ {
+  "id": "ddf1b933-c1e9-4b14-a57d-9c20bbb2c4dd",
+  "publicName": "Eden Roc Residence Block D",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "bf16ad28-7b9a-4862-a6b6-96f9e815f84a",
+  "publicName": "Elpez",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "ecffe717-0f1b-47cb-89d2-b13d90c79fec",
+  "publicName": "Elysia Blu Residences",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "f036570c-304f-425e-abc6-e2988f4bd32e",
+  "publicName": "Emerald",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "0fac6e0d-4ac9-46f3-a6a5-14ce68d60ac4",
+  "publicName": "Emerald Park",
+  "district": null,
+  "publishStatus": "published"
+ },
+ {
+  "id": "e4f40f29-1240-4541-8572-b4d12d4bfa09",
+  "publicName": "Engomi Plots",
+  "district": "Limassol",
+  "publishStatus": "archived"
+ },
+ {
+  "id": "75d9b6d4-4c8d-48ad-bd10-6a1a5d30de88",
+  "publicName": "Eniko Mare",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "a275ed61-d067-4818-95c9-501ca21f1b5c",
+  "publicName": "Evolution Tower",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "f9cbe44b-9b6e-4254-918d-2ed7f621f07d",
+  "publicName": "Flow Residences",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "f7e99330-4826-44b0-b14e-b80aa9408b39",
+  "publicName": "Force",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "28a9f532-c66a-4e83-81b8-08e41246abd5",
+  "publicName": "Forest Park",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "4711fca5-d34c-4ac4-93f5-0fbb045085fb",
+  "publicName": "Forma",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "9a8b6f47-c1af-425a-ae89-888745664c47",
+  "publicName": "Galaxy Residences",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "bef89c18-3036-4623-8cd6-8cb2a7cc85c0",
+  "publicName": "Gallery",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "162170ca-b7c5-4137-94d4-fa18393568d0",
+  "publicName": "Germasogeia View",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "55ed9fc0-e042-403a-943f-e821bbedde70",
+  "publicName": "Germasogeia View 2",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "c59a7c5d-6204-4dbb-ab92-93c3157a7e25",
+  "publicName": "Glow",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "9cfe0422-42c5-4793-a2df-5ad9168a5dbc",
+  "publicName": "Glow 2",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "6d82df55-4a4f-4c44-8220-da97e990fa25",
+  "publicName": "Golden Hills",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "d4c989aa-9ac6-4f5b-9cbc-2d29681348a6",
+  "publicName": "Grand Valley Homes",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "3d299543-6ed3-411a-b031-eec35853a5e7",
+  "publicName": "Grato Homes 2",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "c2b70187-304c-4dc6-a8b3-1415f4c12ebd",
+  "publicName": "Gravity",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "5eea69fa-18db-490c-9366-36af2af3933c",
+  "publicName": "Green View",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "a5d78db1-046e-40d3-9f31-80074a9929db",
+  "publicName": "Grigio Court",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "21d90c66-322c-4668-84a3-782c2027d46f",
+  "publicName": "Harmony Residences",
+  "district": "Paphos",
+  "publishStatus": "archived"
+ },
+ {
+  "id": "b743889e-0491-4aa5-b098-d705f9e86412",
+  "publicName": "Harmony Residences 2",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "14265c2d-e20b-407d-b889-3a30cd49ccf8",
+  "publicName": "Heart",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "19fb80de-9d60-47a1-bcbf-72612b39b944",
+  "publicName": "Hide",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "30367f26-2841-4857-90e0-2b2a56fcefdc",
+  "publicName": "Hilltop Villa",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "1f9dcdcc-72bf-43d7-90fe-a7714c18a4ab",
+  "publicName": "IBC Tower",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "0ba63706-9126-46e1-98a7-046e49fcf44b",
+  "publicName": "Imperial Residences",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "58b1c0ad-7af4-4e48-b180-53b5653113c5",
+  "publicName": "Infinity",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "7d2f64bf-92e0-4179-9a67-0197893a0e73",
+  "publicName": "Iris",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "fe9673a8-52ba-41d1-917a-f82aaafe0a4b",
+  "publicName": "Jasmine Gardens",
+  "district": "Paphos",
+  "publishStatus": "archived"
+ },
+ {
+  "id": "b578bd28-9c08-470c-b6bd-10907d90c3d0",
+  "publicName": "Kai",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "cf8cfaa7-e399-4591-9917-e31882ce1b51",
+  "publicName": "Kaia Residences",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "07caf08b-f34f-4c71-8b92-f944306e92b0",
+  "publicName": "Kinyras Gardens Villas",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "f976bde1-d8c6-4241-a99f-445e9ac8fd79",
+  "publicName": "Konia Crown",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "4a50eecb-47d3-4177-b186-31ee053eabca",
+  "publicName": "Konia Green",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "57ad2eea-60fd-4fe1-aa4c-96cc4dfe6df8",
+  "publicName": "Lana Villa",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "ea9d1ecb-fce4-4f2a-8d07-395ba81e2d9d",
+  "publicName": "Land of Tomorrow",
+  "district": "Larnaca",
+  "publishStatus": "published"
+ },
+ {
+  "id": "3e8b5773-46c7-4a48-be56-747712a3cbe6",
+  "publicName": "Lazzero Park",
+  "district": null,
+  "publishStatus": "published"
+ },
+ {
+  "id": "2f79f264-5690-4f99-b6a3-553a211b63a3",
+  "publicName": "Legacy",
+  "district": "Limassol",
+  "publishStatus": "archived"
+ },
+ {
+  "id": "dbf1ece7-b21d-4fa5-928f-314e8c6aba59",
+  "publicName": "Lemba Panorama",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "3f965b88-d16e-4f1e-a06d-ea1229a4122e",
+  "publicName": "Lemba Villas",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "85a80f64-2ccb-4687-a117-40a620fc5b92",
+  "publicName": "Lemon Grove",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "9ea4f634-7ea9-4dfe-9168-701cfefc526d",
+  "publicName": "Lennox Residences",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "501bf5ee-d0ad-41f8-870f-cc4494a3997f",
+  "publicName": "Leto's Family Park",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "486a0540-26dc-4ea9-906d-b5adf1acd35d",
+  "publicName": "Life",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "4ce3eea1-0638-44d9-b9e9-31642278fd8f",
+  "publicName": "Luma Genesis",
+  "district": null,
+  "publishStatus": "published"
+ },
+ {
+  "id": "ca5ce0d6-0267-49a5-a2fd-e4e65566ddbf",
+  "publicName": "Lyra",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "7bcdbe03-3740-475e-a274-e28a45f41053",
+  "publicName": "Lyra B",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "9ba0b744-544c-4844-9aa1-c9538fe1cd5c",
+  "publicName": "MEDOUSA RESALES",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "77d7c4bd-5b21-452a-b3ab-3cda17382733",
+  "publicName": "Marelia Valley",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "706188ec-abc1-4eeb-93a0-fd01d03f4f40",
+  "publicName": "Mbc Iii",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "be3b4d8e-0baa-4325-87dd-ba7762deb895",
+  "publicName": "Melania - Begonia Residences",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "9d58c58b-3fc4-4635-9f2e-12f3eb71f18a",
+  "publicName": "Mesogi-Residence-8",
+  "district": "Paphos",
+  "publishStatus": "archived"
+ },
+ {
+  "id": "2eecee69-c739-4ece-b7d1-1e0a3074d662",
+  "publicName": "Meteora Residential Development",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "6855a0e3-df3d-458c-93ca-6d5499e4ef4d",
+  "publicName": "Michelle Park",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "2f79d483-2b57-476c-83cd-c4875fad3fd4",
+  "publicName": "Minthis",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "73ada44d-ee61-44ec-95df-101ef2f87779",
+  "publicName": "Monagroulli Hills",
+  "district": "Limassol",
+  "publishStatus": "archived"
+ },
+ {
+  "id": "2650226d-ec34-48fb-9815-bb2f2e983a14",
+  "publicName": "Montes",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "1933c993-adef-4dda-8cea-b07ede16bb81",
+  "publicName": "Montville",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "47e24306-681f-4afb-a456-d05cc334afc6",
+  "publicName": "Morea Residences",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "6c56b93f-f997-4344-a2f1-828d707bdeb1",
+  "publicName": "Navie",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "fc1bdf55-b368-4685-81a3-124aadddc187",
+  "publicName": "Naya Residences",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "8893ee82-4466-4236-a8f9-90fb291d2672",
+  "publicName": "Neon",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "efecdf03-d76a-4d84-8d5a-8adeadb4731b",
+  "publicName": "Neon Homes",
+  "district": null,
+  "publishStatus": "published"
+ },
+ {
+  "id": "8ed2e5fc-5e26-44ea-a588-dbf600ea7057",
+  "publicName": "Nest",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "95cab080-6e22-4499-9498-3a68eb771800",
+  "publicName": "Neve Residences",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "b33fe01c-de03-4691-86f6-c1ab8d0bb212",
+  "publicName": "Nexus House",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "25d948ad-98d6-4ca4-bbf7-7f2b044c30e9",
+  "publicName": "Noa Residences",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "3faefbeb-dd01-4f77-b9d4-68cb3468fd17",
+  "publicName": "Noble",
+  "district": null,
+  "publishStatus": "published"
+ },
+ {
+  "id": "9a06feb1-f08a-49d6-8129-bedcbf20bdc6",
+  "publicName": "Oasis Villas",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "2779126e-8de5-41e7-a856-f7befb18822a",
+  "publicName": "Olea Residences",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "ee37983d-b3ca-43df-8be6-0dc460826e89",
+  "publicName": "Olive Grove",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "a018569c-fcd5-4f09-9503-dacccf67a081",
+  "publicName": "Olivelia Homes",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "eb1543eb-c86c-419d-a951-28488a55e254",
+  "publicName": "One",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "f30644e3-453d-40c6-b5f4-45edf50e82b8",
+  "publicName": "Onero Residences",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "c39bd6c4-3c7d-427f-b87f-ed0243ac86d3",
+  "publicName": "Orama Residences",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "9da243e3-60f6-4ff3-9815-e2a9259dad2d",
+  "publicName": "Orion Residences",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "25ebb915-e152-47bc-9409-36150467de4b",
+  "publicName": "Ouranos Villas",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "4744fc55-7dfd-49cc-b639-ef9b9d1eb87e",
+  "publicName": "Pafia City 1",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "52cbf540-a13a-476b-87fd-32f73e96f0f0",
+  "publicName": "Pafia City 2",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "be2cfb7e-e40a-4c68-ab7c-6fa33ed603d3",
+  "publicName": "Pafia City 3",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "57664c73-6240-4643-bc13-a239fea1bbae",
+  "publicName": "Pafilia Gardens",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "955660ce-3874-42e6-967f-8b565148bdb4",
+  "publicName": "Pafilia Plaza",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "08799fdb-c65b-45ab-888a-74e0fbb55df8",
+  "publicName": "Panorama Apartments",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "e224cc86-b898-444f-9936-98be0932efa4",
+  "publicName": "Paphos Central View",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "e9bd72a5-9a20-4f58-abb4-ea5342b26f45",
+  "publicName": "Paphos Residences",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "244898dc-b5dd-48c4-84f2-0bc66a6009f8",
+  "publicName": "Paphos Suites A",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "1974ddcc-390c-43fc-83df-c4f605567115",
+  "publicName": "Pearl Park Residences",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "20833198-40b9-4711-8c82-513e2950fc7d",
+  "publicName": "Pearl Sea Caves Villas plot 1",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "58b912f4-6877-4b9a-8cf9-22e9ee9f7a1d",
+  "publicName": "Pearl Sea Caves Villas plot 2",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "3f160892-1cb6-48a8-b355-72fb9a848c1b",
+  "publicName": "Petridia Valley",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "54b3d076-6263-4778-bd4d-1fad0df1c9da",
+  "publicName": "Peyia Panorama",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "70b3df04-a6af-4f79-9e6b-2da23939efb9",
+  "publicName": "Pine Park",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "3add7e82-74eb-4aa9-a2bc-adb1ecd2baa4",
+  "publicName": "Pistachio Villa",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "ee3230d8-f32f-49a9-bb67-2db483a5f52e",
+  "publicName": "Premier Residences",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "660d2ee9-cf54-4524-b334-d9ae5d585c33",
+  "publicName": "Premier Tower",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "b9495b79-6d82-4c1f-9d71-eae8e6460d22",
+  "publicName": "Prodromi Gardens",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "e8489d19-47b4-47d3-822d-7da6ab2913b0",
+  "publicName": "Promenade Boutique Hotel",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "6c212298-7770-40cf-aa11-75cbecd18741",
+  "publicName": "Quatrro",
+  "district": null,
+  "publishStatus": "published"
+ },
+ {
+  "id": "682396ac-5647-46d5-9732-e4d8ac96fbc7",
+  "publicName": "Qube",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "9e245c59-e979-4f53-b70e-d1d74acd7548",
+  "publicName": "Qube Offices",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "d38d0ac2-d4ae-447b-8dbf-d1d9be35783c",
+  "publicName": "Regency Boutique Hotel",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "138bd611-9d6b-49fe-9f06-d3543e510d5c",
+  "publicName": "Regent",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "015d1074-add3-4798-9013-5679367e2e2a",
+  "publicName": "Ridge",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "ba3aef66-5eec-4c02-904d-6a0f188633bb",
+  "publicName": "Ridge Residences",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "bcaf3470-b413-4cc7-a278-bfeca5d6bbb2",
+  "publicName": "Rise",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "0fdb824c-71b1-4f1f-99c2-c451f4503be3",
+  "publicName": "Roble Park",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "612b544f-2f06-43b3-8b13-e2896d89dc26",
+  "publicName": "Rosa dei Venti",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "42a77dd3-d7fd-4b33-b337-3fadc7e13263",
+  "publicName": "Roseland Villas 1",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "af5ac65e-52c8-414d-bff6-3e4e2e1e5509",
+  "publicName": "Royal Horizon",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "51f9de40-8467-4e23-8f1e-e5d2993057c2",
+  "publicName": "Royal Residences",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "cb2e7e48-9e69-4121-ba70-15ce2b377d8a",
+  "publicName": "Ruby Project",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "22aad198-5a71-4eab-bfe6-35325aaa43fc",
+  "publicName": "Salt",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "1b9adf87-2456-4dbe-8d92-841f16e91147",
+  "publicName": "Sea Caves Paradise",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "5daca9d9-e893-4fc7-9563-1ac17bab03bc",
+  "publicName": "Sena",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "37370b69-8e12-4909-9914-a1ceb3ca0c7d",
+  "publicName": "Sense",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "ae0687bb-62ba-4e4a-88f2-9bb7b3eb6db0",
+  "publicName": "Serenity",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "c096d46a-19dd-42f0-aca0-66b6d873ac22",
+  "publicName": "Serenity Court",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "e852f9cf-4e9c-442e-a080-533c29668640",
+  "publicName": "Sky Tower",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "5465fbaf-8c40-4d17-84a4-48c5f1627b3f",
+  "publicName": "Solea Residences",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "648a8553-ef39-4300-9d72-cb6837be3c93",
+  "publicName": "Spirit",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "53120e3d-a634-44c7-b316-056f6aff00dd",
+  "publicName": "Stay in the City Residences - A",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "9b7e7bf4-0134-4a44-a0e2-e6e486629fab",
+  "publicName": "Sunset Sea Caves Villas",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "ceabc5b9-947c-446a-bb48-7f58bf57e16d",
+  "publicName": "Synergy",
+  "district": "Larnaca",
+  "publishStatus": "published"
+ },
+ {
+  "id": "6357191c-5ee0-4546-a361-13828f1b8ff3",
+  "publicName": "Tala Villa",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "7e7687e7-ae1f-4b36-98ad-912177a3e5bd",
+  "publicName": "Tenera Homes",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "1e161b58-aea1-4fe1-8b62-af12dded0742",
+  "publicName": "Tenera Villas 1A & 1B",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "3d5f82bf-b14c-427c-a0af-ad8ae6e469f4",
+  "publicName": "The Collection",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "3c766057-21e7-4c9f-8753-0898a5751194",
+  "publicName": "The Cove",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "c75e8ba2-356d-4739-963e-652d2f9c4158",
+  "publicName": "The Docks",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "5f9d2f86-ec7e-4806-9c26-88b648d35304",
+  "publicName": "The King Residences",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "cb773db2-6b54-45ae-b73c-b41e195dcaec",
+  "publicName": "The Riverside Residences",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "bef820a5-e6aa-4771-b0c8-66b6f8aea596",
+  "publicName": "The View (Phase B)",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "59db7e66-90d7-4360-bdcd-c9c34430c607",
+  "publicName": "Thea",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "5800eac7-40c9-4087-b5d1-383359f6322d",
+  "publicName": "Trees Park",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "dec07fa9-e072-4837-9fa4-66ea7172abcc",
+  "publicName": "Tress",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "bf111b77-545b-420b-a7e3-912d7a7a6d13",
+  "publicName": "Triangle House",
+  "district": null,
+  "publishStatus": "archived"
+ },
+ {
+  "id": "827467f2-1169-47fb-bf40-470995283c5e",
+  "publicName": "Trinity Residences",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "dfef6b9f-db1e-4ced-aef2-5942efc41464",
+  "publicName": "Unico Designer Apartments",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "725abd52-d022-4053-9cba-6f979584b50b",
+  "publicName": "Upside",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "dfa39e53-9ed4-4ffb-9f30-bddfb5fe8bbb",
+  "publicName": "Uptown Villas",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "d13c02c6-d232-43fc-bdf8-375a3da08da7",
+  "publicName": "VENARA",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "d94ee90c-0a08-49f8-9e75-6f0ca8f23ea3",
+  "publicName": "VENARA VIEW",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "c0778979-1060-4ac6-8140-4065fc9df17c",
+  "publicName": "Vasileon Signature Residences",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "48ad9eea-7b2d-416f-8b46-903ccdbffc49",
+  "publicName": "Vasileon Signature Residences",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "a3d3cbbf-713f-4459-a2a1-9a56b98fdb4a",
+  "publicName": "Velaro Homes",
+  "district": null,
+  "publishStatus": "published"
+ },
+ {
+  "id": "18d35973-2968-476e-9755-88ec9842fb03",
+  "publicName": "Verde",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "e1034797-27f5-473d-bcc5-651cbdbf9232",
+  "publicName": "Viewpoint Hills",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "355e9798-6aaa-4cfe-b7a1-cd9da338bbc0",
+  "publicName": "Villa A",
+  "district": null,
+  "publishStatus": "draft"
+ },
+ {
+  "id": "f2cb422e-2af0-4b1d-a023-2f957eff62db",
+  "publicName": "Villa Infinity",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "9bb5d315-e231-4acd-a8a4-ff6fa9a89f07",
+  "publicName": "Villa Oasis",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "0539cb5d-6121-4db8-b967-941613b4eab5",
+  "publicName": "Villa Superior",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "586e659a-411c-43a9-a735-e10726c8eab4",
+  "publicName": "Villas-For-Sale-Aqua",
+  "district": "Paphos",
+  "publishStatus": "archived"
+ },
+ {
+  "id": "7933a7cc-80e5-46a8-ba2c-ae5d5a555d70",
+  "publicName": "Virgo",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "9e5e7e22-2f34-46fa-aa6f-c6ca5783e259",
+  "publicName": "Vision",
+  "district": "Limassol",
+  "publishStatus": "published"
+ },
+ {
+  "id": "5a2e5b20-2dc6-4f76-9e92-eb999c27cd89",
+  "publicName": "Zaya Residences",
+  "district": "Paphos",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "cb949dac-8bd6-4333-a18a-a595b2dfa5ee",
+  "publicName": "Zephyros Village 3",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "589563f3-0513-41a8-80cb-85fbeb97d2a8",
+  "publicName": "Zoia",
+  "district": "Limassol",
+  "publishStatus": "draft"
+ },
+ {
+  "id": "17d09dc6-e3a6-477d-a92e-553f14544c80",
+  "publicName": "absolute-villas",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "38b111f2-a52f-4e25-95e7-8baf26e4fcb8",
+  "publicName": "aura-konia",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "56a34e56-0da8-43a7-a9a3-9965efaa05ce",
+  "publicName": "carina-kissonerga-apartments-paphos",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "e312b990-3e3e-4014-aa2b-55d9a8677aa8",
+  "publicName": "coast-villas-verano",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "87fe1f69-b375-4812-bf7b-d2f97828c9cf",
+  "publicName": "elements",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "46aee257-9850-40bf-a4d4-f41a90750e3b",
+  "publicName": "elements-oxygen-park-of-colours",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "3fdcfc54-05f9-4965-881e-c8a66824ca60",
+  "publicName": "la-bella",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "1bf152f0-0091-479a-aa0d-aaaaa136034e",
+  "publicName": "new-apartments-in-paphos-capella",
+  "district": "Paphos",
+  "publishStatus": "archived"
+ },
+ {
+  "id": "5a8ee372-81a2-49e1-b6fc-36e4e7510fb9",
+  "publicName": "oculus",
+  "district": "Paphos",
+  "publishStatus": "published"
+ },
+ {
+  "id": "0340fb52-6e0d-448b-b258-94e95012983a",
+  "publicName": "riverside",
+  "district": "Paphos",
+  "publishStatus": "published"
+ }
+]

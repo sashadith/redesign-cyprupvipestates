@@ -1,0 +1,135 @@
+[
+ {
+  "id": "cc5c2b2f-74c1-4e85-948e-65f5aecd3b7b",
+  "developmentId": "f30644e3-453d-40c6-b5f4-45edf50e82b8",
+  "district": "Paphos",
+  "town": null,
+  "area": "Kato Paphos"
+ },
+ {
+  "id": "012f18f6-911a-418f-9c13-ed10fa871cd2",
+  "developmentId": "efecdf03-d76a-4d84-8d5a-8adeadb4731b",
+  "district": "Paphos",
+  "town": null,
+  "area": null
+ },
+ {
+  "id": "9c12c573-69a8-4b9e-aee5-30d6728cb754",
+  "developmentId": "4ce3eea1-0638-44d9-b9e9-31642278fd8f",
+  "district": "Paphos",
+  "town": null,
+  "area": "Geroskipou"
+ },
+ {
+  "id": "d0e9838f-9bed-4532-9660-e37ed454069e",
+  "developmentId": "51f9de40-8467-4e23-8f1e-e5d2993057c2",
+  "district": "Paphos",
+  "town": "Kouklia",
+  "area": null
+ },
+ {
+  "id": "f0b04cce-f6cb-4516-b749-9077f0d56c8b",
+  "developmentId": "a5d78db1-046e-40d3-9f31-80074a9929db",
+  "district": "Paphos",
+  "town": "Polis",
+  "area": "Prodromi"
+ },
+ {
+  "id": "c9fc92ef-06c0-40d6-9978-b0e9476210f7",
+  "developmentId": "37d32b3c-ed09-49e5-a5d1-494ae870accc",
+  "district": "Paphos",
+  "town": null,
+  "area": "Kato Paphos"
+ },
+ {
+  "id": "0ee41b22-d352-4215-bf0d-0dd401e21226",
+  "developmentId": "2c51a6f7-38ff-489d-a05b-824d6c6fb694",
+  "district": "Paphos",
+  "town": null,
+  "area": null
+ },
+ {
+  "id": "ee355b47-9323-4691-b01c-dd0648e6ef46",
+  "developmentId": "6d18c046-7c71-43cb-b200-d8ce56d04f37",
+  "district": "Paphos",
+  "town": null,
+  "area": "Paphos"
+ },
+ {
+  "id": "d25fdb16-8c32-4e61-9346-8ec7ed2b0762",
+  "developmentId": "a3d3cbbf-713f-4459-a2a1-9a56b98fdb4a",
+  "district": "Paphos",
+  "town": "Peyia",
+  "area": "Sea Caves"
+ },
+ {
+  "id": "b0c6acb5-6938-4213-8888-62e576638cb5",
+  "developmentId": "a78d9c7b-6cf5-4716-8e24-5bc32c9cf715",
+  "district": "Paphos",
+  "town": "Polis",
+  "area": "Argaka"
+ },
+ {
+  "id": "a650f617-a25a-4d7c-b498-fd02fc1573c7",
+  "developmentId": "3faefbeb-dd01-4f77-b9d4-68cb3468fd17",
+  "district": "Paphos",
+  "town": null,
+  "area": "Paphos"
+ },
+ {
+  "id": "aed1eca1-7974-4be9-8d80-3e37198113b8",
+  "developmentId": "3e8b5773-46c7-4a48-be56-747712a3cbe6",
+  "district": "Paphos",
+  "town": null,
+  "area": "Geroskipou"
+ },
+ {
+  "id": "981a5fcc-3f0b-4266-9e2b-5979e9d16d8a",
+  "developmentId": "0fac6e0d-4ac9-46f3-a6a5-14ce68d60ac4",
+  "district": "Paphos",
+  "town": null,
+  "area": "Geroskipou"
+ },
+ {
+  "id": "dc3378a9-d109-4704-9949-6cb980f28b84",
+  "developmentId": "ec717de8-9d45-48e6-9b3e-d0315bcfced8",
+  "district": "Paphos",
+  "town": null,
+  "area": null
+ },
+ {
+  "id": "dda8a6a8-4865-4570-9d05-4f3b44bd9672",
+  "developmentId": "6c212298-7770-40cf-aa11-75cbecd18741",
+  "district": "Paphos",
+  "town": null,
+  "area": "Kato Paphos"
+ },
+ {
+  "id": "a6f8b351-2409-4a9c-b82a-101d63dd0af1",
+  "developmentId": "e4f40f29-1240-4541-8572-b4d12d4bfa09",
+  "district": "Nicosia",
+  "town": null,
+  "area": "Nicosia"
+ },
+ {
+  "id": "1a91c168-d24d-4a99-be7d-21db82c450b1",
+  "developmentId": "0ba63706-9126-46e1-98a7-046e49fcf44b",
+  "district": "Paphos",
+  "town": "Kouklia",
+  "area": "Venus Rock"
+ },
+ {
+  "id": "e1a92909-cbff-4825-b9f9-b277832890b9",
+  "developmentId": "187664ef-7bed-46c7-9b4c-334cdf45a1ac",
+  "district": "Paphos",
+  "town": null,
+  "area": "Geroskipou"
+ },
+ {
+  "id": "696eadf9-e30b-49b8-ac2e-a5ff0135b18c",
+  "developmentId": "41c67ef3-aa45-4b1b-88a4-cf3f17364eb6",
+  "district": "Paphos",
+  "town": null,
+  "area": "Empa"
+ }
+]
