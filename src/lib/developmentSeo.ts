@@ -198,6 +198,24 @@ const PRICE_FORMAT: Record<Lang, (n: number) => string> = {
   ru: (n) => `${groupDigits(n, " ")} €`,
 };
 
+// Completion is stored free-form, and in practice almost always as "Q3 2029".
+// Rendered raw, that leaves an English quarter notation sitting in Polish and
+// Russian copy ("oddanie Q3 2029"), which is what the hand-written text these
+// placeholders replaced got right by writing "III kw. 2029" / "3 кв. 2029".
+// Anything that isn't a plain quarter-and-year passes through untouched — the
+// field is free text and may hold a date, a season, or a note.
+const QUARTER = /^Q([1-4])\s*(\d{4})$/i;
+const ROMAN = ["I", "II", "III", "IV"];
+function localizeCompletion(raw: string, l: Lang): string {
+  const m = raw.match(QUARTER);
+  if (!m) return raw;
+  const q = Number(m[1]);
+  const year = m[2];
+  if (l === "pl") return `${ROMAN[q - 1]} kw. ${year}`;
+  if (l === "ru") return `${q} кв. ${year}`;
+  return `Q${q} ${year}`; // en/de — "Q3 2029" reads natively in both
+}
+
 function placeholderValues(vm: ProjectVM, l: Lang): Record<string, string | null> {
   const available = listedUnits(vm.units).filter((u) => u.status === "available").length;
   return {
@@ -206,7 +224,7 @@ function placeholderValues(vm: ProjectVM, l: Lang): Record<string, string | null
     // advertise "0 units available" — the whole override falls back to the
     // auto-generated text, which handles sold-out properly.
     unitsAvailable: available > 0 ? String(available) : null,
-    completion: vm.completion?.trim() || null,
+    completion: vm.completion?.trim() ? localizeCompletion(vm.completion.trim(), l) : null,
   };
 }
 
