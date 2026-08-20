@@ -61,7 +61,27 @@ const COUNT = /(\d{1,4})\s+(units?|homes?|apartments?|villas?|residences?|Einhei
 // This is a heuristic, not a proof: it kills the class of false positive we
 // have actually seen, and the Action Center's snooze is the escape hatch for
 // any it misses. Matched against the text shortly before the amount.
-const NOT_A_FROM_PRICE = /(furniture|package|paket|möbel|mebl|мебел|vat|mwst|deposit|anzahlung|reservation|reservierung|fee|gebühr|opłat|сбор|взнос|per (month|year)|pro (monat|jahr)|monthly|rent|miete|najem|аренд)/i;
+//
+// The LEADING boundary is load-bearing. Without it "rent" matches inside
+// "cur|rent|ly", which silently suppressed a real finding: :glow advertised
+// "prices currently starting from €320,000" against a live €316,000 and the
+// rule stayed quiet about it. It also stops "vat" matching inside "pri|vat|e".
+//
+// There is deliberately NO trailing boundary. These words compound and inflect:
+// German "Möbelpaket", Polish "pakiet mebli", Russian "пакет мебели" — a
+// trailing boundary blocks every one of them, and velaro-homes' furniture
+// package (the false positive this list exists for) came back in three of its
+// four languages the moment one was added.
+//
+// \b would not do — it is ASCII-only, and half these words are Cyrillic; the
+// \p{L} escape is not available either (this project's tsconfig sets no target,
+// so the /u flag is rejected), hence the explicit letter class below, which
+// covers Latin, the German/Polish diacritics and Cyrillic.
+const LETTER = "A-Za-zÀ-ÖØ-öø-ÿĀ-ſА-Яа-яЁё";
+const NOT_A_FROM_PRICE = new RegExp(
+  `(?<![${LETTER}])(furniture|package|paket|pakiet|möbel|mebl|мебел|пакет|vat|mwst|deposit|anzahlung|reservation|reservierung|fee|geb[üu]hr|op[łl]at|сбор|взнос|per (month|year)|pro (monat|jahr)|monthly|rent|miete|najem|аренд)`,
+  "i",
+);
 
 const num = (s: string) => Number(String(s).replace(/[^\d]/g, ""));
 const fmt = (n: number) => `€${n.toLocaleString("en-US")}`;
@@ -79,6 +99,7 @@ function scanField(
   livePrice: number | null,
   available: number,
   listed: number,
+  publicName: string,
 ): Array<Pick<StaleFigure, "kind" | "said" | "value" | "live" | "context">> {
   const out: Array<Pick<StaleFigure, "kind" | "said" | "value" | "live" | "context">> = [];
   if (!text || !text.trim()) return out;
@@ -103,6 +124,14 @@ function scanField(
     // Either reading is legitimate — copy says "N available" or "N homes in
     // total" — so only flag a number that matches NEITHER.
     if (!value || value === available || value === listed) continue;
+    // The digit may belong to the project's NAME rather than to a count.
+    // "Abiete 2 apartments offer an exceptional living experience" reads as a
+    // count of two and was reported as one; the development is called Abiete 2.
+    // Same shape guards Glow 2, Avalon Gardens 2, Roseland Villas 1 and every
+    // other numbered project. Checked by asking whether the word before the
+    // number, plus the number, is part of the name.
+    const beforeWord = text.slice(0, c.index).match(new RegExp(`([${LETTER}0-9'’-]+)\\s*$`))?.[1];
+    if (beforeWord && publicName.toLowerCase().includes(`${beforeWord.toLowerCase()} ${value}`)) continue;
     out.push({
       kind: "count",
       said: tidy(c[0]),
@@ -149,7 +178,7 @@ export async function getStaleCopyFigures(): Promise<StaleFigure[]> {
     ];
 
     for (const [field, text] of fields) {
-      for (const hit of scanField(text, priceFrom, available, listed.length)) {
+      for (const hit of scanField(text, priceFrom, available, listed.length, d.publicName)) {
         findings.push({
           developmentId: d.id,
           slug: d.slug as string,

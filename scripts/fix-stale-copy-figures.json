@@ -1,72 +1,199 @@
 {
-  "spirit": {
-    "seo": {
-      "descEN": "Apartments and penthouses at :spirit in Potamos Germasogeias, Limassol — from {priceFrom}, completion {completion}.",
-      "descDE": "Apartments und Penthouses im :spirit in Potamos Germasogeias, Limassol – ab {priceFrom}, Fertigstellung {completion}.",
-      "descPL": "Apartamenty i penthouse'y :spirit w Potamos Germasogeias, Limassol – od {priceFrom}, oddanie {completion}.",
-      "descRU": "Апартаменты и пентхаусы :spirit в Потамос Гермасойя, Лимассол — от {priceFrom}, сдача {completion}."
-    },
+  "arbeo-park": {
+    "edits": {
+      "descriptionEN": [{ "find": "This collection of 32 apartments spans", "replace": "This collection spans" }],
+      "descriptionDE": [{ "find": "Die Anlage umfasst 32 Wohnungen mit", "replace": "Die Anlage umfasst Wohnungen mit" }],
+      "descriptionPL": [{ "find": "Ten zespół 32 apartamentów obejmuje", "replace": "Ten zespół apartamentów obejmuje" }],
+      "descriptionRU": [{ "find": "Комплекс из 32 апартаментов включает", "replace": "Комплекс апартаментов включает" }]
+    }
+  },
+  "avalon-gardens-2": {
+    "edits": {
+      "descriptionEN": [{ "find": "comprises a total of 12 studios, 21 apartments, and 15 villas, providing", "replace": "comprises studios, apartments and villas, providing" }]
+    }
+  },
+  "balance": {
     "edits": {
       "descriptionEN": [
-        { "find": "comprises just four apartments and penthouses of two and three bedrooms, ranging from 146.92 m² to 356.49 m², priced from €670,000.", "replace": "comprises apartments and penthouses of one, two and three bedrooms." }
+        { "find": "Completion is scheduled for the third quarter of 2029, with prices from €173,000.", "replace": "Completion is scheduled for the third quarter of 2029." },
+        { "find": "this off-plan development brings 85 apartments and studios across one, two and three-bedroom layouts, each 70.1 m².", "replace": "this off-plan development brings apartments and studios across one, two and three-bedroom layouts." }
       ],
       "descriptionDE": [
-        { "find": "Sie umfasst lediglich vier Apartments und Penthouses mit zwei bis drei Schlafzimmern, zwischen 146,92 m² und 356,49 m², ab 670.000 €.", "replace": "Sie umfasst Apartments und Penthouses mit einem bis drei Schlafzimmern." }
+        { "find": "Die Fertigstellung ist für das dritte Quartal 2029 vorgesehen, Preise beginnen bei 173.000 €.", "replace": "Die Fertigstellung ist für das dritte Quartal 2029 vorgesehen." },
+        { "find": "befindet, 85 Apartments und Studios mit ein, zwei oder drei Schlafzimmern, jeweils 70,1 m² groß.", "replace": "befindet, Apartments und Studios mit ein, zwei oder drei Schlafzimmern." }
       ],
       "descriptionPL": [
-        { "find": "Obejmuje zaledwie cztery apartamenty i penthouse'y o układzie dwu- i trzysypialnianym, o powierzchni od 146,92 m² do 356,49 m², w cenach od 670 000 €.", "replace": "Obejmuje apartamenty i penthouse'y o układzie od jedno- do trzysypialnianego." }
+        { "find": "Zakończenie budowy zaplanowano na trzeci kwartał 2029 roku, a ceny zaczynają się od 173 000 €.", "replace": "Zakończenie budowy zaplanowano na trzeci kwartał 2029 roku." },
+        { "find": "obejmująca 85 apartamentów i studiów w układach jedno-, dwu- i trzypokojowych, każde o powierzchni 70,1 m².", "replace": "obejmująca apartamenty i studia w układach jedno-, dwu- i trzypokojowych." }
       ],
       "descriptionRU": [
-        { "find": "Он включает всего четыре апартамента и пентхауса с двумя и тремя спальнями, площадью от 146,92 м² до 356,49 м², стоимостью от 670 000 €.", "replace": "Он включает апартаменты и пентхаусы с одной, двумя и тремя спальнями." }
+        { "find": "Завершение строительства запланировано на третий квартал 2029 года, цены начинаются от 173 000 €.", "replace": "Завершение строительства запланировано на третий квартал 2029 года." },
+        { "find": "включающий 85 апартаментов и студий с одной, двумя и тремя спальнями, каждая площадью 70,1 м².", "replace": "включающий апартаменты и студии с одной, двумя и тремя спальнями." }
       ]
     }
   },
-  "elements": {
+  "dream-tower": {
     "seo": {
-      "descEN": "Elements — apartments in Park Of Colours, Paphos, from {priceFrom}, completion {completion}. A rare address beside one of the city's largest parks.",
-      "descDE": "Elements – Apartments im Park Of Colours, Paphos, ab {priceFrom}, Fertigstellung {completion}. Eine seltene Lage an einem der größten Parks der Stadt.",
-      "descPL": "Elements – apartamenty w Park Of Colours w Pafos, od {priceFrom}, oddanie {completion}. Rzadka lokalizacja przy jednym z największych parków miasta.",
-      "descRU": "Elements — апартаменты в Park Of Colours, Пафос, от {priceFrom}, сдача {completion}. Редкий адрес у одного из крупнейших парков города."
+      "descEN": "Apartments and penthouses at :dream Tower in Agios Tychonas, Limassol, from {priceFrom} — a completed tower above the seafront boulevard.",
+      "descDE": "Wohnungen und Penthouses im :dream Tower in Agios Tychonas, Limassol, ab {priceFrom} — ein fertiggestellter Turm an der Uferpromenade.",
+      "descPL": "Apartamenty i penthouse'y w :dream Tower w Agios Tychonas, Limassol, od {priceFrom} — ukończona wieża przy nadmorskim bulwarze.",
+      "descRU": "Апартаменты и пентхаусы в :dream Tower в Айос Тихонасе, Лимассол, от {priceFrom} — завершённая башня на набережной."
     },
     "edits": {
-      "descriptionEN": [
-        { "find": "Four apartments of 1 and 2 bedrooms, from 50 m² to 54 m², are under construction, with prices starting at €250,000.", "replace": "Apartments of one and two bedrooms are under construction." }
-      ],
-      "descriptionDE": [
-        { "find": "Vier Apartments mit 1 und 2 Schlafzimmern, zwischen 50 m² und 54 m², befinden sich im Bau; die Preise beginnen bei 250.000 €.", "replace": "Apartments mit einem und zwei Schlafzimmern befinden sich im Bau." }
-      ],
-      "descriptionPL": [
-        { "find": "W budowie znajdują się cztery apartamenty o powierzchni od 50 m² do 54 m², z 1 lub 2 sypialniami, w cenach od 250 000 €.", "replace": "W budowie znajdują się apartamenty z jedną lub dwiema sypialniami." }
-      ],
-      "descriptionRU": [
-        { "find": "На стадии строительства находятся четыре апартамента с 1 и 2 спальнями площадью от 50 м² до 54 м², цены начинаются от 250 000 €.", "replace": "На стадии строительства находятся апартаменты с одной и двумя спальнями." }
-      ]
+      "descriptionEN": [{ "find": "its 34 residences ranging from", "replace": "its residences ranging from" }],
+      "descriptionDE": [{ "find": "umfasst 34 Wohnungen mit ein bis vier", "replace": "umfasst Wohnungen mit ein bis vier" }],
+      "descriptionPL": [{ "find": "oferując 34 lokale od jednej do czterech", "replace": "oferując lokale od jednej do czterech" }],
+      "descriptionRU": [{ "find": "включает 34 резиденции с одной–четырьмя", "replace": "включает резиденции с одной–четырьмя" }]
     }
   },
-  "flow-residences": {
+  "force": {
     "seo": {
-      "descEN": "New apartments and studios at Flow Residences in Agios Nicolaos, Limassol, from {priceFrom}, completion {completion}.",
-      "descDE": "Neue Wohnungen und Studios in Agios Nicolaos, Limassol, ab {priceFrom}, Fertigstellung {completion}.",
-      "descPL": "Nowe apartamenty i studia w Agios Nicolaos w Limassol, od {priceFrom}, oddanie {completion}.",
-      "descRU": "Новые апартаменты и студии в Айос Николаос, Лимассол, от {priceFrom}, сдача {completion}."
+      "descEN": "Own an office at :force in Mesa Geitonia, Limassol, from {priceFrom}, ready {completion} — secure yours today.",
+      "descDE": "Sichern Sie sich ein Büro im :force in Mesa Geitonia, Limassol, ab {priceFrom}, Fertigstellung {completion}.",
+      "descPL": "Biuro w :force w Mesa Geitonia, Limassol, od {priceFrom}, oddanie {completion}.",
+      "descRU": "Офис в комплексе :force в Меса Гитония, Лимассол, от {priceFrom}, сдача {completion}."
+    }
+  },
+  "glow": {
+    "seo": {
+      "descEN": "Studios, apartments and penthouses at :glow in Agios Athanasios, Limassol, from {priceFrom}, completion {completion}.",
+      "descDE": "Studios, Apartments und Penthouses im Projekt :glow in Agios Athanasios, Limassol, ab {priceFrom}, Fertigstellung {completion}.",
+      "descPL": "Studia, apartamenty i penthouse'y w :glow w Agios Athanasios, Limassol, od {priceFrom}, oddanie {completion}.",
+      "descRU": "Студии, апартаменты и пентхаусы :glow в Айос-Афанасиос, Лимассол, от {priceFrom}, сдача {completion}."
+    },
+    "edits": {
+      "descriptionEN": [{ "find": "Completion is scheduled for the first quarter of 2030, with prices currently starting from €320,000.", "replace": "Completion is scheduled for the first quarter of 2030." }],
+      "descriptionDE": [{ "find": "Die Fertigstellung ist für das erste Quartal 2030 vorgesehen, die Preise beginnen derzeit bei 320.000 €.", "replace": "Die Fertigstellung ist für das erste Quartal 2030 vorgesehen." }],
+      "descriptionPL": [{ "find": "Zakończenie budowy zaplanowano na pierwszy kwartał 2030 roku, a ceny startują obecnie od 320 000 €.", "replace": "Zakończenie budowy zaplanowano na pierwszy kwartał 2030 roku." }],
+      "descriptionRU": [{ "find": "Завершение строительства запланировано на первый квартал 2030 года, а цены начинаются от 320 000 €.", "replace": "Завершение строительства запланировано на первый квартал 2030 года." }]
+    }
+  },
+  "glow-2": {
+    "seo": {
+      "descEN": "New apartments and penthouses at :glow 2 in Agios Athanasios, Limassol, from {priceFrom}, completion {completion}.",
+      "descDE": "Neue Wohnungen und Penthouses im :glow 2 in Agios Athanasios, Limassol, ab {priceFrom}, Fertigstellung {completion}.",
+      "descPL": "Nowe apartamenty i penthouse'y w :glow 2 w Agios Athanasios, Limassol, od {priceFrom}, ukończenie {completion}.",
+      "descRU": "Новые апартаменты и пентхаусы в :glow 2, Айос Афанасиос, Лимасол, от {priceFrom}, сдача {completion}."
     },
     "edits": {
       "descriptionEN": [
-        { "find": "the complex comprises just five residences, ranging from compact studios to three-bedroom apartments, with internal areas spanning 92.5 m² to 196.86 m².", "replace": "the complex comprises a small number of residences, ranging from compact studios to three-bedroom apartments." },
-        { "find": " Prices start from €389,000.", "replace": "" }
+        { "find": "Completion is set for the fourth quarter of 2029, with prices from €426,000.", "replace": "Completion is set for the fourth quarter of 2029." },
+        { "find": "Within a gated complex of 43 apartments and penthouses, residences range", "replace": "Within a gated complex of apartments and penthouses, residences range" }
       ],
       "descriptionDE": [
-        { "find": "Er umfasst lediglich fünf Wohneinheiten, von kompakten Studios bis zu Dreizimmerwohnungen, mit Wohnflächen zwischen 92,5 m² und 196,86 m².", "replace": "Er umfasst wenige Wohneinheiten, von kompakten Studios bis zu Dreizimmerwohnungen." },
-        { "find": " Preise ab 389.000 €.", "replace": "" }
+        { "find": "Die Fertigstellung ist für das vierte Quartal 2029 vorgesehen, Preise beginnen bei 426.000 €.", "replace": "Die Fertigstellung ist für das vierte Quartal 2029 vorgesehen." },
+        { "find": "In einer bewachten Anlage mit 43 Apartments und Penthouses reichen", "replace": "In einer bewachten Anlage mit Apartments und Penthouses reichen" }
       ],
-      "descriptionPL": [
-        { "find": "Obejmuje zaledwie pięć lokali, od kompaktowych kawalerek po apartamenty z trzema sypialniami, o powierzchni od 92,5 m² do 196,86 m².", "replace": "Obejmuje niewielką liczbę lokali, od kompaktowych kawalerek po apartamenty z trzema sypialniami." },
-        { "find": " Ceny od 389 000 €.", "replace": "" }
-      ],
-      "descriptionRU": [
-        { "find": "Он включает всего пять резиденций — от компактных студий до трёхспальных апартаментов площадью от 92,5 м² до 196,86 м².", "replace": "Он включает небольшое число резиденций — от компактных студий до трёхспальных апартаментов." },
-        { "find": " Цены от 389 000 €.", "replace": "" }
-      ]
+      "descriptionPL": [{ "find": "Zakończenie budowy zaplanowano na czwarty kwartał 2029 roku, a ceny zaczynają się od 426 000 €.", "replace": "Zakończenie budowy zaplanowano na czwarty kwartał 2029 roku." }],
+      "descriptionRU": [{ "find": "Завершение строительства намечено на четвёртый квартал 2029 года, цены начинаются от 426 000 €.", "replace": "Завершение строительства намечено на четвёртый квартал 2029 года." }]
+    }
+  },
+  "lazzero-park": {
+    "edits": {
+      "descriptionEN": [{ "find": "The development comprises 51 apartments across", "replace": "The development comprises apartments across" }],
+      "descriptionDE": [{ "find": "Die Anlage umfasst 51 Wohnungen mit zwei bis vier", "replace": "Die Anlage umfasst Wohnungen mit zwei bis vier" }],
+      "descriptionPL": [{ "find": "Inwestycja obejmuje 51 apartamentów o układzie", "replace": "Inwestycja obejmuje apartamenty o układzie" }],
+      "descriptionRU": [{ "find": "Комплекс включает 51 апартамент с двумя–четырьмя", "replace": "Комплекс включает апартаменты с двумя–четырьмя" }]
+    }
+  },
+  "nest": {
+    "seo": {
+      "descEN": "Studios, apartments and penthouses from {priceFrom} in :nest, Germasogeia Village, Limassol, ready {completion}.",
+      "descDE": "Studios, Wohnungen und Penthouses ab {priceFrom} im :nest in Germasogeia Village, Limassol, Fertigstellung {completion}.",
+      "descPL": "Studia, apartamenty i penthouse'y od {priceFrom} w :nest, Germasogeia Village, Limassol, ukończenie {completion}.",
+      "descRU": "Студии, апартаменты и пентхаусы от {priceFrom} в :nest, деревня Гермасойя, Лимассол, сдача {completion}."
+    },
+    "edits": {
+      "descriptionEN": [{ "find": "a gated complex of 42 apartments, penthouses and studios", "replace": "a gated complex of apartments, penthouses and studios" }],
+      "descriptionDE": [{ "find": "eine bewachte Anlage mit 42 Wohnungen, Penthouses und Studios", "replace": "eine bewachte Anlage mit Wohnungen, Penthouses und Studios" }],
+      "descriptionPL": [{ "find": "strzeżony kompleks 42 apartamentów, penthouse’ów i studiów", "replace": "strzeżony kompleks apartamentów, penthouse’ów i studiów" }],
+      "descriptionRU": [{ "find": "закрытый комплекс из 42 апартаментов, пентхаусов и студий", "replace": "закрытый комплекс апартаментов, пентхаусов и студий" }]
+    }
+  },
+  "oculus": {
+    "seo": {
+      "descEN": "Exclusive apartment at Oculus in Universal, Paphos, from {priceFrom}. Completion {completion} – a rare, single-unit opportunity in Cyprus.",
+      "descDE": "Exklusives Apartment im Projekt Oculus in Universal, Paphos, ab {priceFrom}. Fertigstellung {completion} – eine einzigartige Gelegenheit auf Zypern.",
+      "descPL": "Ekskluzywny apartament w inwestycji Oculus w Universal, Pafos, od {priceFrom}. Ukończenie {completion} – wyjątkowa, jedyna dostępna oferta na Cyprze.",
+      "descRU": "Эксклюзивные апартаменты в проекте Oculus в Юниверсал, Пафос, от {priceFrom}. Сдача {completion} – уникальное предложение на Кипре."
+    }
+  },
+  "pearl-park-residences": {
+    "seo": {
+      "descEN": "Maisonettes and apartments in Universal, Paphos, from {priceFrom} at Pearl Park Residences — a new development ready to view.",
+      "descDE": "Maisonetten und Wohnungen in Universal, Paphos, ab {priceFrom} bei Pearl Park Residences — ein neues Projekt in bester Lage.",
+      "descPL": "Maisonety i apartamenty w Universal, Pafos, od {priceFrom} w Pearl Park Residences — nowa inwestycja w doskonałej lokalizacji.",
+      "descRU": "Мезонеты и квартиры в районе Universal, Пафос, от {priceFrom} в Pearl Park Residences — новый комплекс в отличном месте."
+    }
+  },
+  "riverside": {
+    "seo": {
+      "titleEN": "Riverside Apartments in Universal, Paphos | From {priceFrom}",
+      "titleDE": "Riverside Apartments in Universal, Paphos | Ab {priceFrom}",
+      "titlePL": "Apartamenty Riverside w Universal, Pafos | Od {priceFrom}",
+      "titleRU": "Апартаменты Riverside в Юниверсал, Пафос | От {priceFrom}",
+      "descEN": "Riverside offers stylish apartments in Universal, Paphos, from {priceFrom}, completion {completion} — enquire today.",
+      "descDE": "Riverside bietet stilvolle Apartments in Universal, Paphos, ab {priceFrom}, Fertigstellung {completion} — jetzt anfragen.",
+      "descPL": "Riverside to stylowe apartamenty w Universal, Pafos, od {priceFrom}, oddanie {completion} — zapytaj o szczegóły.",
+      "descRU": "Riverside — стильные апартаменты в Юниверсал, Пафос, от {priceFrom}, сдача {completion} — узнайте подробности."
+    }
+  },
+  "roseland-villas-1": {
+    "seo": {
+      "descEN": "Exclusive villas in Chloraka, Paphos, from {priceFrom} — a select development. Enquire today to secure yours.",
+      "descDE": "Exklusive Villen in Chloraka, Paphos, ab {priceFrom} — ein ausgewähltes Projekt. Jetzt anfragen und sichern.",
+      "descPL": "Ekskluzywne wille w Chloraka, Pafos, od {priceFrom} — wyjątkowa inwestycja. Zapytaj już dziś i zarezerwuj swoją.",
+      "descRU": "Эксклюзивные виллы в Хлораке, Пафос, от {priceFrom} — уникальный комплекс. Оставьте заявку сегодня."
+    }
+  },
+  "royal-residences": {
+    "edits": {
+      "descriptionEN": [{ "find": "This off-plan collection comprises 13 villas of three and four bedrooms", "replace": "This off-plan collection comprises villas of three and four bedrooms" }],
+      "descriptionDE": [{ "find": "umfasst 13 Villen mit drei oder vier Schlafzimmern", "replace": "umfasst Villen mit drei oder vier Schlafzimmern" }],
+      "descriptionPL": [{ "find": "obejmuje 13 willi o trzech lub czterech sypialniach", "replace": "obejmuje wille o trzech lub czterech sypialniach" }],
+      "descriptionRU": [{ "find": "включает 13 вилл с тремя или четырьмя спальнями", "replace": "включает виллы с тремя или четырьмя спальнями" }]
+    }
+  },
+  "salt": {
+    "edits": {
+      "descriptionEN": [{ "find": "Prices start from €289,000. ", "replace": "" }],
+      "descriptionDE": [{ "find": "Die Preise beginnen bei 289.000 €. ", "replace": "" }],
+      "descriptionPL": [{ "find": "Ceny zaczynają się od 289 000 €. ", "replace": "" }],
+      "descriptionRU": [{ "find": "Цены начинаются от 289 000 €. ", "replace": "" }]
+    }
+  },
+  "sense": {
+    "seo": {
+      "descEN": "Apartments and studios at :sense in Agios Tychonas, Limassol, from {priceFrom}, completion {completion}.",
+      "descDE": "Apartments und Studios im :sense in Agios Tychonas, Limassol, ab {priceFrom}, Fertigstellung {completion}.",
+      "descPL": "Apartamenty i studia w :sense w Agios Tychonas, Limassol, od {priceFrom}, oddanie {completion}.",
+      "descRU": "Апартаменты и студии в комплексе :sense, Айос-Тихонас, Лимассол, от {priceFrom}, сдача {completion}."
+    },
+    "edits": {
+      "descriptionEN": [{ "find": "Completion is set for the second quarter of 2027, with prices from €510,000.", "replace": "Completion is set for the second quarter of 2027." }],
+      "descriptionDE": [{ "find": "Die Fertigstellung ist für das zweite Quartal 2027 vorgesehen, Preise beginnen bei 510.000 €.", "replace": "Die Fertigstellung ist für das zweite Quartal 2027 vorgesehen." }],
+      "descriptionPL": [{ "find": "Zakończenie budowy planowane jest na drugi kwartał 2027 roku, ceny zaczynają się od 510 000 €.", "replace": "Zakończenie budowy planowane jest na drugi kwartał 2027 roku." }],
+      "descriptionRU": [{ "find": "Завершение строительства запланировано на второй квартал 2027 года, цены начинаются от 510 000 €.", "replace": "Завершение строительства запланировано на второй квартал 2027 года." }]
+    }
+  },
+  "synergy": {
+    "seo": {
+      "titleEN": ":synergy Villas in Oroklini, Larnaca – From {priceFrom}",
+      "titleDE": ":synergy Villen in Oroklini, Larnaka – Ab {priceFrom}",
+      "titlePL": ":synergy Wille w Oroklini, Larnaka – Od {priceFrom}",
+      "titleRU": "Виллы :synergy в Ороклини, Ларнака – от {priceFrom}",
+      "descEN": "Modern villas at :synergy in Oroklini, Larnaca, from {priceFrom}, completion {completion} – secure yours early.",
+      "descDE": "Moderne Villen im Projekt :synergy in Oroklini, Larnaka, ab {priceFrom}, Fertigstellung {completion} – jetzt sichern.",
+      "descPL": "Nowoczesne wille :synergy w Oroklini, Larnaka, od {priceFrom}, ukończenie {completion} – zarezerwuj już teraz.",
+      "descRU": "Современные виллы :synergy в Ороклини, Ларнака, от {priceFrom}, сдача {completion} – успейте забронировать."
+    }
+  },
+  "velaro-homes": {
+    "edits": {
+      "descriptionEN": [{ "find": "This collection of 19 villas, either four or three bedrooms", "replace": "This collection of villas, either four or three bedrooms" }],
+      "descriptionDE": [{ "find": "Diese Anlage aus 19 Villen mit vier oder drei Schlafzimmern", "replace": "Diese Anlage aus Villen mit vier oder drei Schlafzimmern" }],
+      "descriptionPL": [{ "find": "Ten zespół 19 willi, cztero- lub trzysypialnianych", "replace": "Ten zespół willi, cztero- lub trzysypialnianych" }],
+      "descriptionRU": [{ "find": "Комплекс из 19 вилл с четырьмя или тремя спальнями", "replace": "Комплекс вилл с четырьмя или тремя спальнями" }]
     }
   }
 }

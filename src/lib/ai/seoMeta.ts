@@ -148,9 +148,19 @@ const clamp = (s: string, max: number) => {
 // hand-written copy would be silently discarded on every render, with nothing
 // anywhere to say why. Catching it here makes it visible while it is still fixable.
 const KNOWN_PLACEHOLDERS = new Set<string>(SEO_PLACEHOLDERS);
-const badFields = (r: Partial<SeoMetaResult>) =>
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// A digit in the PROJECT'S OWN NAME is not a figure. Several developments are
+// numbered — Glow 2, Abiete 2, Avalon Gardens 2, Roseland Villas 1 — and a bare
+// /\d/ check rejects every possible sentence about them, making "Generate with
+// Claude" permanently impossible for those projects. The name is removed before
+// the digit test, never from the stored text.
+const badFields = (r: Partial<SeoMetaResult>, publicName: string) =>
   LANG_KEYS.filter((k) => {
-    const v = r[k] ?? "";
+    const raw = r[k] ?? "";
+    const v = publicName.trim()
+      ? raw.replace(new RegExp(escapeRe(publicName.trim()), "gi"), "")
+      : raw;
     if (/\d/.test(v)) return true;
     let m: RegExpExecArray | null;
     const re = /\{(\w*)\}/g;
@@ -193,7 +203,7 @@ export async function generateSeoMeta(vm: ProjectVM, tuning?: { emphasize?: stri
   };
 
   let raw = await attempt();
-  const firstOffenders = badFields(raw);
+  const firstOffenders = badFields(raw, vm.publicName);
   if (firstOffenders.length) {
     raw = await attempt(
       `Your previous answer was rejected in these fields: ${firstOffenders.join(", ")}. ` +
@@ -203,7 +213,7 @@ export async function generateSeoMeta(vm: ProjectVM, tuning?: { emphasize?: stri
       `${SEO_PLACEHOLDERS.map((p) => `{${p}}`).join(", ")}.`,
     );
   }
-  const offenders = badFields(raw);
+  const offenders = badFields(raw, vm.publicName);
   if (offenders.length) {
     throw new Error(
       `Generated copy still contains a figure or an unknown placeholder in ${offenders.join(", ")} ` +
