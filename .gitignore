@@ -53,3 +53,6 @@ next-env.d.ts
 # Claude Code agent tooling — local to the working dir, not product code
 /.agents/
 /skills-lock.json
+
+# Backups written by scripts/fix-stale-copy-figures.mjs before it touches prod copy
+scripts/fix-stale-copy-figures-backup-*.json

@@ -1,0 +1,54 @@
+{
+  "gravity": {
+    "seo": {
+      "descEN": "Offices, shops and restaurant space at :gravity, right in Limassol city centre. From {priceFrom}, completion {completion}.",
+      "descDE": "Büros, Geschäfte und Gastronomieflächen im :gravity, mitten im Zentrum von Limassol. Ab {priceFrom}, Fertigstellung {completion}.",
+      "descPL": "Biura, lokale usługowe i gastronomiczne w :gravity, w samym centrum Limassol. Od {priceFrom}, oddanie {completion}.",
+      "descRU": "Офисы, магазины и ресторанные площади в :gravity, в самом центре Лимасола. От {priceFrom}, сдача {completion}."
+    },
+    "paragraph2": {
+      "descriptionEN": {
+        "expect": "Ten units",
+        "text": "Office and shop space is arranged across the building, from compact suites to whole floors, with underground parking addressing a genuine scarcity in this part of the centre."
+      },
+      "descriptionDE": {
+        "expect": "Zehn Einheiten",
+        "text": "Büro- und Geschäftsflächen verteilen sich über das gesamte Gebäude, von kompakten Einheiten bis zu ganzen Etagen, ergänzt durch eine Tiefgarage – ein echter Vorteil in diesem Teil des Zentrums, wo Parkraum knapp ist."
+      },
+      "descriptionPL": {
+        "expect": "Dziesięć lokali",
+        "text": "Powierzchnie biurowe i handlowe rozmieszczone są w całym budynku, od kompaktowych lokali po całe piętra, a uzupełnia je parking podziemny – realna wartość w tej części centrum, gdzie miejsc parkingowych brakuje."
+      },
+      "descriptionRU": {
+        "expect": "Десять помещений",
+        "text": "Офисные и торговые помещения распределены по всему зданию — от компактных блоков до целых этажей, — а подземная парковка становится настоящей ценностью в этой части центра, где парковочных мест не хватает."
+      }
+    }
+  },
+  "upside": {
+    "seo": {
+      "descEN": "New apartments at :upside in Agios Athanasios, Limassol — one to four bedrooms, from {priceFrom}, completion {completion}.",
+      "descDE": "Neue Apartments im :upside in Agios Athanasios, Limassol – ein bis vier Schlafzimmer, ab {priceFrom}, Fertigstellung {completion}.",
+      "descPL": "Nowe apartamenty :upside w Agios Athanasios, Limassol – od jednej do czterech sypialni, od {priceFrom}, oddanie {completion}.",
+      "descRU": "Новые апартаменты :upside в Агиос Афанасиос, Лимассол — от одной до четырёх спален, от {priceFrom}, сдача {completion}."
+    },
+    "paragraph2": {
+      "descriptionEN": {
+        "expect": "just 11 apartments",
+        "text": "Within a small gated complex, layouts range from one to four bedrooms, giving buyers real choice between compact city pieds-à-terre and family-sized residences. A gym and pool serve residents within the secured grounds, and the development is still at off-plan stage."
+      },
+      "descriptionDE": {
+        "expect": "lediglich 11 Wohnungen",
+        "text": "In einer gesicherten, überschaubaren Anlage reichen die Grundrisse von ein bis vier Schlafzimmern und bieten damit echte Wahlmöglichkeiten zwischen kompakten Stadtwohnungen und großzügigen Familienresidenzen. Fitnessraum und Pool stehen den Bewohnern innerhalb des geschützten Areals zur Verfügung; das Projekt befindet sich derzeit im Vorverkauf."
+      },
+      "descriptionPL": {
+        "expect": "zaledwie 11 mieszkań",
+        "text": "W kameralnym, ogrodzonym kompleksie układy obejmują od jednej do czterech sypialni, co daje realny wybór między kompaktowym mieszkaniem miejskim a przestronną rezydencją rodzinną. Mieszkańcy mają do dyspozycji siłownię i basen na terenie strzeżonego kompleksu, a inwestycja znajduje się obecnie w przedsprzedaży."
+      },
+      "descriptionRU": {
+        "expect": "всего из 11 квартир",
+        "text": "В небольшом закрытом комплексе планировки варьируются от одной до четырёх спален, что даёт реальный выбор между компактной городской квартирой и просторной резиденцией для семьи. Жителям доступны тренажёрный зал и бассейн на охраняемой территории, а проект находится на стадии строительства."
+      }
+    }
+  }
+}
