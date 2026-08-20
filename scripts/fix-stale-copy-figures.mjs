@@ -1,49 +1,50 @@
-// One-off: correct the stale figures in :gravity's and :upside's published copy.
+// Corrects stale figures in published DevelopmentOverride copy, one batch at a
+// time. The batch lives in fix-stale-copy-figures.json next to this file; git
+// history holds the batches already applied.
 //
 //   node --env-file=.env.local scripts/fix-stale-copy-figures.mjs           # dry run
 //   node --env-file=.env.local scripts/fix-stale-copy-figures.mjs --apply   # write
 //
-// Both were advertising numbers that had drifted from live data (found by the
-// Action Center rule in src/lib/seo/staleCopyFigures.ts, 2026-08-20):
+// Why any of this is needed: these fields are written once — by an admin or by
+// "Generate with Claude" — and never regenerated, while the numbers they quote
+// move with every feed sync. The Action Center rule in
+// src/lib/seo/staleCopyFigures.ts finds them; this applies the corrections.
 //
-//   :gravity  "from €981,243" and "Ten units"  — live: €360,053, 47 available
-//   :upside   "from €280,000" and "11 units"   — live: €310,000, 10 available
+// Two field families, two treatments:
 //
-// :upside's is the dangerous direction — the published price sat €30,000 BELOW
-// the real one, so an enquiry arrives expecting something that is not for sale.
+//   seo.*        Replaced wholesale (they are one sentence). Figures are written
+//                as {priceFrom}/{completion} placeholders, which
+//                resolveMetaDescription substitutes on every render
+//                (src/lib/developmentSeo.ts) — so these cannot drift again.
+//                Unit counts are deliberately NOT placeheld: the surrounding
+//                phrasing would have to agree with a changing number ("1 units")
+//                in four languages, and the count is already shown live in the
+//                hero, the facts panel and the unit list on the same page.
 //
-// Two different treatments, because the two field families render differently:
+//   description* Long prose, with no placeholder support on its render path, so
+//                the wrong figures are edited out instead. Applied as EXACT
+//                SUBSTRING replacements rather than whole-paragraph rewrites:
+//                the stale number is usually one clause inside a 500-character
+//                paragraph, and retyping the rest by hand is how you silently
+//                corrupt copy nobody asked you to touch. Each `find` must occur
+//                exactly once in the field, which makes it its own guard — if
+//                the copy changed since review, the script aborts instead of
+//                overwriting someone else's edit.
 //
-//   seo.desc*      -> rewritten with {priceFrom}/{completion} placeholders.
-//                     resolveMetaDescription() substitutes them on every render
-//                     (src/lib/developmentSeo.ts), so these can never drift
-//                     again. Unit counts are deliberately NOT placeheld: the
-//                     phrasing would have to agree with a number that changes
-//                     ("1 units"), in four languages.
-//   description*   -> plain prose, no placeholder support on that render path,
-//                     so the volatile figures are removed instead. Only
-//                     PARAGRAPH 2 is touched — the one carrying the count, the
-//                     size range and the price. Paragraphs 1 and 3 are pure
-//                     location and audience copy and are never rewritten; the
-//                     script splices around them rather than restating them, so
-//                     it cannot corrupt text it was not meant to change.
+// Only what is WRONG is corrected. Figures that are still accurate stay — ridge
+// quotes its real 307.6–347.1 m² range and its real 3.10 m ceilings, and there
+// is no reason to strip a fact that is true and describes the built product
+// rather than the current offer.
 //
-// Sizes, prices and availability are all shown live further down the same page
-// (facts panel, hero, unit list), so removing them from the prose costs the
-// reader nothing.
-//
-// Safety: a full backup of every field it touches is written before the first
-// update, and each paragraph swap asserts the paragraph still contains the
-// stale phrase it was reviewed against — if the copy changed since, the script
-// aborts rather than overwriting someone else's edit.
+// A full backup of every field touched is written before the first update.
 import { readFileSync, writeFileSync } from "node:fs";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 const APPLY = process.argv.includes("--apply");
 const HERE = new URL(".", import.meta.url).pathname;
-const changes = JSON.parse(readFileSync(`${HERE}fix-stale-copy-figures.json`, "utf8"));
-const slugs = Object.keys(changes);
+const batch = JSON.parse(readFileSync(`${HERE}fix-stale-copy-figures.json`, "utf8"));
+const slugs = Object.keys(batch);
 const DESC_FIELDS = ["descriptionEN", "descriptionDE", "descriptionPL", "descriptionRU"];
 
 const devs = await prisma.development.findMany({
@@ -66,40 +67,37 @@ writeFileSync(backupPath, JSON.stringify(
 console.log(`backup: ${backupPath}\n`);
 
 for (const d of devs) {
-  const spec = changes[d.slug];
+  const spec = batch[d.slug];
   const currentSeo = (d.override.seo && typeof d.override.seo === "object") ? d.override.seo : {};
-  const data = { seo: { ...currentSeo, ...spec.seo } };
+  const data = {};
 
   console.log(`========== ${d.slug}`);
-  for (const [k, v] of Object.entries(spec.seo)) {
-    console.log(`  ${k}`);
-    console.log(`    old: ${JSON.stringify(currentSeo[k] ?? null)}`);
-    console.log(`    new: ${JSON.stringify(v)}`);
+
+  if (spec.seo) {
+    data.seo = { ...currentSeo, ...spec.seo };
+    for (const [k, v] of Object.entries(spec.seo)) {
+      console.log(`  ${k}`);
+      console.log(`    old: ${JSON.stringify(currentSeo[k] ?? null)}`);
+      console.log(`    new: ${JSON.stringify(v)}`);
+    }
   }
 
-  for (const [field, { expect, text }] of Object.entries(spec.paragraph2)) {
-    const full = d.override[field];
-    if (!full) throw new Error(`${d.slug}.${field} is empty — aborting`);
-    const paras = full.split(/\n\s*\n/);
-    if (paras.length < 2) throw new Error(`${d.slug}.${field}: expected 2+ paragraphs, found ${paras.length} — aborting`);
-    if (!paras[1].includes(expect)) {
-      throw new Error(`${d.slug}.${field}: paragraph 2 no longer contains ${JSON.stringify(expect)} — copy changed since review, aborting`);
+  // Edits are grouped by field so several can be applied to the same paragraph
+  // or to different paragraphs of the same text, in order.
+  for (const [field, edits] of Object.entries(spec.edits ?? {})) {
+    let text = d.override[field];
+    if (!text) throw new Error(`${d.slug}.${field} is empty — aborting`);
+    for (const { find, replace } of edits) {
+      const occurrences = text.split(find).length - 1;
+      if (occurrences !== 1) {
+        throw new Error(`${d.slug}.${field}: ${JSON.stringify(find)} occurs ${occurrences}x, expected exactly 1 — copy changed since review, aborting`);
+      }
+      text = text.replace(find, replace);
+      console.log(`  ${field}`);
+      console.log(`    - ${JSON.stringify(find)}`);
+      console.log(`    + ${JSON.stringify(replace)}`);
     }
-    // Splice the replacement into the ORIGINAL string rather than re-joining the
-    // parts. These fields are stored with CRLF line endings, and the paragraph
-    // split leaves the trailing "\r" attached to each part — a join("\n\n")
-    // would quietly rewrite every paragraph break in the field from CRLF to LF
-    // and strip that "\r", i.e. change bytes this script has no business
-    // touching. Preserving the trailing character keeps the field byte-identical
-    // outside the one paragraph being replaced.
-    const target = paras[1];
-    const trailing = target.endsWith("\r") ? "\r" : "";
-    const at = full.indexOf(target);
-    if (at === -1) throw new Error(`${d.slug}.${field}: could not locate paragraph 2 in the source string — aborting`);
-    data[field] = full.slice(0, at) + text + trailing + full.slice(at + target.length);
-    console.log(`  ${field} — replacing paragraph 2 of ${paras.length}`);
-    console.log(`    old: ${JSON.stringify(paras[1])}`);
-    console.log(`    new: ${JSON.stringify(text)}`);
+    data[field] = text;
   }
 
   if (APPLY) {

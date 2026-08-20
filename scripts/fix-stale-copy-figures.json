@@ -1,54 +1,54 @@
 {
-  "gravity": {
+  "montville": {
     "seo": {
-      "descEN": "Offices, shops and restaurant space at :gravity, right in Limassol city centre. From {priceFrom}, completion {completion}.",
-      "descDE": "Büros, Geschäfte und Gastronomieflächen im :gravity, mitten im Zentrum von Limassol. Ab {priceFrom}, Fertigstellung {completion}.",
-      "descPL": "Biura, lokale usługowe i gastronomiczne w :gravity, w samym centrum Limassol. Od {priceFrom}, oddanie {completion}.",
-      "descRU": "Офисы, магазины и ресторанные площади в :gravity, в самом центре Лимасола. От {priceFrom}, сдача {completion}."
+      "descEN": "Exclusive villas at Montville in Agios Tychonas, Limassol — three to five bedrooms, from {priceFrom}, completion {completion}.",
+      "descDE": "Exklusive Villen im Montville in Agios Tychonas, Limassol – drei bis fünf Schlafzimmer, ab {priceFrom}, Fertigstellung {completion}.",
+      "descPL": "Ekskluzywne wille Montville w Agios Tychonas, Limassol – od trzech do pięciu sypialni, od {priceFrom}, oddanie {completion}.",
+      "descRU": "Эксклюзивные виллы Montville в Агиос-Тихонас, Лимассол — от трёх до пяти спален, от {priceFrom}, сдача {completion}."
     },
-    "paragraph2": {
-      "descriptionEN": {
-        "expect": "Ten units",
-        "text": "Office and shop space is arranged across the building, from compact suites to whole floors, with underground parking addressing a genuine scarcity in this part of the centre."
-      },
-      "descriptionDE": {
-        "expect": "Zehn Einheiten",
-        "text": "Büro- und Geschäftsflächen verteilen sich über das gesamte Gebäude, von kompakten Einheiten bis zu ganzen Etagen, ergänzt durch eine Tiefgarage – ein echter Vorteil in diesem Teil des Zentrums, wo Parkraum knapp ist."
-      },
-      "descriptionPL": {
-        "expect": "Dziesięć lokali",
-        "text": "Powierzchnie biurowe i handlowe rozmieszczone są w całym budynku, od kompaktowych lokali po całe piętra, a uzupełnia je parking podziemny – realna wartość w tej części centrum, gdzie miejsc parkingowych brakuje."
-      },
-      "descriptionRU": {
-        "expect": "Десять помещений",
-        "text": "Офисные и торговые помещения распределены по всему зданию — от компактных блоков до целых этажей, — а подземная парковка становится настоящей ценностью в этой части центра, где парковочных мест не хватает."
-      }
+    "edits": {
+      "descriptionEN": [
+        { "find": "Three villas occupy a hillside enclave", "replace": "A small collection of villas occupies a hillside enclave" },
+        { "find": "this is a private collection of three-to-five-bedroom villas ranging from 650 m² to 734.1 m², priced from €4,670,000.", "replace": "this is a private collection of three- to five-bedroom villas." }
+      ],
+      "descriptionDE": [
+        { "find": "Drei Villen liegen in einem privaten Anwesen", "replace": "Wenige Villen liegen in einem privaten Anwesen" },
+        { "find": "Es umfasst drei Villen mit drei bis fünf Schlafzimmern, zwischen 650 m² und 734,1 m², ab 4.670.000 €.", "replace": "Es umfasst Villen mit drei bis fünf Schlafzimmern." }
+      ],
+      "descriptionPL": [
+        { "find": "Trzy wille zajmują prywatny kompleks", "replace": "Kilka willi zajmuje prywatny kompleks" },
+        { "find": "Obejmuje trzy wille o trzech–pięciu sypialniach, o powierzchni od 650 m² do 734,1 m², w cenach od 4 670 000 €.", "replace": "Obejmuje wille o trzech–pięciu sypialniach." }
+      ],
+      "descriptionRU": [
+        { "find": "Три виллы расположены в частном комплексе", "replace": "Несколько вилл расположены в частном комплексе" },
+        { "find": "Он включает три виллы с тремя–пятью спальнями площадью от 650 м² до 734,1 м², стоимостью от 4 670 000 €.", "replace": "Он включает виллы с тремя–пятью спальнями." }
+      ]
     }
   },
-  "upside": {
+  "ridge": {
     "seo": {
-      "descEN": "New apartments at :upside in Agios Athanasios, Limassol — one to four bedrooms, from {priceFrom}, completion {completion}.",
-      "descDE": "Neue Apartments im :upside in Agios Athanasios, Limassol – ein bis vier Schlafzimmer, ab {priceFrom}, Fertigstellung {completion}.",
-      "descPL": "Nowe apartamenty :upside w Agios Athanasios, Limassol – od jednej do czterech sypialni, od {priceFrom}, oddanie {completion}.",
-      "descRU": "Новые апартаменты :upside в Агиос Афанасиос, Лимассол — от одной до четырёх спален, от {priceFrom}, сдача {completion}."
+      "descEN": "Exclusive three-bedroom villas at :ridge in Agios Tychonas, Limassol, from {priceFrom}, completion {completion}.",
+      "descDE": "Exklusive Villen mit drei Schlafzimmern im :ridge in Agios Tychonas, Limassol, ab {priceFrom}, Fertigstellung {completion}.",
+      "descPL": "Ekskluzywne trzysypialniane wille :ridge w Agios Tychonas, Limassol, od {priceFrom}, oddanie {completion}.",
+      "descRU": "Эксклюзивные виллы :ridge с тремя спальнями в Айос-Тихонасе, Лимассол, от {priceFrom}, сдача {completion}."
     },
-    "paragraph2": {
-      "descriptionEN": {
-        "expect": "just 11 apartments",
-        "text": "Within a small gated complex, layouts range from one to four bedrooms, giving buyers real choice between compact city pieds-à-terre and family-sized residences. A gym and pool serve residents within the secured grounds, and the development is still at off-plan stage."
-      },
-      "descriptionDE": {
-        "expect": "lediglich 11 Wohnungen",
-        "text": "In einer gesicherten, überschaubaren Anlage reichen die Grundrisse von ein bis vier Schlafzimmern und bieten damit echte Wahlmöglichkeiten zwischen kompakten Stadtwohnungen und großzügigen Familienresidenzen. Fitnessraum und Pool stehen den Bewohnern innerhalb des geschützten Areals zur Verfügung; das Projekt befindet sich derzeit im Vorverkauf."
-      },
-      "descriptionPL": {
-        "expect": "zaledwie 11 mieszkań",
-        "text": "W kameralnym, ogrodzonym kompleksie układy obejmują od jednej do czterech sypialni, co daje realny wybór między kompaktowym mieszkaniem miejskim a przestronną rezydencją rodzinną. Mieszkańcy mają do dyspozycji siłownię i basen na terenie strzeżonego kompleksu, a inwestycja znajduje się obecnie w przedsprzedaży."
-      },
-      "descriptionRU": {
-        "expect": "всего из 11 квартир",
-        "text": "В небольшом закрытом комплексе планировки варьируются от одной до четырёх спален, что даёт реальный выбор между компактной городской квартирой и просторной резиденцией для семьи. Жителям доступны тренажёрный зал и бассейн на охраняемой территории, а проект находится на стадии строительства."
-      }
+    "edits": {
+      "descriptionEN": [
+        { "find": "this gated community comprises five three-bedroom villas arranged over three levels", "replace": "this gated community comprises three-bedroom villas arranged over three levels" },
+        { "find": "Completion is set for the fourth quarter of 2029, with prices from €1,774,000.", "replace": "Completion is set for the fourth quarter of 2029." }
+      ],
+      "descriptionDE": [
+        { "find": "umfasst diese Gated Community fünf Villen mit je drei Schlafzimmern über drei Ebenen", "replace": "umfasst diese Gated Community Villen mit je drei Schlafzimmern über drei Ebenen" },
+        { "find": "Die Fertigstellung ist für das vierte Quartal 2029 vorgesehen, mit Preisen ab 1.774.000 €.", "replace": "Die Fertigstellung ist für das vierte Quartal 2029 vorgesehen." }
+      ],
+      "descriptionPL": [
+        { "find": "obejmuje pięć trzysypialnianych willi rozłożonych na trzech poziomach", "replace": "obejmuje trzysypialniane wille rozłożone na trzech poziomach" },
+        { "find": "Zakończenie inwestycji planowane jest na czwarty kwartał 2029 roku, a ceny zaczynają się od 1 774 000 €.", "replace": "Zakończenie inwestycji planowane jest na czwarty kwartał 2029 roku." }
+      ],
+      "descriptionRU": [
+        { "find": "этот закрытый комплекс включает пять вилл с тремя спальнями на трёх уровнях", "replace": "этот закрытый комплекс включает виллы с тремя спальнями на трёх уровнях" },
+        { "find": "Завершение строительства намечено на четвёртый квартал 2029 года, цены начинаются от 1 774 000 €.", "replace": "Завершение строительства намечено на четвёртый квартал 2029 года." }
+      ]
     }
   }
 }
