@@ -35,9 +35,11 @@ export async function generateProjectDescription(ctx: DescriptionContext): Promi
     ctx.areaText ? `Neighbourhood character: ${ctx.areaText.slice(0, 600)}` : "",
     ctx.category ? `Category: ${ctx.category}` : "",
     ctx.stage ? `Construction stage: ${ctx.stage}` : "",
-    ctx.completion ? `Completion: ${ctx.completion}` : "",
-    ctx.priceFrom ? `Prices from: €${ctx.priceFrom.toLocaleString("en-US")}` : "",
-    ctx.unitSummary ? `Units: ${ctx.unitSummary}` : "",
+    // completion date and price-from are deliberately NOT passed — this text is
+    // saved and never regenerated, so any figure in it rots (see the no-digit
+    // rule below and the same treatment in seoMeta.ts). Handing the model a
+    // quarter or a price while forbidding digits just makes it spell them out.
+    ctx.unitSummary ? `Homes: ${ctx.unitSummary}` : "",
     ctx.projectAmenities.length ? `Development amenities: ${ctx.projectAmenities.join(", ")}` : "",
     ctx.unitAmenities.length ? `Unit features: ${ctx.unitAmenities.join(", ")}` : "",
     ctx.sourceText ? `Developer's own text (raw material — rewrite, do not copy): ${ctx.sourceText.slice(0, 800)}` : "",
@@ -60,6 +62,7 @@ Rules:
 - ~${words} words in EACH language.
 - NEVER mention the project's name or the developer's name — describe the property, lifestyle, location and features.
 - Use ONLY the data given; do not invent facts, figures or amenities.
+- NEVER write a digit. No unit counts, no prices, no completion dates or quarters, no square metres, no percentages. This description is SAVED and never regenerated, while the project's real numbers move with every feed sync — so a figure written here is wrong as soon as stock sells or a price changes. Nothing in the data gives you a figure to quote. Bedroom counts are the one thing you may name, and only spelled out as words ("two-bedroom", never "2-bedroom"), because that describes the homes themselves rather than what is currently for sale.
 - Sophisticated, confident, understated. No clichés ("nestled", "hidden gem", "boasts", "oasis"), no marketing hype.
 - Vary sentence length and rhythm; write like a human editor, not a template. It must read as original and NOT machine-generated.
 - Structure the copy as 2–3 short paragraphs separated by a blank line (a real double newline "\n\n"). Suggested flow: location & setting · the development, units & amenities · interiors and who it suits.
@@ -72,8 +75,15 @@ Return via the description tool.` + tuningBlock({ emphasize: ctx.emphasize, avoi
 
   const CYRILLIC_RE = /[Ѐ-ӿ]/;
   const hasLeakedCyrillic = (out: FourLang) => CYRILLIC_RE.test(out.en) || CYRILLIC_RE.test(out.de) || CYRILLIC_RE.test(out.pl);
+  // Enforcement for the no-digit rule above — a prompt rule is a request, and
+  // anything that slips through is stored permanently. Reuses the same
+  // retry-once path as the language leak.
+  const hasDigits = (out: FourLang) => /\d/.test(out.en) || /\d/.test(out.de) || /\d/.test(out.pl) || /\d/.test(out.ru);
+  const isClean = (out: FourLang) => !hasLeakedCyrillic(out) && !hasDigits(out);
 
-  const attempt = async (): Promise<FourLang> => {
+  // `correction` is only set on the retry — naming what went wrong beats sending
+  // the identical prompt again and hoping for a different sample.
+  const attempt = async (correction?: string): Promise<FourLang> => {
     const msg = await client.messages.create({
       model: AI_MODEL,
       max_tokens: 3000,
@@ -89,7 +99,7 @@ Return via the description tool.` + tuningBlock({ emphasize: ctx.emphasize, avoi
         },
       ],
       tool_choice: { type: "tool", name: "description" },
-      messages: [{ role: "user", content: prompt }],
+      messages: [{ role: "user", content: correction ? `${prompt}\n\n${correction}` : prompt }],
     });
 
     const tool = msg.content.find((b: any) => b.type === "tool_use") as any;
@@ -100,8 +110,26 @@ Return via the description tool.` + tuningBlock({ emphasize: ctx.emphasize, avoi
   };
 
   const first = await attempt();
-  if (!hasLeakedCyrillic(first)) return first;
-  // Non-target-language leak into en/de/pl (source text was itself multilingual) — retry once.
-  const second = await attempt();
-  return hasLeakedCyrillic(second) ? first : second;
+  if (isClean(first)) return first;
+  // Either a non-target-language leak into en/de/pl (the source text was itself
+  // multilingual) or a figure that got through the no-digit rule — retry once.
+  const second = await attempt(
+    [
+      hasDigits(first)
+        ? "Your previous answer contained digits. Rewrite with no digit anywhere — and do not spell the figures out in words either; drop the fact instead."
+        : "",
+      hasLeakedCyrillic(first)
+        ? "Your previous answer leaked non-target-language characters into en/de/pl. Each field must be 100% in its own language."
+        : "",
+    ].filter(Boolean).join(" "),
+  );
+  if (isClean(second)) return second;
+  // Still not clean. A language leak is cosmetic and the old behaviour — keep the
+  // first attempt. A figure is not: it would be saved and go stale, so refuse.
+  if (hasDigits(second) && hasDigits(first)) {
+    throw new Error(
+      "Generated description still contains figures after a retry — numbers must not be baked into saved copy (they go stale). Try again, or edit by hand.",
+    );
+  }
+  return hasDigits(second) ? first : second;
 }

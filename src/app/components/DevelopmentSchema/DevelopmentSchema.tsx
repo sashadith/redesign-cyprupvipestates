@@ -6,7 +6,7 @@ import Script from "next/script";
 import { abs } from "@/lib/seo";
 import { localizedHref } from "@/lib/locale";
 import type { ProjectVM } from "@/app/preview-project/feeds";
-import { computeAvailability } from "@/lib/developmentAvailability";
+import { computeAvailability, listedUnits } from "@/lib/developmentAvailability";
 
 export default function DevelopmentSchema({ p, lang, canonical }: { p: ProjectVM; lang: string; canonical: string }) {
   // Same guard the legacy component uses: no point emitting a listing schema
@@ -14,6 +14,10 @@ export default function DevelopmentSchema({ p, lang, canonical }: { p: ProjectVM
   if (!p.center || !p.gallery.length) return null;
 
   const { soldOut } = computeAvailability(p.units);
+  // Same listed-only population the page itself counts and renders — a
+  // numberOfAccommodationUnits taken from the raw rows would tell Google a
+  // larger number than the page shows (see listedUnits).
+  const listedCount = listedUnits(p.units).length;
   // p.priceFrom/priceTo are already fully resolved by resolveDevelopmentPrice()
   // in mapRowToVM (src/lib/developmentCard.ts) — the single source of truth
   // every surface (this schema, the page itself, the merged /projects card) uses.
@@ -33,7 +37,7 @@ export default function DevelopmentSchema({ p, lang, canonical }: { p: ProjectVM
       addressCountry: "CY",
     },
     geo: { "@type": "GeoCoordinates", latitude: p.center.lat, longitude: p.center.lng },
-    ...(p.units.length ? { numberOfAccommodationUnits: p.units.length } : {}),
+    ...(listedCount ? { numberOfAccommodationUnits: listedCount } : {}),
     ...(priceFrom != null
       ? {
           offers: {

@@ -9,6 +9,7 @@ import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleA
 import { resolveMapsUrlToGeo } from "@/lib/mapsGeo";
 import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
 import { recomputeDevelopmentDerivedState } from "@/lib/developmentDerivedState";
+import { listedUnits } from "@/lib/developmentAvailability";
 import { syncDeveloperDrive, type DriveSyncResult } from "@/lib/driveAvailabilitySync";
 import { syncOneDevelopment, type SyncOneDevelopmentResult } from "@/lib/feedSync";
 import { uniqueDevelopmentSlug } from "@/lib/developmentSeo";
@@ -61,14 +62,20 @@ export async function generateDescription(developmentId: string, words: number, 
     const slug = area.toLowerCase().replace(/ph/g, "f").replace(/[^a-z]/g, "");
     const areaRow = area ? await prisma.areaDescription.findFirst({ where: { areaSlug: slug } }) : null;
 
-    const types = Array.from(new Set(d.units.map((u) => u.type).filter(Boolean)));
-    const beds = Array.from(new Set(d.units.map((u) => u.beds).filter(Boolean))).sort();
-    const sizes = d.units.map((u) => u.areaBuilt).filter(Boolean);
+    // Describes the KIND of home, never how many or how big. The count and the
+    // size range used to be in here and went straight into saved description
+    // text that nothing ever regenerates — see the no-digit rule in
+    // src/lib/ai/projectDescription.ts. Bedrooms survive because they describe
+    // the homes themselves; the prompt requires them spelled out as words.
+    // Listed units only, so a type or bedroom count carried solely by units that
+    // vanished from the feed can't be advertised (same population the public
+    // page renders — see listedUnits).
+    const listed = listedUnits(d.units);
+    const types = Array.from(new Set(listed.map((u) => u.type).filter(Boolean)));
+    const beds = Array.from(new Set(listed.map((u) => u.beds).filter(Boolean))).sort();
     const unitSummary = [
-      `${d.units.length} unit${d.units.length === 1 ? "" : "s"}`,
       types.length ? types.join(" / ") : "",
       beds.length ? beds.join("/") + "-bedroom" : "",
-      sizes.length ? `${sizes[0]}–${sizes[sizes.length - 1]}` : "",
     ].filter(Boolean).join(", ");
 
     const texts = await generateProjectDescription({

@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { generateSeoMetaAction, saveSeoPromptAction } from "./actions";
+import { SEO_PLACEHOLDERS } from "@/lib/seoPlaceholders";
 import { ClaudeButton } from "../_ai";
 
 type Lang = "en" | "de" | "pl" | "ru";
@@ -88,6 +89,22 @@ export default function SeoMetaFields({
         </p>
       )}
       <p className="text-[11px] text-[#9CA3AF]">Pre-filled with the free auto-generated text; “Generate with Claude” writes a punchier alternative you can still edit before saving.</p>
+      {/* Saved text is never regenerated, so a figure typed in here goes stale the
+          next time stock or prices move — that is how six live projects ended up
+          advertising unit counts and prices that no longer existed (2026-08-20).
+          Placeholders are the supported way to quote a live figure. */}
+      <p className="text-[11px] text-[#9CA3AF]">
+        Don’t type figures — this text is saved as-is and never refreshed, so unit counts and prices in it go stale.
+        Use{" "}
+        {SEO_PLACEHOLDERS.map((ph, i) => (
+          <React.Fragment key={ph}>
+            {i > 0 && " "}
+            <code className="rounded bg-[#F3F4F6] px-1 py-0.5 text-[#374151]">{`{${ph}}`}</code>
+          </React.Fragment>
+        ))}{" "}
+        instead — they’re replaced with current data every time the page is rendered. An unknown placeholder, or one with no value
+        (e.g. no completion date set), makes the whole field fall back to the auto-generated text.
+      </p>
     </div>
   );
 }

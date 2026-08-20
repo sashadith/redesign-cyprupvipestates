@@ -1,0 +1,62 @@
+{
+  "salt": {
+    "descDE": "Neue Apartments im Projekt :salt in Asomatos, Limassol, ab 289.000 €, Fertigstellung im 4. Quartal 2027. Nur 12 Einheiten in dieser exklusiven Anlage – sichern…",
+    "descEN": "New apartments at :salt in Asomatos, Limassol, from €289,000, with completion set for Q4 2027. Only 12 units in this exclusive development — reserve yours earl…",
+    "descPL": "Nowe apartamenty w kompleksie :salt w Asomatos, Limassol, już od 289 000 €, z ukończeniem w IV kwartale 2027. Tylko 12 lokali w tej ekskluzywnej inwestycji – z…",
+    "descRU": "Новые апартаменты в комплексе :salt в Асоматос, Лимассол, от €289 000, сдача в IV квартале 2027 года. Всего 12 квартир в этом эксклюзивном проекте — успейте за…",
+    "titleDE": ":salt Apartments in Asomatos, Limassol | Ab 289.000 €",
+    "titleEN": ":salt Apartments in Asomatos, Limassol | From €289,000",
+    "titlePL": ":salt Apartamenty w Asomatos, Limassol | Od 289 000 €",
+    "titleRU": ":salt Апартаменты в Асоматос, Лимассол | От €289 000"
+  },
+  "balance": {
+    "descDE": "Moderne Apartments und Studios in Livadia, Larnaca, ab 173.000 €. :balance bietet 85 Wohnungen, Fertigstellung Q3 2029 – jetzt sichern.",
+    "descEN": "Modern apartments and studios in Livadia, Larnaca, from €173,000. :balance offers 85 homes ready in Q3 2029 – secure yours today.",
+    "descPL": "Nowoczesne apartamenty i studia w Livadii, Larnaka, już od 173 000 €. :balance to 85 lokali, gotowość w III kw. 2029 – zarezerwuj już dziś.",
+    "descRU": "Современные апартаменты и студии в Ливадии, Ларнака, от €173,000. :balance – 85 квартир, сдача в 3 кв. 2029 – успейте купить.",
+    "titleDE": ":balance – Apartments & Studios in Livadia, Larnaca",
+    "titleEN": ":balance – Apartments & Studios in Livadia, Larnaca",
+    "titlePL": ":balance – Apartamenty i Studia w Livadii, Larnaka",
+    "titleRU": ":balance – Апартаменты и Студии в Ливадии, Ларнака"
+  },
+  "onero-residences": {
+    "descDE": "Apartments und Maisonetten zum Verkauf in Kato Paphos, Zypern, ab 390.000 €. Nur 6 exklusive Einheiten in dieser neuen Residenz – jetzt anfragen.",
+    "descEN": "Apartments and maisonettes for sale in Kato Paphos, Cyprus, from €390,000. Only 6 exclusive units in this new residence — enquire today.",
+    "descPL": "Apartamenty i maisonety na sprzedaż w Kato Paphos na Cyprze już od 390 000 €. Tylko 6 ekskluzywnych lokali w tej nowej inwestycji – zapytaj już dziś.",
+    "descRU": "Апартаменты и мезонеты на продажу в Като Пафос, Кипр, от 390 000 €. Всего 6 эксклюзивных резиденций в новом комплексе — узнайте подробности сегодня.",
+    "titleDE": "Onero Residences: Apartments & Maisonetten in Kato Paphos",
+    "titleEN": "Onero Residences: Apartments & Maisonettes in Kato Paphos",
+    "titlePL": "Onero Residences: Apartamenty i Maisonety w Kato Paphos",
+    "titleRU": "Onero Residences: апартаменты и мезонеты в Като Пафос"
+  },
+  "royal-residences": {
+    "descDE": "Villen in Royal Residences, Venus Rock, Paphos, ab 1.125.000 €. 13 exklusive Einheiten in dieser gefragten Lage Zyperns verfügbar.",
+    "descEN": "Villas at Royal Residences in Venus Rock, Paphos, from €1,125,000. 13 exclusive units available in this sought-after Cyprus location.",
+    "descPL": "Wille Royal Residences w Venus Rock, Pafos, już od 1 125 000 €. 13 ekskluzywnych jednostek dostępnych w tej pożądanej lokalizacji na Cyprze.",
+    "descRU": "Виллы Royal Residences в Venus Rock, Пафос, от €1 125 000. 13 эксклюзивных вилл в престижном районе Кипра.",
+    "titleDE": "Royal Residences: Villen in Venus Rock, Paphos",
+    "titleEN": "Royal Residences: Villas in Venus Rock, Paphos",
+    "titlePL": "Royal Residences: Wille w Venus Rock, Pafos",
+    "titleRU": "Royal Residences: виллы в Venus Rock, Пафос"
+  },
+  "galaxy-residences": {
+    "descDE": "Neue Apartments in Vasiliko, Paphos, ab 320.000 €. Galaxy Residences bietet 28 Wohnungen in ruhiger Lage auf Zypern – frühzeitige Auswahl noch möglich.",
+    "descEN": "New apartments in Vasiliko, Paphos, from €320,000. Galaxy Residences offers 28 homes in a quiet Cyprus location — early choice still available.",
+    "descPL": "Nowe apartamenty w Vasiliko, Pafos, od 320 000 €. Galaxy Residences to 28 lokali w spokojnej okolicy Cypru — wszystkie wciąż dostępne.",
+    "descRU": "Новые апартаменты в Василико, Пафос, от 320 000 €. Galaxy Residences — 28 квартир в тихом районе Кипра, все пока в продаже.",
+    "titleDE": "Galaxy Residences – Apartments in Vasiliko, Paphos",
+    "titleEN": "Galaxy Residences – Apartments in Vasiliko, Paphos",
+    "titlePL": "Galaxy Residences – Apartamenty w Vasiliko, Pafos",
+    "titleRU": "Galaxy Residences – апартаменты в Василико, Пафос"
+  },
+  "ridge-residences": {
+    "descDE": "Exklusive Villen im Ridge Residences in Venus Rock, Limassol, ab 1.800.000 €. Nur 4 Villen insgesamt – sichern Sie sich Ihre in diesem seltenen Projekt auf Zyp…",
+    "descEN": "Exclusive villas at Ridge Residences in Venus Rock, Limassol, from €1,800,000. Only 4 villas in total – secure yours in this rare Cyprus development.",
+    "descPL": "Ekskluzywne wille Ridge Residences w Venus Rock, Limassol, od 1 800 000 €. Tylko 4 wille w całym projekcie – zarezerwuj swoją na Cyprze.",
+    "descRU": "Эксклюзивные виллы Ridge Residences в Venus Rock, Лимассол, от 1 800 000 €. Всего 4 виллы в проекте – успейте выбрать свою на Кипре.",
+    "titleDE": "Ridge Residences – Villen in Venus Rock, Limassol",
+    "titleEN": "Ridge Residences – Villas in Venus Rock, Limassol",
+    "titlePL": "Ridge Residences – Wille w Venus Rock, Limassol",
+    "titleRU": "Ridge Residences – виллы в Venus Rock, Лимассол"
+  }
+}

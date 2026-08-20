@@ -13,6 +13,7 @@
 // sidesteps noun-number agreement entirely.
 import { prisma } from "@/lib/prisma";
 import type { ProjectVM } from "@/app/preview-project/feeds";
+import { listedUnits } from "@/lib/developmentAvailability";
 
 export const TITLE_MAX = 60;
 export const DESC_MAX = 160;
@@ -85,16 +86,28 @@ function typeKeyOf(raw: string): keyof typeof TYPE_LABEL {
   return "generic";
 }
 
+// The unit population every auto-generated title/description describes: the
+// LISTED units, i.e. what a visitor actually finds on the page. Units that
+// vanished from the developer's feed must not put a type or a bed count into a
+// search snippet that the page itself never shows. Falls back to all units when
+// nothing is listed any more, for the same reason resolveDevelopmentType does
+// (developmentCard.ts): a withdrawn development keeps the type it was built as
+// rather than degrading to "generic".
+function describedUnits(vm: ProjectVM): ProjectVM["units"] {
+  const listed = listedUnits(vm.units);
+  return listed.length ? listed : vm.units;
+}
+
 /** Single dominant type across units, or "generic" if mixed/empty. */
 function typesLabel(vm: ProjectVM, lang: Lang): string {
-  const keys = Array.from(new Set(vm.units.map((u) => (u.type ? typeKeyOf(u.type) : null)).filter(Boolean))) as (keyof typeof TYPE_LABEL)[];
+  const keys = Array.from(new Set(describedUnits(vm).map((u) => (u.type ? typeKeyOf(u.type) : null)).filter(Boolean))) as (keyof typeof TYPE_LABEL)[];
   const key = keys.length === 1 ? keys[0] : "generic";
   return TYPE_LABEL[key][lang];
 }
 
 /** "3" if every unit has the same bed count, "2–4" if it varies, null if unknown. */
 function bedsRange(vm: ProjectVM): string | null {
-  const nums = vm.units.map((u) => Number(String(u.beds).match(/\d+/)?.[0])).filter((n) => Number.isFinite(n) && n > 0);
+  const nums = describedUnits(vm).map((u) => Number(String(u.beds).match(/\d+/)?.[0])).filter((n) => Number.isFinite(n) && n > 0);
   if (!nums.length) return null;
   const lo = Math.min(...nums), hi = Math.max(...nums);
   return lo === hi ? String(lo) : `${lo}–${hi}`;
@@ -139,7 +152,11 @@ export function autoMetaDescription(vm: ProjectVM, lang: string): string {
   const place = [vm.area, vm.district].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(", ");
   const lbl = LABELS[l];
   const sentence1 = `${type}${place ? ` ${lbl.in} ${place}` : ""}, ${lbl.cyprus}.`;
-  const avail = vm.units.filter((u) => u.status === "available").length || vm.units.length;
+  // Fallback total (no available unit left) counts the LISTED units only —
+  // the same population the page itself shows. Counting raw rows would put a
+  // number in the search snippet that is larger than anything on the page
+  // (see listedUnits in developmentAvailability.ts).
+  const avail = vm.units.filter((u) => u.status === "available").length || listedUnits(vm.units).length;
   const priceClause = vm.priceFrom ? ` ${lbl.from} ${fmtPrice(vm.priceFrom)}` : "";
   // EN only: "unit"/"units" inflects with the count (DE/PL/RU labels below are
   // already fixed, count-invariant nouns — "Einheiten"/"jednostek"/"объектов" —
@@ -150,6 +167,68 @@ export function autoMetaDescription(vm: ProjectVM, lang: string): string {
   return fit([sentence1, sentence2, sentence3].filter(Boolean), DESC_MAX);
 }
 
+// ---------- live placeholders in stored SEO text ----------
+//
+// Manual and AI-written overrides are stored once and never regenerated, while
+// the figures they talk about move with every feed sync. On 2026-08-20 all six
+// AI-written projects had drifted — Royal Residences still advertised "13
+// exclusive units available" on a page that says SOLD OUT, :salt named a price
+// €26,600 above the real one. Banning figures outright (see the no-digit rule in
+// src/lib/ai/seoMeta.ts) fixes correctness but costs the search snippet its most
+// clickable element.
+//
+// So stored text may carry a placeholder instead of a figure, resolved against
+// live data on every render: write "from {priceFrom}" and the reader always sees
+// today's price. The stored string stays figure-free, which is exactly what the
+// generator's guard enforces — the two mechanisms are designed to fit together.
+// Defined in its own import-free module so the admin editor (a client component)
+// can name the same tokens without pulling this file — and Prisma — into the
+// browser bundle. Re-exported here so the resolver and its constant stay together.
+export { SEO_PLACEHOLDERS } from "@/lib/seoPlaceholders";
+import { SEO_PLACEHOLDERS } from "@/lib/seoPlaceholders";
+
+const groupDigits = (n: number, sep: string) => Math.round(n).toLocaleString("en-US").replace(/,/g, sep);
+
+// Per-language money formatting, matching the convention each locale's existing
+// copy already used (EN leads with the symbol, DE/PL/RU trail it).
+const PRICE_FORMAT: Record<Lang, (n: number) => string> = {
+  en: (n) => `€${groupDigits(n, ",")}`,
+  de: (n) => `${groupDigits(n, ".")} €`,
+  pl: (n) => `${groupDigits(n, " ")} €`,
+  ru: (n) => `${groupDigits(n, " ")} €`,
+};
+
+function placeholderValues(vm: ProjectVM, l: Lang): Record<string, string | null> {
+  const available = listedUnits(vm.units).filter((u) => u.status === "available").length;
+  return {
+    priceFrom: vm.priceFrom != null ? PRICE_FORMAT[l](vm.priceFrom) : null,
+    // Zero is deliberately unresolvable, not "0": a sold-out project must not
+    // advertise "0 units available" — the whole override falls back to the
+    // auto-generated text, which handles sold-out properly.
+    unitsAvailable: available > 0 ? String(available) : null,
+    completion: vm.completion?.trim() || null,
+  };
+}
+
+/**
+ * Substitute {placeholder}s with live values.
+ * Returns null when ANY placeholder is unknown or currently has no value — the
+ * caller then falls back to the auto-generated text. Never emit a half-resolved
+ * string: a stray "{priceFrom}" or a dangling "from ." in a search result is
+ * worse than a plainer sentence that is always correct.
+ */
+export function applySeoPlaceholders(text: string, vm: ProjectVM, lang: string): string | null {
+  if (!text.includes("{")) return text;
+  const values = placeholderValues(vm, asLang(lang));
+  let unresolved = false;
+  const out = text.replace(/\{(\w+)\}/g, (_m, key: string) => {
+    const v = values[key];
+    if (v == null) { unresolved = true; return ""; }
+    return v;
+  });
+  return unresolved ? null : out;
+}
+
 // ---------- override resolution ----------
 
 export type SeoOverride = Partial<Record<`title${Uppercase<Lang>}` | `desc${Uppercase<Lang>}`, string>>;
@@ -157,11 +236,17 @@ export type SeoOverride = Partial<Record<`title${Uppercase<Lang>}` | `desc${Uppe
 export function resolveMetaTitle(vm: ProjectVM, lang: string, seo?: SeoOverride | null): string {
   const key = `title${asLang(lang).toUpperCase()}` as keyof SeoOverride;
   const override = (seo?.[key] || "").trim();
-  return override || autoMetaTitle(vm, lang);
+  if (!override) return autoMetaTitle(vm, lang);
+  const resolved = applySeoPlaceholders(override, vm, lang);
+  // Re-clamp after substitution: the stored string was measured with the
+  // placeholder in it, and the live value has a different length.
+  return resolved ? fit([resolved], TITLE_MAX) : autoMetaTitle(vm, lang);
 }
 
 export function resolveMetaDescription(vm: ProjectVM, lang: string, seo?: SeoOverride | null): string {
   const key = `desc${asLang(lang).toUpperCase()}` as keyof SeoOverride;
   const override = (seo?.[key] || "").trim();
-  return override || autoMetaDescription(vm, lang);
+  if (!override) return autoMetaDescription(vm, lang);
+  const resolved = applySeoPlaceholders(override, vm, lang);
+  return resolved ? fit([resolved], DESC_MAX) : autoMetaDescription(vm, lang);
 }

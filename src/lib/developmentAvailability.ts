@@ -78,3 +78,29 @@ export function availabilityContradiction(
   }
   return null;
 }
+
+// ---------------------------------------------------------------------------
+// "Listed" = the unit population a public visitor can actually see.
+//
+// A unit flips to "unlisted" when it disappears from the developer's feed
+// (feedSync.ts) — the row survives in the DB so admin/sync keep seeing it and
+// it can silently return if the feed re-lists it, but it is NOT for sale and
+// never renders on a public surface (UnitsView filters it out of the unit
+// grid/table).
+//
+// Every public COUNT must be taken over this population, or a page contradicts
+// itself: found 2026-08-19 on GALAXY RESIDENCES (29 unit rows, 2 unlisted) —
+// the fact panel said "29 Units" directly above a list of 27. `available`
+// counts are unaffected either way (an unlisted unit is never "available"), so
+// only totals/derived-sold numbers need this.
+//
+// Deliberately NOT folded into computeAvailability(): its `total` is the
+// admin-facing row count (the unit editor and the developments tables show
+// every row, unlisted included), and its `soldOut` is a separate decision that
+// is intentionally left computed over all rows.
+export const isListedUnit = (u: UnitStatusLike): boolean => u.status !== "unlisted";
+
+/** Public-facing unit population — everything except "unlisted". */
+export function listedUnits<T extends UnitStatusLike>(units: T[]): T[] {
+  return units.filter(isListedUnit);
+}
