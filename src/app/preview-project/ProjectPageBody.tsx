@@ -17,7 +17,7 @@ import type { ProjectVM } from "@/app/preview-project/feeds";
 import { splitDescriptionParagraphs } from "@/lib/text";
 import { resolveDevelopmentType } from "@/lib/developmentCard";
 import DistancesStrip from "@/app/components/DistancesStrip/DistancesStrip";
-import { computeAvailability, resolveAvailabilityStatusLabel, resolveStageLabel } from "@/lib/developmentAvailability";
+import { computeAvailability, listedUnits, resolveAvailabilityStatusLabel, resolveStageLabel } from "@/lib/developmentAvailability";
 import { developmentCopy } from "@/lib/developmentCopy";
 import { getAlternativeDevelopments } from "@/lib/developmentAlternatives";
 import AlternativesBlock from "@/app/preview-project/AlternativesBlock";
@@ -58,6 +58,12 @@ export default async function ProjectPageBody({
 }) {
   const t = developmentCopy(lang);
   const avail = p.units.filter((u) => u.status === "available");
+  // Every unit COUNT on this page is taken over the listed population —
+  // the same one UnitsView renders below (see listedUnits in
+  // developmentAvailability.ts). Counting p.units raw made the fact panel
+  // claim more units than the list underneath it actually shows
+  // (GALAXY RESIDENCES: "29 Units" over a list of 27, 2026-08-19).
+  const listed = listedUnits(p.units);
   // p.priceFrom is already fully resolved (override -> Development.priceFrom ->
   // cheapest available unit) by resolveDevelopmentPrice() in mapRowToVM — see
   // src/lib/developmentCard.ts, the single source of truth every surface
@@ -110,7 +116,7 @@ export default async function ProjectPageBody({
   const facts = [
     { label: t.factLocation, value: p.location },
     types.length ? { label: t.factPropertyType, value: types.join(", ") } : null,
-    p.units.length ? { label: t.factUnits, value: `${p.units.length}${avail.length !== p.units.length ? ` ${t.factUnitsAvailable(avail.length)}` : ""}` } : null,
+    listed.length ? { label: t.factUnits, value: `${listed.length}${avail.length !== listed.length ? ` ${t.factUnitsAvailable(avail.length)}` : ""}` } : null,
     { label: t.factStatus, value: availabilityLabel },
     stageLabel ? { label: t.factConstructionStage, value: stageLabel } : null,
     plotRange ? { label: t.factPlot, value: plotRange } : null,
@@ -145,7 +151,7 @@ export default async function ProjectPageBody({
               <div className="pp-hero__stats">
                 <div className="pp-hero__price"><b>{priceFrom != null ? fmtPrice(priceFrom, p.currency, t.priceOnRequest) : "—"}</b><span>{priceFrom != null ? (isSold ? t.heroFromSoldOut : `${t.heroFrom}${p.vatApplies !== false ? ` · ${t.vatSuffix}` : ""}`) : t.heroFrom}</span></div>
                 <div><b>{types.join(" · ") || "—"}</b><span>{t.heroType}</span></div>
-                {p.units.length > 0 && <div><b>{avail.length}{avail.length !== p.units.length && <small>/{p.units.length}</small>}</b><span>{t.heroAvailable}</span></div>}
+                {listed.length > 0 && <div><b>{avail.length}{avail.length !== listed.length && <small>/{listed.length}</small>}</b><span>{t.heroAvailable}</span></div>}
               </div>
             </div>
           </div>
@@ -266,11 +272,11 @@ export default async function ProjectPageBody({
         )}
 
         {/* ---------- UNITS ---------- */}
-        {p.units.length > 0 && (
+        {listed.length > 0 && (
           <section className="pp-wrap pp-section pp-units-sec">
             <div className="pp-units-head">
               <h2 className="pp-h2">{isSold ? t.unitsHeadingSoldOut : t.unitsHeading}</h2>
-              <p className="pp-hint" style={{ margin: 0 }}>{t.unitsSubAvailable(avail.length)}{p.units.length !== avail.length ? t.unitsSubSold(p.units.length - avail.length) : ""}</p>
+              <p className="pp-hint" style={{ margin: 0 }}>{t.unitsSubAvailable(avail.length)}{listed.length !== avail.length ? t.unitsSubSold(listed.length - avail.length) : ""}</p>
             </div>
             <UnitsView units={p.units} lang={lang} />
           </section>

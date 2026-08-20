@@ -5,6 +5,7 @@ import { atSize } from "./imageSize";
 import Lightbox from "./Lightbox";
 import { developmentCopy, type DevelopmentStrings } from "@/lib/developmentCopy";
 import { roundArea } from "@/lib/formatArea";
+import { listedUnits } from "@/lib/developmentAvailability";
 
 export type UnitVM = {
   id?: string; // DevelopmentUnit.id — only populated by the DB-backed path (developmentRender.ts); optional so the live-feed adapters (feeds.ts), which have no DB row yet, are unaffected
@@ -261,7 +262,7 @@ export default function UnitsView({ units, lang = "en" }: { units: UnitVM[]; lan
   // page at all — it's not "sold" or "reserved" for a buyer to see, it's
   // simply not for sale anymore. The row survives in the DB (admin + sync
   // still see it) purely so it can silently return if the feed re-lists it.
-  const visibleUnits = useMemo(() => units.filter((u) => u.status !== "unlisted"), [units]);
+  const visibleUnits = useMemo(() => listedUnits(units), [units]);
 
   const sorted = useMemo(() => {
     const rank = { available: 0, reserved: 1, sold: 2, unlisted: 3 } as const;

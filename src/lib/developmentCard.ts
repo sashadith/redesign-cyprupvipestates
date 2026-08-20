@@ -9,6 +9,8 @@
 // Keep every one of these as the single source of truth; do not
 // re-implement any of this inline again on either surface.
 
+import { isListedUnit } from "@/lib/developmentAvailability";
+
 type UnitLike = { status?: string | null; price?: number | null; beds?: string | null; type?: string | null; areaBuilt?: string | null };
 
 // Development.priceFrom/priceTo can be null even when real unit prices exist
@@ -136,9 +138,38 @@ export function resolveDevelopmentLocation(...parts: (string | null | undefined)
 // `category` scalar — e.g. Luma Genesis has category=null but every unit is
 // type="Apartment". Only fall back to category when no unit has a type at
 // all (a development with no synced units yet).
+//
+// Three-step resolution, in order:
+//   1. LISTED units' types — the population a visitor can actually see. A type
+//      carried only by units that vanished from the feed is not on offer:
+//      Onero Residences advertised "Apartments · Maisonettes" on its page, its
+//      listing card, and to the catalogue's Maisonette filter, while all three
+//      of its maisonette units were unlisted (2026-08-20).
+//   2. ALL units' types, when nothing is listed any more. A sold-out/withdrawn
+//      development keeps the type it was actually built as — dropping to step 3
+//      there would relabel Royal Residences and Ridge Residences from
+//      "Villa"/"Villas" to the generic category "Residential", which is a
+//      worse answer than the slightly stale one.
+//   3. `category`, only when no unit anywhere carries a type.
+//
+// Step 1 also feeds matchesPropertyTypeFilter below, i.e. catalogue filter
+// membership — measured 2026-08-20 over the full catalogue population (129
+// published, slugged developments) against the four values the UI actually
+// offers (projectsI18n.ts): Apartment 72, Villa 48, Townhouse 1, Commercial 8,
+// all unchanged, and the alternatives commercial-gate unchanged too. No
+// selectable filter moves: the types that drop out are only ever carried by
+// unlisted units, and no development is reachable through such a type alone.
+// Exactly two displayed type strings change — Onero ("Apartments · Maisonettes"
+// -> "Apartments", the fix) and :salt, where only the ORDER shifts
+// ("Apartment · Studio" -> "Studio · Apartment") because the order follows the
+// unit rows and its unlisted rows happened to come first.
 export function resolveDevelopmentType(category: string | null | undefined, units: UnitLike[]): string {
-  const types = Array.from(new Set(units.map((u) => (u.type ?? "").trim()).filter(Boolean)));
-  if (types.length) return types.join(" · ");
+  const typesOf = (pool: UnitLike[]) =>
+    Array.from(new Set(pool.map((u) => (u.type ?? "").trim()).filter(Boolean)));
+  const listed = typesOf(units.filter(isListedUnit));
+  if (listed.length) return listed.join(" · ");
+  const all = typesOf(units);
+  if (all.length) return all.join(" · ");
   return (category ?? "").trim();
 }
 
