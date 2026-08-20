@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { ActionItem } from "../types";
 import { computeTitleSweepComparison } from "@/lib/seo/titleSweepRemeasure";
 import { getCtrWatchlist, getWeekOverWeekMovers, getCwvFailingByClass, CTR_WINDOW_DAYS } from "@/lib/seo/queries";
+import { getStaleCopyFigures, groupStaleFigures } from "@/lib/seo/staleCopyFigures";
 
 const DAY = 86_400_000;
 const RANK_DROP_MIN_IMPRESSIONS = 100;
@@ -120,7 +121,40 @@ async function cwvDegraded(): Promise<ActionItem[]> {
   }));
 }
 
+// (f) Stored copy whose figures no longer match live data — a price or a unit
+// count typed into a meta description or a project description, which nothing
+// ever refreshes. See src/lib/seo/staleCopyFigures.ts for how it drifts and how
+// widespread it was when this rule was written (26 of 128 published
+// developments). A wrong PRICE is URGENT: it is the number a buyer acts on, and
+// the audit found it wrong in both directions — :upside advertised €30,000
+// below its real from-price, so the enquiry arrives expecting something that
+// isn't for sale. A wrong count is ACTION: embarrassing, not costly.
+//
+// `since` is the override's updatedAt — the last moment the copy was touched,
+// which is the closest thing to "when this became wrong" without a per-field
+// history. It over-reports age when the copy was right at write time and only
+// drifted later, which is the common case; the item still surfaces, just with
+// an older timestamp than the drift itself.
+//
+// Prose can legitimately mention amounts other than the from-price (a furniture
+// package, a fee); staleCopyFigures filters the class we have seen, and snooze
+// covers the rest — hence a per-figure item id.
+async function staleCopyFigures(): Promise<ActionItem[]> {
+  const groups = groupStaleFigures(await getStaleCopyFigures());
+  return groups.map((g) => ({
+    id: `seo-stale-figure:${g.developmentId}:${g.kind}:${g.value}`,
+    severity: g.kind === "price" ? "URGENT" : "ACTION",
+    category: "SEO",
+    title: g.kind === "price"
+      ? `${g.publicName} — published copy names ${g.said}, the page shows ${g.live}`
+      : `${g.publicName} — published copy says "${g.said}", live is ${g.live}`,
+    description: `In ${g.fields.join(", ")}. "…${g.context}…" — this text is stored and never regenerated; replace the figure with a {priceFrom}/{unitsAvailable}/{completion} placeholder so it stays current.`,
+    deepLink: `/admin/developments/${g.developmentId}`,
+    since: g.updatedAt,
+  }));
+}
+
 export async function seoRules(): Promise<ActionItem[]> {
-  const [a, b, c, d, e] = await Promise.all([ctrOutliers(), rankingDrops(), newPagesIndexed(), titleSweepDue(), cwvDegraded()]);
-  return [...a, ...b, ...c, ...d, ...e];
+  const [a, b, c, d, e, f] = await Promise.all([ctrOutliers(), rankingDrops(), newPagesIndexed(), titleSweepDue(), cwvDegraded(), staleCopyFigures()]);
+  return [...a, ...b, ...c, ...d, ...e, ...f];
 }
