@@ -36,6 +36,24 @@ const plain = (v: unknown): string =>
     .filter((s) => s.trim())
     .join(" ");
 
+/* Live project count for the "In numbers" band.
+
+   Counts every Development that is NOT archived — i.e. published plus the ones
+   still being prepared — because the claim is about the portfolio we work
+   with, not about how many detail pages happen to be browsable today.
+   Archived projects (sold out and retired) are deliberately excluded so the
+   number can never drift upward on the strength of dead listings.
+   Verified 2026-08-21: 130 published + 74 draft = 204, 40 archived excluded. */
+export const getProjectCount = cache(async (): Promise<number> => {
+  try {
+    return await prisma.development.count({ where: { publishStatus: { not: "archived" } } });
+  } catch {
+    // Never let a DB hiccup take the page down — fall back to the last
+    // hand-maintained figure rather than rendering a zero.
+    return 195;
+  }
+});
+
 export const getAboutPageData = cache(async (lang: string) => {
   const l = (["en", "de", "pl", "ru"].includes(lang) ? lang : "en") as CorporateLocale;
   const row = await prisma.singlepage.findUnique({

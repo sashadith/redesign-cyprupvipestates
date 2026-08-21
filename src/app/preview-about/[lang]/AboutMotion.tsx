@@ -113,7 +113,7 @@ export default function AboutMotion() {
       });
 
       /* ---------------- CTA ---------------- */
-      gsap.from(".abt__cta-btns", {
+      gsap.from(".abt__cta .cnt__channel-grid", {
         y: 24,
         autoAlpha: 0,
         duration: 0.6,

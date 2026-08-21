@@ -33,9 +33,12 @@ export type AboutStrings = {
   stanceTitle: string;
   stanceBody: string[];
 
+  heroImageAlt: string;
+
   statsEyebrow: string;
   statsTitle: string;
-  stats: { number: number; sign?: string; title: string; description: string }[];
+  /** `live: "projects"` swaps the hard-coded number for the DB count at render time. */
+  stats: { number: number; sign?: string; live?: "projects"; title: string; description: string }[];
 
   workEyebrow: string;
   workTitle: string;
@@ -62,8 +65,12 @@ export type AboutStrings = {
 
   ctaTitle: string;
   ctaLead: string;
-  ctaPrimary: string;
-  ctaSecondary: string;
+  /* Labels for the shared ContactChannels block that closes the page — same
+     wording as the Contacts page's own direct-lines section. */
+  channelWhatsapp: string;
+  channelPhone: string;
+  channelEmail: string;
+  channelHint: { whatsapp: string; phone: string; email: string };
 };
 
 const EN: AboutStrings = {
@@ -75,6 +82,7 @@ const EN: AboutStrings = {
   heroLead:
     "We connect people with their dream home on the island of sunshine — not just as a property consultancy, but as the partner who stays with you from the first conversation to the day you get the keys.",
   heroCta: "Meet the team",
+  heroImageAlt: "Limassol seafront at night, Cyprus",
   heroScroll: "Scroll",
 
   stanceEyebrow: "What drives us",
@@ -88,7 +96,7 @@ const EN: AboutStrings = {
   statsEyebrow: "In numbers",
   statsTitle: "Ten years on the ground",
   stats: [
-    { number: 195, title: "Real estate projects", description: "In southern Cyprus. From studio apartments to high-class villas" },
+    { number: 195, live: "projects", title: "Real estate projects", description: "In southern Cyprus. From studio apartments to high-class villas" },
     { number: 10, title: "Years of experience", description: "As a full-service real estate marketing agency" },
     { number: 360, sign: "°", title: "Service for our clients", description: "From the first contact to the handover of the keys" },
     { number: 100, sign: "%", title: "Satisfied clients", description: "From Germany, Austria, Switzerland and beyond" },
@@ -135,8 +143,14 @@ const EN: AboutStrings = {
 
   ctaTitle: "Let's talk about your plans",
   ctaLead: "Tell us what you are looking for — we will come back to you personally, usually the same day.",
-  ctaPrimary: "Contact our team",
-  ctaSecondary: "Browse projects",
+  channelWhatsapp: "WhatsApp",
+  channelPhone: "Phone",
+  channelEmail: "Email",
+  channelHint: {
+    whatsapp: "Fastest reply, usually within minutes",
+    phone: "Call us directly during office hours",
+    email: "For detailed enquiries and documents",
+  },
 };
 
 const DE: AboutStrings = {
@@ -148,6 +162,7 @@ const DE: AboutStrings = {
   heroLead:
     "Wir verbinden Menschen mit ihrem Traumhaus auf der Insel der Sonne — nicht nur als Immobilienberatung, sondern als Partner, der vom ersten Gespräch bis zur Schlüsselübergabe an Ihrer Seite bleibt.",
   heroCta: "Das Team kennenlernen",
+  heroImageAlt: "Die Uferpromenade von Limassol bei Nacht, Zypern",
   heroScroll: "Scrollen",
 
   stanceEyebrow: "Was uns antreibt",
@@ -161,7 +176,7 @@ const DE: AboutStrings = {
   statsEyebrow: "In Zahlen",
   statsTitle: "Zehn Jahre vor Ort",
   stats: [
-    { number: 195, title: "Immobilienprojekte", description: "Auf Süd-Zypern. Von Studio-Apartments bis High-Class-Villen" },
+    { number: 195, live: "projects", title: "Immobilienprojekte", description: "Auf Süd-Zypern. Von Studio-Apartments bis High-Class-Villen" },
     { number: 10, title: "Jahre Erfahrung", description: "Als Full-Service-Immobilien-Marketing-Agentur" },
     { number: 360, sign: "°", title: "Service für unsere Kunden", description: "Vom ersten Kontakt bis zur Schlüsselübergabe" },
     { number: 100, sign: "%", title: "Zufriedene Kunden", description: "Aus Deutschland, Österreich, der Schweiz und weiteren Ländern" },
@@ -208,8 +223,14 @@ const DE: AboutStrings = {
 
   ctaTitle: "Sprechen wir über Ihre Pläne",
   ctaLead: "Sagen Sie uns, wonach Sie suchen — wir melden uns persönlich zurück, meist noch am selben Tag.",
-  ctaPrimary: "Team kontaktieren",
-  ctaSecondary: "Projekte ansehen",
+  channelWhatsapp: "WhatsApp",
+  channelPhone: "Telefon",
+  channelEmail: "E-Mail",
+  channelHint: {
+    whatsapp: "Schnellste Antwort, meist innerhalb von Minuten",
+    phone: "Rufen Sie uns während der Bürozeiten direkt an",
+    email: "Für ausführliche Anfragen und Unterlagen",
+  },
 };
 
 const PL: AboutStrings = {
@@ -221,6 +242,7 @@ const PL: AboutStrings = {
   heroLead:
     "Łączymy ludzi z ich wymarzonym domem na słonecznej wyspie — nie tylko jako doradztwo w zakresie nieruchomości, ale jako partner, który towarzyszy Ci od pierwszej rozmowy aż po dzień odbioru kluczy.",
   heroCta: "Poznaj zespół",
+  heroImageAlt: "Nadmorska promenada Limassol nocą, Cypr",
   heroScroll: "Przewiń",
 
   stanceEyebrow: "Co nas napędza",
@@ -234,7 +256,7 @@ const PL: AboutStrings = {
   statsEyebrow: "W liczbach",
   statsTitle: "Dziesięć lat na miejscu",
   stats: [
-    { number: 195, title: "Projektów nieruchomości", description: "Na południu Cypru. Od apartamentów studio po luksusowe wille" },
+    { number: 195, live: "projects", title: "Projektów nieruchomości", description: "Na południu Cypru. Od apartamentów studio po luksusowe wille" },
     { number: 10, title: "Lat doświadczenia", description: "Jako agencja kompleksowego marketingu nieruchomości" },
     { number: 360, sign: "°", title: "Obsługa naszych klientów", description: "Od pierwszego kontaktu aż do przekazania kluczy" },
     { number: 100, sign: "%", title: "Zadowolonych klientów", description: "Z Niemiec, Austrii, Szwajcarii i innych krajów" },
@@ -281,8 +303,14 @@ const PL: AboutStrings = {
 
   ctaTitle: "Porozmawiajmy o Twoich planach",
   ctaLead: "Powiedz nam, czego szukasz — odezwiemy się osobiście, zwykle jeszcze tego samego dnia.",
-  ctaPrimary: "Skontaktuj się z zespołem",
-  ctaSecondary: "Zobacz projekty",
+  channelWhatsapp: "WhatsApp",
+  channelPhone: "Telefon",
+  channelEmail: "E-mail",
+  channelHint: {
+    whatsapp: "Najszybsza odpowiedź, zwykle w ciągu kilku minut",
+    phone: "Zadzwoń bezpośrednio w godzinach pracy biura",
+    email: "Do szczegółowych zapytań i dokumentów",
+  },
 };
 
 const RU: AboutStrings = {
@@ -294,6 +322,7 @@ const RU: AboutStrings = {
   heroLead:
     "Мы соединяем людей с домом их мечты на солнечном острове — не просто как консультанты по недвижимости, а как партнёр, который остаётся рядом от первого разговора до дня передачи ключей.",
   heroCta: "Познакомиться с командой",
+  heroImageAlt: "Набережная Лимассола ночью, Кипр",
   heroScroll: "Прокрутить",
 
   stanceEyebrow: "Что нас ведёт",
@@ -307,7 +336,7 @@ const RU: AboutStrings = {
   statsEyebrow: "В цифрах",
   statsTitle: "Десять лет на месте",
   stats: [
-    { number: 195, title: "Проектов недвижимости", description: "На юге Кипра. От студий до вилл высокого класса" },
+    { number: 195, live: "projects", title: "Проектов недвижимости", description: "На юге Кипра. От студий до вилл высокого класса" },
     { number: 10, title: "Лет опыта", description: "Как агентство полного цикла маркетинга недвижимости" },
     { number: 360, sign: "°", title: "Спектр услуг для клиентов", description: "От первого контакта до передачи ключей" },
     { number: 100, sign: "%", title: "Довольных клиентов", description: "Из Германии, Австрии, Швейцарии и других стран" },
@@ -354,8 +383,14 @@ const RU: AboutStrings = {
 
   ctaTitle: "Обсудим ваши планы",
   ctaLead: "Расскажите, что вы ищете, — мы ответим лично, обычно в тот же день.",
-  ctaPrimary: "Связаться с командой",
-  ctaSecondary: "Смотреть проекты",
+  channelWhatsapp: "WhatsApp",
+  channelPhone: "Телефон",
+  channelEmail: "Email",
+  channelHint: {
+    whatsapp: "Самый быстрый ответ, обычно за считаные минуты",
+    phone: "Позвоните напрямую в рабочие часы",
+    email: "Для подробных запросов и документов",
+  },
 };
 
 const ALL: Record<string, AboutStrings> = { en: EN, de: DE, pl: PL, ru: RU };

@@ -3,6 +3,10 @@ import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import { SITE_URL } from "@/lib/seo";
 import "../../preview-home/tokens.css";
 import "../../preview-insights/insights.css";
+/* The closing block reuses the Contacts page's channel cards (shared
+   ContactChannels component), whose styles live in that page's stylesheet —
+   same arrangement as Partners importing preview-insights/insights.css. */
+import "../../preview-contacts/contacts.css";
 import "../about.css";
 import LenisProvider from "../../preview-home/anim/LenisProvider";
 

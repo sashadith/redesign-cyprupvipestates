@@ -14,6 +14,19 @@
 
 /* ------------------------------------------------------------------ HERO */
 .abt__hero-media img { width: 100%; height: 100%; object-fit: cover; }
+/* Limassol by night is a busy, high-contrast photo: the shared .hero__scrim
+   is built for a calm image and leaves the lead paragraph sitting over lit
+   towers and reflections. A left-anchored reinforcement carries the text
+   column and fades out before the skyline, so the city keeps its colour.
+   Same technique and reasoning as the Contacts hero. */
+.abt__hero::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(100deg, rgba(5, 12, 10, 0.88) 0%, rgba(5, 12, 10, 0.76) 28%,
+                    rgba(5, 12, 10, 0.44) 56%, rgba(5, 12, 10, 0.18) 78%,
+                    rgba(5, 12, 10, 0) 95%);
+}
+.abt__hero .hero__inner { z-index: 2; }
 /* Hero headings across all three corporate pages use the Hero/H1 step
    (--text-h1, clamp 2.6 → 4.25rem) — never --text-display.
    element+class so it outranks tokens.css's own `.hero__title` font-size
@@ -76,7 +89,22 @@ hr.abt__stripe { margin: var(--s-5) 0 0; max-width: none; background: linear-gra
 .abt__stance-p:last-child { margin-bottom: 0; }
 
 /* ----------------------------------------------------------------- STATS */
-.abt__stats { padding-block: var(--section-y); }
+.abt__stats { padding-block: var(--section-y); position: relative; z-index: 0; overflow: hidden; }
+/* Golden-cloud atmosphere, same construction as the single-project pages and
+   the Contacts consultant finder: champagne radials on pseudo-elements,
+   drifting via the design kit's own cloudDriftA/B keyframes, behind content. */
+.abt__stats::before, .abt__stats::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  border-radius: 50%; aspect-ratio: 1; will-change: transform;
+  background: radial-gradient(circle, rgba(194, 154, 94, 0.16), rgba(194, 154, 94, 0) 66%);
+}
+.abt__stats::before { left: -8%; top: 2%; width: min(50vw, 580px); animation: cloudDriftA 27s ease-in-out infinite alternate; }
+.abt__stats::after {
+  right: -9%; bottom: -4%; width: min(46vw, 540px);
+  background: radial-gradient(circle, rgba(194, 154, 94, 0.13), rgba(194, 154, 94, 0) 66%);
+  animation: cloudDriftB 31s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) { .abt__stats::before, .abt__stats::after { animation: none; } }
 /* Benefits is itself a .section — nested inside this one, its own
    --section-y padding stacked with ours into ~200px of dead space below the
    numbers (found in the 2026-08-21 visual pass). The outer section owns the
@@ -84,40 +112,83 @@ hr.abt__stripe { margin: var(--s-5) 0 0; max-width: none; background: linear-gra
 .abt__stats .benefits { padding-block: 0; margin-top: var(--s-7); }
 
 /* ------------------------------------------------------------------ WORK */
-/* Numbered editorial sequence — deliberately NOT a third card grid, so the
-   page has real compositional variation between its three "list" sections. */
+/* Three numbered glass cards, the pattern Insights and Partners use for their
+   own numbered lists (.ins__topic). The first version was a stacked list with
+   hairline rules and an oversized numeral in a side column — at three items it
+   read as an unstyled table rather than a deliberate set. */
 .abt__work { padding-block: var(--section-y); }
-.abt__steps { list-style: none; margin-bottom: 0; padding: 0; display: grid; gap: var(--s-6); }
-.abt__step { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s-5) var(--s-6); align-items: start;
-  padding-top: var(--s-6); border-top: 1px solid var(--hairline); }
-.abt__step:first-child { border-top: 0; padding-top: 0; }
-.abt__step-num { font-family: var(--font-display), serif; font-size: clamp(2rem, 1.2rem + 2.6vw, 3.2rem);
-  line-height: 1; color: var(--accent); opacity: 0.85; font-weight: 300; }
-.abt__step-title { font-family: var(--font-display), serif; font-size: var(--text-h3); font-weight: 400;
-  margin: 0 0 var(--s-4); color: var(--text); }
-.abt__step-desc { margin: 0; color: var(--text-soft); line-height: 1.75; max-width: 60ch; }
+.abt__steps { list-style: none; margin-bottom: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--s-5); }
+.abt__step {
+  position: relative; display: flex; flex-direction: column;
+  padding: var(--s-7) var(--s-6) var(--s-6);
+  border: 1px solid var(--glass-border); border-radius: var(--r-ui); background: var(--glass-bg);
+  transition: transform var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease);
+}
+.abt__step:hover { transform: translateY(-6px); border-color: var(--accent); background: var(--accent-soft); }
+/* The numeral sits IN FLOW above the title, not as a ghost behind it: as a
+   top-right absolute it collided with the two- and three-word headings
+   ("Digitally supported processes" ran straight through the 03). */
+.abt__step-num {
+  display: block; margin-bottom: var(--s-4);
+  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 300;
+  font-size: 2.6rem; line-height: 1; color: var(--accent);
+  transition: transform var(--dur-sm) var(--ease-soft);
+}
+.abt__step:hover .abt__step-num { transform: translateY(-3px); }
+.abt__step-title {
+  font-family: var(--font-display), var(--font-display-cyr), serif; font-size: var(--text-h3);
+  font-weight: 400; line-height: 1.2; margin: 0 0 var(--s-4); color: var(--text);
+}
+.abt__step-desc { margin: 0; color: var(--text-soft); line-height: 1.75; }
 
 /* --------------------------------------------------------------- RECEIVE */
+/* The design system's OWN benefit pattern — .about__bullet + .about__medallion
+   from the homepage — rather than another card grid. The first version used
+   pale cards on a pale section with ◆/❋/✦ glyphs as markers, which read as
+   stray characters and had almost no contrast against the background. */
 .abt__receive { padding-block: var(--section-y); }
-.abt__cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: var(--s-5); }
-.abt__card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--r-ui);
-  padding: var(--s-6); transition: transform var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease); }
-.abt__card:hover { transform: translateY(-4px); border-color: var(--accent); }
-.abt__card-mark { display: block; font-size: 1.4rem; color: var(--accent); margin-bottom: var(--s-4); line-height: 1; }
-.abt__card-title { font-family: var(--font-display), serif; font-size: var(--text-h3); font-weight: 400; margin: 0 0 var(--s-4); color: var(--text); }
-.abt__card-desc { margin: 0; color: var(--text-soft); line-height: 1.75; }
+.abt__cards { list-style: none; margin-bottom: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: clamp(32px, 4vw, 56px); }
+.abt__card { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--s-5); }
+.abt__card-medallion {
+  width: 95px; height: 95px; border-radius: 999px; display: grid; place-items: center; flex: none;
+  color: var(--accent); border: 1px solid var(--accent); background: var(--accent-soft);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  transition: transform var(--dur-sm) var(--ease-soft), box-shadow var(--dur-sm) var(--ease);
+}
+.abt__card:hover .abt__card-medallion {
+  transform: translateY(-3px); box-shadow: 0 0 0 1px var(--accent), 0 14px 30px -14px var(--glow);
+}
+.abt__card-title {
+  font-family: var(--font-display), var(--font-display-cyr), serif; font-size: var(--text-h3);
+  font-weight: 400; line-height: 1.2; margin: 0; color: var(--text);
+}
+.abt__card-desc { margin: 0; color: var(--text-soft); line-height: 1.75; max-width: 34ch; }
 
 /* ---------------------------------------------------------------- VALUES */
-/* Six values as a compact hairline grid — the old page gave each of these a
-   full block with an image, which is what made the section outstay its value. */
+/* Six values as an even 3x2 grid. The first version put them in an auto-fit
+   grid that resolved to four columns, so the last row held two items and the
+   short gold dash before each title read as a stray hyphen. Fixed columns keep
+   the rows even; a gold numeral replaces the dash. */
 .abt__values { padding-block: var(--section-y); }
 .abt__values-grid { list-style: none; margin-bottom: 0; padding: 0;
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0; }
-.abt__value { padding: var(--s-6) var(--s-6) var(--s-6) 0; border-top: 1px solid var(--hairline); }
-.abt__value-title { position: relative; padding-left: var(--s-5); font-family: var(--font-body), sans-serif;
-  font-size: 1rem; font-weight: 600; letter-spacing: 0.01em; margin: 0 0 var(--s-4); color: var(--text); }
-.abt__value-title::before { content: ""; position: absolute; left: 0; top: 0.52em; width: 10px; height: 1px; background: var(--accent); }
-.abt__value-desc { margin: 0; padding-left: var(--s-5); color: var(--text-soft); line-height: 1.75; font-size: var(--text-sm); }
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-7) var(--s-6); }
+@media (max-width: 900px) { .abt__values-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .abt__values-grid { grid-template-columns: 1fr; } }
+/* Fixed numeral column, not `auto`: each value is its own grid, so an `auto`
+   track sized to that item's own numeral and the glyph-width difference
+   between 01 and 04 shifted the text column by a few pixels per row. */
+.abt__value { display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); gap: var(--s-2) var(--s-4); align-items: baseline;
+  padding-top: var(--s-5); border-top: 1px solid var(--hairline); }
+.abt__value-num {
+  grid-row: span 2; font-family: var(--font-display), var(--font-display-cyr), serif;
+  font-size: 1.5rem; font-weight: 300; line-height: 1; color: var(--accent); opacity: 0.75;
+}
+.abt__value-title { margin: 0; font-family: var(--font-body), sans-serif;
+  font-size: 1.05rem; font-weight: 600; letter-spacing: 0.01em; color: var(--text); }
+.abt__value-desc { margin: 0; color: var(--text-soft); line-height: 1.75; font-size: var(--text-sm); }
 
 /* ------------------------------------------------------------------ TEAM */
 .abt__team { padding-block: var(--section-y); }
@@ -147,10 +218,12 @@ hr.abt__stripe { margin: var(--s-5) 0 0; max-width: none; background: linear-gra
 /* ------------------------------------------------------------------- CTA */
 .abt__cta { padding-block: var(--section-y); }
 .abt__cta-inner { text-align: center; display: flex; flex-direction: column; align-items: center; }
+/* The shared channel cards are left-aligned inside; only the heading block
+   above them is centred. */
+.abt__cta .cnt__channel-grid { width: 100%; margin-top: var(--s-7); text-align: left; }
 .abt__cta hr.abt__stripe { width: min(200px, 60%); background: linear-gradient(90deg, transparent, var(--accent), transparent); }
 .abt__cta-title { max-width: 20ch; }
 .abt__cta .abt__lead { max-width: 56ch; margin-inline: auto; }
-.abt__cta-btns { margin-top: var(--s-7); display: flex; flex-wrap: wrap; gap: var(--s-4); justify-content: center; }
 
 /* ---------------------------------------------------------- RESPONSIVE */
 @media (max-width: 900px) {
@@ -179,3 +252,21 @@ hr.abt__stripe { margin: var(--s-5) 0 0; max-width: none; background: linear-gra
    light surfaces (4.96:1 / 4.54:1), so the colour still reads as the brand
    bronze rather than a different colour. */
 .is-light .abt__member-role { color: #826238; }
+
+/* ------------------------------------------------ SHIMMER SWEEP CONTAINMENT */
+/* tokens.css animates .shimmer::after (a 44%-wide glowing runner) out to
+   `translate(236%)`, i.e. ~508px past the rule's own right edge at desktop.
+   .hero's `overflow: hidden` only clips that at the VIEWPORT edge, so the
+   highlight visibly travels out into the right-hand gutter, past the page
+   container. clip-path trims it to the rule's own width while the negative
+   top/bottom insets keep the 22px vertical glow intact — `overflow: hidden`
+   would have flattened that against the 1px-tall box. */
+.abt__hero .hero__stripe, hr.abt__stripe { clip-path: inset(-14px 0 -14px 0); }
+
+/* tokens.css gives the travelling white highlight a wide halo
+   (`box-shadow: 0 0 22px 5px var(--glow-strong)`). Dropped here: over a photo
+   it read as a smear around the light rather than a clean glint. The runner
+   itself and the rule's own subtle base glow are untouched.
+   Applied to the section rules as well as the hero one so the two keep
+   matching — the hero rule was asked to look exactly like the section rules. */
+.abt__hero .hero__stripe::after, hr.abt__stripe::after { box-shadow: none; }

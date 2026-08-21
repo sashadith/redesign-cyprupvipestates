@@ -8,9 +8,10 @@ import type { Translation } from "@/types/homepage";
 import Nav from "../../preview-home/sections/Nav";
 import Footer from "../../preview-home/sections/Footer";
 import Benefits from "../../preview-home/sections/Benefits";
+import ContactChannels from "@/app/components/ContactChannels/ContactChannels";
 import AboutMotion from "./AboutMotion";
 import { aboutCopy } from "./copy";
-import { getAboutPageData } from "./data";
+import { getAboutPageData, getProjectCount } from "./data";
 
 /* Cyprus VIP Estates — About, redesigned.
 
@@ -26,6 +27,10 @@ import { getAboutPageData } from "./data";
    surfaced and no hover treatment), the values row, and the stance section —
    which merges three overlapping trust blocks from the old page into one. */
 
+/* Limassol by night — the same asset the Client Presentation page uses for its
+   Limassol city card, so the two surfaces share one image of the city. */
+const HERO_IMAGE = "/uploads/images/7002ff319a170a66ef37739e608e14a0e3b0a9c1-2560x1441.jpg";
+
 type Props = { params: { lang: string } };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -40,8 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     translations: corporateTranslations("about"),
   });
 
-  const { heroImage } = await getAboutPageData(lang);
-  const ogImage = heroImage ? abs(heroImage) : undefined;
+  const ogImage = abs(HERO_IMAGE);
 
   return {
     title: t.metaTitle,
@@ -65,6 +69,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+/* Thin-line icons in the same language as the Contacts channel icons and the
+   DistancesStrip set: 24px viewBox, stroke-based, no fills. */
+const IcoCurated = () => (
+  <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M12 3.2 14.6 8.6l5.9.85-4.3 4.15 1.02 5.9L12 16.66l-5.22 2.84 1.02-5.9-4.3-4.15 5.9-.85L12 3.2Z" />
+  </svg>
+);
+const IcoFullService = () => (
+  <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M20.5 12a8.5 8.5 0 1 1-3.2-6.65" />
+    <path d="M8.5 12.2l2.6 2.6 6-6.4" />
+  </svg>
+);
+const IcoAfterSales = () => (
+  <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <path d="M3.5 10.6 12 4l8.5 6.6" />
+    <path d="M5.8 9.4V19a1 1 0 0 0 1 1h10.4a1 1 0 0 0 1-1V9.4" />
+    <path d="M9.7 20v-5.2h4.6V20" />
+  </svg>
+);
+const RECEIVE_ICONS = [<IcoCurated key="a" />, <IcoFullService key="b" />, <IcoAfterSales key="c" />];
+
 const Arrow = () => (
   <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden>
     <path d="M3 13L13 3M13 3H6M13 3V10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
@@ -74,7 +100,8 @@ const Arrow = () => (
 export default async function AboutPage({ params }: Props) {
   const { lang } = params;
   const t = aboutCopy(lang);
-  const { team, reviews, heroImage, heroAlt } = await getAboutPageData(lang);
+  const { team, reviews } = await getAboutPageData(lang);
+  const projectCount = await getProjectCount();
 
   const translations: Translation[] = i18n.languages.map((l) => ({
     language: l.id,
@@ -92,7 +119,14 @@ export default async function AboutPage({ params }: Props) {
     benefits: t.stats.map((s, i) => ({
       _key: `stat-${i}`,
       _type: "benefits",
-      counting: { _key: `c-${i}`, _type: "counting", conuntNumber: s.number, sign: s.sign ?? "" },
+      counting: {
+        _key: `c-${i}`,
+        _type: "counting",
+        // The projects figure comes from the database (see getProjectCount);
+        // the rest are editorial constants.
+        conuntNumber: s.live === "projects" ? projectCount : s.number,
+        sign: s.sign ?? "",
+      },
       title: s.title,
       description: s.description,
     })),
@@ -110,7 +144,7 @@ export default async function AboutPage({ params }: Props) {
         {/* ------------------------------------------------------------ HERO */}
         <section className="hero abt__hero">
           <div className="hero__media abt__hero-media">
-            {heroImage && <img src={heroImage} alt={heroAlt} fetchPriority="high" />}
+            <img src={HERO_IMAGE} alt={t.heroImageAlt} fetchPriority="high" />
           </div>
           <div className="hero__scrim" aria-hidden />
           <div className="hero__inner wrap">
@@ -130,7 +164,7 @@ export default async function AboutPage({ params }: Props) {
             <div className="hero__stripe shimmer" aria-hidden />
             <p className="hero__desc abt__hero-lead">{t.heroLead}</p>
             <div className="hero__cta">
-              <a className="btn btn--primary" href="#team">
+              <a className="btn btn--glass" href="#team">
                 <span>{t.heroCta}</span>
               </a>
             </div>
@@ -173,10 +207,8 @@ export default async function AboutPage({ params }: Props) {
               {t.work.map((w, i) => (
                 <li className="abt__step" key={w.title}>
                   <span className="abt__step-num" aria-hidden>{String(i + 1).padStart(2, "0")}</span>
-                  <div className="abt__step-body">
-                    <h3 className="abt__step-title">{w.title}</h3>
-                    <p className="abt__step-desc">{w.description}</p>
-                  </div>
+                  <h3 className="abt__step-title">{w.title}</h3>
+                  <p className="abt__step-desc">{w.description}</p>
                 </li>
               ))}
             </ol>
@@ -189,15 +221,15 @@ export default async function AboutPage({ params }: Props) {
             <p className="abt__eyebrow">{t.receiveEyebrow}</p>
             <h2 className="abt__title">{t.receiveTitle}</h2>
             <hr className="shimmer abt__stripe" />
-            <div className="abt__cards">
+            <ul className="abt__cards">
               {t.receive.map((r, i) => (
-                <article className="abt__card" key={r.title}>
-                  <span className="abt__card-mark" aria-hidden>{["◆", "❋", "✦"][i] ?? "◆"}</span>
+                <li className="abt__card" key={r.title}>
+                  <span className="abt__card-medallion" aria-hidden>{RECEIVE_ICONS[i]}</span>
                   <h3 className="abt__card-title">{r.title}</h3>
                   <p className="abt__card-desc">{r.description}</p>
-                </article>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         </section>
 
@@ -208,8 +240,9 @@ export default async function AboutPage({ params }: Props) {
             <h2 className="abt__title">{t.valuesTitle}</h2>
             <hr className="shimmer abt__stripe" />
             <ul className="abt__values-grid">
-              {t.values.map((v) => (
+              {t.values.map((v, i) => (
                 <li className="abt__value" key={v.title}>
+                  <span className="abt__value-num" aria-hidden>{String(i + 1).padStart(2, "0")}</span>
                   <h3 className="abt__value-title">{v.title}</h3>
                   <p className="abt__value-desc">{v.description}</p>
                 </li>
@@ -277,14 +310,14 @@ export default async function AboutPage({ params }: Props) {
             <h2 className="abt__title abt__cta-title">{t.ctaTitle}</h2>
             <hr className="shimmer abt__stripe" />
             <p className="abt__lead">{t.ctaLead}</p>
-            <div className="abt__cta-btns">
-              <a className="btn btn--primary" href={corporatePath("contacts", lang)}>
-                <span>{t.ctaPrimary}</span>
-              </a>
-              <a className="btn btn--ghost" href={localizedHref(lang, "projects")}>
-                <span>{t.ctaSecondary}</span>
-              </a>
-            </div>
+            {/* The same three direct-contact cards the Contacts page uses —
+                one shared component, so the two can't drift apart. */}
+            <ContactChannels
+              labels={{
+                whatsapp: t.channelWhatsapp, phone: t.channelPhone, email: t.channelEmail,
+                hint: t.channelHint,
+              }}
+            />
           </div>
         </section>
       </main>
