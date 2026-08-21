@@ -1,0 +1,316 @@
+/* =====================================================================
+   Contacts — redesigned page styles.
+
+   Built on the shared design system (preview-home/tokens.css) — .wrap,
+   .section, .h1/.h2, .lead, .eyebrow, .btn, .shimmer and .it are inherited,
+   never redefined. This file adds only this page's own compositions.
+
+   The page is a routing tool, and the styling follows that: the three direct
+   channels are the largest, most tappable targets on the page; the consultant
+   finder reads as a filter, not a gallery; the form is deliberately quieter
+   than both.
+   ===================================================================== */
+
+.cnt { background: var(--bg); }
+
+/* ------------------------------------------------------------------ HERO */
+/* Same construction as the About hero: the shared .hero/.hero__media/
+   .hero__scrim/.hero__inner stack from tokens.css, with this page's own
+   previewImage as the still background. Only the bits that are specific to
+   this page live here — everything else is inherited, not restated. */
+.cnt__hero-media img { width: 100%; height: 100%; object-fit: cover; }
+/* This page's photo is a BRIGHT one (pale contract paper, light desk) — unlike
+   About's dark textured shot. The shared .hero__scrim only reaches ~0.30 alpha
+   at the height the text sits (measured: title/eyebrow both at 51% of the hero),
+   which leaves ivory-on-near-white and a champagne eyebrow that all but
+   vanishes. This adds a left-anchored reinforcement behind the text column,
+   so the keys and desk on the right keep their contrast and colour.
+
+   It reaches almost the full width rather than stopping at ~76%: the gold
+   heading rule spans the whole container and fades to transparent at its
+   right end, so its faint tail was landing on bright photo and disappearing —
+   which made the hero rule look SHORTER than the identical rules under the
+   section headings (verified: both compute to the same width, gradient,
+   shadow and sweep transform; only the backdrop differed). A light veil out
+   to 97% keeps the tail legible while the keys stay clearly visible. */
+.cnt__hero::after {
+  content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(100deg, rgba(5, 12, 10, 0.86) 0%, rgba(5, 12, 10, 0.74) 30%,
+                    rgba(5, 12, 10, 0.46) 60%, rgba(5, 12, 10, 0.22) 82%,
+                    rgba(5, 12, 10, 0) 97%);
+}
+/* Keep the copy above the reinforcement. */
+.cnt__hero .hero__inner { z-index: 2; }
+/* element+class so it outranks tokens.css's own .hero__title font-size,
+   same reason as h1.abt__hero-title on About. Hero/H1 step, no max-width so
+   the gold stripe beneath it stays aligned with the headline. */
+h1.cnt__hero-title { font-size: var(--text-h1); max-width: none; }
+.cnt__hero-lead { max-width: 58ch; }
+
+/* Live open/closed badge */
+.cnt__hours { margin-top: var(--s-5); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-5); font-size: var(--text-sm); }
+.cnt__hours-label { text-transform: uppercase; letter-spacing: 0.18em; font-size: 0.68rem; color: var(--text-faint); }
+.cnt__hours-value { color: var(--text); }
+.cnt__hours-badge { display: inline-flex; align-items: center; gap: var(--s-2); padding: 4px 12px; border-radius: 999px;
+  font-size: 0.78rem; border: 1px solid var(--hairline-strong); }
+.cnt__hours-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.cnt__hours-badge--open { color: #7FC8A0; border-color: rgba(127, 200, 160, 0.45); }
+.cnt__hours-badge--open .cnt__hours-dot { background: #7FC8A0; box-shadow: 0 0 0 3px rgba(127, 200, 160, 0.18); }
+.cnt__hours-badge--closed { color: var(--text-faint); }
+.cnt__hours-badge--closed .cnt__hours-dot { background: var(--text-faint); }
+.cnt__hours-tz { color: var(--text-faint); font-size: 0.78rem; }
+
+/* ------------------------------------------------ SHARED SECTION FURNITURE */
+/* Self-contained for the same reason as About's (see about.css): mixing the
+   shared .eyebrow/.h2/.lead classes in meant tokens.css's `margin: 0` won on
+   CSS-order and every margin here silently never applied.
+   Rhythm measured off the published homepage sections:
+     title ──24px──> .shimmer stripe ──32px──> lead ──48px──> content */
+.cnt__eyebrow {
+  margin: 0 0 var(--s-4); font-family: var(--font-body), sans-serif;
+  font-size: var(--text-caption); font-weight: 600; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--accent);
+}
+.cnt__title {
+  /* No max-width: the heading spans the page container so it isn't broken
+     onto a second line while half the row sits empty. Same reasoning as the
+     hero headline — and it keeps the gold rule beneath it aligned with the
+     text rather than running past it. */
+  margin: 0;
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-size: var(--text-h2); font-weight: 400; line-height: 1.1;
+  letter-spacing: -0.02em; color: var(--text); text-wrap: balance;
+}
+/* element+class so it outranks tokens.css's `.shimmer { margin: 0 }`
+   regardless of which stylesheet the bundler emits first. */
+hr.cnt__stripe { margin: var(--s-5) 0 0; max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
+.cnt__lead {
+  margin: var(--s-6) 0 0; font-family: var(--font-body), sans-serif;
+  font-size: var(--text-lead); font-weight: 300; line-height: 1.6; color: var(--text-soft);
+}
+.cnt__channel-grid, .cnt__finder { margin-top: var(--s-7); }
+
+/* -------------------------------------------------------------- CHANNELS */
+/* The primary action of the page. The first version was three flat tiles with
+   a 22px icon and a small value line, which read as boring and hard to scan.
+   This version borrows the design system's OWN icon-badge component — the
+   95px gold-ring .about__medallion used for the homepage benefits — puts the
+   actual number/address at a size you can read across a desk, and numbers the
+   cards so the row reads as one deliberate set. Whole card is the link target. */
+.cnt__channels { padding-block: var(--section-y); }
+.cnt__channel-grid { list-style: none; margin-bottom: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: var(--s-5); }
+
+.cnt__channel {
+  position: relative; display: flex; flex-direction: column; height: 100%; overflow: hidden;
+  padding: var(--s-7) var(--s-6) var(--s-6);
+  border: 1px solid var(--glass-border); border-radius: var(--r-ui);
+  background: var(--glass-bg); text-decoration: none; color: inherit;
+  transition: transform var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease);
+}
+.cnt__channel:hover, .cnt__channel:focus-visible { transform: translateY(-6px); border-color: var(--accent); background: var(--accent-soft); }
+
+/* Oversized ghost numeral, echoing the numbered sequence on About's
+   "how we work". Decorative only — clipped by the card's overflow. */
+.cnt__channel-index {
+  /* Sits fully inside the card. An earlier version used a negative top so the
+     numeral bled off the corner, but the card's overflow:hidden sliced it flat
+     across the top and it read as a clipping bug rather than a flourish. */
+  position: absolute; top: var(--s-4); right: var(--s-5); pointer-events: none;
+  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 300;
+  font-size: 4.5rem; line-height: 1; color: var(--accent); opacity: 0.14;
+  transition: opacity var(--dur-sm) var(--ease), transform var(--dur-sm) var(--ease-soft);
+}
+.cnt__channel:hover .cnt__channel-index { opacity: 0.24; transform: translateY(3px); }
+
+/* The design system's medallion, verbatim in size and treatment. */
+.cnt__channel-medallion {
+  width: 95px; height: 95px; border-radius: 999px; display: grid; place-items: center; flex: none;
+  color: var(--accent); border: 1px solid var(--accent); background: var(--accent-soft);
+  box-shadow: inset 0 1px 0 var(--glass-highlight);
+  margin-bottom: var(--s-5);
+  transition: transform var(--dur-sm) var(--ease-soft), box-shadow var(--dur-sm) var(--ease);
+}
+.cnt__channel:hover .cnt__channel-medallion {
+  transform: translateY(-3px);
+  box-shadow: 0 0 0 1px var(--accent), 0 14px 30px -14px var(--glow);
+}
+
+.cnt__channel-title {
+  font-family: var(--font-body), sans-serif; font-size: 0.72rem; font-weight: 600;
+  letter-spacing: 0.24em; text-transform: uppercase; color: var(--text-faint);
+  margin-bottom: var(--s-3);
+}
+/* The line people actually came here for — display face, properly sized. */
+.cnt__channel-value {
+  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  font-size: clamp(1.25rem, 1.05rem + 0.9vw, 1.7rem); line-height: 1.25; letter-spacing: -0.01em;
+  color: var(--text); margin-bottom: var(--s-4);
+  /* Break at the @ / dots rather than mid-word — `word-break: break-word` split
+     the address as "…cyprusvipestates.c / om". */
+  overflow-wrap: anywhere; word-break: normal;
+}
+/* The address is a good deal longer than a phone number; give it its own step
+   so all three cards keep the value on a comparable number of lines. */
+.cnt__channel--email .cnt__channel-value { font-size: clamp(1.05rem, 0.92rem + 0.5vw, 1.3rem); }
+.cnt__channel-hint {
+  /* Body size, not --text-sm: at 14px this line was the smallest thing in the
+     card and got skipped, even though it carries the reason to pick one
+     channel over another. */
+  font-size: var(--text-body); color: var(--text-soft); line-height: 1.65; margin-top: auto;
+}
+.cnt__channel-go {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; border-radius: 999px; margin-top: var(--s-5);
+  border: 1px solid var(--hairline-strong); color: var(--accent);
+  transition: background var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease), transform var(--dur-sm) var(--ease);
+}
+.cnt__channel:hover .cnt__channel-go {
+  background: var(--accent); border-color: var(--accent); color: var(--accent-ink); transform: translate(3px, -3px);
+}
+
+/* ---------------------------------------------------------------- FINDER */
+/* Plain --section-y, symmetric top and bottom.
+   The section originally looked bottom-heavy for ONE reason: the form wrapper
+   below it added a second, redundant 100px of dark padding above the light
+   form band (see .cnt__form-sec), so the real gap between the last consultant
+   card and the form was ~200px. With that removed, the standard section
+   padding is correct — an earlier attempt also shaved this to 0.6x, which
+   overcorrected and left the cards sitting almost on the edge. */
+section.cnt__finder-sec { padding-block: var(--section-y); }
+
+/* Golden-cloud atmosphere, the same construction the single-project pages use
+   (.pp-about::before / .pp-units-sec::before-and-after in preview-project/
+   project.css): soft champagne radial gradients on pseudo-elements, drifting
+   via the design kit's own cloudDriftA/B keyframes. Sits behind the content
+   (z-index -1 inside a z-index:0 stacking context) so it is never clipped by
+   the cards, and it honours prefers-reduced-motion like every other instance. */
+.cnt__finder-sec { position: relative; z-index: 0; overflow: hidden; }
+.cnt__finder-sec::before, .cnt__finder-sec::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  border-radius: 50%; aspect-ratio: 1; will-change: transform;
+  background: radial-gradient(circle, rgba(194, 154, 94, 0.16), rgba(194, 154, 94, 0) 66%);
+}
+.cnt__finder-sec::before { left: -8%; top: 4%; width: min(50vw, 580px); animation: cloudDriftA 27s ease-in-out infinite alternate; }
+.cnt__finder-sec::after {
+  right: -9%; bottom: 2%; width: min(44vw, 520px);
+  background: radial-gradient(circle, rgba(194, 154, 94, 0.13), rgba(194, 154, 94, 0) 66%);
+  animation: cloudDriftB 31s ease-in-out infinite alternate;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cnt__finder-sec::before, .cnt__finder-sec::after { animation: none; }
+}
+.cnt__chips { display: flex; flex-wrap: wrap; gap: var(--s-3); margin-bottom: var(--s-5); }
+.cnt__chip { display: inline-flex; align-items: center; gap: var(--s-2); padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--hairline-strong); background: none; color: var(--text-soft);
+  font-family: var(--font-body), sans-serif; font-size: var(--text-sm); cursor: pointer;
+  transition: border-color var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease); }
+.cnt__chip:hover { border-color: var(--accent); color: var(--text); }
+.cnt__chip.is-active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.cnt__chip-n { font-size: 0.72rem; opacity: 0.7; }
+.cnt__chip.is-active .cnt__chip-n { opacity: 0.85; }
+.cnt__finder-count { margin: 0 0 var(--s-6); font-size: 0.78rem; color: var(--text-faint);
+  text-transform: uppercase; letter-spacing: 0.14em; }
+.cnt__finder-empty { color: var(--text-soft); max-width: 50ch; }
+
+/* 220px, not 260px: with ten consultants a 260px minimum resolves to four
+   columns at desktop, so the last row holds only two cards and its empty right
+   half reads as extra bottom padding on the section (the padding itself
+   measures 100px top and bottom — verified). At 220px the same ten fill five
+   columns exactly, two even rows, no ragged edge. */
+.cnt__people { list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: var(--s-5); }
+.cnt__person { display: flex; align-items: center; gap: var(--s-5);
+  padding: var(--s-5); border: 1px solid var(--hairline); border-radius: var(--r-ui); background: var(--glass-bg); }
+/* At five-up the row is ~227px wide — side-by-side avatar+text would squeeze
+   the longer roles ("Digital Strategy & Web Technology Lead") into slivers, so
+   stack them from the point the columns get narrow. */
+@media (min-width: 1100px) {
+  .cnt__person { flex-direction: column; align-items: flex-start; gap: var(--s-4); }
+}
+/* Filtered-out members keep their DOM node (no image re-layout, no re-run of
+   the reveal animation) — they are removed from the flow and from the
+   accessibility tree instead. */
+.cnt__person.is-hidden { display: none; }
+.cnt__person-photo { width: 68px; height: 68px; flex: none; border-radius: 50%; overflow: hidden; background: var(--surface-raised); }
+.cnt__person-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.cnt__person-ph { display: block; width: 100%; height: 100%; }
+.cnt__person-body { min-width: 0; }
+.cnt__person-name { font-family: var(--font-display), serif; font-size: 1.08rem; font-weight: 400; margin: 0 0 2px; color: var(--text); }
+.cnt__person-role { margin: 0 0 var(--s-3); font-size: var(--text-sm); color: var(--accent); }
+.cnt__person-langs { margin: 0; font-size: 0.76rem; color: var(--text-faint); line-height: 1.5; }
+.cnt__person-langs-label { display: block; text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.64rem; margin-bottom: 1px; }
+
+/* ------------------------------------------------------------------ FORM */
+/* No padding of its own: the shared Form component renders as
+   `.section is-light formsec`, which already carries --section-y top and
+   bottom. The wrapper's own padding-top stacked a second 100px of DARK space
+   above the light form band — together with the finder's bottom padding that
+   was ~160px of empty green between the last consultant card and the form,
+   which is what read as "too much space under the cards".
+   element+class again, so it beats tokens.css's `.section { padding-block }`. */
+section.cnt__form-sec { padding-block: 0; }
+
+/* ------------------------------------------------------------ RESPONSIVE */
+@media (max-width: 900px) {
+  .cnt__title { max-width: none; }
+}
+@media (max-width: 560px) {
+  .cnt__channel { padding: var(--s-6) var(--s-5) var(--s-5); }
+  .cnt__channel-medallion { width: 76px; height: 76px; margin-bottom: var(--s-5); }
+  .cnt__channel-medallion svg { width: 32px; height: 32px; }
+  .cnt__channel-index { font-size: 5.5rem; }
+  .cnt__people { grid-template-columns: 1fr; }
+}
+
+/* SplitText line wrapper — keep block-level so a reflow mid-animation can't
+   collapse a heading onto one line. */
+.cnt .motion-line { display: block; }
+
+
+/* ------------------------------------------- LIGHT-THEME SMALL-TEXT ACCENT */
+/* See the same note in about.css: --bronze is below the AA floor for small
+   text on the light surfaces, so accent-coloured small text inside .is-light
+   blocks uses a slightly darker step of the same hue. */
+.is-light .cnt__person-role,
+.is-light .cnt__channel-value { color: #826238; }
+
+/* The open/closed badge lives on the dark hero today (#7FC8A0 measures
+   9.47:1 there). Should it ever be moved into a light block, that same green
+   drops to 1.75:1 and becomes unreadable — so bind the light-theme values
+   here rather than leaving a silent trap for whoever moves it. */
+.is-light .cnt__hours-badge--open { color: #1F7A4D; border-color: rgba(31, 122, 77, 0.4); }
+.is-light .cnt__hours-badge--open .cnt__hours-dot { background: #1F7A4D; box-shadow: 0 0 0 3px rgba(31, 122, 77, 0.15); }
+.is-light .cnt__hours-badge--closed { color: var(--text-faint); }
+
+/* ------------------------------------------------ SHIMMER SWEEP CONTAINMENT */
+/* tokens.css animates .shimmer::after (a 44%-wide glowing runner) out to
+   `translate(236%)`, i.e. ~508px past the rule's own right edge at desktop.
+   .hero's `overflow: hidden` only clips that at the VIEWPORT edge, so the
+   highlight visibly travels out into the right-hand gutter, past the page
+   container. clip-path trims it to the rule's own width while the negative
+   top/bottom insets keep the 22px vertical glow intact — `overflow: hidden`
+   would have flattened that against the 1px-tall box. */
+.cnt__hero .hero__stripe, hr.cnt__stripe { clip-path: inset(-14px 0 -14px 0); }
+
+/* tokens.css gives the travelling white highlight a wide halo
+   (`box-shadow: 0 0 22px 5px var(--glow-strong)`). Dropped here: over a photo
+   it read as a smear around the light rather than a clean glint. The runner
+   itself and the rule's own subtle base glow are untouched.
+   Applied to the section rules as well as the hero one so the two keep
+   matching — the hero rule was asked to look exactly like the section rules. */
+.cnt__hero .hero__stripe::after, hr.cnt__stripe::after { box-shadow: none; }
+
+/* --------------------------------------------- LONG-WORD SAFETY (NARROW) */
+/* Russian compounds can exceed the hero measure on a phone:
+   "средиземноморским" renders 413px wide against a 350px container at 390px
+   viewport, and .hero's overflow:hidden silently CLIPPED it — the page showed
+   no horizontal scroll, so it looked fine while the accent word was cut off.
+   Hyphenation is preferred (the <html lang> is set per locale, so the browser
+   applies the right patterns); break-word is the fallback when no hyphenation
+   dictionary is available. Only kicks in when a word genuinely cannot fit, so
+   shorter locales are unaffected. */
+@media (max-width: 560px) {
+  h1.cnt__hero-title, h1.cnt__hero-title .it { hyphens: auto; overflow-wrap: break-word; }
+}
