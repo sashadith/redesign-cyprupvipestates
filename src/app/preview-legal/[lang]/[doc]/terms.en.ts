@@ -11,6 +11,18 @@ import type { LegalDoc } from "./types";
    severability clause, consumer-rights wording (the old text had none, and
    these terms are read by EU consumers), and a "last updated" date.
 
+   Revised 2026-08-21: the claim that links are checked when set was an
+   unverifiable assertion about internal practice and is gone; a cross-
+   reference to the privacy policy, a consumer-ADR statement and a prevailing-
+   language clause were added. The EU ODR platform is deliberately NOT
+   referenced — it was shut down on 20 July 2025 and a link to it would be a
+   defect.
+
+   STILL MISSING, and only the operator can supply it: the company
+   registration number (and VAT number, if registered). A Cyprus limited
+   company is normally expected to state these. Nothing in the codebase or
+   the database carries them, so they were not invented here.
+
    NOT legal advice — review by a Cyprus-qualified lawyer is still required. */
 
 export const TERMS_EN: LegalDoc = {
@@ -136,7 +148,7 @@ export const TERMS_EN: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "Where we link to external websites, those sites are outside our control. We check links at the time of setting them, but we are not responsible for their content and do not adopt it as our own.",
+          text: "Where we link to external websites, those sites are outside our control and their content can change at any time. We are not responsible for it and do not adopt it as our own. If a link leads somewhere unlawful or inappropriate, tell us and we will remove it.",
         },
       ],
     },
@@ -161,8 +173,38 @@ export const TERMS_EN: LegalDoc = {
       ],
     },
     {
+      id: "data-protection",
+      title: "10. Your data",
+      blocks: [
+        {
+          kind: "p",
+          text: "How we handle the personal data you give us — what we collect, who receives it, how long we keep it and the rights you can exercise — is set out in our Privacy Policy, which forms part of these terms by reference.",
+        },
+      ],
+    },
+    {
+      id: "dispute-resolution",
+      title: "11. Consumer dispute resolution",
+      blocks: [
+        {
+          kind: "p",
+          text: "We are not obliged to take part in dispute resolution proceedings before a consumer arbitration body, and we do not currently do so. This does not affect your right to bring a claim before the competent courts.",
+        },
+      ],
+    },
+    {
+      id: "language",
+      title: "12. Language versions",
+      blocks: [
+        {
+          kind: "p",
+          text: "These terms are published in English, German, Polish and Russian. The translations are provided for your convenience; where the versions differ in meaning, the English version applies.",
+        },
+      ],
+    },
+    {
       id: "jurisdiction",
-      title: "10. Governing law and jurisdiction",
+      title: "13. Governing law and jurisdiction",
       blocks: [
         {
           kind: "p",

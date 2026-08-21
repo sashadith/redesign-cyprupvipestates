@@ -61,7 +61,7 @@ export const TERMS_PL: LegalDoc = {
       { kind: "p", text: "Treść tej witryny — teksty, zdjęcia, filmy, grafiki i układ — jest chroniona prawem autorskim i należy do nas lub do naszych licencjodawców. Zwielokrotnianie, rozpowszechnianie i każde inne wykorzystanie wykraczające poza dozwolony użytek wymaga naszej uprzedniej pisemnej zgody." },
     ]},
     { id: "external-links", title: "7. Odnośniki zewnętrzne", blocks: [
-      { kind: "p", text: "Witryny, do których prowadzą nasze odnośniki, pozostają poza naszą kontrolą. Sprawdzamy odnośniki w chwili ich umieszczania, lecz nie odpowiadamy za ich treść i nie uznajemy jej za własną." },
+      { kind: "p", text: "Witryny, do których prowadzą nasze odnośniki, pozostają poza naszą kontrolą, a ich treść może się w każdej chwili zmienić. Nie odpowiadamy za nią i nie uznajemy jej za własną. Jeśli odnośnik prowadzi do treści bezprawnych lub nieodpowiednich, daj nam znać — usuniemy go." },
     ]},
     { id: "changes", title: "8. Zmiany warunków", blocks: [
       { kind: "p", text: "Możemy zmieniać niniejsze warunki, gdy zmieniają się nasze usługi lub otoczenie prawne. Obowiązuje wersja opublikowana tutaj w chwili Twoich odwiedzin. Data u góry wskazuje ostatnią zmianę." },
@@ -69,7 +69,16 @@ export const TERMS_PL: LegalDoc = {
     { id: "severability", title: "9. Klauzula salwatoryjna", blocks: [
       { kind: "p", text: "Jeżeli którekolwiek postanowienie tych warunków jest lub stanie się nieważne, ważność pozostałych postanowień pozostaje nienaruszona. Postanowienie nieważne zastępuje się dopuszczalnym, które najbardziej odpowiada jego celowi gospodarczemu." },
     ]},
-    { id: "jurisdiction", title: "10. Prawo właściwe i jurysdykcja", blocks: [
+    { id: "data-protection", title: "10. Twoje dane", blocks: [
+      { kind: "p", text: "Sposób, w jaki postępujemy z przekazanymi nam danymi osobowymi — co zbieramy, kto je otrzymuje, jak długo je przechowujemy i z jakich praw możesz skorzystać — opisuje nasza Polityka prywatności, która przez to odesłanie stanowi część niniejszych warunków." },
+    ]},
+    { id: "dispute-resolution", title: "11. Pozasądowe rozwiązywanie sporów konsumenckich", blocks: [
+      { kind: "p", text: "Nie mamy obowiązku uczestniczyć w postępowaniu przed podmiotem pozasądowego rozwiązywania sporów konsumenckich i obecnie w nim nie uczestniczymy. Nie ogranicza to Twojego prawa do wniesienia sprawy do właściwego sądu." },
+    ]},
+    { id: "language", title: "12. Wersje językowe", blocks: [
+      { kind: "p", text: "Niniejsze warunki publikujemy w językach angielskim, niemieckim, polskim i rosyjskim. Tłumaczenia mają charakter pomocniczy; w razie rozbieżności znaczeniowej rozstrzyga wersja angielska." },
+    ]},
+    { id: "jurisdiction", title: "13. Prawo właściwe i jurysdykcja", blocks: [
       { kind: "p", text: "Zastosowanie ma prawo Republiki Cypryjskiej. Wyłącznym miejscem jurysdykcji dla wszystkich sporów jest Pafos na Cyprze." },
       { kind: "p", text: "Jeżeli jesteś konsumentem zamieszkałym w UE, wybór prawa nie pozbawia Cię ochrony wynikającej z bezwzględnie obowiązujących przepisów Twojego kraju zamieszkania; możesz również wnieść sprawę do sądów tego kraju." },
     ]},

@@ -123,7 +123,7 @@ export const TERMS_DE: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "Soweit wir auf externe Websites verlinken, liegen deren Inhalte außerhalb unseres Einflusses. Wir prüfen Links bei der Verlinkung, übernehmen jedoch keine Verantwortung für deren Inhalte und machen sie uns nicht zu eigen.",
+          text: "Soweit wir auf externe Websites verlinken, liegen deren Inhalte außerhalb unseres Einflusses und können sich jederzeit ändern. Wir übernehmen dafür keine Verantwortung und machen sie uns nicht zu eigen. Führt ein Link zu rechtswidrigen oder unangemessenen Inhalten, teilen Sie es uns mit — wir entfernen ihn.",
         },
       ],
     },
@@ -148,8 +148,38 @@ export const TERMS_DE: LegalDoc = {
       ],
     },
     {
+      id: "data-protection",
+      title: "10. Ihre Daten",
+      blocks: [
+        {
+          kind: "p",
+          text: "Wie wir mit den personenbezogenen Daten umgehen, die Sie uns überlassen — was wir erheben, wer sie erhält, wie lange wir sie speichern und welche Rechte Sie ausüben können —, steht in unserer Datenschutzerklärung, die durch diesen Verweis Bestandteil dieser Bedingungen ist.",
+        },
+      ],
+    },
+    {
+      id: "dispute-resolution",
+      title: "11. Verbraucherstreitbeilegung",
+      blocks: [
+        {
+          kind: "p",
+          text: "Zur Teilnahme an einem Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle sind wir nicht verpflichtet und nehmen daran derzeit nicht teil. Ihr Recht, die zuständigen Gerichte anzurufen, bleibt davon unberührt.",
+        },
+      ],
+    },
+    {
+      id: "language",
+      title: "12. Sprachfassungen",
+      blocks: [
+        {
+          kind: "p",
+          text: "Diese Bedingungen werden in Englisch, Deutsch, Polnisch und Russisch veröffentlicht. Die Übersetzungen dienen Ihrer Bequemlichkeit; weichen die Fassungen inhaltlich voneinander ab, gilt die englische Fassung.",
+        },
+      ],
+    },
+    {
       id: "jurisdiction",
-      title: "10. Anwendbares Recht und Gerichtsstand",
+      title: "13. Anwendbares Recht und Gerichtsstand",
       blocks: [
         {
           kind: "p",
