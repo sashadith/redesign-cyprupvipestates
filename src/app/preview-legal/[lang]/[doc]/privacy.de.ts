@@ -36,7 +36,7 @@ export const PRIVACY_DE: LegalDoc = {
         },
         {
           kind: "p",
-          text: "Einen Datenschutzbeauftragten haben wir nicht bestellt, da wir dazu nach Art. 37 DSGVO nicht verpflichtet sind. Ihre datenschutzrechtlichen Anliegen richten Sie bitte an die oben genannte Adresse — sie erreichen dort die zuständige Person.",
+          text: "Bei jeder Frage zu Ihren Daten — Auskunft, Berichtigung, Löschung oder alles Weitere aus dieser Erklärung — schreiben Sie an die oben genannte Adresse; Ihr Anliegen erreicht dort die zuständige Person.",
         },
       ],
     },
@@ -68,8 +68,20 @@ export const PRIVACY_DE: LegalDoc = {
               text: "Wir zählen Seitenaufrufe über einen täglich wechselnden, nicht umkehrbaren Hash aus IP-Adresse und Browser-Kennung. Der Hash ändert sich jeden Tag, wird nie zusammen mit Ihrer IP-Adresse gespeichert und erlaubt weder Ihre Identifikation noch ein Wiedererkennen über mehrere Tage. Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse zu erfahren, welche Inhalte nützlich sind), abgewogen dadurch, dass kein dauerhafter Identifikator entsteht.",
             },
             {
-              term: "Google Analytics und Meta-Pixel",
-              text: "Nur mit Ihrer Einwilligung setzen wir Google Analytics (Google Ireland Limited) und das Meta-Pixel (Meta Platforms Ireland Limited) ein, um Reichweite und Werbewirksamkeit zu messen. Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung). Sie können die Einwilligung jederzeit mit Wirkung für die Zukunft widerrufen.",
+              term: "Google Tag Manager, Google Analytics und Google Ads",
+              text: "Nur wenn Sie Analyse- und Marketing-Cookies zustimmen, laden wir den Google Tag Manager (Google Ireland Limited), der seinerseits Google Analytics 4 zur Reichweitenmessung und Google Ads zur Conversion-Messung und für Remarketing aktiviert. Der Tag Manager selbst verwaltet nur die übrigen Tags; die Datenverarbeitung erfolgt durch die von ihm geladenen Dienste. Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung).",
+            },
+            {
+              term: "Meta-Pixel",
+              text: "Nur mit Ihrer Einwilligung. Anbieter: Meta Platforms Ireland Limited. Es misst, ob ein Besuch auf eine unserer Anzeigen zurückgeht, und ermöglicht das Ansprechen vergleichbarer Zielgruppen. Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung).",
+            },
+            {
+              term: "LinkedIn Insight Tag",
+              text: "Nur mit Ihrer Einwilligung. Anbieter: LinkedIn Ireland Unlimited Company. Es misst die Wirkung unserer LinkedIn-Kampagnen und erlaubt dort die Zielgruppenansprache. Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung).",
+            },
+            {
+              term: "Microsoft Clarity — einschließlich Sitzungsaufzeichnung",
+              text: "Clarity (Microsoft Ireland Operations Limited) zeigt uns, wie Seiten tatsächlich genutzt werden: Mausbewegungen, Scrollen, Klicks und Interaktionen, die als anonymisierte Sitzungsaufzeichnung abgespielt und zu Heatmaps zusammengefasst werden können. Das geht deutlich weiter als bloßes Zählen von Aufrufen, weshalb wir es hier gesondert benennen. Das Clarity-Skript wird auf jeder Seite geladen, erhält dabei aber die Information, ob Sie eingewilligt haben: ohne Ihre Einwilligung läuft es im eingeschränkten Modus von Microsoft, der keine Cookies setzt und kein Profil bildet; mit Ihrer Einwilligung zeichnet es die vollständige Sitzung auf. Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung) für den vollen Modus und Art. 6 Abs. 1 lit. f DSGVO (unser berechtigtes Interesse zu erkennen, wo die Seite Nutzer verwirrt) für den eingeschränkten Modus. Dem letzteren können Sie jederzeit nach Art. 21 widersprechen.",
             },
           ],
         },
@@ -104,7 +116,7 @@ export const PRIVACY_DE: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "Google und Meta sind über ihre irischen Gesellschaften eingebunden; die Verarbeitung auf deren Infrastruktur kann jedoch Übermittlungen in die USA umfassen. Diese stützen sich auf den Angemessenheitsbeschluss der EU-Kommission zum EU-US Data Privacy Framework, soweit der Empfänger darunter zertifiziert ist, im Übrigen auf Standardvertragsklauseln nach Art. 46 Abs. 2 lit. c DSGVO.",
+          text: "Google, Meta, Microsoft und LinkedIn sind über ihre irischen Gesellschaften eingebunden; die Verarbeitung auf deren Infrastruktur kann jedoch Übermittlungen in die USA umfassen. Diese stützen sich auf den Angemessenheitsbeschluss der EU-Kommission zum EU-US Data Privacy Framework, soweit der Empfänger darunter zertifiziert ist, im Übrigen auf Standardvertragsklauseln nach Art. 46 Abs. 2 lit. c DSGVO.",
         },
         {
           kind: "p",
@@ -117,15 +129,23 @@ export const PRIVACY_DE: LegalDoc = {
       title: "5. Wie lange wir speichern",
       blocks: [
         {
+          kind: "p",
+          text: "Wir speichern personenbezogene Daten nur so lange, wie es der Zweck ihrer Erhebung erfordert, und darüber hinaus nur, soweit eine gesetzliche Aufbewahrungspflicht besteht.",
+        },
+        {
           kind: "list",
           items: [
-            "Server-Logfiles: bis zu 30 Tage, danach Löschung oder Anonymisierung.",
-            "Anfragen und zugehörige Korrespondenz: für die Dauer unseres Kontakts und bis zu 3 Jahre nach dem letzten Austausch, damit wir ein später wieder aufgenommenes Gespräch fortführen können.",
-            "Daten zu einem abgeschlossenen Geschäft: solange zyprisches Handels- und Steuerrecht die Aufbewahrung verlangt, in der Regel 6 Jahre.",
+            "Server-Logfiles: nur so lange, wie es für den sicheren Betrieb und die Aufklärung von Störungen oder Missbrauch erforderlich ist, danach Löschung oder Anonymisierung.",
+            "Anfragen und zugehörige Korrespondenz: solange wir zu Ihrem Anliegen mit Ihnen in Kontakt stehen, und danach nur so lange, wie daraus noch ein Folgegespräch entstehen kann.",
+            "Daten zu einem abgeschlossenen Geschäft: für den Zeitraum, den zyprisches Handels- und Steuerrecht vorschreibt.",
             "Newsletter-Anmeldungen: bis zur Abmeldung.",
-            "Einwilligungsnachweise: solange erforderlich, um die Einwilligung zu belegen, sowie 3 Jahre nach ihrem Widerruf.",
-            "Cookielose Statistik: der Tages-Hash geht ausschließlich in aggregierte Zählwerte ein und ist zu keinem Zeitpunkt auf eine Person zurückführbar.",
+            "Einwilligungsnachweise: solange wir die Erteilung der Einwilligung belegen können müssen.",
+            "Cookielose Statistik: ausschließlich aggregierte Zählwerte — der Tages-Hash ist zu keinem Zeitpunkt auf eine Person zurückführbar.",
           ],
+        },
+        {
+          kind: "p",
+          text: "Wenn Sie wissen möchten, wie lange wir eine bestimmte Kategorie Ihrer Daten speichern, fragen Sie uns — wir teilen es Ihnen mit.",
         },
       ],
     },
@@ -135,11 +155,28 @@ export const PRIVACY_DE: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "Technisch notwendige Cookies — etwa zum Speichern Ihrer Sprachwahl oder Ihrer Cookie-Entscheidung — setzen wir auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO; sie sind nicht einwilligungsbedürftig.",
+          text: "Unser Cookie-Banner bietet dieselben drei Kategorien, die auch in dieser Erklärung verwendet werden:",
+        },
+        {
+          kind: "definitions",
+          items: [
+            {
+              term: "Notwendig",
+              text: "Für den Betrieb der Website erforderlich — etwa zum Speichern Ihrer Sprachwahl und Ihrer Cookie-Entscheidung selbst. Grundlage: Art. 6 Abs. 1 lit. f DSGVO; diese lassen sich nicht abschalten.",
+            },
+            {
+              term: "Analyse",
+              text: "Google Analytics 4 (über den Google Tag Manager) und Microsoft Clarity im vollen Modus. Werden erst nach Ihrer Zustimmung gesetzt.",
+            },
+            {
+              term: "Marketing",
+              text: "Google Ads, das Meta-Pixel und das LinkedIn Insight Tag. Werden erst nach Ihrer Zustimmung gesetzt.",
+            },
+          ],
         },
         {
           kind: "p",
-          text: "Statistik- und Marketing-Cookies, einschließlich derer von Google Analytics und dem Meta-Pixel, werden erst nach Ihrer Einwilligung gesetzt. Sie können diese Entscheidung jederzeit ändern oder widerrufen; die Rechtmäßigkeit der bis dahin erfolgten Verarbeitung bleibt unberührt. Sie können Cookies zudem in Ihren Browsereinstellungen blockieren oder löschen — Teile der Website funktionieren dann möglicherweise nicht wie vorgesehen.",
+          text: "Sie können Ihre Entscheidung jederzeit über das Cookie-Banner ändern oder widerrufen; die Rechtmäßigkeit der bis dahin erfolgten Verarbeitung bleibt unberührt. Sie können Cookies zudem in Ihren Browsereinstellungen blockieren oder löschen — Teile der Website funktionieren dann möglicherweise nicht wie vorgesehen.",
         },
       ],
     },

@@ -20,6 +20,19 @@ import type { LegalDoc } from "./types";
      + a "last updated" date and a changes clause
    Also fixed: a duplicated server-log paragraph, and "Lawyersnecessary".
 
+   Revised again 2026-08-21 after auditing what the site actually loads
+   (src/app/[lang]/layout.tsx): the first version named only Google Analytics
+   and the Meta Pixel. Google Tag Manager, Google Ads, the LinkedIn Insight
+   Tag and Microsoft Clarity were all live and undisclosed — Clarity in
+   particular does session recording, which is materially more intrusive than
+   visit counting and is now called out by name. Retention figures that had
+   been written as concrete periods (30 days / 3 years / 6 years) were NOT
+   verified against the server config or the company's actual practice, so
+   they are replaced by purpose-based wording; a wrong figure in a privacy
+   notice is a promise that has to be kept. The claim that no DPO has been
+   appointed was likewise unverified and is gone. Cookie categories now match
+   the banner's own three (necessary / analytics / marketing).
+
    NOT legal advice. This is a substantially more complete draft than what it
    replaces, but it still needs review by a Cyprus-qualified lawyer before it
    goes live. */
@@ -53,7 +66,7 @@ export const PRIVACY_EN: LegalDoc = {
         },
         {
           kind: "p",
-          text: "We have not appointed a Data Protection Officer, as we are not required to do so under Art. 37 GDPR. For any privacy matter, write to the address above and your request will reach the person responsible.",
+          text: "For any question about your data — access, correction, deletion or anything else in this policy — write to the address above and your request will reach the person responsible.",
         },
       ],
     },
@@ -85,8 +98,20 @@ export const PRIVACY_EN: LegalDoc = {
               text: "We count page views using a daily-rotating, irreversible hash derived from your IP address and browser string. The hash changes every day, is never stored alongside your IP address, and cannot be used to identify you or to recognise you across days. Legal basis: Art. 6 (1) (f) GDPR (our legitimate interest in understanding which content is useful), balanced by the fact that no identifier persists.",
             },
             {
-              term: "Google Analytics and Meta Pixel",
-              text: "Only if you consent, we use Google Analytics (Google Ireland Limited) and the Meta Pixel (Meta Platforms Ireland Limited) to measure reach and the effectiveness of our advertising. Legal basis: Art. 6 (1) (a) GDPR (consent). You can withdraw consent at any time with effect for the future.",
+              term: "Google Tag Manager, Google Analytics and Google Ads",
+              text: "Only if you consent to analytics and marketing cookies, we load Google Tag Manager (Google Ireland Limited), which in turn activates Google Analytics 4 for reach measurement and Google Ads for conversion measurement and remarketing. Google Tag Manager itself only manages the other tags; it is the tags it loads that process your data. Legal basis: Art. 6 (1) (a) GDPR (consent).",
+            },
+            {
+              term: "Meta Pixel",
+              text: "Only with your consent. Provider: Meta Platforms Ireland Limited. It measures whether a visit followed one of our advertisements and lets us reach comparable audiences. Legal basis: Art. 6 (1) (a) GDPR (consent).",
+            },
+            {
+              term: "LinkedIn Insight Tag",
+              text: "Only with your consent. Provider: LinkedIn Ireland Unlimited Company. It measures the performance of our LinkedIn campaigns and allows audience targeting there. Legal basis: Art. 6 (1) (a) GDPR (consent).",
+            },
+            {
+              term: "Microsoft Clarity — including session recording",
+              text: "Clarity (Microsoft Ireland Operations Limited) shows us how pages are actually used: mouse movement, scrolling, clicks and page interactions, which it can replay as an anonymised session recording and aggregate into heatmaps. This is more far-reaching than plain visit counting, which is why we name it separately here. The Clarity script is loaded on every page, but it is told whether you have consented: without your consent it runs in Microsoft's restricted mode, which does not set cookies and does not build a profile; with your consent it records the full session. Legal basis: Art. 6 (1) (a) GDPR (consent) for the full mode, and Art. 6 (1) (f) GDPR (our legitimate interest in seeing where the site confuses people) for the restricted mode. You can object to the latter at any time under Art. 21.",
             },
           ],
         },
@@ -121,7 +146,7 @@ export const PRIVACY_EN: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "Google and Meta are contracted through their Irish entities, but processing on their infrastructure can involve transfers to the United States. Those transfers rely on the EU Commission's adequacy decision for the EU–US Data Privacy Framework where the recipient is certified under it, and otherwise on Standard Contractual Clauses under Art. 46 (2) (c) GDPR.",
+          text: "Google, Meta, Microsoft and LinkedIn are contracted through their Irish entities, but processing on their infrastructure can involve transfers to the United States. Those transfers rely on the EU Commission's adequacy decision for the EU–US Data Privacy Framework where the recipient is certified under it, and otherwise on Standard Contractual Clauses under Art. 46 (2) (c) GDPR.",
         },
         {
           kind: "p",
@@ -134,15 +159,23 @@ export const PRIVACY_EN: LegalDoc = {
       title: "5. How long we keep it",
       blocks: [
         {
+          kind: "p",
+          text: "We keep personal data only for as long as the purpose it was collected for requires, and after that only where a legal retention duty applies.",
+        },
+        {
           kind: "list",
           items: [
-            "Server log files: up to 30 days, then deleted or anonymised.",
-            "Enquiries and the related correspondence: for the duration of our contact and for up to 3 years after the last exchange, so that we can pick up a conversation you resume later.",
-            "Data connected to a concluded transaction: for as long as Cypriot commercial and tax law requires us to retain it, which is generally 6 years.",
+            "Server log files: only as long as needed to operate the site securely and to investigate faults or abuse, then deleted or anonymised.",
+            "Enquiries and the related correspondence: while we are in contact with you about your enquiry, and afterwards only for as long as it may still lead to a follow-up conversation.",
+            "Data connected to a concluded transaction: for the period Cypriot commercial and tax law requires us to retain it.",
             "Newsletter subscriptions: until you unsubscribe.",
-            "Consent records: for as long as needed to demonstrate that consent was given, and for 3 years after it is withdrawn.",
-            "Cookieless analytics: the daily hash is retained in aggregate counts only and cannot be traced back to a person at any point.",
+            "Consent records: for as long as we must be able to demonstrate that consent was given.",
+            "Cookieless analytics: aggregate counts only — the daily hash cannot be traced back to a person at any point.",
           ],
+        },
+        {
+          kind: "p",
+          text: "If you want to know how long we are holding a particular category of your data, ask us and we will tell you.",
         },
       ],
     },
@@ -152,11 +185,28 @@ export const PRIVACY_EN: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "Cookies that are strictly necessary to operate the site — for example to remember your language or your cookie choice — are set on the basis of Art. 6 (1) (f) GDPR and do not require consent.",
+          text: "Our cookie banner offers the same three categories used throughout this policy:",
+        },
+        {
+          kind: "definitions",
+          items: [
+            {
+              term: "Necessary",
+              text: "Required for the site to work — for example remembering your language and your cookie choice itself. Set on the basis of Art. 6 (1) (f) GDPR; these cannot be switched off.",
+            },
+            {
+              term: "Analytics",
+              text: "Google Analytics 4 (via Google Tag Manager) and Microsoft Clarity in its full mode. Only set once you have agreed.",
+            },
+            {
+              term: "Marketing",
+              text: "Google Ads, the Meta Pixel and the LinkedIn Insight Tag. Only set once you have agreed.",
+            },
+          ],
         },
         {
           kind: "p",
-          text: "Analytics and marketing cookies, including those set by Google Analytics and the Meta Pixel, are only set once you have consented. You can change or withdraw that choice at any time; withdrawal does not affect the lawfulness of processing carried out beforehand. You can also block or delete cookies in your browser settings, though parts of the site may then not work as intended.",
+          text: "You can change or withdraw your choice at any time through the cookie banner; withdrawal does not affect the lawfulness of processing carried out beforehand. You can also block or delete cookies in your browser settings, though parts of the site may then not work as intended.",
         },
       ],
     },
