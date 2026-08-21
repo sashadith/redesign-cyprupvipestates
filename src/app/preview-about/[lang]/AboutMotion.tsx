@@ -28,13 +28,13 @@ export default function AboutMotion() {
       const toArr = (sel: string) => gsap.utils.toArray<HTMLElement>(sel);
 
       /* ---------------- HERO (on load) ---------------- */
-      const headline = document.querySelector<HTMLElement>(".abt__hero-title");
+      const headline = document.querySelector<HTMLElement>(".abt__hero .hero__headline");
       if (headline) {
         const split = new SplitText(headline, { type: "lines", linesClass: "motion-line" });
         splits.push(split);
         gsap
           .timeline()
-          .from(".abt__hero-eyebrow", { autoAlpha: 0, y: 14, duration: 0.5, ease: "power2.out" }, 0)
+          .from(".abt__hero .hero__brand", { autoAlpha: 0, y: 14, duration: 0.5, ease: "power2.out" }, 0)
           .from(split.lines, { y: 80, duration: 0.9, stagger: 0.12, ease: "power3.out" }, 0.25)
           .from(".abt__hero .hero__stripe", { scaleX: 0, transformOrigin: "left center", autoAlpha: 0, duration: 0.6, ease: "power3.out" }, 1.1)
           .from(".abt__hero-lead", { autoAlpha: 0, y: 22, duration: 0.6, ease: "power2.out" }, 1.45)

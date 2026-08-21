@@ -14,11 +14,7 @@
 
 /* ------------------------------------------------------------------ HERO */
 .abt__hero-media img { width: 100%; height: 100%; object-fit: cover; }
-.abt__hero-eyebrow {
-  font-family: var(--font-body), sans-serif; font-size: var(--text-caption); font-weight: 600;
-  letter-spacing: 0.26em; text-transform: uppercase; color: var(--accent); margin: 0 0 var(--s-5);
-}
-.abt__hero-title { max-width: 18ch; }
+.abt__hero-title { max-width: 20ch; }
 .abt__hero-lead { max-width: 58ch; margin-top: var(--s-5); }
 
 /* ---------------------------------------------- SHARED SECTION FURNITURE */
@@ -39,6 +35,9 @@
    single column below 900px rather than squeezing both. */
 .abt__stance { padding-block: var(--section-y); }
 .abt__stance-grid { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: var(--s-7) var(--s-8); align-items: start; }
+/* Optical top alignment: the lead's large cap-height made the right column
+   look like it started above the eyebrow. */
+@media (min-width: 901px) { .abt__stance-body { padding-top: var(--s-2); } }
 .abt__stance-head { position: sticky; top: 120px; }
 .abt__stance-title { max-width: 16ch; }
 .abt__stance-lead { color: var(--text); font-size: var(--text-lead); margin: 0 0 var(--s-6); max-width: 62ch; line-height: 1.65; }
@@ -46,7 +45,12 @@
 .abt__stance-p:last-child { margin-bottom: 0; }
 
 /* ----------------------------------------------------------------- STATS */
-.abt__stats { padding-top: var(--section-y); }
+.abt__stats { padding-block: var(--section-y); }
+/* Benefits is itself a .section — nested inside this one, its own
+   --section-y padding stacked with ours into ~200px of dead space below the
+   numbers (found in the 2026-08-21 visual pass). The outer section owns the
+   breathing room; the inner keeps only the heading→grid step. */
+.abt__stats .benefits { padding-block: 0; margin-top: var(--s-7); }
 
 /* ------------------------------------------------------------------ WORK */
 /* Numbered editorial sequence — deliberately NOT a third card grid, so the

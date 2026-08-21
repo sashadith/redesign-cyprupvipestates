@@ -114,11 +114,18 @@ export default async function AboutPage({ params }: Props) {
           </div>
           <div className="hero__scrim" aria-hidden />
           <div className="hero__inner wrap">
-            <p className="hero__brand abt__hero-eyebrow">{t.heroEyebrow}</p>
-            <h1 className="hero__headline abt__hero-title">
-              {t.heroTitle[0]}
-              <span className="it">{t.heroTitle[1]}</span>
-              {t.heroTitle[2]}
+            {/* Same structure as the homepage/partners hero: the h1 IS
+                .hero__title (which carries the display font-size); brand and
+                headline are spans inside it. Putting .hero__headline on the
+                h1 itself left it at the browser-default size — and SplitText
+                then froze that broken one-word-per-line wrap permanently. */}
+            <h1 className="hero__title abt__hero-title">
+              <span className="hero__brand">{t.heroEyebrow}</span>
+              <span className="hero__headline">
+                {t.heroTitle[0]}
+                <span className="it">{t.heroTitle[1]}</span>
+                {t.heroTitle[2]}
+              </span>
             </h1>
             <div className="hero__stripe shimmer" aria-hidden />
             <p className="hero__desc abt__hero-lead">{t.heroLead}</p>
