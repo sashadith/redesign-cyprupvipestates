@@ -16,15 +16,23 @@
 .abt__hero-media img { width: 100%; height: 100%; object-fit: cover; }
 .abt__hero-eyebrow {
   font-family: var(--font-body), sans-serif; font-size: var(--text-caption); font-weight: 600;
-  letter-spacing: 0.26em; text-transform: uppercase; color: var(--accent); margin: 0 0 var(--s-4);
+  letter-spacing: 0.26em; text-transform: uppercase; color: var(--accent); margin: 0 0 var(--s-5);
 }
 .abt__hero-title { max-width: 18ch; }
-.abt__hero-lead { max-width: 58ch; }
+.abt__hero-lead { max-width: 58ch; margin-top: var(--s-5); }
 
-/* Shared section furniture */
-.abt__eyebrow { margin-bottom: var(--s-3); }
+/* ---------------------------------------------- SHARED SECTION FURNITURE */
+/* Vertical rhythm taken from the homepage, not invented: there, the heading
+   carries margin:0 and the element BELOW it owns the gap — .about__desc is
+   `margin: var(--s-7) 0 56px`. The first pass of this page used --s-3/--s-5/
+   --s-6 (12/24/32px), which is why every section read as cramped next to the
+   rest of the site. These are the homepage's own steps. */
+.abt__eyebrow { margin: 0 0 var(--s-4); }
 .abt__title { margin: 0 0 var(--s-5); max-width: 22ch; }
-.abt__lead { margin-bottom: var(--s-6); }
+/* Heading → lead → content: the same 48px step the homepage uses. */
+.abt__lead { margin: var(--s-5) 0 var(--s-7); max-width: 62ch; }
+/* Any grid/list that follows a heading block keeps a full 48px of air. */
+.abt__cards, .abt__values-grid, .abt__team-grid, .abt__quotes, .abt__steps { margin-top: var(--s-7); }
 
 /* ---------------------------------------------------------------- STANCE */
 /* Editorial two-column: heading anchored left, prose right. Collapses to a
@@ -33,8 +41,8 @@
 .abt__stance-grid { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: var(--s-7) var(--s-8); align-items: start; }
 .abt__stance-head { position: sticky; top: 120px; }
 .abt__stance-title { max-width: 16ch; }
-.abt__stance-lead { color: var(--text); font-size: var(--text-lead); margin: 0 0 var(--s-5); max-width: 62ch; }
-.abt__stance-p { color: var(--text-soft); line-height: 1.75; margin: 0 0 var(--s-5); max-width: 62ch; }
+.abt__stance-lead { color: var(--text); font-size: var(--text-lead); margin: 0 0 var(--s-6); max-width: 62ch; line-height: 1.65; }
+.abt__stance-p { color: var(--text-soft); line-height: 1.75; margin: 0 0 var(--s-6); max-width: 62ch; }
 .abt__stance-p:last-child { margin-bottom: 0; }
 
 /* ----------------------------------------------------------------- STATS */
@@ -43,69 +51,69 @@
 /* ------------------------------------------------------------------ WORK */
 /* Numbered editorial sequence — deliberately NOT a third card grid, so the
    page has real compositional variation between its three "list" sections. */
-.abt__work { background: var(--surface); padding-block: var(--section-y); }
-.abt__steps { list-style: none; margin: var(--s-7) 0 0; padding: 0; display: grid; gap: var(--s-6); }
+.abt__work { padding-block: var(--section-y); }
+.abt__steps { list-style: none; padding: 0; display: grid; gap: var(--s-6); }
 .abt__step { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s-5) var(--s-6); align-items: start;
   padding-top: var(--s-6); border-top: 1px solid var(--hairline); }
 .abt__step:first-child { border-top: 0; padding-top: 0; }
 .abt__step-num { font-family: var(--font-display), serif; font-size: clamp(2rem, 1.2rem + 2.6vw, 3.2rem);
   line-height: 1; color: var(--accent); opacity: 0.85; font-weight: 300; }
 .abt__step-title { font-family: var(--font-display), serif; font-size: var(--text-h3); font-weight: 400;
-  margin: 0 0 var(--s-3); color: var(--text); }
-.abt__step-desc { margin: 0; color: var(--text-soft); line-height: 1.7; max-width: 60ch; }
+  margin: 0 0 var(--s-4); color: var(--text); }
+.abt__step-desc { margin: 0; color: var(--text-soft); line-height: 1.75; max-width: 60ch; }
 
 /* --------------------------------------------------------------- RECEIVE */
 .abt__receive { padding-block: var(--section-y); }
-.abt__cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: var(--s-5); margin-top: var(--s-7); }
+.abt__cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: var(--s-5); }
 .abt__card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--r-ui);
   padding: var(--s-6); transition: transform var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease); }
 .abt__card:hover { transform: translateY(-4px); border-color: var(--accent); }
 .abt__card-mark { display: block; font-size: 1.4rem; color: var(--accent); margin-bottom: var(--s-4); line-height: 1; }
-.abt__card-title { font-family: var(--font-display), serif; font-size: var(--text-h3); font-weight: 400; margin: 0 0 var(--s-3); color: var(--text); }
-.abt__card-desc { margin: 0; color: var(--text-soft); line-height: 1.7; }
+.abt__card-title { font-family: var(--font-display), serif; font-size: var(--text-h3); font-weight: 400; margin: 0 0 var(--s-4); color: var(--text); }
+.abt__card-desc { margin: 0; color: var(--text-soft); line-height: 1.75; }
 
 /* ---------------------------------------------------------------- VALUES */
 /* Six values as a compact hairline grid — the old page gave each of these a
    full block with an image, which is what made the section outstay its value. */
-.abt__values { background: var(--surface); padding-block: var(--section-y); }
-.abt__values-grid { list-style: none; margin: var(--s-7) 0 0; padding: 0;
+.abt__values { padding-block: var(--section-y); }
+.abt__values-grid { list-style: none; padding: 0;
   display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0; }
 .abt__value { padding: var(--s-6) var(--s-6) var(--s-6) 0; border-top: 1px solid var(--hairline); }
 .abt__value-title { position: relative; padding-left: var(--s-5); font-family: var(--font-body), sans-serif;
-  font-size: 1rem; font-weight: 600; letter-spacing: 0.01em; margin: 0 0 var(--s-3); color: var(--text); }
+  font-size: 1rem; font-weight: 600; letter-spacing: 0.01em; margin: 0 0 var(--s-4); color: var(--text); }
 .abt__value-title::before { content: ""; position: absolute; left: 0; top: 0.52em; width: 10px; height: 1px; background: var(--accent); }
-.abt__value-desc { margin: 0; padding-left: var(--s-5); color: var(--text-soft); line-height: 1.7; font-size: var(--text-sm); }
+.abt__value-desc { margin: 0; padding-left: var(--s-5); color: var(--text-soft); line-height: 1.75; font-size: var(--text-sm); }
 
 /* ------------------------------------------------------------------ TEAM */
 .abt__team { padding-block: var(--section-y); }
 .abt__team-grid { list-style: none; margin: 0; padding: 0;
   display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: var(--s-6) var(--s-5); }
 .abt__member-photo { position: relative; aspect-ratio: 3 / 4; border-radius: var(--r-ui); overflow: hidden;
-  background: var(--surface-raised); margin-bottom: var(--s-4); }
+  background: var(--surface-raised); margin-bottom: var(--s-5); }
 .abt__member-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center top;
   transition: transform 0.7s var(--ease-soft); }
 .abt__member:hover .abt__member-photo img { transform: scale(1.04); }
 .abt__member-ph { display: block; width: 100%; height: 100%; background: var(--surface-raised); }
-.abt__member-name { font-family: var(--font-display), serif; font-size: 1.12rem; font-weight: 400; margin: 0 0 2px; color: var(--text); }
-.abt__member-role { margin: 0 0 var(--s-2); font-size: var(--text-sm); color: var(--accent); }
+.abt__member-name { font-family: var(--font-display), serif; font-size: 1.12rem; font-weight: 400; margin: 0 0 var(--s-1); color: var(--text); }
+.abt__member-role { margin: 0 0 var(--s-3); font-size: var(--text-sm); color: var(--accent); }
 .abt__member-langs { margin: 0; font-size: 0.78rem; color: var(--text-faint); line-height: 1.5; }
 .abt__member-langs-label { display: block; text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.66rem; color: var(--text-faint); margin-bottom: 2px; }
 
 /* --------------------------------------------------------------- STORIES */
-.abt__stories { background: var(--surface); padding-block: var(--section-y); }
+.abt__stories { padding-block: var(--section-y); }
 .abt__quotes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--s-5); }
 .abt__quote { margin: 0; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--r-ui); padding: var(--s-6); display: flex; flex-direction: column; }
-.abt__quote-text { margin: 0 0 var(--s-5); color: var(--text-soft); line-height: 1.75; font-size: var(--text-sm); flex: 1; }
+.abt__quote-text { margin: 0 0 var(--s-6); color: var(--text-soft); line-height: 1.75; font-size: var(--text-sm); flex: 1; }
 .abt__quote-text::before { content: "\201C"; display: block; font-family: var(--font-display), serif; font-size: 2.4rem; line-height: 0.6; color: var(--accent); margin-bottom: var(--s-3); }
 .abt__quote-by { display: flex; align-items: center; gap: var(--s-3); font-size: var(--text-sm); color: var(--text); }
 .abt__quote-photo { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex: none; }
-.abt__stories-all { margin-top: var(--s-7); }
+.abt__stories-all { margin-top: var(--s-8); }
 
 /* ------------------------------------------------------------------- CTA */
 .abt__cta { padding-block: var(--section-y); }
 .abt__cta-inner { text-align: center; display: flex; flex-direction: column; align-items: center; }
 .abt__cta-title { max-width: 20ch; }
-.abt__cta .abt__lead { max-width: 56ch; }
+.abt__cta .abt__lead { max-width: 56ch; margin-inline: auto; }
 .abt__cta-btns { display: flex; flex-wrap: wrap; gap: var(--s-4); justify-content: center; }
 
 /* ---------------------------------------------------------- RESPONSIVE */
@@ -124,3 +132,14 @@
 /* Motion safety: SplitText wraps lines in .motion-line; keep them block-level
    so a mid-animation reflow can't collapse a heading onto one line. */
 .abt .motion-line { display: block; }
+
+
+/* ------------------------------------------- LIGHT-THEME SMALL-TEXT ACCENT */
+/* The design system's light accent (--bronze #8E6B3D) measures 4.31:1 on
+   --paper and 3.94:1 on --paper-2 — below the 4.5:1 WCAG AA floor for text
+   under ~19px. It is fine for headings and for the decorative rules, but the
+   small accent-coloured lines in light sections (a team member's role) need
+   more. #826238 is the same hue darkened just far enough to clear AA on both
+   light surfaces (4.96:1 / 4.54:1), so the colour still reads as the brand
+   bronze rather than a different colour. */
+.is-light .abt__member-role { color: #826238; }

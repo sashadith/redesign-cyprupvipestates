@@ -139,7 +139,7 @@ export default async function ContactsPage({ params }: Props) {
         </section>
 
         {/* -------------------------------------------------------- CHANNELS */}
-        <section className="section cnt__channels">
+        <section className="section is-light cnt__channels">
           <div className="wrap">
             <p className="eyebrow cnt__eyebrow">{t.channelsEyebrow}</p>
             <h2 className="h2 cnt__title">{t.channelsTitle}</h2>

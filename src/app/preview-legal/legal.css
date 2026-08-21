@@ -12,10 +12,10 @@
 
 /* ------------------------------------------------------------------ HEAD */
 .lgl__head { padding-top: clamp(140px, 12vw, 200px); padding-bottom: var(--s-7); border-bottom: 1px solid var(--hairline); }
-.lgl__eyebrow { margin-bottom: var(--s-3); }
-.lgl__title { margin: 0 0 var(--s-5); max-width: 18ch; }
-.lgl__stripe { height: 1px; width: min(200px, 38%); background: var(--accent); opacity: 0.7; margin-bottom: var(--s-5); }
-.lgl__intro { max-width: 62ch; margin-bottom: var(--s-6); }
+.lgl__eyebrow { margin: 0 0 var(--s-4); }
+.lgl__title { margin: 0 0 var(--s-6); max-width: 18ch; }
+.lgl__stripe { height: 1px; width: min(200px, 38%); background: var(--accent); opacity: 0.7; margin-bottom: var(--s-6); }
+.lgl__intro { max-width: 62ch; margin: 0 0 var(--s-7); }
 
 .lgl__updated { display: inline-flex; align-items: baseline; gap: var(--s-3); margin: 0;
   font-size: var(--text-sm); color: var(--text); padding: 8px 16px; border-radius: 999px;
@@ -23,6 +23,12 @@
 .lgl__updated-label { text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.66rem; color: var(--text-faint); }
 
 /* ------------------------------------------------------------------ BODY */
+/* The reading area runs on the LIGHT theme. Ten sections of dense legal prose
+   in ivory-on-deep-green is the wrong call for sustained reading, and the
+   design system already carries a light variant (.is-light) that the homepage
+   uses for its own long-form sections. The dark header above it keeps the
+   page unmistakably part of the site. */
+.lgl__bodywrap { background: var(--bg); color: var(--text); }
 .lgl__body { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: var(--s-8);
   align-items: start; padding-top: var(--s-8); padding-bottom: var(--section-y); }
 
@@ -45,30 +51,30 @@
 .lgl__section, .lgl__contact { scroll-margin-top: 110px; }
 
 .lgl__section-title { font-family: var(--font-display), serif; font-size: var(--text-h3); font-weight: 400;
-  line-height: 1.2; margin: 0 0 var(--s-5); color: var(--text); }
+  line-height: 1.2; margin: 0 0 var(--s-6); color: var(--text); }
 
-.lgl__p { margin: 0 0 var(--s-4); color: var(--text-soft); line-height: 1.75; }
+.lgl__p { margin: 0 0 var(--s-5); color: var(--text-soft); line-height: 1.8; }
 .lgl__p:last-child { margin-bottom: 0; }
 
-.lgl__list { margin: 0 0 var(--s-4); padding: 0; list-style: none; display: grid; gap: var(--s-3); }
-.lgl__list li { position: relative; padding-left: var(--s-5); color: var(--text-soft); line-height: 1.7; }
+.lgl__list { margin: 0 0 var(--s-5); padding: 0; list-style: none; display: grid; gap: var(--s-4); }
+.lgl__list li { position: relative; padding-left: var(--s-5); color: var(--text-soft); line-height: 1.75; }
 .lgl__list li::before { content: ""; position: absolute; left: 0; top: 0.68em; width: 8px; height: 1px; background: var(--accent); }
 
 /* Definition list — used where each item is "a thing we collect" plus its
    own legal basis, which reads far better as a term/definition pair than as
    another bullet list. */
-.lgl__defs { margin: 0 0 var(--s-4); display: grid; gap: var(--s-5); }
+.lgl__defs { margin: 0 0 var(--s-5); display: grid; gap: var(--s-6); }
 .lgl__def { padding-left: var(--s-5); border-left: 1px solid var(--hairline); }
 .lgl__def-term { font-family: var(--font-body), sans-serif; font-weight: 600; font-size: 1rem;
   color: var(--text); margin-bottom: var(--s-2); }
-.lgl__def-text { margin: 0; color: var(--text-soft); line-height: 1.75; font-size: var(--text-sm); }
+.lgl__def-text { margin: 0; color: var(--text-soft); line-height: 1.8; font-size: var(--text-sm); }
 
 /* Callout — for the statements that must not be skimmed past: the
    "not a licensed brokerage" position, the right to complain, and the fact
    that data really is passed to developers. */
-.lgl__callout { margin: 0 0 var(--s-4); padding: var(--s-5); border-radius: var(--r-ui);
+.lgl__callout { margin: 0 0 var(--s-5); padding: var(--s-6); border-radius: var(--r-ui);
   background: var(--accent-soft); border: 1px solid var(--hairline-strong);
-  color: var(--text); line-height: 1.7; }
+  color: var(--text); line-height: 1.75; }
 
 .lgl__contact { padding-top: var(--s-7); border-top: 1px solid var(--hairline-strong); }
 .lgl__sibling { margin: var(--s-5) 0 0; }

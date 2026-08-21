@@ -132,7 +132,7 @@ export default async function AboutPage({ params }: Props) {
         </section>
 
         {/* ---------------------------------------------------------- STANCE */}
-        <section className="section abt__stance">
+        <section className="section is-light abt__stance">
           <div className="wrap abt__stance-grid">
             <div className="abt__stance-head">
               <p className="eyebrow abt__eyebrow">{t.stanceEyebrow}</p>
@@ -156,7 +156,7 @@ export default async function AboutPage({ params }: Props) {
         </section>
 
         {/* ------------------------------------------------------- HOW WE WORK */}
-        <section className="section abt__work">
+        <section className="section is-light abt__work">
           <div className="wrap">
             <p className="eyebrow abt__eyebrow">{t.workEyebrow}</p>
             <h2 className="h2 abt__title">{t.workTitle}</h2>
@@ -175,7 +175,7 @@ export default async function AboutPage({ params }: Props) {
         </section>
 
         {/* --------------------------------------------------- WHAT YOU RECEIVE */}
-        <section className="section abt__receive">
+        <section className="section is-light abt__receive">
           <div className="wrap">
             <p className="eyebrow abt__eyebrow">{t.receiveEyebrow}</p>
             <h2 className="h2 abt__title">{t.receiveTitle}</h2>
@@ -208,7 +208,7 @@ export default async function AboutPage({ params }: Props) {
         </section>
 
         {/* ------------------------------------------------------------ TEAM */}
-        <section className="section abt__team" id="team">
+        <section className="section is-light abt__team" id="team">
           <div className="wrap">
             <p className="eyebrow abt__eyebrow">{t.teamEyebrow}</p>
             <h2 className="h2 abt__title">{t.teamTitle}</h2>
@@ -260,7 +260,7 @@ export default async function AboutPage({ params }: Props) {
         )}
 
         {/* ------------------------------------------------------------- CTA */}
-        <section className="section abt__cta">
+        <section className="section is-light abt__cta">
           <div className="wrap abt__cta-inner">
             <h2 className="h2 abt__title abt__cta-title">{t.ctaTitle}</h2>
             <p className="lead abt__lead">{t.ctaLead}</p>

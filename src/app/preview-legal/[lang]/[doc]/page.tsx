@@ -126,7 +126,7 @@ export default async function LegalPage({ params }: Props) {
           </div>
         </header>
 
-        <div className="wrap lgl__body">
+        <div className="lgl__bodywrap is-light"><div className="wrap lgl__body">
           <LegalToc label={t.tocLabel} sections={t.sections.map((s) => ({ id: s.id, title: s.title }))} />
 
           <div className="lgl__content">
@@ -147,6 +147,7 @@ export default async function LegalPage({ params }: Props) {
               )}
             </section>
           </div>
+        </div>
         </div>
       </main>
 
