@@ -176,12 +176,16 @@ export default async function AboutPage({ params }: Props) {
           <div className="wrap abt__stance-grid">
             <div className="abt__stance-head">
               <p className="abt__eyebrow">{t.stanceEyebrow}</p>
-              <h2 className="abt__title abt__stance-title">{t.stanceTitle}</h2>
+              <h2 className="abt__title abt__stance-title">
+                {t.stanceTitle[0]}
+                <span className="it">{t.stanceTitle[1]}</span>
+                {t.stanceTitle[2]}
+              </h2>
             <hr className="shimmer abt__stripe" />
             </div>
             <div className="abt__stance-body">
               {t.stanceBody.map((p, i) => (
-                <p key={i} className={i === 0 ? "abt__stance-lead" : "abt__stance-p"}>{p}</p>
+                <p key={i} className={`abt__stance-p${i === 0 ? " abt__stance-p--open" : ""}`}>{p}</p>
               ))}
             </div>
           </div>

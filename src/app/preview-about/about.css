@@ -83,9 +83,14 @@ hr.abt__stripe { margin: var(--s-5) 0 0; max-width: none; background: linear-gra
 @media (min-width: 901px) { .abt__stance-body { padding-top: var(--s-2); } }
 .abt__stance-head { position: sticky; top: 120px; }
 .abt__stance-title { max-width: 16ch; }
-.abt__stance-lead { margin: 0 0 var(--s-6); max-width: 62ch; font-family: var(--font-body), sans-serif;
-  font-size: var(--text-lead); font-weight: 300; line-height: 1.65; color: var(--text); }
-.abt__stance-p { color: var(--text-soft); line-height: 1.75; margin: 0 0 var(--s-6); max-width: 62ch; }
+/* All three paragraphs share one size. The first used to run at --text-lead
+   (22px) while the rest sat at body size (17px), which made the opening line
+   read as a separate, louder element rather than the start of one thought. */
+.abt__stance-p { margin: 0 0 var(--s-6); max-width: 62ch;
+  font-family: var(--font-body), sans-serif; font-size: var(--text-body);
+  font-weight: 300; line-height: 1.75; color: var(--text-soft); }
+/* The opening line keeps the full-strength ink; the rest stay soft. */
+.abt__stance-p--open { color: var(--text); }
 .abt__stance-p:last-child { margin-bottom: 0; }
 
 /* ----------------------------------------------------------------- STATS */
@@ -109,7 +114,15 @@ hr.abt__stripe { margin: var(--s-5) 0 0; max-width: none; background: linear-gra
    --section-y padding stacked with ours into ~200px of dead space below the
    numbers (found in the 2026-08-21 visual pass). The outer section owns the
    breathing room; the inner keeps only the heading→grid step. */
-.abt__stats .benefits { padding-block: 0; margin-top: var(--s-7); }
+.abt__stats .benefits {
+  padding-block: 0; margin-top: var(--s-7);
+  /* Transparent, not inherited: .benefits is itself a .section, and
+     `.section { background: var(--bg) }` painted an OPAQUE deep-green block
+     straight over the golden clouds behind this section — visible as a hard
+     rectangular band across the numbers. Two-class specificity beats
+     tokens.css's single-class rule regardless of bundle order. */
+  background: transparent;
+}
 
 /* ------------------------------------------------------------------ WORK */
 /* Three numbered glass cards, the pattern Insights and Partners use for their

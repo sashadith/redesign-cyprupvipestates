@@ -68,7 +68,7 @@ export default function AboutMotion() {
       });
 
       /* ---------------- STANCE paragraphs ---------------- */
-      const stanceParas = toArr(".abt__stance-lead, .abt__stance-p");
+      const stanceParas = toArr(".abt__stance-p");
       if (stanceParas.length) {
         gsap.from(stanceParas, {
           y: 30,

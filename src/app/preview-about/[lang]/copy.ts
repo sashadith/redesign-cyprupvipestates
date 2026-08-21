@@ -30,7 +30,8 @@ export type AboutStrings = {
   heroScroll: string;
 
   stanceEyebrow: string;
-  stanceTitle: string;
+  /** Split so the middle part carries the .it gold accent, like heroTitle. */
+  stanceTitle: [string, string, string];
   stanceBody: string[];
 
   heroImageAlt: string;
@@ -86,7 +87,7 @@ const EN: AboutStrings = {
   heroScroll: "Scroll",
 
   stanceEyebrow: "What drives us",
-  stanceTitle: "Moving to Cyprus is more than buying property",
+  stanceTitle: ["Moving to Cyprus is ", "more than", " buying property"],
   stanceBody: [
     "It is a step toward a self-determined, enjoyable life — and we put our whole heart into it.",
     "Our mission is to help people find their ideal home under the Cypriot sun, with personal advice, absolute transparency, and a tireless commitment to the highest quality standards.",
@@ -166,7 +167,7 @@ const DE: AboutStrings = {
   heroScroll: "Scrollen",
 
   stanceEyebrow: "Was uns antreibt",
-  stanceTitle: "Ein Umzug nach Zypern ist mehr als ein Immobilienkauf",
+  stanceTitle: ["Ein Umzug nach Zypern ist ", "mehr als", " ein Immobilienkauf"],
   stanceBody: [
     "Er ist ein Schritt in ein selbstbestimmtes, genussvolles Leben — dafür setzen wir unser ganzes Herzblut ein.",
     "Unsere Mission ist es, Menschen dabei zu unterstützen, ihr ideales Zuhause unter der zyprischen Sonne zu finden: mit persönlicher Beratung, absoluter Transparenz und einem unermüdlichen Einsatz für höchste Qualitätsstandards.",
@@ -246,7 +247,7 @@ const PL: AboutStrings = {
   heroScroll: "Przewiń",
 
   stanceEyebrow: "Co nas napędza",
-  stanceTitle: "Przeprowadzka na Cypr to coś więcej niż zakup nieruchomości",
+  stanceTitle: ["Przeprowadzka na Cypr to ", "coś więcej", " niż zakup nieruchomości"],
   stanceBody: [
     "To krok w stronę samodzielnego, przyjemnego życia — i wkładamy w to całe serce.",
     "Naszą misją jest pomoc w znalezieniu idealnego domu pod cypryjskim słońcem: z osobistym doradztwem, absolutną przejrzystością i niestrudzonym zaangażowaniem w najwyższe standardy jakości.",
@@ -326,7 +327,7 @@ const RU: AboutStrings = {
   heroScroll: "Прокрутить",
 
   stanceEyebrow: "Что нас ведёт",
-  stanceTitle: "Переезд на Кипр — это больше, чем покупка недвижимости",
+  stanceTitle: ["Переезд на Кипр — это ", "больше", ", чем покупка недвижимости"],
   stanceBody: [
     "Это шаг к самостоятельной, наполненной жизни — и мы вкладываем в него всю душу.",
     "Наша миссия — помочь людям найти идеальный дом под кипрским солнцем: с персональными консультациями, абсолютной прозрачностью и неустанной приверженностью высочайшим стандартам качества.",
