@@ -29,9 +29,8 @@ export default function LegalMotion() {
           .from(".lgl__eyebrow", { autoAlpha: 0, y: 12, duration: 0.45, ease: "power2.out" }, 0)
           // No autoAlpha on the H1 — same LCP reasoning as every other page here.
           .from(split.lines, { y: 50, duration: 0.7, stagger: 0.09, ease: "power3.out" }, 0.18)
-          .from(".lgl__stripe", { scaleX: 0, transformOrigin: "left center", autoAlpha: 0, duration: 0.55, ease: "power3.out" }, 0.8)
-          .from(".lgl__intro", { autoAlpha: 0, y: 18, duration: 0.5, ease: "power2.out" }, 1.0)
-          .from(".lgl__updated", { autoAlpha: 0, y: 12, duration: 0.45, ease: "power2.out" }, 1.12);
+          .from(".lgl__intro", { autoAlpha: 0, y: 18, duration: 0.5, ease: "power2.out" }, 0.8)
+          .from(".lgl__updated", { autoAlpha: 0, y: 12, duration: 0.45, ease: "power2.out" }, 0.95);
       }
 
       gsap.from(".lgl__toc", {

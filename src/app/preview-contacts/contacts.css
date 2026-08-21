@@ -14,16 +14,36 @@
 .cnt { background: var(--bg); }
 
 /* ------------------------------------------------------------------ HERO */
-/* A text hero rather than a photo one: this page is about acting, not
-   atmosphere, so nothing competes with the channel cards right below. */
-.cnt__hero { padding-top: clamp(140px, 12vw, 200px); padding-bottom: var(--s-8); }
-.cnt__hero-inner { max-width: 900px; }
-.cnt__hero-title { margin: 0 0 var(--s-6); max-width: 16ch; }
-.cnt__stripe { height: 1px; width: min(220px, 40%); background: var(--accent); opacity: 0.7; margin-bottom: var(--s-6); }
-.cnt__hero-lead { max-width: 60ch; margin: 0 0 var(--s-7); }
+/* Light content-page hero — the SAME construction as FAQ's .faqp__hero and
+   Insights' .ins__hero, down to the gradient and the spacing steps, so this
+   page sits in the same family as the other published content pages rather
+   than inventing a third hero style:
+     eyebrow ──16px──> title (display size, weight 400) ──32px──> lead ──24px──> meta
+   The earlier version used .h1 (68px/400) on a dark block with a hairline
+   jammed between title and lead — that is what read as thin and cramped. */
+.cnt__hero {
+  position: relative; isolation: isolate; overflow: visible; z-index: 1;
+  padding: clamp(120px, 16vh, 200px) 0 clamp(48px, 6vw, 76px);
+  background: linear-gradient(180deg, var(--surface-raised) 0%, var(--paper) 64%, var(--paper-2) 100%);
+  border-bottom: 1px solid var(--hairline);
+}
+.cnt__hero-inner { max-width: 980px; }
+.cnt__hero .cnt__eyebrow {
+  margin: 0 0 var(--s-4); font-family: var(--font-body), sans-serif; font-size: var(--text-caption);
+  font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent);
+}
+.cnt__hero-title {
+  margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  font-size: var(--text-display); line-height: 1.0; letter-spacing: -0.02em; color: var(--text);
+  text-wrap: balance; max-width: 18ch;
+}
+.cnt__hero-lead {
+  margin: var(--s-6) 0 0; max-width: 52ch; font-family: var(--font-body), sans-serif;
+  font-size: var(--text-lead); font-weight: 300; line-height: 1.55; color: var(--text-soft);
+}
 
 /* Live open/closed badge */
-.cnt__hours { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-5); font-size: var(--text-sm); }
+.cnt__hours { margin-top: var(--s-5); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-3) var(--s-5); font-size: var(--text-sm); }
 .cnt__hours-label { text-transform: uppercase; letter-spacing: 0.18em; font-size: 0.68rem; color: var(--text-faint); }
 .cnt__hours-value { color: var(--text); }
 .cnt__hours-badge { display: inline-flex; align-items: center; gap: var(--s-2); padding: 4px 12px; border-radius: 999px;

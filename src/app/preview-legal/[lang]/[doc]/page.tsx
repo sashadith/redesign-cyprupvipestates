@@ -7,6 +7,7 @@ import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporateLo
 import type { Translation } from "@/types/homepage";
 import Nav from "../../../preview-home/sections/Nav";
 import Footer from "../../../preview-home/sections/Footer";
+import LightHeroFlag from "../../../preview-insights/LightHeroFlag";
 import LegalMotion from "./LegalMotion";
 import LegalToc from "./LegalToc";
 import { getLegalDoc, isLegalDocKey } from "./registry";
@@ -109,16 +110,17 @@ export default async function LegalPage({ params }: Props) {
 
   return (
     <>
+      <LightHeroFlag />
       <LegalMotion />
       <Nav lang={lang} translations={translations} homeHref={localizedHref(lang)} />
 
       <main className="lgl">
-        <header className="lgl__head">
+        {/* Same light content-page hero as Contacts and FAQ. */}
+        <header className="lgl__head is-light">
           <div className="wrap">
-            <p className="eyebrow lgl__eyebrow">{t.eyebrow}</p>
-            <h1 className="h1 lgl__title">{t.title}</h1>
-            <div className="lgl__stripe shimmer" aria-hidden />
-            <p className="lead lgl__intro">{t.intro}</p>
+            <p className="lgl__eyebrow">{t.eyebrow}</p>
+            <h1 className="lgl__title">{t.title}</h1>
+            <p className="lgl__intro">{t.intro}</p>
             <p className="lgl__updated">
               <span className="lgl__updated-label">{t.updatedLabel}</span>
               <time dateTime={t.updated}>{updatedDisplay}</time>

@@ -132,7 +132,6 @@ export default async function AboutPage({ params }: Props) {
             <div className="hero__cta">
               <a className="btn btn--primary" href="#team">
                 <span>{t.heroCta}</span>
-                <span className="btn__ico"><Arrow /></span>
               </a>
             </div>
           </div>
@@ -260,7 +259,6 @@ export default async function AboutPage({ params }: Props) {
               </div>
               <a className="btn btn--ghost abt__stories-all" href={localizedHref(lang, "case-studies")}>
                 <span>{t.storiesAll}</span>
-                <span className="btn__ico"><Arrow /></span>
               </a>
             </div>
           </section>
@@ -274,11 +272,9 @@ export default async function AboutPage({ params }: Props) {
             <div className="abt__cta-btns">
               <a className="btn btn--primary" href={corporatePath("contacts", lang)}>
                 <span>{t.ctaPrimary}</span>
-                <span className="btn__ico"><Arrow /></span>
               </a>
               <a className="btn btn--ghost" href={localizedHref(lang, "projects")}>
                 <span>{t.ctaSecondary}</span>
-                <span className="btn__ico"><Arrow /></span>
               </a>
             </div>
           </div>

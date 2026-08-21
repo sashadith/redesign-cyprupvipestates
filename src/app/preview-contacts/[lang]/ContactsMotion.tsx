@@ -29,9 +29,8 @@ export default function ContactsMotion() {
           .timeline()
           .from(".cnt__hero .cnt__eyebrow", { autoAlpha: 0, y: 14, duration: 0.5, ease: "power2.out" }, 0)
           .from(split.lines, { y: 70, duration: 0.85, stagger: 0.1, ease: "power3.out" }, 0.2)
-          .from(".cnt__stripe", { scaleX: 0, transformOrigin: "left center", autoAlpha: 0, duration: 0.6, ease: "power3.out" }, 0.95)
-          .from(".cnt__hero-lead", { autoAlpha: 0, y: 20, duration: 0.55, ease: "power2.out" }, 1.2)
-          .from(".cnt__hours", { autoAlpha: 0, y: 16, duration: 0.5, ease: "power2.out" }, 1.35);
+          .from(".cnt__hero-lead", { autoAlpha: 0, y: 20, duration: 0.55, ease: "power2.out" }, 0.95)
+          .from(".cnt__hours", { autoAlpha: 0, y: 16, duration: 0.5, ease: "power2.out" }, 1.1);
       }
 
       /* ---------------- SECTION HEADINGS ---------------- */

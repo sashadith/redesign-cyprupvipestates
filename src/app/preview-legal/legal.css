@@ -11,13 +11,29 @@
 .lgl { background: var(--bg); }
 
 /* ------------------------------------------------------------------ HEAD */
-.lgl__head { padding-top: clamp(140px, 12vw, 200px); padding-bottom: var(--s-7); border-bottom: 1px solid var(--hairline); }
-.lgl__eyebrow { margin: 0 0 var(--s-4); }
-.lgl__title { margin: 0 0 var(--s-6); max-width: 18ch; }
-.lgl__stripe { height: 1px; width: min(200px, 38%); background: var(--accent); opacity: 0.7; margin-bottom: var(--s-6); }
-.lgl__intro { max-width: 62ch; margin: 0 0 var(--s-7); }
+/* Same light content-page hero as Contacts and FAQ — see the note in
+   contacts.css for why these three now share one construction. */
+.lgl__head {
+  position: relative; isolation: isolate; z-index: 1;
+  padding: clamp(120px, 16vh, 200px) 0 clamp(48px, 6vw, 76px);
+  background: linear-gradient(180deg, var(--surface-raised) 0%, var(--paper) 64%, var(--paper-2) 100%);
+  border-bottom: 1px solid var(--hairline);
+}
+.lgl__eyebrow {
+  margin: 0 0 var(--s-4); font-family: var(--font-body), sans-serif; font-size: var(--text-caption);
+  font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent);
+}
+.lgl__title {
+  margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  font-size: var(--text-display); line-height: 1.0; letter-spacing: -0.02em; color: var(--text);
+  text-wrap: balance; max-width: 16ch;
+}
+.lgl__intro {
+  margin: var(--s-6) 0 0; max-width: 56ch; font-family: var(--font-body), sans-serif;
+  font-size: var(--text-lead); font-weight: 300; line-height: 1.55; color: var(--text-soft);
+}
 
-.lgl__updated { display: inline-flex; align-items: baseline; gap: var(--s-3); margin: 0;
+.lgl__updated { display: inline-flex; align-items: baseline; gap: var(--s-3); margin: var(--s-5) 0 0;
   font-size: var(--text-sm); color: var(--text); padding: 8px 16px; border-radius: 999px;
   border: 1px solid var(--hairline-strong); }
 .lgl__updated-label { text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.66rem; color: var(--text-faint); }

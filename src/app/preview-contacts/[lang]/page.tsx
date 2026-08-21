@@ -7,6 +7,7 @@ import type { Translation } from "@/types/homepage";
 import Nav from "../../preview-home/sections/Nav";
 import Footer from "../../preview-home/sections/Footer";
 import Form from "../../preview-home/sections/Form";
+import LightHeroFlag from "../../preview-insights/LightHeroFlag";
 import ContactsMotion from "./ContactsMotion";
 import ConsultantFinder, { type FinderMember } from "./ConsultantFinder";
 import OfficeHours from "./OfficeHours";
@@ -114,21 +115,27 @@ export default async function ContactsPage({ params }: Props) {
 
   return (
     <>
+      <LightHeroFlag />
       <ContactsMotion />
       <Nav lang={lang} translations={translations} homeHref={localizedHref(lang)} />
 
       <main className="cnt">
         {/* ------------------------------------------------------------ HERO */}
-        <section className="cnt__hero">
+        {/* Light content-page hero, modelled on FAQ's .faqp__hero (and Insights'
+            .ins__hero): eyebrow → display-size title with a gold accent word →
+            lead → meta line. Deliberately NOT the homepage/partners photo hero
+            (.hero__title, 300 weight over an image) — that pattern is for
+            conversion landing pages; this is a page people arrive at to DO
+            something, and it reads better light and heavier. */}
+        <section className="cnt__hero is-light">
           <div className="wrap cnt__hero-inner">
-            <p className="eyebrow cnt__eyebrow">{t.heroEyebrow}</p>
-            <h1 className="h1 cnt__hero-title">
+            <p className="cnt__eyebrow">{t.heroEyebrow}</p>
+            <h1 className="cnt__hero-title">
               {t.heroTitle[0]}
               <span className="it">{t.heroTitle[1]}</span>
               {t.heroTitle[2]}
             </h1>
-            <div className="cnt__stripe shimmer" aria-hidden />
-            <p className="lead cnt__hero-lead">{t.heroLead}</p>
+            <p className="cnt__hero-lead">{t.heroLead}</p>
             <OfficeHours
               labels={{
                 label: t.hoursLabel, value: t.hoursValue, open: t.hoursOpen,
@@ -198,7 +205,6 @@ export default async function ContactsPage({ params }: Props) {
               <address className="cnt__office-address">{t.officeAddress}</address>
               <a className="btn btn--ghost" href={mapHref} target="_blank" rel="noopener noreferrer">
                 <span>{t.officeDirections}</span>
-                <span className="btn__ico"><Arrow /></span>
               </a>
             </div>
             <div className="cnt__office-map">
