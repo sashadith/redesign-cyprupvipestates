@@ -148,8 +148,9 @@ export default async function ContactsPage({ params }: Props) {
         {/* -------------------------------------------------------- CHANNELS */}
         <section className="section is-light cnt__channels">
           <div className="wrap">
-            <p className="eyebrow cnt__eyebrow">{t.channelsEyebrow}</p>
-            <h2 className="h2 cnt__title">{t.channelsTitle}</h2>
+            <p className="cnt__eyebrow">{t.channelsEyebrow}</p>
+            <h2 className="cnt__title">{t.channelsTitle}</h2>
+            <hr className="shimmer cnt__stripe" />
             <ul className="cnt__channel-grid">
               {channels.map((c) => (
                 <li key={c.key}>
@@ -173,9 +174,10 @@ export default async function ContactsPage({ params }: Props) {
         {/* ---------------------------------------------------------- FINDER */}
         <section className="section cnt__finder-sec" id="team">
           <div className="wrap">
-            <p className="eyebrow cnt__eyebrow">{t.finderEyebrow}</p>
-            <h2 className="h2 cnt__title">{t.finderTitle}</h2>
-            <p className="lead cnt__lead">{t.finderLead}</p>
+            <p className="cnt__eyebrow">{t.finderEyebrow}</p>
+            <h2 className="cnt__title">{t.finderTitle}</h2>
+            <hr className="shimmer cnt__stripe" />
+            <p className="cnt__lead">{t.finderLead}</p>
             <ConsultantFinder
               members={members}
               lang={lang}
@@ -190,7 +192,7 @@ export default async function ContactsPage({ params }: Props) {
         {/* ------------------------------------------------------------ FORM */}
         <section className="section cnt__form-sec" id="form">
           <div className="wrap">
-            <p className="eyebrow cnt__eyebrow">{t.formEyebrow}</p>
+            <p className="cnt__eyebrow">{t.formEyebrow}</p>
           </div>
           <Form lang={lang} title={<span className="cnt__title">{t.formTitle}</span>} subtitle={t.formLead} />
         </section>
@@ -199,8 +201,9 @@ export default async function ContactsPage({ params }: Props) {
         <section className="section cnt__office">
           <div className="wrap cnt__office-grid">
             <div className="cnt__office-body">
-              <p className="eyebrow cnt__eyebrow">{t.officeEyebrow}</p>
-              <h2 className="h2 cnt__title">{t.officeTitle}</h2>
+              <p className="cnt__eyebrow">{t.officeEyebrow}</p>
+              <h2 className="cnt__title">{t.officeTitle}</h2>
+            <hr className="shimmer cnt__stripe" />
               <p className="cnt__office-company">{t.officeCompany}</p>
               <address className="cnt__office-address">{t.officeAddress}</address>
               <a className="btn btn--ghost" href={mapHref} target="_blank" rel="noopener noreferrer">

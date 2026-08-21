@@ -18,16 +18,38 @@
 .abt__hero-lead { max-width: 58ch; margin-top: var(--s-5); }
 
 /* ---------------------------------------------- SHARED SECTION FURNITURE */
-/* Vertical rhythm taken from the homepage, not invented: there, the heading
-   carries margin:0 and the element BELOW it owns the gap — .about__desc is
-   `margin: var(--s-7) 0 56px`. The first pass of this page used --s-3/--s-5/
-   --s-6 (12/24/32px), which is why every section read as cramped next to the
-   rest of the site. These are the homepage's own steps. */
-.abt__eyebrow { margin: 0 0 var(--s-4); }
-.abt__title { margin: 0 0 var(--s-5); max-width: 22ch; }
-/* Heading → lead → content: the same 48px step the homepage uses. */
-.abt__lead { margin: var(--s-5) 0 var(--s-7); max-width: 62ch; }
-/* Any grid/list that follows a heading block keeps a full 48px of air. */
+/* These are fully self-contained on purpose. The first version set only
+   margins here and let the shared .eyebrow/.h2/.lead classes supply the type —
+   but those carry `margin: 0`, and because this file's position in the final
+   CSS bundle is not guaranteed relative to tokens.css, THEY won every time.
+   Result: every margin below silently never applied, which is exactly why the
+   page read as having no spacing at all. FAQ and Insights avoid this by using
+   only page-scoped classes; so does this file now.
+
+   The rhythm itself is measured off the published homepage sections:
+     title ──24px──> .shimmer stripe ──32px──> lead ──48px──> content
+   (.about__stripe margin-top 24px, .featured__desc margin-top 32px,
+    .cities__grid / .descblock__grid margin-top 32–64px). */
+.abt__eyebrow {
+  margin: 0 0 var(--s-4); font-family: var(--font-body), sans-serif;
+  font-size: var(--text-caption); font-weight: 600; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--accent);
+}
+.abt__title {
+  margin: 0; max-width: 22ch;
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-size: var(--text-h2); font-weight: 400; line-height: 1.1;
+  letter-spacing: -0.02em; color: var(--text); text-wrap: balance;
+}
+/* The gold divider every published section carries under its heading. */
+/* element+class so it outranks tokens.css's `.shimmer { margin: 0 }`
+   regardless of which stylesheet the bundler emits first. */
+hr.abt__stripe { margin: var(--s-5) 0 0; max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
+.abt__lead {
+  margin: var(--s-6) 0 0; max-width: 62ch; font-family: var(--font-body), sans-serif;
+  font-size: var(--text-lead); font-weight: 300; line-height: 1.6; color: var(--text-soft);
+}
+/* Any grid/list that follows the heading block keeps a full 48px of air. */
 .abt__cards, .abt__values-grid, .abt__team-grid, .abt__quotes, .abt__steps { margin-top: var(--s-7); }
 
 /* ---------------------------------------------------------------- STANCE */
@@ -40,7 +62,8 @@
 @media (min-width: 901px) { .abt__stance-body { padding-top: var(--s-2); } }
 .abt__stance-head { position: sticky; top: 120px; }
 .abt__stance-title { max-width: 16ch; }
-.abt__stance-lead { color: var(--text); font-size: var(--text-lead); margin: 0 0 var(--s-6); max-width: 62ch; line-height: 1.65; }
+.abt__stance-lead { margin: 0 0 var(--s-6); max-width: 62ch; font-family: var(--font-body), sans-serif;
+  font-size: var(--text-lead); font-weight: 300; line-height: 1.65; color: var(--text); }
 .abt__stance-p { color: var(--text-soft); line-height: 1.75; margin: 0 0 var(--s-6); max-width: 62ch; }
 .abt__stance-p:last-child { margin-bottom: 0; }
 
@@ -56,7 +79,7 @@
 /* Numbered editorial sequence — deliberately NOT a third card grid, so the
    page has real compositional variation between its three "list" sections. */
 .abt__work { padding-block: var(--section-y); }
-.abt__steps { list-style: none; padding: 0; display: grid; gap: var(--s-6); }
+.abt__steps { list-style: none; margin-bottom: 0; padding: 0; display: grid; gap: var(--s-6); }
 .abt__step { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s-5) var(--s-6); align-items: start;
   padding-top: var(--s-6); border-top: 1px solid var(--hairline); }
 .abt__step:first-child { border-top: 0; padding-top: 0; }
@@ -80,7 +103,7 @@
 /* Six values as a compact hairline grid — the old page gave each of these a
    full block with an image, which is what made the section outstay its value. */
 .abt__values { padding-block: var(--section-y); }
-.abt__values-grid { list-style: none; padding: 0;
+.abt__values-grid { list-style: none; margin-bottom: 0; padding: 0;
   display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 0; }
 .abt__value { padding: var(--s-6) var(--s-6) var(--s-6) 0; border-top: 1px solid var(--hairline); }
 .abt__value-title { position: relative; padding-left: var(--s-5); font-family: var(--font-body), sans-serif;
@@ -90,7 +113,7 @@
 
 /* ------------------------------------------------------------------ TEAM */
 .abt__team { padding-block: var(--section-y); }
-.abt__team-grid { list-style: none; margin: 0; padding: 0;
+.abt__team-grid { list-style: none; margin-bottom: 0; padding: 0;
   display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: var(--s-6) var(--s-5); }
 .abt__member-photo { position: relative; aspect-ratio: 3 / 4; border-radius: var(--r-ui); overflow: hidden;
   background: var(--surface-raised); margin-bottom: var(--s-5); }
@@ -116,9 +139,10 @@
 /* ------------------------------------------------------------------- CTA */
 .abt__cta { padding-block: var(--section-y); }
 .abt__cta-inner { text-align: center; display: flex; flex-direction: column; align-items: center; }
+.abt__cta hr.abt__stripe { width: min(200px, 60%); background: linear-gradient(90deg, transparent, var(--accent), transparent); }
 .abt__cta-title { max-width: 20ch; }
 .abt__cta .abt__lead { max-width: 56ch; margin-inline: auto; }
-.abt__cta-btns { display: flex; flex-wrap: wrap; gap: var(--s-4); justify-content: center; }
+.abt__cta-btns { margin-top: var(--s-7); display: flex; flex-wrap: wrap; gap: var(--s-4); justify-content: center; }
 
 /* ---------------------------------------------------------- RESPONSIVE */
 @media (max-width: 900px) {

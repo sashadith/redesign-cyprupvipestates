@@ -141,12 +141,13 @@ export default async function AboutPage({ params }: Props) {
         <section className="section is-light abt__stance">
           <div className="wrap abt__stance-grid">
             <div className="abt__stance-head">
-              <p className="eyebrow abt__eyebrow">{t.stanceEyebrow}</p>
-              <h2 className="h2 abt__title abt__stance-title">{t.stanceTitle}</h2>
+              <p className="abt__eyebrow">{t.stanceEyebrow}</p>
+              <h2 className="abt__title abt__stance-title">{t.stanceTitle}</h2>
+            <hr className="shimmer abt__stripe" />
             </div>
             <div className="abt__stance-body">
               {t.stanceBody.map((p, i) => (
-                <p key={i} className={i === 0 ? "lead abt__stance-lead" : "abt__stance-p"}>{p}</p>
+                <p key={i} className={i === 0 ? "abt__stance-lead" : "abt__stance-p"}>{p}</p>
               ))}
             </div>
           </div>
@@ -155,8 +156,9 @@ export default async function AboutPage({ params }: Props) {
         {/* ----------------------------------------------------------- STATS */}
         <section className="section abt__stats">
           <div className="wrap">
-            <p className="eyebrow abt__eyebrow">{t.statsEyebrow}</p>
-            <h2 className="h2 abt__title">{t.statsTitle}</h2>
+            <p className="abt__eyebrow">{t.statsEyebrow}</p>
+            <h2 className="abt__title">{t.statsTitle}</h2>
+            <hr className="shimmer abt__stripe" />
           </div>
           <Benefits block={benefitsBlock} />
         </section>
@@ -164,8 +166,9 @@ export default async function AboutPage({ params }: Props) {
         {/* ------------------------------------------------------- HOW WE WORK */}
         <section className="section is-light abt__work">
           <div className="wrap">
-            <p className="eyebrow abt__eyebrow">{t.workEyebrow}</p>
-            <h2 className="h2 abt__title">{t.workTitle}</h2>
+            <p className="abt__eyebrow">{t.workEyebrow}</p>
+            <h2 className="abt__title">{t.workTitle}</h2>
+            <hr className="shimmer abt__stripe" />
             <ol className="abt__steps">
               {t.work.map((w, i) => (
                 <li className="abt__step" key={w.title}>
@@ -183,8 +186,9 @@ export default async function AboutPage({ params }: Props) {
         {/* --------------------------------------------------- WHAT YOU RECEIVE */}
         <section className="section is-light abt__receive">
           <div className="wrap">
-            <p className="eyebrow abt__eyebrow">{t.receiveEyebrow}</p>
-            <h2 className="h2 abt__title">{t.receiveTitle}</h2>
+            <p className="abt__eyebrow">{t.receiveEyebrow}</p>
+            <h2 className="abt__title">{t.receiveTitle}</h2>
+            <hr className="shimmer abt__stripe" />
             <div className="abt__cards">
               {t.receive.map((r, i) => (
                 <article className="abt__card" key={r.title}>
@@ -200,8 +204,9 @@ export default async function AboutPage({ params }: Props) {
         {/* ---------------------------------------------------------- VALUES */}
         <section className="section abt__values">
           <div className="wrap">
-            <p className="eyebrow abt__eyebrow">{t.valuesEyebrow}</p>
-            <h2 className="h2 abt__title">{t.valuesTitle}</h2>
+            <p className="abt__eyebrow">{t.valuesEyebrow}</p>
+            <h2 className="abt__title">{t.valuesTitle}</h2>
+            <hr className="shimmer abt__stripe" />
             <ul className="abt__values-grid">
               {t.values.map((v) => (
                 <li className="abt__value" key={v.title}>
@@ -216,9 +221,10 @@ export default async function AboutPage({ params }: Props) {
         {/* ------------------------------------------------------------ TEAM */}
         <section className="section is-light abt__team" id="team">
           <div className="wrap">
-            <p className="eyebrow abt__eyebrow">{t.teamEyebrow}</p>
-            <h2 className="h2 abt__title">{t.teamTitle}</h2>
-            <p className="lead abt__lead">{t.teamLead}</p>
+            <p className="abt__eyebrow">{t.teamEyebrow}</p>
+            <h2 className="abt__title">{t.teamTitle}</h2>
+            <hr className="shimmer abt__stripe" />
+            <p className="abt__lead">{t.teamLead}</p>
             <ul className="abt__team-grid">
               {team.map((m) => (
                 <li className="abt__member" key={m.name}>
@@ -243,9 +249,10 @@ export default async function AboutPage({ params }: Props) {
         {featuredReviews.length > 0 && (
           <section className="section abt__stories">
             <div className="wrap">
-              <p className="eyebrow abt__eyebrow">{t.storiesEyebrow}</p>
-              <h2 className="h2 abt__title">{t.storiesTitle}</h2>
-              <p className="lead abt__lead">{t.storiesLead}</p>
+              <p className="abt__eyebrow">{t.storiesEyebrow}</p>
+              <h2 className="abt__title">{t.storiesTitle}</h2>
+            <hr className="shimmer abt__stripe" />
+              <p className="abt__lead">{t.storiesLead}</p>
               <div className="abt__quotes">
                 {featuredReviews.map((r) => (
                   <figure className="abt__quote" key={r.name}>
@@ -267,8 +274,9 @@ export default async function AboutPage({ params }: Props) {
         {/* ------------------------------------------------------------- CTA */}
         <section className="section is-light abt__cta">
           <div className="wrap abt__cta-inner">
-            <h2 className="h2 abt__title abt__cta-title">{t.ctaTitle}</h2>
-            <p className="lead abt__lead">{t.ctaLead}</p>
+            <h2 className="abt__title abt__cta-title">{t.ctaTitle}</h2>
+            <hr className="shimmer abt__stripe" />
+            <p className="abt__lead">{t.ctaLead}</p>
             <div className="abt__cta-btns">
               <a className="btn btn--primary" href={corporatePath("contacts", lang)}>
                 <span>{t.ctaPrimary}</span>

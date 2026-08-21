@@ -56,20 +56,36 @@
 .cnt__hours-tz { color: var(--text-faint); font-size: 0.78rem; }
 
 /* ------------------------------------------------ SHARED SECTION FURNITURE */
-/* Same rhythm as the homepage and the About page: heading carries margin:0,
-   the element below owns the gap, and the step from a heading block to its
-   content is a full 48px (--s-7). The first pass used 12/24/32px, which read
-   as cramped against every other page on the site. */
-.cnt__eyebrow { margin: 0 0 var(--s-4); }
-.cnt__title { margin: 0 0 var(--s-5); max-width: 24ch; }
-.cnt__lead { margin: var(--s-5) 0 var(--s-7); max-width: 62ch; }
+/* Self-contained for the same reason as About's (see about.css): mixing the
+   shared .eyebrow/.h2/.lead classes in meant tokens.css's `margin: 0` won on
+   CSS-order and every margin here silently never applied.
+   Rhythm measured off the published homepage sections:
+     title ──24px──> .shimmer stripe ──32px──> lead ──48px──> content */
+.cnt__eyebrow {
+  margin: 0 0 var(--s-4); font-family: var(--font-body), sans-serif;
+  font-size: var(--text-caption); font-weight: 600; letter-spacing: 0.3em;
+  text-transform: uppercase; color: var(--accent);
+}
+.cnt__title {
+  margin: 0; max-width: 24ch;
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-size: var(--text-h2); font-weight: 400; line-height: 1.1;
+  letter-spacing: -0.02em; color: var(--text); text-wrap: balance;
+}
+/* element+class so it outranks tokens.css's `.shimmer { margin: 0 }`
+   regardless of which stylesheet the bundler emits first. */
+hr.cnt__stripe { margin: var(--s-5) 0 0; max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
+.cnt__lead {
+  margin: var(--s-6) 0 0; max-width: 62ch; font-family: var(--font-body), sans-serif;
+  font-size: var(--text-lead); font-weight: 300; line-height: 1.6; color: var(--text-soft);
+}
 .cnt__channel-grid, .cnt__finder { margin-top: var(--s-7); }
 
 /* -------------------------------------------------------------- CHANNELS */
 /* The primary action of the whole page — full-card link targets, not a link
    inside a card, so the entire tile is tappable on mobile. */
 .cnt__channels { padding-block: var(--section-y); }
-.cnt__channel-grid { list-style: none; padding: 0;
+.cnt__channel-grid { list-style: none; margin-bottom: 0; padding: 0;
   display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: var(--s-5); }
 .cnt__channel { position: relative; display: flex; flex-direction: column; height: 100%;
   padding: var(--s-6); border: 1px solid var(--glass-border); border-radius: var(--r-ui);
