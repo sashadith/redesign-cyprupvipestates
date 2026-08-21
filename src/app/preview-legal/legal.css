@@ -61,7 +61,10 @@
 .lgl__toc-link.is-active { color: var(--accent); border-left-color: var(--accent); }
 
 /* --------------------------------------------------------------- CONTENT */
-.lgl__content { max-width: 68ch; }
+/* Full width of its grid track, not a 68ch measure. The narrower column left
+   a wide empty band between the text and the right edge of the page container
+   while the table of contents already constrains the left side. */
+.lgl__content { max-width: none; }
 .lgl__section { padding-bottom: var(--s-7); }
 .lgl__section + .lgl__section { padding-top: var(--s-7); border-top: 1px solid var(--hairline); }
 /* Offset for the fixed nav so an anchor jump doesn't hide the heading. */
