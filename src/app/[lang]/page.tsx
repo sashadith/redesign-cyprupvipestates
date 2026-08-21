@@ -20,6 +20,7 @@ import {
   DEFAULT_OG_IMAGE_HEIGHT,
 } from "@/lib/seo";
 import { Translation } from "@/types/homepage";
+import { notFound } from "next/navigation";
 import { FormStandardDocument } from "@/types/formStandardDocument";
 import type { TextContent, DoubleTextBlock } from "@/types/blog";
 
@@ -97,6 +98,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function Home({ params }: Props) {
   const { lang } = params;
   const homePage = await getHomePageByLang(lang);
+  // No homepage row for this locale — including when `lang` isn't a locale at
+  // all (/uploads and friends land here). Without this the render dies on a
+  // null deref and the URL 500s instead of 404ing.
+  if (!homePage) notFound();
   const formDocument: FormStandardDocument = await getFormStandardDocumentByLang(lang);
   const t = homeStrings(lang);
 
