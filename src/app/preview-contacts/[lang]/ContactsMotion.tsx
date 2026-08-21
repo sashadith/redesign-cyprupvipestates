@@ -21,16 +21,17 @@ export default function ContactsMotion() {
       const toArr = (sel: string) => gsap.utils.toArray<HTMLElement>(sel);
 
       /* ---------------- HERO (on load) ---------------- */
-      const headline = document.querySelector<HTMLElement>(".cnt__hero-title");
+      const headline = document.querySelector<HTMLElement>(".cnt__hero .hero__headline");
       if (headline) {
         const split = new SplitText(headline, { type: "lines", linesClass: "motion-line" });
         splits.push(split);
         gsap
           .timeline()
-          .from(".cnt__hero .cnt__eyebrow", { autoAlpha: 0, y: 14, duration: 0.5, ease: "power2.out" }, 0)
+          .from(".cnt__hero .hero__brand", { autoAlpha: 0, y: 14, duration: 0.5, ease: "power2.out" }, 0)
           .from(split.lines, { y: 70, duration: 0.85, stagger: 0.1, ease: "power3.out" }, 0.2)
-          .from(".cnt__hero-lead", { autoAlpha: 0, y: 20, duration: 0.55, ease: "power2.out" }, 0.95)
-          .from(".cnt__hours", { autoAlpha: 0, y: 16, duration: 0.5, ease: "power2.out" }, 1.1);
+          .from(".cnt__hero .hero__stripe", { scaleX: 0, transformOrigin: "left center", autoAlpha: 0, duration: 0.6, ease: "power3.out" }, 0.95)
+          .from(".cnt__hero-lead", { autoAlpha: 0, y: 20, duration: 0.55, ease: "power2.out" }, 1.2)
+          .from(".cnt__hours", { autoAlpha: 0, y: 16, duration: 0.5, ease: "power2.out" }, 1.35);
       }
 
       /* ---------------- SECTION HEADINGS ---------------- */
@@ -53,7 +54,7 @@ export default function ContactsMotion() {
       });
 
       /* ---------------- EYEBROWS + LEADS ---------------- */
-      toArr(".cnt__channels .cnt__eyebrow, .cnt__finder-sec .cnt__eyebrow, .cnt__form-sec .cnt__eyebrow, .cnt__office .cnt__eyebrow, .cnt__lead").forEach((el) => {
+      toArr(".cnt__channels .cnt__eyebrow, .cnt__finder-sec .cnt__eyebrow, .cnt__lead").forEach((el) => {
         gsap.from(el, {
           y: 22,
           autoAlpha: 0,
@@ -103,23 +104,6 @@ export default function ContactsMotion() {
           scrollTrigger: { trigger: ".cnt__people", start: "top 88%", once: true },
         });
       }
-
-      /* ---------------- OFFICE ---------------- */
-      gsap.from(".cnt__office-body", {
-        x: -30,
-        autoAlpha: 0,
-        duration: 0.7,
-        ease: "power3.out",
-        scrollTrigger: { trigger: ".cnt__office-grid", start: "top 85%", once: true },
-      });
-      gsap.from(".cnt__office-map", {
-        autoAlpha: 0,
-        y: 30,
-        duration: 0.7,
-        delay: 0.12,
-        ease: "power3.out",
-        scrollTrigger: { trigger: ".cnt__office-grid", start: "top 85%", once: true },
-      });
 
       ScrollTrigger.refresh();
     });

@@ -44,7 +44,13 @@ export type ContactsStrings = {
   speaks: string;
 
   formEyebrow: string;
-  formTitle: string;
+  /* The shared Form collects a name, contact details and a preferred channel —
+     there is NO free-text message field on this page (showQuestionField is
+     opt-in and only the FAQ page turns it on). "Send us a message" therefore
+     promised an input that isn't there; the wording now asks for details and
+     offers a callback instead. */
+  /** Split so the middle part carries the .it gold accent, like heroTitle. */
+  formTitle: [string, string, string];
   formLead: string;
 
   officeEyebrow: string;
@@ -74,7 +80,7 @@ const EN: ContactsStrings = {
     email: "For detailed enquiries and documents",
   },
 
-  hoursLabel: "Office hours",
+  hoursLabel: "Working hours",
   hoursValue: "Daily, 9:00 – 18:00",
   hoursOpen: "Open now",
   hoursClosed: "Closed right now",
@@ -93,8 +99,8 @@ const EN: ContactsStrings = {
   speaks: "Speaks",
 
   formEyebrow: "Write to us",
-  formTitle: "Send us a message",
-  formLead: "Tell us what you are looking for. We reply personally, usually the same day.",
+  formTitle: ["Let us ", "come back", " to you"],
+  formLead: "Leave your details and tell us how you would rather be reached. One of our consultants gets in touch personally — usually the same day.",
 
   officeEyebrow: "Visit us",
   officeTitle: "Our office in Paphos",
@@ -123,7 +129,7 @@ const DE: ContactsStrings = {
     email: "Für ausführliche Anfragen und Unterlagen",
   },
 
-  hoursLabel: "Bürozeiten",
+  hoursLabel: "Arbeitszeiten",
   hoursValue: "Täglich, 9:00 – 18:00 Uhr",
   hoursOpen: "Jetzt geöffnet",
   hoursClosed: "Gerade geschlossen",
@@ -142,8 +148,8 @@ const DE: ContactsStrings = {
   speaks: "Spricht",
 
   formEyebrow: "Schreiben Sie uns",
-  formTitle: "Senden Sie uns eine Nachricht",
-  formLead: "Sagen Sie uns, wonach Sie suchen. Wir antworten persönlich, meist noch am selben Tag.",
+  formTitle: ["Wir ", "melden uns", " bei Ihnen"],
+  formLead: "Hinterlassen Sie Ihre Kontaktdaten und auf welchem Weg Sie am liebsten erreicht werden. Eine unserer Beraterinnen oder einer unserer Berater meldet sich persönlich — meist noch am selben Tag.",
 
   officeEyebrow: "Besuchen Sie uns",
   officeTitle: "Unser Büro in Paphos",
@@ -191,8 +197,8 @@ const PL: ContactsStrings = {
   speaks: "Mówi",
 
   formEyebrow: "Napisz do nas",
-  formTitle: "Wyślij nam wiadomość",
-  formLead: "Powiedz nam, czego szukasz. Odpowiadamy osobiście, zwykle tego samego dnia.",
+  formTitle: ["Oddzwonimy ", "do Ciebie", ""],
+  formLead: "Zostaw swoje dane i wybierz, jak najchętniej się kontaktujesz. Jeden z naszych doradców odezwie się osobiście — zwykle jeszcze tego samego dnia.",
 
   officeEyebrow: "Odwiedź nas",
   officeTitle: "Nasze biuro w Pafos",
@@ -240,8 +246,8 @@ const RU: ContactsStrings = {
   speaks: "Говорит",
 
   formEyebrow: "Напишите нам",
-  formTitle: "Отправьте сообщение",
-  formLead: "Расскажите, что вы ищете. Мы отвечаем лично, обычно в тот же день.",
+  formTitle: ["Мы ", "свяжемся", " с вами"],
+  formLead: "Оставьте свои контакты и удобный способ связи. Наш консультант свяжется с вами лично — обычно в тот же день.",
 
   officeEyebrow: "Приезжайте",
   officeTitle: "Наш офис в Пафосе",
