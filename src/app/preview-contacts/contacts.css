@@ -1,0 +1,120 @@
+/* =====================================================================
+   Contacts — redesigned page styles.
+
+   Built on the shared design system (preview-home/tokens.css) — .wrap,
+   .section, .h1/.h2, .lead, .eyebrow, .btn, .shimmer and .it are inherited,
+   never redefined. This file adds only this page's own compositions.
+
+   The page is a routing tool, and the styling follows that: the three direct
+   channels are the largest, most tappable targets on the page; the consultant
+   finder reads as a filter, not a gallery; the form is deliberately quieter
+   than both.
+   ===================================================================== */
+
+.cnt { background: var(--bg); }
+
+/* ------------------------------------------------------------------ HERO */
+/* A text hero rather than a photo one: this page is about acting, not
+   atmosphere, so nothing competes with the channel cards right below. */
+.cnt__hero { padding-top: clamp(140px, 12vw, 200px); padding-bottom: var(--s-8); }
+.cnt__hero-inner { max-width: 900px; }
+.cnt__hero-title { margin: 0 0 var(--s-5); max-width: 16ch; }
+.cnt__stripe { height: 1px; width: min(220px, 40%); background: var(--accent); opacity: 0.7; margin-bottom: var(--s-5); }
+.cnt__hero-lead { max-width: 60ch; margin-bottom: var(--s-6); }
+
+/* Live open/closed badge */
+.cnt__hours { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-4); font-size: var(--text-sm); }
+.cnt__hours-label { text-transform: uppercase; letter-spacing: 0.18em; font-size: 0.68rem; color: var(--text-faint); }
+.cnt__hours-value { color: var(--text); }
+.cnt__hours-badge { display: inline-flex; align-items: center; gap: var(--s-2); padding: 4px 12px; border-radius: 999px;
+  font-size: 0.78rem; border: 1px solid var(--hairline-strong); }
+.cnt__hours-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.cnt__hours-badge--open { color: #7FC8A0; border-color: rgba(127, 200, 160, 0.45); }
+.cnt__hours-badge--open .cnt__hours-dot { background: #7FC8A0; box-shadow: 0 0 0 3px rgba(127, 200, 160, 0.18); }
+.cnt__hours-badge--closed { color: var(--text-faint); }
+.cnt__hours-badge--closed .cnt__hours-dot { background: var(--text-faint); }
+.cnt__hours-tz { color: var(--text-faint); font-size: 0.78rem; }
+
+/* Shared section furniture */
+.cnt__eyebrow { margin-bottom: var(--s-3); }
+.cnt__title { margin: 0 0 var(--s-5); max-width: 24ch; }
+.cnt__lead { margin-bottom: var(--s-6); max-width: 62ch; }
+
+/* -------------------------------------------------------------- CHANNELS */
+/* The primary action of the whole page — full-card link targets, not a link
+   inside a card, so the entire tile is tappable on mobile. */
+.cnt__channels { padding-block: var(--section-y); }
+.cnt__channel-grid { list-style: none; margin: var(--s-6) 0 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: var(--s-5); }
+.cnt__channel { position: relative; display: flex; flex-direction: column; height: 100%;
+  padding: var(--s-6); border: 1px solid var(--glass-border); border-radius: var(--r-ui);
+  background: var(--glass-bg); text-decoration: none; color: inherit;
+  transition: transform var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease); }
+.cnt__channel:hover, .cnt__channel:focus-visible { transform: translateY(-4px); border-color: var(--accent); background: var(--accent-soft); }
+.cnt__channel-ico { color: var(--accent); margin-bottom: var(--s-4); line-height: 0; }
+.cnt__channel-title { font-family: var(--font-display), serif; font-size: var(--text-h3); font-weight: 400; margin-bottom: var(--s-2); }
+.cnt__channel-value { font-size: 1rem; color: var(--text); margin-bottom: var(--s-3); word-break: break-word; }
+.cnt__channel-hint { font-size: var(--text-sm); color: var(--text-soft); line-height: 1.6; margin-top: auto; }
+.cnt__channel-arrow { position: absolute; top: var(--s-6); right: var(--s-6); color: var(--accent);
+  opacity: 0; transform: translate(-4px, 4px); transition: opacity var(--dur-sm) var(--ease), transform var(--dur-sm) var(--ease); }
+.cnt__channel:hover .cnt__channel-arrow, .cnt__channel:focus-visible .cnt__channel-arrow { opacity: 1; transform: translate(0, 0); }
+
+/* ---------------------------------------------------------------- FINDER */
+.cnt__finder-sec { background: var(--surface); padding-block: var(--section-y); }
+.cnt__chips { display: flex; flex-wrap: wrap; gap: var(--s-2); margin-bottom: var(--s-4); }
+.cnt__chip { display: inline-flex; align-items: center; gap: var(--s-2); padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--hairline-strong); background: none; color: var(--text-soft);
+  font-family: var(--font-body), sans-serif; font-size: var(--text-sm); cursor: pointer;
+  transition: border-color var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease); }
+.cnt__chip:hover { border-color: var(--accent); color: var(--text); }
+.cnt__chip.is-active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.cnt__chip-n { font-size: 0.72rem; opacity: 0.7; }
+.cnt__chip.is-active .cnt__chip-n { opacity: 0.85; }
+.cnt__finder-count { margin: 0 0 var(--s-5); font-size: 0.78rem; color: var(--text-faint);
+  text-transform: uppercase; letter-spacing: 0.14em; }
+.cnt__finder-empty { color: var(--text-soft); max-width: 50ch; }
+
+.cnt__people { list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap: var(--s-4); }
+.cnt__person { display: flex; align-items: center; gap: var(--s-4);
+  padding: var(--s-4); border: 1px solid var(--hairline); border-radius: var(--r-ui); background: var(--glass-bg); }
+/* Filtered-out members keep their DOM node (no image re-layout, no re-run of
+   the reveal animation) — they are removed from the flow and from the
+   accessibility tree instead. */
+.cnt__person.is-hidden { display: none; }
+.cnt__person-photo { width: 68px; height: 68px; flex: none; border-radius: 50%; overflow: hidden; background: var(--surface-raised); }
+.cnt__person-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
+.cnt__person-ph { display: block; width: 100%; height: 100%; }
+.cnt__person-body { min-width: 0; }
+.cnt__person-name { font-family: var(--font-display), serif; font-size: 1.08rem; font-weight: 400; margin: 0 0 2px; color: var(--text); }
+.cnt__person-role { margin: 0 0 var(--s-2); font-size: var(--text-sm); color: var(--accent); }
+.cnt__person-langs { margin: 0; font-size: 0.76rem; color: var(--text-faint); line-height: 1.5; }
+.cnt__person-langs-label { display: block; text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.64rem; margin-bottom: 1px; }
+
+/* ------------------------------------------------------------------ FORM */
+.cnt__form-sec { padding-top: var(--section-y); }
+
+/* ---------------------------------------------------------------- OFFICE */
+.cnt__office { padding-block: var(--section-y); }
+.cnt__office-grid { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: var(--s-7); align-items: center; }
+.cnt__office-company { margin: 0 0 var(--s-2); color: var(--text); font-weight: 600; }
+.cnt__office-address { margin: 0 0 var(--s-6); font-style: normal; color: var(--text-soft); line-height: 1.7; max-width: 40ch; }
+.cnt__office-map { border-radius: var(--r-ui); overflow: hidden; border: 1px solid var(--hairline); background: var(--surface-raised); }
+.cnt__office-map iframe { display: block; width: 100%; height: 380px; border: 0; }
+
+/* ------------------------------------------------------------ RESPONSIVE */
+@media (max-width: 900px) {
+  .cnt__office-grid { grid-template-columns: 1fr; gap: var(--s-6); }
+  .cnt__office-map iframe { height: 300px; }
+  .cnt__title { max-width: none; }
+}
+@media (max-width: 560px) {
+  .cnt__hero { padding-top: clamp(110px, 22vw, 150px); }
+  .cnt__channel { padding: var(--s-5); }
+  .cnt__channel-arrow { display: none; }
+  .cnt__people { grid-template-columns: 1fr; }
+}
+
+/* SplitText line wrapper — keep block-level so a reflow mid-animation can't
+   collapse a heading onto one line. */
+.cnt .motion-line { display: block; }

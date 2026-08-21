@@ -3,6 +3,7 @@ import createIntlMiddleware from "next-intl/middleware";
 
 import { defaultLocale, locales } from "@/i18n.config";
 import nestedPageRedirects from "@/lib/nestedPageRedirects.json";
+import { CORPORATE_SLUGS } from "@/lib/corporatePageSlugs";
 import { EN_REDIRECT_TITLE_SWEEP_EXCLUDE } from "@/lib/seo/enRedirectTitleSweepExclude";
 
 // Reserved first segments that are their own route, not singlepages — never canonicalised here.
@@ -144,6 +145,37 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
+  // Corporate pages redesign (About / Contacts / Privacy / Terms) — these
+  // four differ from every rewrite above in one important way: their slug is
+  // TRANSLATED per locale (about-us / ueber-uns / o-nas / o-nas, …), so the
+  // match is driven by the shared CORPORATE_SLUGS map rather than a literal
+  // path regex. Both this rewrite and each page's canonical/hreflang read
+  // that same map, so they cannot drift apart.
+  //
+  // Fails soft by design: if an editor renames one of these slugs in the
+  // admin, the match simply stops firing and the URL falls through to the old
+  // block-rendered singlepage route below — the previous design, not a 404.
+  {
+    const segs = request.nextUrl.pathname.split("/").filter(Boolean);
+    const maybeLocale = segs[0];
+    const hasLocalePrefix = maybeLocale === "de" || maybeLocale === "pl" || maybeLocale === "ru";
+    const lang = hasLocalePrefix ? maybeLocale : "en";
+    const rest = hasLocalePrefix ? segs.slice(1) : segs;
+    if (rest.length === 1) {
+      const slug = rest[0];
+      for (const [page, byLocale] of Object.entries(CORPORATE_SLUGS)) {
+        if ((byLocale as Record<string, string>)[lang] !== slug) continue;
+        const tree =
+          page === "about" ? "preview-about"
+          : page === "contacts" ? "preview-contacts"
+          : "preview-legal";
+        const url = request.nextUrl.clone();
+        url.pathname = tree === "preview-legal" ? `/preview-legal/${lang}/${page}` : `/${tree}/${lang}`;
+        return NextResponse.rewrite(url);
+      }
+    }
+  }
+
   // Singlepage canonicalisation. The catch-all singlepage route matches a page by its leaf slug
   // alone, so a nested page (parent/child) also resolves at a flat "/leaf" or wrong-parent URL —
   // duplicate content. Map each nested leaf to its canonical path and 308-redirect anything else.
@@ -266,6 +298,6 @@ export const config = {
   // than this one file; not fixed wholesale here to avoid touching this
   // matcher's blast radius beyond what's actually needed right now.
   matcher: [
-    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|apple-icon.png|icon.png|manifest.webmanifest|sandbox|og|preview-assets|preview-case-studies|preview-faq|preview-home|preview-insights|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
+    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|favicon.ico|apple-icon.png|icon.png|manifest.webmanifest|sandbox|og|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-home|preview-insights|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
   ],
 };
