@@ -14,7 +14,15 @@
 
 /* ------------------------------------------------------------------ HERO */
 .abt__hero-media img { width: 100%; height: 100%; object-fit: cover; }
-.abt__hero-title { max-width: 20ch; }
+/* Hero headings across all three corporate pages use the Hero/H1 step
+   (--text-h1, clamp 2.6 → 4.25rem) — never --text-display.
+   element+class so it outranks tokens.css's own `.hero__title` font-size
+   regardless of which stylesheet the bundler emits first (same reason as
+   hr.abt__stripe below).
+   No max-width: the headline spans the container exactly as the homepage's
+   does, which is what keeps the gold stripe beneath it aligned with the text
+   instead of running far past it. */
+h1.abt__hero-title { font-size: var(--text-h1); max-width: none; }
 .abt__hero-lead { max-width: 58ch; margin-top: var(--s-5); }
 
 /* ---------------------------------------------- SHARED SECTION FURNITURE */

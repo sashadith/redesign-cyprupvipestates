@@ -34,8 +34,10 @@
 }
 .cnt__hero-title {
   margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
-  font-size: var(--text-display); line-height: 1.0; letter-spacing: -0.02em; color: var(--text);
-  text-wrap: balance; max-width: 18ch;
+  /* Hero/H1 step, not --text-display — heroes across the corporate pages all
+     use --text-h1 (clamp 2.6 → 4.25rem). */
+  font-size: var(--text-h1); line-height: 1.05; letter-spacing: -0.02em; color: var(--text);
+  text-wrap: balance; max-width: 20ch;
 }
 .cnt__hero-lead {
   margin: var(--s-6) 0 0; max-width: 52ch; font-family: var(--font-body), sans-serif;
