@@ -160,7 +160,12 @@ hr.abt__stripe { margin: var(--s-5) 0 0; max-width: none; background: linear-gra
    from the homepage — rather than another card grid. The first version used
    pale cards on a pale section with ◆/❋/✦ glyphs as markers, which read as
    stray characters and had almost no contrast against the background. */
-.abt__receive { padding-block: var(--section-y); }
+/* Two adjacent light sections read as one long block when both sit on
+   --paper. This one steps down to --paper-2 (which .is-light exposes as
+   --surface), so the boundary between "how we work" and "what you receive"
+   is visible without breaking the light passage into dark.
+   element+class so it outranks tokens.css's `.section { background: var(--bg) }`. */
+section.abt__receive { padding-block: var(--section-y); background: var(--surface); }
 .abt__cards { list-style: none; margin-bottom: 0; padding: 0;
   display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
   gap: clamp(32px, 4vw, 56px); }
@@ -283,3 +288,16 @@ hr.abt__stripe { margin: var(--s-5) 0 0; max-width: none; background: linear-gra
    Applied to the section rules as well as the hero one so the two keep
    matching — the hero rule was asked to look exactly like the section rules. */
 .abt__hero .hero__stripe::after, hr.abt__stripe::after { box-shadow: none; }
+
+/* --------------------------------------------- LONG-WORD SAFETY (NARROW) */
+/* Russian compounds can exceed the hero measure on a phone:
+   "средиземноморским" renders 413px wide against a 350px container at 390px
+   viewport, and .hero's overflow:hidden silently CLIPPED it — the page showed
+   no horizontal scroll, so it looked fine while the accent word was cut off.
+   Hyphenation is preferred (the <html lang> is set per locale, so the browser
+   applies the right patterns); break-word is the fallback when no hyphenation
+   dictionary is available. Only kicks in when a word genuinely cannot fit, so
+   shorter locales are unaffected. */
+@media (max-width: 560px) {
+  h1.abt__hero-title, h1.abt__hero-title .it { hyphens: auto; overflow-wrap: break-word; }
+}

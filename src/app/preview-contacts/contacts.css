@@ -301,3 +301,16 @@ section.cnt__form-sec { padding-block: 0; }
    Applied to the section rules as well as the hero one so the two keep
    matching — the hero rule was asked to look exactly like the section rules. */
 .cnt__hero .hero__stripe::after, hr.cnt__stripe::after { box-shadow: none; }
+
+/* --------------------------------------------- LONG-WORD SAFETY (NARROW) */
+/* Russian compounds can exceed the hero measure on a phone:
+   "средиземноморским" renders 413px wide against a 350px container at 390px
+   viewport, and .hero's overflow:hidden silently CLIPPED it — the page showed
+   no horizontal scroll, so it looked fine while the accent word was cut off.
+   Hyphenation is preferred (the <html lang> is set per locale, so the browser
+   applies the right patterns); break-word is the fallback when no hyphenation
+   dictionary is available. Only kicks in when a word genuinely cannot fit, so
+   shorter locales are unaffected. */
+@media (max-width: 560px) {
+  h1.cnt__hero-title, h1.cnt__hero-title .it { hyphens: auto; overflow-wrap: break-word; }
+}
