@@ -11,11 +11,12 @@ import DriveIntervalSelect from "./DriveIntervalSelect";
 import BackLink from "../../BackLink";
 import { computeAvailability } from "@/lib/developmentAvailability";
 import { resolveLinkedDeveloper, developerGroupExists, listDeveloperPageOptions } from "@/lib/developerLink";
+import { adminDateTime } from "@/lib/adminTime";
 
 export const dynamic = "force-dynamic";
 
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#1B4B43]";
-const fmt = (d: Date) => new Date(d).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+const fmt = (d: Date) => adminDateTime(d);
 const STATUS_STYLE: Record<string, string> = {
   draft: "bg-[#F3F4F6] text-[#6B7280]", ready: "bg-[#FEF3C7] text-[#92400E]",
   published: "bg-[#DCFCE7] text-[#166534]", archived: "bg-[#FEE2E2] text-[#991B1B]",

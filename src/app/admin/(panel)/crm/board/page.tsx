@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { updateLeadStatus } from "../../../actions";
+import { adminDate } from "@/lib/adminTime";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +58,7 @@ export default async function CrmBoard() {
                     {l.firstName} {l.lastName}
                   </Link>
                   <div className="text-xs text-[#6B7280] truncate">{l.email}</div>
-                  <div className="text-[11px] text-[#9CA3AF] mt-1">{l.source.replace(/_/g, " ")} · {new Date(l.createdAt).toLocaleDateString("en-GB")}</div>
+                  <div className="text-[11px] text-[#9CA3AF] mt-1">{l.source.replace(/_/g, " ")} · {adminDate(l.createdAt)}</div>
                   <form action={move} className="mt-2 flex gap-1">
                     <input type="hidden" name="id" value={l.id} />
                     <select name="status" defaultValue={status} className="flex-1 rounded border border-[#E5E7EB] text-[11px] px-1 py-1 text-[#111827]">

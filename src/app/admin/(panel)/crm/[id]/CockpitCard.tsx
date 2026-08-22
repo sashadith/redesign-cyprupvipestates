@@ -3,6 +3,7 @@ import { formatWaPhone } from "@/lib/crm/waFormat";
 import GenerateReplyButton from "./GenerateReplyButton";
 import BookingButton from "./BookingButton";
 import StatusPopover from "../StatusPopover";
+import { adminDateTime } from "@/lib/adminTime";
 
 // The Lead Cockpit's hero card (Phase 1 of 4, 2026-07-23; consolidated in the
 // correction batch, 2026-07-23) — a single glance-able summary that now
@@ -339,7 +340,7 @@ export default function CockpitCard({
           {field("UTM", lead.utm)}
           {field("Click ID", lead.clickId)}
           {hostLinkField("Referrer", lead.referrer)}
-          {field("Received", new Date(lead.createdAt).toLocaleString("en-GB"))}
+          {field("Received", adminDateTime(lead.createdAt))}
           {field("Notified", `Telegram: ${lead.telegramNotified ? "✓" : "—"}  ·  Email: ${lead.emailNotified ? "✓" : "—"}`)}
         </div>
       </dl>

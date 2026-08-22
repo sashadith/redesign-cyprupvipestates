@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import CollapsibleList from "../CollapsibleList";
 import ComposeEmailModal from "./ComposeEmailModal";
 import { isManualInteractionType } from "@/lib/crm/interactionHelpers";
+import { adminDateTime } from "@/lib/adminTime";
 
 export type TimelineRow = {
   id: string;
@@ -283,7 +284,7 @@ export default function UnifiedTimeline({
                   )}
                   {r.direction && <span className="text-xs text-[#9CA3AF]">{DIRECTION_ARROW[r.direction] ?? ""}</span>}
                   <span className="text-xs text-[#6B7280]">
-                    {new Date(r.occurredAt).toLocaleString("en-GB")}
+                    {adminDateTime(r.occurredAt)}
                     {r.createdByName ? ` · ${r.createdByName}` : ""}
                   </span>
                   {deletable && (

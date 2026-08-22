@@ -3,11 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { runSync } from "./actions";
 import DevelopmentsTable from "./DevelopmentsTable";
 import { computeAvailability } from "@/lib/developmentAvailability";
+import { adminDate } from "@/lib/adminTime";
 
 export const dynamic = "force-dynamic";
 
 const fmtDate = (d: Date | null) =>
-  d ? new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—";
+  d ? adminDate(d) : "—";
 const fmtPrice = (n: number | null) => (n == null ? "—" : "€" + n.toLocaleString("en-US"));
 // soldOutSince is always phrased as a lower bound, never an exact date — for
 // developments already sold out before this field existed, a one-off backfill

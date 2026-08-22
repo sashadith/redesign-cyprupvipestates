@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { updateEmailSettings, sendTestEmail, type EmailSettingsView } from "./actions";
 import { looksLikeHtml } from "@/lib/emailSignature/looksLikeHtml";
+import { adminDateTime } from "@/lib/adminTime";
 
 type SignatureValues = { en: string; de: string; pl: string; ru: string };
 
@@ -201,7 +202,7 @@ export default function EmailSettingsForm({ userId, settings }: { userId: string
         <TestEmailButton userId={userId} />
         {settings.lastTestSentAt && (
           <p className="text-[11px] text-[#9CA3AF] mt-2">
-            Last test: {new Date(settings.lastTestSentAt).toLocaleString("en-GB")} — {settings.lastTestOk ? "succeeded" : "failed"}
+            Last test: {adminDateTime(settings.lastTestSentAt)} — {settings.lastTestOk ? "succeeded" : "failed"}
           </p>
         )}
       </div>

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import TrashRowActions from "./TrashRowActions";
 import EmptyTrashButton from "./EmptyTrashButton";
+import { adminDate } from "@/lib/adminTime";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +49,7 @@ export default async function CrmTrash() {
               <tr key={l.id} className="hover:bg-[#F8F9FA]">
                 <td className="px-4 py-2.5 font-medium text-[#111827]">{l.firstName} {l.lastName}</td>
                 <td className="px-4 py-2.5 text-[#6B7280]">{l.email}</td>
-                <td className="px-4 py-2.5 text-[#6B7280]">{l.deletedAt ? new Date(l.deletedAt).toLocaleDateString("en-GB") : "—"}</td>
+                <td className="px-4 py-2.5 text-[#6B7280]">{l.deletedAt ? adminDate(l.deletedAt) : "—"}</td>
                 <td className="px-4 py-2.5 text-[#6B7280]">{deleterName(l.deletedById)}</td>
                 <td className="px-4 py-2.5"><TrashRowActions id={l.id} canPermanentlyDelete={isAdmin} /></td>
               </tr>

@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import CreateUserForm from "./create-user-form";
 import UserRowActions from "./user-row-actions";
+import { adminDate } from "@/lib/adminTime";
 
 export const dynamic = "force-dynamic";
 
@@ -47,7 +48,7 @@ export default async function UsersPage() {
                   <td className="px-4 py-2.5 text-[#6B7280]">{u.email}</td>
                   <td className="px-4 py-2.5">{u.role}</td>
                   <td className="px-4 py-2.5">{u.isActive ? "✓" : "—"}</td>
-                  <td className="px-4 py-2.5 text-[#6B7280]">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString("en-GB") : "—"}</td>
+                  <td className="px-4 py-2.5 text-[#6B7280]">{u.lastLoginAt ? adminDate(u.lastLoginAt) : "—"}</td>
                   <td className="px-4 py-2.5 text-right">
                     {controlsHidden ? (
                       <span className="text-xs text-[#9CA3AF]">Protected</span>
