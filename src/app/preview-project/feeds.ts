@@ -387,7 +387,18 @@ async function qubehub(dev: string, id = "1"): Promise<ProjectVM | null> {
   const main = ov.mainImage ? secure(ov.mainImage) : null; // admin-selected hero image, shown first
   const gallery = main ? [main, ...galleryAll.filter((u) => u !== main)] : galleryAll;
   const amenities = arr(project.benefits).map(txt).filter(Boolean);
-  const prices = units.map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b);
+  // AVAILABLE units only. This feeds Development.priceFrom/priceTo, which
+  // resolveDevelopmentPrice() treats as the AUTHORITATIVE project price and
+  // prefers over any unit-derived figure — so a sold unit priced below the
+  // cheapest available one silently becomes the advertised "from" price.
+  // Observed on Royal Horizon: two sold villas at €550,000 set the headline
+  // while the cheapest villa a buyer could actually get was €950,000, and the
+  // SEO description repeated the same €550,000 through {priceFrom}.
+  // Leaving this null when nothing is available is deliberate: resolveDevelopment-
+  // Price() then applies its own documented sold-out fallback ("sold from …"),
+  // which is the single place that semantics belongs. Matches what the aristo
+  // adapter already did.
+  const prices = units.filter((u) => u.status === "available").map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b);
   return {
     id, dev, publicName, developerName, developer: dev.toUpperCase(),
     // area from the feed (e.g. "Coral Bay"); district from coordinates
@@ -643,7 +654,18 @@ async function xml2u(dev: string, id: string): Promise<ProjectVM | null> {
   // call above; same reasoning, same no-op on Pafilia.
   const gallery = sizedImages(Array.from(new Set(group.flatMap((p: any) => arr(p?.images?.image).map((e: any) => aristoImg(e?.image))))).filter(Boolean), "large");
   const plans = Array.from(new Set(group.flatMap((p: any) => arr(p?.Floorplans?.floorplan).map((e: any) => aristoImg(e?.floorplan))))).filter(Boolean);
-  const prices = units.map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b);
+  // AVAILABLE units only. This feeds Development.priceFrom/priceTo, which
+  // resolveDevelopmentPrice() treats as the AUTHORITATIVE project price and
+  // prefers over any unit-derived figure — so a sold unit priced below the
+  // cheapest available one silently becomes the advertised "from" price.
+  // Observed on Royal Horizon: two sold villas at €550,000 set the headline
+  // while the cheapest villa a buyer could actually get was €950,000, and the
+  // SEO description repeated the same €550,000 through {priceFrom}.
+  // Leaving this null when nothing is available is deliberate: resolveDevelopment-
+  // Price() then applies its own documented sold-out fallback ("sold from …"),
+  // which is the single place that semantics belongs. Matches what the aristo
+  // adapter already did.
+  const prices = units.filter((u) => u.status === "available").map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b);
   return {
     id, dev, publicName, developerName, developer: cfg.developer,
     area, district, town: "", location: joinLoc(district, area),
@@ -823,7 +845,18 @@ async function medousa(id: string): Promise<ProjectVM | null> {
   const stage = MEDOUSA_STAGE_LABEL[clean(project.completion?.status).toLowerCase()] || "";
   const completion = expectedDate && validDate(expectedDate) ? fmtCompletion(expectedDate) : "";
   const amenities = arr(project.amenities?.amenity).map((a: any) => humanizeCode(clean(a))).filter(Boolean);
-  const prices = units.map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b);
+  // AVAILABLE units only. This feeds Development.priceFrom/priceTo, which
+  // resolveDevelopmentPrice() treats as the AUTHORITATIVE project price and
+  // prefers over any unit-derived figure — so a sold unit priced below the
+  // cheapest available one silently becomes the advertised "from" price.
+  // Observed on Royal Horizon: two sold villas at €550,000 set the headline
+  // while the cheapest villa a buyer could actually get was €950,000, and the
+  // SEO description repeated the same €550,000 through {priceFrom}.
+  // Leaving this null when nothing is available is deliberate: resolveDevelopment-
+  // Price() then applies its own documented sold-out fallback ("sold from …"),
+  // which is the single place that semantics belongs. Matches what the aristo
+  // adapter already did.
+  const prices = units.filter((u) => u.status === "available").map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b);
 
   return {
     id: ref, dev: "medousa", publicName, developerName, developer: "Medousa Developers",
@@ -893,7 +926,18 @@ async function squareOne(id: string): Promise<ProjectVM | null> {
   const town = clean(first.town);
   const area = ov.area ?? (town && town.toLowerCase() !== district.toLowerCase() ? town : "");
   const gallery = sizedImages(Array.from(new Set(group.flatMap((p: any) => arr(p?.images?.image).map((im: any) => txt(im?.url))))).filter(Boolean));
-  const prices = units.map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b);
+  // AVAILABLE units only. This feeds Development.priceFrom/priceTo, which
+  // resolveDevelopmentPrice() treats as the AUTHORITATIVE project price and
+  // prefers over any unit-derived figure — so a sold unit priced below the
+  // cheapest available one silently becomes the advertised "from" price.
+  // Observed on Royal Horizon: two sold villas at €550,000 set the headline
+  // while the cheapest villa a buyer could actually get was €950,000, and the
+  // SEO description repeated the same €550,000 through {priceFrom}.
+  // Leaving this null when nothing is available is deliberate: resolveDevelopment-
+  // Price() then applies its own documented sold-out fallback ("sold from …"),
+  // which is the single place that semantics belongs. Matches what the aristo
+  // adapter already did.
+  const prices = units.filter((u) => u.status === "available").map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b);
   const amenities = units.some((u) => u.features.includes("Private pool")) ? ["Private pool (selected units)"] : [];
   return {
     id, dev: "squareone", publicName, developerName, developer: "Square One",
