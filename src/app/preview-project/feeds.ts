@@ -674,6 +674,39 @@ async function xml2u(dev: string, id: string): Promise<ProjectVM | null> {
 // non-colliding names/slugs.
 // ==================================================================
 const MEDOUSA_URL = "https://medousa.agent-portal.cloud/api/feed/v7a996A70CWQWgWobsAxCWqB9lB3YVcBgcgQMAc50nk.xml";
+// Names and descriptions are ABSENT from the primary feed: <project> is missing
+// entirely and every <descriptions><description> is empty (verified 2026-08-22,
+// 0/13 names, 0/13 descriptions), so all 13 projects arrive as generic
+// "Apartments in Paphos"/"Villas in Paphos" — five of each, colliding on slug —
+// with no copy at all. That empty description is also what blocks all 14
+// Medousa developments at the publish gate (computePublishGate requires one).
+//
+// Medousa's portal exposes the SAME 13 projects under a second token that does
+// carry both, keyed by identical PRJ- refs. That feed is availability-only
+// (112 of 326 units, no floorplans, no unit specs) so it can never replace the
+// primary one — it is read here purely as a metadata sidecar: 13/13 names,
+// 11/13 descriptions, same refs, same developer account.
+const MEDOUSA_META_URL = "https://medousa.agent-portal.cloud/api/feed/4gZq0OKRf37VpuUQcF56_QWFKGFjhfTgx6V3obAl2Ws.xml";
+
+type MedousaMeta = { name: string; description: string };
+// Failure here is deliberately non-fatal. This vendor rotates feed tokens
+// (four distinct ones seen in a single day), and a dead sidecar must never
+// take the primary feed — units, prices, floorplans — down with it. On failure
+// names fall back to OVERRIDES and description to "", i.e. exactly the
+// behaviour that existed before this sidecar was added.
+async function medousaMeta(): Promise<Map<string, MedousaMeta>> {
+  const out = new Map<string, MedousaMeta>();
+  try {
+    for (const p of arr((await cachedParse(MEDOUSA_META_URL))?.feed?.projects?.project)) {
+      const r = txt(p?.$?.ref);
+      if (r) out.set(r, { name: clean(p.project), description: tidyDesc(clean(arr(p.descriptions?.description)[0])) });
+    }
+  } catch {
+    /* sidecar unavailable — see comment above */
+  }
+  return out;
+}
+
 const MEDOUSA_STAGE_LABEL: Record<string, string> = { off_plan: "Off Plan", under_construction: "Under Construction", completed: "Completed" };
 // amenity/feature codes arrive snake_case ("vrf_system", "furniture_package") —
 // title-case them for display; the couple of acronyms that'd otherwise read
@@ -682,9 +715,22 @@ const MEDOUSA_WORD_FIX: Record<string, string> = { vrf: "VRF" };
 const humanizeCode = (s: string) =>
   s.replace(/_/g, " ").replace(/\b\w+\b/g, (w) => MEDOUSA_WORD_FIX[w.toLowerCase()] ?? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 const medousaImages = (media: any, role: string) => sizedImages(arr(media?.image).filter((im: any) => txt(im?.$?.role) === role).map((im: any) => txt(im)));
+// Project-level plans (site plan / master plan). This adapter hardcoded
+// `plans: []`, so nothing could ever arrive here even if the feed carried it.
+// It currently does not: Golden Hills, checked 2026-08-22, ships only
+// image role="hero" ×7 and document role="brochure" ×7 at project level — and
+// those "brochures" are byte-identical copies of the hero JPEGs (1280×853),
+// not PDFs and not site plans. Wired anyway so the moment Medousa starts
+// exporting one it lands in the right place instead of being dropped silently.
+// Matched on a role CONTAINING "plan" rather than a fixed literal, since the
+// exact name they would use (siteplan | site_plan | masterplan | …) is not
+// knowable in advance; "hero" cannot match it, and unit floorplans live on the
+// property, not here, so they cannot leak in either.
+const medousaPlanImages = (media: any) =>
+  sizedImages(arr(media?.image).filter((im: any) => /plan/i.test(txt(im?.$?.role))).map((im: any) => txt(im)));
 
 async function medousa(id: string): Promise<ProjectVM | null> {
-  const data = await cachedParse(MEDOUSA_URL);
+  const [data, meta] = await Promise.all([cachedParse(MEDOUSA_URL), medousaMeta()]);
   const projects = arr(data?.feed?.projects?.project);
   const project = projects.find((p: any) => txt(p?.$?.ref) === id) ?? projects[0];
   if (!project) return null;
@@ -735,33 +781,62 @@ async function medousa(id: string): Promise<ProjectVM | null> {
   });
 
   const ov = OVERRIDES[`medousa:${ref}`] ?? {};
-  const developerName = toTitleCaseName(clean(project.name) || ref), publicName = ov.name ?? developerName;
-  const district = clean(loc.district) || clean(loc.city) || "";
+  const m = meta.get(ref);
+  // OVERRIDES still win: they cover PRJ-29060, which no longer appears in
+  // either feed, and they are the fallback if the sidecar token rotates. The
+  // other 11 now agree with the sidecar verbatim (checked 2026-08-22), so they
+  // are belt-and-braces rather than the only source they used to be. The
+  // sidecar additionally supplies two names OVERRIDES never had: "Adonidos
+  // Gardens" (PRJ-15357) and "MBC III" (PRJ-31879), which until now rendered
+  // as "Apartments In Paphos" and "Mbc Iii".
+  const developerName = toTitleCaseName(clean(project.name) || ref);
+  const publicName = ov.name ?? m?.name ?? developerName;
+  // Geo first, exactly like every other adapter in this file. This one used to
+  // take the feed's own district/city verbatim, which meant the Polis/Kouklia
+  // sub-regions could never fire for Medousa: the feed answers "Paphos" for
+  // everything, so a project in Polis Chrysochous or Venus Rock would have been
+  // filed under Paphos with nothing to correct it. The feed values stay on as
+  // the fallback for PRJ-25735, which ships <country>CY</country> and nothing
+  // else. Verified 2026-08-22 against all 13 live projects: zero classification
+  // changes today — this closes a future gap, it does not move existing data.
+  const center = lat != null && lng != null ? { lat, lng } : null;
+  const district =
+    districtFor(center) ||
+    districtFromText(clean(loc.district)) ||
+    districtFromText(clean(loc.city)) ||
+    clean(loc.district) ||
+    clean(loc.city) ||
+    "";
   const town = clean(loc.city);
   const area = ov.area ?? "";
-  // completion/expected-date is populated on only 1 of 12 projects — fall
-  // back to the always-present completion/status enum (off_plan|under_
-  // construction|completed) rather than leaving completion blank whenever
-  // a date is missing.
+  // completion/status (off_plan|under_construction|completed) is present on all
+  // 13 projects and is a CONSTRUCTION STAGE, so it belongs in `stage` — not in
+  // `completion`, which is the completion date. It used to be written to
+  // `completion` as a fallback, which left `stage` empty and produced two wrong
+  // rows on the project page: resolveStageLabel() fell through to `status` and
+  // printed "Available" as the construction stage, while the real stage showed
+  // up under the "Completion" label. Empty `stage` also failed the publish gate
+  // for all 14 developments. expected-date is populated on only 1 of 13, so
+  // `completion` is now simply blank when there is no date — the stage row
+  // carries the information instead.
   const expectedDate = clean(project.completion?.["expected-date"]);
-  const completion = expectedDate && validDate(expectedDate)
-    ? fmtCompletion(expectedDate)
-    : MEDOUSA_STAGE_LABEL[clean(project.completion?.status).toLowerCase()] || "";
+  const stage = MEDOUSA_STAGE_LABEL[clean(project.completion?.status).toLowerCase()] || "";
+  const completion = expectedDate && validDate(expectedDate) ? fmtCompletion(expectedDate) : "";
   const amenities = arr(project.amenities?.amenity).map((a: any) => humanizeCode(clean(a))).filter(Boolean);
   const prices = units.map((u) => u.price).filter((n): n is number => n != null).sort((a, b) => a - b);
 
   return {
     id: ref, dev: "medousa", publicName, developerName, developer: "Medousa Developers",
     area, district, town, location: joinLoc(district, town, area),
-    status: "Available", category: "Residential", completion, energy: "",
-    description: "",
+    status: "Available", category: "Residential", stage, completion, energy: "",
+    description: m?.description ?? "",
     // PRJ-25735 ("Medousa Resales") ships <location><country>CY</country></location>
     // only — no city/lat/lng at all. lat/lng end up null (no map pin, by
     // design, not an error); district/town/area all resolve to "" the same
     // way any other project with a sparse location already would.
-    gallery: ov.mainImage ? [secure(ov.mainImage)] : medousaImages(project.media, "hero"), plans: [], renders: [],
+    gallery: ov.mainImage ? [secure(ov.mainImage)] : medousaImages(project.media, "hero"), plans: medousaPlanImages(project.media), renders: [],
     amenities, heroVideo: ov.heroVideo,
-    center: lat != null && lng != null ? { lat, lng } : null,
+    center,
     units,
     priceFrom: prices[0] ?? null, priceTo: prices[prices.length - 1] ?? null, currency: "EUR",
   };
