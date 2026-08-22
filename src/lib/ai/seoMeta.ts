@@ -25,8 +25,8 @@ Your text competes in a list of ten blue links. Its only job is to make the righ
 
 ## LENGTH — the rule broken most often
 
-- Meta title: aim for 45–55 characters. Hard ceiling ${TITLE_MAX}.
-- Meta description: aim for 130–145 characters. Hard ceiling ${DESC_MAX}.
+- Meta title: aim for 45–55 characters. Anything over 58 is rejected and sent back to you for a rewrite; ${TITLE_MAX} is the hard ceiling.
+- Meta description: aim for 130–145 characters. Anything over 150 is rejected and sent back to you for a rewrite; ${DESC_MAX} is the hard ceiling at which text is cut off mechanically.
 
 Aim for the MIDDLE of the band, never the ceiling. Text over the ceiling is cut off mechanically, mid-word, and a search result ending in a severed word reads as broken.
 
@@ -225,6 +225,24 @@ const badFields = (r: Partial<SeoMetaResult>, publicName: string) =>
     return false;
   });
 
+// Length gets the same treatment, for the same reason: the clamp below is LOSSY.
+// It can only cut, and cutting is exactly what destroyed the Polish and Russian
+// price clauses on Azure Living and Eden Golf — "od {priceFrom}" became "od…",
+// a price promise with no price, live in the search result. Asking the model for
+// a shorter rewrite is strictly better than truncating its answer, so an
+// over-long field now earns the same retry a stray digit does.
+//
+// The budget sits deliberately BELOW the hard ceiling. Measured on production
+// after the prompt was rewritten to ask for 130–145: the model still landed at
+// 156–158, i.e. just under whatever ceiling it is shown. Aiming the enforcement
+// at 160 therefore produces 160. Ten characters of headroom is what turns the
+// clamp back into a genuine last resort instead of the normal path.
+const DESC_BUDGET = 150;
+const TITLE_BUDGET = 58;
+const budgetFor = (k: string) => (k.startsWith("title") ? TITLE_BUDGET : DESC_BUDGET);
+const overLength = (r: Partial<SeoMetaResult>) =>
+  LANG_KEYS.filter((k) => (r[k] ?? "").trim().length > budgetFor(k));
+
 export async function generateSeoMeta(vm: ProjectVM, tuning?: { emphasize?: string; avoid?: string }): Promise<SeoMetaResult> {
   const client = anthropic();
   if (!client) throw new Error("ANTHROPIC_API_KEY not configured");
@@ -261,14 +279,26 @@ export async function generateSeoMeta(vm: ProjectVM, tuning?: { emphasize?: stri
 
   let raw = await attempt();
   const firstOffenders = badFields(raw, vm.publicName);
-  if (firstOffenders.length) {
-    raw = await attempt(
-      `Your previous answer was rejected in these fields: ${firstOffenders.join(", ")}. ` +
-      `They contain either a digit or a placeholder that does not exist. Rewrite ALL fields ` +
-      `with no digit anywhere (and do not spell figures out in words — drop the fact or use a ` +
-      `placeholder), and use ONLY these placeholders, spelled exactly: ` +
-      `${SEO_PLACEHOLDERS.map((p) => `{${p}}`).join(", ")}.`,
-    );
+  const firstLong = overLength(raw);
+  if (firstOffenders.length || firstLong.length) {
+    const notes: string[] = [];
+    if (firstOffenders.length)
+      notes.push(
+        `These fields were rejected: ${firstOffenders.join(", ")}. ` +
+        `They contain either a digit or a placeholder that does not exist. Rewrite them ` +
+        `with no digit anywhere (and do not spell figures out in words — drop the fact or use a ` +
+        `placeholder), using ONLY these placeholders, spelled exactly: ` +
+        `${SEO_PLACEHOLDERS.map((p) => `{${p}}`).join(", ")}.`,
+      );
+    if (firstLong.length)
+      notes.push(
+        `These fields are TOO LONG: ` +
+        `${firstLong.map((k) => `${k} (${(raw[k] ?? "").trim().length} characters, budget ${budgetFor(k)})`).join(", ")}. ` +
+        `Rewrite them shorter by DROPPING the least important detail — do not compress by ` +
+        `removing articles or stacking clauses, and do not shorten the other languages to match. ` +
+        `Count a placeholder as the literal characters you type, braces included: "{priceFrom}" is 11.`,
+      );
+    raw = await attempt(notes.join(" "));
   }
   const offenders = badFields(raw, vm.publicName);
   if (offenders.length) {
@@ -279,8 +309,12 @@ export async function generateSeoMeta(vm: ProjectVM, tuning?: { emphasize?: stri
     );
   }
 
-  // Safety net — never trust the model to perfectly respect the char budget
-  // (the same limits the free template generator enforces, see developmentSeo.ts).
+  // Last resort only — after the retry above, a field should already be inside
+  // DESC_BUDGET/TITLE_BUDGET, comfortably under these hard limits. If one still
+  // is not, clamp rather than fail: an over-long description is a cosmetic
+  // problem, unlike a baked-in figure. clamp() will not cut inside a
+  // {placeholder} (see its comment), so the worst case is a shortened sentence,
+  // never a price clause stripped of its price.
   const out = {} as SeoMetaResult;
   for (const k of LANG_KEYS) out[k] = clamp(raw[k] ?? "", k.startsWith("title") ? TITLE_MAX : DESC_MAX);
   return out;
