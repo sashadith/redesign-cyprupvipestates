@@ -244,6 +244,11 @@ export function applySeoPlaceholders(text: string, vm: ProjectVM, lang: string):
     if (v == null) { unresolved = true; return ""; }
     return v;
   });
+  // A surviving brace means a MALFORMED token — most likely one cut in half by
+  // an over-long generation ("{priceF"). The regex above cannot match it, so it
+  // would otherwise sail through as ordinary text and reach Google verbatim.
+  // Treat it exactly like an unresolved placeholder and fall back.
+  if (out.includes("{") || out.includes("}")) unresolved = true;
   return unresolved ? null : out;
 }
 

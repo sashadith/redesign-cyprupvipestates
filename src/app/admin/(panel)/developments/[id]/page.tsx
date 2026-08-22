@@ -346,6 +346,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
           status: u.status || "available",
           amenities: arr(u.amenities),
           photos: arr(u.photos),
+          plans: arr(u.plans),
           attrs: (Array.isArray(u.attrs) ? u.attrs : []) as { name: string; value: string }[],
         }))}
       />

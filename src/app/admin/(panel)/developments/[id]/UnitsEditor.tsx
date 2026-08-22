@@ -43,12 +43,16 @@ export type UnitRow = {
   status: string;
   amenities: string[];
   photos: string[];
+  // Feed-supplied floor plans. Read-only in the admin: they are imported by the
+  // sync and were previously loaded nowhere, so a unit's own plan existed in the
+  // database and on the public page but was invisible here.
+  plans: string[];
   attrs: { name: string; value: string }[];
 };
 
 const blank = (): UnitRow => ({
   label: "", ref: "", feedRef: "", source: "manual", type: "", beds: "", baths: "", areaBuilt: "", areaInternal: "", areaPlot: "", areaVeranda: "", areaVerandaOpen: "",
-  floor: "", unitNumber: "", storage: "", guestWc: "", orientation: "", price: "", status: "available", amenities: [], photos: [], attrs: [],
+  floor: "", unitNumber: "", storage: "", guestWc: "", orientation: "", price: "", status: "available", amenities: [], photos: [], plans: [], attrs: [],
 });
 
 const cell = "w-full rounded-md border border-[#E5E7EB] bg-white hover:border-[#D1D5DB] focus:border-[#1B4B43] focus:ring-1 focus:ring-[#1B4B43]/20 focus:outline-none px-2 py-1.5 text-sm transition-colors";
@@ -216,7 +220,7 @@ export default function UnitsEditor({ developmentId, initial, isDriveSynced, isF
                       openDetail === i ? "bg-[#1B4B43] border-[#1B4B43] text-white" : "border-[#1B4B43] text-[#1B4B43] hover:bg-[#1B4B43]/10"
                     }`}
                   >
-                    {openDetail === i ? "▾ Close" : "▸ Open"}{u.photos.length ? ` · 📷${u.photos.length}` : ""}
+                    {openDetail === i ? "▾ Close" : "▸ Open"}{u.photos.length ? ` · 📷${u.photos.length}` : ""}{u.plans.length ? ` · 📐${u.plans.length}` : ""}
                   </button>
                 </td>
                 <td className="px-4 py-1 text-center">

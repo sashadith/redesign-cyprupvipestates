@@ -130,9 +130,23 @@ function factsFor(vm: ProjectVM): string {
   ].filter(Boolean).join("\n");
 }
 
+// Truncation must never cut inside a {placeholder}. A half token like
+// "{priceF" can never resolve, and applySeoPlaceholders' guard does not catch
+// it either: its regex requires a closing brace, so the fragment is not an
+// UNRESOLVED placeholder, it is simply not a placeholder at all — and the
+// literal text ships straight into the search snippet. Observed on Golden
+// Hills, which generated "… From {priceF…".
+// When the cut would land inside a token, fall back to cutting before it.
 const clamp = (s: string, max: number) => {
   const t = String(s || "").trim();
-  return t.length <= max ? t : t.slice(0, max - 1).trimEnd() + "…";
+  if (t.length <= max) return t;
+  let cut = max - 1;
+  const open = t.lastIndexOf("{", cut);
+  if (open !== -1) {
+    const close = t.indexOf("}", open);
+    if (close === -1 || close >= cut) cut = open;
+  }
+  return t.slice(0, cut).trimEnd() + "…";
 };
 
 // The prompt's rules are requests; this is the enforcement. Same posture as the
