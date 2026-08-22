@@ -715,6 +715,19 @@ const MEDOUSA_WORD_FIX: Record<string, string> = { vrf: "VRF" };
 const humanizeCode = (s: string) =>
   s.replace(/_/g, " ").replace(/\b\w+\b/g, (w) => MEDOUSA_WORD_FIX[w.toLowerCase()] ?? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 const medousaImages = (media: any, role: string) => sizedImages(arr(media?.image).filter((im: any) => txt(im?.$?.role) === role).map((im: any) => txt(im)));
+// Project-level plans (site plan / master plan). This adapter hardcoded
+// `plans: []`, so nothing could ever arrive here even if the feed carried it.
+// It currently does not: Golden Hills, checked 2026-08-22, ships only
+// image role="hero" ×7 and document role="brochure" ×7 at project level — and
+// those "brochures" are byte-identical copies of the hero JPEGs (1280×853),
+// not PDFs and not site plans. Wired anyway so the moment Medousa starts
+// exporting one it lands in the right place instead of being dropped silently.
+// Matched on a role CONTAINING "plan" rather than a fixed literal, since the
+// exact name they would use (siteplan | site_plan | masterplan | …) is not
+// knowable in advance; "hero" cannot match it, and unit floorplans live on the
+// property, not here, so they cannot leak in either.
+const medousaPlanImages = (media: any) =>
+  sizedImages(arr(media?.image).filter((im: any) => /plan/i.test(txt(im?.$?.role))).map((im: any) => txt(im)));
 
 async function medousa(id: string): Promise<ProjectVM | null> {
   const [data, meta] = await Promise.all([cachedParse(MEDOUSA_URL), medousaMeta()]);
@@ -821,7 +834,7 @@ async function medousa(id: string): Promise<ProjectVM | null> {
     // only — no city/lat/lng at all. lat/lng end up null (no map pin, by
     // design, not an error); district/town/area all resolve to "" the same
     // way any other project with a sparse location already would.
-    gallery: ov.mainImage ? [secure(ov.mainImage)] : medousaImages(project.media, "hero"), plans: [], renders: [],
+    gallery: ov.mainImage ? [secure(ov.mainImage)] : medousaImages(project.media, "hero"), plans: medousaPlanImages(project.media), renders: [],
     amenities, heroVideo: ov.heroVideo,
     center,
     units,
