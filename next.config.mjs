@@ -27,10 +27,6 @@ const nextConfig = {
   },
   async rewrites() {
     return [
-      {
-        source: "/sitemap.xml",
-        destination: "/api/sitemap",
-      },
       // Local preview only: serve /uploads from production so images/video show locally.
       ...(isLocalPreview
         ? [{ source: "/uploads/:path*", destination: "https://cyprusvipestates.com/uploads/:path*" }]
