@@ -778,13 +778,24 @@ async function medousa(id: string): Promise<ProjectVM | null> {
   // as "Apartments In Paphos" and "Mbc Iii".
   const developerName = toTitleCaseName(clean(project.name) || ref);
   const publicName = ov.name ?? m?.name ?? developerName;
-  const district = clean(loc.district) || clean(loc.city) || "";
+  // Geo first, exactly like every other adapter in this file. This one used to
+  // take the feed's own district/city verbatim, which meant the Polis/Kouklia
+  // sub-regions could never fire for Medousa: the feed answers "Paphos" for
+  // everything, so a project in Polis Chrysochous or Venus Rock would have been
+  // filed under Paphos with nothing to correct it. The feed values stay on as
+  // the fallback for PRJ-25735, which ships <country>CY</country> and nothing
+  // else. Verified 2026-08-22 against all 13 live projects: zero classification
+  // changes today — this closes a future gap, it does not move existing data.
+  const center = lat != null && lng != null ? { lat, lng } : null;
+  const district =
+    districtFor(center) ||
+    districtFromText(clean(loc.district)) ||
+    districtFromText(clean(loc.city)) ||
+    clean(loc.district) ||
+    clean(loc.city) ||
+    "";
   const town = clean(loc.city);
   const area = ov.area ?? "";
-  // completion/expected-date is populated on only 1 of 12 projects — fall
-  // back to the always-present completion/status enum (off_plan|under_
-  // construction|completed) rather than leaving completion blank whenever
-  // a date is missing.
   // completion/status (off_plan|under_construction|completed) is present on all
   // 13 projects and is a CONSTRUCTION STAGE, so it belongs in `stage` — not in
   // `completion`, which is the completion date. It used to be written to
@@ -812,7 +823,7 @@ async function medousa(id: string): Promise<ProjectVM | null> {
     // way any other project with a sparse location already would.
     gallery: ov.mainImage ? [secure(ov.mainImage)] : medousaImages(project.media, "hero"), plans: [], renders: [],
     amenities, heroVideo: ov.heroVideo,
-    center: lat != null && lng != null ? { lat, lng } : null,
+    center,
     units,
     priceFrom: prices[0] ?? null, priceTo: prices[prices.length - 1] ?? null, currency: "EUR",
   };
