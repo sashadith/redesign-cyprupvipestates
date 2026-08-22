@@ -49,8 +49,26 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
     price: u.price ?? null, currency: u.currency ?? "EUR",
     beds: u.beds ?? "", baths: u.baths ?? "", areaBuilt: u.areaBuilt ?? "", areaPlot: u.areaPlot ?? "", areaVeranda: u.areaVeranda ?? "",
     floor: u.floor ?? "", attrs: arr(u.attrs), features: arr<string>(u.amenities),
-    // No unit photos uploaded → fall back to the project gallery (hero/main image first).
-    photos: arr<string>(u.photos).length ? arr<string>(u.photos) : finalGallery,
+    // Unit imagery, in descending order of how specific it is to THIS unit:
+    // its own photos, else its own floor plans, else the project gallery.
+    //
+    // The floor-plan step was added 2026-08-22. UnitsView renders `photos` and
+    // nothing else — `plans` is declared on the view model but never drawn — so
+    // a unit's own floor plan was imported faithfully and then never shown,
+    // while the card fell all the way through to the project gallery and every
+    // unit in a development displayed the same handful of hero shots. For an
+    // off-plan unit the floor plan is the more informative image anyway.
+    //
+    // Scope, measured across all 2130 unit rows before the change: exactly 206
+    // units have plans but no photos, all of them Medousa, all in draft
+    // developments. Every other feed either ships unit photos (bbf, aristo,
+    // island-blue, domenica, inex, squareone, pafilia) or ships neither, so
+    // nothing else moves and no published unit changes.
+    photos: arr<string>(u.photos).length
+      ? arr<string>(u.photos)
+      : arr<string>(u.plans).length
+        ? arr<string>(u.plans)
+        : finalGallery,
     plans: arr<string>(u.plans),
     coords: u.latitude != null && u.longitude != null ? { lat: u.latitude, lng: u.longitude } : null,
     description: "",
