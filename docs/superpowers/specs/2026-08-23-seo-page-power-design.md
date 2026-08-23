@@ -99,6 +99,26 @@ days.
 *Work: content depth, authority, internal linking.*
 **Today: 90 pages, 67,344 impressions. The dominant pile.**
 
+This pile is not a long tail of forgettable pages. Eight of the nine commercial
+city/type landing pages are in it:
+
+```
+off-plan-properties-in-paphos     5,078 impr    8 clicks   0.16 %   pos 33.2
+villas-in-cyprus                  2,270 impr   29 clicks   1.28 %   pos 39.9
+properties-paphos                 1,903 impr   39 clicks   2.05 %   pos 27.5
+off-plan-properties-in-limassol   1,660 impr    6 clicks   0.36 %   pos 47.2
+property-for-sale-limassol          944 impr    2 clicks   0.21 %   pos 51.1
+investment-property-in-cyprus       473 impr    3 clicks   0.63 %   pos 45.4
+apartments-in-cyprus                410 impr   13 clicks   3.17 %   pos 32.0
+property-for-sale-larnaca           294 impr    2 clicks   0.68 %   pos 40.2
+luxury-villas-in-cyprus-over-1M     659 impr   18 clicks   2.73 %   pos 14.9   (healthy)
+```
+
+Google serves "off-plan properties in Paphos" 5,078 times a quarter on page
+four. No title rewrite reaches a click from position 33. The commercial keyword
+strategy is inside diagnosis 2, which is why it ships in the first release
+rather than being deferred as the unpleasant pile.
+
 **3 · unclicked** — ≥300 impressions, average position 20 or better, CTR below
 **half the median of its own position bucket**. Buckets are position 0–5, 5–10
 and 10–20; a bucket median is only computed when at least 5 pages with ≥100
@@ -156,9 +176,23 @@ incident — reuse it, do not re-derive it.
 is published Developments, Projects, Blogs and Singlepages × their locales; GSC
 supplies measurements onto that universe.
 
+Verified 2026-08-23 that the commercial city/type landing pages
+(`/off-plan-properties-in-paphos` and its siblings) are Singlepage rows, so the
+inventory already covers them — they need no separate source.
+
 **Window: 90 days, excluding the most recent 3.** A 28-day window leaves only 46
-pages above 300 impressions — too thin to judge CTR. GSC lags two to three days;
-without the exclusion every page looks like it collapsed at the start of a month.
+pages above 300 impressions — too thin to judge CTR (90 days gives 129). Shorter
+is not faster, it is wronger. GSC lags two to three days; without the exclusion
+every page looks like it collapsed at the start of a month.
+
+**A 28-day trend arrow** sits beside each page on the admin screen — impressions,
+position and CTR against the preceding 28 days. It is **not** a diagnosis and
+raises **no** alert: `actionCenter/rules/seo.ts` already reports week-over-week
+ranking drops, and two systems shouting the same thing is worse than one. The
+arrow exists so someone working a pile can see whether a change is taking hold.
+
+The honest re-measure horizon after a change is **four weeks** — the same horizon
+the existing title sweep already assumes.
 
 ## Where it surfaces
 
