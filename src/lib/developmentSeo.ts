@@ -13,7 +13,7 @@
 // sidesteps noun-number agreement entirely.
 import { prisma } from "@/lib/prisma";
 import type { ProjectVM } from "@/app/preview-project/feeds";
-import { listedUnits } from "@/lib/developmentAvailability";
+import { listedUnits, computeAvailability } from "@/lib/developmentAvailability";
 
 export const TITLE_MAX = 60;
 export const DESC_MAX = 160;
@@ -113,11 +113,11 @@ function bedsRange(vm: ProjectVM): string | null {
   return lo === hi ? String(lo) : `${lo}–${hi}`;
 }
 
-const LABELS: Record<Lang, { in: string; from: string; unitsAvailable: string; completion: string; cyprus: string }> = {
-  en: { in: "in", from: "from", unitsAvailable: "units available", completion: "Completion", cyprus: "Cyprus" },
-  de: { in: "in", from: "ab", unitsAvailable: "Einheiten verfügbar", completion: "Fertigstellung", cyprus: "Zypern" },
-  pl: { in: "w", from: "od", unitsAvailable: "dostępnych jednostek", completion: "Termin realizacji", cyprus: "Cypr" },
-  ru: { in: "в", from: "от", unitsAvailable: "доступных объектов", completion: "Срок сдачи", cyprus: "Кипр" },
+const LABELS: Record<Lang, { in: string; from: string; unitsAvailable: string; completion: string; cyprus: string; soldOut: string; similar: string }> = {
+  en: { in: "in", from: "from", unitsAvailable: "units available", completion: "Completion", cyprus: "Cyprus", soldOut: "Sold out", similar: "See similar projects" },
+  de: { in: "in", from: "ab", unitsAvailable: "Einheiten verfügbar", completion: "Fertigstellung", cyprus: "Zypern", soldOut: "Ausverkauft", similar: "Ähnliche Projekte ansehen" },
+  pl: { in: "w", from: "od", unitsAvailable: "dostępnych jednostek", completion: "Termin realizacji", cyprus: "Cypr", soldOut: "Wyprzedane", similar: "Zobacz podobne inwestycje" },
+  ru: { in: "в", from: "от", unitsAvailable: "доступных объектов", completion: "Срок сдачи", cyprus: "Кипр", soldOut: "Продано", similar: "Похожие проекты" },
 };
 
 const fmtPrice = (n: number) => `€${n.toLocaleString("en-US")}`;
@@ -156,6 +156,18 @@ export function autoMetaDescription(vm: ProjectVM, lang: string): string {
   // the same population the page itself shows. Counting raw rows would put a
   // number in the search snippet that is larger than anything on the page
   // (see listedUnits in developmentAvailability.ts).
+  // Sold out: say so, and say nothing else numeric. Both figures are actively
+  // misleading here — vm.priceFrom falls back to the cheapest SOLD unit (see
+  // resolveDevelopmentPrice), and the `|| listedUnits(...)` fallback below turns
+  // "0 available" into the TOTAL unit count, so this branch used to produce
+  // "16 units available from €170,000." for Celestia, whose own page says
+  // "Sold out · 0 / 16 available". A searcher clicking that finds nothing to
+  // buy; the snippet should set the expectation the page will meet, and point
+  // at what this visitor can still act on.
+  const { soldOut } = computeAvailability(listedUnits(vm.units));
+  if (soldOut) {
+    return fit([`${lbl.soldOut} — ${sentence1}`, `${lbl.similar}.`], DESC_MAX);
+  }
   const avail = vm.units.filter((u) => u.status === "available").length || listedUnits(vm.units).length;
   const priceClause = vm.priceFrom ? ` ${lbl.from} ${fmtPrice(vm.priceFrom)}` : "";
   // EN only: "unit"/"units" inflects with the count (DE/PL/RU labels below are
@@ -219,7 +231,13 @@ function localizeCompletion(raw: string, l: Lang): string {
 function placeholderValues(vm: ProjectVM, l: Lang): Record<string, string | null> {
   const available = listedUnits(vm.units).filter((u) => u.status === "available").length;
   return {
-    priceFrom: vm.priceFrom != null ? PRICE_FORMAT[l](vm.priceFrom) : null,
+    // Unresolvable when sold out, for the same reason unitsAvailable is (below).
+    // vm.priceFrom falls back to the cheapest SOLD unit once nothing is
+    // available, so "from {priceFrom}" would advertise a price nobody can pay —
+    // the page itself is careful to label that figure "sold from", but a search
+    // snippet written by hand cannot know to. Falling back to the auto text is
+    // correct here because that text is now sold-out aware too.
+    priceFrom: vm.priceFrom != null && available > 0 ? PRICE_FORMAT[l](vm.priceFrom) : null,
     // Zero is deliberately unresolvable, not "0": a sold-out project must not
     // advertise "0 units available" — the whole override falls back to the
     // auto-generated text, which handles sold-out properly.
