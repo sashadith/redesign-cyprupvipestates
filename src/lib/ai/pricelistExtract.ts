@@ -397,23 +397,32 @@ export async function extractAvailabilityFromPricelist(text: string, full = fals
     });
   }
 
-    // Qualify a ref with its block ONLY where the bare ref is ambiguous inside the
-  // same project. Olias' Arbeo Park has four blocks that each number their flats
-  // 101/102/201/… , so a bare "101" identifies four different apartments; the
-  // sync matches units by ref, so it matched none of the 28 curated rows and
-  // created duplicates alongside them instead.
+  // Qualify refs with their block where a project numbers its units per block.
+  // Olias' Arbeo Park has four blocks that each number their flats 101/102/201/… ,
+  // so a bare "101" identifies four different apartments; the sync matches units
+  // by ref, so it matched none of the 28 curated rows and created duplicates
+  // alongside them instead.
   //
-  // Conditional on purpose. Qualifying unconditionally would rewrite the refs of
-  // every Drive/Dropbox project whose sheet happens to carry a block column, and
-  // the Drive sync DELETES feed units whose ref is no longer in the extraction
-  // (deliberately, after an August incident) — so a format change would prune and
-  // recreate them, losing the images hanging off those rows. Leaving unique refs
-  // untouched keeps all 20 currently-clean projects byte-identical.
+  // The decision is per PROJECT, not per unit. A first attempt qualified only the
+  // refs that actually collided, which left Arbeo Park half-qualified: 101/201/301
+  // exist in every block and became "Block A 101", but 103/104/203/204/303/304
+  // exist only in Block C, stayed bare, matched nothing, and were recreated as six
+  // duplicate feed rows. Once any ref in a project is ambiguous, the whole project
+  // is numbered per block and every ref has to carry its block.
+  //
+  // Still conditional at the project level on purpose: qualifying unconditionally
+  // would rewrite the refs of every Drive/Dropbox project whose sheet happens to
+  // carry a block column, and the Drive sync DELETES feed units whose ref is no
+  // longer in the extraction (deliberately, after an August incident) — so a
+  // format change would prune and recreate them, losing the images hanging off
+  // those rows. Projects with no ambiguity at all stay byte-identical.
   for (const proj of Array.from(byProject.values())) {
     const seen = new Map<string, number>();
     for (const u of proj.units) seen.set(u.ref, (seen.get(u.ref) ?? 0) + 1);
+    const perBlock = proj.units.some((u) => (seen.get(u.ref) ?? 0) > 1 && !!u.block);
+    if (!perBlock) continue;
     for (const u of proj.units) {
-      if ((seen.get(u.ref) ?? 0) > 1 && u.block && !u.ref.toLowerCase().includes(u.block.toLowerCase())) {
+      if (u.block && !u.ref.toLowerCase().includes(u.block.toLowerCase())) {
         u.ref = `${u.block} ${u.ref}`;
       }
     }
