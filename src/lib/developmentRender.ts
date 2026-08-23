@@ -110,6 +110,30 @@ export const getDbProject = cache(async (dev: string, id: string): Promise<DbPro
   return d ? mapRowToVM(d) : null;
 });
 
+/** Lookup by the STORED feedKey, with no reconstruction.
+ *
+ *  getDbProject(dev, id) rebuilds the key as `${dev}:${id}`, which is correct
+ *  only for the two-part feed keys. Drive and Dropbox keys are three-part —
+ *  `drive:<developerAccountId>:<slug>` — so passing feedProjectId (the slug)
+ *  silently misses and returns null. Measured 2026-08-23: 24 of 244
+ *  developments (18 drive, 6 dropbox), every one of which showed
+ *  "Could not load project data" in the admin SEO panel, with empty
+ *  auto-generated title/description placeholders and a failing
+ *  "Generate with Claude".
+ *
+ *  The trap was already documented above the previewHref in the admin page —
+ *  and the very next line fell into it anyway. Callers that hold the row should
+ *  use this instead of reassembling a key they already have.
+ */
+export const getDbProjectByFeedKey = cache(async (feedKey: string, lang: string = "en"): Promise<DbProjectVM | null> => {
+  if (!feedKey) return null;
+  const d = await prisma.development.findUnique({
+    where: { feedKey },
+    include: { units: { orderBy: { sortIndex: "asc" } }, override: true },
+  });
+  return d ? mapRowToVM(d, lang) : null;
+});
+
 /** Slug-based lookup for the SEO-facing route (src/app/[lang]/projects/[slug]/page.tsx).
  *  `lang` selects the override description field (descriptionEN/DE/PL/RU) and the
  *  per-unit status label — defaults to "en" so any caller that (still) doesn't pass
