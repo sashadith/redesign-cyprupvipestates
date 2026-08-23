@@ -33,11 +33,17 @@ type MetricWindow = { since: Date; until: Date };
 /** Named, not positional. An `Array<Map<…>>` destructured as
  *  `[main, recent, prior]` lets a swap of two window literals type-check, run,
  *  and invert the sign of every trend arrow on the site with nothing to catch
- *  it. Position must not carry meaning here. */
-type WindowSet = { main: MetricWindow; recent: MetricWindow; prior: MetricWindow };
-type TotalsSet = { main: Map<PageKey, Totals>; recent: Map<PageKey, Totals>; prior: Map<PageKey, Totals> };
-
+ *  it. Position must not carry meaning here.
+ *
+ *  WINDOW_NAMES is the single declaration and both record types are derived
+ *  from it, so a fourth window cannot be added to the record without the
+ *  compiler also demanding it in the array — the residual failure mode of the
+ *  fix above, where a name missing from the array would silently yield an
+ *  empty map for that window. */
 const WINDOW_NAMES = ["main", "recent", "prior"] as const;
+type WindowName = (typeof WINDOW_NAMES)[number];
+type WindowSet = Record<WindowName, MetricWindow>;
+type TotalsSet = Record<WindowName, Map<PageKey, Totals>>;
 
 /**
  * Sums page-level GSC rows into one totals map per window.
@@ -77,8 +83,10 @@ async function gscTotals(canonicalMap: Map<string, string>, windows: WindowSet):
     const key = pageKey(localeOfPath(target.page), target.page);
     const at = row.date.getTime();
     for (const name of WINDOW_NAMES) {
-      const window = windows[name];
-      if (at < window.since.getTime() || at >= window.until.getTime()) continue;
+      // `range`, not `window`: a local named `window` shadows the DOM global,
+      // which is in scope here even though this module is server-only.
+      const range = windows[name];
+      if (at < range.since.getTime() || at >= range.until.getTime()) continue;
       const totals = outs[name].get(key) ?? emptyTotals();
       totals.impressions += row.impressions;
       totals.clicks += row.clicks;
@@ -180,15 +188,25 @@ const utcMidnight = (d: Date): Date => new Date(Date.UTC(d.getUTCFullYear(), d.g
 export type PageVerdictResult = {
   verdicts: PageVerdict[];
   coveragePct: number;
-  /** Inclusive, UTC midnight — the first day the window covers. */
+  /** INCLUSIVE, UTC midnight — the first day the window covers. */
   windowStart: Date;
-  /** EXCLUSIVE, UTC midnight — the first day the window does NOT cover. Display
-   *  code wanting a human "… to <last day>" must subtract one day. */
+  /** EXCLUSIVE, UTC midnight — the first day the window does NOT cover, i.e.
+   *  the day after `today − GSC_LAG_DAYS`. Display code wanting a human
+   *  "… to <last day>" must subtract one day. */
   windowEnd: Date;
 };
 
 export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdictResult> {
-  const windowEnd = utcMidnight(new Date(now.getTime() - GSC_LAG_DAYS * DAY));
+  // The property to hold: the NEWEST day inside the window is exactly
+  // `today − GSC_LAG_DAYS`. `windowEnd` is an exclusive bound, so it is the
+  // midnight that FOLLOWS that day — expressed here as "newest covered day,
+  // plus one" rather than as `(GSC_LAG_DAYS - 1) * DAY`, so the property is
+  // stated outright instead of being left for the reader to reconstruct from
+  // the arithmetic. That newest day is present in the data: the sync cron
+  // (src/app/api/cron/gsc-sync/route.ts, LAG_DAYS = 2) fetches through
+  // `now − 2 days` inclusive, one day fresher than this window needs.
+  const newestCoveredDay = utcMidnight(new Date(now.getTime() - GSC_LAG_DAYS * DAY));
+  const windowEnd = new Date(newestCoveredDay.getTime() + DAY);
   const windowStart = utcMidnight(new Date(windowEnd.getTime() - WINDOW_DAYS * DAY));
   const trendStart = utcMidnight(new Date(windowEnd.getTime() - TREND_WINDOW_DAYS * DAY));
   const priorStart = utcMidnight(new Date(trendStart.getTime() - TREND_WINDOW_DAYS * DAY));
@@ -236,8 +254,8 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
         reason = `Average position ${position.toFixed(1)} sits on the edge of the comparison range, so there is no expected CTR to measure against.`;
       } else if (median == null) {
         reason = `Position ${position.toFixed(1)} has too few comparable pages to set an expected CTR.`;
-      } else if (median <= 0) {
-        // Every comparable page in this bucket earned zero clicks too, so the
+      } else if (!(median > 0)) {
+        // A median of 0 means at least half the bucket earned no clicks, so the
         // bar is 0 and `ctr < 0 * fraction` can never be true. Left to fall
         // through, the `unclicked` test becomes unfalsifiable and EVERY page in
         // the bucket is certified healthy — including a 5,000-impression page
@@ -248,7 +266,19 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
         // crossing 50% zero-click pages is ordinary. Kept distinct from the
         // too-few-pages case above: there the sample is missing, here the
         // sample exists and has nothing to say.
-        reason = `The comparable pages at position ${position.toFixed(1)} earned no clicks either, so there is no expected CTR to judge against.`;
+        //
+        // Written `!(median > 0)` rather than `median <= 0` so a NaN bar is
+        // rejected rather than silently passed through, matching the
+        // Number.isFinite discipline in `positionOf` — one habit, not two
+        // standards.
+        //
+        // The sentence branches on THIS page's clicks: a zero median says
+        // nothing about the page being judged, so "earned no clicks either" is
+        // untrue of a page here with 500 impressions and 15 clicks.
+        const noBar = `At least half the comparable pages at position ${position.toFixed(1)} earned no clicks, so there is no expected CTR to judge against`;
+        reason = t.clicks > 0
+          ? `${noBar} — this page's own ${ctr.toFixed(2)}% cannot be called high or low.`
+          : `${noBar}, and this page earned none either.`;
       } else if (ctr < median * CTR_MEDIAN_FRACTION) {
         diagnosis = "unclicked";
         reason = `CTR ${ctr.toFixed(2)}% against ${median.toFixed(2)}% typical for position ${position.toFixed(1)} — title and meta description.`;
