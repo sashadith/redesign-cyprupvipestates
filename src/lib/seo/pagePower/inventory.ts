@@ -36,8 +36,20 @@ const KIND_PRIORITY: Record<InventoryPage["kind"], number> = {
 // Fixed, hand-authored pages the sitemap also emits by hand (src/app/sitemaps/[type]/route.ts):
 // not CMS rows, but real indexable URLs with real GSC volume, so they must be in the
 // inventory or the coverage metric would treat their clicks as unmatched.
+//
+// "Projects listing" is here for a second reason, and it is the one that bit:
+// `/projects` is the ONLY fixed page with a TemplateClass of its own
+// (`projects-listing`, templateClass.ts), so leaving it out did not just lose one
+// page — it emptied a whole class. Measured 2026-08-23: not one of the 1,675
+// inventory pages carried that class, while `getClassVerdicts` was counting 112
+// sessions entering it and the sitemap was emitting it in all four locales at
+// priority 0.8, the highest of any listing. The class-level report could call the
+// catalogue repelling and the page-level report could not name a single page of it
+// to act on. It also had a diagnosis waiting: `/projects` alone drew 574
+// impressions and 4 clicks in 90 days, over MIN_IMPRESSIONS_CTR, at 0.7% CTR.
 const FIXED_PAGES: ReadonlyArray<{ title: string; path: (locale: Locale) => string }> = [
   { title: "Homepage", path: (locale) => (locale === ("en" as Locale) ? "/" : `/${locale}`) },
+  { title: "Projects listing", path: (locale) => localised(locale, "/projects") },
   { title: "FAQ", path: (locale) => localised(locale, "/faq") },
   { title: "Partners", path: (locale) => localised(locale, "/partners") },
 ];
