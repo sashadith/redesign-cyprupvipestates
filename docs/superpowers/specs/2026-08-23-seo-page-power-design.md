@@ -148,16 +148,49 @@ performing class**. Floor: ≥100 entering sessions in the window, otherwise
 unjudged.
 *Work: landing layout, internal routes to further properties.*
 
-**5 · mute** — comparison sessions involving this class produce no lead
-attributed to a page of this class. Floor: ≥50 comparison sessions for the
-class in the window, otherwise unjudged.
+**5 · mute** — sessions that ENTERED on this class and went on to compare two or
+more properties produce no lead attributed to a page of this class. Floor: ≥50
+such sessions in the window, otherwise unjudged.
 *Work: offer, call to action, contact path.*
 
-Diagnosis 5 will read **unjudged for most classes at first**, and that is the
-honest output: ~26 website leads in 19 months cannot support a per-class verdict
-yet. It becomes meaningful as volume accumulates. `BookingRequest` (4 rows since
-July 2026) has the right shape to replace the lead signal here once it has
-history — revisit when it does.
+This says "entered on", not "involving", and the difference is not cosmetic. A
+comparison session is *defined* as one viewing two or more different Development
+pages — so "comparison sessions involving development-page" is identically equal
+to the site-wide total, for every window, forever. The floor would be meaningless
+for exactly the class that matters most, and homepage and projects-listing are
+near-degenerate for the same navigational reason. Scoping by entry page also
+keeps entering sessions, comparison sessions and the rate between them one
+arithmetically consistent triple, so the per-class expectations sum to the site
+total instead of several times it.
+
+The cost, recorded rather than fixed: the two halves are differently scoped. A
+class's lead count is leads whose *form page* belonged to it, while its expected
+lead count is built from sessions that *entered* on it. A class hosting most of
+the enquiry forms but receiving few entries is measured against a mismatched
+expectation.
+
+A second limitation, inherent to the data: `PageView` and `Lead` share no session
+key, so a lead can never be traced to the journey that produced it. A lead is
+credited to whichever class hosted the form — the blog post that began the
+research and the development page that closed it both count as the development
+page. Read the figure as "enquiries sent from this class", never as "enquiries
+this class earned".
+
+Diagnosis 5 **cannot fire at all today**, and that is the honest output rather
+than a gap. At ~4 page-attributable leads per 90-day window across five classes,
+zero leads is the *expected* result for a perfectly healthy class — under a
+Poisson null, P(zero) is 45% at λ=0.8. A rule that fired on zero would fire on
+every class while carrying no information at all.
+
+So the implementation requires the class to have been expected to produce at
+least three leads before silence counts as evidence (e⁻³ ≈ 5%, the point where
+silence is surprising). Because a class's expected leads can never exceed the
+site's page-attributable total, this means diagnosis 5 stays dormant until at
+least three such leads land in one window. It becomes reachable on its own as
+volume grows, with no threshold to edit.
+
+`BookingRequest` (4 rows since July 2026) has the right shape to replace the lead
+signal here once it has history — revisit when it does.
 
 ## Data flow
 
