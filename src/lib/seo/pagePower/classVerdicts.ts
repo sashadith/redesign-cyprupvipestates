@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { buildCanonicalMap, canonicalize, localeOfPath } from "@/lib/seo/urlCanonical";
 import { templateClassOf, type TemplateClass } from "@/lib/seo/templateClass";
-import { getInventory } from "./inventory";
 import {
   CLASS_RATE_FRACTION, COMPARISON_PROJECT_PAGES, MIN_COMPARISON_SESSIONS,
   MIN_ENTERING_SESSIONS, WINDOW_DAYS, type ClassVerdict,
@@ -11,6 +10,12 @@ import {
 // 30 Google clicks in 90 days, so a per-page landing analysis would manufacture
 // noise; these are measured on SESSIONS (3,853 in the same window) and reported
 // per template class.
+//
+// EVERY production figure quoted in this file — 3,853 sessions, 282 comparison
+// sessions, ~26 website leads in 19 months, 148 of 179 leads entered by hand —
+// was measured on 2026-08-23, the same run as the thresholds in types.ts. See
+// docs/superpowers/specs/2026-08-23-seo-page-power-design.md. Re-measure before
+// leaning on one; they are not preferences and they are not eternal.
 
 const DAY = 86_400_000;
 
@@ -31,12 +36,12 @@ const DAY = 86_400_000;
  * instead of emitting a finding it cannot support.
  *
  * What that actually requires. Since
- * `expectedLeads_c = comparisonSessions_c × attributedLeads / siteComparisonSessions`
- * and `comparisonSessions_c ≤ siteComparisonSessions`, the tight bound is just
- * `expectedLeads_c ≤ attributedLeads`. So the precondition for `mute` is THREE
- * PAGE-ATTRIBUTABLE LEADS SITE-WIDE in the window, plus concentration: at four
- * leads against 282 comparison sessions, one class would need about 212 of those
- * 282. Hundreds, not thousands, and within reach of the traffic this site
+ * `expectedLeads_c = onwardComparisonSessions_c × attributedLeads / siteComparisonSessions`
+ * and `onwardComparisonSessions_c ≤ siteComparisonSessions`, the tight bound is
+ * just `expectedLeads_c ≤ attributedLeads`. So the precondition for `mute` is
+ * THREE PAGE-ATTRIBUTABLE LEADS SITE-WIDE in the window, plus concentration: at
+ * four leads against 282 comparison sessions, one class would need about 212 of
+ * those 282. Hundreds, not thousands, and within reach of the traffic this site
  * already has.
  *
  * The practical consequence, stated plainly: at the site's current lead volume
@@ -59,7 +64,15 @@ const MUTE_MIN_EXPECTED_LEADS = 3;
  *  oldest day in half and hand back sessions whose FIRST ROW IS NOT THEIR ENTRY
  *  PAGE — every entry-page-derived number below would be silently wrong for that
  *  day. Truncating the newest day is harmless by comparison: a session's first
- *  row is still its first row. */
+ *  row is still its first row.
+ *
+ *  Carries the same warning as the copy in pageVerdicts.ts, because this module
+ *  performs exactly the arithmetic that warning protects: DST is a non-issue and
+ *  `DAY = 86_400_000` is exact here, since every bound produced by this function
+ *  is a UTC-midnight instant and every comparison against it is absolute-ms — no
+ *  local calendar is ever consulted. Do NOT "fix" the subtraction below into a
+ *  timezone-aware one. Duplicated rather than shared only because the two
+ *  modules justify it differently; keep the two copies identical in behaviour. */
 const utcMidnight = (d: Date): Date => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 
 /** Strips query and hash, then a trailing slash, so `/de/`, `/de?x=1` and `/de`
@@ -113,23 +126,51 @@ const CLASS_ORDER: Record<TemplateClass, number> = {
 };
 const ALL_CLASSES = (Object.keys(CLASS_ORDER) as TemplateClass[]).sort((a, b) => CLASS_ORDER[a] - CLASS_ORDER[b]);
 
-/** `projects` holds DEVELOPMENT SLUGS, not paths — see the note where it is
- *  filled. `entryClass` is stored rather than the entry path because the class
- *  is the only thing this module asks of it, and re-deriving it later would mean
- *  canonicalising the same path twice. */
-type Session = { entryClass: TemplateClass | null; projects: Set<string> };
+/**
+ * `entryClass` is non-nullable because a session cannot exist without one: a
+ * Session is only ever constructed while processing a view, and
+ * `templateClassOf` is total. The type carries that invariant so no reader has
+ * to re-derive it, and so no dead null-branch has to be maintained.
+ *
+ * The two slug sets are the SAME measurement at two scopes, and keeping them
+ * apart is the point:
+ *  - `projects` — every distinct Development slug in the session, entry page
+ *    included. This is the site-level comparison metric, the approved north-star
+ *    figure (282 per quarter), and it is not redefined to suit anything here.
+ *  - `onwardProjects` — only those seen AFTER the entry pageview. This is what a
+ *    per-class rate must be built on, because counting the entry page measures a
+ *    different funnel step for each class; see `onwardComparisonSessions` in
+ *    types.ts for the full argument and the numbers.
+ *
+ * Both hold SLUGS, not paths — see the note where they are filled.
+ */
+type Session = { entryClass: TemplateClass; projects: Set<string>; onwardProjects: Set<string> };
 
 export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVerdict[]> {
-  // WINDOW_DAYS whole UTC days ending with today; today is necessarily partial.
-  // Deliberately NOT the GSC-lagged window `getPageVerdicts` uses: PageView and
-  // Lead are written live, so there is nothing to wait for, and holding back
-  // three days of them would discard real sessions to match an unrelated
-  // source's latency. The two windows are never joined.
+  // The last WINDOW_DAYS UTC calendar days, the newest of which is today and is
+  // therefore only partly elapsed. Deliberately NOT the GSC-lagged window
+  // `getPageVerdicts` uses: PageView and Lead are written live, so there is
+  // nothing to wait for, and holding back three days of them would discard real
+  // sessions to match an unrelated source's latency. The two windows are never
+  // joined — but both modules write "in WINDOW_DAYS days" into reason strings an
+  // admin reads side by side, and those two spans END three days apart. Say
+  // which source a number came from before comparing them.
   const since = new Date(utcMidnight(now).getTime() - (WINDOW_DAYS - 1) * DAY);
 
-  const [map, inventory, views, leads] = await Promise.all([
+  const [map, developments, views, leads] = await Promise.all([
     buildCanonicalMap(),
-    getInventory(),
+    // Deliberately NOT `getInventory()`, and deliberately NOT filtered by
+    // `publishStatus`. This set exists to CLASSIFY 90 DAYS OF HISTORY, and the
+    // published set is a snapshot of today: a Development unpublished, archived
+    // or sold out mid-window would retroactively demote every pageview it ever
+    // received to `other-landing-page`, deflating comparison sessions across
+    // every class and inflating `other-landing-page`'s entering sessions — a
+    // silent shift in `bestRate`, the bar all five classes are judged against,
+    // for a reason that has nothing to do with any template. On a site where
+    // properties routinely sell out and come down, that is not a corner case.
+    // pageVerdicts.ts filtering to published IS correct there, because it only
+    // ever classifies pages that are in today's inventory to begin with.
+    prisma.development.findMany({ where: { slug: { not: null } }, select: { slug: true } }),
     prisma.pageView.findMany({
       where: { createdAt: { gte: since }, isBot: false, isPrefetch: false, isTest: false },
       select: { visitorHash: true, path: true, createdAt: true },
@@ -150,7 +191,7 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
     }),
   ]);
 
-  const devSlugs = new Set(inventory.filter((p) => p.kind === "development").map((p) => p.path.split("/").pop() as string));
+  const devSlugs = new Set(developments.map((d) => d.slug).filter((slug): slug is string => slug !== null));
 
   const classify = (rawPath: string): { path: string; cls: TemplateClass } => {
     const path = normalisePath(rawPath);
@@ -164,25 +205,34 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
     return { path: target.page, cls: templateClassOf(target.page, devSlugs) };
   };
 
-  // `visitorHash` is a daily-rotating cookieless hash, so one "session" is one
-  // visitor-DAY: multi-day research counts more than once and returning
-  // visitors are invisible. That is a deliberate ceiling of the analytics
-  // design (no PII), not a defect to route around here. The day is inside the
-  // hash preimage, so the hash alone is a safe session key.
+  // `visitorHash` is sha256(salt | UTC-day | ip | userAgent) — see
+  // src/lib/visitorHash.ts. It biases in BOTH directions and both belong on the
+  // record, because everything below is built on it:
+  //  - It DEFLATES. The hash rotates at UTC midnight, so a "session" is one
+  //    visitor-DAY. Multi-day research counts more than once, and returning
+  //    visitors — a return to the same property being one of the strongest
+  //    buying signals there is — are invisible entirely.
+  //  - It INFLATES. The identity is really one (IP, user-agent)-day, not one
+  //    person. Two people behind a single NAT or CGNAT egress on the same
+  //    user-agent — two iPhones on one carrier, an office, a household — merge
+  //    into one pseudo-session that inherits the UNION of their property views
+  //    and the entry class of whichever loaded first. That manufactures
+  //    comparison sessions out of unrelated visitors and misattributes the
+  //    grouping key, hitting the numerator and the denominator at once.
+  // Both are ceilings of a deliberately cookieless, PII-free design, not defects
+  // to route around here. The day sitting inside the preimage does make the hash
+  // alone a safe key ACROSS days — that, and nothing more, is what it buys.
   const sessions = new Map<string, Session>();
   for (const view of views) {
+    // A row with no hash cannot be grouped into a session at all. Treated as a
+    // session of its own it would add a phantom entering session that can never
+    // become a comparison one, deflating every rate; dropped, it costs only
+    // itself. The current writer always sets the field
+    // (src/app/api/analytics/track/route.ts computes it unconditionally on every
+    // insert), so a null can only be historical, and the column is nullable for
+    // that history alone.
     if (!view.visitorHash) continue;
     const { path, cls } = classify(view.path);
-    const session = sessions.get(view.visitorHash) ?? { entryClass: null, projects: new Set<string>() };
-    // Rows arrive oldest-first, so the first one seen for a hash is the entry.
-    // `templateClassOf` is total — anything it does not recognise becomes
-    // `other-landing-page` — so no session is ever dropped for having entered
-    // on an unknown page. The cost is that `other-landing-page` is a catch-all
-    // that also absorbs utility pages (/book/<token>, thank-you pages) and
-    // legacy `/projects/<slug>` pages that are not Developments. Filtering
-    // entries down to the CMS inventory instead would shrink the session
-    // denominator invisibly, which is the worse trade.
-    if (session.entryClass === null) session.entryClass = cls;
     // Keyed by SLUG, not path. A Development is reachable in all four locales,
     // so `/projects/x` and `/de/projects/x` are one property: a visitor using
     // the language switcher on a single property would otherwise register as
@@ -190,20 +240,44 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
     // module is built on. `templateClassOf` only returns `development-page`
     // when the last segment is a known Development slug, so the segment is safe
     // to use as the identity.
-    if (cls === "development-page") session.projects.add(path.split("/").pop() as string);
-    sessions.set(view.visitorHash, session);
+    const slug = cls === "development-page" ? (path.split("/").pop() as string) : null;
+
+    const session = sessions.get(view.visitorHash);
+    if (session === undefined) {
+      // Rows arrive oldest-first, so the first one seen for a hash is the entry
+      // pageview. `templateClassOf` is total — anything it does not recognise
+      // becomes `other-landing-page` — so no session is ever dropped for having
+      // entered on an unknown page. The cost is that `other-landing-page` is a
+      // catch-all that also absorbs utility pages (/book/<token>, thank-you
+      // pages) and legacy `/projects/<slug>` pages that are not Developments.
+      // Filtering entries down to the CMS inventory instead would shrink the
+      // session denominator invisibly, which is the worse trade.
+      sessions.set(view.visitorHash, {
+        entryClass: cls,
+        projects: slug === null ? new Set<string>() : new Set<string>([slug]),
+        // The entry pageview is by definition not onward, so this starts empty
+        // even when the session landed ON a property.
+        onwardProjects: new Set<string>(),
+      });
+      continue;
+    }
+    if (slug !== null) {
+      session.projects.add(slug);
+      session.onwardProjects.add(slug);
+    }
   }
 
   const entering = new Map<TemplateClass, number>();
-  const comparing = new Map<TemplateClass, number>();
+  const onwardComparing = new Map<TemplateClass, number>();
   let siteComparisonSessions = 0;
   for (const session of Array.from(sessions.values())) {
-    if (session.entryClass === null) continue;
-    const isComparison = session.projects.size >= COMPARISON_PROJECT_PAGES;
     entering.set(session.entryClass, (entering.get(session.entryClass) ?? 0) + 1);
-    if (isComparison) {
-      comparing.set(session.entryClass, (comparing.get(session.entryClass) ?? 0) + 1);
-      siteComparisonSessions++;
+    // Two different counts on purpose — see the `Session` doc comment. A session
+    // reaching COMPARISON_PROJECT_PAGES onward necessarily reaches it overall,
+    // so the onward counts are a subset of the site total, never a rival to it.
+    if (session.projects.size >= COMPARISON_PROJECT_PAGES) siteComparisonSessions++;
+    if (session.onwardProjects.size >= COMPARISON_PROJECT_PAGES) {
+      onwardComparing.set(session.entryClass, (onwardComparing.get(session.entryClass) ?? 0) + 1);
     }
   }
 
@@ -213,17 +287,17 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
   // limitation is real and worth stating: a comparison session spans several
   // classes, and this credits the last one. A blog post that started the
   // research and a development page that closed it both count as the
-  // development page. Read `leads` as "enquiries sent FROM this class", never as
-  // "enquiries this class earned".
+  // development page. Read the count as "enquiries sent FROM this class", never
+  // as "enquiries this class earned".
   //
-  // A second mismatch follows from it and matters to `mute` below: `leads` is
-  // scoped by the page the FORM sat on, while the expectation it is judged
-  // against is built from sessions that ENTERED on the class. A class that hosts
-  // most of the site's enquiry forms but receives few entries is therefore
-  // measured against an expectation built from someone else's traffic, in both
-  // directions. The two cannot be reconciled without a session-to-lead key,
-  // which the data does not have — so the bar is set where a mismatch of this
-  // size cannot manufacture a verdict on its own.
+  // A second mismatch follows from it and matters to `mute` below: the lead
+  // count is scoped by the page the FORM sat on, while the expectation it is
+  // judged against is built from sessions that ENTERED on the class. A class
+  // that hosts most of the site's enquiry forms but receives few entries is
+  // therefore measured against an expectation built from someone else's traffic,
+  // in both directions. The two cannot be reconciled without a session-to-lead
+  // key, which the data does not have — so the bar is set where a mismatch of
+  // this size cannot manufacture a verdict on its own.
   const leadsByClass = new Map<TemplateClass, number>();
   let attributedLeads = 0;
   for (const lead of leads) {
@@ -238,10 +312,16 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
     attributedLeads++;
   }
 
-  // The null model behind `mute`: leads spread across classes in proportion to
-  // comparison volume. Since every comparison session is counted under exactly
-  // one entry class, the per-class expectations sum back to `attributedLeads`.
-  // It is a yardstick for "would zero have been surprising", not a causal claim.
+  // The null model behind `mute`: page-attributable leads spread across the
+  // classes in proportion to onward-comparison volume. A yardstick for "would
+  // zero have been surprising", not a causal claim.
+  //
+  // The denominator is the SITE-LEVEL comparison metric (entry page included)
+  // while the volume it multiplies is onward-only, so the per-class expectations
+  // sum to LESS than `attributedLeads` rather than exactly to it. That is the
+  // deliberate direction: it makes `mute` harder to reach, never easier, and
+  // under-claiming is the correct failure here. The site-level metric is the
+  // approved north-star figure and is not rescoped to tidy up this arithmetic.
   const leadsPerComparisonSession = siteComparisonSessions > 0 ? attributedLeads / siteComparisonSessions : 0;
 
   // The true observed rate for EVERY class, including those below the floor —
@@ -252,7 +332,7 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
   const rates = new Map<TemplateClass, number>();
   for (const cls of ALL_CLASSES) {
     const e = entering.get(cls) ?? 0;
-    rates.set(cls, e > 0 ? (100 * (comparing.get(cls) ?? 0)) / e : 0);
+    rates.set(cls, e > 0 ? (100 * (onwardComparing.get(cls) ?? 0)) / e : 0);
   }
   const bestRate = Math.max(
     0,
@@ -261,11 +341,17 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
 
   return ALL_CLASSES.map((cls): ClassVerdict => {
     const enteringSessions = entering.get(cls) ?? 0;
-    const comparisonSessions = comparing.get(cls) ?? 0;
-    const comparisonRate = rates.get(cls) ?? 0;
+    const onwardComparisonSessions = onwardComparing.get(cls) ?? 0;
+    const onwardComparisonRate = rates.get(cls) ?? 0;
     const leadCount = leadsByClass.get(cls) ?? 0;
-    const expectedLeads = comparisonSessions * leadsPerComparisonSession;
-    const base = { templateClass: cls, enteringSessions, comparisonSessions, comparisonRate, leads: leadCount };
+    const expectedLeads = onwardComparisonSessions * leadsPerComparisonSession;
+    const base = {
+      templateClass: cls,
+      enteringSessions,
+      onwardComparisonSessions,
+      onwardComparisonRate,
+      attributableLeads: leadCount,
+    };
 
     if (enteringSessions < MIN_ENTERING_SESSIONS) {
       return {
@@ -276,8 +362,8 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
     }
 
     // Reached only when this class itself cleared the floor, so it is one of the
-    // classes the bar is drawn from: a zero bar means NO judgeable class
-    // produced a single comparison session. Left to fall through, every
+    // classes the bar is drawn from: a zero bar means NO judgeable class sent a
+    // single session onward to two properties. Left to fall through, every
     // comparison of the form `0 < 0 * 0.5` is false and each of those classes
     // would be certified against a benchmark that does not exist. Today the
     // MIN_COMPARISON_SESSIONS branch below would happen to catch them — but on a
@@ -287,15 +373,15 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
       return {
         ...base,
         diagnosis: "unjudged",
-        reason: `No template class with enough entering sessions to judge produced a single comparison session in ${WINDOW_DAYS} days, so there is no benchmark to measure this one against.`,
+        reason: `No template class with enough entering sessions to judge sent a single session onward to two or more properties in ${WINDOW_DAYS} days, so there is no benchmark to measure this one against.`,
       };
     }
 
-    if (comparisonRate < bestRate * CLASS_RATE_FRACTION) {
+    if (onwardComparisonRate < bestRate * CLASS_RATE_FRACTION) {
       return {
         ...base,
         diagnosis: "repelling",
-        reason: `${comparisonRate.toFixed(1)}% of the ${fmt(enteringSessions)} sessions entering here go on to compare two or more properties, against ${bestRate.toFixed(1)}% for the strongest class — landing layout and internal routes to further properties.`,
+        reason: `${onwardComparisonRate.toFixed(1)}% of the ${fmt(enteringSessions)} sessions entering here go on to view two or more different properties AFTER the page they landed on, against ${bestRate.toFixed(1)}% for the strongest class — landing layout and internal routes to further properties.`,
       };
     }
 
@@ -306,15 +392,15 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
       return {
         ...base,
         diagnosis: "healthy",
-        reason: `${comparisonRate.toFixed(1)}% of entering sessions go on to compare properties, in line with the ${bestRate.toFixed(1)}% best, and ${enquiries(leadCount)} came from pages of this class.`,
+        reason: `${onwardComparisonRate.toFixed(1)}% of sessions entering here go on to two or more properties after the landing page, in line with the ${bestRate.toFixed(1)}% best, and ${enquiries(leadCount)} came from pages of this class.`,
       };
     }
 
-    if (comparisonSessions < MIN_COMPARISON_SESSIONS) {
+    if (onwardComparisonSessions < MIN_COMPARISON_SESSIONS) {
       return {
         ...base,
         diagnosis: "unjudged",
-        reason: `${fmt(comparisonSessions)} sessions entered here and went on to compare properties — below the ${MIN_COMPARISON_SESSIONS} needed to judge whether this class produces enquiries.`,
+        reason: `${fmt(onwardComparisonSessions)} sessions entered here and went on to two or more properties — below the ${MIN_COMPARISON_SESSIONS} needed to judge whether this class produces enquiries.`,
       };
     }
 
@@ -322,7 +408,7 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
       return {
         ...base,
         diagnosis: "mute",
-        reason: `${fmt(comparisonSessions)} sessions entered here and compared properties, which at the site's own rate of enquiries traceable to a page should have produced about ${expectedLeads.toFixed(1)} — none came from a page of this class. Offer, call to action, contact path.`,
+        reason: `${fmt(onwardComparisonSessions)} sessions entered here and went on to two or more properties, which at the site's own rate of enquiries traceable to a page should have produced about ${expectedLeads.toFixed(1)} — none came from a page of this class. Offer, call to action, contact path.`,
       };
     }
 
@@ -332,7 +418,7 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
     return {
       ...base,
       diagnosis: "unjudged",
-      reason: `The whole site produced ${enquiries(attributedLeads)} traceable to a page from ${fmt(siteComparisonSessions)} comparison sessions in ${WINDOW_DAYS} days (enquiries by phone, WhatsApp or manual entry carry no page and are not counted), so this class's ${fmt(comparisonSessions)} would be expected to produce about ${expectedLeads.toFixed(1)} — too few for its zero to mean anything.`,
+      reason: `The whole site produced ${enquiries(attributedLeads)} traceable to a page from ${fmt(siteComparisonSessions)} comparison sessions in ${WINDOW_DAYS} days (enquiries by phone, WhatsApp or manual entry carry no page and are not counted), so the ${fmt(onwardComparisonSessions)} sessions that entered here and went on to two or more properties would be expected to produce about ${expectedLeads.toFixed(1)} — too few for its zero to mean anything.`,
     };
   });
 }

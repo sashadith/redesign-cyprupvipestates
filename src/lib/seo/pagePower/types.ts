@@ -79,15 +79,26 @@ export const MIN_BUCKET_IMPRESSIONS = 100;
 
 /** A comparison session views this many DIFFERENT project pages. Comparing two
  *  properties is what a buyer does; reading five articles is what a researcher
- *  does. */
+ *  does.
+ *
+ *  Applied at TWO scopes, which classVerdicts.ts keeps apart under two names
+ *  because they are not the same number: the site-level metric counts distinct
+ *  Development pages across the WHOLE session (the approved north-star figure,
+ *  282 per quarter), while the per-class rate counts only those seen AFTER the
+ *  entry pageview. Counting the entry page in a per-class rate compares
+ *  different funnel steps across classes — see `onwardComparisonSessions`
+ *  below. */
 export const COMPARISON_PROJECT_PAGES = 2;
 export const MIN_ENTERING_SESSIONS = 100;
+
+/** Floor for judging LEAD production, i.e. the `mute` diagnosis. Measured on
+ *  `onwardComparisonSessions`, not on the site-level metric. */
 export const MIN_COMPARISON_SESSIONS = 50;
 
-/** A template class is flagged `repelling` when its comparison rate is below
- *  this fraction of the BEST-performing class's rate. Deliberately relative
- *  to the best class, not to a site-wide average, because an average that
- *  includes the weak classes drags the bar down toward them. */
+/** A template class is flagged `repelling` when its onward-comparison rate is
+ *  below this fraction of the BEST-performing class's rate. Deliberately
+ *  relative to the best class, not to a site-wide average, because an average
+ *  that includes the weak classes drags the bar down toward them. */
 export const CLASS_RATE_FRACTION = 0.5;
 
 export type PageDiagnosis = "invisible" | "buried" | "unclicked" | "healthy" | "unjudged";
@@ -140,11 +151,35 @@ export type PageVerdict = {
 
 export type ClassVerdict = {
   templateClass: TemplateClass;
+  /** Sessions whose FIRST pageview was a page of this class. */
   enteringSessions: number;
-  comparisonSessions: number;
-  /** percent of entering sessions that became comparison sessions */
-  comparisonRate: number;
-  leads: number;
+  /** Sessions that entered on this class and then viewed COMPARISON_PROJECT_PAGES
+   *  different Development pages AFTER the entry pageview.
+   *
+   *  ONWARD is the whole point of the name and must not be quietly dropped. The
+   *  site-level metric counts the entry page too, and counting it here would
+   *  measure a different funnel step per class: a session entering ON a
+   *  Development page needs to see only ONE further property to reach two,
+   *  while a session entering on the homepage needs two. At a plausible ~0.3
+   *  per-property continuation and ~0.4 homepage-to-property click-through that
+   *  alone scores `development-page` ~30% against `homepage` ~12% — a ratio
+   *  already under CLASS_RATE_FRACTION with IDENTICAL user behaviour. Since
+   *  `development-page` would then set the bar essentially always, the artefact
+   *  runs one way: manufactured `repelling` verdicts on homepage, blog-post and
+   *  other-landing-page, each carrying an assertion about landing layout that
+   *  the data never supported. */
+  onwardComparisonSessions: number;
+  /** percent of `enteringSessions` that became `onwardComparisonSessions` */
+  onwardComparisonRate: number;
+  /** Enquiries in the window whose `Lead.pageSource` resolves to a page of this
+   *  class. NOT the enquiries this class produced, and NOT all enquiries:
+   *  `pageSource` records the page the FORM sat on, so a journey spanning
+   *  several classes is credited entirely to the last one, and enquiries
+   *  arriving by phone, WhatsApp or manual entry carry no page at all and are
+   *  counted nowhere (148 of 179 leads since January 2025 were entered by
+   *  hand). Do not surface this under a bare "Leads" column — it will be read
+   *  as the business's lead count, which it is not. */
+  attributableLeads: number;
   diagnosis: ClassDiagnosis;
   reason: string;
 };
