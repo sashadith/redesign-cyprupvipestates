@@ -3,7 +3,7 @@ import { buildCanonicalMap, canonicalize, localeOfPath } from "@/lib/seo/urlCano
 import { templateClassOf, type TemplateClass } from "@/lib/seo/templateClass";
 import {
   CLASS_RATE_FRACTION, COMPARISON_PROJECT_PAGES, MIN_COMPARISON_SESSIONS,
-  MIN_ENTERING_SESSIONS, WINDOW_DAYS, type ClassVerdict,
+  MIN_ENTERING_SESSIONS, MIN_EXPECTED_ONWARD, WINDOW_DAYS, type ClassVerdict,
 } from "./types";
 
 // The two diagnoses that cannot work per page. Only 5 pages on this site clear
@@ -361,6 +361,12 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
     const onwardComparisonRate = rates.get(cls) ?? 0;
     const leadCount = leadsByClass.get(cls) ?? 0;
     const expectedLeads = onwardComparisonSessions * leadsPerComparisonSession;
+    // What this class WOULD have produced at the best class's rate. The bar the
+    // `repelling` test moves against, and therefore the right quantity to size
+    // the evidence on: a rate can only be told from the bar when the bar itself
+    // predicts enough events. For the best class it equals its own observed
+    // count exactly, which is the sanity check on the formula.
+    const expectedOnward = (enteringSessions * bestRate) / 100;
     const base = {
       templateClass: cls,
       enteringSessions,
@@ -390,6 +396,34 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
         ...base,
         diagnosis: "unjudged",
         reason: `No template class with enough entering sessions to judge sent a single session on to two or more properties other than the one it landed on in ${WINDOW_DAYS} days, so there is no benchmark to measure this one against.`,
+      };
+    }
+
+    // Gates the WHOLE engagement axis, not just `repelling`. MIN_ENTERING_SESSIONS
+    // bounds the denominator of the rate and nothing bounded the numerator, so a
+    // class could clear that floor and still be judged on a handful of onward
+    // sessions — measured 2026-08-23, `projects-listing` was called `repelling`
+    // on ONE, a 1-in-11 fluke (see MIN_EXPECTED_ONWARD in types.ts for the
+    // false-alarm table). Blocking only the `repelling` branch would have handed
+    // the same class `healthy` on the same non-evidence with the sign flipped,
+    // since that branch asks only for a traced enquiry. One onward session is no
+    // more evidence for healthy than against it, so neither verdict is available
+    // here and the reason says so outright.
+    //
+    // Returning `unjudged` rather than falling through to the lead axis hides
+    // nothing: `onwardComparisonSessions >= MIN_COMPARISON_SESSIONS` would force
+    // this class's own rate to at least 50/enteringSessions, hence
+    // `expectedOnward = enteringSessions × bestRate ≥ 50` since `bestRate` is the
+    // maximum over judgeable classes — well above this floor. A class gated here
+    // can therefore never have been eligible for `mute` anyway.
+    if (expectedOnward < MIN_EXPECTED_ONWARD) {
+      const engagement = `${fmt(onwardComparisonSessions)} of the ${fmt(enteringSessions)} sessions entering here went on to two or more properties other than their landing page, where the strongest class's rate predicts about ${expectedOnward.toFixed(0)} — below the ${MIN_EXPECTED_ONWARD} expected needed before that gap can be told from chance, so this class is not judged on engagement in either direction.`;
+      return {
+        ...base,
+        diagnosis: "unjudged",
+        reason: leadCount > 0
+          ? `${engagement} ${enquiries(leadCount)} came from pages of this class, too few to stand as a verdict alone.`
+          : engagement,
       };
     }
 
