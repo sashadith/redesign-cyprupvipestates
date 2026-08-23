@@ -94,14 +94,25 @@ export const MIN_BUCKET_PAGES = 5;
  *  diagnosis). Re-measuring one is not license to update the other. */
 export const MIN_BUCKET_IMPRESSIONS = 100;
 
-/** A comparison session views this many DIFFERENT project pages. Comparing two
+/** A comparison session views this many DIFFERENT property pages. Comparing two
  *  properties is what a buyer does; reading five articles is what a researcher
  *  does.
  *
+ *  A PROPERTY is a published Development OR a published legacy Sanity Project,
+ *  which is the whole of what `/projects/{slug}` serves. That is NOT the same
+ *  set as the `development-page` template class — see `propertyOf` in
+ *  classVerdicts.ts for why the two must stay apart — and reading it as the
+ *  Development-only set was a real defect, not a theoretical one: measured
+ *  2026-08-23, the site holds 147 published Developments against 611 published
+ *  legacy Projects, and the Development-only reading found 106 comparison
+ *  sessions in the window where the spec's own definition finds 276. The
+ *  approved north-star figure is 282 per quarter (measured 2026-08-23 over the
+ *  window ending that day — see the design spec); the property-wide definition
+ *  reproduces it, the Development-only one returned 38% of it.
+ *
  *  Applied at TWO scopes, which classVerdicts.ts keeps apart under two names
  *  because they are not the same number: the site-level metric counts distinct
- *  Development pages across the WHOLE session (the approved north-star figure,
- *  282 per quarter, measured 2026-08-23 — see the design spec), while the
+ *  properties across the WHOLE session (the north-star figure above), while the
  *  per-class rate counts only distinct properties OTHER THAN the one the
  *  session landed on. Counting the landing property in a per-class rate compares
  *  different funnel steps across classes — see `onwardComparisonSessions`
@@ -112,18 +123,23 @@ export const MIN_ENTERING_SESSIONS = 100;
 /** Floor for judging LEAD production, i.e. the `mute` diagnosis. Measured on
  *  `onwardComparisonSessions`, not on the site-level metric.
  *
- *  DORMANT AT CURRENT VOLUME, AND DELIBERATELY LEFT SO. Measured against
- *  production on 2026-08-23 over a 90-day window, the five classes produced
- *  onward counts of 1, 2, 14, 22 and 31. The largest is 31, so NO class reaches
- *  50 and the `mute` branch cannot fire at all: every class with no traced
- *  enquiry reads `unjudged`, however badly it actually converts.
+ *  NO LONGER DORMANT, and the correction is worth recording. This note used to
+ *  read "the five classes produced onward counts of 1, 2, 14, 22 and 31, the
+ *  largest is 31, so NO class reaches 50 and the `mute` branch cannot fire at
+ *  all". Those counts were measured while "property" wrongly meant "Development
+ *  only" (see COMPARISON_PROJECT_PAGES above), which hid most of the site's
+ *  property browsing. Re-measured 2026-08-23 over the same window with the
+ *  corrected definition, the counts are 9, 12, 31, 41 and 117: `other-landing-page`
+ *  clears this floor almost two and a half times over, and `mute` is a verdict
+ *  this module can now actually emit. It does not emit it today only because 27
+ *  enquiries are traced to that class — see MUTE_MIN_EXPECTED_LEADS in
+ *  classVerdicts.ts for the second precondition and the full derivation.
  *
- *  That is the safe direction and the constant is NOT to be lowered to make the
- *  branch reachable. At counts like these a lead-production verdict would be a
- *  coin flip — the same defect, in a different place, as declaring a class
- *  `repelling` on one onward session (see MIN_EXPECTED_ONWARD below). It becomes
- *  reachable on its own as traffic or the window grows. If you are here because
- *  `mute` never fires: this is why, and it is not a bug. */
+ *  The constant is unchanged and is still NOT to be lowered. At counts below it
+ *  a lead-production verdict would be a coin flip — the same defect, in a
+ *  different place, as declaring a class `repelling` on a handful of onward
+ *  sessions (see MIN_EXPECTED_ONWARD below). It is now the binding constraint on
+ *  the second-closest class: `homepage` sits at 41. */
 export const MIN_COMPARISON_SESSIONS = 50;
 
 /** Floor under the EVIDENCE for the engagement axis, in EXPECTED onward
@@ -139,21 +155,33 @@ export const MIN_COMPARISON_SESSIONS = 50;
  *    expected  6 → 6.20%      expected 30 → 0.09%
  *    expected 10 → 2.93%      expected 40 → 0.02%
  *
- *  and the same run's five classes:
+ *  and the same run's five classes, re-measured with the corrected property
+ *  definition (see COMPARISON_PROJECT_PAGES) and against the benchmark the
+ *  paragraph below now requires — `other-landing-page` at 8.6%:
  *
- *    homepage            expected 22.0  observed 14  false alarm 0.36%
- *    projects-listing    expected  4.0  observed  1  false alarm 9.35%
- *    development-page    expected 22.0  observed 22  false alarm 0.35%
- *    blog-post           expected 40.5  observed  2  false alarm 0.03%
- *    other-landing-page  expected 49.1  observed 31  false alarm 0.01%
+ *    homepage            expected  52.6  observed  41  false alarm 0.004%
+ *    projects-listing    expected   9.3  observed  12  false alarm 4.56%
+ *    development-page    expected  51.5  observed  31  false alarm 0.003%
+ *    blog-post           expected  96.6  observed   9  false alarm <0.001%
+ *    other-landing-page  expected 117.0  observed 117  false alarm <0.001%
  *
  *  20 bounds the false alarm at 0.5% and, on that data, gates exactly the one
- *  class that could not support a verdict — a 1-in-11 fluke — while leaving the
- *  other four judgeable, each at or below 0.36%. Re-measure before changing it.
+ *  class that cannot support a verdict — `projects-listing`, at a 1-in-22 chance
+ *  of a spurious `repelling` — while leaving the other four judgeable, each
+ *  under 0.005%. Re-measure before changing it.
  *
- *  It gates the WHOLE engagement axis, not just `repelling`. One onward session
- *  is no more evidence for `healthy` than against it, so a class below this
- *  floor is reported `unjudged` on engagement rather than certified by silence. */
+ *  It gates the WHOLE engagement axis, not just `repelling`. A handful of onward
+ *  sessions is no more evidence for `healthy` than against it, so a class below
+ *  this floor is reported `unjudged` on engagement rather than certified by
+ *  silence.
+ *
+ *  Since 2026-08-23 it also gates which class may SET the bar. Nothing did
+ *  before, so a class the module refused to judge could still decide what every
+ *  other class was judged against — on this window `projects-listing`, unjudged
+ *  on 12 onward sessions, carried the highest rate on the site and as the
+ *  benchmark turned `development-page` `repelling`. See `benchmarkClasses` in
+ *  classVerdicts.ts for why the class's own onward count is the non-circular way
+ *  to apply exactly this floor there. */
 export const MIN_EXPECTED_ONWARD = 20;
 
 /** A template class is flagged `repelling` when its onward-comparison rate is
@@ -215,7 +243,8 @@ export type ClassVerdict = {
   /** Sessions whose FIRST pageview was a page of this class. */
   enteringSessions: number;
   /** Sessions that entered on this class and then viewed COMPARISON_PROJECT_PAGES
-   *  different Development pages OTHER THAN THE ONE THEY LANDED ON.
+   *  different PROPERTIES — Developments and legacy Projects alike, see
+   *  COMPARISON_PROJECT_PAGES — OTHER THAN THE ONE THEY LANDED ON.
    *
    *  Both exclusions are load-bearing and neither may be quietly dropped: not
    *  the entry pageview, and not the entry PROPERTY. Excluding only the pageview
@@ -224,6 +253,16 @@ export type ClassVerdict = {
    *  property you landed on is ordinary browsing, not an edge case. Excluding
    *  the property itself makes the quantity identical across every class:
    *  two distinct properties that are not where the session started.
+   *
+   *  That last claim only became TRUE on 2026-08-23. While "property" meant
+   *  "Development", it was not identical across classes at all: a session
+   *  comparing two legacy properties scored nought and the same journey among
+   *  Developments scored two, and sessions entering on a legacy property sat in
+   *  `other-landing-page`'s denominator with their property browsing in no
+   *  numerator — a one-directional push toward `repelling` for the class that
+   *  absorbs 611 of the site's 758 property pages. The exclusion is what makes
+   *  the funnel step the same; the property definition is what makes the
+   *  COUNTING the same, and both are needed.
    *
    *  The site-level metric counts the entry page too, and counting it here would
    *  measure a different funnel step per class: a session entering ON a
@@ -242,11 +281,20 @@ export type ClassVerdict = {
   /** Enquiries in the window whose `Lead.pageSource` resolves to a page of this
    *  class. NOT the enquiries this class produced, and NOT all enquiries:
    *  `pageSource` records the page the FORM sat on, so a journey spanning
-   *  several classes is credited entirely to the last one, and enquiries
-   *  arriving by phone, WhatsApp or manual entry carry no page at all and are
-   *  counted nowhere (148 of 179 leads since January 2025 were entered by
-   *  hand). Do not surface this under a bare "Leads" column — it will be read
-   *  as the business's lead count, which it is not. */
+   *  several classes is credited entirely to the last one, and an enquiry
+   *  carrying no recoverable page is counted nowhere. Soft-deleted leads are
+   *  excluded, as they are from every other lead query in this codebase.
+   *
+   *  How many carry no page is smaller than this comment used to say. It read
+   *  "enquiries arriving by phone, WhatsApp or manual entry carry no page at all
+   *  and are counted nowhere (148 of 179 leads since January 2025 were entered
+   *  by hand)", which conflated source=MANUAL with having no page. Measured
+   *  2026-08-23: 148 of 179 are indeed MANUAL, but 141 of the 179 carry a
+   *  `pageSource` and 119 resolve to a path — the MANUAL rows are monday.com
+   *  imports that kept the URL. Only 38 leads lack the field entirely.
+   *
+   *  Do not surface this under a bare "Leads" column — it will be read as the
+   *  business's lead count, which it is not. */
   attributableLeads: number;
   diagnosis: ClassDiagnosis;
   reason: string;

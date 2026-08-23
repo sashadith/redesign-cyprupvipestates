@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getPageVerdicts } from "@/lib/seo/pagePower/pageVerdicts";
-import { getClassVerdicts } from "@/lib/seo/pagePower/classVerdicts";
+import { getClassVerdicts, classWindow } from "@/lib/seo/pagePower/classVerdicts";
 import { templateClassLabel } from "@/lib/seo/templateClass";
 import { COMPARISON_PROJECT_PAGES, type ClassDiagnosis } from "@/lib/seo/pagePower/types";
 import PagePowerTable, { type Row } from "./PagePowerTable";
@@ -27,7 +27,13 @@ const CLASS_DIAGNOSIS_COLOR: Record<ClassDiagnosis, string> = {
 const day = (d: Date): string => d.toISOString().slice(0, 10);
 
 export default async function PagePowerPage() {
-  const [pages, classes] = await Promise.all([getPageVerdicts(), getClassVerdicts()]);
+  // One `now` for both layers. Two `new Date()` calls either side of a slow
+  // query can straddle UTC midnight, and this page would then print two windows
+  // derived from two different "todays" — the one mismatch a reader has no way
+  // to spot.
+  const now = new Date();
+  const [pages, classes] = await Promise.all([getPageVerdicts(now), getClassVerdicts(now)]);
+  const classSpan = classWindow(now);
 
   // Only the fields the table renders — see the `Row` comment in
   // PagePowerTable.tsx for why this is not a spread of the verdict.
@@ -49,6 +55,14 @@ export default async function PagePowerPage() {
   // pagePower/pageVerdicts.ts says display code must subtract a day; this is
   // that code. DAY is exact here because both bounds are UTC midnights.
   const lastCoveredDay = new Date(pages.windowEnd.getTime() - DAY);
+  // The by-class card runs on PageView and Lead, which have no ingestion lag, so
+  // `getClassVerdicts` does not hold back the GSC_LAG_DAYS the page layer must —
+  // its window ends three days later than the one in the header above. Until
+  // 2026-08-23 this card printed no window of its own and inherited that header,
+  // naming a span its own numbers do not cover. Both are dated for the same
+  // reason `classVerdicts.ts` gives: say which source a number came from before
+  // comparing them.
+  const classLastCoveredDay = new Date(classSpan.windowEnd.getTime() - DAY);
 
   return (
     <div>
@@ -70,14 +84,22 @@ export default async function PagePowerPage() {
 
       <Card>
         <div className="flex items-baseline justify-between gap-4 mb-3">
-          <h2 className="text-sm font-semibold">By template class</h2>
+          <div>
+            <h2 className="text-sm font-semibold">By template class</h2>
+            <p className="text-xs text-[#6B7280] mt-0.5">
+              Site visits and enquiries over {day(classSpan.windowStart)} to {day(classLastCoveredDay)} — a different
+              window from the one above, which waits for Google to finish reporting.
+            </p>
+          </div>
           {/* Both columns are routinely misread, and both misreadings are
               recorded on `ClassVerdict` in pagePower/types.ts: "onward" counts
               only properties OTHER than the one the session landed on (so every
               class is measured at the same funnel step), and the enquiry count
-              is only those whose form page resolves to this class — 148 of 179
-              leads since January 2025 were entered by hand and appear in no
-              class at all. */}
+              is only those whose form page resolves to this class — measured
+              2026-08-23, 60 of 179 leads carry no recoverable page and appear
+              in no class. A property here is a Development OR a legacy
+              project page; both are counted, which they were not before
+              2026-08-23. */}
           <span className="text-xs text-[#6B7280] text-right">
             Onward = entered here, then viewed {COMPARISON_PROJECT_PAGES}+ properties other than the landing page ·
             enquiries are only those whose form page resolves to this class

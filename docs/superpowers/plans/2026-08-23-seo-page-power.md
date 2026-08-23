@@ -176,14 +176,25 @@ export const MIN_BUCKET_PAGES = 5;
  *  diagnosis). Re-measuring one is not license to update the other. */
 export const MIN_BUCKET_IMPRESSIONS = 100;
 
-/** A comparison session views this many DIFFERENT project pages. Comparing two
+/** A comparison session views this many DIFFERENT property pages. Comparing two
  *  properties is what a buyer does; reading five articles is what a researcher
  *  does.
  *
+ *  A PROPERTY is a published Development OR a published legacy Sanity Project,
+ *  which is the whole of what `/projects/{slug}` serves. That is NOT the same
+ *  set as the `development-page` template class — see `propertyOf` in
+ *  classVerdicts.ts for why the two must stay apart — and reading it as the
+ *  Development-only set was a real defect, not a theoretical one: measured
+ *  2026-08-23, the site holds 147 published Developments against 611 published
+ *  legacy Projects, and the Development-only reading found 106 comparison
+ *  sessions in the window where the spec's own definition finds 276. The
+ *  approved north-star figure is 282 per quarter (measured 2026-08-23 over the
+ *  window ending that day — see the design spec); the property-wide definition
+ *  reproduces it, the Development-only one returned 38% of it.
+ *
  *  Applied at TWO scopes, which classVerdicts.ts keeps apart under two names
  *  because they are not the same number: the site-level metric counts distinct
- *  Development pages across the WHOLE session (the approved north-star figure,
- *  282 per quarter, measured 2026-08-23 — see the design spec), while the
+ *  properties across the WHOLE session (the north-star figure above), while the
  *  per-class rate counts only distinct properties OTHER THAN the one the
  *  session landed on. Counting the landing property in a per-class rate compares
  *  different funnel steps across classes — see `onwardComparisonSessions`
@@ -194,18 +205,23 @@ export const MIN_ENTERING_SESSIONS = 100;
 /** Floor for judging LEAD production, i.e. the `mute` diagnosis. Measured on
  *  `onwardComparisonSessions`, not on the site-level metric.
  *
- *  DORMANT AT CURRENT VOLUME, AND DELIBERATELY LEFT SO. Measured against
- *  production on 2026-08-23 over a 90-day window, the five classes produced
- *  onward counts of 1, 2, 14, 22 and 31. The largest is 31, so NO class reaches
- *  50 and the `mute` branch cannot fire at all: every class with no traced
- *  enquiry reads `unjudged`, however badly it actually converts.
+ *  NO LONGER DORMANT, and the correction is worth recording. This note used to
+ *  read "the five classes produced onward counts of 1, 2, 14, 22 and 31, the
+ *  largest is 31, so NO class reaches 50 and the `mute` branch cannot fire at
+ *  all". Those counts were measured while "property" wrongly meant "Development
+ *  only" (see COMPARISON_PROJECT_PAGES above), which hid most of the site's
+ *  property browsing. Re-measured 2026-08-23 over the same window with the
+ *  corrected definition, the counts are 9, 12, 31, 41 and 117: `other-landing-page`
+ *  clears this floor almost two and a half times over, and `mute` is a verdict
+ *  this module can now actually emit. It does not emit it today only because 27
+ *  enquiries are traced to that class — see MUTE_MIN_EXPECTED_LEADS in
+ *  classVerdicts.ts for the second precondition and the full derivation.
  *
- *  That is the safe direction and the constant is NOT to be lowered to make the
- *  branch reachable. At counts like these a lead-production verdict would be a
- *  coin flip — the same defect, in a different place, as declaring a class
- *  `repelling` on one onward session (see MIN_EXPECTED_ONWARD below). It becomes
- *  reachable on its own as traffic or the window grows. If you are here because
- *  `mute` never fires: this is why, and it is not a bug. */
+ *  The constant is unchanged and is still NOT to be lowered. At counts below it
+ *  a lead-production verdict would be a coin flip — the same defect, in a
+ *  different place, as declaring a class `repelling` on a handful of onward
+ *  sessions (see MIN_EXPECTED_ONWARD below). It is now the binding constraint on
+ *  the second-closest class: `homepage` sits at 41. */
 export const MIN_COMPARISON_SESSIONS = 50;
 
 /** Floor under the EVIDENCE for the engagement axis, in EXPECTED onward
@@ -221,21 +237,33 @@ export const MIN_COMPARISON_SESSIONS = 50;
  *    expected  6 → 6.20%      expected 30 → 0.09%
  *    expected 10 → 2.93%      expected 40 → 0.02%
  *
- *  and the same run's five classes:
+ *  and the same run's five classes, re-measured with the corrected property
+ *  definition (see COMPARISON_PROJECT_PAGES) and against the benchmark the
+ *  paragraph below now requires — `other-landing-page` at 8.6%:
  *
- *    homepage            expected 22.0  observed 14  false alarm 0.36%
- *    projects-listing    expected  4.0  observed  1  false alarm 9.35%
- *    development-page    expected 22.0  observed 22  false alarm 0.35%
- *    blog-post           expected 40.5  observed  2  false alarm 0.03%
- *    other-landing-page  expected 49.1  observed 31  false alarm 0.01%
+ *    homepage            expected  52.6  observed  41  false alarm 0.004%
+ *    projects-listing    expected   9.3  observed  12  false alarm 4.56%
+ *    development-page    expected  51.5  observed  31  false alarm 0.003%
+ *    blog-post           expected  96.6  observed   9  false alarm <0.001%
+ *    other-landing-page  expected 117.0  observed 117  false alarm <0.001%
  *
  *  20 bounds the false alarm at 0.5% and, on that data, gates exactly the one
- *  class that could not support a verdict — a 1-in-11 fluke — while leaving the
- *  other four judgeable, each at or below 0.36%. Re-measure before changing it.
+ *  class that cannot support a verdict — `projects-listing`, at a 1-in-22 chance
+ *  of a spurious `repelling` — while leaving the other four judgeable, each
+ *  under 0.005%. Re-measure before changing it.
  *
- *  It gates the WHOLE engagement axis, not just `repelling`. One onward session
- *  is no more evidence for `healthy` than against it, so a class below this
- *  floor is reported `unjudged` on engagement rather than certified by silence. */
+ *  It gates the WHOLE engagement axis, not just `repelling`. A handful of onward
+ *  sessions is no more evidence for `healthy` than against it, so a class below
+ *  this floor is reported `unjudged` on engagement rather than certified by
+ *  silence.
+ *
+ *  Since 2026-08-23 it also gates which class may SET the bar. Nothing did
+ *  before, so a class the module refused to judge could still decide what every
+ *  other class was judged against — on this window `projects-listing`, unjudged
+ *  on 12 onward sessions, carried the highest rate on the site and as the
+ *  benchmark turned `development-page` `repelling`. See `benchmarkClasses` in
+ *  classVerdicts.ts for why the class's own onward count is the non-circular way
+ *  to apply exactly this floor there. */
 export const MIN_EXPECTED_ONWARD = 20;
 
 /** A template class is flagged `repelling` when its onward-comparison rate is
@@ -297,7 +325,8 @@ export type ClassVerdict = {
   /** Sessions whose FIRST pageview was a page of this class. */
   enteringSessions: number;
   /** Sessions that entered on this class and then viewed COMPARISON_PROJECT_PAGES
-   *  different Development pages OTHER THAN THE ONE THEY LANDED ON.
+   *  different PROPERTIES — Developments and legacy Projects alike, see
+   *  COMPARISON_PROJECT_PAGES — OTHER THAN THE ONE THEY LANDED ON.
    *
    *  Both exclusions are load-bearing and neither may be quietly dropped: not
    *  the entry pageview, and not the entry PROPERTY. Excluding only the pageview
@@ -306,6 +335,16 @@ export type ClassVerdict = {
    *  property you landed on is ordinary browsing, not an edge case. Excluding
    *  the property itself makes the quantity identical across every class:
    *  two distinct properties that are not where the session started.
+   *
+   *  That last claim only became TRUE on 2026-08-23. While "property" meant
+   *  "Development", it was not identical across classes at all: a session
+   *  comparing two legacy properties scored nought and the same journey among
+   *  Developments scored two, and sessions entering on a legacy property sat in
+   *  `other-landing-page`'s denominator with their property browsing in no
+   *  numerator — a one-directional push toward `repelling` for the class that
+   *  absorbs 611 of the site's 758 property pages. The exclusion is what makes
+   *  the funnel step the same; the property definition is what makes the
+   *  COUNTING the same, and both are needed.
    *
    *  The site-level metric counts the entry page too, and counting it here would
    *  measure a different funnel step per class: a session entering ON a
@@ -324,11 +363,20 @@ export type ClassVerdict = {
   /** Enquiries in the window whose `Lead.pageSource` resolves to a page of this
    *  class. NOT the enquiries this class produced, and NOT all enquiries:
    *  `pageSource` records the page the FORM sat on, so a journey spanning
-   *  several classes is credited entirely to the last one, and enquiries
-   *  arriving by phone, WhatsApp or manual entry carry no page at all and are
-   *  counted nowhere (148 of 179 leads since January 2025 were entered by
-   *  hand). Do not surface this under a bare "Leads" column — it will be read
-   *  as the business's lead count, which it is not. */
+   *  several classes is credited entirely to the last one, and an enquiry
+   *  carrying no recoverable page is counted nowhere. Soft-deleted leads are
+   *  excluded, as they are from every other lead query in this codebase.
+   *
+   *  How many carry no page is smaller than this comment used to say. It read
+   *  "enquiries arriving by phone, WhatsApp or manual entry carry no page at all
+   *  and are counted nowhere (148 of 179 leads since January 2025 were entered
+   *  by hand)", which conflated source=MANUAL with having no page. Measured
+   *  2026-08-23: 148 of 179 are indeed MANUAL, but 141 of the 179 carry a
+   *  `pageSource` and 119 resolve to a path — the MANUAL rows are monday.com
+   *  imports that kept the URL. Only 38 leads lack the field entirely.
+   *
+   *  Do not surface this under a bare "Leads" column — it will be read as the
+   *  business's lead count, which it is not. */
   attributableLeads: number;
   diagnosis: ClassDiagnosis;
   reason: string;
@@ -1075,12 +1123,14 @@ import {
 
 // The two diagnoses that cannot work per page. Only 5 pages on this site clear
 // 30 Google clicks in 90 days, so a per-page landing analysis would manufacture
-// noise; these are measured on SESSIONS (3,853 in the same window) and reported
+// noise; these are measured on SESSIONS (3,824 in the same window) and reported
 // per template class.
 //
-// EVERY production figure quoted in this file — 3,853 sessions, 282 comparison
-// sessions, ~26 website leads in 19 months, 148 of 179 leads entered by hand —
-// was measured on 2026-08-23, the same run as the thresholds in types.ts. See
+// EVERY production figure quoted in this file — 3,824 sessions, 276 comparison
+// sessions, 37 page-attributable enquiries, 147 published Developments against
+// 611 published legacy Projects — was measured on 2026-08-23 over the window
+// this module now defines (2026-05-25 to 2026-08-22 inclusive), the same run as
+// the thresholds in types.ts. See
 // docs/superpowers/specs/2026-08-23-seo-page-power-design.md. Re-measure before
 // leaning on one; they are not preferences and they are not eternal.
 
@@ -1091,36 +1141,51 @@ const DAY = 86_400_000;
  * produce before observing none is evidence of anything.
  *
  * This is not a measured production threshold like the ones in types.ts — it is
- * a derivation, which is why it lives here and not there. The site produced ~26
- * website leads in 19 months, i.e. on the order of four per 90-day window across
- * all five classes. Under a Poisson null with mean λ, the chance of seeing zero
- * is e^-λ: at λ = 0.8 that is 45%, at λ = 0.2 it is 82%. So "this class produced
- * no lead" is the ORDINARY outcome for a perfectly healthy class, and a `mute`
- * verdict gated only on a comparison-session count — the plan's original shape —
- * would fire on nearly every class that clears the floor while carrying no
- * information at all. e^-3 ≈ 5%, so λ ≥ 3 is the point at which silence is
- * surprising rather than expected. Below it this module says so, in words,
- * instead of emitting a finding it cannot support.
+ * a derivation, which is why it lives here and not there. Under a Poisson null
+ * with mean λ, the chance of seeing zero is e^-λ: at λ = 0.8 that is 45%, at
+ * λ = 0.2 it is 82%. So for a thin class "no enquiry came from here" is the
+ * ORDINARY outcome even when nothing is wrong, and a `mute` verdict gated only
+ * on a comparison-session count — the plan's original shape — would fire on
+ * classes carrying no information at all. e^-3 ≈ 5%, so λ ≥ 3 is the point at
+ * which silence is surprising rather than expected.
  *
  * What that actually requires. Since
- * `expectedLeads_c = onwardComparisonSessions_c × attributedLeads / siteComparisonSessions`
+ * `expectedLeads_c = onwardComparisonSessions_c × siteLeadsPerComparisonSession`
  * and `onwardComparisonSessions_c ≤ siteComparisonSessions`, the tight bound is
  * just `expectedLeads_c ≤ attributedLeads`. So the precondition for `mute` is
- * THREE PAGE-ATTRIBUTABLE LEADS SITE-WIDE in the window, plus concentration: at
- * four leads against 282 comparison sessions, one class would need about 212 of
- * those 282. Hundreds, not thousands, and within reach of the traffic this site
- * already has.
+ * THREE PAGE-ATTRIBUTABLE ENQUIRIES SITE-WIDE in the window, plus concentration.
  *
- * The practical consequence, stated plainly: at the site's current lead volume
- * `mute` will not fire, and the reason is the numerator, not the traffic.
- * `attributedLeads` counts only leads carrying a resolvable `pageSource`, and
- * most arrive by phone, WhatsApp or manual entry — 148 of 179 since January 2025
- * were entered by hand — so the realistic page-attributable count in a 90-day
- * window is nought to two, short of three on its own. That is the honest state
- * of the evidence, and the design spec predicted it ("Diagnosis 5 will read
- * unjudged for most classes at first, and that is the honest output"). The
- * diagnosis becomes reachable on its own as page-attributable lead volume grows
- * — no threshold edit needed.
+ * THIS BRANCH IS REACHABLE, AND THAT IS NEW. The comment this one replaces
+ * argued the opposite, on two figures that did not survive checking (both
+ * corrected 2026-08-23):
+ *
+ *  - It read "148 of 179 leads were entered by hand" as "and therefore carry no
+ *    page". They do carry one: measured all-time, 141 of the 179 leads have a
+ *    non-null `pageSource` and 119 of those resolve to a path — the MANUAL rows
+ *    are monday.com imports that kept the URL. Only 38 leads lack the field
+ *    entirely. src/lib/crm/compose/generate.ts already recorded "79% of leads
+ *    have a pageSource" before this branch existed.
+ *  - It put "the realistic page-attributable count in a 90-day window" at nought
+ *    to two. In this window it is 47 with a `pageSource`, 38 of them not
+ *    soft-deleted, 37 of those resolving to a path.
+ *
+ * Against 276 site comparison sessions those 37 give λ ≈ 0.134 per comparison
+ * session, so a class needs roughly 23 onward comparison sessions before its
+ * expectation reaches 3 — and MIN_COMPARISON_SESSIONS already demands 50 of
+ * them, which on this window's figures predicts about 6.7. Measured 2026-08-23,
+ * `other-landing-page` clears both preconditions outright: 117 onward comparison
+ * sessions, expectation 15.7. It reads `healthy` rather than `mute` only because
+ * 27 enquiries actually were traced to it. Had those 27 been zero, this module
+ * would have emitted `mute` — as it should.
+ *
+ * So the honest statement is no longer "it cannot fire at this site's volume".
+ * It is that one class is already eligible for it, and the next-closest is
+ * nine onward sessions short: `homepage` sits at 41 against
+ * MIN_COMPARISON_SESSIONS' 50, while its expectation of 5.5 clears THIS bar
+ * comfortably. The binding constraint is now that floor, not this one. The
+ * fall-through below still exists for the classes that cannot support the
+ * verdict, and still says so in words rather than emitting a finding it cannot
+ * support.
  */
 const MUTE_MIN_EXPECTED_LEADS = 3;
 
@@ -1130,8 +1195,7 @@ const MUTE_MIN_EXPECTED_LEADS = 3;
  *  at UTC midnight. A window bound carrying `now`'s time-of-day would slice the
  *  oldest day in half and hand back sessions whose FIRST ROW IS NOT THEIR ENTRY
  *  PAGE — every entry-page-derived number below would be silently wrong for that
- *  day. Truncating the newest day is harmless by comparison: a session's first
- *  row is still its first row.
+ *  day.
  *
  *  Carries the same warning as the copy in pageVerdicts.ts, because this module
  *  performs exactly the arithmetic that warning protects: DST is a non-issue and
@@ -1141,6 +1205,37 @@ const MUTE_MIN_EXPECTED_LEADS = 3;
  *  timezone-aware one. Duplicated rather than shared only because the two
  *  modules justify it differently; keep the two copies identical in behaviour. */
 const utcMidnight = (d: Date): Date => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+
+/**
+ * The span every figure below covers: WINDOW_DAYS COMPLETE UTC days, the newest
+ * of which is yesterday. `windowEnd` is EXCLUSIVE — the first instant the window
+ * does not cover — matching `PageVerdictResult.windowEnd`, so display code must
+ * subtract a day before printing a date a reader would recognise.
+ *
+ * Exported because the admin screen shows this module's table directly beneath
+ * the page layer's, and until 2026-08-23 it printed the PAGE layer's dates over
+ * both. The two windows genuinely differ and the card has to say so itself.
+ *
+ * Deliberately NOT lagged by GSC_LAG_DAYS the way `getPageVerdicts` is. That lag
+ * exists because Google backfills Search Console for two to three days; PageView
+ * and Lead are first-party rows written at the moment they happen, so there is
+ * nothing to wait for, and holding back three days of them would discard real
+ * sessions to match an unrelated source's latency. The consequence is that the
+ * two spans END three days apart. They are never joined — but both modules write
+ * "in WINDOW_DAYS days" into reason strings an admin reads side by side, so say
+ * which source a number came from before comparing them.
+ *
+ * The newest day IS excluded, and that is not the GSC lag by another name. Today
+ * is only partly elapsed, and a session captured mid-visit is counted as an
+ * entering session whose onward browsing has not happened yet — it lands in
+ * every rate's denominator and in no numerator. One partial day out of ninety
+ * cannot move a verdict, but it makes the reason strings' "in 90 days" false and
+ * the printed window a day wider than the data, for nothing.
+ */
+export function classWindow(now: Date = new Date()): { windowStart: Date; windowEnd: Date } {
+  const windowEnd = utcMidnight(now);
+  return { windowStart: new Date(windowEnd.getTime() - WINDOW_DAYS * DAY), windowEnd };
+}
 
 /** Strips query and hash, then a trailing slash, so `/de/`, `/de?x=1` and `/de`
  *  are one path. Without it `/de/` misses the homepage regex in `templateClassOf`
@@ -1163,6 +1258,11 @@ function normalisePath(path: string): string {
  * treated as paths — classifying every one of them as `other-landing-page`,
  * invisibly. The host is deliberately not checked, because every host this
  * field can carry serves the same path structure.
+ *
+ * Not every non-null `pageSource` survives this: measured 2026-08-23, 141 leads
+ * all-time carry the field and 119 resolve to a path, the rest holding free text
+ * a monday.com import wrote there ("TikTok", "Friends"). In the 90-day window it
+ * is 38 non-deleted with the field and 37 resolving.
  */
 function pathFromLeadSource(pageSource: string): string | null {
   const raw = pageSource.trim();
@@ -1178,6 +1278,14 @@ function pathFromLeadSource(pageSource: string): string | null {
 
 const fmt = (n: number): string => n.toLocaleString("en-GB");
 const enquiries = (n: number): string => `${fmt(n)} ${n === 1 ? "enquiry" : "enquiries"}`;
+
+/** Every URL shape that serves ONE property. Both a Development and a legacy
+ *  Sanity Project live at `/projects/{slug}` in all four locales — the shape is
+ *  shared, which is exactly why `templateClassOf` needs a slug set to tell the
+ *  two apart and why this module needs one to tell a property from anything
+ *  else. Kept beside `propertyOf` rather than reusing the copy inside
+ *  `templateClassOf`, because the two answer different questions (see there). */
+const PROPERTY_PATH = /^(?:\/(?:de|pl|ru))?\/projects\/([^/]+)$/;
 
 /** Every class gets exactly one verdict, so this list must stay exhaustive.
  *  Declared as a `Record<TemplateClass, number>` and not an array literal: a
@@ -1199,41 +1307,36 @@ const ALL_CLASSES = (Object.keys(CLASS_ORDER) as TemplateClass[]).sort((a, b) =>
  * `templateClassOf` is total. The type carries that invariant so no reader has
  * to re-derive it, and so no dead null-branch has to be maintained.
  *
- * The two slug sets are the SAME measurement at two scopes, and keeping them
+ * The two property sets are the SAME measurement at two scopes, and keeping them
  * apart is the point:
- *  - `projects` — every distinct Development slug in the session, entry page
- *    included. This is the site-level comparison metric, the approved north-star
- *    figure (282 per quarter), and it is not redefined to suit anything here.
- *  - `onwardProjects` — distinct properties OTHER THAN `entrySlug`, seen after
- *    the entry pageview. This is what a per-class rate must be built on, because
- *    counting the landing property measures a different funnel step for each
- *    class; see `onwardComparisonSessions` in types.ts for the full argument.
+ *  - `properties` — every distinct property in the session, entry page included.
+ *    This is the site-level comparison metric — the approved north-star figure,
+ *    282 per quarter, 276 on the window this module now measures — and it is not
+ *    redefined to suit anything here. See COMPARISON_PROJECT_PAGES in types.ts
+ *    for what a property is and for what the Development-only reading cost.
+ *  - `onwardProperties` — distinct properties OTHER THAN `entryProperty`, seen
+ *    after the entry pageview. This is what a per-class rate must be built on,
+ *    because counting the landing property measures a different funnel step for
+ *    each class; see `onwardComparisonSessions` in types.ts for the full
+ *    argument.
  *
- * `entrySlug` exists only to be excluded from `onwardProjects`, and is null when
- * the session did not land on a property at all — in which case there is nothing
- * to exclude and every property seen is onward.
+ * `entryProperty` exists only to be excluded from `onwardProperties`, and is
+ * null when the session did not land on a property at all — in which case there
+ * is nothing to exclude and every property seen is onward.
  *
- * All three hold SLUGS, not paths — see the note where they are filled.
+ * All three hold PROPERTY IDENTITIES, not paths — see `propertyOf`.
  */
 type Session = {
   entryClass: TemplateClass;
-  entrySlug: string | null;
-  projects: Set<string>;
-  onwardProjects: Set<string>;
+  entryProperty: string | null;
+  properties: Set<string>;
+  onwardProperties: Set<string>;
 };
 
 export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVerdict[]> {
-  // The last WINDOW_DAYS UTC calendar days, the newest of which is today and is
-  // therefore only partly elapsed. Deliberately NOT the GSC-lagged window
-  // `getPageVerdicts` uses: PageView and Lead are written live, so there is
-  // nothing to wait for, and holding back three days of them would discard real
-  // sessions to match an unrelated source's latency. The two windows are never
-  // joined — but both modules write "in WINDOW_DAYS days" into reason strings an
-  // admin reads side by side, and those two spans END three days apart. Say
-  // which source a number came from before comparing them.
-  const since = new Date(utcMidnight(now).getTime() - (WINDOW_DAYS - 1) * DAY);
+  const { windowStart, windowEnd } = classWindow(now);
 
-  const [map, developments, views, leads] = await Promise.all([
+  const [map, developments, projects, views, leads] = await Promise.all([
     buildCanonicalMap(),
     // Deliberately NOT `getInventory()`, and deliberately NOT filtered by
     // `publishStatus`. This set exists to CLASSIFY 90 DAYS OF HISTORY, and the
@@ -1247,8 +1350,28 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
     // pageVerdicts.ts filtering to published IS correct there, because it only
     // ever classifies pages that are in today's inventory to begin with.
     prisma.development.findMany({ where: { slug: { not: null } }, select: { slug: true } }),
+    // Legacy Sanity Projects, and the `status: "PUBLISHED"` filter here is NOT
+    // an inconsistency with the unfiltered Development query above — it is the
+    // same predicate `getInventory()` uses (inventory.ts), so the two modules
+    // agree on which Projects are live, and the historical-classification
+    // argument that forbids the filter for Developments does not bite here.
+    // Measured 2026-08-23: including the 276 ARCHIVED rows as well changes the
+    // site comparison-session count by nought (276 either way) and moves no
+    // class figure at all, because archiving a legacy Project writes a
+    // `legacy_project_redirects` row and `canonicalize` has already folded its
+    // pageviews onto the Development that replaced it before this set is
+    // consulted. A Development that comes down has no such successor to be
+    // folded onto, which is the whole difference between the two queries.
+    //
+    // `translationGroupId` is selected because a Project is a PER-LOCALE ROW
+    // with a per-locale slug, unlike a Development's one language-agnostic
+    // slug — see `propertyOf` for what that costs and how it is paid.
+    prisma.project.findMany({
+      where: { status: "PUBLISHED", slug: { not: "" } },
+      select: { slug: true, translationGroupId: true },
+    }),
     prisma.pageView.findMany({
-      where: { createdAt: { gte: since }, isBot: false, isPrefetch: false, isTest: false },
+      where: { createdAt: { gte: windowStart, lt: windowEnd }, isBot: false, isPrefetch: false, isTest: false },
       select: { visitorHash: true, path: true, createdAt: true },
       // `id` is the tie-break, and it is load-bearing: `createdAt` alone leaves
       // rows sharing a timestamp in an order Postgres may return either way, and
@@ -1258,16 +1381,100 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
       orderBy: [{ createdAt: "asc" }, { id: "asc" }],
     }),
     prisma.lead.findMany({
-      // Leads with no `pageSource` (phone, WhatsApp, manually entered — 148 of
-      // 179 since January 2025 were manual) carry no page to attribute to and
-      // are excluded here rather than defaulted anywhere. `Lead.status` is never
-      // read: the operator ruled it unusable as a scoring basis.
-      where: { createdAt: { gte: since }, pageSource: { not: null } },
+      // Three filters, each excluding a different kind of non-evidence.
+      //
+      // `deletedAt: null` — the soft-delete flag set by the /admin/crm trash
+      // flow, documented on the column itself (prisma/schema.prisma) as
+      // "excluded from all normal queries", and excluded by every other lead
+      // query in this codebase. It was missing here until 2026-08-23, and it
+      // was not academic: 9 of the 47 leads carrying a `pageSource` in this
+      // window are trashed. `healthy` is gated on nothing more than
+      // `leadCount > 0`, so a class whose only traced enquiry was one the
+      // operator had explicitly thrown away was certified healthy and printed
+      // "1 enquiry came from pages of this class" to say so.
+      //
+      // `pageSource: { not: null }` — a lead with no page cannot be attributed
+      // to a class and is excluded here rather than defaulted anywhere. It is a
+      // smaller exclusion than this file used to claim: 141 of 179 leads
+      // all-time DO carry the field, monday.com's MANUAL imports included.
+      //
+      // `Lead.status` is never read: the operator ruled it unusable as a
+      // scoring basis.
+      where: { createdAt: { gte: windowStart, lt: windowEnd }, deletedAt: null, pageSource: { not: null } },
       select: { pageSource: true },
     }),
   ]);
 
   const devSlugs = new Set(developments.map((d) => d.slug).filter((slug): slug is string => slug !== null));
+
+  /**
+   * Slug → property identity, for legacy Projects only.
+   *
+   * A Development carries ONE language-agnostic slug and is reachable in all
+   * four locales under it (developmentSeo.ts), so its slug IS its identity. A
+   * Project is a per-locale row carrying a per-locale slug, so one property can
+   * appear as up to four different slugs — measured 2026-08-23, 11 of the 154
+   * published translation groups do:
+   * `villas-cap-st-georges-resort` / `villen-…` / `wille-…` / `villy-…` are one
+   * property in four languages. Keyed by slug, a visitor using the language
+   * switcher on a single legacy property would register as having compared two,
+   * which is precisely the buying signal this module exists to count.
+   * `translationGroupId` is that property's identity across locales and every
+   * published Project row has one.
+   *
+   * Namespaced with a `project:` prefix so the fallback for a row without a
+   * group can never collide with a Development slug used as an identity.
+   */
+  const projectProperties = new Map<string, string>();
+  for (const project of projects) {
+    projectProperties.set(project.slug, `project:${project.translationGroupId ?? project.slug}`);
+  }
+
+  /**
+   * "Is this path a property page, and if so WHICH property" — the question
+   * this module needs, and it is NOT the question `templateClassOf` answers.
+   *
+   * `templateClassOf` returns `development-page` only for a slug that is a known
+   * Development, and that is right for what it is for: a legacy Project at
+   * `/projects/{slug}` renders through completely different components, so
+   * grouping the two together would mix two unrelated templates' Core Web Vitals
+   * into one number, and `development-page` as a CLASS LABEL honestly names
+   * Development pages. This module reused that class to mean "this pageview is a
+   * property", and it is not. Measured 2026-08-23: 147 published Developments
+   * against 611 published legacy Projects, and in this window 1,296 pageviews on
+   * Development property pages against 1,526 on legacy ones. Reading only the
+   * Developments made more than half of all property browsing invisible to the
+   * onward metric, put every session entering on a legacy property into
+   * `other-landing-page`'s denominator with its property browsing in no
+   * numerator, and scored a session comparing two legacy properties at nought
+   * while the same journey among Developments scored two. It also failed to
+   * reproduce the module's own approved north-star: this window holds 276
+   * comparison sessions on the spec's definition and the Development-only
+   * reading found 106.
+   *
+   * The two concepts are genuinely different and must stay separate. Do not
+   * "simplify" this back into a call to `templateClassOf`, and do not widen
+   * `templateClassOf` to match it — that would put legacy Projects into the
+   * Development CWV bucket, which is the defect it was written to prevent.
+   *
+   * The Development wins a slug collision, which is the same rule and the same
+   * reason as `KIND_PRIORITY` in inventory.ts: during a supersede window both
+   * rows can hold one slug, and the Development is what the dispatcher actually
+   * serves (src/app/[lang]/projects/[slug]/page.tsx). Because the identity IS
+   * the slug on that branch, the collision collapses to one property rather than
+   * being counted as two. A Project superseded by a Development under a
+   * DIFFERENT slug is handled a step earlier — `canonicalize` folds the old path
+   * onto the new one before this is called. (Measured 2026-08-23: 16 published Project rows
+   * carry a slug that is also a Development slug, none of them inside a
+   * multi-slug translation group.)
+   */
+  const propertyOf = (path: string): string | null => {
+    const match = path.match(PROPERTY_PATH);
+    if (match === null) return null;
+    const slug = match[1];
+    if (devSlugs.has(slug)) return slug;
+    return projectProperties.get(slug) ?? null;
+  };
 
   const classify = (rawPath: string): { path: string; cls: TemplateClass } => {
     const path = normalisePath(rawPath);
@@ -1309,14 +1516,10 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
     // that history alone.
     if (!view.visitorHash) continue;
     const { path, cls } = classify(view.path);
-    // Keyed by SLUG, not path. A Development is reachable in all four locales,
-    // so `/projects/x` and `/de/projects/x` are one property: a visitor using
-    // the language switcher on a single property would otherwise register as
-    // having compared two, which is precisely the buying signal this whole
-    // module is built on. `templateClassOf` only returns `development-page`
-    // when the last segment is a known Development slug, so the segment is safe
-    // to use as the identity.
-    const slug = cls === "development-page" ? (path.split("/").pop() as string) : null;
+    // Keyed by PROPERTY, not path — see `propertyOf`. A property is one property
+    // in all four locales, so `/projects/x` and `/de/projects/x` must not count
+    // as two.
+    const property = propertyOf(path);
 
     const session = sessions.get(view.visitorHash);
     if (session === undefined) {
@@ -1325,28 +1528,31 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
       // becomes `other-landing-page` — so no session is ever dropped for having
       // entered on an unknown page. The cost is that `other-landing-page` is a
       // catch-all that also absorbs utility pages (/book/<token>, thank-you
-      // pages) and legacy `/projects/<slug>` pages that are not Developments.
+      // pages) and, because `templateClassOf` splits by RENDERING TEMPLATE, every
+      // legacy `/projects/<slug>` page too. Those legacy entries are property
+      // entries and are handled as such by `propertyOf` above — the class label
+      // is about the template, not about whether a property was seen.
       // Filtering entries down to the CMS inventory instead would shrink the
       // session denominator invisibly, which is the worse trade.
       sessions.set(view.visitorHash, {
         entryClass: cls,
-        entrySlug: slug,
-        projects: slug === null ? new Set<string>() : new Set<string>([slug]),
+        entryProperty: property,
+        properties: property === null ? new Set<string>() : new Set<string>([property]),
         // The entry pageview is by definition not onward, so this starts empty
         // even when the session landed ON a property.
-        onwardProjects: new Set<string>(),
+        onwardProperties: new Set<string>(),
       });
       continue;
     }
-    if (slug !== null) {
-      session.projects.add(slug);
+    if (property !== null) {
+      session.properties.add(property);
       // The landing property is excluded from the onward set for the whole
       // session, not just for its first pageview. `land on x → view y → back to
       // x` is ordinary browsing, and counting that return would let a session
       // entering on a property reach the threshold on ONE further property
       // while every other class still needs two — the same asymmetry, smaller,
-      // and running the same direction because `development-page` sets the bar.
-      if (slug !== session.entrySlug) session.onwardProjects.add(slug);
+      // and running the same direction.
+      if (property !== session.entryProperty) session.onwardProperties.add(property);
     }
   }
 
@@ -1358,8 +1564,8 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
     // Two different counts on purpose — see the `Session` doc comment. A session
     // reaching COMPARISON_PROJECT_PAGES onward necessarily reaches it overall,
     // so the onward counts are a subset of the site total, never a rival to it.
-    if (session.projects.size >= COMPARISON_PROJECT_PAGES) siteComparisonSessions++;
-    if (session.onwardProjects.size >= COMPARISON_PROJECT_PAGES) {
+    if (session.properties.size >= COMPARISON_PROJECT_PAGES) siteComparisonSessions++;
+    if (session.onwardProperties.size >= COMPARISON_PROJECT_PAGES) {
       onwardComparing.set(session.entryClass, (onwardComparing.get(session.entryClass) ?? 0) + 1);
     }
   }
@@ -1395,44 +1601,83 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
     attributedLeads++;
   }
 
-  // The null model behind `mute`: page-attributable leads spread across the
-  // classes in proportion to onward-comparison volume. A yardstick for "would
-  // zero have been surprising", not a causal claim.
-  //
-  // The denominator is the SITE-LEVEL comparison metric (entry page included)
-  // while the volume it multiplies is onward-only, so the per-class expectations
-  // sum to LESS than `attributedLeads` rather than exactly to it. That is the
-  // deliberate direction: it makes `mute` harder to reach, never easier, and
-  // under-claiming is the correct failure here. The site-level metric is the
-  // approved north-star figure and is not rescoped to tidy up this arithmetic.
-  const leadsPerComparisonSession = siteComparisonSessions > 0 ? attributedLeads / siteComparisonSessions : 0;
+  /**
+   * The null model behind `mute`: page-attributable enquiries spread across the
+   * classes in proportion to onward-comparison volume. A yardstick for "would
+   * zero have been surprising", not a causal claim.
+   *
+   * ITS NAME IS AN AMBITION, NOT A MEASUREMENT, and the gap runs both ways.
+   * The numerator counts every page-attributable enquiry on the site, from ALL
+   * sessions — one-page visits and comparison sessions alike — while the
+   * denominator counts comparison sessions only. It is therefore an upper bound
+   * on the real enquiries-per-comparison-session, and an upper bound in the
+   * expectation makes `mute` EASIER to reach, which is the unsafe direction.
+   * Running against it, the volume this figure multiplies is onward-only while
+   * the denominator is the site-level metric, so the per-class expectations sum
+   * to LESS than `attributedLeads` rather than exactly to it: measured
+   * 2026-08-23 they sum to 28.2 against 37 attributed. Net, the arithmetic still
+   * under-claims, but not by construction — check both halves before leaning on
+   * it, and re-check them if either scope changes.
+   *
+   * It cannot be MADE what its name says: `Lead` and `PageView` share no session
+   * key, so the enquiries produced BY comparison sessions are not identifiable
+   * at all (the same missing key documented above the attribution loop). Naming
+   * it for the scope of its denominator is the closest honest description. The
+   * site-level metric is the approved north-star figure and is not rescoped to
+   * tidy up this arithmetic.
+   */
+  const siteLeadsPerComparisonSession = siteComparisonSessions > 0 ? attributedLeads / siteComparisonSessions : 0;
 
   // The true observed rate for EVERY class, including those below the floor —
   // it is a fact about the class either way, and reporting it keeps NaN out of
   // the record entirely (a NaN would serialise to null and break any consumer
-  // calling toFixed on it). The floor governs whether it may be JUDGED, which
-  // is decided per class below; only classes clearing it may set the bar.
+  // calling toFixed on it). The floors govern whether it may be JUDGED and
+  // whether it may set the bar, both decided below.
   const rates = new Map<TemplateClass, number>();
   for (const cls of ALL_CLASSES) {
     const e = entering.get(cls) ?? 0;
     rates.set(cls, e > 0 ? (100 * (onwardComparing.get(cls) ?? 0)) / e : 0);
   }
-  const bestRate = Math.max(
-    0,
-    ...ALL_CLASSES.filter((cls) => (entering.get(cls) ?? 0) >= MIN_ENTERING_SESSIONS).map((cls) => rates.get(cls) ?? 0),
+
+  /**
+   * Which classes are allowed to SET the bar — the same evidence floor the bar
+   * then imposes on everyone else, applied to the class setting it.
+   *
+   * Until 2026-08-23 only MIN_ENTERING_SESSIONS gated this, and MIN_EXPECTED_ONWARD
+   * gated the class being JUDGED. So a class the module refused to judge could
+   * still decide what everybody else was judged against. That is not a
+   * hypothetical: on this window `projects-listing` is `unjudged` — 12 onward
+   * sessions cannot support a verdict either way — and its 11.0% is the highest
+   * rate on the site, so as the benchmark it would make `development-page`
+   * `repelling` at 5.1% against a bar drawn from evidence the tool would not
+   * accept about `projects-listing` itself. A bar nobody is allowed to be judged on is not a
+   * bar.
+   *
+   * Measured on the class's OWN onward count rather than on `expectedOnward`,
+   * which would be circular — `expectedOnward` is defined in terms of `bestRate`
+   * and `bestRate` is what this is choosing. The two coincide exactly where it
+   * matters: for the class that sets the bar,
+   * `expectedOnward = enteringSessions × rate = onwardComparisonSessions`. So
+   * this is MIN_EXPECTED_ONWARD evaluated at the benchmark class, not a second,
+   * looser floor wearing its name.
+   */
+  const benchmarkClasses = ALL_CLASSES.filter(
+    (cls) => (entering.get(cls) ?? 0) >= MIN_ENTERING_SESSIONS && (onwardComparing.get(cls) ?? 0) >= MIN_EXPECTED_ONWARD,
   );
+  const bestRate = Math.max(0, ...benchmarkClasses.map((cls) => rates.get(cls) ?? 0));
 
   return ALL_CLASSES.map((cls): ClassVerdict => {
     const enteringSessions = entering.get(cls) ?? 0;
     const onwardComparisonSessions = onwardComparing.get(cls) ?? 0;
     const onwardComparisonRate = rates.get(cls) ?? 0;
     const leadCount = leadsByClass.get(cls) ?? 0;
-    const expectedLeads = onwardComparisonSessions * leadsPerComparisonSession;
+    const expectedLeads = onwardComparisonSessions * siteLeadsPerComparisonSession;
     // What this class WOULD have produced at the best class's rate. The bar the
     // `repelling` test moves against, and therefore the right quantity to size
     // the evidence on: a rate can only be told from the bar when the bar itself
     // predicts enough events. For the best class it equals its own observed
-    // count exactly, which is the sanity check on the formula.
+    // count exactly, which is the sanity check on the formula — and, since
+    // 2026-08-23, also the eligibility test for setting the bar at all.
     const expectedOnward = (enteringSessions * bestRate) / 100;
     const base = {
       templateClass: cls,
@@ -1450,10 +1695,9 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
       };
     }
 
-    // Reached only when this class itself cleared the floor, so it is one of the
-    // classes the bar is drawn from: a zero bar means NO judgeable class sent a
-    // single session onward to two properties. Left to fall through, every
-    // comparison of the form `0 < 0 * 0.5` is false and each of those classes
+    // A zero bar means no class cleared BOTH benchmark floors with a single
+    // session going onward to two properties. Left to fall through, every
+    // comparison of the form `0 < 0 * 0.5` is false and each of these classes
     // would be certified against a benchmark that does not exist. Today the
     // MIN_COMPARISON_SESSIONS branch below would happen to catch them — but on a
     // floor over a different quantity, by coincidence, and coincidence is not a
@@ -1462,27 +1706,26 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
       return {
         ...base,
         diagnosis: "unjudged",
-        reason: `No template class with enough entering sessions to judge sent a single session on to two or more properties other than the one it landed on in ${WINDOW_DAYS} days, so there is no benchmark to measure this one against.`,
+        reason: `No template class carries enough evidence to set a benchmark — that needs ${MIN_ENTERING_SESSIONS} entering sessions and ${MIN_EXPECTED_ONWARD} of them going on to two or more properties other than the one they landed on, and in ${WINDOW_DAYS} days none did — so there is nothing to measure this one against.`,
       };
     }
 
     // Gates the WHOLE engagement axis, not just `repelling`. MIN_ENTERING_SESSIONS
     // bounds the denominator of the rate and nothing bounded the numerator, so a
     // class could clear that floor and still be judged on a handful of onward
-    // sessions — measured 2026-08-23, `projects-listing` was called `repelling`
-    // on ONE, a 1-in-11 fluke (see MIN_EXPECTED_ONWARD in types.ts for the
-    // false-alarm table). Blocking only the `repelling` branch would have handed
-    // the same class `healthy` on the same non-evidence with the sign flipped,
-    // since that branch asks only for a traced enquiry. One onward session is no
-    // more evidence for healthy than against it, so neither verdict is available
-    // here and the reason says so outright.
+    // sessions — measured 2026-08-23, `projects-listing` is judged on 12 (see
+    // MIN_EXPECTED_ONWARD in types.ts for the false-alarm table). Blocking only
+    // the `repelling` branch would hand the same class `healthy` on the same
+    // non-evidence with the sign flipped, since that branch asks only for a
+    // traced enquiry. Thin evidence is no more evidence for healthy than against
+    // it, so neither verdict is available here and the reason says so outright.
     //
     // Returning `unjudged` rather than falling through to the lead axis hides
     // nothing: `onwardComparisonSessions >= MIN_COMPARISON_SESSIONS` would force
     // this class's own rate to at least 50/enteringSessions, hence
     // `expectedOnward = enteringSessions × bestRate ≥ 50` since `bestRate` is the
-    // maximum over judgeable classes — well above this floor. A class gated here
-    // can therefore never have been eligible for `mute` anyway.
+    // maximum over benchmark-eligible classes — well above this floor. A class
+    // gated here can therefore never have been eligible for `mute` anyway.
     if (expectedOnward < MIN_EXPECTED_ONWARD) {
       const engagement = `${fmt(onwardComparisonSessions)} of the ${fmt(enteringSessions)} sessions entering here went on to two or more properties other than their landing page, where the strongest class's rate predicts about ${expectedOnward.toFixed(0)} — below the ${MIN_EXPECTED_ONWARD} expected needed before that gap can be told from chance, so this class is not judged on engagement in either direction.`;
       return {
@@ -1529,13 +1772,14 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
       };
     }
 
-    // Where the plan would have emitted `mute`. See MUTE_MIN_EXPECTED_LEADS: at
-    // this site's lead volume zero is the expected outcome for a healthy class,
-    // so the honest report is what the evidence cannot support, not a finding.
+    // Where the plan would have emitted `mute` unconditionally. See
+    // MUTE_MIN_EXPECTED_LEADS: for a class this thin, zero is the expected
+    // outcome even when nothing is wrong, so the honest report is what the
+    // evidence cannot support, not a finding.
     return {
       ...base,
       diagnosis: "unjudged",
-      reason: `The whole site produced ${enquiries(attributedLeads)} traceable to a page from ${fmt(siteComparisonSessions)} comparison sessions in ${WINDOW_DAYS} days (enquiries by phone, WhatsApp or manual entry carry no page and are not counted), so the ${fmt(onwardComparisonSessions)} sessions that entered here and went on to two or more properties other than their landing page would be expected to produce about ${expectedLeads.toFixed(1)} — too few for its zero to mean anything.`,
+      reason: `The whole site produced ${enquiries(attributedLeads)} traceable to a page from ${fmt(siteComparisonSessions)} comparison sessions in ${WINDOW_DAYS} days (enquiries reaching us by phone or WhatsApp carry no page and are not counted), so the ${fmt(onwardComparisonSessions)} sessions that entered here and went on to two or more properties other than their landing page would be expected to produce about ${expectedLeads.toFixed(1)} — too few for its zero to mean anything.`,
     };
   });
 }
@@ -1882,7 +2126,7 @@ export default function PagePowerTable({ rows }: { rows: Row[] }) {
 ```tsx
 import Link from "next/link";
 import { getPageVerdicts } from "@/lib/seo/pagePower/pageVerdicts";
-import { getClassVerdicts } from "@/lib/seo/pagePower/classVerdicts";
+import { getClassVerdicts, classWindow } from "@/lib/seo/pagePower/classVerdicts";
 import { templateClassLabel } from "@/lib/seo/templateClass";
 import { COMPARISON_PROJECT_PAGES, type ClassDiagnosis } from "@/lib/seo/pagePower/types";
 import PagePowerTable, { type Row } from "./PagePowerTable";
@@ -1909,7 +2153,13 @@ const CLASS_DIAGNOSIS_COLOR: Record<ClassDiagnosis, string> = {
 const day = (d: Date): string => d.toISOString().slice(0, 10);
 
 export default async function PagePowerPage() {
-  const [pages, classes] = await Promise.all([getPageVerdicts(), getClassVerdicts()]);
+  // One `now` for both layers. Two `new Date()` calls either side of a slow
+  // query can straddle UTC midnight, and this page would then print two windows
+  // derived from two different "todays" — the one mismatch a reader has no way
+  // to spot.
+  const now = new Date();
+  const [pages, classes] = await Promise.all([getPageVerdicts(now), getClassVerdicts(now)]);
+  const classSpan = classWindow(now);
 
   // Only the fields the table renders — see the `Row` comment in
   // PagePowerTable.tsx for why this is not a spread of the verdict.
@@ -1931,6 +2181,14 @@ export default async function PagePowerPage() {
   // pagePower/pageVerdicts.ts says display code must subtract a day; this is
   // that code. DAY is exact here because both bounds are UTC midnights.
   const lastCoveredDay = new Date(pages.windowEnd.getTime() - DAY);
+  // The by-class card runs on PageView and Lead, which have no ingestion lag, so
+  // `getClassVerdicts` does not hold back the GSC_LAG_DAYS the page layer must —
+  // its window ends three days later than the one in the header above. Until
+  // 2026-08-23 this card printed no window of its own and inherited that header,
+  // naming a span its own numbers do not cover. Both are dated for the same
+  // reason `classVerdicts.ts` gives: say which source a number came from before
+  // comparing them.
+  const classLastCoveredDay = new Date(classSpan.windowEnd.getTime() - DAY);
 
   return (
     <div>
@@ -1952,14 +2210,22 @@ export default async function PagePowerPage() {
 
       <Card>
         <div className="flex items-baseline justify-between gap-4 mb-3">
-          <h2 className="text-sm font-semibold">By template class</h2>
+          <div>
+            <h2 className="text-sm font-semibold">By template class</h2>
+            <p className="text-xs text-[#6B7280] mt-0.5">
+              Site visits and enquiries over {day(classSpan.windowStart)} to {day(classLastCoveredDay)} — a different
+              window from the one above, which waits for Google to finish reporting.
+            </p>
+          </div>
           {/* Both columns are routinely misread, and both misreadings are
               recorded on `ClassVerdict` in pagePower/types.ts: "onward" counts
               only properties OTHER than the one the session landed on (so every
               class is measured at the same funnel step), and the enquiry count
-              is only those whose form page resolves to this class — 148 of 179
-              leads since January 2025 were entered by hand and appear in no
-              class at all. */}
+              is only those whose form page resolves to this class — measured
+              2026-08-23, 60 of 179 leads carry no recoverable page and appear
+              in no class. A property here is a Development OR a legacy
+              project page; both are counted, which they were not before
+              2026-08-23. */}
           <span className="text-xs text-[#6B7280] text-right">
             Onward = entered here, then viewed {COMPARISON_PROJECT_PAGES}+ properties other than the landing page ·
             enquiries are only those whose form page resolves to this class
@@ -2193,10 +2459,18 @@ there are 1,679 verdicts and 1,118 of them are `invisible` pages carrying 1,463
 impressions between them, so sending everything is 658 kB of which two thirds is
 noise. HONESTY: several verdicts carry caveats the model must not strip — the
 homepage reads `buried` at position 22.2 on a 4.92% CTR, `projects-listing` is
-`unjudged` because one onward session cannot support a verdict either way, and
-`mute` cannot fire at all at this traffic volume. The reason strings carry that
-nuance, so they travel verbatim and the prompt is told to treat them as the
-evidence rather than the label.
+`unjudged` because its onward sessions cannot support a verdict either way, and
+`mute` fires for at most one class. The reason strings carry that nuance, so
+they travel verbatim and the prompt is told to treat them as the evidence rather
+than the label.
+
+(Both class-level figures above were re-measured in the pre-merge correction
+batch of 2026-08-23. `projects-listing` was `unjudged` on ONE onward session
+before "property" was corrected to cover legacy Projects as well as
+Developments, and 12 after; `mute` was believed unreachable on a lead census
+that turned out to be wrong. The note this task writes into the advisor payload
+is worded from the corrected figures — see `MIN_COMPARISON_SESSIONS` in
+types.ts.)
 
 One caveat is NOT in a reason string and must be carried as data: 7 of the 12
 `unclicked` pages sit inside a live title-sweep re-measurement window, and
@@ -2216,7 +2490,7 @@ At the top of `src/lib/seoAdvisor/gather.ts`, beside the existing imports:
 ```typescript
 import { getPageVerdicts } from "@/lib/seo/pagePower/pageVerdicts";
 import { getClassVerdicts } from "@/lib/seo/pagePower/classVerdicts";
-import { WINDOW_DAYS as PAGE_POWER_WINDOW_DAYS, type PageDiagnosis, type ClassDiagnosis } from "@/lib/seo/pagePower/types";
+import { MIN_COMPARISON_SESSIONS, WINDOW_DAYS as PAGE_POWER_WINDOW_DAYS, type PageDiagnosis, type ClassDiagnosis } from "@/lib/seo/pagePower/types";
 ```
 
 `pagesInSuppressionWindow` and `REMEASURE_WINDOW_DAYS` join the existing
@@ -2281,7 +2555,7 @@ Add this field to the `AdvisorPayload` type, after `titleSweep` and before
   // `notes` is not decoration. Everything a truncated, threshold-derived summary
   // is SILENT about is stated there, because silence reads to a model as "no
   // caveat" — that a pile is longer than the rows shown, that `unjudged` is
-  // unmeasured rather than fine, that `mute` cannot fire at this traffic volume,
+  // unmeasured rather than fine, what `mute` needs before it may fire at all,
   // and that a `reason` is the evidence while the diagnosis word is only the
   // label of the threshold it crossed.
   pagePower: {
@@ -2394,7 +2668,7 @@ async function gatherPagePower(): Promise<AdvisorPayload["pagePower"]> {
       `'position' is impression-weighted across every query a page ranks for, so a page can carry a poor average position and a healthy CTR at the same time when its clicks come from a few strong queries and its impressions from a long tail of deep ones. That pairing is a query mix, not a contradiction and not a data error: read the CTR before proposing work on a buried page.`,
       `'unjudged' means below a measurement floor, not healthy — those pages are unmeasured, and 'otherDiagnoses' carries the impressions sitting in them. Never report unjudged pages, or an unjudged template class, as fine.`,
       `'titleRewriteBlockedByLiveSweep' means this page's title and meta description were rewritten by a sweep that is still inside its ${REMEASURE_WINDOW_DAYS}-day re-measurement window. The diagnosis stands and the page is genuinely underperforming — but the title work does NOT: rewriting it again destroys the measurement in flight. Do not propose title or meta changes for such a page; wait for the window to close (see the titleSweep field for when).`,
-      `The class diagnosis 'mute' — comparison traffic arriving but no enquiry traceable to it — cannot fire at this site's traffic volume; such a class is reported 'unjudged' instead. Its absence is not evidence that lead production is healthy.`,
+      `The class diagnosis 'mute' — comparison traffic arriving but no enquiry traceable to it — needs both ${MIN_COMPARISON_SESSIONS} onward comparison sessions and an expectation of at least three page-attributable enquiries before it may fire. Measured 2026-08-23 exactly one class clears both, so for the other four a 'mute' that never appears is a floor being reported, not lead production being healthy; those read 'unjudged' and their reason says which floor.`,
       `Every page here is published and in the CMS inventory; ${Number(pageResult.coveragePct.toFixed(1))}% of GSC clicks in the window resolved onto one. The rest landed on URLs the canonical map does not know, so a page's figures can understate it.`,
     ],
   };

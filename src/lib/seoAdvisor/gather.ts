@@ -18,7 +18,7 @@ import { computeTitleSweepComparison, REMEASURE_WINDOW_DAYS } from "@/lib/seo/ti
 import { getRecentChangelogEntries, type ChangelogEntry } from "@/lib/seo/siteChangelog";
 import { getPageVerdicts } from "@/lib/seo/pagePower/pageVerdicts";
 import { getClassVerdicts } from "@/lib/seo/pagePower/classVerdicts";
-import { WINDOW_DAYS as PAGE_POWER_WINDOW_DAYS, type PageDiagnosis, type ClassDiagnosis } from "@/lib/seo/pagePower/types";
+import { MIN_COMPARISON_SESSIONS, WINDOW_DAYS as PAGE_POWER_WINDOW_DAYS, type PageDiagnosis, type ClassDiagnosis } from "@/lib/seo/pagePower/types";
 
 const DAY = 86_400_000;
 const CHANGELOG_LOOKBACK_DAYS = 60;
@@ -100,7 +100,7 @@ export type AdvisorPayload = {
   // `notes` is not decoration. Everything a truncated, threshold-derived summary
   // is SILENT about is stated there, because silence reads to a model as "no
   // caveat" — that a pile is longer than the rows shown, that `unjudged` is
-  // unmeasured rather than fine, that `mute` cannot fire at this traffic volume,
+  // unmeasured rather than fine, what `mute` needs before it may fire at all,
   // and that a `reason` is the evidence while the diagnosis word is only the
   // label of the threshold it crossed.
   pagePower: {
@@ -293,7 +293,7 @@ async function gatherPagePower(): Promise<AdvisorPayload["pagePower"]> {
       `'position' is impression-weighted across every query a page ranks for, so a page can carry a poor average position and a healthy CTR at the same time when its clicks come from a few strong queries and its impressions from a long tail of deep ones. That pairing is a query mix, not a contradiction and not a data error: read the CTR before proposing work on a buried page.`,
       `'unjudged' means below a measurement floor, not healthy — those pages are unmeasured, and 'otherDiagnoses' carries the impressions sitting in them. Never report unjudged pages, or an unjudged template class, as fine.`,
       `'titleRewriteBlockedByLiveSweep' means this page's title and meta description were rewritten by a sweep that is still inside its ${REMEASURE_WINDOW_DAYS}-day re-measurement window. The diagnosis stands and the page is genuinely underperforming — but the title work does NOT: rewriting it again destroys the measurement in flight. Do not propose title or meta changes for such a page; wait for the window to close (see the titleSweep field for when).`,
-      `The class diagnosis 'mute' — comparison traffic arriving but no enquiry traceable to it — cannot fire at this site's traffic volume; such a class is reported 'unjudged' instead. Its absence is not evidence that lead production is healthy.`,
+      `The class diagnosis 'mute' — comparison traffic arriving but no enquiry traceable to it — needs both ${MIN_COMPARISON_SESSIONS} onward comparison sessions and an expectation of at least three page-attributable enquiries before it may fire. Measured 2026-08-23 exactly one class clears both, so for the other four a 'mute' that never appears is a floor being reported, not lead production being healthy; those read 'unjudged' and their reason says which floor.`,
       `Every page here is published and in the CMS inventory; ${Number(pageResult.coveragePct.toFixed(1))}% of GSC clicks in the window resolved onto one. The rest landed on URLs the canonical map does not know, so a page's figures can understate it.`,
     ],
   };
