@@ -287,6 +287,28 @@ export function resolveMetaTitle(vm: ProjectVM, lang: string, seo?: SeoOverride 
 export function resolveMetaDescription(vm: ProjectVM, lang: string, seo?: SeoOverride | null): string {
   const key = `desc${asLang(lang).toUpperCase()}` as keyof SeoOverride;
   const override = (seo?.[key] || "").trim();
+  // Sold out: the stored text is ignored outright, whatever it says.
+  //
+  // Every override was written while the project was still selling, so once it
+  // sells out the text is stale BY DEFINITION — and the ones that hurt most are
+  // exactly the ones the placeholder mechanism cannot rescue, because they bake
+  // their claims in as plain words rather than tokens. Two live examples before
+  // this rule: absolute-villas ran "only one unit available … Enquire before
+  // it's gone" on a page showing 0/1, and serenity-court offered "priced from
+  // €420,000" on a sold-out one. Neither contains a "{", so
+  // applySeoPlaceholders returns them untouched and no fallback ever triggers.
+  //
+  // Descriptions only, not titles: titles here are structural ("Name – Type in
+  // Place") and carry no availability or price claim, so there is nothing to go
+  // stale. The project name also stays in the title, which is why the generated
+  // description below does not need to repeat it.
+  //
+  // The cost is real and accepted: a deliberately written sold-out description
+  // would be discarded too. No such text exists today, and the alternative —
+  // trusting stored copy on a page that contradicts it — is what produced the
+  // two cases above.
+  const { soldOut } = computeAvailability(listedUnits(vm.units));
+  if (soldOut) return autoMetaDescription(vm, lang);
   if (!override) return autoMetaDescription(vm, lang);
   const resolved = applySeoPlaceholders(override, vm, lang);
   return resolved ? fit([resolved], DESC_MAX) : autoMetaDescription(vm, lang);
