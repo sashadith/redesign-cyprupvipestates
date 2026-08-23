@@ -64,7 +64,8 @@ read-only. Do not write.
 | File | Change |
 |---|---|
 | `src/lib/actionCenter/index.ts:5,26` | Import and call `pagePowerRules()`. |
-| `src/lib/seoAdvisor/gather.ts:26,140` | Add `pagePower` to `AdvisorPayload` and populate it. |
+| `src/lib/seoAdvisor/gather.ts:66,282` | Add `pagePower` to `AdvisorPayload` and populate it. |
+| `src/lib/seoAdvisor/analyze.ts:20,22` | Tell the ANALYZE step to read `reason`, not the diagnosis label. |
 
 The directory split mirrors `src/lib/seoAdvisor/` (gather/analyze/deliver/types),
 the existing precedent in this codebase for a multi-file lib module.
@@ -2103,69 +2104,241 @@ git commit -m "Page Power: Action Center rule, grouped by diagnosis"
 The spec lists the advisor as a consumer: it should discuss named piles instead
 of raw metrics. Without this task that requirement has no implementation.
 
+Two constraints pull against each other here and both are load-bearing. SIZE:
+there are 1,679 verdicts and 1,118 of them are `invisible` pages carrying 1,463
+impressions between them, so sending everything is 658 kB of which two thirds is
+noise. HONESTY: several verdicts carry caveats the model must not strip — the
+homepage reads `buried` at position 22.2 on a 4.92% CTR, `projects-listing` is
+`unjudged` because one onward session cannot support a verdict either way, and
+`mute` cannot fire at all at this traffic volume. The reason strings carry that
+nuance, so they travel verbatim and the prompt is told to treat them as the
+evidence rather than the label.
+
 **Files:**
 - Modify: `src/lib/seoAdvisor/gather.ts` — extend `AdvisorPayload` and populate it
+- Modify: `src/lib/seoAdvisor/analyze.ts` — one prompt principle for reading it
 
-- [ ] **Step 1: Extend the payload type**
-
-In `src/lib/seoAdvisor/gather.ts`, add this field to the `AdvisorPayload` type,
-after `titleSweep` and before `siteChangelog`:
-
-```typescript
-  // Page Power diagnosis counts, so the ANALYZE step reasons about named piles
-  // ("90 pages buried below position 20") rather than re-deriving them from raw
-  // metrics and inventing its own thresholds. Detail lives at
-  // /admin/analytics/seo/power; only the summary belongs in the prompt.
-  pagePower: {
-    pages: { diagnosis: string; count: number; impressions: number; examples: string[] }[];
-    classes: { templateClass: string; diagnosis: string; reason: string }[];
-    coveragePct: number;
-  };
-```
-
-- [ ] **Step 2: Add the import**
+- [ ] **Step 1: Add the imports**
 
 At the top of `src/lib/seoAdvisor/gather.ts`, beside the existing imports:
 
 ```typescript
 import { getPageVerdicts } from "@/lib/seo/pagePower/pageVerdicts";
 import { getClassVerdicts } from "@/lib/seo/pagePower/classVerdicts";
+import { WINDOW_DAYS as PAGE_POWER_WINDOW_DAYS, type PageDiagnosis, type ClassDiagnosis } from "@/lib/seo/pagePower/types";
 ```
 
-- [ ] **Step 3: Populate it in `gatherAdvisorPayload`**
+- [ ] **Step 2: Add the size discipline, beside `CHANGELOG_LOOKBACK_DAYS`**
 
-Inside `gatherAdvisorPayload`, before the return, compute:
+What is sent, and what is deliberately not:
 
 ```typescript
-  const [pagePowerPages, pagePowerClasses] = await Promise.all([getPageVerdicts(), getClassVerdicts()]);
-  const pagePowerSummary = {
-    pages: (["buried", "unclicked", "invisible"] as const).map((diagnosis) => {
-      const matching = pagePowerPages.verdicts.filter((v) => v.diagnosis === diagnosis);
-      return {
-        diagnosis,
-        count: matching.length,
-        impressions: matching.reduce((sum, v) => sum + v.impressions, 0),
-        examples: matching.sort((a, b) => b.impressions - a.impressions).slice(0, 3).map((v) => v.path),
-      };
-    }),
-    classes: pagePowerClasses
-      .filter((c) => c.diagnosis === "repelling" || c.diagnosis === "mute")
-      .map((c) => ({ templateClass: String(c.templateClass), diagnosis: c.diagnosis, reason: c.reason })),
-    coveragePct: pagePowerPages.coveragePct,
+// The three diagnoses that name WORK. `healthy` and `unjudged` are reported as
+// counts further down rather than dropped — see PAGE_POWER_OTHER_DIAGNOSES.
+const PAGE_POWER_ACTIONABLE: readonly PageDiagnosis[] = ["buried", "unclicked", "invisible"];
+const PAGE_POWER_OTHER_DIAGNOSES: readonly PageDiagnosis[] = ["healthy", "unjudged"];
+
+/** Impression floor for LISTING a diagnosed page as its own row, as opposed to
+ *  counting it inside its pile.
+ *
+ *  Not a tuned knob. The diagnoses' own floors leave the range [10, 100) empty
+ *  of every actionable diagnosis, so this number can neither drop a `buried`
+ *  page (which needs MIN_IMPRESSIONS_BURIED = 100 impressions to exist at all)
+ *  nor keep an `invisible` one (which needs fewer than MIN_IMPRESSIONS_VISIBLE
+ *  = 10). Measured against production on 2026-08-23 it listed 78 of 78 buried
+ *  and 12 of 12 unclicked pages, and 0 of 1,118 invisible ones.
+ *
+ *  That last figure is why it exists. The invisible pile is 67% of the 1,679
+ *  verdicts and carries 1,463 impressions between them — 1.3 each — so its
+ *  "largest" pages are ten rows of nine impressions apiece, each paying the full
+ *  cost of a reason sentence to describe a page no suggestion could ever be
+ *  justified on. The PILE is actionable; its individual pages are not. It
+ *  therefore arrives as counts, which is the shape the work it asks for
+ *  (indexing, internal links) acts on anyway. */
+const ADVISOR_MIN_LISTED_IMPRESSIONS = 100;
+
+/** Listed rows per diagnosis, after the floor. Half the `slice(0, 20)` the GSC
+ *  lists below use, because the rows are not comparable: a striking-distance row
+ *  is ~100 bytes of numbers, while a listed verdict carries a whole reason
+ *  sentence. Measured 2026-08-23: at 10 the pagePower block serialises to 8.1 kB
+ *  and the payload grows from 10.6 kB to 18.7 kB — the largest single block after
+ *  the GSC lists, which is the right order for the only field that names the work
+ *  rather than the metric. The cap binds hardest on `buried` (78 pages), where
+ *  the ten listed carry 28,611 of the pile's 62,982 impressions and the other
+ *  34,371 are disclosed in `omittedImpressions` rather than implied by silence. */
+const ADVISOR_MAX_LISTED_PAGES = 10;
+
+const isoDay = (d: Date): string => d.toISOString().slice(0, 10);
+```
+
+- [ ] **Step 3: Extend the payload type**
+
+Add this field to the `AdvisorPayload` type, after `titleSweep` and before
+`siteChangelog`:
+
+```typescript
+  // Page Power diagnoses, so the ANALYZE step reasons about named piles ("78
+  // pages buried below position 20") rather than re-deriving them from raw
+  // metrics and inventing its own thresholds. The full table lives at
+  // /admin/analytics/seo/power; serialised whole on 2026-08-23 the 1,679
+  // verdicts are 658 kB against a 10.6 kB payload — sixty times the rest of it,
+  // two thirds of that the invisible pile at 1.3 impressions a page.
+  //
+  // `notes` is not decoration. Everything a truncated, threshold-derived summary
+  // is SILENT about is stated there, because silence reads to a model as "no
+  // caveat" — that a pile is longer than the rows shown, that `unjudged` is
+  // unmeasured rather than fine, that `mute` cannot fire at this traffic volume,
+  // and that a `reason` is the evidence while the diagnosis word is only the
+  // label of the threshold it crossed.
+  pagePower: {
+    /** Both INCLUSIVE, YYYY-MM-DD. Deliberately not `PageVerdictResult.windowEnd`,
+     *  which is exclusive: this payload is read by a model that will quote the
+     *  dates it is given, and an exclusive bound quoted as a date is wrong. */
+    firstDay: string;
+    lastDay: string;
+    windowDays: number;
+    coveragePct: number;
+    totalPages: number;
+    pages: {
+      diagnosis: PageDiagnosis;
+      count: number;
+      impressions: number;
+      listed: { path: string; impressions: number; clicks: number; ctr: number; position: number | null; reason: string }[];
+      omittedPages: number;
+      omittedImpressions: number;
+    }[];
+    otherDiagnoses: { diagnosis: PageDiagnosis; count: number; impressions: number }[];
+    /** EVERY class, healthy ones included — not just the ones with a finding. A
+     *  filtered list cannot be told apart from a short one, so a class that
+     *  simply did not appear would be read as certified. */
+    classes: { templateClass: TemplateClass; diagnosis: ClassDiagnosis; reason: string }[];
+    notes: string[];
   };
 ```
 
-and add `pagePower: pagePowerSummary,` to the returned object.
+- [ ] **Step 4: Populate it**
 
-- [ ] **Step 4: Verify it compiles**
+Beside the other `gather*` helpers in `src/lib/seoAdvisor/gather.ts`:
+
+```typescript
+async function gatherPagePower(): Promise<AdvisorPayload["pagePower"]> {
+  const [pageResult, classes] = await Promise.all([getPageVerdicts(), getClassVerdicts()]);
+  const impressionsOf = (rows: { impressions: number }[]) => rows.reduce((sum, v) => sum + v.impressions, 0);
+
+  const pages = PAGE_POWER_ACTIONABLE.map((diagnosis) => {
+    const matching = pageResult.verdicts
+      .filter((v) => v.diagnosis === diagnosis)
+      .sort((a, b) => b.impressions - a.impressions);
+    const listable = matching.filter((v) => v.impressions >= ADVISOR_MIN_LISTED_IMPRESSIONS);
+    const listed = listable.slice(0, ADVISOR_MAX_LISTED_PAGES);
+    return {
+      diagnosis,
+      count: matching.length,
+      impressions: impressionsOf(matching),
+      listed: listed.map((v) => ({
+        path: v.path,
+        impressions: v.impressions,
+        clicks: v.clicks,
+        // Rounded to what the reason sentences already print. Full precision
+        // here would put "4.919977924" beside the reason's "4.92" and invite the
+        // model to treat two renderings of one number as two measurements.
+        ctr: Number(v.ctr.toFixed(2)),
+        position: v.position == null ? null : Number(v.position.toFixed(1)),
+        // Verbatim, never re-summarised. The reason is where the nuance lives:
+        // that an `invisible` page at position 2.9 has ruled indexing OUT, that
+        // a zero bucket median means a CTR cannot be called high or low. A
+        // paraphrase would keep the diagnosis and drop exactly the sentence that
+        // stops it being over-claimed.
+        reason: v.reason,
+      })),
+      omittedPages: matching.length - listed.length,
+      omittedImpressions: impressionsOf(matching) - impressionsOf(listed),
+    };
+  });
+
+  const otherDiagnoses = PAGE_POWER_OTHER_DIAGNOSES.map((diagnosis) => {
+    const matching = pageResult.verdicts.filter((v) => v.diagnosis === diagnosis);
+    return { diagnosis, count: matching.length, impressions: impressionsOf(matching) };
+  });
+
+  // The last day the window COVERS. `windowEnd` is exclusive (see
+  // PageVerdictResult), so the human date is one day earlier.
+  const lastDay = new Date(pageResult.windowEnd.getTime() - DAY);
+
+  return {
+    firstDay: isoDay(pageResult.windowStart),
+    lastDay: isoDay(lastDay),
+    windowDays: PAGE_POWER_WINDOW_DAYS,
+    coveragePct: Number(pageResult.coveragePct.toFixed(1)),
+    totalPages: pageResult.verdicts.length,
+    pages,
+    otherDiagnoses,
+    classes: classes.map((c) => ({ templateClass: c.templateClass, diagnosis: c.diagnosis, reason: c.reason })),
+    notes: [
+      `Window: ${PAGE_POWER_WINDOW_DAYS} days, ${isoDay(pageResult.windowStart)} to ${isoDay(lastDay)} inclusive — longer than, and ending earlier than, the ${ADVISOR_PERIOD_DAYS}-day GSC figures elsewhere in this payload. The two never sum and are not comparable page by page.`,
+      `Truncated on purpose: a pile lists only its pages with at least ${ADVISOR_MIN_LISTED_IMPRESSIONS} impressions, largest first, at most ${ADVISOR_MAX_LISTED_PAGES} of them. 'omittedPages' and 'omittedImpressions' say exactly what each 'listed' array leaves out, so an empty or short 'listed' is never an empty or short pile. The full table is at /admin/analytics/seo/power.`,
+      `'reason' is the measured evidence; the diagnosis word is only the label of the threshold that evidence crossed. Build rationales from the reason text and carry its qualifications with it — do not restate the label as if it were the finding.`,
+      `'position' is impression-weighted across every query a page ranks for, so a page can carry a poor average position and a healthy CTR at the same time when its clicks come from a few strong queries and its impressions from a long tail of deep ones. That pairing is a query mix, not a contradiction and not a data error: read the CTR before proposing work on a buried page.`,
+      `'unjudged' means below a measurement floor, not healthy — those pages are unmeasured, and 'otherDiagnoses' carries the impressions sitting in them. Never report unjudged pages, or an unjudged template class, as fine.`,
+      `The class diagnosis 'mute' — comparison traffic arriving but no enquiry traceable to it — cannot fire at this site's traffic volume; such a class is reported 'unjudged' instead. Its absence is not evidence that lead production is healthy.`,
+      `Every page here is published and in the CMS inventory; ${Number(pageResult.coveragePct.toFixed(1))}% of GSC clicks in the window resolved onto one. The rest landed on URLs the canonical map does not know, so a page's figures can understate it.`,
+    ],
+  };
+}
+```
+
+Add `gatherPagePower()` to the `Promise.all` in `gatherAdvisorPayload`:
+
+```typescript
+export async function gatherAdvisorPayload(): Promise<AdvisorPayload> {
+  const [perLocale, movers, ctrWatchlist, strikingDistance, cwvPerClass, platform, titleSweep, pagePower] = await Promise.all([
+    getLocalePeriodComparison(ADVISOR_PERIOD_DAYS),
+    getClickDeltaMovers(ADVISOR_PERIOD_DAYS, 15),
+    getCtrWatchlist(),
+    getStrikingDistance(ADVISOR_PERIOD_DAYS),
+    gatherCwvSummary(),
+    gatherPlatformStats(),
+    gatherTitleSweepStatus(),
+    gatherPagePower(),
+  ]);
+```
+
+and add `pagePower,` to the returned object, after `titleSweep,`.
+
+- [ ] **Step 5: Tell the ANALYZE step how to read it**
+
+A payload field the prompt never mentions is a field the model will summarise in
+its own words. Add principle 9 to `SYSTEM_PROMPT` in
+`src/lib/seoAdvisor/analyze.ts`:
+
+```typescript
+9. The pagePower field carries a per-page and per-template-class DIAGNOSIS with a one-sentence \`reason\`. The reason is the evidence; the diagnosis word ("buried", "unclicked", "invisible", "repelling", "unjudged") is only the label of the threshold that evidence crossed. Cite the reason text and carry its qualifications into your rationale — never restate the label as though it were an established fact, and never assert something the reason explicitly rules out. Read pagePower.notes before using the field: it states what the summary is truncated to, what "unjudged" does and does not mean, and which verdicts cannot be reached at this site's traffic volume at all. Prefer discussing these named piles over re-deriving your own thresholds from the raw metrics.
+```
+
+and name the new field in the paragraph listing what the payload contains:
+
+```typescript
+You'll receive a compact JSON data payload (GSC 28-day period-over-period stats per locale, click winners/losers, the CTR watchlist, a striking-distance list, Core Web Vitals status per template class, platform/publishing stats, title-sweep status, a truncated Page Power diagnosis summary with its caveats in pagePower.notes, and a site changelog of recent structural changes). Analyze it and produce AT MOST 5 suggestions — quality over quantity; if the data doesn't support 5 good ideas, return fewer.
+```
+
+- [ ] **Step 6: Verify it compiles**
 
 Run: `npx tsc --noEmit`
 Expected: no output, exit 0.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 7: Verify the payload against production**
+
+Serialise `gatherAdvisorPayload()` and check the block, rather than trusting the
+shape. Measured 2026-08-23: `pagePower` is 8,082 bytes inside an 18,720-byte
+payload; `buried` lists 10 of 78 and discloses `omittedPages: 68`,
+`omittedImpressions: 34371`; `unclicked` lists 10 of 12; `invisible` lists 0 of
+1,118 and discloses all 1,463 impressions as omitted; all five template classes
+are present, including the three `healthy` ones.
+
+- [ ] **Step 8: Commit**
 
 ```bash
-git add src/lib/seoAdvisor/gather.ts
+git add src/lib/seoAdvisor/gather.ts src/lib/seoAdvisor/analyze.ts docs/superpowers/plans/2026-08-23-seo-page-power.md
 git commit -m "Page Power: feed the diagnosis summary to the weekly advisor"
 ```
 
