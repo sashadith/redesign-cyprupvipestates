@@ -30,12 +30,25 @@ const DAY = 86_400_000;
  * surprising rather than expected. Below it this module says so, in words,
  * instead of emitting a finding it cannot support.
  *
+ * What that actually requires. Since
+ * `expectedLeads_c = comparisonSessions_c × attributedLeads / siteComparisonSessions`
+ * and `comparisonSessions_c ≤ siteComparisonSessions`, the tight bound is just
+ * `expectedLeads_c ≤ attributedLeads`. So the precondition for `mute` is THREE
+ * PAGE-ATTRIBUTABLE LEADS SITE-WIDE in the window, plus concentration: at four
+ * leads against 282 comparison sessions, one class would need about 212 of those
+ * 282. Hundreds, not thousands, and within reach of the traffic this site
+ * already has.
+ *
  * The practical consequence, stated plainly: at the site's current lead volume
- * `mute` CANNOT FIRE. Reaching λ = 3 would need thousands of comparison sessions
- * in a single class against 282 site-wide. That is the honest state of the
- * evidence, and the design spec predicted it ("Diagnosis 5 will read unjudged
- * for most classes at first, and that is the honest output"). The diagnosis
- * becomes reachable on its own as lead volume grows — no threshold edit needed.
+ * `mute` will not fire, and the reason is the numerator, not the traffic.
+ * `attributedLeads` counts only leads carrying a resolvable `pageSource`, and
+ * most arrive by phone, WhatsApp or manual entry — 148 of 179 since January 2025
+ * were entered by hand — so the realistic page-attributable count in a 90-day
+ * window is nought to two, short of three on its own. That is the honest state
+ * of the evidence, and the design spec predicted it ("Diagnosis 5 will read
+ * unjudged for most classes at first, and that is the honest output"). The
+ * diagnosis becomes reachable on its own as page-attributable lead volume grows
+ * — no threshold edit needed.
  */
 const MUTE_MIN_EXPECTED_LEADS = 3;
 
@@ -202,6 +215,15 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
   // research and a development page that closed it both count as the
   // development page. Read `leads` as "enquiries sent FROM this class", never as
   // "enquiries this class earned".
+  //
+  // A second mismatch follows from it and matters to `mute` below: `leads` is
+  // scoped by the page the FORM sat on, while the expectation it is judged
+  // against is built from sessions that ENTERED on the class. A class that hosts
+  // most of the site's enquiry forms but receives few entries is therefore
+  // measured against an expectation built from someone else's traffic, in both
+  // directions. The two cannot be reconciled without a session-to-lead key,
+  // which the data does not have — so the bar is set where a mismatch of this
+  // size cannot manufacture a verdict on its own.
   const leadsByClass = new Map<TemplateClass, number>();
   let attributedLeads = 0;
   for (const lead of leads) {
@@ -300,7 +322,7 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
       return {
         ...base,
         diagnosis: "mute",
-        reason: `${fmt(comparisonSessions)} sessions entered here and compared properties, which at the site's own rate should have produced about ${expectedLeads.toFixed(1)} enquiries — none arrived. Offer, call to action, contact path.`,
+        reason: `${fmt(comparisonSessions)} sessions entered here and compared properties, which at the site's own rate of enquiries traceable to a page should have produced about ${expectedLeads.toFixed(1)} — none came from a page of this class. Offer, call to action, contact path.`,
       };
     }
 
@@ -310,7 +332,7 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
     return {
       ...base,
       diagnosis: "unjudged",
-      reason: `The whole site produced ${enquiries(attributedLeads)} from ${fmt(siteComparisonSessions)} comparison sessions in ${WINDOW_DAYS} days, so this class's ${fmt(comparisonSessions)} would be expected to produce about ${expectedLeads.toFixed(1)} — too few for its zero to mean anything.`,
+      reason: `The whole site produced ${enquiries(attributedLeads)} traceable to a page from ${fmt(siteComparisonSessions)} comparison sessions in ${WINDOW_DAYS} days (enquiries by phone, WhatsApp or manual entry carry no page and are not counted), so this class's ${fmt(comparisonSessions)} would be expected to produce about ${expectedLeads.toFixed(1)} — too few for its zero to mean anything.`,
     };
   });
 }
