@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import { workbookToText } from "@/lib/sheetToText";
 
 /* Minimal Google Drive REST client for the availability sync. Uses a stored OAuth
    refresh token (GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REFRESH_TOKEN),
@@ -190,6 +190,5 @@ export async function getSpreadsheetText(file: DriveFile, accessToken: string): 
   }
   const r = await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&supportsAllDrives=true`, { headers: H, cache: "no-store" });
   const ab = await r.arrayBuffer();
-  const wb = XLSX.read(Buffer.from(ab), { type: "buffer" });
-  return wb.SheetNames.map((n) => `### ${n}\n${XLSX.utils.sheet_to_csv(wb.Sheets[n])}`).join("\n");
+  return workbookToText(Buffer.from(ab));
 }

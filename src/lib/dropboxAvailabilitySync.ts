@@ -1,5 +1,4 @@
 import crypto from "node:crypto";
-import * as XLSX from "xlsx";
 import mammoth from "mammoth";
 import { prisma } from "@/lib/prisma";
 import { dropboxConfigured, getDropboxAccessToken, listSharedFolder, findPriceFile, downloadSharedFile, type DropboxFile } from "./dropbox";
@@ -14,6 +13,7 @@ import { recomputeDevelopmentDistances } from "./developmentDistances";
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { resolveMapsUrlToGeo } from "./mapsGeo";
 import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart } from "./imageMirror";
+import { workbookToText } from "@/lib/sheetToText";
 
 // Higher than driveAvailabilitySync.ts's MAX_IMAGES=10 — Kuutio's Dropbox
 // folders are the developer's own curated marketing set (not a mixed bag of
@@ -238,8 +238,7 @@ export async function previewKuutioSync(developerAccountId: string): Promise<Kuu
     const buf = await downloadSharedFile(shareUrl, file.id, at);
     const hash = crypto.createHash("sha256").update(buf).digest("hex");
     if (sheetCache.has(hash)) return sheetCache.get(hash)!;
-    const wb = XLSX.read(buf, { type: "buffer" });
-    const fullText = wb.SheetNames.map((n) => `### ${n}\n${XLSX.utils.sheet_to_csv(wb.Sheets[n])}`).join("\n");
+    const fullText = workbookToText(buf);
     const sheets = splitBySheet(fullText);
     sheetCache.set(hash, sheets);
     return sheets;

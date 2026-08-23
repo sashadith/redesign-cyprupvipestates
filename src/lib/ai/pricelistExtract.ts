@@ -8,6 +8,8 @@ import { toTitleCaseName } from "@/lib/textCase";
 
 export type ExtractedUnit = {
   ref: string;
+  /** Block/building label from a dedicated column or merged cell, when the sheet has one. */
+  block?: string;
   type?: string;            // property type per unit, e.g. "Apartment" / "Townhouse" / "Villa"
   bedrooms?: string;
   bathrooms?: string;
@@ -44,6 +46,7 @@ const flatSchema = (itemProps: Record<string, any>, required: string[]) => ({
 const SCHEMA_UNITS = flatSchema({
   project: { type: "string" },
   ref: { type: "string" },
+  block: { type: "string" },
   type: { type: "string" },
   bedrooms: { type: "string" },
   bathrooms: { type: "string" },
@@ -97,6 +100,7 @@ PRICE LIST:
 const PROMPT_UNITS = `You are given ONE section of a developer's master PRICE LIST (spreadsheet flattened to text) — it covers exactly ONE project, named in its own first row/title. Return a FLAT list "items" of EVERY sellable unit in this section — one item per unit:
 - project: the SAME project name for every single item, taken from this section's own title/first row. A section is often internally divided into sub-groups (e.g. "Block A", "Block B", a separate "Villa Number" table, apartments vs villas) — those are NOT separate projects, they are all part of THIS ONE project. Never invent a per-block or per-subtable project name; use one identical string for all items.
 - ref: the unit / villa / apartment label EXACTLY as its own cell/row shows it, verbatim — copy it whole, never trim, shorten, or drop any part of it (including a "Block X" prefix already present in that cell's own text).
+- block: the block / building label this unit belongs to, when the sheet keeps it in its OWN column or in a merged cell beside the rows (e.g. "Block A", "Block B", "A", "B"). Copy it for EVERY unit under that label, not just the first row. Leave blank when the sheet has no such column. Do NOT invent one, and do NOT move it into ref — ref stays exactly what its own cell says.
 - type: the property type for THIS unit, ONLY when the sheet has its own dedicated column spelling out a real type word (e.g. "Apartment" / "Townhouse" / "Villa" / "Maisonette") — leave blank if there's no such column. Do NOT use a short block/letter/floor code column (e.g. "A", "B", "D-GF") even if it sits right next to the ref column — that's a block or floor label, not a property type, even when it happens to come before the real type column in the sheet's layout.
 - bedrooms, bathrooms: as given.
 - areaBuilt: the total built/internal area, ONLY when the sheet gives ONE such figure.
@@ -320,6 +324,7 @@ export async function extractAvailabilityFromPricelist(text: string, full = fals
     if (!byProject.has(k)) byProject.set(k, { project, units: [] });
     byProject.get(k)!.units.push({
       ref: String(u.ref),
+      block: u.block ? String(u.block).trim() : undefined,
       bedrooms: u.bedrooms || undefined,
       bathrooms: u.bathrooms || undefined,
       areaBuilt: u.areaBuilt || undefined,
@@ -368,5 +373,27 @@ export async function extractAvailabilityFromPricelist(text: string, full = fals
   // Unconditional final safety net — don't rely on the catalog call having
   // succeeded this run (when it comes back empty, the per-project drop-unmatched
   // guard above has nothing to check against and lets everything through).
-  return Array.from(byProject.values()).filter((p) => !GENERIC_NAME_RE.test(p.project.trim()));
+    // Qualify a ref with its block ONLY where the bare ref is ambiguous inside the
+  // same project. Olias' Arbeo Park has four blocks that each number their flats
+  // 101/102/201/… , so a bare "101" identifies four different apartments; the
+  // sync matches units by ref, so it matched none of the 28 curated rows and
+  // created duplicates alongside them instead.
+  //
+  // Conditional on purpose. Qualifying unconditionally would rewrite the refs of
+  // every Drive/Dropbox project whose sheet happens to carry a block column, and
+  // the Drive sync DELETES feed units whose ref is no longer in the extraction
+  // (deliberately, after an August incident) — so a format change would prune and
+  // recreate them, losing the images hanging off those rows. Leaving unique refs
+  // untouched keeps all 20 currently-clean projects byte-identical.
+  for (const proj of Array.from(byProject.values())) {
+    const seen = new Map<string, number>();
+    for (const u of proj.units) seen.set(u.ref, (seen.get(u.ref) ?? 0) + 1);
+    for (const u of proj.units) {
+      if ((seen.get(u.ref) ?? 0) > 1 && u.block && !u.ref.toLowerCase().includes(u.block.toLowerCase())) {
+        u.ref = `${u.block} ${u.ref}`;
+      }
+    }
+  }
+
+return Array.from(byProject.values()).filter((p) => !GENERIC_NAME_RE.test(p.project.trim()));
 }
