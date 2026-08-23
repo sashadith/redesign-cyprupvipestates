@@ -36,6 +36,29 @@ import { deriveLocale } from "@/lib/gsc/client";
 
 export type CanonicalTarget = { locale: Locale; page: string };
 
+/**
+ * The single locale derivation for everything joined on a `locale::path` key.
+ *
+ * `deriveLocale` only recognises a prefix that is FOLLOWED BY A SLASH
+ * (`/de/x`), so a bare locale root (`/de`) derives as "en". That would key the
+ * German, Polish and Russian homepages as `en::/de` on the GSC side while the
+ * page inventory keys them as `de::/de` — the three localised homepages would
+ * never match, their clicks would count as uncovered, and all three would be
+ * reported as having no impressions while being among the highest-traffic
+ * pages on the site. (Confirmed against production 2026-08-23: `/de` 123
+ * impressions, `/pl` 29, `/ru` 491, none of which would have joined.)
+ *
+ * Fixed here rather than inside `deriveLocale` itself, because that function
+ * also decides `SearchMetric.locale` at sync time and `locale` is part of that
+ * table's unique key — changing it would fork every existing homepage series
+ * into a second one. Any source joined on a page key (GSC, PageView, Lead)
+ * must use THIS function, not `deriveLocale` directly.
+ */
+export function localeOfPath(path: string): Locale {
+  if (path === "/de" || path === "/pl" || path === "/ru") return path.slice(1) as Locale;
+  return deriveLocale(path);
+}
+
 let cached: { map: Map<string, string>; builtAt: number } | null = null;
 const CACHE_TTL_MS = 5 * 60 * 1000;
 

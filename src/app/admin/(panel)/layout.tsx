@@ -53,7 +53,7 @@ function buildModules(isAdmin: boolean, trashCount: number, activeLeadCount: num
         { href: "/admin/developers/publishing-queue", label: "Publishing Queue" },
       ],
     },
-    { key: "analytics", label: "Analytics", pages: [{ href: "/admin/analytics", label: "Analytics" }, { href: "/admin/analytics/seo", label: "SEO" }, { href: "/admin/analytics/seo/advisor", label: "SEO Advisor" }] },
+    { key: "analytics", label: "Analytics", pages: [{ href: "/admin/analytics", label: "Analytics" }, { href: "/admin/analytics/seo", label: "SEO" }, { href: "/admin/analytics/seo/power", label: "Page Power" }, { href: "/admin/analytics/seo/advisor", label: "SEO Advisor" }] },
     { key: "website", label: "Website", pages: websitePages },
     ...(isAdmin
       ? [{ key: "users", label: "Users", pages: [{ href: "/admin/users", label: "Users" }] }]
