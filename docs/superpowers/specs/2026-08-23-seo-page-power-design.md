@@ -226,10 +226,11 @@ measurements onto that universe, never the universe itself.
 
 The universe is published Developments, Projects, Blogs, Singlepages, Case
 Studies and Developer pages × their locales, plus the fixed pages the sitemap
-emits by hand (homepage, `/faq`, `/partners`).
+emits by hand (homepage, `/projects`, `/blog`, `/developers`, `/case-studies`,
+`/faq`, `/partners`).
 
-That list is longer than the one this spec first carried, and the two additions
-were found by code review during implementation rather than by design:
+That list is longer than the one this spec first carried, and every addition was
+found by code review during implementation rather than by design:
 
 - **Developer pages were missing entirely** — 14,315 impressions and 153 clicks
   in 90 days, roughly a tenth of the site's whole search surface. One of them,
@@ -250,6 +251,30 @@ nested  /de/luxusvillen-in-zypern/villen-in-paphos    535 impressions
   ones — `villas-in-cyprus/villas-in-paphos`,
   `apartments-in-cyprus/apartments-in-paphos`. Every one would have been
   diagnosed "invisible" while ranking perfectly well.
+
+- **The listing pages were missing** — `/projects` first, then `/blog`,
+  `/developers` and `/case-studies`, all four locales each. The `/projects`
+  omission emptied a whole template class: `projects-listing` had 112 sessions
+  entering it and not one page to name. The other twelve cost 377 impressions,
+  zero clicks, and one verdict that could never be emitted — `/ru/developers` at
+  131 impressions and average position 41.3, which is `buried`.
+
+**Coverage cannot catch an omission, and the third one proved it.** Coverage is
+a share of CLICKS, and a page that is missing from the inventory is usually
+missing because nobody notices it — which means it has no clicks to be missed.
+`/blog`, `/developers` and `/case-studies` cost 0 clicks across twelve URLs, so
+coverage stayed at 99.1 % throughout.
+
+So the inventory is now checked against the SITEMAP, which is the site's own
+statement of what it asks Google to index. `scripts/verify-page-power.mjs`
+fetches all six sitemaps and asserts set equality with the inventory in both
+directions: a `<loc>` with no inventory page is a verdict that can never be
+emitted, and an inventory page with no `<loc>` is a page being judged that the
+site is not advertising. Deriving the fixed list from the sitemap generator was
+considered and rejected — those routes are emitted inline inside five generator
+functions with their own priorities and hreflang sets, and hoisting them means
+editing a live SEO route to serve a diagnostic. Checking is the cheaper half of
+the same idea and covers every kind rather than only the fixed ones.
 
 Development pages are included only while `NEW_PROJECTS_INDEXABLE`
 (`src/lib/developmentSeo.ts`) is true; when it is false they are not public SEO
@@ -287,6 +312,31 @@ named piles instead of raw metrics.
 **"Not enough data" is its own state**, not a diagnosis. A page below its floor
 is carried as *unjudged* and never appears as a problem. Without this, 1,400
 pages look healthy when they are merely unmeasured.
+
+**A page too young for the window is not told its indexing is broken.** The
+`invisible` floor is 10 impressions over 90 days, and a page that has been live
+for nine of those days never had the window to accumulate over: "indexing,
+internal links, or no demand" asserts three causes its own publication date
+rules out. Measured 2026-08-23, this is not an edge case — 548 of the 1,125
+`invisible` pages were published inside the window (every one of the 588
+Development pages, and 86 Blogs), 430 of them within 30 days.
+
+The date comes from `publishedAt` and never from `createdAt`: the whole legacy
+corpus shares one `createdAt`, 2026-06-16, the instant the Sanity migration
+wrote the rows, and a Development's is when the feed sync ingested it — a median
+of 20 days before it went live. Three kinds carry no usable date at all
+(`singlepage`'s is a backfill, `developer` has no column, fixed routes have no
+row); those are treated as unknown, which leaves them in the pile rather than
+excusing them. Under-claiming is the safe direction.
+
+Such a page keeps its diagnosis and stays on the admin screen — it really is
+published and really is not being shown — with a reason that names its
+publication date, how many of the window's days it has been live, and the date
+its count becomes comparable. What changes is the ACTION CENTER, which subtracts
+them from the pile it asks for work on and says how many it left out. The
+`buried` and `unclicked` piles are deliberately not filtered this way: both rest
+on 100 and 300 impressions the page actually received, so a young page reaching
+either has demonstrably been crawled, indexed and served.
 
 **Stable item IDs** following `staleCopyFigures`: diagnosis plus page key. If a
 page's diagnosis changes it becomes a new item, so an old snooze cannot hide a

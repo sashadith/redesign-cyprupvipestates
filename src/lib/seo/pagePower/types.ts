@@ -214,7 +214,6 @@ export type PageVerdict = {
    *  "clean up" this prefix; it must stay exactly as served for the
    *  cross-table join to work. */
   path: string;
-  templateClass: TemplateClass;
   impressions: number;
   clicks: number;
   /** percent, 0–100 */

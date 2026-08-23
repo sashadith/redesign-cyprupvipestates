@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/prisma";
 import { buildCanonicalMap, canonicalize, localeOfPath } from "@/lib/seo/urlCanonical";
-import { templateClassOf } from "@/lib/seo/templateClass";
 import { getInventory } from "./inventory";
 import {
   BURIED_POSITION, CTR_MEDIAN_FRACTION, GSC_LAG_DAYS, MIN_BUCKET_IMPRESSIONS,
@@ -254,6 +253,39 @@ const impressions = (n: number): string => `${fmt(n)} impression${n === 1 ? "" :
  *  arithmetic later with a timezone-aware subtraction. */
 const utcMidnight = (d: Date): Date => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 
+const ymd = (d: Date): string => d.toISOString().slice(0, 10);
+
+/**
+ * The publication date and the days of the window a page was actually live for
+ * — but ONLY when that is fewer than the whole window. Null otherwise, which
+ * covers both "published before this window opened" and "no usable publication
+ * date" (`developer`, `singlepage` and `fixed` rows carry none — see
+ * `InventoryPage.publishedAt`).
+ *
+ * Returning ONE nullable object rather than a nullable number plus the date is
+ * what lets every call site below narrow both without re-testing the predicate
+ * or casting; the predicate is stated once, here.
+ *
+ * The two nulls are collapsed deliberately. Every caller uses this only to
+ * WITHHOLD a claim, so "unknown date" and "old enough" have to behave
+ * identically: an unknown date must leave the existing wording and the existing
+ * Action Center count exactly as they were, never excuse a page. Under-claiming
+ * is the safe direction here and merging the cases makes it unmissable.
+ *
+ * `days` is clamped into [0, WINDOW_DAYS]: `publishedAt` can be set to a future
+ * instant by the scheduled-publish flow (`scheduledAt` → `publishedAt`), and a
+ * negative "live for −4 days" printed in a reason an admin reads is worse than
+ * saying nothing.
+ */
+function partialWindowAge(publishedAt: Date | null, windowStart: Date, windowEnd: Date): { publishedAt: Date; days: number } | null {
+  if (publishedAt == null) return null;
+  const at = publishedAt.getTime();
+  if (!Number.isFinite(at)) return null; // an unparseable date is unknown, not new
+  if (at <= windowStart.getTime()) return null; // live for the whole window
+  const days = Math.max(0, Math.min(WINDOW_DAYS, (windowEnd.getTime() - at) / DAY));
+  return { publishedAt, days };
+}
+
 export type PageVerdictResult = {
   verdicts: PageVerdict[];
   coveragePct: number;
@@ -263,6 +295,33 @@ export type PageVerdictResult = {
    *  the day after `today − GSC_LAG_DAYS`. Display code wanting a human
    *  "… to <last day>" must subtract one day. */
   windowEnd: Date;
+  /**
+   * Keys of the pages whose own publication date falls INSIDE the window, so
+   * they were live for fewer than WINDOW_DAYS of it and their 90-day counts are
+   * not comparable with the rest of the site's.
+   *
+   * Reported ALONGSIDE the verdicts rather than as a field on `PageVerdict`, and
+   * not as a sixth diagnosis, because the diagnosis these pages carry is true:
+   * a Development published nine days ago really is published and really is not
+   * being shown. What is not true is the CAUSE the `invisible` reason used to
+   * assert, and the WORK the Action Center used to ask for. So the admin screen
+   * keeps listing them under their real diagnosis with a reason that names the
+   * publication date, and actionCenter/rules/pagePower.ts subtracts this set
+   * from the pile it asks for work on — see the note there for which diagnoses
+   * it applies to and why not all of them.
+   *
+   * An ARRAY, not a Set, on purpose: this crosses a JSON boundary in the
+   * verification harness (`scripts/verify-page-power.mjs` reads it off a probe
+   * route) and `JSON.stringify(new Set())` is `{}` — a silent empty, which is
+   * exactly the failure mode this whole result type exists to avoid. Callers
+   * that need membership build their own Set from it.
+   *
+   * Pages with no usable publication date are NOT in here (`developer`,
+   * `singlepage` and `fixed` have none — see `InventoryPage.publishedAt`), so
+   * this set under-claims by construction. That is the correct direction: an
+   * unknown date leaves a page in the pile being asked about.
+   */
+  publishedInsideWindow: PageKey[];
 };
 
 export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdictResult> {
@@ -289,12 +348,19 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
 
   const inventoryKeys = new Set(inventory.map((p) => p.key));
   const buckets = bucketStats(totals.main, inventoryKeys);
-  const devSlugs = new Set(inventory.filter((p) => p.kind === "development").map((p) => p.path.split("/").pop() as string));
+
+  const publishedInsideWindow: PageKey[] = [];
 
   const verdicts: PageVerdict[] = inventory.map((page) => {
     const t = totals.main.get(page.key) ?? emptyTotals();
     const position = positionOf(t);
     const ctr = ctrOf(t);
+
+    // Collected for EVERY page, not just the invisible ones, so the set this
+    // function hands back is a fact about publication dates rather than about
+    // one diagnosis — the Action Center decides which diagnoses it applies to.
+    const young = partialWindowAge(page.publishedAt, windowStart, windowEnd);
+    if (young != null) publishedInsideWindow.push(page.key);
 
     const recentImpressions = totals.recent.get(page.key)?.impressions ?? 0;
     const priorImpressions = totals.prior.get(page.key)?.impressions ?? 0;
@@ -322,9 +388,39 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
       // file) — and falls to the original wording, where indexing and internal
       // links are still live hypotheses. A null must never be read as a good
       // rank here; that is what the explicit `!= null` buys.
-      reason = position != null && position < WELL_RANKED_POSITION
-        ? `${impressions(t.impressions)} in ${WINDOW_DAYS} days, but at average position ${position.toFixed(1)} — indexed and served on the first page, so indexing and internal links are ruled out. Nobody is searching for this subject: the work is demand-side (a subject with search volume), or accepting that this page will never carry traffic. Nothing technical will move it.`
-        : `Fewer than ${MIN_IMPRESSIONS_VISIBLE} impressions in ${WINDOW_DAYS} days — indexing, internal links, or no demand for the subject.`;
+      //
+      // AGE IS TESTED FIRST, and it is the same defect one step earlier. The
+      // rank split above rules out two of the three causes from the page's own
+      // position; a publication date inside the window rules out all three from
+      // the page's own row, because a page that has not had the window cannot
+      // have failed to accumulate over it. Measured 2026-08-23: 548 of the 1,125
+      // `invisible` pages were published inside the window — every one of the
+      // 588 Development pages (147 Developments went live between 2026-07-06 and
+      // today, 114 of them in the last 30 days) and 86 Blogs — and 430 of those
+      // 548 had been live 30 days or less. 167 of them would otherwise have
+      // reached the well-ranked sentence and been told "Nobody is searching for
+      // this subject" on nine days of data, which is a demand verdict no
+      // nine-day sample supports. Hence this order, not the other one.
+      //
+      // `createdAt` is NOT the field for this and using it would have produced a
+      // wrong answer in both directions — see `InventoryPage.publishedAt` for
+      // the measurement.
+      if (young != null) {
+        const days = Math.round(young.days);
+        // `days` clamps to 0 for the 70 pages published after `windowEnd` — the
+        // window ends GSC_LAG_DAYS behind today, so anything published this week
+        // is genuinely outside it. "live for 0 of the 90 days" is arithmetically
+        // right and reads like a bug, so that case gets its own clause.
+        const livedFor = days < 1
+          ? `it was not live for any of the ${WINDOW_DAYS} days this window measures`
+          : `it has been live for ${days} of the ${WINDOW_DAYS} days this window measures`;
+        const comparableFrom = ymd(new Date(young.publishedAt.getTime() + WINDOW_DAYS * DAY));
+        reason = `Published ${ymd(young.publishedAt)}, so ${livedFor} — ${impressions(t.impressions)} so far. It is under the ${MIN_IMPRESSIONS_VISIBLE}-impression floor because it has not had the window, which says nothing about its indexing, its internal links or its demand. The work is to wait: its count is comparable with the rest of the site from ${comparableFrom}.`;
+      } else {
+        reason = position != null && position < WELL_RANKED_POSITION
+          ? `${impressions(t.impressions)} in ${WINDOW_DAYS} days, but at average position ${position.toFixed(1)} — indexed and served on the first page, so indexing and internal links are ruled out. Nobody is searching for this subject: the work is demand-side (a subject with search volume), or accepting that this page will never carry traffic. Nothing technical will move it.`
+          : `Fewer than ${MIN_IMPRESSIONS_VISIBLE} impressions in ${WINDOW_DAYS} days — indexing, internal links, or no demand for the subject.`;
+      }
     } else if (t.impressions >= MIN_IMPRESSIONS_BURIED && position != null && position > BURIED_POSITION) {
       diagnosis = "buried";
       reason = `${fmt(t.impressions)} impressions at average position ${position.toFixed(1)} — nobody scrolls that far. Needs content and authority, not a new title.`;
@@ -410,7 +506,6 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
       key: page.key,
       locale: page.locale,
       path: page.path,
-      templateClass: templateClassOf(page.path, devSlugs),
       impressions: t.impressions,
       clicks: t.clicks,
       ctr,
@@ -434,5 +529,5 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
   }
   const coveragePct = totalClicks > 0 ? (100 * matchedClicks) / totalClicks : 100;
 
-  return { verdicts, coveragePct, windowStart, windowEnd };
+  return { verdicts, coveragePct, windowStart, windowEnd, publishedInsideWindow };
 }

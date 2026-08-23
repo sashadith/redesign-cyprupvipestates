@@ -296,7 +296,6 @@ export type PageVerdict = {
    *  "clean up" this prefix; it must stay exactly as served for the
    *  cross-table join to work. */
   path: string;
-  templateClass: TemplateClass;
   impressions: number;
   clicks: number;
   /** percent, 0–100 */
@@ -429,6 +428,32 @@ export type InventoryPage = {
   path: string;
   kind: "development" | "project" | "blog" | "singlepage" | "developer" | "caseStudy" | "fixed";
   title: string;
+  /** When this URL went live, or null when no field on the row means that.
+   *
+   *  Read `publishedAt` and nothing else. `createdAt` is on every one of these
+   *  models and is NOT a publication date — measured 2026-08-23, the whole
+   *  legacy corpus carries the SAME `createdAt` instant, 2026-06-16, because
+   *  that is when the Sanity migration wrote the rows: 611 Projects, 207 Blogs,
+   *  177 Singlepages, 88 Developers and 12 Case Studies, all of it. A
+   *  Development's `createdAt` is when the feed sync first ingested it, which
+   *  ran a median of 20 days and up to 49 days before the page was published.
+   *  Judging page age on `createdAt` would report every page on the site as
+   *  brand new and every Development as older than it is.
+   *
+   *  Null is returned rather than guessed for the three kinds with no usable
+   *  field, and each null is a measured decision, not an oversight:
+   *  - `singlepage`: 156 of 177 rows have `publishedAt` null and the other 21
+   *    all carry one identical instant, 2026-07-07 — a backfill, not a
+   *    publication. Using it would date 21 long-standing landing pages as
+   *    published inside the window and quietly excuse them.
+   *  - `developer`: the model has no `publishedAt` column at all, and no
+   *    `status` either (every row is live).
+   *  - `fixed`: hand-authored routes, no row to carry a date.
+   *
+   *  Consumers must treat null as "age unknown", never as "old" — see the
+   *  publication-age guard in pageVerdicts.ts, which only ever uses this to
+   *  WITHHOLD a claim, so an unknown date leaves the claim exactly as it was. */
+  publishedAt: Date | null;
 };
 
 const LOCALES: Locale[] = ["en", "de", "pl", "ru"] as Locale[];
@@ -456,7 +481,10 @@ const KIND_PRIORITY: Record<InventoryPage["kind"], number> = {
 // not CMS rows, but real indexable URLs with real GSC volume, so they must be in the
 // inventory or the coverage metric would treat their clicks as unmatched.
 //
-// "Projects listing" is here for a second reason, and it is the one that bit:
+// This list has now been caught short THREE times, which is why it is no longer
+// trusted to be right by reading it — see the sitemap cross-check below.
+//
+// "Projects listing" was the second, and it is the one that bit hardest:
 // `/projects` is the ONLY fixed page with a TemplateClass of its own
 // (`projects-listing`, templateClass.ts), so leaving it out did not just lose one
 // page — it emptied a whole class. Measured 2026-08-23: not one of the 1,675
@@ -464,11 +492,44 @@ const KIND_PRIORITY: Record<InventoryPage["kind"], number> = {
 // sessions entering it and the sitemap was emitting it in all four locales at
 // priority 0.8, the highest of any listing. The class-level report could call the
 // catalogue repelling and the page-level report could not name a single page of it
-// to act on. It also had a diagnosis waiting: `/projects` alone drew 574
-// impressions and 4 clicks in 90 days, over MIN_IMPRESSIONS_CTR, at 0.7% CTR.
+// to act on. It also had a diagnosis waiting — though NOT the one this comment
+// used to claim. Re-measured through this module on 2026-08-23, `/projects` draws
+// 694 impressions and 6 clicks at average position 56.3, so the diagnosis waiting
+// for it is `buried`. Citing MIN_IMPRESSIONS_CTR and a CTR figure implied a CTR
+// verdict, and at position 56 that branch is unreachable: `getPageVerdicts`
+// reaches it only at a position of BURIED_POSITION or better. A listing page
+// ranking in the fifties is a content-and-authority problem, not a title one, and
+// the two asks are the opposite of each other.
+//
+// The three listings below were the third, added 2026-08-23. `${prefix}/blog`
+// (sitemap priority 0.8), `${prefix}/developers` (0.7) and
+// `${prefix}/case-studies` (0.8), in all four locales — twelve indexable URLs,
+// none of them noindexed, none of them in this list. Coverage barely moved
+// because they draw 377 impressions and ZERO clicks between them, and coverage
+// is a share of clicks. That is exactly why coverage could not have caught this:
+// a page with no clicks is invisible to the instrument the join is trusted on.
+// The cost was verdicts, not coverage — `/ru/developers` sits at 131 impressions
+// and average position 41.3, a `buried` verdict this module could not emit at all
+// while the URL was absent.
+//
+// DERIVING this list from the sitemap generator was considered and rejected.
+// Those routes are emitted inline inside five different generator functions,
+// each interleaved with its own Sanity calls and carrying its own priority,
+// changefreq and hreflang set; hoisting them into a shared constant means
+// editing the live sitemap route to serve a diagnostic, and the two consumers
+// want different fields (the sitemap wants priority and alternates, this wants a
+// title). CHECKING is the cheaper half of the same idea and catches strictly
+// more: `scripts/verify-page-power.mjs` now fetches all six sitemaps and asserts
+// that every `<loc>` it emits is an inventory path. That covers every kind, not
+// just the fixed ones, and it fails loudly on the next omission instead of
+// waiting for a fourth review. Measured 2026-08-23 with the twelve added: 1,691
+// sitemap URLs, 1,691 inventory paths, nothing on either side alone.
 const FIXED_PAGES: ReadonlyArray<{ title: string; path: (locale: Locale) => string }> = [
   { title: "Homepage", path: (locale) => (locale === ("en" as Locale) ? "/" : `/${locale}`) },
   { title: "Projects listing", path: (locale) => localised(locale, "/projects") },
+  { title: "Blog listing", path: (locale) => localised(locale, "/blog") },
+  { title: "Developers listing", path: (locale) => localised(locale, "/developers") },
+  { title: "Case studies listing", path: (locale) => localised(locale, "/case-studies") },
   { title: "FAQ", path: (locale) => localised(locale, "/faq") },
   { title: "Partners", path: (locale) => localised(locale, "/partners") },
 ];
@@ -514,16 +575,16 @@ export async function getInventory(): Promise<InventoryPage[]> {
     NEW_PROJECTS_INDEXABLE
       ? prisma.development.findMany({
           where: { publishStatus: "published", slug: { not: null } },
-          select: { slug: true, publicName: true },
+          select: { slug: true, publicName: true, publishedAt: true },
         })
       : Promise.resolve([]),
     prisma.project.findMany({
       where: { status: "PUBLISHED", slug: { not: "" } },
-      select: { slug: true, language: true, title: true },
+      select: { slug: true, language: true, title: true, publishedAt: true },
     }),
     prisma.blog.findMany({
       where: { status: "PUBLISHED", slug: { not: "" } },
-      select: { slug: true, language: true, title: true },
+      select: { slug: true, language: true, title: true, publishedAt: true },
     }),
     prisma.singlepage.findMany({
       where: { status: "PUBLISHED", slug: { not: "" } },
@@ -536,7 +597,7 @@ export async function getInventory(): Promise<InventoryPage[]> {
     }),
     prisma.caseStudy.findMany({
       where: { status: "PUBLISHED", slug: { not: "" } },
-      select: { slug: true, language: true, title: true },
+      select: { slug: true, language: true, title: true, publishedAt: true },
     }),
   ]);
 
@@ -545,16 +606,16 @@ export async function getInventory(): Promise<InventoryPage[]> {
   for (const d of devs) {
     for (const locale of LOCALES) {
       const path = localised(locale, `/projects/${d.slug}`);
-      out.push({ key: pageKey(locale, path), locale, path, kind: "development", title: d.publicName });
+      out.push({ key: pageKey(locale, path), locale, path, kind: "development", title: d.publicName, publishedAt: d.publishedAt });
     }
   }
   for (const p of projects) {
     const path = localised(p.language, `/projects/${p.slug}`);
-    out.push({ key: pageKey(p.language, path), locale: p.language, path, kind: "project", title: p.title });
+    out.push({ key: pageKey(p.language, path), locale: p.language, path, kind: "project", title: p.title, publishedAt: p.publishedAt });
   }
   for (const b of blogs) {
     const path = localised(b.language, `/blog/${b.slug}`);
-    out.push({ key: pageKey(b.language, path), locale: b.language, path, kind: "blog", title: b.title });
+    out.push({ key: pageKey(b.language, path), locale: b.language, path, kind: "blog", title: b.title, publishedAt: b.publishedAt });
   }
   const singlesById = new Map(singles.map((s) => [s.sanityId, s]));
   for (const s of singles) {
@@ -562,20 +623,20 @@ export async function getInventory(): Promise<InventoryPage[]> {
     // the full served path by walking parentSanityId (see nestedSlugPath above).
     const nested = nestedSlugPath(s, singlesById);
     const path = localised(s.language, `/${nested}`);
-    out.push({ key: pageKey(s.language, path), locale: s.language, path, kind: "singlepage", title: s.title });
+    out.push({ key: pageKey(s.language, path), locale: s.language, path, kind: "singlepage", title: s.title, publishedAt: null });
   }
   for (const dev of developers) {
     const path = localised(dev.language, `/developers/${dev.slug}`);
-    out.push({ key: pageKey(dev.language, path), locale: dev.language, path, kind: "developer", title: dev.title });
+    out.push({ key: pageKey(dev.language, path), locale: dev.language, path, kind: "developer", title: dev.title, publishedAt: null });
   }
   for (const c of caseStudies) {
     const path = localised(c.language, `/case-studies/${c.slug}`);
-    out.push({ key: pageKey(c.language, path), locale: c.language, path, kind: "caseStudy", title: c.title });
+    out.push({ key: pageKey(c.language, path), locale: c.language, path, kind: "caseStudy", title: c.title, publishedAt: c.publishedAt });
   }
   for (const locale of LOCALES) {
     for (const fixed of FIXED_PAGES) {
       const path = fixed.path(locale);
-      out.push({ key: pageKey(locale, path), locale, path, kind: "fixed", title: fixed.title });
+      out.push({ key: pageKey(locale, path), locale, path, kind: "fixed", title: fixed.title, publishedAt: null });
     }
   }
 
@@ -649,7 +710,6 @@ export function localeOfPath(path: string): Locale {
 ```typescript
 import { prisma } from "@/lib/prisma";
 import { buildCanonicalMap, canonicalize, localeOfPath } from "@/lib/seo/urlCanonical";
-import { templateClassOf } from "@/lib/seo/templateClass";
 import { getInventory } from "./inventory";
 import {
   BURIED_POSITION, CTR_MEDIAN_FRACTION, GSC_LAG_DAYS, MIN_BUCKET_IMPRESSIONS,
@@ -903,6 +963,39 @@ const impressions = (n: number): string => `${fmt(n)} impression${n === 1 ? "" :
  *  arithmetic later with a timezone-aware subtraction. */
 const utcMidnight = (d: Date): Date => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
 
+const ymd = (d: Date): string => d.toISOString().slice(0, 10);
+
+/**
+ * The publication date and the days of the window a page was actually live for
+ * — but ONLY when that is fewer than the whole window. Null otherwise, which
+ * covers both "published before this window opened" and "no usable publication
+ * date" (`developer`, `singlepage` and `fixed` rows carry none — see
+ * `InventoryPage.publishedAt`).
+ *
+ * Returning ONE nullable object rather than a nullable number plus the date is
+ * what lets every call site below narrow both without re-testing the predicate
+ * or casting; the predicate is stated once, here.
+ *
+ * The two nulls are collapsed deliberately. Every caller uses this only to
+ * WITHHOLD a claim, so "unknown date" and "old enough" have to behave
+ * identically: an unknown date must leave the existing wording and the existing
+ * Action Center count exactly as they were, never excuse a page. Under-claiming
+ * is the safe direction here and merging the cases makes it unmissable.
+ *
+ * `days` is clamped into [0, WINDOW_DAYS]: `publishedAt` can be set to a future
+ * instant by the scheduled-publish flow (`scheduledAt` → `publishedAt`), and a
+ * negative "live for −4 days" printed in a reason an admin reads is worse than
+ * saying nothing.
+ */
+function partialWindowAge(publishedAt: Date | null, windowStart: Date, windowEnd: Date): { publishedAt: Date; days: number } | null {
+  if (publishedAt == null) return null;
+  const at = publishedAt.getTime();
+  if (!Number.isFinite(at)) return null; // an unparseable date is unknown, not new
+  if (at <= windowStart.getTime()) return null; // live for the whole window
+  const days = Math.max(0, Math.min(WINDOW_DAYS, (windowEnd.getTime() - at) / DAY));
+  return { publishedAt, days };
+}
+
 export type PageVerdictResult = {
   verdicts: PageVerdict[];
   coveragePct: number;
@@ -912,6 +1005,33 @@ export type PageVerdictResult = {
    *  the day after `today − GSC_LAG_DAYS`. Display code wanting a human
    *  "… to <last day>" must subtract one day. */
   windowEnd: Date;
+  /**
+   * Keys of the pages whose own publication date falls INSIDE the window, so
+   * they were live for fewer than WINDOW_DAYS of it and their 90-day counts are
+   * not comparable with the rest of the site's.
+   *
+   * Reported ALONGSIDE the verdicts rather than as a field on `PageVerdict`, and
+   * not as a sixth diagnosis, because the diagnosis these pages carry is true:
+   * a Development published nine days ago really is published and really is not
+   * being shown. What is not true is the CAUSE the `invisible` reason used to
+   * assert, and the WORK the Action Center used to ask for. So the admin screen
+   * keeps listing them under their real diagnosis with a reason that names the
+   * publication date, and actionCenter/rules/pagePower.ts subtracts this set
+   * from the pile it asks for work on — see the note there for which diagnoses
+   * it applies to and why not all of them.
+   *
+   * An ARRAY, not a Set, on purpose: this crosses a JSON boundary in the
+   * verification harness (`scripts/verify-page-power.mjs` reads it off a probe
+   * route) and `JSON.stringify(new Set())` is `{}` — a silent empty, which is
+   * exactly the failure mode this whole result type exists to avoid. Callers
+   * that need membership build their own Set from it.
+   *
+   * Pages with no usable publication date are NOT in here (`developer`,
+   * `singlepage` and `fixed` have none — see `InventoryPage.publishedAt`), so
+   * this set under-claims by construction. That is the correct direction: an
+   * unknown date leaves a page in the pile being asked about.
+   */
+  publishedInsideWindow: PageKey[];
 };
 
 export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdictResult> {
@@ -938,12 +1058,19 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
 
   const inventoryKeys = new Set(inventory.map((p) => p.key));
   const buckets = bucketStats(totals.main, inventoryKeys);
-  const devSlugs = new Set(inventory.filter((p) => p.kind === "development").map((p) => p.path.split("/").pop() as string));
+
+  const publishedInsideWindow: PageKey[] = [];
 
   const verdicts: PageVerdict[] = inventory.map((page) => {
     const t = totals.main.get(page.key) ?? emptyTotals();
     const position = positionOf(t);
     const ctr = ctrOf(t);
+
+    // Collected for EVERY page, not just the invisible ones, so the set this
+    // function hands back is a fact about publication dates rather than about
+    // one diagnosis — the Action Center decides which diagnoses it applies to.
+    const young = partialWindowAge(page.publishedAt, windowStart, windowEnd);
+    if (young != null) publishedInsideWindow.push(page.key);
 
     const recentImpressions = totals.recent.get(page.key)?.impressions ?? 0;
     const priorImpressions = totals.prior.get(page.key)?.impressions ?? 0;
@@ -971,9 +1098,39 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
       // file) — and falls to the original wording, where indexing and internal
       // links are still live hypotheses. A null must never be read as a good
       // rank here; that is what the explicit `!= null` buys.
-      reason = position != null && position < WELL_RANKED_POSITION
-        ? `${impressions(t.impressions)} in ${WINDOW_DAYS} days, but at average position ${position.toFixed(1)} — indexed and served on the first page, so indexing and internal links are ruled out. Nobody is searching for this subject: the work is demand-side (a subject with search volume), or accepting that this page will never carry traffic. Nothing technical will move it.`
-        : `Fewer than ${MIN_IMPRESSIONS_VISIBLE} impressions in ${WINDOW_DAYS} days — indexing, internal links, or no demand for the subject.`;
+      //
+      // AGE IS TESTED FIRST, and it is the same defect one step earlier. The
+      // rank split above rules out two of the three causes from the page's own
+      // position; a publication date inside the window rules out all three from
+      // the page's own row, because a page that has not had the window cannot
+      // have failed to accumulate over it. Measured 2026-08-23: 548 of the 1,125
+      // `invisible` pages were published inside the window — every one of the
+      // 588 Development pages (147 Developments went live between 2026-07-06 and
+      // today, 114 of them in the last 30 days) and 86 Blogs — and 430 of those
+      // 548 had been live 30 days or less. 167 of them would otherwise have
+      // reached the well-ranked sentence and been told "Nobody is searching for
+      // this subject" on nine days of data, which is a demand verdict no
+      // nine-day sample supports. Hence this order, not the other one.
+      //
+      // `createdAt` is NOT the field for this and using it would have produced a
+      // wrong answer in both directions — see `InventoryPage.publishedAt` for
+      // the measurement.
+      if (young != null) {
+        const days = Math.round(young.days);
+        // `days` clamps to 0 for the 70 pages published after `windowEnd` — the
+        // window ends GSC_LAG_DAYS behind today, so anything published this week
+        // is genuinely outside it. "live for 0 of the 90 days" is arithmetically
+        // right and reads like a bug, so that case gets its own clause.
+        const livedFor = days < 1
+          ? `it was not live for any of the ${WINDOW_DAYS} days this window measures`
+          : `it has been live for ${days} of the ${WINDOW_DAYS} days this window measures`;
+        const comparableFrom = ymd(new Date(young.publishedAt.getTime() + WINDOW_DAYS * DAY));
+        reason = `Published ${ymd(young.publishedAt)}, so ${livedFor} — ${impressions(t.impressions)} so far. It is under the ${MIN_IMPRESSIONS_VISIBLE}-impression floor because it has not had the window, which says nothing about its indexing, its internal links or its demand. The work is to wait: its count is comparable with the rest of the site from ${comparableFrom}.`;
+      } else {
+        reason = position != null && position < WELL_RANKED_POSITION
+          ? `${impressions(t.impressions)} in ${WINDOW_DAYS} days, but at average position ${position.toFixed(1)} — indexed and served on the first page, so indexing and internal links are ruled out. Nobody is searching for this subject: the work is demand-side (a subject with search volume), or accepting that this page will never carry traffic. Nothing technical will move it.`
+          : `Fewer than ${MIN_IMPRESSIONS_VISIBLE} impressions in ${WINDOW_DAYS} days — indexing, internal links, or no demand for the subject.`;
+      }
     } else if (t.impressions >= MIN_IMPRESSIONS_BURIED && position != null && position > BURIED_POSITION) {
       diagnosis = "buried";
       reason = `${fmt(t.impressions)} impressions at average position ${position.toFixed(1)} — nobody scrolls that far. Needs content and authority, not a new title.`;
@@ -1059,7 +1216,6 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
       key: page.key,
       locale: page.locale,
       path: page.path,
-      templateClass: templateClassOf(page.path, devSlugs),
       impressions: t.impressions,
       clicks: t.clicks,
       ctr,
@@ -1083,7 +1239,7 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
   }
   const coveragePct = totalClicks > 0 ? (100 * matchedClicks) / totalClicks : 100;
 
-  return { verdicts, coveragePct, windowStart, windowEnd };
+  return { verdicts, coveragePct, windowStart, windowEnd, publishedInsideWindow };
 }
 ```
 
