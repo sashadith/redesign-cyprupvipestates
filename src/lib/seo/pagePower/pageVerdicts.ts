@@ -1,7 +1,5 @@
-import type { Locale } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { buildCanonicalMap, canonicalize } from "@/lib/seo/urlCanonical";
-import { deriveLocale } from "@/lib/gsc/client";
+import { buildCanonicalMap, canonicalize, localeOfPath } from "@/lib/seo/urlCanonical";
 import { templateClassOf } from "@/lib/seo/templateClass";
 import { getInventory } from "./inventory";
 import {
@@ -12,27 +10,6 @@ import {
 } from "./types";
 
 const DAY = 86_400_000;
-
-/**
- * The single locale derivation for everything joined on `PageKey`.
- *
- * `deriveLocale` only recognises a prefix that is FOLLOWED BY A SLASH
- * (`/de/x`), so a bare locale root (`/de`) derives as "en". That would key the
- * German, Polish and Russian homepages as `en::/de` on the GSC side while
- * `inventory.ts` keys them as `de::/de` — the three localised homepages would
- * never match, their clicks would count as uncovered, and all three would be
- * reported `invisible` while being among the highest-traffic pages on the site.
- *
- * Fixed here rather than inside `deriveLocale` itself, because that function
- * also decides `SearchMetric.locale` at sync time and `locale` is part of that
- * table's unique key — changing it would split every existing homepage row into
- * a second series. Any later source joined on `PageKey` (PageView, Lead) must
- * use THIS function, not `deriveLocale` directly.
- */
-export function localeOfPath(path: string): Locale {
-  if (path === "/de" || path === "/pl" || path === "/ru") return path.slice(1) as Locale;
-  return deriveLocale(path);
-}
 
 type Totals = { impressions: number; clicks: number; weightedPosition: number };
 
@@ -66,10 +43,11 @@ async function gscTotals(canonicalMap: Map<string, string>, windows: Window[]): 
     // Derive the locale from the PATH, not from SearchMetric.locale. All three
     // sources (GSC, PageView, Lead) must derive it identically or the join keys
     // will not line up — and the stored value is not reliable anyway: a German
-    // article at a prefix-less URL is recorded with locale "en".
+    // article at a prefix-less URL is recorded with locale "en". `localeOfPath`
+    // rather than `deriveLocale`: see its doc comment in urlCanonical.ts.
     const target = canonicalize(canonicalMap, localeOfPath(row.page), row.page);
-    // Re-derive after canonicalisation too: `canonicalize` fills the locale in
-    // with `deriveLocale`, which has the bare-root blind spot described above.
+    // Re-derive after canonicalisation too — `canonicalize` fills the locale in
+    // with `deriveLocale`, which carries the bare-root blind spot.
     const key = pageKey(localeOfPath(target.page), target.page);
     const at = row.date.getTime();
     for (let i = 0; i < windows.length; i++) {
@@ -217,6 +195,11 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
     };
   });
 
+  // Coverage: the share of GSC clicks that landed on a page we know about. If
+  // this falls, redirects exist that the canonical map has not learned yet —
+  // that is itself an alarm, so it is reported rather than silently absorbed.
+  // Every unmatched click is a page being judged on partial data, or not judged
+  // at all, so this number is the instrument the whole join is trusted on.
   let totalClicks = 0;
   let matchedClicks = 0;
   for (const [key, t] of Array.from(totals.entries())) {
