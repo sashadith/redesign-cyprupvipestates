@@ -338,9 +338,27 @@ them from the pile it asks for work on and says how many it left out. The
 on 100 and 300 impressions the page actually received, so a young page reaching
 either has demonstrably been crawled, indexed and served.
 
-**Stable item IDs** following `staleCopyFigures`: diagnosis plus page key. If a
-page's diagnosis changes it becomes a new item, so an old snooze cannot hide a
-new problem.
+**Stable item IDs**, and the grouped items need a different scheme from the
+per-page one this spec first specified. It said "diagnosis plus page key", which
+belongs to a design of one item per page — rejected, because 90 items would bury
+every other rule in the panel. What the grouped items carry instead is the
+diagnosis plus the pile's MAGNITUDE BAND, on a 1-2-5 ladder:
+`page-power:buried:50+`.
+
+The promise is the same and it is the one that matters: `dismissForeverItem`
+writes `snoozedUntil = 2099`, so a bare `page-power:buried` would let one
+dismissal silence the buried diagnosis permanently, including every page that
+became buried afterwards. A band changes when the pile roughly doubles or
+halves, so a dismissal covers the pile it was taken against and lapses once that
+pile is a materially different one.
+
+A fingerprint of the page set would keep the promise exactly and make timed
+snoozes useless: recomputing the verdicts seven days back on 2026-08-23, every
+pile had changed membership — `buried` 4 in and 2 out, `unclicked` 2 in and 2
+out, `invisible` 12 in and 12 out with no net change at all. Bands held across
+all three over the same week. On a pile as small as `unclicked`'s five pages no
+band can be both stable for a month and sensitive to a doubling; there it
+expires early, which is the safe direction.
 
 **Coverage ratio is a visible metric.** The share of GSC clicks that resolve
 through canonicalisation is shown on the admin page. If it drops, new redirects
@@ -351,7 +369,8 @@ exist that the map does not know — that is itself an alarm.
 There is no test runner in this repo. As with `staleCopyFigures`:
 
 1. **Invariants against live data** — every page has exactly one diagnosis or is
-   unjudged; totals reconcile; coverage above 85 %.
+   unjudged; totals reconcile; coverage above 85 %; the inventory and the six
+   sitemaps hold the same set of URLs.
 2. **Manual calibration pass** — read the ten largest entries of each diagnosis
    and confirm each is real. This is the step that caught `abiete-2` (a project
    named "Abiete 2", read as a count) and velaro-homes' furniture package. Below
@@ -359,6 +378,23 @@ There is no test runner in this repo. As with `staleCopyFigures`:
 3. **Only then** enable the Action Center rule.
 
 Calibration requires the production DB tunnel on `localhost:5433`.
+
+`scripts/verify-page-power.mjs` is committed and step 1 is run through it. It
+reads the real modules through a probe route at `/api/page-power-probe` which is
+deliberately NOT committed — a permanently mounted route dumping every page's
+search performance is not worth leaving on a production build for a diagnostic,
+and TypeScript modules cannot be imported from a plain `.mjs` script, so there
+is no way to exercise the real code without one. The script carries that route's
+full source and prints it on every failure path, so re-creating it is a copy and
+a delete rather than an archaeology exercise. It also records the 2026-08-23 run
+— 1,691 pages, 99.1 % coverage, 690 published inside the window, `invisible`
+1,125 / `buried` 79 / `unclicked` 12 / `healthy` 39 / `unjudged` 436 — and
+prints the drift, so a later run has something to be surprised by.
+
+The run must have `NEW_PROJECTS_INDEXABLE=true` in the environment. Without it
+the inventory silently loses all 588 Development pages and every count is wrong
+in a way that reads like a finding; the script fails on a page count more than
+25 % from the baseline and names that as the likely cause.
 
 ## Deliberately excluded
 
