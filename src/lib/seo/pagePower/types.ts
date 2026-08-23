@@ -19,6 +19,21 @@ export const GSC_LAG_DAYS = 3;
  *  ranking drops. */
 export const TREND_WINDOW_DAYS = 28;
 
+/** Minimum impressions in the PRIOR 28-day window before a trend percentage is
+ *  computed at all. It exists because MIN_IMPRESSIONS_VISIBLE is a 90-day
+ *  visibility floor and means nothing as the denominator of a 28-day ratio: at
+ *  a prior of 10, three recent impressions render a confident "−70%" that is
+ *  entirely sampling noise.
+ *
+ *  100 because the relative standard error on a count is roughly 1/sqrt(n), so
+ *  a prior of 100 carries about 10% noise and the ±20–30% swings this arrow is
+ *  meant to communicate sit clearly outside it; at 30 the noise is ~18% and the
+ *  arrow reports variance as a trend. Independently derived from, and only
+ *  coincidentally equal to, MIN_IMPRESSIONS_BURIED and MIN_BUCKET_IMPRESSIONS
+ *  below — re-measuring any one of the three is not license to update the
+ *  others. */
+export const MIN_IMPRESSIONS_TREND = 100;
+
 export const MIN_IMPRESSIONS_VISIBLE = 10;
 
 /** Page-level eligibility floor for the `buried` diagnosis — independently
@@ -109,7 +124,17 @@ export type PageVerdict = {
   diagnosis: PageDiagnosis;
   /** one sentence an admin can read without opening the code */
   reason: string;
-  /** 28d vs the preceding 28d, for the admin trend arrow; null when unmeasurable */
+  /** 28d vs the preceding 28d, for the admin trend arrow; null when the prior
+   *  window is below MIN_IMPRESSIONS_TREND.
+   *
+   *  Known limitation of expressing growth as a ratio: the prior window is the
+   *  denominator, so a page that went from 0 to 4,000 impressions — the single
+   *  best outcome this feature can produce — yields null and shows NO ARROW AT
+   *  ALL, while a page that went 400 → 380 shows one. The arrow answers "is
+   *  this moving relative to where it was", which is undefined for a page that
+   *  was nowhere. Do not paper over it by treating a prior of 0 as 1; that
+   *  invents a +399,900% figure. If breakout pages need surfacing, that is a
+   *  separate absolute-delta signal, not a repair to this one. */
   impressionsTrendPct: number | null;
 };
 

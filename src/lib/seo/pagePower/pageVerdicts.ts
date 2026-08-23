@@ -5,65 +5,122 @@ import { getInventory } from "./inventory";
 import {
   BURIED_POSITION, CTR_MEDIAN_FRACTION, GSC_LAG_DAYS, MIN_BUCKET_IMPRESSIONS,
   MIN_BUCKET_PAGES, MIN_IMPRESSIONS_BURIED, MIN_IMPRESSIONS_CTR,
-  MIN_IMPRESSIONS_VISIBLE, POSITION_BUCKETS, TREND_WINDOW_DAYS, WINDOW_DAYS,
+  MIN_IMPRESSIONS_TREND, MIN_IMPRESSIONS_VISIBLE, POSITION_BUCKETS,
+  TREND_WINDOW_DAYS, WINDOW_DAYS,
   pageKey, type PageKey, type PageVerdict,
 } from "./types";
 
 const DAY = 86_400_000;
 
+// Deliberately NOT reusing `accumulate`/`avgPosition`/`ctrPct` from
+// src/lib/seo/queries.ts, whose header declares itself the single source of
+// truth for page-level aggregation. The divergence is the point: `avgPosition`
+// returns 0 for a page with no impressions, and 0 is the BEST possible position
+// — a page with no data would read as ranking first and be judged against the
+// CTR expectation for position 0. This module needs "no position" to be
+// representable, so `positionOf` returns null and every caller is forced to
+// handle it. Same reason `positionOf` rejects non-finite values below. If those
+// helpers ever grow a null-returning variant, collapse this back onto them.
+
 type Totals = { impressions: number; clicks: number; weightedPosition: number };
 
 const emptyTotals = (): Totals => ({ impressions: 0, clicks: 0, weightedPosition: 0 });
 
-type Window = { since: Date; until: Date };
+/** Named `MetricWindow`, not `Window`: `lib.dom` is in scope in this project and
+ *  a bare `Window` silently shadows the global DOM type. */
+type MetricWindow = { since: Date; until: Date };
+
+/** Named, not positional. An `Array<Map<…>>` destructured as
+ *  `[main, recent, prior]` lets a swap of two window literals type-check, run,
+ *  and invert the sign of every trend arrow on the site with nothing to catch
+ *  it. Position must not carry meaning here. */
+type WindowSet = { main: MetricWindow; recent: MetricWindow; prior: MetricWindow };
+type TotalsSet = { main: Map<PageKey, Totals>; recent: Map<PageKey, Totals>; prior: Map<PageKey, Totals> };
+
+const WINDOW_NAMES = ["main", "recent", "prior"] as const;
 
 /**
- * Sums page-level GSC rows into one totals map per requested window.
+ * Sums page-level GSC rows into one totals map per window.
  *
  * Takes the canonical map as a PARAMETER rather than building it: it reads
  * `redirect-mapping.csv` off disk and queries the legacy-redirect table, and
- * the caller needs three windows, so building it per call would repeat that
- * work three times over.
+ * there are three windows, so building it per call would repeat that work three
+ * times over.
  *
  * The windows are served from ONE query spanning their union for the same
  * reason — the trend windows are strictly inside the main window, so three
  * separate queries would pull the same tens of thousands of rows three times.
  */
-async function gscTotals(canonicalMap: Map<string, string>, windows: Window[]): Promise<Array<Map<PageKey, Totals>>> {
-  const since = new Date(Math.min(...windows.map((w) => w.since.getTime())));
-  const until = new Date(Math.max(...windows.map((w) => w.until.getTime())));
+async function gscTotals(canonicalMap: Map<string, string>, windows: WindowSet): Promise<TotalsSet> {
+  const bounds = WINDOW_NAMES.map((name) => windows[name]);
+  const since = new Date(Math.min(...bounds.map((w) => w.since.getTime())));
+  const until = new Date(Math.max(...bounds.map((w) => w.until.getTime())));
 
   const rows = await prisma.searchMetric.findMany({
     where: { query: null, date: { gte: since, lt: until } },
     select: { date: true, page: true, impressions: true, clicks: true, position: true },
   });
 
-  const outs = windows.map(() => new Map<PageKey, Totals>());
+  const outs: TotalsSet = { main: new Map(), recent: new Map(), prior: new Map() };
   for (const row of rows) {
     // Derive the locale from the PATH, not from SearchMetric.locale. All three
     // sources (GSC, PageView, Lead) must derive it identically or the join keys
     // will not line up — and the stored value is not reliable anyway: a German
     // article at a prefix-less URL is recorded with locale "en". `localeOfPath`
     // rather than `deriveLocale`: see its doc comment in urlCanonical.ts.
+    // The locale argument below is inert — `target.locale` is deliberately
+    // ignored, see the next line — but `canonicalize` requires one.
     const target = canonicalize(canonicalMap, localeOfPath(row.page), row.page);
-    // Re-derive after canonicalisation too — `canonicalize` fills the locale in
-    // with `deriveLocale`, which carries the bare-root blind spot.
+    // Re-derived from the CANONICAL path, discarding `target.locale`, because
+    // `canonicalize` fills that in with `deriveLocale` and inherits its
+    // bare-root blind spot. Neither call is redundant: this one decides the key.
     const key = pageKey(localeOfPath(target.page), target.page);
     const at = row.date.getTime();
-    for (let i = 0; i < windows.length; i++) {
-      if (at < windows[i].since.getTime() || at >= windows[i].until.getTime()) continue;
-      const totals = outs[i].get(key) ?? emptyTotals();
+    for (const name of WINDOW_NAMES) {
+      const window = windows[name];
+      if (at < window.since.getTime() || at >= window.until.getTime()) continue;
+      const totals = outs[name].get(key) ?? emptyTotals();
       totals.impressions += row.impressions;
       totals.clicks += row.clicks;
       totals.weightedPosition += row.position * row.impressions;
-      outs[i].set(key, totals);
+      outs[name].set(key, totals);
     }
   }
   return outs;
 }
 
-const positionOf = (t: Totals): number | null => (t.impressions > 0 ? t.weightedPosition / t.impressions : null);
+/** Null rather than 0 when there is no usable position — see the note at the
+ *  top of this file. Non-finite is rejected explicitly: `position` is Postgres
+ *  `double precision`, which admits NaN and ±Infinity, and NaN compares false
+ *  against everything, so a single poisoned row would otherwise carry a
+ *  50,000-impression page silently past every threshold in `getPageVerdicts`. */
+const positionOf = (t: Totals): number | null => {
+  if (t.impressions <= 0) return null;
+  const position = t.weightedPosition / t.impressions;
+  return Number.isFinite(position) ? position : null;
+};
+
 const ctrOf = (t: Totals): number => (t.impressions > 0 ? (100 * t.clicks) / t.impressions : 0);
+
+/** Which bucket a position belongs to, or null if none — the ONE implementation
+ *  of the half-open `[low, high)` membership rule documented on POSITION_BUCKETS
+ *  in types.ts. `bucketMedians` calls it too, so a page can never be compared
+ *  against a median drawn from a population it was not itself eligible for. */
+function bucketKeyFor(position: number): string | null {
+  for (const [low, high] of POSITION_BUCKETS) if (position >= low && position < high) return `${low}-${high}`;
+  return null;
+}
+
+/** True median. `sorted[Math.floor(n / 2)]` on its own is the UPPER of the two
+ *  middle values on an even-length sample — the 67th percentile of a six-page
+ *  bucket, not the median — which biases the expected-CTR bar upward and
+ *  over-flags `unclicked`, while the reason text quotes a "typical" figure that
+ *  is typical of nothing. MIN_BUCKET_PAGES is 5, so even-length buckets are the
+ *  ordinary case, not an edge case. Input must be sorted ascending. */
+function medianOf(sorted: number[]): number {
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
 
 /**
  * Median CTR per position bucket, computed over INVENTORY PAGES ONLY.
@@ -84,56 +141,77 @@ const ctrOf = (t: Totals): number => (t.impressions > 0 ? (100 * t.clicks) / t.i
  * with a reason saying exactly that. Under-claiming is the correct failure.
  */
 function bucketMedians(totals: Map<PageKey, Totals>, inventoryKeys: Set<PageKey>): Map<string, number> {
+  const byBucket = new Map<string, number[]>();
+  for (const [key, t] of Array.from(totals.entries())) {
+    if (!inventoryKeys.has(key)) continue;
+    if (t.impressions < MIN_BUCKET_IMPRESSIONS) continue;
+    const position = positionOf(t);
+    if (position == null) continue;
+    const bucket = bucketKeyFor(position);
+    if (bucket == null) continue;
+    const ctrs = byBucket.get(bucket) ?? [];
+    ctrs.push(ctrOf(t));
+    byBucket.set(bucket, ctrs);
+  }
+
   const medians = new Map<string, number>();
-  for (const [low, high] of POSITION_BUCKETS) {
-    const ctrs: number[] = [];
-    for (const [key, t] of Array.from(totals.entries())) {
-      if (!inventoryKeys.has(key)) continue;
-      const position = positionOf(t);
-      if (position == null || t.impressions < MIN_BUCKET_IMPRESSIONS) continue;
-      if (position >= low && position < high) ctrs.push(ctrOf(t));
-    }
+  for (const [bucket, ctrs] of Array.from(byBucket.entries())) {
     if (ctrs.length < MIN_BUCKET_PAGES) continue;
     ctrs.sort((a, b) => a - b);
-    medians.set(`${low}-${high}`, ctrs[Math.floor(ctrs.length / 2)]);
+    medians.set(bucket, medianOf(ctrs));
   }
   return medians;
 }
 
-function bucketKeyFor(position: number): string | null {
-  for (const [low, high] of POSITION_BUCKETS) if (position >= low && position < high) return `${low}-${high}`;
-  return null;
-}
-
 const fmt = (n: number): string => n.toLocaleString("en-GB");
 
-export type PageVerdictResult = { verdicts: PageVerdict[]; coveragePct: number; windowStart: Date; windowEnd: Date };
+/** SearchMetric.date is `@db.Date`, so every row sits at UTC midnight. Bounds
+ *  carrying `now`'s time-of-day make `gte: windowStart` exclude the row on
+ *  windowStart's own date, so the date handed back for display is one the window
+ *  does not contain — and the injectable `now` parameter invites callers to pass
+ *  a date-only value, which would flip that behaviour again.
+ *
+ *  DST is a non-issue and DAY = 86_400_000 is exact here: every bound produced
+ *  by this function is a UTC-midnight instant and every comparison against it is
+ *  absolute-ms, so no local calendar is ever consulted. Do not "fix" the
+ *  arithmetic later with a timezone-aware subtraction. */
+const utcMidnight = (d: Date): Date => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+
+export type PageVerdictResult = {
+  verdicts: PageVerdict[];
+  coveragePct: number;
+  /** Inclusive, UTC midnight — the first day the window covers. */
+  windowStart: Date;
+  /** EXCLUSIVE, UTC midnight — the first day the window does NOT cover. Display
+   *  code wanting a human "… to <last day>" must subtract one day. */
+  windowEnd: Date;
+};
 
 export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdictResult> {
-  const windowEnd = new Date(now.getTime() - GSC_LAG_DAYS * DAY);
-  const windowStart = new Date(windowEnd.getTime() - WINDOW_DAYS * DAY);
-  const trendStart = new Date(windowEnd.getTime() - TREND_WINDOW_DAYS * DAY);
-  const priorStart = new Date(trendStart.getTime() - TREND_WINDOW_DAYS * DAY);
+  const windowEnd = utcMidnight(new Date(now.getTime() - GSC_LAG_DAYS * DAY));
+  const windowStart = utcMidnight(new Date(windowEnd.getTime() - WINDOW_DAYS * DAY));
+  const trendStart = utcMidnight(new Date(windowEnd.getTime() - TREND_WINDOW_DAYS * DAY));
+  const priorStart = utcMidnight(new Date(trendStart.getTime() - TREND_WINDOW_DAYS * DAY));
 
   const [inventory, canonicalMap] = await Promise.all([getInventory(), buildCanonicalMap()]);
-  const [totals, recent, prior] = await gscTotals(canonicalMap, [
-    { since: windowStart, until: windowEnd },
-    { since: trendStart, until: windowEnd },
-    { since: priorStart, until: trendStart },
-  ]);
+  const totals = await gscTotals(canonicalMap, {
+    main: { since: windowStart, until: windowEnd },
+    recent: { since: trendStart, until: windowEnd },
+    prior: { since: priorStart, until: trendStart },
+  });
 
   const inventoryKeys = new Set(inventory.map((p) => p.key));
-  const medians = bucketMedians(totals, inventoryKeys);
+  const medians = bucketMedians(totals.main, inventoryKeys);
   const devSlugs = new Set(inventory.filter((p) => p.kind === "development").map((p) => p.path.split("/").pop() as string));
 
   const verdicts: PageVerdict[] = inventory.map((page) => {
-    const t = totals.get(page.key) ?? emptyTotals();
+    const t = totals.main.get(page.key) ?? emptyTotals();
     const position = positionOf(t);
     const ctr = ctrOf(t);
 
-    const recentImpressions = recent.get(page.key)?.impressions ?? 0;
-    const priorImpressions = prior.get(page.key)?.impressions ?? 0;
-    const impressionsTrendPct = priorImpressions >= MIN_IMPRESSIONS_VISIBLE
+    const recentImpressions = totals.recent.get(page.key)?.impressions ?? 0;
+    const priorImpressions = totals.prior.get(page.key)?.impressions ?? 0;
+    const impressionsTrendPct = priorImpressions >= MIN_IMPRESSIONS_TREND
       ? (100 * (recentImpressions - priorImpressions)) / priorImpressions
       : null;
 
@@ -148,7 +226,7 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
       reason = `${fmt(t.impressions)} impressions at average position ${position.toFixed(1)} — nobody scrolls that far. Needs content and authority, not a new title.`;
     } else if (t.impressions >= MIN_IMPRESSIONS_CTR && position != null && position <= BURIED_POSITION) {
       const bucket = bucketKeyFor(position);
-      const median = bucket ? medians.get(bucket) : undefined;
+      const median = bucket == null ? undefined : medians.get(bucket);
       if (bucket == null) {
         // Position exactly BURIED_POSITION: the buckets are half-open and stop
         // at 20, so 20.0 belongs to no bucket while still passing the <= 20 test
@@ -158,6 +236,19 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
         reason = `Average position ${position.toFixed(1)} sits on the edge of the comparison range, so there is no expected CTR to measure against.`;
       } else if (median == null) {
         reason = `Position ${position.toFixed(1)} has too few comparable pages to set an expected CTR.`;
+      } else if (median <= 0) {
+        // Every comparable page in this bucket earned zero clicks too, so the
+        // bar is 0 and `ctr < 0 * fraction` can never be true. Left to fall
+        // through, the `unclicked` test becomes unfalsifiable and EVERY page in
+        // the bucket is certified healthy — including a 5,000-impression page
+        // with no clicks at all, which is the single most confidently wrong
+        // sentence this module could emit, on exactly the pages the feature
+        // exists to find. It is reachable: at positions 10–20 the expected
+        // clicks over the window are around one, so a thin locale's bucket
+        // crossing 50% zero-click pages is ordinary. Kept distinct from the
+        // too-few-pages case above: there the sample is missing, here the
+        // sample exists and has nothing to say.
+        reason = `The comparable pages at position ${position.toFixed(1)} earned no clicks either, so there is no expected CTR to judge against.`;
       } else if (ctr < median * CTR_MEDIAN_FRACTION) {
         diagnosis = "unclicked";
         reason = `CTR ${ctr.toFixed(2)}% against ${median.toFixed(2)}% typical for position ${position.toFixed(1)} — title and meta description.`;
@@ -165,19 +256,20 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
         diagnosis = "healthy";
         reason = `CTR ${ctr.toFixed(2)}% is in line with position ${position.toFixed(1)}.`;
       }
+    } else if (position == null) {
+      // Visible, but no usable average position — with impressions above the
+      // floor the only way in is a non-finite weighted average, i.e. corrupt
+      // stored GSC data. Blaming the impression count here would contradict the
+      // impression count printed in the same sentence.
+      reason = `${fmt(t.impressions)} impressions, but the stored average position is not a usable number — the GSC data for this page needs re-syncing.`;
+    } else if (position > BURIED_POSITION) {
+      // A bad position with too few impressions to call it buried. NOT a CTR
+      // question: a page at position 45 would never reach the CTR test however
+      // many impressions it had, so quoting the CTR floor here would misdirect.
+      reason = `${fmt(t.impressions)} impressions at average position ${position.toFixed(1)} — below the ${MIN_IMPRESSIONS_BURIED} impressions needed to call a page buried.`;
     } else {
-      // Everything left over is `unjudged`, and it gets here for one of TWO
-      // different reasons — which one depends on the position, so the sentence
-      // has to branch or it will lie to an admin:
-      //  - a bad position with too few impressions to call it buried, which is
-      //    NOT a CTR question at all (a page at position 45 would never reach
-      //    the CTR test however many impressions it had);
-      //  - a good position with too few impressions to judge CTR.
-      if (position != null && position > BURIED_POSITION) {
-        reason = `${fmt(t.impressions)} impressions at average position ${position.toFixed(1)} — below the ${MIN_IMPRESSIONS_BURIED} impressions needed to call a page buried.`;
-      } else {
-        reason = `${fmt(t.impressions)} impressions — below the ${MIN_IMPRESSIONS_CTR} needed to judge CTR.`;
-      }
+      // A good position with too few impressions to judge CTR.
+      reason = `${fmt(t.impressions)} impressions — below the ${MIN_IMPRESSIONS_CTR} needed to judge CTR.`;
     }
 
     return {
@@ -202,7 +294,7 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
   // at all, so this number is the instrument the whole join is trusted on.
   let totalClicks = 0;
   let matchedClicks = 0;
-  for (const [key, t] of Array.from(totals.entries())) {
+  for (const [key, t] of Array.from(totals.main.entries())) {
     totalClicks += t.clicks;
     if (inventoryKeys.has(key)) matchedClicks += t.clicks;
   }
