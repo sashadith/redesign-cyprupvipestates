@@ -104,15 +104,31 @@ city/type landing pages are in it:
 
 ```
 off-plan-properties-in-paphos     5,078 impr    8 clicks   0.16 %   pos 33.2
-villas-in-cyprus                  2,270 impr   29 clicks   1.28 %   pos 39.9
 properties-paphos                 1,903 impr   39 clicks   2.05 %   pos 27.5
 off-plan-properties-in-limassol   1,660 impr    6 clicks   0.36 %   pos 47.2
 property-for-sale-limassol          944 impr    2 clicks   0.21 %   pos 51.1
+villas-in-cyprus                    831 impr    — clicks      —     pos 52.1
 investment-property-in-cyprus       473 impr    3 clicks   0.63 %   pos 45.4
 apartments-in-cyprus                410 impr   13 clicks   3.17 %   pos 32.0
 property-for-sale-larnaca           294 impr    2 clicks   0.68 %   pos 40.2
 luxury-villas-in-cyprus-over-1M     659 impr   18 clicks   2.73 %   pos 14.9   (healthy)
 ```
+
+**The `villas-in-cyprus` row was corrected on 2026-08-23**, during calibration,
+and it was corrected because the ORIGINAL MEASUREMENT WAS WRONG — not because the
+tool disagreed with it. It first read 2,270 impressions at position 39.9. That
+was a substring match: sixteen GSC page rows contain the string
+`villas-in-cyprus`, and they belong to at least seven different pages —
+`/luxury-villas-in-cyprus-over-1-million`, `/villas-in-cyprus/villas-in-paphos`,
+`/villas-in-cyprus/family-villas`, `/villas-in-cyprus-for-investors`,
+`/villas-in-cyprus-for-emigrating`, `/villas-in-cyprus-for-moving-from-us`,
+`/villas-in-cyprus-for-moving-from-canada`, each with its own `/en/` variant —
+summing to 2,293. The page itself draws 831 impressions at position 52.1. The
+figure above was re-derived from that page's own rows; clicks and CTR were not
+re-derived and are left blank rather than carried over from the bad sum. The
+other two anchors are within rounding of the tool's 5,130 and 1,688 and stand as
+written. Match GSC page rows exactly, never by substring: on this site a
+"page" name is a prefix of seven others.
 
 Google serves "off-plan properties in Paphos" 5,078 times a quarter on page
 four. No title rewrite reaches a click from position 33. The commercial keyword
@@ -314,3 +330,56 @@ Calibration requires the production DB tunnel on `localhost:5433`.
   from 2026-06-18, so trends start now rather than reaching back.
 - **Experiment loop** — generalise the title sweep once the diagnosis mix shows
   what is worth testing.
+
+## Calibration 2026-08-23
+
+Gate on the diagnosis layer before it was shown to anyone. Passed; no threshold
+moved.
+
+**Run.** Window 2026-05-23 .. 2026-08-21, 1,679 pages, coverage 99.1 %.
+
+```
+buried 78 · healthy 39 · invisible 1,118 · unclicked 12 · unjudged 432
+```
+
+**Method.** Top 10 pages by impressions for each of `buried`, `unclicked` and
+`invisible` — 30 rows. Every URL fetched from production and checked for HTTP
+status, robots directives, `<title>`, meta description and body length. Position
+and CTR taken from the same GSC rows the verdict was computed from, so the check
+tests the verdict against its own evidence rather than against a re-query.
+
+**Result.** `buried` 10/10, `unclicked` 10/10, `invisible` 10/10 — all three
+clear the 80 % precision bar. Every URL returned 200, none was noindex, all
+carried a title and a 68–166 character description over 6,000+ characters of
+text. No diagnosis pointed at a broken or missing page. All three anchors in
+"diagnosis 2" above come back `buried`.
+
+**One presentation defect found and fixed.** The `invisible` reason string named
+causes its own data ruled out: "indexing, internal links, or no demand for the
+subject" was printed for pages ranking at position 2.9. Three of the ten checked
+were in that state — `/projects/ruby-project` and `/de/projects/velaro-homes` at
+position 2.9, `/ru/projects/aura-konia` at 6.3, each 9 impressions at 11.1 % CTR.
+A page at position 2.9 is indexed and being served, so two of the three causes
+were excluded by the very row the verdict came from, and the one that applied —
+nobody searches for "Velaro Homes" — was listed last. The reason now splits on
+the page's own rank: well-ranked pages are told plainly that the work is
+demand-side, everything else keeps the original wording. The DIAGNOSIS was
+correct in all ten cases and did not change.
+
+**The homepage reads `buried` at position 22.2 with a 4.92 % CTR, and that is
+correct.** It looks like a bug — a 4.92 % CTR is the best on the site — so the
+reason is recorded here. Its query-level rows show 36 of 41 clicks arriving from
+thirteen queries at position 0–3, essentially the brand term "cyprus vip
+estates" at position 1.8, while 540 of its 836 sampled impressions sit past
+position 20 and produced one click between them. The page-level average of 22.2
+is the honest summary of a bimodal distribution: it wins its brand term and
+loses everything else. Do not "fix" this by exempting the homepage.
+
+**A URL migration ran inside the window and the canonical map folded it
+correctly.** `/en/villas-in-cyprus` served until 2026-07-21 and
+`/villas-in-cyprus` from 2026-07-19, so the two overlap by two days and GSC
+carries them as separate series. The redirect-aware canonical map merged them
+into one page. This is the first confirmation on LIVE data that the folding
+works — worth having on the record before any screen shows a trend line, since
+an unfolded migration reads as a traffic collapse on the old URL and a
+suspicious surge on the new one.

@@ -693,6 +693,19 @@ const positionOf = (t: Totals): number | null => {
 
 const ctrOf = (t: Totals): number => (t.impressions > 0 ? (100 * t.clicks) / t.impressions : 0);
 
+/** The top of the SECOND position bucket — the union of POSITION_BUCKETS[0] and
+ *  POSITION_BUCKETS[1], i.e. "on the first page of results". Used only by the
+ *  `invisible` reason below, to decide whether a page's own rank rules out the
+ *  technical explanations.
+ *
+ *  Derived from the buckets rather than written as a literal 10 so the boundary
+ *  stays tied to the ranking bands the rest of this module already reasons in;
+ *  re-banding POSITION_BUCKETS moves this with it instead of leaving a stale
+ *  number behind. It reads two fixed indices, so it assumes the buckets keep at
+ *  least two bands — which POSITION_BUCKETS' own doc comment already requires,
+ *  since `bucketMedians` and `bucketKeyFor` depend on the same shape. */
+const WELL_RANKED_POSITION = POSITION_BUCKETS[1][1];
+
 /** Which bucket a position belongs to, or null if none — the ONE implementation
  *  of the half-open `[low, high)` membership rule documented on POSITION_BUCKETS
  *  in types.ts. `bucketMedians` calls it too, so a page can never be compared
@@ -821,7 +834,24 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
 
     if (t.impressions < MIN_IMPRESSIONS_VISIBLE) {
       diagnosis = "invisible";
-      reason = `Fewer than ${MIN_IMPRESSIONS_VISIBLE} impressions in ${WINDOW_DAYS} days — indexing, internal links, or no demand for the subject.`;
+      // The diagnosis is right either way; the CAUSE is not. Calibration on
+      // 2026-08-23 found three of the ten highest-impression `invisible` pages
+      // ranking in the top seven results — `/projects/ruby-project` and
+      // `/de/projects/velaro-homes` at position 2.9, `/ru/projects/aura-konia`
+      // at 6.3, each on 9 impressions and an 11.1% CTR. A page at position 2.9
+      // is indexed and is being served: "indexing" and "internal links" are not
+      // merely unlikely there, they are EXCLUDED by the same row the verdict is
+      // computed from, and the one cause that does apply was listed third. So
+      // the sentence splits on the page's own rank.
+      //
+      // A page with no impressions has no position — `positionOf` returns null
+      // rather than 0 for exactly this reason (see the note at the top of this
+      // file) — and falls to the original wording, where indexing and internal
+      // links are still live hypotheses. A null must never be read as a good
+      // rank here; that is what the explicit `!= null` buys.
+      reason = position != null && position < WELL_RANKED_POSITION
+        ? `${fmt(t.impressions)} impressions in ${WINDOW_DAYS} days, but at average position ${position.toFixed(1)} — indexed and served on the first page, so indexing and internal links are ruled out. Nobody is searching for this subject: the work is demand-side (a subject with search volume), or accepting that this page will never carry traffic. Nothing technical will move it.`
+        : `Fewer than ${MIN_IMPRESSIONS_VISIBLE} impressions in ${WINDOW_DAYS} days — indexing, internal links, or no demand for the subject.`;
     } else if (t.impressions >= MIN_IMPRESSIONS_BURIED && position != null && position > BURIED_POSITION) {
       diagnosis = "buried";
       reason = `${fmt(t.impressions)} impressions at average position ${position.toFixed(1)} — nobody scrolls that far. Needs content and authority, not a new title.`;
