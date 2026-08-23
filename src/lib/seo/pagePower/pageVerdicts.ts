@@ -186,6 +186,13 @@ function bucketMedians(totals: Map<PageKey, Totals>, inventoryKeys: Set<PageKey>
 
 const fmt = (n: number): string => n.toLocaleString("en-GB");
 
+/** "1 impression" / "9 impressions". Only the `invisible` branch can reach a
+ *  count of one — every other diagnosis has an impression floor of 100 or more —
+ *  but 137 of the 1,118 invisible pages read "1 impressions" without this, and
+ *  a tool that miscounts its own noun is not believed about anything else.
+ *  Same shape as `enquiries` in classVerdicts.ts. */
+const impressions = (n: number): string => `${fmt(n)} impression${n === 1 ? "" : "s"}`;
+
 /** SearchMetric.date is `@db.Date`, so every row sits at UTC midnight. Bounds
  *  carrying `now`'s time-of-day make `gte: windowStart` exclude the row on
  *  windowStart's own date, so the date handed back for display is one the window
@@ -267,7 +274,7 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
       // links are still live hypotheses. A null must never be read as a good
       // rank here; that is what the explicit `!= null` buys.
       reason = position != null && position < WELL_RANKED_POSITION
-        ? `${fmt(t.impressions)} impressions in ${WINDOW_DAYS} days, but at average position ${position.toFixed(1)} — indexed and served on the first page, so indexing and internal links are ruled out. Nobody is searching for this subject: the work is demand-side (a subject with search volume), or accepting that this page will never carry traffic. Nothing technical will move it.`
+        ? `${impressions(t.impressions)} in ${WINDOW_DAYS} days, but at average position ${position.toFixed(1)} — indexed and served on the first page, so indexing and internal links are ruled out. Nobody is searching for this subject: the work is demand-side (a subject with search volume), or accepting that this page will never carry traffic. Nothing technical will move it.`
         : `Fewer than ${MIN_IMPRESSIONS_VISIBLE} impressions in ${WINDOW_DAYS} days — indexing, internal links, or no demand for the subject.`;
     } else if (t.impressions >= MIN_IMPRESSIONS_BURIED && position != null && position > BURIED_POSITION) {
       diagnosis = "buried";
