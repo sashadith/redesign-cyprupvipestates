@@ -8,6 +8,8 @@ import { toTitleCaseName } from "@/lib/textCase";
 
 export type ExtractedUnit = {
   ref: string;
+  /** Block/building label from a dedicated column or merged cell, when the sheet has one. */
+  block?: string;
   type?: string;            // property type per unit, e.g. "Apartment" / "Townhouse" / "Villa"
   bedrooms?: string;
   bathrooms?: string;
@@ -44,6 +46,7 @@ const flatSchema = (itemProps: Record<string, any>, required: string[]) => ({
 const SCHEMA_UNITS = flatSchema({
   project: { type: "string" },
   ref: { type: "string" },
+  block: { type: "string" },
   type: { type: "string" },
   bedrooms: { type: "string" },
   bathrooms: { type: "string" },
@@ -97,6 +100,7 @@ PRICE LIST:
 const PROMPT_UNITS = `You are given ONE section of a developer's master PRICE LIST (spreadsheet flattened to text) — it covers exactly ONE project, named in its own first row/title. Return a FLAT list "items" of EVERY sellable unit in this section — one item per unit:
 - project: the SAME project name for every single item, taken from this section's own title/first row. A section is often internally divided into sub-groups (e.g. "Block A", "Block B", a separate "Villa Number" table, apartments vs villas) — those are NOT separate projects, they are all part of THIS ONE project. Never invent a per-block or per-subtable project name; use one identical string for all items.
 - ref: the unit / villa / apartment label EXACTLY as its own cell/row shows it, verbatim — copy it whole, never trim, shorten, or drop any part of it (including a "Block X" prefix already present in that cell's own text).
+- block: the block / building label this unit belongs to, when the sheet keeps it in its OWN column or in a merged cell beside the rows (e.g. "Block A", "Block B", "A", "B"). Copy it for EVERY unit under that label, not just the first row. Leave blank when the sheet has no such column. Do NOT invent one, and do NOT move it into ref — ref stays exactly what its own cell says.
 - type: the property type for THIS unit, ONLY when the sheet has its own dedicated column spelling out a real type word (e.g. "Apartment" / "Townhouse" / "Villa" / "Maisonette") — leave blank if there's no such column. Do NOT use a short block/letter/floor code column (e.g. "A", "B", "D-GF") even if it sits right next to the ref column — that's a block or floor label, not a property type, even when it happens to come before the real type column in the sheet's layout.
 - bedrooms, bathrooms: as given.
 - areaBuilt: the total built/internal area, ONLY when the sheet gives ONE such figure.
@@ -278,7 +282,20 @@ async function mapWithConcurrency<T, R>(items: T[], n: number, fn: (t: T) => Pro
   return out;
 }
 
-export async function extractAvailabilityFromPricelist(text: string, full = false): Promise<ExtractedPricelistProject[]> {
+export type ExtractStats = { extracted: number; kept: number; dropped: number; droppedNames: string[] };
+
+export type ExtractOpts = {
+  /** The project this file is KNOWN to belong to — skips name guessing entirely.
+   *  Set by callers reading a per-project price list out of that project's own
+   *  subfolder, where identity is a fact, not an inference. */
+  knownProject?: string;
+  /** Reports how many extracted rows were kept vs discarded by the canonical
+   *  name filter. That filter used to drop rows in silence, which is how Arbeo
+   *  Park lost most of its units without anything anywhere saying so. */
+  onStats?: (s: ExtractStats) => void;
+};
+
+export async function extractAvailabilityFromPricelist(text: string, full = false, opts: ExtractOpts = {}): Promise<ExtractedPricelistProject[]> {
   const client = anthropic();
   if (!client) throw new Error("ANTHROPIC_API_KEY not configured");
   const wholeDoc = text.slice(0, 120000);
@@ -296,19 +313,33 @@ export async function extractAvailabilityFromPricelist(text: string, full = fals
   // they can never become a valid match target (real projects legitimately named
   // e.g. "The Overview Residences" would still need to pass the FULL-string test).
   const GENERIC_NAME_RE = /^(all\s+projects?|summary|overview|price\s*list|catalogue|catalog|index|master\s*(list|sheet))$/i;
-  const canonicalNames = Array.from(new Set(catalog.map((c: any) => String(c?.project || "")).filter(Boolean)))
-    .filter((n) => !GENERIC_NAME_RE.test(n.trim()));
-  const toCanonical = buildCanonicalMatcher(canonicalNames);
+  // knownProject short-circuits the whole guess-and-reconcile dance: when the
+  // caller already knows which project the file belongs to, every row belongs to
+  // it, full stop. Without this the model has to name a project PER ROW, and on a
+  // sheet built as one table per block it can reasonably answer "Block A" — which
+  // matches no catalogue entry and gets dropped by the filter below. That is what
+  // reduced Arbeo Park's 28 flats to 6 (measured 2026-08-23), leaving the rest to
+  // reappear as duplicates alongside the curated rows.
+  const canonicalNames = opts.knownProject
+    ? [opts.knownProject]
+    : Array.from(new Set(catalog.map((c: any) => String(c?.project || "")).filter(Boolean)))
+        .filter((n) => !GENERIC_NAME_RE.test(n.trim()));
+  const toCanonical = opts.knownProject
+    ? (_g: string) => ({ name: opts.knownProject!, matched: true })
+    : buildCanonicalMatcher(canonicalNames);
 
   // Group units under their project, preserving first-seen order. When the catalog
   // call succeeded, silently drop any guess that doesn't resolve to a real project —
   // that's how the catalogue/summary sheet itself (its own "### " tab, each row
   // looking like a "unit" named after a project) used to leak in as a bogus project.
   const byProject = new Map<string, ExtractedPricelistProject>();
+  let kept = 0;
+  const droppedNames = new Set<string>();
   for (const u of unitItems) {
     if (!u?.project || !u?.ref) continue;
     const { name: matchedName, matched } = toCanonical(u.project);
-    if (canonicalNames.length && !matched) continue;
+    if (canonicalNames.length && !matched) { droppedNames.add(String(u.project)); continue; }
+    kept++;
     // Title Case regardless of how the source (spreadsheet header, PDF title)
     // delivered it — GROSSER AUFTRAG / Kuutio decision, 2026-08-13. Applied
     // here, once, so every downstream consumer (canonical matching against
@@ -320,6 +351,7 @@ export async function extractAvailabilityFromPricelist(text: string, full = fals
     if (!byProject.has(k)) byProject.set(k, { project, units: [] });
     byProject.get(k)!.units.push({
       ref: String(u.ref),
+      block: u.block ? String(u.block).trim() : undefined,
       bedrooms: u.bedrooms || undefined,
       bathrooms: u.bathrooms || undefined,
       areaBuilt: u.areaBuilt || undefined,
@@ -364,6 +396,44 @@ export async function extractAvailabilityFromPricelist(text: string, full = fals
       }
     });
   }
+
+  // Qualify refs with their block where a project numbers its units per block.
+  // Olias' Arbeo Park has four blocks that each number their flats 101/102/201/… ,
+  // so a bare "101" identifies four different apartments; the sync matches units
+  // by ref, so it matched none of the 28 curated rows and created duplicates
+  // alongside them instead.
+  //
+  // The decision is per PROJECT, not per unit. A first attempt qualified only the
+  // refs that actually collided, which left Arbeo Park half-qualified: 101/201/301
+  // exist in every block and became "Block A 101", but 103/104/203/204/303/304
+  // exist only in Block C, stayed bare, matched nothing, and were recreated as six
+  // duplicate feed rows. Once any ref in a project is ambiguous, the whole project
+  // is numbered per block and every ref has to carry its block.
+  //
+  // Still conditional at the project level on purpose: qualifying unconditionally
+  // would rewrite the refs of every Drive/Dropbox project whose sheet happens to
+  // carry a block column, and the Drive sync DELETES feed units whose ref is no
+  // longer in the extraction (deliberately, after an August incident) — so a
+  // format change would prune and recreate them, losing the images hanging off
+  // those rows. Projects with no ambiguity at all stay byte-identical.
+  for (const proj of Array.from(byProject.values())) {
+    const seen = new Map<string, number>();
+    for (const u of proj.units) seen.set(u.ref, (seen.get(u.ref) ?? 0) + 1);
+    const perBlock = proj.units.some((u) => (seen.get(u.ref) ?? 0) > 1 && !!u.block);
+    if (!perBlock) continue;
+    for (const u of proj.units) {
+      if (u.block && !u.ref.toLowerCase().includes(u.block.toLowerCase())) {
+        u.ref = `${u.block} ${u.ref}`;
+      }
+    }
+  }
+
+  opts.onStats?.({
+    extracted: unitItems.length,
+    kept,
+    dropped: unitItems.length - kept,
+    droppedNames: Array.from(droppedNames),
+  });
 
   // Unconditional final safety net — don't rely on the catalog call having
   // succeeded this run (when it comes back empty, the per-project drop-unmatched

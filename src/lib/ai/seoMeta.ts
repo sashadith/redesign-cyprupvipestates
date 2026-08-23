@@ -19,22 +19,65 @@ export const SEO_PROMPT_KEY = "seoMeta";
 // cache-eligibility floor, and this isn't a tight-loop batch call (one project at
 // a time from the admin UI), so there's little repetition to amortize a cache
 // write against anyway.
-export const DEFAULT_SEO_PROMPT = `You write SEO meta titles and meta descriptions for real-estate development pages on a luxury Cyprus property website, aimed at international buyers.
+export const DEFAULT_SEO_PROMPT = `You write SEO meta titles and meta descriptions for real-estate development pages on a luxury Cyprus property website, for international buyers searching in English, German, Polish and Russian.
 
-Rules:
-- Meta title: at most ${TITLE_MAX} characters TOTAL, including the project name. Always include the project name, the property type, and the location (area and/or district).
-- Meta description: at most ${DESC_MAX} characters. A natural, compelling sentence or two that would make someone want to click in a Google search result — mention location and property type. No keyword stuffing, no generic filler ("Discover your dream home...", "Explore our exclusive...").
-- NEVER write a digit. No unit counts, no prices, no dates, no completion quarters, no sizes, no percentages, no street numbers — in the title or the description, in any language. This text is SAVED and never regenerated, while the project's real numbers keep changing with every feed sync, so any figure written here is wrong the moment it is stored. Do not spell a figure out in words to get around this rule either.
-- When you want to quote a live figure, write a PLACEHOLDER instead of the number. Exactly three are available, each written in curly braces, and they are replaced with current data every time the page is rendered:
-    {priceFrom}       the current lowest price, formatted for the language (e.g. English "€320,000", German "320.000 €")
+Your text competes in a list of ten blue links. Its only job is to make the right buyer click and let the wrong one scroll past. Write for a person choosing where to spend half a million euros, not for a keyword scanner.
+
+## LENGTH — the rule broken most often
+
+- Meta title: aim for 45–55 characters. Anything over 58 is rejected and sent back to you for a rewrite; ${TITLE_MAX} is the hard ceiling.
+- Meta description: aim for 130–145 characters. Anything over 150 is rejected and sent back to you for a rewrite; ${DESC_MAX} is the hard ceiling at which text is cut off mechanically.
+
+Aim for the MIDDLE of the band, never the ceiling. Text over the ceiling is cut off mechanically, mid-word, and a search result ending in a severed word reads as broken.
+
+Budget each language separately. German and Russian run noticeably longer than English for the same content, and Polish longer still. When a language does not fit, say LESS — drop the weakest detail. Never pad a short language to match a long one, and never translate a sentence that only fits in English.
+
+Google shows roughly the first 150 characters on desktop and fewer on a phone, so put the reason to click in the FIRST half. The end of the line is the part nobody reads.
+
+## NEVER WRITE A DIGIT
+
+No unit counts, no prices, no dates, no completion quarters, no sizes, no percentages, no street numbers — in the title or the description, in any language. This text is SAVED and never regenerated, while the project's real numbers change with every feed sync, so any figure written here is wrong the moment it is stored. Do not spell a figure out in words to get around this.
+
+## PLACEHOLDERS — the only way to quote a live figure
+
+Three exist. Write them EXACTLY as spelled, braces included, in every language:
+
+    {priceFrom}       the current lowest price, formatted for the language (English "€320,000", German "320.000 €")
     {unitsAvailable}  how many homes are available right now
-    {completion}      the completion date as the project states it (e.g. "Q4 2027")
-  Write them EXACTLY as spelled above, in every language, and put the surrounding words in the target language — German "ab {priceFrom}", Polish "od {priceFrom}". Invent no other placeholder: an unknown one, or one whose value is missing, makes the whole text fall back to a generic auto-generated version, so use them only where the figure genuinely earns its place — a price in the description is worth it, three placeholders in one sentence is not.
-  Count each placeholder as roughly the length of the number it will become when you budget characters.
-- Sell the place, not the inventory: location, character, the kind of home it is, who it suits. The amenities and the proximity notes below are your material — turn proximity into words ("moments from the sea"), never into a figure.
-- Write EACH language natively — never leave English terms untranslated, never translate word-for-word.
-- Use ONLY the facts given below; never invent details, prices, or amenities.
-- Return via the seo_meta tool: one title + one description per language (en/de/pl/ru), all in a single response.`;
+    {completion}      the completion date as the project states it ("Q4 2027")
+
+Put the surrounding words in the target language: German "ab {priceFrom}", Polish "od {priceFrom}", Russian "от {priceFrom}".
+
+Three rules that matter more than they look:
+
+1. Count a placeholder as the LITERAL characters you type, braces and all — "{priceFrom}" is 11 characters. Do NOT count it as the length of the number it will become. Miscounting here is what pushes a description over the ceiling.
+2. Never end the description with a placeholder. If the text runs long, the tail is what gets cut, and a price clause stripped of its price — "…from" with nothing after it — is worse than never mentioning price. Place it mid-sentence, with real words after it.
+3. Use at most ONE placeholder per description, and only where the figure genuinely earns its place. A price is usually worth it. Three placeholders in one sentence is not. Invent no other placeholder — an unknown one, or one whose value is currently missing, discards your whole text in favour of a generic auto-generated fallback.
+
+## WHAT ACTUALLY CONVERTS
+
+- Lead with the single most specific true thing about this property. The project name is already in the title; the description should earn attention on its own.
+- Be concrete. "Walk to the beach and the golf course" beats "enjoy an enviable lifestyle". Named places, real features, real distances turned into words.
+- Sell the place and the life in it — location, character, who it suits — not the inventory.
+- Turn the proximity notes below into language ("moments from the sea"), never into a figure.
+- One clear reason to click. A description trying to say five things says nothing.
+- Active voice. Concrete nouns. No sentence that could describe any other project on the island.
+
+Never write, in any language: "Discover", "Explore", "Welcome to", "Nestled", "boasts", "state-of-the-art", "dream home", "hidden gem", "luxury living at its finest", "don't miss", "your perfect". They signal a template and cost the click.
+
+Do not stuff keywords. The location and property type belong in the sentence once, where they read naturally.
+
+## TITLES
+
+Include the project name, the property type, and the location (area and/or district). Put the words a buyer would actually type — property type and place — where they survive truncation. The name may lead when it is short.
+
+## FACTS
+
+Use ONLY the facts given below. Never invent a detail, a price, an amenity or a completion date. If a fact is missing, write around it.
+
+Write EACH language natively — never leave English terms untranslated, never translate word-for-word.
+
+Return via the seo_meta tool: one title and one description per language (en/de/pl/ru), in a single response.`;
 
 export async function getSeoPromptTemplate(): Promise<string> {
   const row = await prisma.aiPromptTemplate.findUnique({ where: { key: SEO_PROMPT_KEY } });
@@ -130,9 +173,23 @@ function factsFor(vm: ProjectVM): string {
   ].filter(Boolean).join("\n");
 }
 
+// Truncation must never cut inside a {placeholder}. A half token like
+// "{priceF" can never resolve, and applySeoPlaceholders' guard does not catch
+// it either: its regex requires a closing brace, so the fragment is not an
+// UNRESOLVED placeholder, it is simply not a placeholder at all — and the
+// literal text ships straight into the search snippet. Observed on Golden
+// Hills, which generated "… From {priceF…".
+// When the cut would land inside a token, fall back to cutting before it.
 const clamp = (s: string, max: number) => {
   const t = String(s || "").trim();
-  return t.length <= max ? t : t.slice(0, max - 1).trimEnd() + "…";
+  if (t.length <= max) return t;
+  let cut = max - 1;
+  const open = t.lastIndexOf("{", cut);
+  if (open !== -1) {
+    const close = t.indexOf("}", open);
+    if (close === -1 || close >= cut) cut = open;
+  }
+  return t.slice(0, cut).trimEnd() + "…";
 };
 
 // The prompt's rules are requests; this is the enforcement. Same posture as the
@@ -167,6 +224,24 @@ const badFields = (r: Partial<SeoMetaResult>, publicName: string) =>
     while ((m = re.exec(v)) !== null) if (!KNOWN_PLACEHOLDERS.has(m[1])) return true;
     return false;
   });
+
+// Length gets the same treatment, for the same reason: the clamp below is LOSSY.
+// It can only cut, and cutting is exactly what destroyed the Polish and Russian
+// price clauses on Azure Living and Eden Golf — "od {priceFrom}" became "od…",
+// a price promise with no price, live in the search result. Asking the model for
+// a shorter rewrite is strictly better than truncating its answer, so an
+// over-long field now earns the same retry a stray digit does.
+//
+// The budget sits deliberately BELOW the hard ceiling. Measured on production
+// after the prompt was rewritten to ask for 130–145: the model still landed at
+// 156–158, i.e. just under whatever ceiling it is shown. Aiming the enforcement
+// at 160 therefore produces 160. Ten characters of headroom is what turns the
+// clamp back into a genuine last resort instead of the normal path.
+const DESC_BUDGET = 150;
+const TITLE_BUDGET = 58;
+const budgetFor = (k: string) => (k.startsWith("title") ? TITLE_BUDGET : DESC_BUDGET);
+const overLength = (r: Partial<SeoMetaResult>) =>
+  LANG_KEYS.filter((k) => (r[k] ?? "").trim().length > budgetFor(k));
 
 export async function generateSeoMeta(vm: ProjectVM, tuning?: { emphasize?: string; avoid?: string }): Promise<SeoMetaResult> {
   const client = anthropic();
@@ -204,14 +279,26 @@ export async function generateSeoMeta(vm: ProjectVM, tuning?: { emphasize?: stri
 
   let raw = await attempt();
   const firstOffenders = badFields(raw, vm.publicName);
-  if (firstOffenders.length) {
-    raw = await attempt(
-      `Your previous answer was rejected in these fields: ${firstOffenders.join(", ")}. ` +
-      `They contain either a digit or a placeholder that does not exist. Rewrite ALL fields ` +
-      `with no digit anywhere (and do not spell figures out in words — drop the fact or use a ` +
-      `placeholder), and use ONLY these placeholders, spelled exactly: ` +
-      `${SEO_PLACEHOLDERS.map((p) => `{${p}}`).join(", ")}.`,
-    );
+  const firstLong = overLength(raw);
+  if (firstOffenders.length || firstLong.length) {
+    const notes: string[] = [];
+    if (firstOffenders.length)
+      notes.push(
+        `These fields were rejected: ${firstOffenders.join(", ")}. ` +
+        `They contain either a digit or a placeholder that does not exist. Rewrite them ` +
+        `with no digit anywhere (and do not spell figures out in words — drop the fact or use a ` +
+        `placeholder), using ONLY these placeholders, spelled exactly: ` +
+        `${SEO_PLACEHOLDERS.map((p) => `{${p}}`).join(", ")}.`,
+      );
+    if (firstLong.length)
+      notes.push(
+        `These fields are TOO LONG: ` +
+        `${firstLong.map((k) => `${k} (${(raw[k] ?? "").trim().length} characters, budget ${budgetFor(k)})`).join(", ")}. ` +
+        `Rewrite them shorter by DROPPING the least important detail — do not compress by ` +
+        `removing articles or stacking clauses, and do not shorten the other languages to match. ` +
+        `Count a placeholder as the literal characters you type, braces included: "{priceFrom}" is 11.`,
+      );
+    raw = await attempt(notes.join(" "));
   }
   const offenders = badFields(raw, vm.publicName);
   if (offenders.length) {
@@ -222,8 +309,12 @@ export async function generateSeoMeta(vm: ProjectVM, tuning?: { emphasize?: stri
     );
   }
 
-  // Safety net — never trust the model to perfectly respect the char budget
-  // (the same limits the free template generator enforces, see developmentSeo.ts).
+  // Last resort only — after the retry above, a field should already be inside
+  // DESC_BUDGET/TITLE_BUDGET, comfortably under these hard limits. If one still
+  // is not, clamp rather than fail: an over-long description is a cosmetic
+  // problem, unlike a baked-in figure. clamp() will not cut inside a
+  // {placeholder} (see its comment), so the worst case is a shortened sentence,
+  // never a price clause stripped of its price.
   const out = {} as SeoMetaResult;
   for (const k of LANG_KEYS) out[k] = clamp(raw[k] ?? "", k.startsWith("title") ? TITLE_MAX : DESC_MAX);
   return out;

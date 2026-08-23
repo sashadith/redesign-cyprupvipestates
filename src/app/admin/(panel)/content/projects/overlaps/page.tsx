@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { confirmOverlap, rejectOverlap } from "./actions";
 import RevertOverlapControl from "./RevertOverlapControl";
+import { adminDate } from "@/lib/adminTime";
 
 export const dynamic = "force-dynamic";
 
@@ -125,7 +126,7 @@ export default async function OverlapsAdmin() {
                   {r.note && <div className="text-xs text-[#6B7280] mt-1 max-w-xs">{r.note}</div>}
                 </td>
                 <td className="px-4 py-2.5 text-xs text-[#6B7280] whitespace-nowrap">
-                  {r.foundAt.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                  {adminDate(r.foundAt)}
                 </td>
                 <td className="px-4 py-2.5">
                   {r.state === "confirmed" && <span className="text-emerald-700 font-medium">Confirmed</span>}

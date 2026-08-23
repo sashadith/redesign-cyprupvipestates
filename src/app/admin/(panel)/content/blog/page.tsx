@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { adminDate } from "@/lib/adminTime";
 
 export const dynamic = "force-dynamic";
 const LOCALES = ["en", "de", "pl", "ru"];
@@ -48,7 +49,7 @@ export default async function BlogAdmin({ searchParams }: { searchParams: { lang
                 </td>
                 <td className="px-4 py-2.5 text-[#6B7280]">{b.category?.title ?? "—"}</td>
                 <td className="px-4 py-2.5 text-[#6B7280]">{b.status}</td>
-                <td className="px-4 py-2.5 text-[#6B7280]">{b.publishedAt ? new Date(b.publishedAt).toLocaleDateString("en-GB") : "—"}</td>
+                <td className="px-4 py-2.5 text-[#6B7280]">{b.publishedAt ? adminDate(b.publishedAt) : "—"}</td>
               </tr>
             ))}
           </tbody>

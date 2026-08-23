@@ -5,6 +5,7 @@ import DeleteLeadButton from "./DeleteLeadButton";
 import StatusPopover from "./StatusPopover";
 import { toggleLeadHotAction } from "../../actions";
 import { BAND_STYLE, LAST_CONTACT_LABEL, money, type ColorBand, type LeadRowData } from "./leadListShared";
+import { adminDate } from "@/lib/adminTime";
 
 // 2026-08-11 — a plain server component again: StatusPopover (client) owns
 // all the interactivity (its portal-rendered popup needs no help from an
@@ -28,7 +29,7 @@ export default function LeadRow({
           <Link href={`/admin/crm/${l.id}`} className={`font-medium hover:underline ${muted ? "" : "text-[#1B4B43]"}`}>{l.firstName} {l.lastName}</Link>
         </div>
       </td>
-      <td className="px-4 py-2.5 text-center" title={l.hotAt ? `Hot since ${new Date(l.hotAt).toLocaleDateString("en-GB")} — click to un-hot` : "Mark as hot"}>
+      <td className="px-4 py-2.5 text-center" title={l.hotAt ? `Hot since ${adminDate(l.hotAt)} — click to un-hot` : "Mark as hot"}>
         {/* 2026-08-11 — one SVG shape (FaFire, react-icons/fa — chosen after
             comparing IoFlame/FaFire/MdLocalFireDepartment/PiFireFill side by
             side on staging) for both states, so toggling never swaps to a
@@ -56,7 +57,7 @@ export default function LeadRow({
       <td className={`px-4 py-2.5 ${muted ? "" : "text-[#6B7280]"}`}>
         {l.interactions[0] ? (
           <>
-            {new Date(l.interactions[0].occurredAt).toLocaleDateString("en-GB")}
+            {adminDate(l.interactions[0].occurredAt)}
             <br />
             <span className="text-xs text-[#9CA3AF]">{LAST_CONTACT_LABEL[l.interactions[0].type]}</span>
           </>

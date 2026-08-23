@@ -6,6 +6,7 @@ import Lightbox from "./Lightbox";
 import { developmentCopy, type DevelopmentStrings } from "@/lib/developmentCopy";
 import { roundArea } from "@/lib/formatArea";
 import { listedUnits } from "@/lib/developmentAvailability";
+import { capitalizeType } from "@/lib/developmentCard";
 
 export type UnitVM = {
   id?: string; // DevelopmentUnit.id — only populated by the DB-backed path (developmentRender.ts); optional so the live-feed adapters (feeds.ts), which have no DB row yet, are unaffected
@@ -153,7 +154,7 @@ function UnitCard({ u, t, open, onToggle }: { u: UnitVM; t: DevelopmentStrings; 
       <button type="button" className={`pp-uc__media${u.photos.length ? " is-zoomable" : ""}`} onClick={() => u.photos.length > 0 && setLb(0)} aria-label={u.photos.length ? t.enlargePhotos : undefined}>
         {u.photos[0] ? <img src={atSize(u.photos[0], "medium")} alt={u.name} loading="lazy" /> : <span className="pp-uc__ph" />}
         <StatusPill u={u} />
-        {u.type && <span className="pp-uc__type">{u.type}</span>}
+        {u.type && <span className="pp-uc__type">{capitalizeType(u.type)}</span>}
         {u.photos.length > 1 && <span className="pp-uc__count"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8"/><rect x="13" y="3" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8"/><rect x="3" y="13" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8"/><rect x="13" y="13" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8"/></svg>{u.photos.length}</span>}
       </button>
       <div className="pp-uc__body">
@@ -215,7 +216,7 @@ function UnitsTable({ units, t }: { units: UnitVM[]; t: DevelopmentStrings }) {
                   aria-expanded={isOpen}
                 >
                   <td className="pp-tbl__name"><span className="pp-tbl__chev" aria-hidden>{isOpen ? "▾" : "▸"}</span>{unitLabel(u)}<small>{u.ref}</small></td>
-                  <td>{u.type || "—"}</td>
+                  <td>{u.type ? capitalizeType(u.type) : "—"}</td>
                   <td>{u.floor || "—"}</td>
                   <td className="r">{u.beds || "—"}</td>
                   <td className="r">{u.areaBuilt ? sqm(u.areaBuilt, t.unitM2) : "—"}</td>

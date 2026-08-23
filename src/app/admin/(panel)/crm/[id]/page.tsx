@@ -15,6 +15,7 @@ import DeleteLeadButton from "../DeleteLeadButton";
 import CockpitCard, { type LastContact, type PresentationSummary } from "./CockpitCard";
 import UnifiedTimeline, { type TimelineRow } from "./UnifiedTimeline";
 import BookingPanel, { type BookingRow } from "./BookingPanel";
+import { adminDate } from "@/lib/adminTime";
 
 export const dynamic = "force-dynamic";
 
@@ -280,7 +281,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
               <li key={d.id} className="flex items-center justify-between gap-3 text-sm">
                 <span>
                   <Link href={`/admin/crm/${d.id}`} className="text-[#1B4B43] font-medium hover:underline">{d.firstName} {d.lastName}</Link>
-                  <span className="text-[#6B7280]"> · {d.email}{d.phone ? ` · ${d.phone}` : ""} · {d.source.replace(/_/g, " ")} · {new Date(d.createdAt).toLocaleDateString("en-GB")}</span>
+                  <span className="text-[#6B7280]"> · {d.email}{d.phone ? ` · ${d.phone}` : ""} · {d.source.replace(/_/g, " ")} · {adminDate(d.createdAt)}</span>
                 </span>
                 <form action={merge}>
                   <input type="hidden" name="sourceId" value={d.id} />

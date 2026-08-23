@@ -133,6 +133,28 @@ export default function UnitDetail({ unit, onPatch, onSave, saving, onClose, onA
         <p className="text-xs text-[#9CA3AF]">Save units first to add photos.</p>
       )}
 
+      {/* Floor plans — feed-supplied and read-only here. They are imported by the
+          sync into DevelopmentUnit.plans and are shown on the public unit card,
+          but the admin never loaded them, so a unit's own plan was invisible to
+          whoever had to check it. Deliberately display-only: nothing in the admin
+          writes unit plans today, and a half-wired editor would be worse than an
+          honest read-only panel. */}
+      {unit.plans.length > 0 && (
+        <div>
+          <p className="text-xs text-[#9CA3AF] mb-1.5">
+            {unit.plans.length} floor plan{unit.plans.length === 1 ? "" : "s"} — from the feed, not editable here.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {unit.plans.map((src) => (
+              <a key={src} href={src} target="_blank" rel="noreferrer" title="Open full size"
+                 className="block w-20 h-20 rounded-md border border-[#E5E7EB] overflow-hidden bg-white hover:border-[#1B4B43] transition-colors">
+                <img src={src} alt="" loading="lazy" className="w-full h-full object-cover" />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!readOnly && (
         <div className="flex justify-end">
           <button type="button" onClick={saveAndClose} disabled={saving} className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-4 py-1.5 hover:bg-[#142E2D] disabled:bg-[#D1D5DB] disabled:cursor-not-allowed">

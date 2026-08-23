@@ -13,7 +13,7 @@
 // sidesteps noun-number agreement entirely.
 import { prisma } from "@/lib/prisma";
 import type { ProjectVM } from "@/app/preview-project/feeds";
-import { listedUnits } from "@/lib/developmentAvailability";
+import { listedUnits, computeAvailability } from "@/lib/developmentAvailability";
 
 export const TITLE_MAX = 60;
 export const DESC_MAX = 160;
@@ -113,11 +113,11 @@ function bedsRange(vm: ProjectVM): string | null {
   return lo === hi ? String(lo) : `${lo}–${hi}`;
 }
 
-const LABELS: Record<Lang, { in: string; from: string; unitsAvailable: string; completion: string; cyprus: string }> = {
-  en: { in: "in", from: "from", unitsAvailable: "units available", completion: "Completion", cyprus: "Cyprus" },
-  de: { in: "in", from: "ab", unitsAvailable: "Einheiten verfügbar", completion: "Fertigstellung", cyprus: "Zypern" },
-  pl: { in: "w", from: "od", unitsAvailable: "dostępnych jednostek", completion: "Termin realizacji", cyprus: "Cypr" },
-  ru: { in: "в", from: "от", unitsAvailable: "доступных объектов", completion: "Срок сдачи", cyprus: "Кипр" },
+const LABELS: Record<Lang, { in: string; from: string; unitsAvailable: string; completion: string; cyprus: string; soldOut: string; similar: string }> = {
+  en: { in: "in", from: "from", unitsAvailable: "units available", completion: "Completion", cyprus: "Cyprus", soldOut: "Sold out", similar: "See similar projects" },
+  de: { in: "in", from: "ab", unitsAvailable: "Einheiten verfügbar", completion: "Fertigstellung", cyprus: "Zypern", soldOut: "Ausverkauft", similar: "Ähnliche Projekte ansehen" },
+  pl: { in: "w", from: "od", unitsAvailable: "dostępnych jednostek", completion: "Termin realizacji", cyprus: "Cypr", soldOut: "Wyprzedane", similar: "Zobacz podobne inwestycje" },
+  ru: { in: "в", from: "от", unitsAvailable: "доступных объектов", completion: "Срок сдачи", cyprus: "Кипр", soldOut: "Продано", similar: "Похожие проекты" },
 };
 
 const fmtPrice = (n: number) => `€${n.toLocaleString("en-US")}`;
@@ -156,6 +156,18 @@ export function autoMetaDescription(vm: ProjectVM, lang: string): string {
   // the same population the page itself shows. Counting raw rows would put a
   // number in the search snippet that is larger than anything on the page
   // (see listedUnits in developmentAvailability.ts).
+  // Sold out: say so, and say nothing else numeric. Both figures are actively
+  // misleading here — vm.priceFrom falls back to the cheapest SOLD unit (see
+  // resolveDevelopmentPrice), and the `|| listedUnits(...)` fallback below turns
+  // "0 available" into the TOTAL unit count, so this branch used to produce
+  // "16 units available from €170,000." for Celestia, whose own page says
+  // "Sold out · 0 / 16 available". A searcher clicking that finds nothing to
+  // buy; the snippet should set the expectation the page will meet, and point
+  // at what this visitor can still act on.
+  const { soldOut } = computeAvailability(listedUnits(vm.units));
+  if (soldOut) {
+    return fit([`${lbl.soldOut} — ${sentence1}`, `${lbl.similar}.`], DESC_MAX);
+  }
   const avail = vm.units.filter((u) => u.status === "available").length || listedUnits(vm.units).length;
   const priceClause = vm.priceFrom ? ` ${lbl.from} ${fmtPrice(vm.priceFrom)}` : "";
   // EN only: "unit"/"units" inflects with the count (DE/PL/RU labels below are
@@ -219,7 +231,13 @@ function localizeCompletion(raw: string, l: Lang): string {
 function placeholderValues(vm: ProjectVM, l: Lang): Record<string, string | null> {
   const available = listedUnits(vm.units).filter((u) => u.status === "available").length;
   return {
-    priceFrom: vm.priceFrom != null ? PRICE_FORMAT[l](vm.priceFrom) : null,
+    // Unresolvable when sold out, for the same reason unitsAvailable is (below).
+    // vm.priceFrom falls back to the cheapest SOLD unit once nothing is
+    // available, so "from {priceFrom}" would advertise a price nobody can pay —
+    // the page itself is careful to label that figure "sold from", but a search
+    // snippet written by hand cannot know to. Falling back to the auto text is
+    // correct here because that text is now sold-out aware too.
+    priceFrom: vm.priceFrom != null && available > 0 ? PRICE_FORMAT[l](vm.priceFrom) : null,
     // Zero is deliberately unresolvable, not "0": a sold-out project must not
     // advertise "0 units available" — the whole override falls back to the
     // auto-generated text, which handles sold-out properly.
@@ -244,6 +262,11 @@ export function applySeoPlaceholders(text: string, vm: ProjectVM, lang: string):
     if (v == null) { unresolved = true; return ""; }
     return v;
   });
+  // A surviving brace means a MALFORMED token — most likely one cut in half by
+  // an over-long generation ("{priceF"). The regex above cannot match it, so it
+  // would otherwise sail through as ordinary text and reach Google verbatim.
+  // Treat it exactly like an unresolved placeholder and fall back.
+  if (out.includes("{") || out.includes("}")) unresolved = true;
   return unresolved ? null : out;
 }
 
@@ -264,6 +287,28 @@ export function resolveMetaTitle(vm: ProjectVM, lang: string, seo?: SeoOverride 
 export function resolveMetaDescription(vm: ProjectVM, lang: string, seo?: SeoOverride | null): string {
   const key = `desc${asLang(lang).toUpperCase()}` as keyof SeoOverride;
   const override = (seo?.[key] || "").trim();
+  // Sold out: the stored text is ignored outright, whatever it says.
+  //
+  // Every override was written while the project was still selling, so once it
+  // sells out the text is stale BY DEFINITION — and the ones that hurt most are
+  // exactly the ones the placeholder mechanism cannot rescue, because they bake
+  // their claims in as plain words rather than tokens. Two live examples before
+  // this rule: absolute-villas ran "only one unit available … Enquire before
+  // it's gone" on a page showing 0/1, and serenity-court offered "priced from
+  // €420,000" on a sold-out one. Neither contains a "{", so
+  // applySeoPlaceholders returns them untouched and no fallback ever triggers.
+  //
+  // Descriptions only, not titles: titles here are structural ("Name – Type in
+  // Place") and carry no availability or price claim, so there is nothing to go
+  // stale. The project name also stays in the title, which is why the generated
+  // description below does not need to repeat it.
+  //
+  // The cost is real and accepted: a deliberately written sold-out description
+  // would be discarded too. No such text exists today, and the alternative —
+  // trusting stored copy on a page that contradicts it — is what produced the
+  // two cases above.
+  const { soldOut } = computeAvailability(listedUnits(vm.units));
+  if (soldOut) return autoMetaDescription(vm, lang);
   if (!override) return autoMetaDescription(vm, lang);
   const resolved = applySeoPlaceholders(override, vm, lang);
   return resolved ? fit([resolved], DESC_MAX) : autoMetaDescription(vm, lang);

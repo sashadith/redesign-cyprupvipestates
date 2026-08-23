@@ -15,7 +15,7 @@ import SyncWithDriveButton from "./SyncWithDriveButton";
 import ArchiveButton from "./ArchiveButton";
 import MapLocationField from "./MapLocationField";
 import SlugField from "@/app/admin/SlugField";
-import { getDbProject } from "@/lib/developmentRender";
+import { getDbProjectByFeedKey } from "@/lib/developmentRender";
 import { autoMetaTitle, autoMetaDescription, developmentSlug, TITLE_MAX, DESC_MAX } from "@/lib/developmentSeo";
 import { computePublishGate, areaSlugOf } from "@/lib/developmentPublishGate";
 import { computeAvailability, availabilityContradiction } from "@/lib/developmentAvailability";
@@ -107,7 +107,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
   // admin can see exactly what ships without typing anything — see
   // src/lib/developmentSeo.ts. Needs the full render VM (units drive the
   // beds/type/price computations), so reuse the same lookup the public page uses.
-  const vmForSeo = await getDbProject(d.dev, d.feedProjectId);
+  const vmForSeo = await getDbProjectByFeedKey(d.feedKey);
   const seoLangs = ["en", "de", "pl", "ru"] as const;
   const autoTitle = Object.fromEntries(seoLangs.map((l) => [l, vmForSeo ? autoMetaTitle(vmForSeo, l) : ""])) as Record<string, string>;
   const autoDesc = Object.fromEntries(seoLangs.map((l) => [l, vmForSeo ? autoMetaDescription(vmForSeo, l) : ""])) as Record<string, string>;
@@ -346,6 +346,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
           status: u.status || "available",
           amenities: arr(u.amenities),
           photos: arr(u.photos),
+          plans: arr(u.plans),
           attrs: (Array.isArray(u.attrs) ? u.attrs : []) as { name: string; value: string }[],
         }))}
       />

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { driveConfigured, folderIdFromUrl, getAccessToken, listFolder, findPriceFile, getSpreadsheetText, findSubfolder, findInfoDocuments, collectMedia, downloadFile, type DriveFile } from "./googleDrive";
-import { extractAvailabilityFromPricelist, buildCanonicalMatcher, type ExtractedPricelistProject } from "./ai/pricelistExtract";
+import { extractAvailabilityFromPricelist, buildCanonicalMatcher, type ExtractedPricelistProject, type ExtractStats } from "./ai/pricelistExtract";
 import { extractPricelistFromPdf } from "./ai/pdfPricelistExtract";
 import { generateProjectDescription } from "./ai/projectDescription";
 import { extractTextFromDocx, extractTextFromPdf } from "./ai/projectInfoExtract";
@@ -380,6 +380,10 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
   // Prefer that file when it exists; only fall back to the master sheet if the
   // project has no subfolder or no price-list-looking file inside it.
   let price: DriveFile | null = null;
+  // Set ONLY when the price list came out of the project's own subfolder. If we
+  // fall back to the developer-wide master sheet below, that file covers many
+  // projects and forcing a single name onto every row would be flatly wrong.
+  let knownProject: string | null = null;
   if (opts.onlyFeedProjectId) {
     const existingDev = await prisma.development.findFirst({
       where: { developerAccountId, feedProjectId: opts.onlyFeedProjectId },
@@ -389,6 +393,7 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
     if (subId) {
       const subFiles = await listFolder(subId, at);
       price = findPriceFile(subFiles);
+      if (price) knownProject = existingDev?.publicName ?? null;
     }
   }
   if (!price) price = findPriceFile(files);
@@ -403,6 +408,14 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
   // units-only sync too, not just a full import.
   const richness = !!opts.content || !!opts.richUnits;
   let extracted: ExtractedPricelistProject[];
+  // Surfaced in the sync's own result message. The canonical-name filter used to
+  // discard rows in total silence — Arbeo Park lost 22 of 28 flats that way and
+  // it only came to light because the survivors showed up as duplicates next to
+  // the curated rows. A number in the message makes the next one obvious.
+  // Holder object rather than a bare `let`: the only assignment happens inside a
+  // callback, which TypeScript's control-flow analysis cannot see, so a plain
+  // variable narrows to `never` by the time the message is built.
+  const extractStats: { value: ExtractStats | null } = { value: null };
   if (price.mimeType === "application/pdf") {
     // PDF price list (2026-08-12, Motive Point) — status comes from the document's
     // own text color, never from AI reading; see pdfPricelistExtract.ts's doc
@@ -414,7 +427,10 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
     extracted = result.projects;
   } else {
     const text = await getSpreadsheetText(price, at);
-    extracted = await extractAvailabilityFromPricelist(text, richness);
+    extracted = await extractAvailabilityFromPricelist(text, richness, {
+      knownProject: knownProject ?? undefined,
+      onStats: (s) => { extractStats.value = s; },
+    });
   }
   if (!extracted.length) return { ok: false, message: "Could not extract any projects from the price list." };
 
@@ -489,7 +505,13 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
 
   return {
     ok: true,
-    message: `${opts.content ? "Imported" : "Synced"} ${projects.length} project${projects.length === 1 ? "" : "s"} from “${price.name}”.`,
+    message:
+      `${opts.content ? "Imported" : "Synced"} ${projects.length} project${projects.length === 1 ? "" : "s"} from “${price.name}”.` +
+      // Only when rows were actually discarded — a clean run stays quiet.
+      (extractStats.value && extractStats.value.dropped > 0
+        ? ` ${extractStats.value.dropped} of ${extractStats.value.extracted} extracted rows were discarded as belonging to no known project` +
+          (extractStats.value.droppedNames.length ? ` (${extractStats.value.droppedNames.slice(0, 4).join(", ")})` : "") + "."
+        : ""),
     projects: projects.length, unitsAvailable: totalAvail,
     ...(pruned.length ? { pruned } : {}),
   };

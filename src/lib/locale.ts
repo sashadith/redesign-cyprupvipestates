@@ -30,3 +30,17 @@ export function localizedHref(lang: string, segments: string | string[] = ""): s
   if (!tail) return prefix || "/";
   return `${prefix}/${tail}`;
 }
+
+/**
+ * Is `lang` one of the four real locales?
+ *
+ * Next fills a `[lang]` route segment with whatever the URL contained, so any
+ * unmatched multi-segment path (/api/x, /og/x, /admin/x — every prefix the
+ * middleware matcher excludes) reaches the `[lang]/…` routes with a junk value.
+ * Passing that to Prisma as a `Locale` throws a validation error rather than
+ * returning no rows, which turned those URLs into 500s instead of 404s. Guard
+ * with this before a `lang` is used as a locale.
+ */
+export function isLocale(lang: string): lang is (typeof LOCALES)[number] {
+  return (LOCALES as readonly string[]).includes(lang);
+}

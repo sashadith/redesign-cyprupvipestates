@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { revokePresentationAction, extendPresentationAction } from "./presentationActions";
 import DeletePresentationButton from "./DeletePresentationButton";
 import CollapsibleList from "../CollapsibleList";
+import { adminDate } from "@/lib/adminTime";
 
 // Same reasoning as api/admin/presentations/route.ts: build the origin from
 // the actual request (this admin panel currently lives on staging), not the
@@ -63,11 +64,11 @@ export default function ExistingPresentations({ presentations, leadId }: { prese
                 <div className="min-w-0">
                   <a href={url} target="_blank" rel="noopener noreferrer" className="text-[#1B4B43] font-medium hover:underline break-all">{url}</a>
                   <div className="text-xs text-[#6B7280] mt-0.5">
-                    {new Date(p.createdAt).toLocaleDateString("en-GB")}
+                    {adminDate(p.createdAt)}
                     {" · "}{p.viewCount} view{p.viewCount === 1 ? "" : "s"}
                     {p.uniqueDays > 0 && ` (${p.uniqueDays} day${p.uniqueDays === 1 ? "" : "s"})`}
                     {" · "}{p.favoritedCount} favorited
-                    {p.expiresAt && ` · expires ${new Date(p.expiresAt).toLocaleDateString("en-GB")}`}
+                    {p.expiresAt && ` · expires ${adminDate(p.expiresAt)}`}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">

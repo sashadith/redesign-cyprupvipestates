@@ -7,7 +7,7 @@ import { cache } from "react";
 import { draftMode } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, isLocale } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
 import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances, districtWithParent } from "@/lib/developmentCard";
 import { soldOutFromCounts, computeAvailability } from "@/lib/developmentAvailability";
@@ -137,6 +137,7 @@ async function resolveFormRef(refObj: any, lang: string) {
 // /pl/projects/<en-slug>). Rows already in `lang` are kept; rows with no sibling in `lang` are
 // dropped (better than a 404). Input order is preserved and duplicates removed.
 async function mapProjectRowsToLang(rows: AnyRow[], lang: string): Promise<AnyRow[]> {
+  if (!isLocale(lang)) return [];
   const tgids = Array.from(new Set(rows.filter((r) => r.language !== lang && r.translationGroupId).map((r) => r.translationGroupId as string)));
   const langRows = tgids.length ? await prisma.project.findMany({ where: { language: lang as any, translationGroupId: { in: tgids } } }) : [];
   const byTgid = new Map<string, AnyRow>();
@@ -223,6 +224,7 @@ type ComputeFilteredProjectsOpts = { priceMin?: number | null; priceMax?: number
 const MAX_FILTERED_PROJECTS = 60;
 
 async function computeFilteredProjects(lang: string, filterCity?: string, filterPropertyType?: string, opts?: ComputeFilteredProjectsOpts) {
+  if (!isLocale(lang)) return [];
   const priceMin = opts?.priceMin ?? null;
   const priceMax = opts?.priceMax ?? null;
   const rows = await prisma.project.findMany({
@@ -276,6 +278,7 @@ async function computeFilteredProjects(lang: string, filterCity?: string, filter
 // pin) — so they're resolved by direct id lookup against BOTH source tables,
 // never against the criteria-filtered result set.
 export async function resolvePinnedProjects(ids: string[], lang: string) {
+  if (!isLocale(lang)) return [];
   const cleanIds = Array.from(new Set((ids || []).filter(Boolean)));
   if (!cleanIds.length) return [];
 
@@ -318,6 +321,7 @@ export function layerPinsAndExcludes(criteriaResults: any[], pinned: any[], excl
 // machinery (price ranges, distances, scarcity counts): the picker only needs
 // enough to search and disambiguate a list, not render a card.
 export async function listProjectsForPicker(lang: string) {
+  if (!isLocale(lang)) return [];
   const [projectRows, devRows] = await Promise.all([
     prisma.project.findMany({
       where: { language: lang as any, status: "PUBLISHED", sanityId: { notIn: HIDDEN_PROJECT_IDS } },
@@ -410,12 +414,17 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string): Pr
 
 // ─────────────────────────────────────────────────────────────────────────────
 export async function getHeaderByLang(lang: string): Promise<Header> {
+  if (!isLocale(lang)) return null as unknown as Header;
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "header", language: lang as any } } });
   const data = (row?.data as AnyRow) ?? {};
   return D({ _id: row?.sanityId, logo: data.logo, logoMobile: data.logoMobile, navLinks: data.navLinks }) as unknown as Header;
 }
 
 async function _getHomePageByLang(lang: string): Promise<Homepage> {
+  // `lang` arrives straight from a [lang] URL segment; an unknown value makes
+  // Prisma throw on the Locale enum instead of returning no rows. Treat it as
+  // a miss so callers run their normal notFound() path. See isLocale().
+  if (!isLocale(lang)) return null as unknown as Homepage;
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "homepage", language: lang as any } } });
   if (!row) return null as unknown as Homepage;
   const d = row.data as AnyRow;
@@ -474,18 +483,21 @@ async function _getHomePageByLang(lang: string): Promise<Homepage> {
 }
 
 export async function getFooterByLang(lang: string): Promise<any> {
+  if (!isLocale(lang)) return null;
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "footer", language: lang as any } } });
   const d = (row?.data as AnyRow) ?? {};
   return D({ _id: row?.sanityId, ...d });
 }
 
 export async function getFormStandardDocumentByLang(lang: string): Promise<FormStandardDocument> {
+  if (!isLocale(lang)) return null as unknown as FormStandardDocument;
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "formStandardDocument", language: lang as any } } });
   const d = (row?.data as AnyRow) ?? {};
   return { _id: row?.sanityId, form: d.form, language: row?.language } as unknown as FormStandardDocument;
 }
 
 async function _getSinglePageByLang(lang: string, slug: string): Promise<Singlepage | null> {
+  if (!isLocale(lang)) return null;
   const row = await prisma.singlepage.findFirst({ where: { language: lang as any, slug, ...draftFilter() } });
   if (!row) return null;
   let parentPage: any = null;
@@ -506,6 +518,7 @@ async function _getSinglePageByLang(lang: string, slug: string): Promise<Singlep
 }
 
 export async function getAllSinglePagesByLang(lang: string) {
+  if (!isLocale(lang)) return [];
   const rows = await prisma.singlepage.findMany({ where: { language: lang as any, status: "PUBLISHED" } });
   const byId = new Map(rows.map((r) => [r.sanityId, r]));
   return rows.map((r) => ({
@@ -516,6 +529,7 @@ export async function getAllSinglePagesByLang(lang: string) {
 }
 
 export async function getAllPathsForLang(lang: string): Promise<string[][]> {
+  if (!isLocale(lang)) return [];
   const rows = await prisma.singlepage.findMany({
     where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED" },
     select: { slug: true, parentSanityId: true, sanityId: true },
@@ -541,6 +555,7 @@ export async function getAllPathsForLang(lang: string): Promise<string[][]> {
 // Child landing pages of a parent singlepage (via parentSanityId) — for the contextual
 // parent->child links block. Returns each child's title + canonical (nested) href, same language.
 export async function getChildLandingPages(lang: string, parentSanityId?: string | null): Promise<{ title: string; href: string }[]> {
+  if (!isLocale(lang)) return [];
   if (!parentSanityId) return [];
   const kids = await prisma.singlepage.findMany({
     where: { language: lang as any, parentSanityId, status: "PUBLISHED", slug: { not: "" } },
@@ -557,6 +572,7 @@ export async function getChildLandingPages(lang: string, parentSanityId?: string
 // pages, preserving the editor's order. Enforces SAME-LANGUAGE + PUBLISHED at render time too
 // (defence-in-depth on top of the admin picker + save action), and skips missing/unpublished refs.
 export async function getRelatedLandingPages(lang: string, refs: any): Promise<{ title: string; href: string }[]> {
+  if (!isLocale(lang)) return [];
   const ids = Array.isArray(refs) ? refs.map((r) => r?._ref).filter(Boolean) : [];
   if (!ids.length) return [];
   const rows = await prisma.singlepage.findMany({
@@ -588,6 +604,7 @@ export const getDeveloperSlugs = (lang: string) => slugList(prisma.developer, fa
 
 // Single-page path items (current + parent slug) for generateStaticParams.
 export async function getSinglePagePathItems(lang: string): Promise<{ current: string; parent?: string }[]> {
+  if (!isLocale(lang)) return [];
   const rows = await prisma.singlepage.findMany({
     where: { language: lang as any, status: "PUBLISHED" },
     select: { slug: true, parentSanityId: true, sanityId: true },
@@ -601,6 +618,7 @@ export async function getSinglePagePathItems(lang: string): Promise<{ current: s
 
 // === Blog ===
 async function _getBlogPostByLang(lang: string, slug: string): Promise<Blog> {
+  if (!isLocale(lang)) return null as unknown as Blog;
   const row = await prisma.blog.findFirst({
     where: { language: lang as any, slug, ...draftFilter() },
     include: { author: true, category: true },
@@ -660,6 +678,7 @@ async function _getBlogPostByLang(lang: string, slug: string): Promise<Blog> {
 }
 
 export async function getBlogPageByLang(lang: string): Promise<BlogPage> {
+  if (!isLocale(lang)) return null as unknown as BlogPage;
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "blogPage", language: lang as any } } });
   const d = (row?.data as AnyRow) ?? {};
   return {
@@ -670,6 +689,7 @@ export async function getBlogPageByLang(lang: string): Promise<BlogPage> {
 }
 
 export async function getBlogPostsByLang(lang: string): Promise<Blog[]> {
+  if (!isLocale(lang)) return [];
   const rows = await prisma.blog.findMany({
     where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED" },
     include: { category: true }, orderBy: { publishedAt: "desc" },
@@ -683,6 +703,7 @@ export async function getBlogPostsByLang(lang: string): Promise<Blog[]> {
 }
 
 export async function getBlogPostsByLangWithPagination(lang: string, limit: number, offset: number): Promise<Blog[]> {
+  if (!isLocale(lang)) return [];
   const rows = await prisma.blog.findMany({
     where: { language: lang as any, status: "PUBLISHED" }, include: { category: true },
     orderBy: { publishedAt: "desc" }, skip: offset, take: limit,
@@ -696,11 +717,13 @@ export async function getBlogPostsByLangWithPagination(lang: string, limit: numb
 }
 
 export async function getTotalBlogPostsByLang(lang: string): Promise<number> {
+  if (!isLocale(lang)) return 0;
   return prisma.blog.count({ where: { language: lang as any } });
 }
 
 // === Case Study ===
 async function _getCaseStudyByLang(lang: string, slug: string): Promise<CaseStudy | null> {
+  if (!isLocale(lang)) return null;
   const row = await prisma.caseStudy.findFirst({ where: { language: lang as any, slug, ...draftFilter() } });
   if (!row) return null;
   const related = await prisma.caseStudyProject.findMany({ where: { caseStudyId: row.id }, include: { project: true } });
@@ -723,6 +746,7 @@ async function _getCaseStudyByLang(lang: string, slug: string): Promise<CaseStud
 }
 
 export async function getCaseStudiesByLang(lang: string): Promise<CaseStudy[]> {
+  if (!isLocale(lang)) return [];
   const rows = await prisma.caseStudy.findMany({ where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED" }, orderBy: { updatedAt: "desc" } });
   return Promise.all(rows.map(async (c) => D({
     ...base(c, "caseStudy"), title: c.title, slug: slugObj(c), seo: c.seo, category: c.category,
@@ -739,6 +763,7 @@ export async function getCaseStudiesByLang(lang: string): Promise<CaseStudy[]> {
 // rather than extending the two above, since those also feed the live page
 // and sitemap generation.
 export async function getCaseStudiesByLangWithDetails(lang: string): Promise<CaseStudy[]> {
+  if (!isLocale(lang)) return [];
   const rows = await prisma.caseStudy.findMany({ where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED" }, orderBy: { updatedAt: "desc" } });
   return Promise.all(rows.map(async (c) => D({
     ...base(c, "caseStudy"), title: c.title, fullTitle: c.fullTitle, slug: slugObj(c), seo: c.seo, category: c.category,
@@ -749,6 +774,7 @@ export async function getCaseStudiesByLangWithDetails(lang: string): Promise<Cas
 }
 
 export async function getCaseStudiesByLangWithPagination(lang: string, limit: number, offset: number): Promise<CaseStudy[]> {
+  if (!isLocale(lang)) return [];
   const rows = await prisma.caseStudy.findMany({ where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED" }, orderBy: { updatedAt: "desc" }, skip: offset, take: limit });
   return Promise.all(rows.map(async (c) => D({
     _id: c.sanityId, _type: "caseStudy", title: c.title, excerpt: c.excerpt, slug: slugObj(c),
@@ -759,6 +785,7 @@ export async function getCaseStudiesByLangWithPagination(lang: string, limit: nu
 }
 
 export async function getCaseStudiesPageByLang(lang: string): Promise<CaseStudiesPage> {
+  if (!isLocale(lang)) return null as unknown as CaseStudiesPage;
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "caseStudiesPage", language: lang as any } } });
   const d = (row?.data as AnyRow) ?? {};
   return {
@@ -769,6 +796,7 @@ export async function getCaseStudiesPageByLang(lang: string): Promise<CaseStudie
 }
 
 export async function getTotalCaseStudiesByLang(lang: string): Promise<number> {
+  if (!isLocale(lang)) return 0;
   return prisma.caseStudy.count({ where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED" } });
 }
 
@@ -779,6 +807,7 @@ export async function getTotalCaseStudiesByLang(lang: string): Promise<number> {
 // separately addressable URLs), so "type=faqPage, language=lang" is already
 // the complete key — no slug or translationGroupId needed.
 export async function getFaqPageByLang(lang: string): Promise<FaqPage | null> {
+  if (!isLocale(lang)) return null;
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "faqPage", language: lang as any } } });
   if (!row) return null;
   const d = (row.data as AnyRow) ?? {};
@@ -798,6 +827,7 @@ async function getFaqPageLanguages(): Promise<{ language: string }[]> {
 }
 
 export async function getProjectsPageByLang(lang: string): Promise<ProjectsPage> {
+  if (!isLocale(lang)) return null as unknown as ProjectsPage;
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "projectsPage", language: lang as any } } });
   const d = (row?.data as AnyRow) ?? {};
   return {
@@ -807,6 +837,7 @@ export async function getProjectsPageByLang(lang: string): Promise<ProjectsPage>
 }
 
 async function _getProjectByLang(lang: string, slug: string): Promise<Project | null> {
+  if (!isLocale(lang)) return null;
   const row = await prisma.project.findFirst({
     where: { language: lang as any, slug, ...draftFilter() },
     include: { developer: { select: { sanityId: true, title: true, slug: true, logo: true } } },
@@ -836,6 +867,7 @@ async function _getProjectByLang(lang: string, slug: string): Promise<Project | 
 // been re-activated is dormant by design (see LegacyProjectRedirect in
 // schema.prisma) rather than needing cleanup on re-activate.
 export async function getLegacyProjectRedirect(lang: string, slug: string): Promise<string | null> {
+  if (!isLocale(lang)) return null;
   const row = await prisma.project.findFirst({
     where: { language: lang as any, slug, status: "ARCHIVED" },
     select: { redirectTarget: { select: { targetPath: true } } },
@@ -844,11 +876,13 @@ export async function getLegacyProjectRedirect(lang: string, slug: string): Prom
 }
 
 export async function getAllDevelopersByLang(lang: string): Promise<Developer[]> {
+  if (!isLocale(lang)) return [];
   const rows = await prisma.developer.findMany({ where: { language: lang as any, slug: { not: "" } }, orderBy: { title: "asc" } });
   return rows.map((d) => ({ _id: d.sanityId, _updatedAt: d.updatedAt, title: d.title, slug: slugObj(d), slugStr: d.slug, logo: D(d.logo), excerpt: d.excerpt })) as unknown as Developer[];
 }
 
 async function _getDeveloperByLang(lang: string, slug: string): Promise<Developer | null> {
+  if (!isLocale(lang)) return null;
   const row = await prisma.developer.findFirst({ where: { language: lang as any, slug } });
   if (!row) return null;
   const out: AnyRow = {
@@ -892,6 +926,7 @@ export async function getDeveloperCatalogByLang(
   lang: string,
   developerSanityId: string,
 ): Promise<{ available: DeveloperCatalogItem[]; soldOut: DeveloperCatalogItem[] }> {
+  if (!isLocale(lang)) return { available: [], soldOut: [] };
   const dev = await prisma.developer.findUnique({
     where: { sanityId: developerSanityId },
     select: { id: true, translationGroupId: true },
@@ -985,6 +1020,7 @@ export async function getDeveloperCatalogByLang(
 }
 
 export async function getThreeProjectsBySameCity(lang: string, city: string, excludeProjectId?: string): Promise<any[]> {
+  if (!isLocale(lang)) return [];
   const rows = await prisma.project.findMany({
     where: {
       language: lang as any, city, isSold: false,
@@ -1018,6 +1054,7 @@ export async function getThreeProjectsBySameCity(lang: string, city: string, exc
 }
 
 export async function getLastFiveProjectsByLang(lang: string): Promise<Project[]> {
+  if (!isLocale(lang)) return [];
   const rows = await prisma.project.findMany({
     where: { language: lang as any, status: "PUBLISHED", sanityId: { notIn: HIDDEN_PROJECT_IDS } },
     orderBy: { createdAt: "desc" },
@@ -1072,6 +1109,7 @@ export async function getLatestDevelopmentsByLang(limit = 5): Promise<LatestDeve
 }
 
 export async function getAllProjectsByLang(lang: string): Promise<Project[]> {
+  if (!isLocale(lang)) return [];
   const rows = await prisma.project.findMany({ where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED" }, orderBy: { createdAt: "desc" } });
   return rows.map((p) => D({
     ...base(p, "project"), title: p.title, slug: slugObj(p), previewImage: D(p.previewImage),
@@ -1234,6 +1272,7 @@ async function queryFilteredDevelopmentRows(f: ProjectFilters) {
 }
 
 async function queryFilteredRows(lang: string, f: ProjectFilters) {
+  if (!isLocale(lang)) return [];
   const { city = "", priceFrom = null, priceTo = null, propertyType = "", bedrooms = "", q = "", north = null, south = null, east = null, west = null } = f;
   const qActive = q && q.length >= 3 ? q : "";
   const rows = await prisma.project.findMany({
@@ -1293,6 +1332,7 @@ export async function getFilteredProjectsCount(lang: string, filters: ProjectFil
 }
 
 export async function getFilteredProjectLocationsByLang(lang: string, filters: ProjectFilters) {
+  if (!isLocale(lang)) return [];
   const rows = (await queryFilteredRows(lang, { ...filters }))
     .filter((p) => p.latitude != null && p.longitude != null)
     // Sold-out Developments get no map pin at all (Part 2a) — excluded at the
@@ -1319,6 +1359,7 @@ function previewUrlOf(p: AnyRow): string | undefined {
 }
 
 export async function getAllProjectsLocationsByLang(lang: string) {
+  if (!isLocale(lang)) return [];
   const rows = (await prisma.project.findMany({ where: { language: lang as any } })).filter((p) => p.latitude != null && p.longitude != null);
   return rows.map((p) => ({
     _id: p.sanityId, title: p.title, slug: p.slug, location: { lat: p.latitude!, lng: p.longitude! },
@@ -1346,6 +1387,7 @@ export async function getFileBySlug(slug: string): Promise<SanityFile | null> {
 }
 
 export async function getNotFoundPageByLang(lang: string): Promise<NotFoundPage> {
+  if (!isLocale(lang)) return null as unknown as NotFoundPage;
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "notFoundPage", language: lang as any } } });
   const d = (row?.data as AnyRow) ?? {};
   return D({

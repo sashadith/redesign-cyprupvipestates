@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { getActionCenterGrouped } from "@/lib/actionCenter";
 import ActionCenterPanel, { type ActionCenterGroupVM } from "./ActionCenterPanel";
+import { adminDateTime } from "@/lib/adminTime";
 
 export const dynamic = "force-dynamic";
 
@@ -130,7 +131,7 @@ export default async function Dashboard() {
               <li key={l.id}>
                 <Link href={`/admin/crm/${l.id}`} className="flex items-center justify-between px-5 py-3 hover:bg-[#F8F9FA]">
                   <span className="text-sm">{l.firstName} {l.lastName} · <span className="text-[#6B7280]">{l.email}</span></span>
-                  <span className="text-xs text-[#6B7280]">{new Date(l.createdAt).toLocaleString("en-GB")}</span>
+                  <span className="text-xs text-[#6B7280]">{adminDateTime(l.createdAt)}</span>
                 </Link>
               </li>
             ))}

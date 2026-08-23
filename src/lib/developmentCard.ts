@@ -163,14 +163,27 @@ export function resolveDevelopmentLocation(...parts: (string | null | undefined)
 // -> "Apartments", the fix) and :salt, where only the ORDER shifts
 // ("Apartment · Studio" -> "Studio · Apartment") because the order follows the
 // unit rows and its unlisted rows happened to come first.
+// Feed vocabularies disagree on case: Medousa ships "villa"/"studio"/
+// "apartment" lower-case, others ship them capitalised. Uppercase the first
+// letter for DISPLAY only — the stored value keeps the feed's own spelling, so
+// matchesPropertyTypeFilter (which lower-cases both sides) and any debugging
+// against the raw feed are unaffected.
+// Only the first letter, deliberately: full title case would turn
+// "semi-detached house" into "Semi-Detached House", which is not how the type
+// reads in English.
+export function capitalizeType(s: string): string {
+  const t = s.trim();
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : t;
+}
+
 export function resolveDevelopmentType(category: string | null | undefined, units: UnitLike[]): string {
   const typesOf = (pool: UnitLike[]) =>
-    Array.from(new Set(pool.map((u) => (u.type ?? "").trim()).filter(Boolean)));
+    Array.from(new Set(pool.map((u) => capitalizeType((u.type ?? "").trim())).filter(Boolean)));
   const listed = typesOf(units.filter(isListedUnit));
   if (listed.length) return listed.join(" · ");
   const all = typesOf(units);
   if (all.length) return all.join(" · ");
-  return (category ?? "").trim();
+  return capitalizeType((category ?? "").trim());
 }
 
 // Catalogue/landing-page propertyType filter match. Every other filter value

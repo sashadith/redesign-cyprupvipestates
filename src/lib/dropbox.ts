@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import { workbookToText } from "@/lib/sheetToText";
 
 /* Minimal Dropbox REST client for the Kuutio availability sync (2026-08-13) —
    same shape and purpose as googleDrive.ts, but reads via a PUBLIC SHARED
@@ -267,6 +267,5 @@ export async function downloadSharedFile(shareUrl: string, path: string, accessT
 // branch (Dropbox has no equivalent), every spreadsheet is a real .xlsx file.
 export async function getSpreadsheetText(file: DropboxFile, shareUrl: string, accessToken: string): Promise<string> {
   const buf = await downloadSharedFile(shareUrl, file.id, accessToken);
-  const wb = XLSX.read(buf, { type: "buffer" });
-  return wb.SheetNames.map((n) => `### ${n}\n${XLSX.utils.sheet_to_csv(wb.Sheets[n])}`).join("\n");
+  return workbookToText(buf);
 }

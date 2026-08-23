@@ -20,6 +20,23 @@ export function normalizeRef(s: string, projectName = ""): string {
   // now avoids generating this redundant prefix in the first place — this stays
   // as the safety net for reconciling rows written before that fix landed.
   x = x.replace(/^block\s+([a-z])\s+(?=\1)/, "");
+  // Then drop the literal WORD "block" wherever it appears, keeping the letter
+  // that follows it. Olias names the same flat three different ways depending on
+  // which file you read: the developer-wide master sheet says "A 101", the
+  // project's own subfolder sheet says "101" in a "Block A" sub-table, and the
+  // curated rows in this DB say "Block A 101". Without this they are three
+  // different units, so the nightly master-sheet sync would have written a
+  // duplicate set next to every curated row (measured 2026-08-23: 32 for Arbeo
+  // Park, 51 for Lazzero Park).
+  //
+  // Note the difference from the rule above, which is what makes this safe: that
+  // one strips the block LETTER as well, so it has to stay narrowly guarded —
+  // developments do exist here where "block a 101" and "block b 101" are two
+  // genuinely different flats, and dropping the letter would merge them. This
+  // rule keeps the letter ("a101" vs "b101"), so it cannot. Verified against all
+  // 244 developments: 221 refs in 9 projects change key, zero of them collide
+  // with another ref in their own project.
+  x = x.replace(/\bblock\b/g, " ");
   if (projectName) x = x.split(projectName.toLowerCase()).join(" ");
   return x.replace(/\b(villas?|units?|apartments?|apt|houses?|plots?|no|nr|number)\b/g, "").replace(/[^a-z0-9]+/g, "");
 }

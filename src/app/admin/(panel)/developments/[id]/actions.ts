@@ -14,7 +14,7 @@ import { syncDeveloperDrive, type DriveSyncResult } from "@/lib/driveAvailabilit
 import { syncOneDevelopment, type SyncOneDevelopmentResult } from "@/lib/feedSync";
 import { uniqueDevelopmentSlug } from "@/lib/developmentSeo";
 import { generateSeoMeta, getSeoPromptTemplate, saveSeoPromptTemplate, type SeoMetaResult } from "@/lib/ai/seoMeta";
-import { getDbProject } from "@/lib/developmentRender";
+import { getDbProjectByFeedKey } from "@/lib/developmentRender";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
 import { localizedHref } from "@/lib/locale";
 import { syncErrorMessage } from "@/lib/syncErrorMessage";
@@ -106,9 +106,9 @@ export async function generateDescription(developmentId: string, words: number, 
 // auto-template both read, so "what Claude sees" matches "what's actually live".
 export async function generateSeoMetaAction(developmentId: string, tuning?: { emphasize?: string; avoid?: string }): Promise<{ ok: boolean; result?: SeoMetaResult; error?: string }> {
   try {
-    const d = await prisma.development.findUnique({ where: { id: developmentId }, select: { dev: true, feedProjectId: true } });
+    const d = await prisma.development.findUnique({ where: { id: developmentId }, select: { feedKey: true } });
     if (!d) return { ok: false, error: "Not found" };
-    const vm = await getDbProject(d.dev, d.feedProjectId);
+    const vm = await getDbProjectByFeedKey(d.feedKey);
     if (!vm) return { ok: false, error: "Could not load project data" };
     const result = await generateSeoMeta(vm, tuning);
     return { ok: true, result };

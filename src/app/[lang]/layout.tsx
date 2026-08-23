@@ -19,6 +19,8 @@ import NavHeroFlag from "../components/Header/NavHeroFlag";
 import { MotionConfig } from "framer-motion";
 import Script from "next/script";
 import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_WIDTH, DEFAULT_OG_IMAGE_HEIGHT } from "@/lib/seo";
+import { notFound } from "next/navigation";
+import { isLocale } from "@/lib/locale";
 
 // Localized label for the "skip to main content" accessibility link.
 const SKIP_LINK_LABELS: Record<string, string> = {
@@ -92,6 +94,11 @@ export default function RootLayout({
   children: React.ReactNode;
   params: { lang: string };
 }) {
+  // Every prefix the middleware matcher excludes (/api, /og, /admin, …) reaches
+  // this layout with that prefix as `lang` when nothing more specific matched.
+  // Reject it here so the whole `[lang]` tree 404s instead of 500ing downstream.
+  if (!isLocale(params.lang)) notFound();
+
   const cookieStore = cookies();
   const consentCookie = cookieStore.get("cookieConsent");
   let hasAnalytics = false;

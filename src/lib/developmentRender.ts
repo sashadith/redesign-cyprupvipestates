@@ -49,8 +49,26 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
     price: u.price ?? null, currency: u.currency ?? "EUR",
     beds: u.beds ?? "", baths: u.baths ?? "", areaBuilt: u.areaBuilt ?? "", areaPlot: u.areaPlot ?? "", areaVeranda: u.areaVeranda ?? "",
     floor: u.floor ?? "", attrs: arr(u.attrs), features: arr<string>(u.amenities),
-    // No unit photos uploaded → fall back to the project gallery (hero/main image first).
-    photos: arr<string>(u.photos).length ? arr<string>(u.photos) : finalGallery,
+    // Unit imagery, in descending order of how specific it is to THIS unit:
+    // its own photos, else its own floor plans, else the project gallery.
+    //
+    // The floor-plan step was added 2026-08-22. UnitsView renders `photos` and
+    // nothing else — `plans` is declared on the view model but never drawn — so
+    // a unit's own floor plan was imported faithfully and then never shown,
+    // while the card fell all the way through to the project gallery and every
+    // unit in a development displayed the same handful of hero shots. For an
+    // off-plan unit the floor plan is the more informative image anyway.
+    //
+    // Scope, measured across all 2130 unit rows before the change: exactly 206
+    // units have plans but no photos, all of them Medousa, all in draft
+    // developments. Every other feed either ships unit photos (bbf, aristo,
+    // island-blue, domenica, inex, squareone, pafilia) or ships neither, so
+    // nothing else moves and no published unit changes.
+    photos: arr<string>(u.photos).length
+      ? arr<string>(u.photos)
+      : arr<string>(u.plans).length
+        ? arr<string>(u.plans)
+        : finalGallery,
     plans: arr<string>(u.plans),
     coords: u.latitude != null && u.longitude != null ? { lat: u.latitude, lng: u.longitude } : null,
     description: "",
@@ -90,6 +108,30 @@ export const getDbProject = cache(async (dev: string, id: string): Promise<DbPro
     include: { units: { orderBy: { sortIndex: "asc" } }, override: true },
   });
   return d ? mapRowToVM(d) : null;
+});
+
+/** Lookup by the STORED feedKey, with no reconstruction.
+ *
+ *  getDbProject(dev, id) rebuilds the key as `${dev}:${id}`, which is correct
+ *  only for the two-part feed keys. Drive and Dropbox keys are three-part —
+ *  `drive:<developerAccountId>:<slug>` — so passing feedProjectId (the slug)
+ *  silently misses and returns null. Measured 2026-08-23: 24 of 244
+ *  developments (18 drive, 6 dropbox), every one of which showed
+ *  "Could not load project data" in the admin SEO panel, with empty
+ *  auto-generated title/description placeholders and a failing
+ *  "Generate with Claude".
+ *
+ *  The trap was already documented above the previewHref in the admin page —
+ *  and the very next line fell into it anyway. Callers that hold the row should
+ *  use this instead of reassembling a key they already have.
+ */
+export const getDbProjectByFeedKey = cache(async (feedKey: string, lang: string = "en"): Promise<DbProjectVM | null> => {
+  if (!feedKey) return null;
+  const d = await prisma.development.findUnique({
+    where: { feedKey },
+    include: { units: { orderBy: { sortIndex: "asc" } }, override: true },
+  });
+  return d ? mapRowToVM(d, lang) : null;
 });
 
 /** Slug-based lookup for the SEO-facing route (src/app/[lang]/projects/[slug]/page.tsx).
