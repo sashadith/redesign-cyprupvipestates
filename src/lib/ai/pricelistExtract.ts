@@ -282,7 +282,20 @@ async function mapWithConcurrency<T, R>(items: T[], n: number, fn: (t: T) => Pro
   return out;
 }
 
-export async function extractAvailabilityFromPricelist(text: string, full = false): Promise<ExtractedPricelistProject[]> {
+export type ExtractStats = { extracted: number; kept: number; dropped: number; droppedNames: string[] };
+
+export type ExtractOpts = {
+  /** The project this file is KNOWN to belong to — skips name guessing entirely.
+   *  Set by callers reading a per-project price list out of that project's own
+   *  subfolder, where identity is a fact, not an inference. */
+  knownProject?: string;
+  /** Reports how many extracted rows were kept vs discarded by the canonical
+   *  name filter. That filter used to drop rows in silence, which is how Arbeo
+   *  Park lost most of its units without anything anywhere saying so. */
+  onStats?: (s: ExtractStats) => void;
+};
+
+export async function extractAvailabilityFromPricelist(text: string, full = false, opts: ExtractOpts = {}): Promise<ExtractedPricelistProject[]> {
   const client = anthropic();
   if (!client) throw new Error("ANTHROPIC_API_KEY not configured");
   const wholeDoc = text.slice(0, 120000);
@@ -300,19 +313,33 @@ export async function extractAvailabilityFromPricelist(text: string, full = fals
   // they can never become a valid match target (real projects legitimately named
   // e.g. "The Overview Residences" would still need to pass the FULL-string test).
   const GENERIC_NAME_RE = /^(all\s+projects?|summary|overview|price\s*list|catalogue|catalog|index|master\s*(list|sheet))$/i;
-  const canonicalNames = Array.from(new Set(catalog.map((c: any) => String(c?.project || "")).filter(Boolean)))
-    .filter((n) => !GENERIC_NAME_RE.test(n.trim()));
-  const toCanonical = buildCanonicalMatcher(canonicalNames);
+  // knownProject short-circuits the whole guess-and-reconcile dance: when the
+  // caller already knows which project the file belongs to, every row belongs to
+  // it, full stop. Without this the model has to name a project PER ROW, and on a
+  // sheet built as one table per block it can reasonably answer "Block A" — which
+  // matches no catalogue entry and gets dropped by the filter below. That is what
+  // reduced Arbeo Park's 28 flats to 6 (measured 2026-08-23), leaving the rest to
+  // reappear as duplicates alongside the curated rows.
+  const canonicalNames = opts.knownProject
+    ? [opts.knownProject]
+    : Array.from(new Set(catalog.map((c: any) => String(c?.project || "")).filter(Boolean)))
+        .filter((n) => !GENERIC_NAME_RE.test(n.trim()));
+  const toCanonical = opts.knownProject
+    ? (_g: string) => ({ name: opts.knownProject!, matched: true })
+    : buildCanonicalMatcher(canonicalNames);
 
   // Group units under their project, preserving first-seen order. When the catalog
   // call succeeded, silently drop any guess that doesn't resolve to a real project —
   // that's how the catalogue/summary sheet itself (its own "### " tab, each row
   // looking like a "unit" named after a project) used to leak in as a bogus project.
   const byProject = new Map<string, ExtractedPricelistProject>();
+  let kept = 0;
+  const droppedNames = new Set<string>();
   for (const u of unitItems) {
     if (!u?.project || !u?.ref) continue;
     const { name: matchedName, matched } = toCanonical(u.project);
-    if (canonicalNames.length && !matched) continue;
+    if (canonicalNames.length && !matched) { droppedNames.add(String(u.project)); continue; }
+    kept++;
     // Title Case regardless of how the source (spreadsheet header, PDF title)
     // delivered it — GROSSER AUFTRAG / Kuutio decision, 2026-08-13. Applied
     // here, once, so every downstream consumer (canonical matching against
@@ -370,9 +397,6 @@ export async function extractAvailabilityFromPricelist(text: string, full = fals
     });
   }
 
-  // Unconditional final safety net — don't rely on the catalog call having
-  // succeeded this run (when it comes back empty, the per-project drop-unmatched
-  // guard above has nothing to check against and lets everything through).
     // Qualify a ref with its block ONLY where the bare ref is ambiguous inside the
   // same project. Olias' Arbeo Park has four blocks that each number their flats
   // 101/102/201/… , so a bare "101" identifies four different apartments; the
@@ -395,5 +419,15 @@ export async function extractAvailabilityFromPricelist(text: string, full = fals
     }
   }
 
-return Array.from(byProject.values()).filter((p) => !GENERIC_NAME_RE.test(p.project.trim()));
+  opts.onStats?.({
+    extracted: unitItems.length,
+    kept,
+    dropped: unitItems.length - kept,
+    droppedNames: Array.from(droppedNames),
+  });
+
+  // Unconditional final safety net — don't rely on the catalog call having
+  // succeeded this run (when it comes back empty, the per-project drop-unmatched
+  // guard above has nothing to check against and lets everything through).
+  return Array.from(byProject.values()).filter((p) => !GENERIC_NAME_RE.test(p.project.trim()));
 }
