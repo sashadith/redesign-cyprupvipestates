@@ -23,19 +23,32 @@ function fillMerges(sheet: XLSX.WorkSheet): void {
   const merges = sheet["!merges"];
   if (!merges?.length) return;
   for (const m of merges) {
+    // DOWN the anchor's own column only — never sideways.
+    //
+    // Sideways filling was the first version and it backfired: a banner or a
+    // "Notes: …" paragraph merged across ten columns got copied into all ten,
+    // so Arbeo Park's four notes rows became forty copies of a 230-character
+    // paragraph — roughly 9,000 of the sheet's 22,000 characters were pure
+    // repetition, and the extraction got WORSE, not better (12 units before,
+    // 6 after).
+    //
+    // Nothing is lost by leaving a horizontal span alone: the value already
+    // sits on that row, in the anchor cell. Only a MULTI-ROW span hides
+    // information, because the rows below the anchor have no value of their
+    // own — which is exactly the case that matters here, a block label beside
+    // its rows. Single-row merges are therefore skipped entirely.
+    if (m.s.r === m.e.r) continue;
     const anchor = sheet[XLSX.utils.encode_cell({ r: m.s.r, c: m.s.c })];
     if (!anchor) continue;
-    for (let r = m.s.r; r <= m.e.r; r++) {
-      for (let c = m.s.c; c <= m.e.c; c++) {
-        const addr = XLSX.utils.encode_cell({ r, c });
-        const cur = sheet[addr];
-        // Fill a cell that is missing OR present-but-blank. Both occur: a real
-        // .xlsx usually omits the covered cells entirely, but a sheet built or
-        // round-tripped by other tools can carry them as empty strings, and
-        // testing only for absence silently skips those.
-        const blank = !cur || cur.v === undefined || cur.v === null || String(cur.v).trim() === "";
-        if (blank) sheet[addr] = { ...anchor };
-      }
+    for (let r = m.s.r + 1; r <= m.e.r; r++) {
+      const addr = XLSX.utils.encode_cell({ r, c: m.s.c });
+      const cur = sheet[addr];
+      // Fill a cell that is missing OR present-but-blank. Both occur: a real
+      // .xlsx omits the covered cells, but sheets round-tripped through other
+      // tools carry them as empty strings, and testing only for absence
+      // silently skips those.
+      const blank = !cur || cur.v === undefined || cur.v === null || String(cur.v).trim() === "";
+      if (blank) sheet[addr] = { ...anchor };
     }
   }
 }
