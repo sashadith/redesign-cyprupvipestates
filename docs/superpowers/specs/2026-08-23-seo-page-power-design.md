@@ -332,11 +332,26 @@ excusing them. Under-claiming is the safe direction.
 Such a page keeps its diagnosis and stays on the admin screen — it really is
 published and really is not being shown — with a reason that names its
 publication date, how many of the window's days it has been live, and the date
-its count becomes comparable. What changes is the ACTION CENTER, which subtracts
-them from the pile it asks for work on and says how many it left out. The
-`buried` and `unclicked` piles are deliberately not filtered this way: both rest
-on 100 and 300 impressions the page actually received, so a young page reaching
-either has demonstrably been crawled, indexed and served.
+its count becomes comparable. What changes is the two surfaces that ask for
+WORK. The Action Center subtracts them from the pile its item covers and says
+how many it left out; the weekly advisor does the same to the pile count it
+sends the model, and carries the excluded number and a note explaining it. Both,
+because they speak to the same operator about the same pile, and a report asking
+for indexing work on several hundred pages the panel has already stopped asking
+about is the same over-claim arriving by a second route. This branch has already
+paid for that lesson once: the Action Center learned to suppress pages inside a
+title-sweep window and the advisor did not, and it took a second round to close.
+
+The advisor gets an EXCLUSION rather than the per-row flag the title sweep gets,
+and the data forces the difference: a row-level flag is only visible on pages
+that get listed, and the `invisible` pile lists none of its pages — every one is
+under the advisor's 100-impression listing floor by definition. Its count is the
+only surface it has.
+
+The `buried` and `unclicked` piles are deliberately not filtered this way on
+either surface: both rest on 100 and 300 impressions the page actually received,
+so a young page reaching either has demonstrably been crawled, indexed and
+served.
 
 **Stable item IDs**, and the grouped items need a different scheme from the
 per-page one this spec first specified. It said "diagnosis plus page key", which

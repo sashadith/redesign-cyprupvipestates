@@ -5,11 +5,23 @@ import { templateClassOf } from "@/lib/seo/templateClass";
 import type { PageDiagnosis } from "@/lib/seo/pagePower/types";
 
 /** Exactly the fields this table renders — deliberately narrower than
- *  `PageVerdict`. Every field crosses the RSC boundary 1,679 times: measured
- *  against production on 2026-08-23 the nine below serialise to 581KB, and
- *  carrying `clicks` and `templateClass` too — neither is displayed, and the
- *  by-class table under this one answers the template question — took it to
- *  658KB for nothing. Add a field here when a column shows it, not before. */
+ *  `PageVerdict`. Every field crosses the RSC boundary 1,691 times: measured
+ *  against production on 2026-08-23 the nine below serialise to 682KB, and
+ *  carrying `clicks` as well — it is not displayed — took it to 701KB for
+ *  nothing. Add a field here when a column shows it, not before.
+ *
+ *  `clicks` is the only field left behind now. `templateClass` used to be the
+ *  second, and it is no longer a choice this comment gets to make: it was
+ *  deleted from `PageVerdict` outright once it turned out that nothing anywhere
+ *  read it — not this table, not gather.ts, not the Action Center.
+ *
+ *  The nine grew from 581KB the same day, and the twelve listing URLs the
+ *  inventory gained are almost none of it. `reason` alone is 330KB of the 682,
+ *  nearly half of every row, and the publication-age sentence is a long one: the
+ *  548 invisible pages published inside the window average 340 characters of
+ *  reason against 190 across the whole table, 189KB between them. Saying WHY a
+ *  page is not being shown costs bytes; a column that renders a number does
+ *  not. That is the trade this narrowing exists to keep making. */
 export type Row = {
   key: string;
   locale: string;
@@ -69,11 +81,11 @@ export default function PagePowerTable({ rows }: { rows: Row[] }) {
     () =>
       rows
         .filter((r) => r.diagnosis === filter)
-        // Tie-broken on path, not left to impressions alone: 618 pages have
+        // Tie-broken on path, not left to impressions alone: 622 pages have
         // zero impressions and `sort` is stable, so ties fall back to inventory
         // order — which comes from Prisma `findMany` calls with no `orderBy`,
         // i.e. whatever order Postgres happened to return. Without the
-        // tie-break the 1,118-row `invisible` tab reshuffles between loads.
+        // tie-break the 1,125-row `invisible` tab reshuffles between loads.
         .sort((a, b) => b.impressions - a.impressions || a.path.localeCompare(b.path)),
     [rows, filter],
   );
@@ -105,12 +117,15 @@ export default function PagePowerTable({ rows }: { rows: Row[] }) {
               <th className="pb-2 font-semibold">Why</th>
             </tr>
           </thead>
-          {/* Every matching row, uncapped. `invisible` is 1,118 rows today and
+          {/* Every matching row, uncapped. `invisible` is 1,125 rows today and
               renders in well under a second, while a cap would hide exactly
-              what makes that pile worth opening — the handful of pages ranking
-              on the first page of results whose reason says the demand is
-              missing, not the indexing. The default tab is `buried` (78 rows),
-              so the long list only renders when someone asks for it. */}
+              what makes that pile worth opening — the pages whose reason rules
+              a cause OUT rather than in. 548 of those rows were published
+              inside the window and say so, and the Action Center deliberately
+              does not ask for work on them; this screen is where they stay
+              visible, because the diagnosis is still true of them. The default
+              tab is `buried` (79 rows), so the long list only renders when
+              someone asks for it. */}
           <tbody className="divide-y divide-[#F3F4F6]">
             {shown.map((r) => (
               <tr key={r.key} className="align-top">
@@ -124,14 +139,14 @@ export default function PagePowerTable({ rows }: { rows: Row[] }) {
                 </td>
                 <td className="py-2 pr-3 text-right tabular-nums">{r.impressions.toLocaleString("en-GB")}</td>
                 <td className={`py-2 pr-3 text-right tabular-nums ${r.impressionsTrendPct == null ? "text-[#9CA3AF]" : r.impressionsTrendPct >= 0 ? "text-[#1B4B43]" : "text-[#B3261E]"}`}>
-                  {/* Null on 1,584 of 1,679 pages — the prior 28 days must clear
+                  {/* Null on 1,596 of 1,691 pages — the prior 28 days must clear
                       MIN_IMPRESSIONS_TREND before a percentage means anything,
                       and an invisible page never will. Empty is the honest
                       reading; see `impressionsTrendPct` in pagePower/types.ts. */}
                   {r.impressionsTrendPct == null ? "—" : `${r.impressionsTrendPct >= 0 ? "+" : ""}${r.impressionsTrendPct.toFixed(0)}%`}
                 </td>
                 <td className="py-2 pr-3 text-right tabular-nums">{r.ctr.toFixed(2)}%</td>
-                {/* Null exactly when the page drew no impressions (618 pages).
+                {/* Null exactly when the page drew no impressions (622 pages).
                     Rendering 0 there would read as "ranked first". */}
                 <td className="py-2 pr-3 text-right tabular-nums">{r.position == null ? "—" : r.position.toFixed(1)}</td>
                 <td className="py-2 text-[#6B7280]">{r.reason}</td>
