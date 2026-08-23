@@ -172,13 +172,39 @@ which 301s to its `/de/` equivalent. That module was written for exactly this
 incident — reuse it, do not re-derive it.
 
 **The page inventory comes from the CMS, not from GSC.** Required for diagnosis
-1: a page with zero impressions has no `SearchMetric` row at all. The universe
-is published Developments, Projects, Blogs and Singlepages × their locales; GSC
-supplies measurements onto that universe.
+1: a page with zero impressions has no `SearchMetric` row at all. GSC supplies
+measurements onto that universe, never the universe itself.
 
-Verified 2026-08-23 that the commercial city/type landing pages
-(`/off-plan-properties-in-paphos` and its siblings) are Singlepage rows, so the
-inventory already covers them — they need no separate source.
+The universe is published Developments, Projects, Blogs, Singlepages, Case
+Studies and Developer pages × their locales, plus the fixed pages the sitemap
+emits by hand (homepage, `/faq`, `/partners`).
+
+That list is longer than the one this spec first carried, and the two additions
+were found by code review during implementation rather than by design:
+
+- **Developer pages were missing entirely** — 14,315 impressions and 153 clicks
+  in 90 days, roughly a tenth of the site's whole search surface. One of them,
+  `/developers/agg-luxury-homes` at 1,497 impressions, already appears in the
+  measured `unclicked` list earlier in this document. It was visible in the data
+  the whole time and still went unnoticed when the inventory was scoped.
+- **Nested Singlepages were being built at the wrong URL.** `Singlepage` rows
+  carry `parentSanityId`, and the served URL is the full parent chain. The first
+  implementation used the leaf slug alone, which does not exist as far as Google
+  is concerned:
+
+```
+flat    /de/villen-in-paphos                            0 impressions
+nested  /de/luxusvillen-in-zypern/villen-in-paphos    535 impressions
+```
+
+  About 25 pages across the four locales are nested, and they are the commercial
+  ones — `villas-in-cyprus/villas-in-paphos`,
+  `apartments-in-cyprus/apartments-in-paphos`. Every one would have been
+  diagnosed "invisible" while ranking perfectly well.
+
+Development pages are included only while `NEW_PROJECTS_INDEXABLE`
+(`src/lib/developmentSeo.ts`) is true; when it is false they are not public SEO
+surface and must not be judged as such.
 
 **Window: 90 days, excluding the most recent 3.** A 28-day window leaves only 46
 pages above 300 impressions — too thin to judge CTR (90 days gives 129). Shorter
