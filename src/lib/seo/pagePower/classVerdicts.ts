@@ -137,14 +137,23 @@ const ALL_CLASSES = (Object.keys(CLASS_ORDER) as TemplateClass[]).sort((a, b) =>
  *  - `projects` — every distinct Development slug in the session, entry page
  *    included. This is the site-level comparison metric, the approved north-star
  *    figure (282 per quarter), and it is not redefined to suit anything here.
- *  - `onwardProjects` — only those seen AFTER the entry pageview. This is what a
- *    per-class rate must be built on, because counting the entry page measures a
- *    different funnel step for each class; see `onwardComparisonSessions` in
- *    types.ts for the full argument and the numbers.
+ *  - `onwardProjects` — distinct properties OTHER THAN `entrySlug`, seen after
+ *    the entry pageview. This is what a per-class rate must be built on, because
+ *    counting the landing property measures a different funnel step for each
+ *    class; see `onwardComparisonSessions` in types.ts for the full argument.
  *
- * Both hold SLUGS, not paths — see the note where they are filled.
+ * `entrySlug` exists only to be excluded from `onwardProjects`, and is null when
+ * the session did not land on a property at all — in which case there is nothing
+ * to exclude and every property seen is onward.
+ *
+ * All three hold SLUGS, not paths — see the note where they are filled.
  */
-type Session = { entryClass: TemplateClass; projects: Set<string>; onwardProjects: Set<string> };
+type Session = {
+  entryClass: TemplateClass;
+  entrySlug: string | null;
+  projects: Set<string>;
+  onwardProjects: Set<string>;
+};
 
 export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVerdict[]> {
   // The last WINDOW_DAYS UTC calendar days, the newest of which is today and is
@@ -254,6 +263,7 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
       // session denominator invisibly, which is the worse trade.
       sessions.set(view.visitorHash, {
         entryClass: cls,
+        entrySlug: slug,
         projects: slug === null ? new Set<string>() : new Set<string>([slug]),
         // The entry pageview is by definition not onward, so this starts empty
         // even when the session landed ON a property.
@@ -263,7 +273,13 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
     }
     if (slug !== null) {
       session.projects.add(slug);
-      session.onwardProjects.add(slug);
+      // The landing property is excluded from the onward set for the whole
+      // session, not just for its first pageview. `land on x → view y → back to
+      // x` is ordinary browsing, and counting that return would let a session
+      // entering on a property reach the threshold on ONE further property
+      // while every other class still needs two — the same asymmetry, smaller,
+      // and running the same direction because `development-page` sets the bar.
+      if (slug !== session.entrySlug) session.onwardProjects.add(slug);
     }
   }
 
@@ -373,7 +389,7 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
       return {
         ...base,
         diagnosis: "unjudged",
-        reason: `No template class with enough entering sessions to judge sent a single session onward to two or more properties in ${WINDOW_DAYS} days, so there is no benchmark to measure this one against.`,
+        reason: `No template class with enough entering sessions to judge sent a single session on to two or more properties other than the one it landed on in ${WINDOW_DAYS} days, so there is no benchmark to measure this one against.`,
       };
     }
 
@@ -381,7 +397,7 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
       return {
         ...base,
         diagnosis: "repelling",
-        reason: `${onwardComparisonRate.toFixed(1)}% of the ${fmt(enteringSessions)} sessions entering here go on to view two or more different properties AFTER the page they landed on, against ${bestRate.toFixed(1)}% for the strongest class — landing layout and internal routes to further properties.`,
+        reason: `${onwardComparisonRate.toFixed(1)}% of the ${fmt(enteringSessions)} sessions entering here go on to view two or more different properties OTHER THAN the page they landed on, against ${bestRate.toFixed(1)}% for the strongest class — landing layout and internal routes to further properties.`,
       };
     }
 
@@ -392,7 +408,7 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
       return {
         ...base,
         diagnosis: "healthy",
-        reason: `${onwardComparisonRate.toFixed(1)}% of sessions entering here go on to two or more properties after the landing page, in line with the ${bestRate.toFixed(1)}% best, and ${enquiries(leadCount)} came from pages of this class.`,
+        reason: `${onwardComparisonRate.toFixed(1)}% of sessions entering here go on to two or more properties other than their landing page, in line with the ${bestRate.toFixed(1)}% best, and ${enquiries(leadCount)} came from pages of this class.`,
       };
     }
 
@@ -400,7 +416,7 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
       return {
         ...base,
         diagnosis: "unjudged",
-        reason: `${fmt(onwardComparisonSessions)} sessions entered here and went on to two or more properties — below the ${MIN_COMPARISON_SESSIONS} needed to judge whether this class produces enquiries.`,
+        reason: `${fmt(onwardComparisonSessions)} sessions entered here and went on to two or more properties other than their landing page — below the ${MIN_COMPARISON_SESSIONS} needed to judge whether this class produces enquiries.`,
       };
     }
 
@@ -408,7 +424,7 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
       return {
         ...base,
         diagnosis: "mute",
-        reason: `${fmt(onwardComparisonSessions)} sessions entered here and went on to two or more properties, which at the site's own rate of enquiries traceable to a page should have produced about ${expectedLeads.toFixed(1)} — none came from a page of this class. Offer, call to action, contact path.`,
+        reason: `${fmt(onwardComparisonSessions)} sessions entered here and went on to two or more properties other than their landing page, which at the site's own rate of enquiries traceable to a page should have produced about ${expectedLeads.toFixed(1)} — none came from a page of this class. Offer, call to action, contact path.`,
       };
     }
 
@@ -418,7 +434,7 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
     return {
       ...base,
       diagnosis: "unjudged",
-      reason: `The whole site produced ${enquiries(attributedLeads)} traceable to a page from ${fmt(siteComparisonSessions)} comparison sessions in ${WINDOW_DAYS} days (enquiries by phone, WhatsApp or manual entry carry no page and are not counted), so the ${fmt(onwardComparisonSessions)} sessions that entered here and went on to two or more properties would be expected to produce about ${expectedLeads.toFixed(1)} — too few for its zero to mean anything.`,
+      reason: `The whole site produced ${enquiries(attributedLeads)} traceable to a page from ${fmt(siteComparisonSessions)} comparison sessions in ${WINDOW_DAYS} days (enquiries by phone, WhatsApp or manual entry carry no page and are not counted), so the ${fmt(onwardComparisonSessions)} sessions that entered here and went on to two or more properties other than their landing page would be expected to produce about ${expectedLeads.toFixed(1)} — too few for its zero to mean anything.`,
     };
   });
 }

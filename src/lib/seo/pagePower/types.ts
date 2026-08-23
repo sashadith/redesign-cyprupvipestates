@@ -84,15 +84,24 @@ export const MIN_BUCKET_IMPRESSIONS = 100;
  *  Applied at TWO scopes, which classVerdicts.ts keeps apart under two names
  *  because they are not the same number: the site-level metric counts distinct
  *  Development pages across the WHOLE session (the approved north-star figure,
- *  282 per quarter), while the per-class rate counts only those seen AFTER the
- *  entry pageview. Counting the entry page in a per-class rate compares
+ *  282 per quarter, measured 2026-08-23 — see the design spec), while the
+ *  per-class rate counts only distinct properties OTHER THAN the one the
+ *  session landed on. Counting the landing property in a per-class rate compares
  *  different funnel steps across classes — see `onwardComparisonSessions`
  *  below. */
 export const COMPARISON_PROJECT_PAGES = 2;
 export const MIN_ENTERING_SESSIONS = 100;
 
 /** Floor for judging LEAD production, i.e. the `mute` diagnosis. Measured on
- *  `onwardComparisonSessions`, not on the site-level metric. */
+ *  `onwardComparisonSessions`, not on the site-level metric.
+ *
+ *  NEEDS RE-MEASURING. The value was calibrated against the entry-inclusive
+ *  count, and `onwardComparisonSessions` is strictly smaller than that — it
+ *  excludes both the landing pageview and the landing property. A floor tuned
+ *  for the larger quantity is therefore stricter than intended against this
+ *  one, in the safe direction (more `unjudged`, not more `mute`), but it is no
+ *  longer the number that was measured. Left at 50 deliberately rather than
+ *  guessed downward; correct it from data at calibration. */
 export const MIN_COMPARISON_SESSIONS = 50;
 
 /** A template class is flagged `repelling` when its onward-comparison rate is
@@ -154,10 +163,17 @@ export type ClassVerdict = {
   /** Sessions whose FIRST pageview was a page of this class. */
   enteringSessions: number;
   /** Sessions that entered on this class and then viewed COMPARISON_PROJECT_PAGES
-   *  different Development pages AFTER the entry pageview.
+   *  different Development pages OTHER THAN THE ONE THEY LANDED ON.
    *
-   *  ONWARD is the whole point of the name and must not be quietly dropped. The
-   *  site-level metric counts the entry page too, and counting it here would
+   *  Both exclusions are load-bearing and neither may be quietly dropped: not
+   *  the entry pageview, and not the entry PROPERTY. Excluding only the pageview
+   *  still lets `land on x → view y → back to x` reach two on one further
+   *  property, while a homepage session needs two — and returning to the
+   *  property you landed on is ordinary browsing, not an edge case. Excluding
+   *  the property itself makes the quantity identical across every class:
+   *  two distinct properties that are not where the session started.
+   *
+   *  The site-level metric counts the entry page too, and counting it here would
    *  measure a different funnel step per class: a session entering ON a
    *  Development page needs to see only ONE further property to reach two,
    *  while a session entering on the homepage needs two. At a plausible ~0.3
