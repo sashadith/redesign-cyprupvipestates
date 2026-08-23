@@ -13,8 +13,8 @@ import {
   CWV_INP_MAX_MS,
 } from "@/lib/seo/queries";
 import type { TemplateClass } from "@/lib/seo/templateClass";
-import { loadSweepEntries } from "@/lib/seo/titleSweepLog";
-import { computeTitleSweepComparison } from "@/lib/seo/titleSweepRemeasure";
+import { loadSweepEntries, pagesInSuppressionWindow } from "@/lib/seo/titleSweepLog";
+import { computeTitleSweepComparison, REMEASURE_WINDOW_DAYS } from "@/lib/seo/titleSweepRemeasure";
 import { getRecentChangelogEntries, type ChangelogEntry } from "@/lib/seo/siteChangelog";
 import { getPageVerdicts } from "@/lib/seo/pagePower/pageVerdicts";
 import { getClassVerdicts } from "@/lib/seo/pagePower/classVerdicts";
@@ -51,8 +51,8 @@ const ADVISOR_MIN_LISTED_IMPRESSIONS = 100;
 /** Listed rows per diagnosis, after the floor. Half the `slice(0, 20)` the GSC
  *  lists below use, because the rows are not comparable: a striking-distance row
  *  is ~100 bytes of numbers, while a listed verdict carries a whole reason
- *  sentence. Measured 2026-08-23: at 10 the pagePower block serialises to 8.1 kB
- *  and the payload grows from 10.6 kB to 18.7 kB — the largest single block after
+ *  sentence. Measured 2026-08-23: at 10 the pagePower block serialises to 9.3 kB
+ *  and the payload grows from 10.6 kB to 19.9 kB — the largest single block after
  *  the GSC lists, which is the right order for the only field that names the work
  *  rather than the metric. The cap binds hardest on `buried` (78 pages), where
  *  the ten listed carry 28,611 of the pile's 62,982 impressions and the other
@@ -116,7 +116,18 @@ export type AdvisorPayload = {
       diagnosis: PageDiagnosis;
       count: number;
       impressions: number;
-      listed: { path: string; impressions: number; clicks: number; ctr: number; position: number | null; reason: string }[];
+      /** `titleRewriteBlockedByLiveSweep` is on the ROW, not left to the model
+       *  to derive by matching the path against `titleSweep[].urls`. Measured
+       *  2026-08-23: 7 of the 12 `unclicked` pages sit inside a 42-day
+       *  re-measurement window (batches closing 2026-08-29 and 2026-09-07), and
+       *  `unclicked` is the diagnosis whose stated work IS a title rewrite. A
+       *  cross-reference the model has to perform is a control that fails
+       *  silently the first time it is skipped, and the failure corrupts an
+       *  experiment the team is actively running. Same source as the Action
+       *  Center's suppression (pagesInSuppressionWindow, docs/SEO-TITLE-SWEEP-LOG.md),
+       *  surfaced as data instead of inference — the row stays in the pile
+       *  because the diagnosis is true of it; only the title work is blocked. */
+      listed: { path: string; impressions: number; clicks: number; ctr: number; position: number | null; reason: string; titleRewriteBlockedByLiveSweep: boolean }[];
       omittedPages: number;
       omittedImpressions: number;
     }[];
@@ -215,7 +226,14 @@ async function gatherTitleSweepStatus(): Promise<AdvisorPayload["titleSweep"]> {
 }
 
 async function gatherPagePower(): Promise<AdvisorPayload["pagePower"]> {
-  const [pageResult, classes] = await Promise.all([getPageVerdicts(), getClassVerdicts()]);
+  // Matched on `path`, the shape the sweep log records and PageVerdict carries
+  // (see the PageKey comment in pagePower/types.ts) — the same join
+  // pagePowerRules() makes, checked against production there on 2026-08-23 with
+  // all 34 in-window entries matching an inventory path. A mismatch fails OPEN:
+  // every flag reads false, which looks exactly like a clean run.
+  const [pageResult, classes, sweptPaths] = await Promise.all([
+    getPageVerdicts(), getClassVerdicts(), pagesInSuppressionWindow(REMEASURE_WINDOW_DAYS),
+  ]);
   const impressionsOf = (rows: { impressions: number }[]) => rows.reduce((sum, v) => sum + v.impressions, 0);
 
   const pages = PAGE_POWER_ACTIONABLE.map((diagnosis) => {
@@ -243,6 +261,7 @@ async function gatherPagePower(): Promise<AdvisorPayload["pagePower"]> {
         // paraphrase would keep the diagnosis and drop exactly the sentence that
         // stops it being over-claimed.
         reason: v.reason,
+        titleRewriteBlockedByLiveSweep: sweptPaths.has(v.path),
       })),
       omittedPages: matching.length - listed.length,
       omittedImpressions: impressionsOf(matching) - impressionsOf(listed),
@@ -273,6 +292,7 @@ async function gatherPagePower(): Promise<AdvisorPayload["pagePower"]> {
       `'reason' is the measured evidence; the diagnosis word is only the label of the threshold that evidence crossed. Build rationales from the reason text and carry its qualifications with it — do not restate the label as if it were the finding.`,
       `'position' is impression-weighted across every query a page ranks for, so a page can carry a poor average position and a healthy CTR at the same time when its clicks come from a few strong queries and its impressions from a long tail of deep ones. That pairing is a query mix, not a contradiction and not a data error: read the CTR before proposing work on a buried page.`,
       `'unjudged' means below a measurement floor, not healthy — those pages are unmeasured, and 'otherDiagnoses' carries the impressions sitting in them. Never report unjudged pages, or an unjudged template class, as fine.`,
+      `'titleRewriteBlockedByLiveSweep' means this page's title and meta description were rewritten by a sweep that is still inside its ${REMEASURE_WINDOW_DAYS}-day re-measurement window. The diagnosis stands and the page is genuinely underperforming — but the title work does NOT: rewriting it again destroys the measurement in flight. Do not propose title or meta changes for such a page; wait for the window to close (see the titleSweep field for when).`,
       `The class diagnosis 'mute' — comparison traffic arriving but no enquiry traceable to it — cannot fire at this site's traffic volume; such a class is reported 'unjudged' instead. Its absence is not evidence that lead production is healthy.`,
       `Every page here is published and in the CMS inventory; ${Number(pageResult.coveragePct.toFixed(1))}% of GSC clicks in the window resolved onto one. The rest landed on URLs the canonical map does not know, so a page's figures can understate it.`,
     ],

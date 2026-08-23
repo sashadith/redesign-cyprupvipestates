@@ -120,12 +120,12 @@ const ctrOf = (t: Totals): number => (t.impressions > 0 ? (100 * t.clicks) / t.i
  *  re-banding POSITION_BUCKETS moves this with it instead of leaving a stale
  *  number behind. It reads two fixed indices, so it assumes the buckets keep at
  *  least two bands — which POSITION_BUCKETS' own doc comment already requires,
- *  since `bucketMedians` and `bucketKeyFor` depend on the same shape. */
+ *  since `bucketStats` and `bucketKeyFor` depend on the same shape. */
 const WELL_RANKED_POSITION = POSITION_BUCKETS[1][1];
 
 /** Which bucket a position belongs to, or null if none — the ONE implementation
  *  of the half-open `[low, high)` membership rule documented on POSITION_BUCKETS
- *  in types.ts. `bucketMedians` calls it too, so a page can never be compared
+ *  in types.ts. `bucketStats` calls it too, so a page can never be compared
  *  against a median drawn from a population it was not itself eligible for. */
 function bucketKeyFor(position: number): string | null {
   for (const [low, high] of POSITION_BUCKETS) if (position >= low && position < high) return `${low}-${high}`;
@@ -143,8 +143,38 @@ function medianOf(sorted: number[]): number {
   return sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
+/** What a position bucket knows about itself. `median` alone was not enough:
+ *  when it is null the page falls to a reason sentence that has to explain WHY
+ *  there is no bar, and "too few comparable pages" without the counts reads as a
+ *  temporary shortage that will fill in next month.
+ *
+ *  Measured against production on 2026-08-23, the 0–5 band is the case that
+ *  forced this: 177 pages average a position there and only 3 of them clear
+ *  MIN_BUCKET_IMPRESSIONS, against the 5 MIN_BUCKET_PAGES asks for. The site
+ *  rarely ranks top-five on queries with volume, so its best-ranking pages —
+ *  including the highest-impression page it has, at 7,018 impressions and
+ *  position 3.5 — are structurally unjudgeable on CTR, not merely unjudged yet.
+ *  Printing 177 beside 3 beside 5 is what tells those two facts apart.
+ *
+ *  This is NOT a case for lowering MIN_BUCKET_PAGES. A median drawn from three
+ *  samples is the unfounded verdict this module exists to refuse; reporting the
+ *  gap is the finding. */
+type BucketStats = {
+  low: number;
+  high: number;
+  /** Inventory pages whose impression-weighted average position falls in this
+   *  band at all. Pages with no impressions have no position and are absent. */
+  pagesInBand: number;
+  /** Of those, the ones clearing MIN_BUCKET_IMPRESSIONS — the sample the median
+   *  is actually drawn from. */
+  comparablePages: number;
+  /** null when `comparablePages` is below MIN_BUCKET_PAGES. */
+  median: number | null;
+};
+
 /**
- * Median CTR per position bucket, computed over INVENTORY PAGES ONLY.
+ * Median CTR per position bucket, and how many pages that median rests on,
+ * computed over INVENTORY PAGES ONLY.
  *
  * The GSC side also carries keys that are not pages of this site any more:
  * parameterised and trailing-slash variants, URLs from before a migration that
@@ -159,29 +189,48 @@ function medianOf(sorted: number[]): number {
  *
  * The cost is sample size, and the cost is safe: a bucket that drops below
  * MIN_BUCKET_PAGES yields no median, and a page in it is reported `unjudged`
- * with a reason saying exactly that. Under-claiming is the correct failure.
+ * with a reason naming both counts — how many pages rank in the band and how
+ * many of them have the volume to compare. Under-claiming is the correct
+ * failure; leaving the reader unable to tell a thin band from a structurally
+ * empty one is not, which is why the counts travel with the median.
  */
-function bucketMedians(totals: Map<PageKey, Totals>, inventoryKeys: Set<PageKey>): Map<string, number> {
-  const byBucket = new Map<string, number[]>();
+function bucketStats(totals: Map<PageKey, Totals>, inventoryKeys: Set<PageKey>): Map<string, BucketStats> {
+  // Seeded from POSITION_BUCKETS rather than grown from the data, so a band no
+  // page reached is present with zeroes instead of missing. A missing entry and
+  // an empty one read identically at the call site, and the difference is the
+  // whole sentence: "177 pages rank here and 3 have volume" against "nothing
+  // ranks here at all".
+  const byBucket = new Map<string, { stats: BucketStats; ctrs: number[] }>();
+  for (const [low, high] of POSITION_BUCKETS) {
+    byBucket.set(`${low}-${high}`, { stats: { low, high, pagesInBand: 0, comparablePages: 0, median: null }, ctrs: [] });
+  }
+
   for (const [key, t] of Array.from(totals.entries())) {
     if (!inventoryKeys.has(key)) continue;
-    if (t.impressions < MIN_BUCKET_IMPRESSIONS) continue;
     const position = positionOf(t);
     if (position == null) continue;
     const bucket = bucketKeyFor(position);
     if (bucket == null) continue;
-    const ctrs = byBucket.get(bucket) ?? [];
-    ctrs.push(ctrOf(t));
-    byBucket.set(bucket, ctrs);
+    const entry = byBucket.get(bucket);
+    if (entry === undefined) continue; // unreachable: bucketKeyFor draws from the same POSITION_BUCKETS seeded above
+    entry.stats.pagesInBand++;
+    // The impression floor gates the MEDIAN's sample, not the band's population
+    // — counted after `pagesInBand` on purpose, since the gap between the two is
+    // the finding when a band has no bar.
+    if (t.impressions < MIN_BUCKET_IMPRESSIONS) continue;
+    entry.stats.comparablePages++;
+    entry.ctrs.push(ctrOf(t));
   }
 
-  const medians = new Map<string, number>();
-  for (const [bucket, ctrs] of Array.from(byBucket.entries())) {
-    if (ctrs.length < MIN_BUCKET_PAGES) continue;
-    ctrs.sort((a, b) => a - b);
-    medians.set(bucket, medianOf(ctrs));
+  const out = new Map<string, BucketStats>();
+  for (const [bucket, entry] of Array.from(byBucket.entries())) {
+    if (entry.ctrs.length >= MIN_BUCKET_PAGES) {
+      entry.ctrs.sort((a, b) => a - b);
+      entry.stats.median = medianOf(entry.ctrs);
+    }
+    out.set(bucket, entry.stats);
   }
-  return medians;
+  return out;
 }
 
 const fmt = (n: number): string => n.toLocaleString("en-GB");
@@ -239,7 +288,7 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
   });
 
   const inventoryKeys = new Set(inventory.map((p) => p.key));
-  const medians = bucketMedians(totals.main, inventoryKeys);
+  const buckets = bucketStats(totals.main, inventoryKeys);
   const devSlugs = new Set(inventory.filter((p) => p.kind === "development").map((p) => p.path.split("/").pop() as string));
 
   const verdicts: PageVerdict[] = inventory.map((page) => {
@@ -281,17 +330,35 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
       reason = `${fmt(t.impressions)} impressions at average position ${position.toFixed(1)} — nobody scrolls that far. Needs content and authority, not a new title.`;
     } else if (t.impressions >= MIN_IMPRESSIONS_CTR && position != null && position <= BURIED_POSITION) {
       const bucket = bucketKeyFor(position);
-      const median = bucket == null ? undefined : medians.get(bucket);
-      if (bucket == null) {
+      // Branching on the whole `stats`, not on a `median` pulled out of it, so
+      // the compiler narrows the band away in every branch that needs its
+      // bounds. The alternative was a cast, and a cast is a claim the compiler
+      // cannot check — this one would have invented a band's low and high
+      // values into a sentence an admin reads as measurement.
+      const stats = bucket == null ? undefined : buckets.get(bucket);
+      if (stats === undefined) {
         // Position exactly BURIED_POSITION: the buckets are half-open and stop
         // at 20, so 20.0 belongs to no bucket while still passing the <= 20 test
         // above. Rare, but an impression-weighted average lands on a boundary
         // often enough to matter (see POSITION_BUCKETS in types.ts) — and "too
         // few comparable pages" would be a false explanation for it.
+        //
+        // Also the only branch a missing bucket entry could surface through, now
+        // that `bucketStats` seeds every band from POSITION_BUCKETS. The
+        // sentence stays true of that case: a position no band claims is outside
+        // the comparison range by definition.
         reason = `Average position ${position.toFixed(1)} sits on the edge of the comparison range, so there is no expected CTR to measure against.`;
-      } else if (median == null) {
-        reason = `Position ${position.toFixed(1)} has too few comparable pages to set an expected CTR.`;
-      } else if (!(median > 0)) {
+      } else if (stats.median == null) {
+        // The counts are named, not summarised as "too few". On 2026-08-23 the
+        // band this fires on was 0–5, where 177 pages rank and 3 have the volume
+        // to be compared: a reader told only "too few comparable pages" hears a
+        // shortage that next month's data will fix, when the truth is that this
+        // site rarely ranks top-five on queries with volume and its best pages
+        // may never be CTR-judgeable. Same treatment the `invisible` reason got
+        // — the sentence has to leave the reader knowing which of the two they
+        // are looking at.
+        reason = `Position ${position.toFixed(1)} sits in the ${stats.low}–${stats.high} band. ${fmt(stats.pagesInBand)} of this site's pages average a position there, but only ${fmt(stats.comparablePages)} of them reach the ${MIN_BUCKET_IMPRESSIONS} impressions in ${WINDOW_DAYS} days a CTR comparison needs, against the ${MIN_BUCKET_PAGES} required to read a typical CTR off them at all. That is a gap in the site's own data, not a late measurement: it closes only when more pages rank in this band with enough volume to compare.`;
+      } else if (!(stats.median > 0)) {
         // A median of 0 means at least half the bucket earned no clicks, so the
         // bar is 0 and `ctr < 0 * fraction` can never be true. Left to fall
         // through, the `unclicked` test becomes unfalsifiable and EVERY page in
@@ -304,8 +371,8 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
         // too-few-pages case above: there the sample is missing, here the
         // sample exists and has nothing to say.
         //
-        // Written `!(median > 0)` rather than `median <= 0` so a NaN bar is
-        // rejected rather than silently passed through, matching the
+        // Written `!(stats.median > 0)` rather than `stats.median <= 0` so a
+        // NaN bar is rejected rather than silently passed through, matching the
         // Number.isFinite discipline in `positionOf` — one habit, not two
         // standards.
         //
@@ -316,9 +383,9 @@ export async function getPageVerdicts(now: Date = new Date()): Promise<PageVerdi
         reason = t.clicks > 0
           ? `${noBar} — this page's own ${ctr.toFixed(2)}% cannot be called high or low.`
           : `${noBar}, and this page earned none either.`;
-      } else if (ctr < median * CTR_MEDIAN_FRACTION) {
+      } else if (ctr < stats.median * CTR_MEDIAN_FRACTION) {
         diagnosis = "unclicked";
-        reason = `CTR ${ctr.toFixed(2)}% against ${median.toFixed(2)}% typical for position ${position.toFixed(1)} — title and meta description.`;
+        reason = `CTR ${ctr.toFixed(2)}% against ${stats.median.toFixed(2)}% typical for position ${position.toFixed(1)} — title and meta description.`;
       } else {
         diagnosis = "healthy";
         reason = `CTR ${ctr.toFixed(2)}% is in line with position ${position.toFixed(1)}.`;

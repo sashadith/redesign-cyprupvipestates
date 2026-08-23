@@ -69,6 +69,23 @@ export const POSITION_BUCKETS: ReadonlyArray<readonly [number, number]> = [
   [5, 10],
   [10, 20],
 ];
+
+/** Comparable pages a position band needs before its median CTR may be used as
+ *  a bar. It sat bare for four rounds; the note is here because the band it
+ *  gates is the one a reader will want to lower it for.
+ *
+ *  Measured against production on 2026-08-23: the 0-5 band holds 177 pages and
+ *  only 3 of them clear MIN_BUCKET_IMPRESSIONS, so the band sets no bar and
+ *  every page in it is reported `unjudged` on CTR — including the site's
+ *  highest-impression page, 7,018 impressions at position 3.5. That is not a
+ *  shortage that fills in with time: this site rarely ranks top-five on queries
+ *  carrying volume, so its best-ranking pages are structurally unjudgeable.
+ *
+ *  Do NOT lower it to make them judgeable. A median drawn from three samples is
+ *  an unfounded verdict with a decimal point on it — the same defect as the
+ *  one-onward-session `repelling` call MIN_EXPECTED_ONWARD exists to block.
+ *  `pageVerdicts.ts` reports the gap instead, naming both counts in the reason
+ *  so a reader can tell a thin band from a structurally empty one. */
 export const MIN_BUCKET_PAGES = 5;
 
 /** Bucket-level sample-size floor for a valid CTR median — independently
