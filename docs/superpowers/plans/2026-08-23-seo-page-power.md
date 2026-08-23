@@ -1636,6 +1636,8 @@ git commit -m "Page Power: calibration result and threshold adjustments"
 **Files:**
 - Create: `src/app/admin/(panel)/analytics/seo/power/page.tsx`
 - Create: `src/app/admin/(panel)/analytics/seo/power/PagePowerTable.tsx`
+- Modify: `src/app/admin/(panel)/layout.tsx` (nav entry — the screen is otherwise
+  reachable only by typing the URL; Task 8's deep links assume it is in the panel)
 
 - [ ] **Step 1: Create the table client component**
 
@@ -1643,22 +1645,34 @@ git commit -m "Page Power: calibration result and threshold adjustments"
 "use client";
 
 import { useMemo, useState } from "react";
+import { templateClassOf } from "@/lib/seo/templateClass";
+import type { PageDiagnosis } from "@/lib/seo/pagePower/types";
 
+/** Exactly the fields this table renders — deliberately narrower than
+ *  `PageVerdict`. Every field crosses the RSC boundary 1,679 times: measured
+ *  against production on 2026-08-23 the nine below serialise to 581KB, and
+ *  carrying `clicks` and `templateClass` too — neither is displayed, and the
+ *  by-class table under this one answers the template question — took it to
+ *  658KB for nothing. Add a field here when a column shows it, not before. */
 export type Row = {
   key: string;
   locale: string;
+  /** As served, locale prefix included — see `PageKey` in pagePower/types.ts.
+   *  English is prefix-less, de/pl/ru are not. */
   path: string;
-  templateClass: string;
   impressions: number;
-  clicks: number;
+  /** percent, 0–100 */
   ctr: number;
   position: number | null;
-  diagnosis: string;
+  diagnosis: PageDiagnosis;
   reason: string;
   impressionsTrendPct: number | null;
 };
 
-const DIAGNOSIS_LABEL: Record<string, string> = {
+/** Keyed by `PageDiagnosis`, not by `string`, so a sixth diagnosis added to
+ *  pagePower/types.ts fails the build here rather than silently producing a
+ *  bucket of pages with no tab to reach it from. */
+const DIAGNOSIS_LABEL: Record<PageDiagnosis, string> = {
   buried: "Buried",
   unclicked: "Unclicked",
   invisible: "Invisible",
@@ -1666,77 +1680,113 @@ const DIAGNOSIS_LABEL: Record<string, string> = {
   unjudged: "Not enough data",
 };
 
-const BADGE: Record<string, string> = {
-  buried: "bg-[#FEF3C7] text-[#92400E]",
-  unclicked: "bg-[#FEE2E2] text-[#991B1B]",
-  invisible: "bg-[#F3F4F6] text-[#374151]",
-  healthy: "bg-[#DCFCE7] text-[#166534]",
-  unjudged: "bg-[#F3F4F6] text-[#9CA3AF]",
-};
+/** Derived from the literal above rather than hand-written a second time:
+ *  non-numeric string keys enumerate in insertion order, so that one literal is
+ *  both the label table and the tab order and the two cannot drift. The order
+ *  is triage order — the three diagnoses that name work to do, then the two
+ *  that are only ever context. */
+const TABS = Object.keys(DIAGNOSIS_LABEL) as PageDiagnosis[];
+
+const SITE_URL = "https://cyprusvipestates.com";
+
+const LocaleBadge = ({ locale }: { locale: string }) => (
+  <span className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] bg-[#F3F4F6] px-1.5 py-0.5 rounded shrink-0">{locale}</span>
+);
+
+/** The four homepages render as `/`, `/de`, `/pl`, `/ru` — a bare slash is a
+ *  four-pixel click target and reads as punctuation next to a 115-character
+ *  blog path. Not hypothetical: `/` and `/de` are both in the buried pile
+ *  today. `templateClassOf` rather than a second root-URL regex, so the set of
+ *  paths that count as a homepage is defined in one place. */
+const pathLabel = (path: string): string => (templateClassOf(path) === "homepage" ? `${path} (homepage)` : path);
 
 export default function PagePowerTable({ rows }: { rows: Row[] }) {
-  const [filter, setFilter] = useState<string>("buried");
+  const [filter, setFilter] = useState<PageDiagnosis>("buried");
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = {};
-    for (const r of rows) c[r.diagnosis] = (c[r.diagnosis] ?? 0) + 1;
+    const c = new Map<PageDiagnosis, number>();
+    for (const r of rows) c.set(r.diagnosis, (c.get(r.diagnosis) ?? 0) + 1);
     return c;
   }, [rows]);
 
   const shown = useMemo(
-    () => rows.filter((r) => r.diagnosis === filter).sort((a, b) => b.impressions - a.impressions),
+    () =>
+      rows
+        .filter((r) => r.diagnosis === filter)
+        // Tie-broken on path, not left to impressions alone: 618 pages have
+        // zero impressions and `sort` is stable, so ties fall back to inventory
+        // order — which comes from Prisma `findMany` calls with no `orderBy`,
+        // i.e. whatever order Postgres happened to return. Without the
+        // tie-break the 1,118-row `invisible` tab reshuffles between loads.
+        .sort((a, b) => b.impressions - a.impressions || a.path.localeCompare(b.path)),
     [rows, filter],
   );
 
   return (
     <div>
       <div className="flex gap-1 border-b border-[#E5E7EB] mb-4 flex-wrap">
-        {Object.keys(DIAGNOSIS_LABEL).map((d) => (
+        {TABS.map((d) => (
           <button
             key={d}
             type="button"
             onClick={() => setFilter(d)}
             className={`px-3 py-1.5 text-sm -mb-px border-b-2 ${filter === d ? "border-[#1B4B43] text-[#111827] font-medium" : "border-transparent text-[#6B7280] hover:text-[#111827]"}`}
           >
-            {DIAGNOSIS_LABEL[d]} <span className="text-[#9CA3AF]">({counts[d] ?? 0})</span>
+            {DIAGNOSIS_LABEL[d]} <span className="text-[#9CA3AF] tabular-nums">({counts.get(d) ?? 0})</span>
           </button>
         ))}
       </div>
 
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left text-[#6B7280] border-b border-[#E5E7EB]">
-            <th className="py-2 font-medium">Page</th>
-            <th className="py-2 font-medium text-right">Impressions</th>
-            <th className="py-2 font-medium text-right">28d</th>
-            <th className="py-2 font-medium text-right">CTR</th>
-            <th className="py-2 font-medium text-right">Position</th>
-            <th className="py-2 font-medium">Why</th>
-          </tr>
-        </thead>
-        <tbody>
-          {shown.map((r) => (
-            <tr key={r.key} className="border-b border-[#F3F4F6] align-top">
-              <td className="py-2 pr-3">
-                <a href={`https://cyprusvipestates.com${r.path}`} target="_blank" rel="noopener noreferrer" className="text-[#1B4B43] hover:underline">
-                  {r.path}
-                </a>
-                <span className={`ml-2 rounded px-1.5 py-0.5 text-[11px] ${BADGE[r.diagnosis] ?? ""}`}>{r.locale}</span>
-              </td>
-              <td className="py-2 text-right tabular-nums">{r.impressions.toLocaleString("en-GB")}</td>
-              <td className={`py-2 text-right tabular-nums ${r.impressionsTrendPct == null ? "text-[#9CA3AF]" : r.impressionsTrendPct >= 0 ? "text-[#166534]" : "text-[#991B1B]"}`}>
-                {r.impressionsTrendPct == null ? "—" : `${r.impressionsTrendPct >= 0 ? "+" : ""}${r.impressionsTrendPct.toFixed(0)}%`}
-              </td>
-              <td className="py-2 text-right tabular-nums">{r.ctr.toFixed(2)}%</td>
-              <td className="py-2 text-right tabular-nums">{r.position == null ? "—" : r.position.toFixed(1)}</td>
-              <td className="py-2 text-[#6B7280]">{r.reason}</td>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left text-xs text-[#6B7280] uppercase tracking-wide">
+              <th className="pb-2 font-semibold">Page</th>
+              <th className="pb-2 font-semibold text-right">Impressions</th>
+              <th className="pb-2 font-semibold text-right" title="Impressions in the last 28 days against the 28 days before them">28d</th>
+              <th className="pb-2 font-semibold text-right">CTR</th>
+              <th className="pb-2 font-semibold text-right">Position</th>
+              <th className="pb-2 font-semibold">Why</th>
             </tr>
-          ))}
-          {shown.length === 0 && (
-            <tr><td colSpan={6} className="py-6 text-center text-[#9CA3AF]">No pages with this diagnosis.</td></tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          {/* Every matching row, uncapped. `invisible` is 1,118 rows today and
+              renders in well under a second, while a cap would hide exactly
+              what makes that pile worth opening — the handful of pages ranking
+              on the first page of results whose reason says the demand is
+              missing, not the indexing. The default tab is `buried` (78 rows),
+              so the long list only renders when someone asks for it. */}
+          <tbody className="divide-y divide-[#F3F4F6]">
+            {shown.map((r) => (
+              <tr key={r.key} className="align-top">
+                <td className="py-2 pr-3">
+                  <div className="flex items-baseline gap-2">
+                    <LocaleBadge locale={r.locale} />
+                    <a href={`${SITE_URL}${r.path}`} target="_blank" rel="noreferrer" className="text-[#374151] hover:text-[#1B4B43] hover:underline break-words" title={r.path}>
+                      {pathLabel(r.path)}
+                    </a>
+                  </div>
+                </td>
+                <td className="py-2 pr-3 text-right tabular-nums">{r.impressions.toLocaleString("en-GB")}</td>
+                <td className={`py-2 pr-3 text-right tabular-nums ${r.impressionsTrendPct == null ? "text-[#9CA3AF]" : r.impressionsTrendPct >= 0 ? "text-[#1B4B43]" : "text-[#B3261E]"}`}>
+                  {/* Null on 1,584 of 1,679 pages — the prior 28 days must clear
+                      MIN_IMPRESSIONS_TREND before a percentage means anything,
+                      and an invisible page never will. Empty is the honest
+                      reading; see `impressionsTrendPct` in pagePower/types.ts. */}
+                  {r.impressionsTrendPct == null ? "—" : `${r.impressionsTrendPct >= 0 ? "+" : ""}${r.impressionsTrendPct.toFixed(0)}%`}
+                </td>
+                <td className="py-2 pr-3 text-right tabular-nums">{r.ctr.toFixed(2)}%</td>
+                {/* Null exactly when the page drew no impressions (618 pages).
+                    Rendering 0 there would read as "ranked first". */}
+                <td className="py-2 pr-3 text-right tabular-nums">{r.position == null ? "—" : r.position.toFixed(1)}</td>
+                <td className="py-2 text-[#6B7280]">{r.reason}</td>
+              </tr>
+            ))}
+            {shown.length === 0 && (
+              <tr><td colSpan={6} className="py-6 text-center text-[#9CA3AF]">No pages with this diagnosis.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -1745,62 +1795,120 @@ export default function PagePowerTable({ rows }: { rows: Row[] }) {
 - [ ] **Step 2: Create the page**
 
 ```tsx
+import Link from "next/link";
 import { getPageVerdicts } from "@/lib/seo/pagePower/pageVerdicts";
 import { getClassVerdicts } from "@/lib/seo/pagePower/classVerdicts";
 import { templateClassLabel } from "@/lib/seo/templateClass";
+import { COMPARISON_PROJECT_PAGES, type ClassDiagnosis } from "@/lib/seo/pagePower/types";
 import PagePowerTable, { type Row } from "./PagePowerTable";
 
 export const dynamic = "force-dynamic";
 
-const Card = ({ children }: { children: React.ReactNode }) => (
-  <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">{children}</div>
+const DAY = 86_400_000;
+
+const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`bg-white rounded-lg border border-[#E5E7EB] p-5 ${className}`}>{children}</div>
 );
+
+/** The class verdict is the point of the table below it, so it is shown rather
+ *  than left for the reader to infer from the reason sentence. Exhaustive over
+ *  `ClassDiagnosis` for the same reason `DIAGNOSIS_LABEL` is in the table
+ *  component: a new diagnosis must not render as unstyled text. */
+const CLASS_DIAGNOSIS_COLOR: Record<ClassDiagnosis, string> = {
+  repelling: "text-[#B3261E]",
+  mute: "text-[#B3261E]",
+  healthy: "text-[#1B4B43]",
+  unjudged: "text-[#9CA3AF]",
+};
+
+const day = (d: Date): string => d.toISOString().slice(0, 10);
 
 export default async function PagePowerPage() {
   const [pages, classes] = await Promise.all([getPageVerdicts(), getClassVerdicts()]);
-  const rows: Row[] = pages.verdicts.map((v) => ({ ...v, locale: String(v.locale), templateClass: String(v.templateClass) }));
+
+  // Only the fields the table renders — see the `Row` comment in
+  // PagePowerTable.tsx for why this is not a spread of the verdict.
+  const rows: Row[] = pages.verdicts.map((v) => ({
+    key: v.key,
+    locale: String(v.locale),
+    path: v.path,
+    impressions: v.impressions,
+    ctr: v.ctr,
+    position: v.position,
+    diagnosis: v.diagnosis,
+    reason: v.reason,
+    impressionsTrendPct: v.impressionsTrendPct,
+  }));
+
+  // `windowEnd` is EXCLUSIVE — the first day the window does NOT cover — so
+  // printing it would name a date whose data is not in any number on this page
+  // (2026-08-21 for a window ending 2026-08-20). Its doc comment in
+  // pagePower/pageVerdicts.ts says display code must subtract a day; this is
+  // that code. DAY is exact here because both bounds are UTC midnights.
+  const lastCoveredDay = new Date(pages.windowEnd.getTime() - DAY);
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-semibold text-[#111827]">Page Power</h1>
-        <p className="text-sm text-[#6B7280]">
-          One diagnosis per page over {pages.windowStart.toISOString().slice(0, 10)} to{" "}
-          {pages.windowEnd.toISOString().slice(0, 10)}. Coverage {pages.coveragePct.toFixed(1)}% of
-          search clicks — below 85% means redirects the canonical map has not learned.
-        </p>
+    <div>
+      <div className="flex items-baseline justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-semibold">Page Power</h1>
+          <p className="text-sm text-[#6B7280] mt-1 max-w-prose">
+            One diagnosis per page over {day(pages.windowStart)} to {day(lastCoveredDay)}. Coverage{" "}
+            {pages.coveragePct.toFixed(1)}% of search clicks — below 85% means redirects the canonical map has not
+            learned.
+          </p>
+        </div>
+        <Link href="/admin/analytics/seo" className="text-sm text-[#1B4B43] hover:underline shrink-0">← Back to SEO</Link>
       </div>
 
-      <Card>
+      <Card className="mb-6">
         <PagePowerTable rows={rows} />
       </Card>
 
       <Card>
-        <h2 className="text-sm font-medium text-[#111827] mb-3">By template class</h2>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-left text-[#6B7280] border-b border-[#E5E7EB]">
-              <th className="py-2 font-medium">Class</th>
-              <th className="py-2 font-medium text-right">Entering</th>
-              <th className="py-2 font-medium text-right">Onward 2+</th>
-              <th className="py-2 font-medium text-right">Rate</th>
-              <th className="py-2 font-medium text-right">Traceable enquiries</th>
-              <th className="py-2 font-medium">Why</th>
-            </tr>
-          </thead>
-          <tbody>
-            {classes.map((c) => (
-              <tr key={c.templateClass} className="border-b border-[#F3F4F6] align-top">
-                <td className="py-2 pr-3">{templateClassLabel(c.templateClass)}</td>
-                <td className="py-2 text-right tabular-nums">{c.enteringSessions}</td>
-                <td className="py-2 text-right tabular-nums">{c.onwardComparisonSessions}</td>
-                <td className="py-2 text-right tabular-nums">{c.onwardComparisonRate.toFixed(1)}%</td>
-                <td className="py-2 text-right tabular-nums">{c.attributableLeads}</td>
-                <td className="py-2 text-[#6B7280]">{c.reason}</td>
+        <div className="flex items-baseline justify-between gap-4 mb-3">
+          <h2 className="text-sm font-semibold">By template class</h2>
+          {/* Both columns are routinely misread, and both misreadings are
+              recorded on `ClassVerdict` in pagePower/types.ts: "onward" counts
+              only properties OTHER than the one the session landed on (so every
+              class is measured at the same funnel step), and the enquiry count
+              is only those whose form page resolves to this class — 148 of 179
+              leads since January 2025 were entered by hand and appear in no
+              class at all. */}
+          <span className="text-xs text-[#6B7280] text-right">
+            Onward = entered here, then viewed {COMPARISON_PROJECT_PAGES}+ properties other than the landing page ·
+            enquiries are only those whose form page resolves to this class
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs text-[#6B7280] uppercase tracking-wide">
+                <th className="pb-2 font-semibold">Class</th>
+                <th className="pb-2 font-semibold text-right">Entering</th>
+                <th className="pb-2 font-semibold text-right">Onward {COMPARISON_PROJECT_PAGES}+</th>
+                <th className="pb-2 font-semibold text-right">Rate</th>
+                <th className="pb-2 font-semibold text-right">Traceable enquiries</th>
+                <th className="pb-2 font-semibold">Why</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-[#F3F4F6]">
+              {classes.map((c) => (
+                <tr key={c.templateClass} className="align-top">
+                  <td className="py-2 pr-3">
+                    <div className="font-medium text-[#111827] capitalize">{templateClassLabel(c.templateClass)}</div>
+                    <div className={`text-xs font-semibold uppercase tracking-wide ${CLASS_DIAGNOSIS_COLOR[c.diagnosis]}`}>{c.diagnosis}</div>
+                  </td>
+                  <td className="py-2 pr-3 text-right tabular-nums">{c.enteringSessions.toLocaleString("en-GB")}</td>
+                  <td className="py-2 pr-3 text-right tabular-nums">{c.onwardComparisonSessions.toLocaleString("en-GB")}</td>
+                  <td className="py-2 pr-3 text-right tabular-nums">{c.onwardComparisonRate.toFixed(1)}%</td>
+                  <td className="py-2 pr-3 text-right tabular-nums">{c.attributableLeads.toLocaleString("en-GB")}</td>
+                  <td className="py-2 text-[#6B7280]">{c.reason}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
     </div>
   );
@@ -1825,7 +1933,7 @@ route resolves) and `has table: true` when authenticated.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add "src/app/admin/(panel)/analytics/seo/power"
+git add "src/app/admin/(panel)/analytics/seo/power" "src/app/admin/(panel)/layout.tsx" docs/superpowers/plans/2026-08-23-seo-page-power.md
 git commit -m "Page Power: admin screen"
 ```
 
