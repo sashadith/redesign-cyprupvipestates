@@ -74,6 +74,45 @@ export const WARM_CONTACT_STATUSES = [...ACTIVE_LEAD_STATUSES, "KEEP_CONTACT"] a
 // change TO one of these three — see RECENT_ACTIVITY_TYPES below) suppresses
 // the item entirely; once that goes stale too, it's ACTION with honest
 // wording, never URGENT.
+//
+// Evidence override (2026-08-24, monday.com import backlog): status is not the
+// only thing that can falsify "no contact logged yet" — the lead's own file
+// can. _Daniel Henderson and _Adnan Hallak each sat at CONTACTED, URGENT,
+// "waiting for a first response since 2192h" for 91 days while carrying a note
+// reading "Conversation on whatsapp on 24/05. Wants to visit Cyprus in summer
+// 2026". Both arrived through scripts/monday-import.mjs, which writes imported
+// conversation history as NOTE rows and never as REAL_CONTACT_TYPES: the same
+// logging gap as the Konstantin incident, landing at a status the split above
+// deliberately does not cover.
+//
+// So the elevated path is now taken for ANY no-contact lead with human-written
+// activity on file, not only for the three statuses that structurally imply it.
+// A NOTE is somebody sitting down and typing about this person. That is enough
+// to make "waiting for a FIRST response" a false statement, even though it
+// proves nothing about whether they were actually contacted — and the ACTION
+// wording it falls back to ("no contact logged in N days") stays true either
+// way, which is exactly why that wording exists.
+//
+// Measured against production on 2026-08-24 before changing anything: of the 11
+// leads in the URGENT tier, exactly these 2 carry a NOTE. The other 9 have only
+// SYSTEM and PRESENTATION_EVENT rows, so the tier keeps every item that is
+// honestly a first-response wait and loses only the two that never were.
+//
+// Suppression comes with the path: a no-contact lead whose newest note is
+// younger than STALE_FOLLOWUP_DAYS drops out of the panel entirely, and at NEW
+// that costs an URGENT item rather than an ACTION one — the most time-critical
+// thing the panel shows. Checked before accepting that: all 198 NOTE rows in
+// production are attributed to a named person (191 Sascha Dith, 7 Aliaksandr
+// Bandziuk), and nothing in src/ writes a NOTE except the admin UI's own
+// add-note action, so no standing automation can silence a genuine
+// first-response wait by touching a lead. If a script ever starts writing
+// NOTEs, this is the line that has to change with it.
+//
+// The anchor is the NEWEST qualifying row, which for both of these leads is the
+// import's own "Phone cleaned" housekeeping note of 2026-05-28 rather than the
+// conversation note from the day before — one day out on an 88-day item.
+// Telling those two apart means reading the note text, which
+// parseStatusChangeTarget's comment already rules out as a standing dependency.
 // Exported — also used by actions.ts's updateLeadStatus to decide whether a
 // STATUS_CHANGE row's target status should count as contact-equivalent (see
 // parseStatusChangeTarget below): these three can't be reached without a real
@@ -126,24 +165,24 @@ async function noFollowUp(): Promise<ActionItem[]> {
     },
   });
 
-  // Second pass, only for elevated-status leads with no real contact: their
-  // most recent activity of ANY type decides suppress-vs-ACTION. Batched
-  // into one groupBy (RECENT_ACTIVITY_TYPES) plus one extra fetch
-  // (STATUS_CHANGE rows, filtered in JS to contact-implying targets) rather
-  // than N+1 per-lead queries.
-  const elevatedNoContactIds = leads
-    .filter((l) => isElevatedStatus(l.status) && !l.interactions[0])
-    .map((l) => l.id);
+  // Second pass, for EVERY lead with no real contact — not just the
+  // elevated-status ones it was originally written for (see the evidence
+  // override in the header comment). Their most recent human-written activity
+  // decides suppress-vs-ACTION, and now also whether the lead can honestly be
+  // called a first-response wait at all. Batched into one groupBy
+  // (RECENT_ACTIVITY_TYPES) plus one extra fetch (STATUS_CHANGE rows, filtered
+  // in JS to contact-implying targets) rather than N+1 per-lead queries.
+  const noContactIds = leads.filter((l) => !l.interactions[0]).map((l) => l.id);
   const lastAnyActivity = new Map<string, Date>();
-  if (elevatedNoContactIds.length) {
+  if (noContactIds.length) {
     const [rows, statusChangeRows] = await Promise.all([
       prisma.leadInteraction.groupBy({
         by: ["leadId"],
-        where: { leadId: { in: elevatedNoContactIds }, type: { in: [...RECENT_ACTIVITY_TYPES] } },
+        where: { leadId: { in: noContactIds }, type: { in: [...RECENT_ACTIVITY_TYPES] } },
         _max: { occurredAt: true },
       }),
       prisma.leadInteraction.findMany({
-        where: { leadId: { in: elevatedNoContactIds }, type: "STATUS_CHANGE" },
+        where: { leadId: { in: noContactIds }, type: "STATUS_CHANGE" },
         select: { leadId: true, occurredAt: true, body: true, metadata: true },
       }),
     ]);
@@ -198,8 +237,12 @@ async function noFollowUp(): Promise<ActionItem[]> {
     }
 
     if (!lastContact) {
-      if (isElevatedStatus(l.status)) {
-        const anchor = lastAnyActivity.get(l.id) ?? l.createdAt;
+      // Either the status implies prior engagement, or the file proves someone
+      // has already worked this lead. Only a lead with neither is genuinely
+      // "waiting for a first response" and reaches URGENT below.
+      const written = lastAnyActivity.get(l.id);
+      if (isElevatedStatus(l.status) || written) {
+        const anchor = written ?? l.createdAt;
         const cutoff = Date.now() - STALE_FOLLOWUP_DAYS * DAY;
         if (anchor.getTime() > cutoff) continue; // recent activity of any kind — suppressed entirely
         const days = Math.floor((Date.now() - anchor.getTime()) / DAY);
