@@ -33,7 +33,7 @@
 | `src/app/admin/(panel)/analytics/seo/power/improve/ImprovePanel.tsx` (new) | Client panel: generate / review / apply / dismiss |
 | `src/app/admin/(panel)/analytics/seo/power/improve/actions.ts` (new) | Server actions with the admin auth pattern |
 | `prisma/schema.prisma` (modify) | `PageImprovement` model |
-| `prisma/migrations/20260824120000_add_page_improvement/migration.sql` (new) | Additive migration, applied only at deploy |
+| `prisma/migrations/20260824140000_add_page_improvement/migration.sql` (new) | Additive migration, applied only at deploy |
 | `src/lib/seo/pagePower/inventory.ts` (modify) | `InventoryPage.source` — the row Apply writes to |
 | `src/lib/seo/titleSweepLog.ts` (modify) | Applied improvements as second suppression source |
 | `src/lib/ai/seoMeta.ts` (modify) | Delegate its digit check to `copyRules.ts` (behavior identical) |
@@ -174,7 +174,7 @@ Run: `npx tsc --noEmit` — exit 0. Then confirm by inspection (state it in your
 
 ## Task 2: Prisma model + migration + historical stamp
 
-**Files:** Modify `prisma/schema.prisma` · Create `prisma/migrations/20260824120000_add_page_improvement/migration.sql` · Modify `docs/superpowers/plans/2026-08-23-seo-page-power.md` (two lines at the top)
+**Files:** Modify `prisma/schema.prisma` · Create `prisma/migrations/20260824140000_add_page_improvement/migration.sql` · Modify `docs/superpowers/plans/2026-08-23-seo-page-power.md` (two lines at the top)
 
 - [x] **Step 1: Add the model** (append after the last content model, matching the schema's section-comment style)
 
