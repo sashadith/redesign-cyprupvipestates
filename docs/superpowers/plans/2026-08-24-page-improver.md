@@ -45,7 +45,7 @@
 
 **Files:** Create `src/lib/ai/copyRules.ts` · Modify `src/lib/ai/seoMeta.ts`
 
-- [ ] **Step 1: Create the shared module**
+- [x] **Step 1: Create the shared module**
 
 ```typescript
 import { SEO_PLACEHOLDERS } from "@/lib/seoPlaceholders";
@@ -72,6 +72,14 @@ import { SEO_PLACEHOLDERS } from "@/lib/seoPlaceholders";
 //    seo.metaTitle raw, so a placeholder written there would appear verbatim
 //    in a Google snippet. For those kinds any {token} is a violation, not just
 //    an unknown one.
+//
+// `allowedName` is not one of those differences — both consumers pass it, and it
+// predates the extraction: a digit in the SUBJECT'S OWN NAME is not a figure.
+// Several developments are numbered — Glow 2, Abiete 2, Avalon Gardens 2,
+// Roseland Villas 1 — and a bare /\d/ check rejects every possible sentence
+// about them, making "Generate with Claude" permanently impossible for those
+// projects. The name is stripped before the digit test, never from the text that
+// gets stored.
 const KNOWN_PLACEHOLDERS = new Set<string>(SEO_PLACEHOLDERS);
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -94,7 +102,7 @@ export function copyViolation(
 }
 ```
 
-- [ ] **Step 2: Delegate `badFields` in seoMeta.ts**
+- [x] **Step 2: Delegate `badFields` in seoMeta.ts**
 
 Replace the block from `const KNOWN_PLACEHOLDERS = new Set<string>(SEO_PLACEHOLDERS);` down to and including the whole `badFields` arrow function with:
 
@@ -114,11 +122,11 @@ const badFields = (r: Partial<SeoMetaResult>, publicName: string) =>
 
 `SEO_PLACEHOLDERS` stays imported in seoMeta.ts — the retry messages still interpolate it. `escapeRe` leaves with the block (verify nothing else in the file uses it: `grep -n escapeRe src/lib/ai/seoMeta.ts` must return nothing after the edit).
 
-- [ ] **Step 3: Verify behavior is identical for the old consumer**
+- [x] **Step 3: Verify behavior is identical for the old consumer**
 
 Run: `npx tsc --noEmit` — exit 0. Then confirm by inspection (state it in your report): for `placeholders` unset and `allowYears` unset, `copyViolation` is the exact predicate `badFields` had — same name-strip, same `/\d/`, same unknown-token loop.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ---
 
@@ -854,7 +862,7 @@ Also confirm the draft-history read on the improve screen renders its "awaiting 
 
 - [ ] **Step 3: Delete the probe, stop the server, `rm -rf .next node_modules .env.local`, `git status --porcelain` clean, `npx next build` green** (build needs the env copied back in first — same recipe as the Page Power plan: symlink node_modules, cp .env.local, build, then clean again).
 
-- [ ] **Step 4: Commit** (the probe route must not be in it).
+- [x] **Step 4: Commit** (the probe route must not be in it).
 
 - [ ] **Step 5: Hand-off report to the operator** — deployment and calibration are THEIR calls, not yours. State:
   - Deploy requires the migration: `CVP_RUN_MIGRATE=1 ./scripts/deploy-prod.sh` (dry-run first). Until deployed, nothing changes in production; locally the suppression union and history reads tolerate the missing table.

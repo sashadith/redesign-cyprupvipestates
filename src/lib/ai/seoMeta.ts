@@ -1,5 +1,6 @@
 import { anthropic, AI_MODEL } from "./anthropic";
 import { PROJECT_BRIEF } from "./projectBrief";
+import { copyViolation } from "./copyRules";
 import { tuningBlock } from "./tuning";
 import { prisma } from "@/lib/prisma";
 import type { ProjectVM } from "@/app/preview-project/feeds";
@@ -205,26 +206,12 @@ const clamp = (s: string, max: number) => {
 // only fall back to the generic auto text when it meets an unknown token, so the
 // hand-written copy would be silently discarded on every render, with nothing
 // anywhere to say why. Catching it here makes it visible while it is still fixable.
-const KNOWN_PLACEHOLDERS = new Set<string>(SEO_PLACEHOLDERS);
-const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-// A digit in the PROJECT'S OWN NAME is not a figure. Several developments are
-// numbered — Glow 2, Abiete 2, Avalon Gardens 2, Roseland Villas 1 — and a bare
-// /\d/ check rejects every possible sentence about them, making "Generate with
-// Claude" permanently impossible for those projects. The name is removed before
-// the digit test, never from the stored text.
+// The rule itself lives in copyRules.ts since 2026-08-24 (the Page Improver is
+// its second consumer). This wrapper keeps the call sites and the retry text
+// unchanged; no options are passed, so developments keep the FULL digit ban —
+// the year exception is for kinds whose figures do not drift with feed syncs.
 const badFields = (r: Partial<SeoMetaResult>, publicName: string) =>
-  LANG_KEYS.filter((k) => {
-    const raw = r[k] ?? "";
-    const v = publicName.trim()
-      ? raw.replace(new RegExp(escapeRe(publicName.trim()), "gi"), "")
-      : raw;
-    if (/\d/.test(v)) return true;
-    let m: RegExpExecArray | null;
-    const re = /\{(\w*)\}/g;
-    while ((m = re.exec(v)) !== null) if (!KNOWN_PLACEHOLDERS.has(m[1])) return true;
-    return false;
-  });
+  LANG_KEYS.filter((k) => copyViolation(r[k] ?? "", { allowedName: publicName }) !== null);
 
 // Length gets the same treatment, for the same reason: the clamp below is LOSSY.
 // It can only cut, and cutting is exactly what destroyed the Polish and Russian
