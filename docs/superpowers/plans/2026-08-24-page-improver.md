@@ -993,14 +993,14 @@ export async function dismissImprovementAction(id: string): Promise<{ error?: st
 
 Follow the layout conventions of `src/app/admin/(panel)/analytics/seo/power/page.tsx` (Card, header, `← Back` link, English copy). Key requirements rather than a fixed fence — this is UI and the sibling screens are the styleguide; the SHAPES below are binding:
 
-- [ ] **Step 1: `page.tsx`** (server). Reads `searchParams.key` (the pageKey arrives `encodeURIComponent`-ed — a path contains slashes, so it is a query param, not a route segment). Loads: `resolveTarget`, the page's verdict from `getPageVerdicts()`, `pagesInSuppressionWindow(REMEASURE_WINDOW_DAYS)`, the standing draft + history (`prisma.pageImprovement.findMany({ where: { pageKey }, orderBy: { createdAt: "desc" } })` — tolerate P2021 pre-migration the same way `titleSweepLog.ts` does, rendering an "awaiting first deploy" note), and `readTargetSeo` for the current fields. Renders:
+- [x] **Step 1: `page.tsx`** (server). Reads `searchParams.key` (the pageKey arrives `encodeURIComponent`-ed — a path contains slashes, so it is a query param, not a route segment). Loads: `resolveTarget`, the page's verdict from `getPageVerdicts()`, `pagesInSuppressionWindow(REMEASURE_WINDOW_DAYS)`, the standing draft + history (`prisma.pageImprovement.findMany({ where: { pageKey }, orderBy: { createdAt: "desc" } })` — tolerate P2021 pre-migration the same way `titleSweepLog.ts` does, rendering an "awaiting first deploy" note), and `readTargetSeo` for the current fields. Renders:
   - Header: path (linked to the live page), locale badge, diagnosis badge + reason, impressions/CTR/position, `← Back to Page Power`.
   - `development` kind: no panel — a card explaining the override editor owns this kind, deep-linking to the development's admin page. **Verify the editor route with `ls "src/app/admin/(panel)/developments"` and use the real one** — state what you found in your report.
   - `fixed` kind: the panel WITHOUT apply, labelled "code-authored page — apply by editing the code".
   - Suppressed page: a card naming the re-measurement window instead of the Generate button.
   - Otherwise `<ImprovePanel …/>` with serializable props: pageKey, kind, currentSeo, draft (id + proposal + createdAt + diagnosis), history rows, applyEnabled (`APPLY_ENABLED`), editorHref (map: Blog→`/admin/content/blog/[id]`, Singlepage→`/admin/content/pages/[id]`, Developer→`/admin/content/developers/[id]`, CaseStudy→`/admin/content/case-studies/[id]`, Project→`/admin/content/projects/[id]` — **verify each folder exists with `ls` before hardcoding**).
 
-- [ ] **Step 2: `ImprovePanel.tsx`** (client). `useTransition` around the three actions; surface returned `error` strings inline (English). Sections:
+- [x] **Step 2: `ImprovePanel.tsx`** (client). `useTransition` around the three actions; surface returned `error` strings inline (English). Sections:
   - **Meta**: current → proposed diff per field (current in muted text, proposed emphasized, char counts against 58/150). Buttons: Apply meta (disabled with title-tooltip when `!applyEnabled` — "Behind the calibration gate"), Dismiss, Regenerate.
   - **Content sections**: each with heading, draft text in a copyable block (`navigator.clipboard.writeText`, with a "Copied" flash), and its `queriesServed` as chips; below them a deep link "Open in editor" (`editorHref`).
   - **Internal links**: list of fromPath → anchor with the why.
@@ -1008,9 +1008,9 @@ Follow the layout conventions of `src/app/admin/(panel)/analytics/seo/power/page
   - **History**: applied/dismissed rows with dates and who applied.
   - Generation takes tens of seconds — the Generate button must show a working state and stay disabled while pending.
 
-- [ ] **Step 3: The link in `PagePowerTable.tsx`.** Add a final column ("") whose cell is `<a href={`/admin/analytics/seo/power/improve?key=${encodeURIComponent(r.key)}`} …>Improve</a>` styled like the existing path link. **Both `colSpan={6}` occurrences (group band row, empty-state row) become 7.**
+- [x] **Step 3: The link in `PagePowerTable.tsx`.** Add a final column ("") whose cell is `<a href={`/admin/analytics/seo/power/improve?key=${encodeURIComponent(r.key)}`} …>Improve</a>` styled like the existing path link. **Both `colSpan={6}` occurrences (group band row, empty-state row) become 7.**
 
-- [ ] **Step 4: `npx tsc --noEmit` → exit 0. Commit.**
+- [x] **Step 4: `npx tsc --noEmit` → exit 0. Commit.**
 
 ---
 
