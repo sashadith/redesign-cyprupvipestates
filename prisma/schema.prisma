@@ -1495,7 +1495,7 @@ model PageImprovement {
   kind        String // inventory kind at generation time
   targetTable String // "Blog" | "Singlepage" | "Developer" | "CaseStudy" | "Project"; "" when apply has no row (fixed pages)
   targetId    String // row id Apply writes to; "" for fixed pages
-  status      String // "draft" | "applied" | "dismissed" — at most one draft per pageKey (enforced in the generate action)
+  status      String // "draft" | "applied" | "dismissed" — see the draft-uniqueness note on @@index below
   // Snapshot of the diagnosis the draft was based on: months later the admin
   // must be able to see WHY this change was proposed, even after the verdict moved.
   diagnosis   String
@@ -1507,6 +1507,23 @@ model PageImprovement {
   appliedAt   DateTime?
   appliedBy   String?
 
+  // "At most one draft per pageKey" is a BEST-EFFORT invariant, not a
+  // guarantee: the generate action deletes the standing draft and inserts the
+  // new one, and under READ COMMITTED two concurrent generates for the same
+  // page can both find nothing to delete and both insert. The honest fix is a
+  // partial unique index (`... ON page_improvements("pageKey") WHERE status =
+  // 'draft'`), which Prisma 5's schema language cannot express — and adding it
+  // in raw SQL would make it the first schema object in this repo that Prisma
+  // cannot see, i.e. permanent reported drift where there is none today
+  // (checked 2026-08-24: no existing migration creates one). Traded away
+  // deliberately: the UI disables the button while a generation is in flight,
+  // one admin operates it, and the cost of a stray second draft is an orphaned
+  // row, not a wrong page. Revisit if this ever becomes a bulk action.
   @@index([pageKey, status])
   @@index([status, appliedAt])
+  // Every one of the other 44 models maps to a snake_case plural physical
+  // table; without this one line this would be the only PascalCase table in
+  // the database, and renaming a live table after Task 8's deploy is its own
+  // migration. The Prisma accessor stays `prisma.pageImprovement` either way.
+  @@map("page_improvements")
 }

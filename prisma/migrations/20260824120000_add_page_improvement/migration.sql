@@ -1,5 +1,5 @@
 -- Additive only. Applied exclusively via the deploy path (CVP_RUN_MIGRATE=1).
-CREATE TABLE "PageImprovement" (
+CREATE TABLE "page_improvements" (
     "id" TEXT NOT NULL,
     "pageKey" TEXT NOT NULL,
     "kind" TEXT NOT NULL,
@@ -15,9 +15,9 @@ CREATE TABLE "PageImprovement" (
     "appliedAt" TIMESTAMP(3),
     "appliedBy" TEXT,
 
-    CONSTRAINT "PageImprovement_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "page_improvements_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "PageImprovement_pageKey_status_idx" ON "PageImprovement"("pageKey", "status");
+CREATE INDEX "page_improvements_pageKey_status_idx" ON "page_improvements"("pageKey", "status");
 
-CREATE INDEX "PageImprovement_status_appliedAt_idx" ON "PageImprovement"("status", "appliedAt");
+CREATE INDEX "page_improvements_status_appliedAt_idx" ON "page_improvements"("status", "appliedAt");

@@ -186,7 +186,7 @@ model PageImprovement {
   kind        String // inventory kind at generation time
   targetTable String // "Blog" | "Singlepage" | "Developer" | "CaseStudy" | "Project"; "" when apply has no row (fixed pages)
   targetId    String // row id Apply writes to; "" for fixed pages
-  status      String // "draft" | "applied" | "dismissed" — at most one draft per pageKey (enforced in the generate action)
+  status      String // "draft" | "applied" | "dismissed" — see the draft-uniqueness note on @@index below
   // Snapshot of the diagnosis the draft was based on: months later the admin
   // must be able to see WHY this change was proposed, even after the verdict moved.
   diagnosis   String
@@ -198,8 +198,25 @@ model PageImprovement {
   appliedAt   DateTime?
   appliedBy   String?
 
+  // "At most one draft per pageKey" is a BEST-EFFORT invariant, not a
+  // guarantee: the generate action deletes the standing draft and inserts the
+  // new one, and under READ COMMITTED two concurrent generates for the same
+  // page can both find nothing to delete and both insert. The honest fix is a
+  // partial unique index (`... ON page_improvements("pageKey") WHERE status =
+  // 'draft'`), which Prisma 5's schema language cannot express — and adding it
+  // in raw SQL would make it the first schema object in this repo that Prisma
+  // cannot see, i.e. permanent reported drift where there is none today
+  // (checked 2026-08-24: no existing migration creates one). Traded away
+  // deliberately: the UI disables the button while a generation is in flight,
+  // one admin operates it, and the cost of a stray second draft is an orphaned
+  // row, not a wrong page. Revisit if this ever becomes a bulk action.
   @@index([pageKey, status])
   @@index([status, appliedAt])
+  // Every one of the other 44 models maps to a snake_case plural physical
+  // table; without this one line this would be the only PascalCase table in
+  // the database, and renaming a live table after Task 8's deploy is its own
+  // migration. The Prisma accessor stays `prisma.pageImprovement` either way.
+  @@map("page_improvements")
 }
 ```
 
@@ -207,7 +224,7 @@ model PageImprovement {
 
 ```sql
 -- Additive only. Applied exclusively via the deploy path (CVP_RUN_MIGRATE=1).
-CREATE TABLE "PageImprovement" (
+CREATE TABLE "page_improvements" (
     "id" TEXT NOT NULL,
     "pageKey" TEXT NOT NULL,
     "kind" TEXT NOT NULL,
@@ -223,12 +240,12 @@ CREATE TABLE "PageImprovement" (
     "appliedAt" TIMESTAMP(3),
     "appliedBy" TEXT,
 
-    CONSTRAINT "PageImprovement_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "page_improvements_pkey" PRIMARY KEY ("id")
 );
 
-CREATE INDEX "PageImprovement_pageKey_status_idx" ON "PageImprovement"("pageKey", "status");
+CREATE INDEX "page_improvements_pageKey_status_idx" ON "page_improvements"("pageKey", "status");
 
-CREATE INDEX "PageImprovement_status_appliedAt_idx" ON "PageImprovement"("status", "appliedAt");
+CREATE INDEX "page_improvements_status_appliedAt_idx" ON "page_improvements"("status", "appliedAt");
 ```
 
 - [x] **Step 3: Regenerate the client and stamp the old plan**
