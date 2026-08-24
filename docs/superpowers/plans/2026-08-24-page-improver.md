@@ -1018,7 +1018,7 @@ Follow the layout conventions of `src/app/admin/(panel)/analytics/seo/power/page
 
 **Requires the production tunnel on `localhost:5433`, `NEW_PROJECTS_INDEXABLE=true`, read-only.** No Claude call happens locally (no key, by design — convention 4).
 
-- [ ] **Step 1: Temporary probe route** `src/app/api/improver-probe/route.ts` (created and deleted inside this task):
+- [x] **Step 1: Temporary probe route** `src/app/api/improver-probe/route.ts` (created and deleted inside this task):
 
 ```typescript
 // TEMPORARY — Page Improver payload probe, deleted in the same task.
@@ -1043,7 +1043,7 @@ export async function GET(req: Request) {
 }
 ```
 
-- [ ] **Step 2: Run against three real pages** (dev server on 3011, `NEW_PROJECTS_INDEXABLE=true`):
+- [x] **Step 2: Run against three real pages** (dev server on 3011, `NEW_PROJECTS_INDEXABLE=true`):
 
 - `en::/off-plan-properties-in-paphos` (buried singlepage) — **expect pooled queries**: this page's history spans `/off-plan-properties-in-paphos` AND `/en/off-plan-properties-in-paphos`; if `queryCount` is small and every query has near-zero impressions, `urlVariants` is not pooling and that is a bug, not a data quirk.
 - `de::/de/blog/wie-nach-zypern-auswandern` (unclicked blog) — expect `currentSeo` populated from the Blog row, siblings of class `blog-post`, `suppressed: false`.
@@ -1051,9 +1051,9 @@ export async function GET(req: Request) {
 
 Also confirm the draft-history read on the improve screen renders its "awaiting first deploy" state rather than crashing (P2021 tolerance), by loading the page for key #2 through the dev server (it 307s to login — confirm compile + no 500 in the dev log).
 
-- [ ] **Step 3: Delete the probe, stop the server, `rm -rf .next node_modules .env.local`, `git status --porcelain` clean, `npx next build` green** (build needs the env copied back in first — same recipe as the Page Power plan: symlink node_modules, cp .env.local, build, then clean again).
+- [x] **Step 3: Delete the probe, stop the server, `rm -rf .next node_modules .env.local`, `git status --porcelain` clean, `npx next build` green** (build needs the env copied back in first — same recipe as the Page Power plan: symlink node_modules, cp .env.local, build, then clean again).
 
-- [ ] **Step 4: Commit** (the probe route must not be in it).
+- [x] **Step 4: Commit** (the probe route must not be in it).
 
 - [ ] **Step 5: Hand-off report to the operator** — deployment and calibration are THEIR calls, not yours. State:
   - Deploy requires the migration: `CVP_RUN_MIGRATE=1 ./scripts/deploy-prod.sh` (dry-run first). Until deployed, nothing changes in production; locally the suppression union and history reads tolerate the missing table.
