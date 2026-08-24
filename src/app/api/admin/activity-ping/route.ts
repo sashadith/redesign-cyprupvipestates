@@ -15,11 +15,14 @@ export async function POST(request: Request) {
   // Body: { path: "/admin/crm/..." }. Tolerate a missing/invalid body —
   // beats from an old client bundle (open tab from before this deploy)
   // still count, just without a module label.
-  let module: string | null = null;
+  // NB: not named `module` — Next's no-assign-module-variable ESLint rule
+  // errors the build on that (CommonJS shadowing), and `tsc` alone won't
+  // catch it.
+  let mod: string | null = null;
   try {
     const body = await request.json();
-    if (typeof body?.path === "string" && body.path.length <= 500) module = moduleFromPath(body.path);
+    if (typeof body?.path === "string" && body.path.length <= 500) mod = moduleFromPath(body.path);
   } catch { /* no body — old client */ }
-  await recordAdminActivity(uid, module);
+  await recordAdminActivity(uid, mod);
   return new NextResponse(null, { status: 204 });
 }
