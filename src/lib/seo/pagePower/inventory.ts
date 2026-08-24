@@ -36,6 +36,12 @@ export type InventoryPage = {
    *  publication-age guard in pageVerdicts.ts, which only ever uses this to
    *  WITHHOLD a claim, so an unknown date leaves the claim exactly as it was. */
   publishedAt: Date | null;
+  /** The DB row Apply would write to — or null where no row exists (`fixed`
+   *  pages are code-authored). Added 2026-08-24 for the Page Improver, which
+   *  needs pageKey → row without re-deriving the path logic above (the nested
+   *  Singlepage walk in particular must not exist twice). Page Power itself
+   *  never reads this. */
+  source: { table: "Development" | "Project" | "Blog" | "Singlepage" | "Developer" | "CaseStudy"; id: string } | null;
 };
 
 const LOCALES: Locale[] = ["en", "de", "pl", "ru"] as Locale[];
@@ -124,7 +130,7 @@ const FIXED_PAGES: ReadonlyArray<{ title: string; path: (locale: Locale) => stri
 // ancestor degrades gracefully instead of dropping the page outright.
 const MAX_PARENT_DEPTH = 20;
 
-type SinglepageRow = { slug: string; language: Locale; title: string; sanityId: string; parentSanityId: string | null };
+type SinglepageRow = { id: string; slug: string; language: Locale; title: string; sanityId: string; parentSanityId: string | null };
 
 function nestedSlugPath(row: SinglepageRow, byId: Map<string, SinglepageRow>): string {
   const segments: string[] = [row.slug];
@@ -157,29 +163,29 @@ export async function getInventory(): Promise<InventoryPage[]> {
     NEW_PROJECTS_INDEXABLE
       ? prisma.development.findMany({
           where: { publishStatus: "published", slug: { not: null } },
-          select: { slug: true, publicName: true, publishedAt: true },
+          select: { id: true, slug: true, publicName: true, publishedAt: true },
         })
       : Promise.resolve([]),
     prisma.project.findMany({
       where: { status: "PUBLISHED", slug: { not: "" } },
-      select: { slug: true, language: true, title: true, publishedAt: true },
+      select: { id: true, slug: true, language: true, title: true, publishedAt: true },
     }),
     prisma.blog.findMany({
       where: { status: "PUBLISHED", slug: { not: "" } },
-      select: { slug: true, language: true, title: true, publishedAt: true },
+      select: { id: true, slug: true, language: true, title: true, publishedAt: true },
     }),
     prisma.singlepage.findMany({
       where: { status: "PUBLISHED", slug: { not: "" } },
-      select: { slug: true, language: true, title: true, sanityId: true, parentSanityId: true },
+      select: { id: true, slug: true, language: true, title: true, sanityId: true, parentSanityId: true },
     }),
     // Developer has no status column — every row is live (see src/app/sitemaps/[type]/route.ts).
     prisma.developer.findMany({
       where: { slug: { not: "" } },
-      select: { slug: true, language: true, title: true },
+      select: { id: true, slug: true, language: true, title: true },
     }),
     prisma.caseStudy.findMany({
       where: { status: "PUBLISHED", slug: { not: "" } },
-      select: { slug: true, language: true, title: true, publishedAt: true },
+      select: { id: true, slug: true, language: true, title: true, publishedAt: true },
     }),
   ]);
 
@@ -188,16 +194,16 @@ export async function getInventory(): Promise<InventoryPage[]> {
   for (const d of devs) {
     for (const locale of LOCALES) {
       const path = localised(locale, `/projects/${d.slug}`);
-      out.push({ key: pageKey(locale, path), locale, path, kind: "development", title: d.publicName, publishedAt: d.publishedAt });
+      out.push({ key: pageKey(locale, path), locale, path, kind: "development", title: d.publicName, publishedAt: d.publishedAt, source: { table: "Development", id: d.id } });
     }
   }
   for (const p of projects) {
     const path = localised(p.language, `/projects/${p.slug}`);
-    out.push({ key: pageKey(p.language, path), locale: p.language, path, kind: "project", title: p.title, publishedAt: p.publishedAt });
+    out.push({ key: pageKey(p.language, path), locale: p.language, path, kind: "project", title: p.title, publishedAt: p.publishedAt, source: { table: "Project", id: p.id } });
   }
   for (const b of blogs) {
     const path = localised(b.language, `/blog/${b.slug}`);
-    out.push({ key: pageKey(b.language, path), locale: b.language, path, kind: "blog", title: b.title, publishedAt: b.publishedAt });
+    out.push({ key: pageKey(b.language, path), locale: b.language, path, kind: "blog", title: b.title, publishedAt: b.publishedAt, source: { table: "Blog", id: b.id } });
   }
   const singlesById = new Map(singles.map((s) => [s.sanityId, s]));
   for (const s of singles) {
@@ -205,20 +211,20 @@ export async function getInventory(): Promise<InventoryPage[]> {
     // the full served path by walking parentSanityId (see nestedSlugPath above).
     const nested = nestedSlugPath(s, singlesById);
     const path = localised(s.language, `/${nested}`);
-    out.push({ key: pageKey(s.language, path), locale: s.language, path, kind: "singlepage", title: s.title, publishedAt: null });
+    out.push({ key: pageKey(s.language, path), locale: s.language, path, kind: "singlepage", title: s.title, publishedAt: null, source: { table: "Singlepage", id: s.id } });
   }
   for (const dev of developers) {
     const path = localised(dev.language, `/developers/${dev.slug}`);
-    out.push({ key: pageKey(dev.language, path), locale: dev.language, path, kind: "developer", title: dev.title, publishedAt: null });
+    out.push({ key: pageKey(dev.language, path), locale: dev.language, path, kind: "developer", title: dev.title, publishedAt: null, source: { table: "Developer", id: dev.id } });
   }
   for (const c of caseStudies) {
     const path = localised(c.language, `/case-studies/${c.slug}`);
-    out.push({ key: pageKey(c.language, path), locale: c.language, path, kind: "caseStudy", title: c.title, publishedAt: c.publishedAt });
+    out.push({ key: pageKey(c.language, path), locale: c.language, path, kind: "caseStudy", title: c.title, publishedAt: c.publishedAt, source: { table: "CaseStudy", id: c.id } });
   }
   for (const locale of LOCALES) {
     for (const fixed of FIXED_PAGES) {
       const path = fixed.path(locale);
-      out.push({ key: pageKey(locale, path), locale, path, kind: "fixed", title: fixed.title, publishedAt: null });
+      out.push({ key: pageKey(locale, path), locale, path, kind: "fixed", title: fixed.title, publishedAt: null, source: null });
     }
   }
 

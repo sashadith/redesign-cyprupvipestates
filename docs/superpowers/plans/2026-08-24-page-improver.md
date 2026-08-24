@@ -264,7 +264,7 @@ Run: `npx prisma generate` (local codegen only — touches no database). Then in
 
 **Files:** Modify `src/lib/seo/pagePower/inventory.ts` · Modify `src/lib/seo/titleSweepLog.ts`
 
-- [ ] **Step 1: Extend `InventoryPage`** — append to the type, after `publishedAt`:
+- [x] **Step 1: Extend `InventoryPage`** — append to the type, after `publishedAt`:
 
 ```typescript
   /** The DB row Apply would write to — or null where no row exists (`fixed`
@@ -275,7 +275,7 @@ Run: `npx prisma generate` (local codegen only — touches no database). Then in
   source: { table: "Development" | "Project" | "Blog" | "Singlepage" | "Developer" | "CaseStudy"; id: string } | null;
 ```
 
-- [ ] **Step 2: Fill it.** Add `id: true` to each of the six `select` blocks in `getInventory()`, and extend each push:
+- [x] **Step 2: Fill it.** Add `id: true` to each of the six `select` blocks in `getInventory()`, and extend each push:
 
 - devs loop: `source: { table: "Development", id: d.id }`
 - projects loop: `source: { table: "Project", id: p.id }`
@@ -287,7 +287,7 @@ Run: `npx prisma generate` (local codegen only — touches no database). Then in
 
 (`SinglepageRow` needs `id: string` added to its type alias.)
 
-- [ ] **Step 3: The suppression union.** In `titleSweepLog.ts`, add `import { prisma } from "@/lib/prisma";` and replace `pagesInSuppressionWindow` with:
+- [x] **Step 3: The suppression union.** In `titleSweepLog.ts`, add `import { prisma } from "@/lib/prisma";` and replace `pagesInSuppressionWindow` with:
 
 ```typescript
 export async function pagesInSuppressionWindow(windowDays: number): Promise<Set<string>> {
@@ -322,7 +322,7 @@ export async function pagesInSuppressionWindow(windowDays: number): Promise<Set<
 }
 ```
 
-- [ ] **Step 4: `npx tsc --noEmit` → exit 0. Commit.**
+- [x] **Step 4: `npx tsc --noEmit` → exit 0. Commit.**
 
 ---
 
