@@ -46,6 +46,21 @@
 // what makes a Gewerbeimmobilie's block silently disappear when there simply
 // aren't 3+ other commercial developments to suggest, by design.
 //
+// NO PRICE BASIS AT ALL (2026-08-24): a development can have neither its own
+// priceFrom nor a single priced unit — Grato Homes 2 (sold out the same day,
+// 1 manually-added "sold" row + 3 feed "reserved" rows, every price null) hit
+// this and got zero alternatives while 76 genuine Paphos candidates existed.
+// The funnel used to bail out here (`currentPrice == null → return []`)
+// because every stage filtered on a price band. It now runs the SAME four
+// stages with the price band simply not applied — developer, location and
+// type carry the ranking on their own — instead of guessing a price. Ordering
+// degrades the same way: without a price to be close to, candidates sort by
+// developer, then location, then type match, then cheapest first (a stable,
+// explainable order — never random). Everything else is unchanged: the
+// commercial/residential boundary, the sold-out exclusion, and the
+// MIN_ALTERNATIVES floor all still apply, so a price-less project with a thin
+// pool still shows no block rather than a weak one.
+//
 // Commercial developments skip this funnel entirely (2026-08-06): with only
 // 5 published commercial developments total, developer/location/price
 // filtering routinely filtered the pool down to nothing worth showing (e.g.
@@ -144,8 +159,9 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
   });
   if (!current) return [];
 
+  // null = this development carries no price anywhere (see the header comment):
+  // the price band is then dropped from every stage rather than guessed at.
   const currentPrice = current.priceFrom ?? cheapestAvailable(current.units) ?? cheapestOfAnyStatus(current.units);
-  if (currentPrice == null) return []; // no price basis to compare against — never guess
 
   const currentTypes = typeTokens(current.category, current.units);
   const currentIsCommercial = isCommercial(current.category, current.units);
@@ -187,13 +203,35 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
     candidates.push({ ...d, price, sameDeveloper, sameLocation, typeMatch });
   }
 
-  const byPriceProximity = (list: Candidate[]) =>
-    [...list].sort((a, b) => Math.abs(a.price - currentPrice) - Math.abs(b.price - currentPrice));
+  // Price band, applied only where there is a price to compare against — a
+  // price-less development passes every candidate through untouched (header
+  // comment) rather than being filtered down to nothing.
+  const withinBand = (price: number, band: number) => {
+    if (currentPrice == null) return true;
+    return inBand(price, currentPrice, band);
+  };
+
+  // Closest price first — the moment a price basis exists. Without one, rank
+  // by the signals that DO exist (developer → location → type), cheapest
+  // first as the final tie-breaker.
+  const byRelevance = (list: Candidate[]) => {
+    const sorted = [...list];
+    if (currentPrice != null) {
+      const basis = currentPrice;
+      return sorted.sort((a, b) => Math.abs(a.price - basis) - Math.abs(b.price - basis));
+    }
+    return sorted.sort((a, b) => {
+      if (a.sameDeveloper !== b.sameDeveloper) return a.sameDeveloper ? -1 : 1;
+      if (a.sameLocation !== b.sameLocation) return a.sameLocation ? -1 : 1;
+      if (a.typeMatch !== b.typeMatch) return a.typeMatch ? -1 : 1;
+      return a.price - b.price;
+    });
+  };
 
   const fill = (chosen: Candidate[], pool: Candidate[]) => {
     if (chosen.length >= MAX_ALTERNATIVES) return chosen;
     const seen = new Set(chosen.map((c) => c.id));
-    const more = byPriceProximity(pool.filter((c) => !seen.has(c.id)));
+    const more = byRelevance(pool.filter((c) => !seen.has(c.id)));
     return [...chosen, ...more].slice(0, MAX_ALTERNATIVES);
   };
 
@@ -205,10 +243,8 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
   const fillLocationFirst = (chosen: Candidate[], pool: Candidate[]) => {
     if (chosen.length >= MAX_ALTERNATIVES) return chosen;
     const seen = new Set(chosen.map((c) => c.id));
-    const more = [...pool.filter((c) => !seen.has(c.id))].sort((a, b) => {
-      if (a.sameLocation !== b.sameLocation) return a.sameLocation ? -1 : 1;
-      return Math.abs(a.price - currentPrice) - Math.abs(b.price - currentPrice);
-    });
+    const rest = byRelevance(pool.filter((c) => !seen.has(c.id)));
+    const more = [...rest].sort((a, b) => (a.sameLocation === b.sameLocation ? 0 : a.sameLocation ? -1 : 1));
     return [...chosen, ...more].slice(0, MAX_ALTERNATIVES);
   };
 
@@ -216,11 +252,11 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
   if (currentIsCommercial) {
     // No developer/location/price filtering — see the header comment above
     // for why. Just every other commercial development, best price match first.
-    chosen = byPriceProximity(candidates).slice(0, MAX_ALTERNATIVES);
+    chosen = byRelevance(candidates).slice(0, MAX_ALTERNATIVES);
   } else {
     // Stage 1: developer AND location, type required, tight price band.
-    chosen = byPriceProximity(
-      candidates.filter((c) => c.sameDeveloper && c.sameLocation && c.typeMatch && inBand(c.price, currentPrice, PRICE_BAND_TIGHT)),
+    chosen = byRelevance(
+      candidates.filter((c) => c.sameDeveloper && c.sameLocation && c.typeMatch && withinBand(c.price, PRICE_BAND_TIGHT)),
     ).slice(0, MAX_ALTERNATIVES);
 
     // Stage 2: developer OR location, type still required, tight price band.
@@ -230,7 +266,7 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
     if (chosen.length < MAX_ALTERNATIVES) {
       chosen = fill(
         chosen,
-        candidates.filter((c) => (c.sameDeveloper || c.sameLocation) && c.typeMatch && inBand(c.price, currentPrice, PRICE_BAND_TIGHT)),
+        candidates.filter((c) => (c.sameDeveloper || c.sameLocation) && c.typeMatch && withinBand(c.price, PRICE_BAND_TIGHT)),
       );
     }
 
@@ -238,7 +274,7 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
     if (chosen.length < MAX_ALTERNATIVES) {
       chosen = fill(
         chosen,
-        candidates.filter((c) => (c.sameDeveloper || c.sameLocation) && inBand(c.price, currentPrice, PRICE_BAND_LOOSE)),
+        candidates.filter((c) => (c.sameDeveloper || c.sameLocation) && withinBand(c.price, PRICE_BAND_LOOSE)),
       );
     }
 
@@ -252,7 +288,7 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
     if (chosen.length < MAX_ALTERNATIVES) {
       chosen = fillLocationFirst(
         chosen,
-        candidates.filter((c) => c.typeMatch && inBand(c.price, currentPrice, PRICE_BAND_LOOSE)),
+        candidates.filter((c) => c.typeMatch && withinBand(c.price, PRICE_BAND_LOOSE)),
       );
     }
   }

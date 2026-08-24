@@ -65,7 +65,6 @@ export type DevelopmentStrings = {
   soldOutBannerBodyNoAlternatives: string;
   offMarketCtaHeadline: GoldPhrase;
   offMarketCtaBody: string;
-  unitsHeadingSoldOut: string; // replaces unitsHeading once sold out
 
   // ---- alternatives block ----
   alternativesHeading: string; // dezent placement on an available project's page
@@ -153,7 +152,6 @@ const EN: DevelopmentStrings = {
   soldOutBannerBodyNoAlternatives: "Homes like these move quickly, and fortunately Cyprus isn't done building beautiful ones. Tell us what brought you here — we'll find what comes closest.",
   offMarketCtaHeadline: { lead: "Get there ", gold: "before the listing", trail: " does." },
   offMarketCtaBody: "Describe your ideal home in one message — we often know about units before they go public, and when we do, we'll think of you first.",
-  unitsHeadingSoldOut: "The Properties",
   alternativesHeading: "Similar projects",
   tagDistrict: "District",
   tagLocality: "Locality",
@@ -216,7 +214,6 @@ const DE: DevelopmentStrings = {
   soldOutBannerBodyNoAlternatives: "Solche Objekte bleiben nicht lange, und zum Glück ist Zypern mit dem Bauen schöner Projekte noch nicht fertig. Sagen Sie uns, was Sie hierhergeführt hat — wir finden, was dem am nächsten kommt.",
   offMarketCtaHeadline: { lead: "Seien Sie ", gold: "schneller", trail: " als das Inserat." },
   offMarketCtaBody: "Beschreiben Sie uns Ihr Wunschobjekt in einer Nachricht — wir wissen oft von Einheiten, bevor sie öffentlich werden, und denken dann zuerst an Sie.",
-  unitsHeadingSoldOut: "Die Objekte",
   alternativesHeading: "Ähnliche Projekte",
   tagDistrict: "Bezirk",
   tagLocality: "Ort",
@@ -279,7 +276,6 @@ const PL: DevelopmentStrings = {
   soldOutBannerBodyNoAlternatives: "Takie rezydencje nie czekają długo, ale na szczęście Cypr nie skończył jeszcze budować pięknych projektów. Powiedz nam, co Cię tu przyciągnęło — znajdziemy to, co jest najbliżej.",
   offMarketCtaHeadline: { lead: "Bądź ", gold: "szybszy niż", trail: " ogłoszenie." },
   offMarketCtaBody: "Opisz nam swoją idealną nieruchomość w jednej wiadomości — często wiemy o rezydencjach, zanim staną się publiczne, i wtedy pomyślimy najpierw o Tobie.",
-  unitsHeadingSoldOut: "Obiekty",
   alternativesHeading: "Podobne projekty",
   tagDistrict: "Okręg",
   tagLocality: "Miejscowość",
@@ -343,7 +339,6 @@ const RU: DevelopmentStrings = {
   soldOutBannerBodyNoAlternatives: "Такие резиденции не задерживаются, но, к счастью, Кипр ещё не закончил строить красивое. Расскажите, что привело вас сюда — мы найдём то, что ближе всего.",
   offMarketCtaHeadline: { lead: "Опередите ", gold: "объявление.", trail: "" },
   offMarketCtaBody: "Опишите нам идеальный объект в одном сообщении — мы часто узнаём о резиденциях до их публикации, и тогда в первую очередь вспомним о вас.",
-  unitsHeadingSoldOut: "Объекты",
   alternativesHeading: "Похожие проекты",
   tagDistrict: "Округ",
   tagLocality: "Населённый пункт",

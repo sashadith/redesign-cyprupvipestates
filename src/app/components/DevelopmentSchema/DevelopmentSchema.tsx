@@ -16,8 +16,12 @@ export default function DevelopmentSchema({ p, lang, canonical }: { p: ProjectVM
   const { soldOut } = computeAvailability(p.units);
   // Same listed-only population the page itself counts and renders — a
   // numberOfAccommodationUnits taken from the raw rows would tell Google a
-  // larger number than the page shows (see listedUnits).
-  const listedCount = listedUnits(p.units).length;
+  // larger number than the page shows (see listedUnits). Sold-out pages no
+  // longer render the units block at all (ProjectPageBody, 2026-08-24), so
+  // the count is dropped there too rather than left describing a list that
+  // isn't on the page — structured data stays a description of what's
+  // actually rendered. `availability: SoldOut` below is unaffected.
+  const listedCount = soldOut ? 0 : listedUnits(p.units).length;
   // p.priceFrom/priceTo are already fully resolved by resolveDevelopmentPrice()
   // in mapRowToVM (src/lib/developmentCard.ts) — the single source of truth
   // every surface (this schema, the page itself, the merged /projects card) uses.

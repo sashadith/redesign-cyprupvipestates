@@ -70,6 +70,40 @@ rewrite always won).
 first time / resuming impressions after being effectively de-indexed — this is
 the intended effect of becoming indexable, not a ranking signal.
 
+## 2026-08-24 — Sold-out project pages: units block removed, alternatives now always resolvable
+
+Two changes to the Development detail page (`/[lang]/projects/[slug]`, the
+`ProjectPageBody` branch):
+
+- **Units block removed on sold-out pages.** Once a Development has zero
+  available units, the "The Properties" list no longer renders at all
+  (`!isSold && listed.length > 0`). On those pages every price cell was
+  already suppressed ("—" for sold, "Reserved" for reserved), so the block
+  carried no price signal and no CTA — the alternatives grid and enquiry form
+  already sit directly under the hero for sold-out projects. **27 of 149
+  published Developments are currently sold out**, so this removes body
+  content from 27 indexable pages (×4 languages). SEO-relevant but expected
+  to be neutral: the block contained no internal links (its only `<a>` was an
+  external Matterport/video attribute link), was not an anchor target, and
+  carried no structured data. `numberOfAccommodationUnits` is now omitted from
+  the `RealEstateListing` JSON-LD on sold-out pages too, so the schema keeps
+  describing only what the page actually renders (`availability: SoldOut` is
+  unchanged).
+
+- **Alternatives no longer require a price basis.** `getAlternativeDevelopments`
+  used to return `[]` whenever a Development had neither its own `priceFrom`
+  nor a single priced unit, because every ranking stage filtered on a price
+  band. It now runs the same four stages with the price band simply not
+  applied (developer → location → type carry the ranking). Verified against
+  all 149 published Developments: **146 results byte-identical, 3 changed** —
+  `grato-homes-2`, `konia-crown`, `neon-homes`, each going from no block at
+  all to 4 suggestions. Net effect on internal linking: 3 pages gain 4
+  outbound internal links each.
+
+**Expect:** slightly lower word count / content volume on sold-out project
+URLs from this date; do not read a click or impression shift on those pages as
+a ranking-quality change without checking sold-out status first.
+
 ## Known migration-era GSC artifact (not a changelog entry, a standing caveat)
 
 Beyond the above, an EARLIER locale-prefix migration (English made prefix-less,
@@ -122,7 +156,7 @@ investigation from 2026-07-18/19 already covered the one real anti-pattern
 
 ## Already-resolved Advisor findings (2026-07-20, not changelog entries — standing caveats)
 
-The Advisor has re-raised both of these as if new. Both are closed; don't re-suggest.
+The Advisor has re-raised these as if new. All are closed; don't re-suggest.
 
 - **`/de/blog/wo-leben-die-meisten-deutschen-auf-zypern` (-95 clicks):** verified healthy
   migration artifact, not decay. Single clean 308 from the pre-migration root URL, correct
@@ -140,3 +174,10 @@ The Advisor has re-raised both of these as if new. Both are closed; don't re-sug
   before and after (noise, not signal). No confirmed cause — likely ordinary SERP
   volatility on a thin filter/listing page, not a redirect or migration defect. Low
   commercial value; not worth further investigation unless it starts mattering.
+- **`/projects/avalon-gardens-2` (-4 clicks, 2026-08-24 verification):** the 308-hop
+  link-equity attribution is dismissed for this page specifically. The card-building resolver
+  fix is confirmed correct and the page does receive a direct, no-redirect inbound link from
+  `/developers/island-blue` — so the link-equity mechanism is present but isn't the click
+  loss driver here. Actual cause: the Development is **100% sold out** (0/28 units
+  available). Attribute future click/impression decline on this page to sold-out status, not
+  to internal-link health, unless unit availability changes.

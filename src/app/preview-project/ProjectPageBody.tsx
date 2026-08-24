@@ -271,11 +271,22 @@ export default async function ProjectPageBody({
           </section>
         )}
 
-        {/* ---------- UNITS ---------- */}
-        {listed.length > 0 && (
+        {/* ---------- UNITS ----------
+            Sold-out pages don't render this block at all (Sascha, 2026-08-24).
+            Once nothing is available it is a dead end: every price cell is
+            replaced by "—" (sold) or "Reserved" (UnitsView's priceCell), so
+            there is no price signal left, and the page's actual next step —
+            alternatives + enquiry form — already sits directly under the hero
+            for sold-out projects. Grato Homes 2 was the trigger: 4 rows with
+            no type, no price and no photos. SEO-neutral by inspection —
+            UnitsView emits no internal links (its only <a> is an external
+            Matterport/video attribute link) and nothing anchors to this
+            section; the schema's unit count is dropped in the same move, see
+            DevelopmentSchema. */}
+        {!isSold && listed.length > 0 && (
           <section className="pp-wrap pp-section pp-units-sec">
             <div className="pp-units-head">
-              <h2 className="pp-h2">{isSold ? t.unitsHeadingSoldOut : t.unitsHeading}</h2>
+              <h2 className="pp-h2">{t.unitsHeading}</h2>
               <p className="pp-hint" style={{ margin: 0 }}>{t.unitsSubAvailable(avail.length)}{listed.length !== avail.length ? t.unitsSubSold(listed.length - avail.length) : ""}</p>
             </div>
             <UnitsView units={p.units} lang={lang} />
