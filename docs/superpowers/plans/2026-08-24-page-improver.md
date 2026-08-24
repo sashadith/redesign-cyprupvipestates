@@ -668,7 +668,7 @@ export async function gatherImprovementInput(pageKey: string): Promise<Improveme
 
 **Files:** Create `src/lib/ai/pageImprover/generate.ts`
 
-- [ ] **Step 1: The module**
+- [x] **Step 1: The module**
 
 ```typescript
 import { anthropic, AI_MODEL } from "../anthropic";
@@ -706,7 +706,7 @@ const violationNotes = (p: Partial<ImprovementProposal>): string[] => {
     if (v.trim().length > budget)
       notes.push(`${field} is ${v.trim().length} characters against a hard ceiling of ${budget}. Rewrite it shorter by dropping the least important detail.`);
   }
-  for (const [i, s] of (p.contentSections ?? []).entries()) {
+  for (const [i, s] of Array.from((p.contentSections ?? []).entries())) {
     if (copyViolation(`${s.heading} ${s.draft}`, { allowYears: true, placeholders: "none" }))
       notes.push(`contentSections[${i}] contains a digit or a {placeholder}. Prose on this page type must be figure-free (bare years excepted) — rewrite that section.`);
   }
@@ -745,6 +745,16 @@ export async function generateProposal(input: ImprovementInput): Promise<Improve
       tools: [{
         name: "page_improvement",
         description: "The proposed repair for this one page.",
+        // No cast on this literal. seoMeta.ts and seoAdvisor/analyze.ts both
+        // carry `as any` here and the plan's draft of this file carried
+        // `as never`; checked 2026-08-24 against @anthropic-ai/sdk 0.110.0,
+        // all three are unnecessary — Tool.InputSchema is
+        // `{ type: "object"; properties?: unknown; required?: string[] }` with
+        // an index signature, so the uncast literal assigns cleanly. Keeping it
+        // uncast is not tidiness: a cast makes `type: "objekt"` or a `required`
+        // holding a non-string compile, and this is the one path in the feature
+        // where a broken schema surfaces only as a 400 from a call nobody can
+        // run locally (no ANTHROPIC_API_KEY on this machine, by decision).
         input_schema: {
           type: "object",
           properties: {
@@ -773,7 +783,7 @@ export async function generateProposal(input: ImprovementInput): Promise<Improve
             },
           },
           required: ["metaTitle", "metaDescription", "rationale", "contentSections", "internalLinks"],
-        } as never,
+        },
       }],
       tool_choice: { type: "tool", name: "page_improvement" },
       messages: [{ role: "user", content: `${JSON.stringify(payload, null, 1)}${correction ? `\n\n${correction}` : ""}` }],
@@ -786,7 +796,14 @@ export async function generateProposal(input: ImprovementInput): Promise<Improve
 
   let raw = await attempt();
   const notes = violationNotes(raw);
-  if (notes.length) raw = await attempt(`These fields were rejected — fix ONLY them, keep the rest:\n- ${notes.join("\n- ")}`);
+  // The retry names what broke, because a blind second call with the identical
+  // prompt mostly reproduces the same mistake (seoMeta.ts's retry, same
+  // reasoning). It asks for a WHOLE new draft rather than a patch: attempt()
+  // replays no assistant turn, so the second call cannot see the text it is
+  // being corrected on, and an instruction to "keep the rest" would name
+  // something the model is not holding.
+  if (notes.length)
+    raw = await attempt(`Your first draft was rejected on the points below. Write the proposal again in full — you are not editing that draft, you cannot see it — and avoid these faults:\n- ${notes.join("\n- ")}`);
   const still = violationNotes(raw);
   if (still.length) throw new Error(`Proposal still violates the copy rules after a retry: ${still.join(" · ")}`);
 
@@ -800,7 +817,7 @@ export async function generateProposal(input: ImprovementInput): Promise<Improve
 }
 ```
 
-- [ ] **Step 2: `npx tsc --noEmit` → exit 0. Commit.**
+- [x] **Step 2: `npx tsc --noEmit` → exit 0. Commit.**
 
 ---
 
