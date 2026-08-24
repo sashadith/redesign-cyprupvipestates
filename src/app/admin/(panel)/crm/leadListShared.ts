@@ -41,6 +41,25 @@ export function computeBand(
   now: number,
 ): { band: ColorBand; reason: string } {
   if (lead.status === "NEW" && !hasContact) {
+    // A follow-up scheduled in the FUTURE is a decision an admin made, so this
+    // branch must not call the lead overdue and contradict it. Reported
+    // 2026-08-24: two hot leads kept their red dot after their follow-ups were
+    // moved out to future dates, because this branch returns before the date is
+    // ever looked at further down.
+    //
+    // Still YELLOW, never GREEN: the first contact genuinely has not happened
+    // yet, so the lead must not drop into the calm band and out of attention —
+    // it is scheduled, not handled. Phrasing mirrors the cadence branches below
+    // ("due today" / "in N days") so the two read as one scheme.
+    if (lead.nextFollowUpAt && lead.nextFollowUpAt.getTime() > now) {
+      const until = lead.nextFollowUpAt.getTime() - now;
+      return {
+        band: "YELLOW",
+        reason: until <= DAY_MS
+          ? "New lead — first contact due today"
+          : `New lead — first contact scheduled in ${Math.ceil(until / DAY_MS)} days`,
+      };
+    }
     const age = now - lead.createdAt.getTime();
     if (age > DAY_MS) {
       return { band: "RED", reason: `New lead — first contact overdue by ${agoLabel(age - DAY_MS)}` };
