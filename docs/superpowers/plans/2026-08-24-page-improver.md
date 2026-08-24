@@ -330,7 +330,7 @@ export async function pagesInSuppressionWindow(windowDays: number): Promise<Set<
 
 **Files:** Create `src/lib/ai/pageImprover/types.ts` · Create `src/lib/ai/pageImprover/target.ts` · Create `src/lib/ai/pageImprover/gather.ts`
 
-- [ ] **Step 1: types.ts**
+- [x] **Step 1: types.ts**
 
 ```typescript
 // Shapes and constants for the Page Improver. The spec is
@@ -369,7 +369,7 @@ export type ImprovementProposal = {
 export type CurrentSeo = { metaTitle: string; metaDescription: string };
 ```
 
-- [ ] **Step 2: target.ts**
+- [x] **Step 2: target.ts**
 
 ```typescript
 import { prisma } from "@/lib/prisma";
@@ -381,9 +381,16 @@ import type { CurrentSeo } from "./types";
 // the nested-Singlepage walk and the development/legacy collision rule must
 // not exist twice, and the inventory is already the single source of truth
 // for "what page is this URL".
-export async function resolveTarget(pageKey: string): Promise<InventoryPage | null> {
-  const inventory = await getInventory();
-  return inventory.find((p) => p.key === pageKey) ?? null;
+//
+// `inventory` is an optional already-loaded copy, for callers resolving more
+// than one key. getInventory() reads six tables and costs 1,965 ms cold /
+// ~250 ms warm for 1,696 pages (measured against production 2026-08-24), so a
+// caller resolving five keys pays it five times unless it threads one through
+// — see gatherImprovementInput, which does, and which measured 775 ms against
+// 246 ms for exactly that.
+export async function resolveTarget(pageKey: string, inventory?: InventoryPage[]): Promise<InventoryPage | null> {
+  const pages = inventory ?? (await getInventory());
+  return pages.find((p) => p.key === pageKey) ?? null;
 }
 
 const SEO_TABLES = ["Blog", "Singlepage", "Developer", "CaseStudy", "Project"] as const;
@@ -399,9 +406,12 @@ const asSeo = (seo: unknown): CurrentSeo => {
 };
 
 // One switch for reads and one for writes, so the set of tables Apply can
-// touch is visible in one place. All five store the same {metaTitle,
-// metaDescription} Json shape — verified on real de/ru rows 2026-08-24, and
-// the admin editors for every kind read `seo.metaTitle ?? ""` identically.
+// touch is visible in one place. `Project` was the one shape the spec only
+// ASSUMED; it holds. Measured across every row of all five tables on
+// 2026-08-24: 887 Projects, 208 Blogs, 182 Singlepages, 88 Developers and 12
+// Case Studies, 1,377 rows, every one of them a Json object carrying exactly
+// `metaTitle` and `metaDescription` and nothing else — no nulls, no third key
+// anywhere. The five admin editors read `seo.metaTitle ?? ""` identically.
 // Developments are deliberately absent: they have their own generator and
 // override editor, and two generators for the same fields drift apart.
 export async function readTargetSeo(table: SeoTable, id: string): Promise<CurrentSeo | null> {
@@ -430,8 +440,12 @@ export async function readTargetSeo(table: SeoTable, id: string): Promise<Curren
 }
 
 export async function writeTargetSeo(table: SeoTable, id: string, next: CurrentSeo): Promise<void> {
-  // Merge, not replace: the Json may carry fields beyond the two we manage
-  // (openGraph overrides, legacy keys) and Apply must not strip them.
+  // Merge, not replace. No row carries a third key today (the census above),
+  // so this is not repairing a known case — it is the same shape the admin
+  // editors already write through (`data.seo = { ...prev.seo, metaTitle,
+  // metaDescription }`, src/app/admin/actions.ts). A replace would work now
+  // and silently strip the first openGraph or legacy field anyone adds later,
+  // and the loss would show up as a rendering change nobody connects to Apply.
   const current = await (async () => {
     switch (table) {
       case "Blog": return (await prisma.blog.findUnique({ where: { id }, select: { seo: true } }))?.seo;
@@ -454,7 +468,7 @@ export async function writeTargetSeo(table: SeoTable, id: string, next: CurrentS
 
 **Plan-time uncertainty to verify in this task, not work around:** the spec flags `Project.seo` shape as assumed. Verify with a read-only query (`node --env-file=.env.local`, select one `Project` row's `seo`); if the shape differs from `{metaTitle, metaDescription}`, remove `"Project"` from `SEO_TABLES`, let legacy projects fall back to proposal-only, and say so in your report and in a comment.
 
-- [ ] **Step 3: gather.ts**
+- [x] **Step 3: gather.ts**
 
 ```typescript
 import { prisma } from "@/lib/prisma";
@@ -464,7 +478,8 @@ import type { PageVerdict, ClassVerdict } from "@/lib/seo/pagePower/types";
 import { REMEASURE_WINDOW_DAYS } from "@/lib/seo/titleSweepRemeasure";
 import { pagesInSuppressionWindow } from "@/lib/seo/titleSweepLog";
 import { templateClassOf } from "@/lib/seo/templateClass";
-import type { InventoryPage } from "@/lib/seo/pagePower/inventory";
+import { buildCanonicalMap, canonicalize, localeOfPath } from "@/lib/seo/urlCanonical";
+import { getInventory, type InventoryPage } from "@/lib/seo/pagePower/inventory";
 import { resolveTarget, readTargetSeo, isSeoTable } from "./target";
 import { IMPROVER_WINDOW_DAYS, MAX_QUERIES, type CurrentSeo } from "./types";
 
@@ -491,28 +506,60 @@ export type ImprovementInput = {
   pageText: PageText;
   currentSeo: CurrentSeo | null;
   siblings: SiblingPattern[];
-  /** Non-null when the page sits in a live re-measurement window — generation
-   *  must REFUSE, not warn (spec rule; three other surfaces already enforce
-   *  this and the improver must not become the fourth to forget). */
+  /** True when the page sits in a live re-measurement window — generation must
+   *  REFUSE, not warn (spec rule; three other surfaces already enforce this and
+   *  the improver must not become the fourth to forget). */
   suppressed: boolean;
 };
 
-// Both historical URL shapes of one page. Two migrations are on record
-// (measured 2026-08-24): English moved OFF the /en prefix at the end of June,
-// and de/pl/ru moved ONTO their prefixes across June/July — 82 pages, each of
-// whose GSC history is split across two URLs. Matching one URL exactly loses
-// most of the baseline; the title-sweep re-measurement made this exact mistake
-// and reported 234 of 2,698 impressions for the biggest page in the batch.
-export function urlVariants(locale: string, path: string): string[] {
-  if (locale === "en") return path === "/" ? ["/", "/en"] : [path, `/en${path}`];
-  const bare = path.replace(new RegExp(`^/${locale}`), "") || "/";
-  return bare === path ? [path] : [path, bare];
+// Every historical URL whose GSC history belongs to this page, resolved through
+// the SAME redirect map Page Power's own totals go through (urlCanonical.ts)
+// instead of by guessing at prefix shapes. GSC keeps every URL variant it has
+// ever seen as its own series, so matching one URL exactly loses most of the
+// baseline: the title-sweep re-measurement made that mistake and reported 234
+// of 2,698 impressions for the biggest page in its batch. Measured here
+// 2026-08-24 over the 90-day window, /de/blog/wo-leben-die-meisten-deutschen-
+// auf-zypern draws 497 queries and 1,734 impressions at its current URL and
+// 914 queries and 3,871 impressions across both of them.
+//
+// Deriving the second variant by STRIPPING the locale prefix — the obvious
+// shape, and the one this function had when the plan was written — is wrong in
+// the other direction, and wrong quietly. Only two migrations ever happened
+// (redirect-mapping.csv: 358 EN-strip rows, 74 DE-to-/de); Polish and Russian
+// never moved at all, and German pages created after the flip never lived at a
+// bare URL either. For all of those the bare path is not an old URL of this
+// page, it is a DIFFERENT LIVE PAGE — English ever since the flip. Measured
+// 2026-08-24, the strip pooled another page's data into 84 de/pl/ru pages
+// worth 7,757 impressions: the Russian homepage would have been handed the
+// English homepage's 833 impressions on top of its own 357, and
+// /ru/developers/agg-luxury-homes would have gone to the model as 12 of its
+// own impressions and 611 borrowed, every borrowed query in the wrong
+// language. The map also earns 358 impressions across 55 archived legacy
+// project URLs that no prefix rule would ever have found.
+//
+// The two pattern-only redirects urlCanonical.ts handles (preview-project/*,
+// properties/*) are not inverted here: measured 2026-08-24 they carry 1
+// impression and 0 rows respectively in the window, which is not worth
+// enumerating an unbounded pattern's preimage for.
+export async function urlVariants(locale: string, path: string): Promise<string[]> {
+  const map = await buildCanonicalMap();
+  const variants = new Set<string>([path]);
+  // Safe for English in a way the prefix strip is not for the others: /en/* is
+  // a dead prefix serving nothing of its own, and all 358 EN rows in the CSV
+  // target exactly the bare strip. Kept alongside the map because the map's
+  // CSV half is a one-time migration snapshot — 2 of the 230 /en URLs still
+  // drawing impressions are missing from it.
+  if (locale === "en") variants.add(path === "/" ? "/en" : `/en${path}`);
+  for (const from of Array.from(map.keys())) {
+    if (canonicalize(map, localeOfPath(from), from).page === path) variants.add(from);
+  }
+  return Array.from(variants);
 }
 
 async function fetchQueries(locale: string, path: string): Promise<QueryRow[]> {
   const since = new Date(Date.now() - IMPROVER_WINDOW_DAYS * DAY);
   const rows = await prisma.searchMetric.findMany({
-    where: { query: { not: null }, date: { gte: since }, page: { in: urlVariants(locale, path) } },
+    where: { query: { not: null }, date: { gte: since }, page: { in: await urlVariants(locale, path) } },
     select: { query: true, impressions: true, clicks: true, position: true },
   });
   const byQuery = new Map<string, { impressions: number; clicks: number; posWeighted: number }>();
@@ -562,14 +609,25 @@ export async function fetchPageText(path: string): Promise<PageText> {
 }
 
 export async function gatherImprovementInput(pageKey: string): Promise<ImprovementInput> {
-  const page = await resolveTarget(pageKey);
-  if (!page) throw new Error(`Unknown page: ${pageKey}`);
-
-  const [{ verdicts }, classes, suppressedPaths] = await Promise.all([
+  // One inventory for the whole call, threaded into every resolveTarget below.
+  // This function resolves up to five keys (the page plus four healthy
+  // siblings) and resolveTarget loads the inventory per call otherwise —
+  // getInventory() reads six tables for 1,696 pages, 1,965 ms cold and ~250 ms
+  // warm. Measured against production 2026-08-24 in this function's exact call
+  // shape (one resolve, then four in parallel), four repetitions on a warm
+  // pool: 775 ms average un-memoised against 246 ms memoised. Half a second
+  // and ~6,800 redundant rows off every Improve click for one extra parameter.
+  // Loaded alongside the verdicts rather than before them because neither needs
+  // the other, and the unknown-key throw below is an admin-typo path, not a hot
+  // one worth serialising for.
+  const [inventory, { verdicts }, classes, suppressedPaths] = await Promise.all([
+    getInventory(),
     getPageVerdicts(),
     getClassVerdicts(),
     pagesInSuppressionWindow(REMEASURE_WINDOW_DAYS),
   ]);
+  const page = await resolveTarget(pageKey, inventory);
+  if (!page) throw new Error(`Unknown page: ${pageKey}`);
   const verdict = verdicts.find((v) => v.key === pageKey) ?? null;
 
   // Healthy siblings of the same template class, as working patterns FROM THIS
@@ -580,14 +638,14 @@ export async function gatherImprovementInput(pageKey: string): Promise<Improveme
     .filter((v) => v.diagnosis === "healthy" && v.key !== pageKey && templateClassOf(v.path) === cls)
     .sort((a, b) => b.impressions - a.impressions)
     .slice(0, 4);
-  const inventory = await Promise.all(healthySiblings.map(async (s) => {
-    const t = await resolveTarget(s.key);
+  const siblingSeo = await Promise.all(healthySiblings.map(async (s) => {
+    const t = await resolveTarget(s.key, inventory);
     if (!t?.source || !isSeoTable(t.source.table)) return null;
     const seo = await readTargetSeo(t.source.table, t.source.id);
     if (!seo || (!seo.metaTitle && !seo.metaDescription)) return null;
     return { path: s.path, metaTitle: seo.metaTitle, metaDescription: seo.metaDescription };
   }));
-  const siblings = inventory.filter((s): s is SiblingPattern => s !== null).slice(0, 2);
+  const siblings = siblingSeo.filter((s): s is SiblingPattern => s !== null).slice(0, 2);
 
   const [queries, pageText, currentSeo] = await Promise.all([
     fetchQueries(String(page.locale), page.path),
@@ -602,7 +660,7 @@ export async function gatherImprovementInput(pageKey: string): Promise<Improveme
 
 **Note for the implementer:** `resolveTarget` is called up to five times here (page + siblings) and each call runs `getInventory()`. Either memoise the inventory within `gatherImprovementInput` (pass it through) or accept the cost with a measurement — decide with a number, not a guess, and say which in your report.
 
-- [ ] **Step 4: `npx tsc --noEmit` → exit 0. Commit.**
+- [x] **Step 4: `npx tsc --noEmit` → exit 0. Commit.**
 
 ---
 
