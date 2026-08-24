@@ -176,7 +176,7 @@ Run: `npx tsc --noEmit` — exit 0. Then confirm by inspection (state it in your
 
 **Files:** Modify `prisma/schema.prisma` · Create `prisma/migrations/20260824120000_add_page_improvement/migration.sql` · Modify `docs/superpowers/plans/2026-08-23-seo-page-power.md` (two lines at the top)
 
-- [ ] **Step 1: Add the model** (append after the last content model, matching the schema's section-comment style)
+- [x] **Step 1: Add the model** (append after the last content model, matching the schema's section-comment style)
 
 ```prisma
 // ─── PAGE IMPROVER (AI-drafted per-page fixes; see docs/superpowers/specs/2026-08-24-page-improver-design.md) ───
@@ -203,7 +203,7 @@ model PageImprovement {
 }
 ```
 
-- [ ] **Step 2: Write the migration SQL** (hand-written; do NOT run `prisma migrate dev` — it would connect to production)
+- [x] **Step 2: Write the migration SQL** (hand-written; do NOT run `prisma migrate dev` — it would connect to production)
 
 ```sql
 -- Additive only. Applied exclusively via the deploy path (CVP_RUN_MIGRATE=1).
@@ -231,7 +231,7 @@ CREATE INDEX "PageImprovement_pageKey_status_idx" ON "PageImprovement"("pageKey"
 CREATE INDEX "PageImprovement_status_appliedAt_idx" ON "PageImprovement"("status", "appliedAt");
 ```
 
-- [ ] **Step 3: Regenerate the client and stamp the old plan**
+- [x] **Step 3: Regenerate the client and stamp the old plan**
 
 Run: `npx prisma generate` (local codegen only — touches no database). Then insert directly under the H1 of `docs/superpowers/plans/2026-08-23-seo-page-power.md`:
 
@@ -239,7 +239,7 @@ Run: `npx prisma generate` (local codegen only — touches no database). Then in
 > **Historical since the 2026-08-24 merge to main.** The byte-identical-fence convention applied during this plan's execution only; source files have moved on (first: `inventory.ts` grew `InventoryPage.source` for the Page Improver). Do not "fix" fences here to match the tree.
 ```
 
-- [ ] **Step 4: `npx tsc --noEmit` → exit 0. Commit.**
+- [x] **Step 4: `npx tsc --noEmit` → exit 0. Commit.**
 
 ---
 

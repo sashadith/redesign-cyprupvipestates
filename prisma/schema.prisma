@@ -1487,3 +1487,26 @@ model BookingRequest {
   @@index([leadId])
   @@map("booking_requests")
 }
+
+// ─── PAGE IMPROVER (AI-drafted per-page fixes; see docs/superpowers/specs/2026-08-24-page-improver-design.md) ───
+model PageImprovement {
+  id          String    @id @default(uuid())
+  pageKey     String // "locale::path" — the Page Power identity of the page
+  kind        String // inventory kind at generation time
+  targetTable String // "Blog" | "Singlepage" | "Developer" | "CaseStudy" | "Project"; "" when apply has no row (fixed pages)
+  targetId    String // row id Apply writes to; "" for fixed pages
+  status      String // "draft" | "applied" | "dismissed" — at most one draft per pageKey (enforced in the generate action)
+  // Snapshot of the diagnosis the draft was based on: months later the admin
+  // must be able to see WHY this change was proposed, even after the verdict moved.
+  diagnosis   String
+  reason      String
+  proposal    Json // { metaTitle, metaDescription, rationale, contentSections[], internalLinks[] }
+  currentSeo  Json // { metaTitle, metaDescription } at generation time — the staleness guard compares against this on apply
+  model       String
+  createdAt   DateTime  @default(now())
+  appliedAt   DateTime?
+  appliedBy   String?
+
+  @@index([pageKey, status])
+  @@index([status, appliedAt])
+}

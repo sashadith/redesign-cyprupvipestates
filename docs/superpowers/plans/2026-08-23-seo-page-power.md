@@ -1,5 +1,7 @@
 # SEO Page Power Implementation Plan
 
+> **Historical since the 2026-08-24 merge to main.** The byte-identical-fence convention applied during this plan's execution only; source files have moved on (first: `inventory.ts` grew `InventoryPage.source` for the Page Improver). Do not "fix" fences here to match the tree.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Give every published page exactly one diagnosis — where it loses its
