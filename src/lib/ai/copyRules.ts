@@ -43,10 +43,23 @@ export function copyViolation(
   let v = name ? raw.replace(new RegExp(escapeRe(name), "gi"), "") : raw;
   if (opts?.allowYears) v = v.replace(/\b20\d{2}\b/g, "");
   if (/\d/.test(v)) return "digit";
+  // Two different questions, so two different patterns.
+  //
+  // "none" asks "is there a brace token at all", and must therefore accept any
+  // contents: measured 2026-08-24, the \w class below matches neither
+  // `{price-from}` nor `{price from}` nor `{a.b}`, so a near-miss spelling
+  // would have passed silently and then appeared verbatim in a Google snippet
+  // — the one outcome this mode exists to prevent.
+  if (opts?.placeholders === "none") return /\{[^}]*\}/.test(v) ? "placeholder" : null;
+  // "known" (the default, and the development generator's path) asks the
+  // narrower question "is this one of OUR tokens", and keeps \w deliberately:
+  // widening it here would change what seoMeta.ts rejects, and that generator's
+  // behaviour is calibrated. A malformed token there is caught downstream
+  // anyway — resolveMetaDescription discards copy carrying one.
   let m: RegExpExecArray | null;
   const re = /\{(\w*)\}/g;
   while ((m = re.exec(v)) !== null) {
-    if (opts?.placeholders === "none" || !KNOWN_PLACEHOLDERS.has(m[1])) return "placeholder";
+    if (!KNOWN_PLACEHOLDERS.has(m[1])) return "placeholder";
   }
   return null;
 }
