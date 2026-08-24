@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import { anthropic, AI_MODEL } from "@/lib/ai/anthropic";
+import { PROJECT_BRIEF } from "@/lib/ai/projectBrief";
 import type { AdvisorPayload } from "./gather";
 
 // SEO strategist persona, embedding docs/SEO-GROWTH-ROADMAP-2026.md's §12/§13
@@ -54,7 +55,14 @@ export async function analyzePayload(payload: AdvisorPayload): Promise<Suggestio
   const msg = await client.messages.create({
     model: AI_MODEL,
     max_tokens: 4096,
-    system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+    // Brief first, role second: the brief is the shared ground every AI feature
+    // stands on (who we are, the funnel, the hard rules); SYSTEM_PROMPT is this
+    // feature's strategist role on top. One cache_control on the last block
+    // covers the concatenation.
+    system: [
+      { type: "text", text: PROJECT_BRIEF },
+      { type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } },
+    ],
     tools: [
       {
         name: "seo_suggestions",

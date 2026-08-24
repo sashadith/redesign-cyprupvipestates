@@ -1,4 +1,5 @@
 import { anthropic, AI_MODEL } from "./anthropic";
+import { PROJECT_BRIEF } from "./projectBrief";
 import { tuningBlock } from "./tuning";
 import { prisma } from "@/lib/prisma";
 import type { ProjectVM } from "@/app/preview-project/feeds";
@@ -256,6 +257,12 @@ export async function generateSeoMeta(vm: ProjectVM, tuning?: { emphasize?: stri
     const msg = await client.messages.create({
       model: AI_MODEL,
       max_tokens: 1024,
+      // The shared project brief rides as the system layer so the carefully
+      // length-tuned user prompt below (and the admin-editable template it
+      // starts from) stays byte-identical to what was calibrated. The brief's
+      // digit rule restates this file's own — deliberately: the enforcement
+      // in badFields() stays the backstop either way.
+      system: [{ type: "text", text: PROJECT_BRIEF }],
       tools: [
         {
           name: "seo_meta",
