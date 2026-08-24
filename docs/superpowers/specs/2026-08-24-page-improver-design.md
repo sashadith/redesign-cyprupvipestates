@@ -23,7 +23,9 @@ Target piles, in priority order (measured 2026-08-24): `buried` (79 pages, 63k i
 | blog, singlepage, developer, caseStudy | title/meta + content sections + internal links | that row's `seo` Json (title/meta only) |
 | project (legacy) | same | `Project` row's seo (same shape — verify at plan time) |
 | development | — deep-link to the existing override editor + generator; attach the query-gap analysis as a note | (existing path; no second generator) |
-| fixed (homepage, /projects, /faq, /partners) | proposal only, clearly labelled "code-authored page — apply by editing the code" | nothing |
+| fixed (homepage, /projects, /blog, /developers, /case-studies, /faq, /partners) | proposal only, labelled with where that page's metadata is actually edited | nothing |
+
+**Correction, 2026-08-24 (Task 7):** the row above originally read "code-authored page — apply by editing the code". That is true of at most one of the seven fixed families. Verified: `/developers` hardcodes its copy in `generateMetadata`, but the homepage reads a `siteDocument` of type `homepage` (edited at `/admin/content/featured`), and `/projects`, `/blog` and `/case-studies` read `siteDocument` types `projectsPage`/`blogPage`/`caseStudiesPage`, which `/admin/content/landing/[id]` edits. Apply still stays out of all of them — a second writer for fields another editor owns is how two generators drift — but the screen names the real editor instead of telling an admin to change code.
 
 Developments get no second generation path on purpose: two generators for the same fields drift apart, and the development pile is overwhelmingly `invisible` (487 of 1,125 — demand-side, text moves nothing).
 
