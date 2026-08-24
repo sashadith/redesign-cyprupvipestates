@@ -27,11 +27,39 @@ const daysSinceCalendar = (d: Date): number => {
 };
 
 // (a) Sold-out published development — archive reminder once it's been sold
-// out a while. There's no stored "became sold out at" timestamp (no history
-// table for that), so `since` uses the most recent unit row's updatedAt as a
-// best-effort proxy for "last time this development's data changed" — units
-// are what a sold-out determination is computed from, so this is the closest
-// available signal.
+// out a while. Ages off Development.soldOutSince, the real false->true
+// transition stamp (Bündel 2, 2026-08-01; maintained by
+// recomputeDevelopmentDerivedState from every write path that can change unit
+// status — see the schema comment).
+//
+// This rule predates that field and used the newest unit row's updatedAt as a
+// stand-in for it, on the reasoning that units are what a sold-out
+// determination is computed from. The stand-in does not age: the nightly feed
+// sync rewrites those rows, so it resets to zero every night. Measured against
+// production on 2026-08-24 — all 26 sold-out published developments had a
+// newest unit row 0 or 1 days old, while soldOutSince put them at 15 to 22
+// days. Across the whole published catalogue, 119 of 148 sat at 0-1 days and
+// the oldest anywhere was 44.
+//
+// The threshold is 60, so the consequence was not a slightly-off date: the
+// ACTION tier could never be reached by any development the sync touches, and
+// the archive reminder this rule exists for had never once fired. Every
+// sold-out project instead showed "Archive reminder in 60 days" — a countdown
+// that reset each night and never arrived — and reported `since` as today, so
+// the panel (which sorts on `since` within a severity, see ../index.ts) filed
+// three-week-old sold-outs as brand new.
+//
+// Switching the source flips no tier on the day it ships: the oldest
+// soldOutSince is 22 days, still short of 60. The first real archive reminder
+// lands 2026-09-30.
+//
+// "at least" / the `+` is not hedging. Developments that were already sold out
+// when the field shipped were stamped by a one-off backfill
+// (scripts/backfill-sold-out-since.mjs), so their value is a lower bound — 5 of
+// the 26 carry the 2026-08-01 rollout date for that reason. The house
+// convention is to phrase every soldOutSince the same way rather than try to
+// tell backfilled values from real transitions; fmtSoldOutSince in
+// src/app/admin/(panel)/developments/page.tsx already does exactly that.
 async function soldOutReminders(): Promise<ActionItem[]> {
   const devs = await prisma.development.findMany({
     where: { publishStatus: "published" },
@@ -41,7 +69,16 @@ async function soldOutReminders(): Promise<ActionItem[]> {
   for (const d of devs) {
     const { soldOut } = computeAvailability(d.units);
     if (!soldOut) continue;
-    const since = d.units.reduce((max, u) => (u.updatedAt > max ? u.updatedAt : max), d.updatedAt);
+    // soldOutSince is null only when the derived state has drifted from the
+    // units it is derived from — a direct DB/admin status write that skipped
+    // recomputeDevelopmentDerivedState, the same class of desync
+    // availabilityContradiction() below reports on. None of the 26 sold-out
+    // developments was in that state on 2026-08-24. Falling back to the old
+    // proxy keeps such a row visible instead of dropping a genuinely sold-out
+    // project off the panel, and because the proxy understates age it can only
+    // hold the item at INFO — a desynced row can never produce an archive
+    // reminder it has not earned.
+    const since = d.soldOutSince ?? d.units.reduce((max, u) => (u.updatedAt > max ? u.updatedAt : max), d.updatedAt);
     const days = Math.floor((Date.now() - since.getTime()) / DAY);
     const name = d.publicName;
     if (days >= SOLD_OUT_ARCHIVE_REMINDER_DAYS) {
@@ -52,10 +89,13 @@ async function soldOutReminders(): Promise<ActionItem[]> {
         deepLink: `/admin/developments/${d.id}`, since,
       });
     } else {
+      const remaining = SOLD_OUT_ARCHIVE_REMINDER_DAYS - days;
       items.push({
         id: `sold-out:${d.id}`, severity: "INFO", category: "DEVELOPERS",
         title: `${name} is sold out`,
-        description: `Archive reminder in ${SOLD_OUT_ARCHIVE_REMINDER_DAYS - days} day${SOLD_OUT_ARCHIVE_REMINDER_DAYS - days === 1 ? "" : "s"}.`,
+        // The age leads, because it is now a real one. The countdown alone was
+        // all this could honestly say while every project looked a day old.
+        description: `${days === 0 ? "Sold out today" : `Sold out for ${days}+ day${days === 1 ? "" : "s"}`}. Archive reminder in ${remaining} day${remaining === 1 ? "" : "s"}.`,
         deepLink: `/admin/developments/${d.id}`, since,
       });
     }
