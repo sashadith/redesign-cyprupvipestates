@@ -1,16 +1,34 @@
 # SEO Title/Meta Sweep — Change Log
 
 Tracks every title/meta change made under the SEO Growth Roadmap's Part 1 (CTR title/meta sweep),
-so results can be re-measured against fresh GSC exports in 4–6 weeks.
+so results can be re-measured in 4–6 weeks.
+
+**The re-measurement is computed, not typed (since 2026-08-24).**
+`src/lib/seo/titleSweepRemeasure.ts` builds both halves of each batch's comparison from the
+`SearchMetric` table: a baseline over the N days ending the day before the batch shipped, and a
+current window of the same N days ending on the last day Search Console actually has data for,
+with every URL variant pooled onto its canonical path. It also computes a **control group** — the
+comparable unswept pages over the same two windows — because the whole site's CTR moves between
+any two months and a swept batch's delta means nothing on its own.
+
+The **"Baseline pos" / "Baseline CTR" columns in the tables below are provenance, not the
+comparison.** They are three-month GSC averages, captured at approval time, and they are kept
+because they are the numbers that were on the screen when each rewrite was approved — but they
+are not measured over the same window as anything they could be compared against, and where they
+disagree with the computed baseline the computed one is right. Do not edit or delete them.
 
 ## 2026-07-18 — Batch 1: 17 approved candidates + 13-page developer template fix
 
 **Source data:** GSC exports at `/Users/sashadith/cyprusvipestates/gsc-exports/` (last 3 months,
 per locale, pulled 2026-07-18). Full before/after draft reviewed and approved by user same day.
 
-**Re-measure after:** 2026-08-15 to 2026-08-29 (4–6 weeks from deploy). Pull a fresh GSC export
-with the same filter shape (Pages report, last 3 months, per locale) and compare position/CTR for
-each URL below against the baseline captured at approval time.
+**Re-measure after:** 2026-08-15 to 2026-08-29 (4–6 weeks from deploy). No manual export is needed
+any more — the comparison, its control group and its statistical power are on
+`/admin/analytics/seo`, recomputed on every load. (The original instruction here was to pull a
+fresh GSC export "with the same filter shape (Pages report, last 3 months, per locale)". That was
+the right instruction and the code did not follow it: it compared these three-month baselines
+against a trailing 28-day current window, so for any page with a trend it reported the trend
+rather than the rewrite. Fixed 2026-08-24.)
 
 ### 17 approved title/meta rewrites
 

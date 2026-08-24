@@ -14,7 +14,7 @@ import {
 } from "@/lib/seo/queries";
 import type { TemplateClass } from "@/lib/seo/templateClass";
 import { loadSweepEntries, pagesInSuppressionWindow } from "@/lib/seo/titleSweepLog";
-import { computeTitleSweepComparison, REMEASURE_WINDOW_DAYS } from "@/lib/seo/titleSweepRemeasure";
+import { computeTitleSweepComparison, sweepVerdictLine, REMEASURE_WINDOW_DAYS } from "@/lib/seo/titleSweepRemeasure";
 import { getRecentChangelogEntries, type ChangelogEntry } from "@/lib/seo/siteChangelog";
 import { getPageVerdicts } from "@/lib/seo/pagePower/pageVerdicts";
 import { getClassVerdicts } from "@/lib/seo/pagePower/classVerdicts";
@@ -117,6 +117,33 @@ export type AdvisorPayload = {
   // Advisor can check a specific candidate URL against it directly instead
   // of just knowing a number of pages are protected somewhere.
   titleSweep: { batchDate: string; daysRemaining: number; urls: string[] }[];
+  // Batches whose window HAS closed, i.e. the results. Deliberately a separate
+  // field from `titleSweep` above rather than more entries in it: `titleSweep`
+  // is the protected list the ANALYZE prompt's rule 4 reads as "do not touch
+  // these titles", and a closed batch is exactly the one whose titles are free
+  // again.
+  //
+  // Every entry carries its own control group and its own power, because a
+  // batch's CTR delta alone is not a result. Over batch 1's windows
+  // (2026-08-24) the swept pages fell 1.15% -> 0.38% while the comparable
+  // unswept rest of the site fell 1.22% -> 0.87% and the swept pages' average
+  // position fell eight places against the control's one — a model handed only
+  // the first number writes "the rewrite failed", and the honest reading is
+  // that the site declined, these pages declined further, and the ranking drop
+  // rather than the snippet is the likelier cause. `verdict` states all of it
+  // in one sentence so the caveat cannot be dropped by paraphrase.
+  titleSweepResults: {
+    batchDate: string;
+    baselineWindow: { from: string; to: string; days: number } | null;
+    currentWindow: { from: string; to: string; days: number } | null;
+    pages: number;
+    measuredPages: number;
+    improvedPages: number;
+    swept: { baselineCtrPct: number; currentCtrPct: number; baselinePosition: number; currentPosition: number; currentClicks: number } | null;
+    control: { pages: number; baselineCtrPct: number; currentCtrPct: number; baselinePosition: number; currentPosition: number } | null;
+    significance: { observedClicks: number; expectedClicks: number; pValue: number; detectableLift: { liftPct: number; power: number }[] } | null;
+    verdict: string;
+  }[];
   // Page Power diagnoses, so the ANALYZE step reasons about named piles ("79
   // pages buried below position 20") rather than re-deriving them from raw
   // metrics and inventing its own thresholds. The full table lives at
@@ -255,15 +282,50 @@ async function gatherPlatformStats() {
   };
 }
 
-async function gatherTitleSweepStatus(): Promise<AdvisorPayload["titleSweep"]> {
+async function gatherTitleSweep(): Promise<{ titleSweep: AdvisorPayload["titleSweep"]; titleSweepResults: AdvisorPayload["titleSweepResults"] }> {
   const comparisons = await computeTitleSweepComparison();
-  return comparisons
-    .filter((c) => !c.isDue)
-    .map((c) => ({
-      batchDate: c.batchDate.toISOString().slice(0, 10),
-      daysRemaining: Math.max(0, Math.ceil((c.dueDate.getTime() - Date.now()) / DAY)),
-      urls: c.rows.map((r) => r.page),
-    }));
+  const win = (w: { from: Date; to: Date; days: number } | null) =>
+    w ? { from: isoDay(w.from), to: isoDay(w.to), days: w.days } : null;
+  return {
+    titleSweep: comparisons
+      .filter((c) => !c.isDue)
+      .map((c) => ({
+        batchDate: isoDay(c.batchDate),
+        daysRemaining: Math.max(0, Math.ceil((c.dueDate.getTime() - Date.now()) / DAY)),
+        urls: c.rows.map((r) => r.page),
+      })),
+    titleSweepResults: comparisons
+      .filter((c) => c.isDue)
+      .map((c) => ({
+        batchDate: isoDay(c.batchDate),
+        baselineWindow: win(c.baselineWindow),
+        currentWindow: win(c.currentWindow),
+        pages: c.rows.length,
+        measuredPages: c.measuredCount,
+        improvedPages: c.improvedCount,
+        swept: c.swept && {
+          baselineCtrPct: c.swept.baseline.ctrPct,
+          currentCtrPct: c.swept.current.ctrPct,
+          baselinePosition: c.swept.baseline.position,
+          currentPosition: c.swept.current.position,
+          currentClicks: c.swept.current.clicks,
+        },
+        control: c.control && {
+          pages: c.control.pages,
+          baselineCtrPct: c.control.baseline.ctrPct,
+          currentCtrPct: c.control.current.ctrPct,
+          baselinePosition: c.control.baseline.position,
+          currentPosition: c.control.current.position,
+        },
+        significance: c.significance && {
+          observedClicks: c.significance.observedClicks,
+          expectedClicks: c.significance.expectedClicks,
+          pValue: c.significance.pValue,
+          detectableLift: c.significance.detectableLift,
+        },
+        verdict: sweepVerdictLine(c),
+      })),
+  };
 }
 
 async function gatherPagePower(): Promise<AdvisorPayload["pagePower"]> {
@@ -361,7 +423,7 @@ export async function gatherAdvisorPayload(): Promise<AdvisorPayload> {
     getStrikingDistance(ADVISOR_PERIOD_DAYS),
     gatherCwvSummary(),
     gatherPlatformStats(),
-    gatherTitleSweepStatus(),
+    gatherTitleSweep(),
     gatherPagePower(),
   ]);
 
@@ -379,7 +441,8 @@ export async function gatherAdvisorPayload(): Promise<AdvisorPayload> {
       perClass: cwvPerClass,
     },
     platform,
-    titleSweep,
+    titleSweep: titleSweep.titleSweep,
+    titleSweepResults: titleSweep.titleSweepResults,
     pagePower,
     siteChangelog: getRecentChangelogEntries(CHANGELOG_LOOKBACK_DAYS),
   };
