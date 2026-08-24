@@ -1,6 +1,7 @@
 import { readFile } from "fs/promises";
 import path from "path";
 import type { Locale } from "@prisma/client";
+import { prisma } from "@/lib/prisma";
 
 // Parses docs/SEO-TITLE-SWEEP-LOG.md — the change log written when the Part 1
 // CTR title/meta sweep shipped (2026-07-18) — so the Action Center can (a)
@@ -70,5 +71,29 @@ export async function pagesInSuppressionWindow(windowDays: number): Promise<Set<
   const entries = await loadSweepEntries();
   const now = Date.now();
   const active = entries.filter((e) => now - e.batchDate.getTime() < windowDays * 86_400_000);
-  return new Set(active.map((e) => e.page));
+  const paths = new Set(active.map((e) => e.page));
+  // Second source since 2026-08-24: pages whose title/meta the Page Improver
+  // APPLIED inside the window. Same contract as the sweep log — "this page's
+  // snippet is mid-measurement, stay quiet about it" — and adding it HERE is
+  // the whole point: the CTR watchlist, the Action Center, the advisor and the
+  // improver itself all call this one function, so none of them can forget.
+  // Runtime rows, not the markdown log: the log is the historical record of
+  // the manual sweeps, and a checked-in file written at runtime would be
+  // overwritten by the next deploy anyway.
+  try {
+    const applied = await prisma.pageImprovement.findMany({
+      where: { status: "applied", appliedAt: { gte: new Date(now - windowDays * 86_400_000) } },
+      select: { pageKey: true },
+    });
+    for (const r of applied) paths.add(r.pageKey.slice(r.pageKey.indexOf("::") + 2));
+  } catch (e) {
+    // P2021 = the table does not exist yet. Real exactly once: local dev runs
+    // against the production tunnel, and the migration reaches production only
+    // via the deploy path — so between Task 2 and Task 8's deploy this query
+    // has no table anywhere. Anything else rethrows; a missing-table catch
+    // that swallowed real failures would silently disable suppression, which
+    // looks exactly like success.
+    if ((e as { code?: string })?.code !== "P2021") throw e;
+  }
+  return paths;
 }

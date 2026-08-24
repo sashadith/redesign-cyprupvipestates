@@ -284,6 +284,10 @@ export default function PagePowerTable({ rows }: { rows: Row[] }) {
                   whose rows all share one sentence this column is empty by
                   design — the sentence is up there, once. */}
               <th className="pb-2 font-semibold">Detail</th>
+              {/* No header text: the cells below say "Improve" themselves, and a
+                  column heading over a one-word action reads as a second label
+                  for the same thing. Named for screen readers only. */}
+              <th className="pb-2 font-semibold"><span className="sr-only">Improve</span></th>
             </tr>
           </thead>
           {/* Every matching row, uncapped. `invisible` is 1,129 rows today and
@@ -299,7 +303,7 @@ export default function PagePowerTable({ rows }: { rows: Row[] }) {
             <tbody key={group.key} className="divide-y divide-[#F3F4F6]">
               {group.shared !== "" && (
                 <tr>
-                  <td colSpan={6} className="pt-4">
+                  <td colSpan={7} className="pt-4">
                     <div className={`rounded px-3 py-2 flex items-baseline gap-2 flex-wrap ${tone.band} ${tone.bandText}`}>
                       <span className="text-xs font-semibold tabular-nums shrink-0">{pages(group.rows.length)}</span>
                       <span className="text-xs">{group.shared}</span>
@@ -359,6 +363,25 @@ export default function PagePowerTable({ rows }: { rows: Row[] }) {
                       )}
                     </td>
                     <td className="py-2 text-[#6B7280]">{detail}</td>
+                    {/* Offered on every row, including Developments, which the
+                        improver refuses. The table cannot tell them apart: a
+                        Development and a legacy Project share the path shape
+                        `/projects/<slug>` — the inventory needs an explicit
+                        KIND_PRIORITY tie-break for exactly that collision — and
+                        neither `Row` nor `PageVerdict` carries a kind. The only
+                        honest source is getInventory(), which is not memoised
+                        and costs ~250 ms warm / 1,965 ms cold (measured
+                        2026-08-24, target.ts), i.e. a second load of it on this
+                        screen to grey out one link. The Improve page resolves
+                        the kind it already has to load anyway and shows a
+                        Development the link to its own editor instead of a
+                        Generate button, so the click costs a page render and
+                        never a Claude call. */}
+                    <td className="py-2 pl-3 text-right whitespace-nowrap">
+                      <a href={`/admin/analytics/seo/power/improve?key=${encodeURIComponent(r.key)}`} className="text-[#374151] hover:text-[#1B4B43] hover:underline">
+                        Improve
+                      </a>
+                    </td>
                   </tr>
                 );
               })}
@@ -366,7 +389,7 @@ export default function PagePowerTable({ rows }: { rows: Row[] }) {
           ))}
           {shown.length === 0 && (
             <tbody>
-              <tr><td colSpan={6} className="py-6 text-center text-[#9CA3AF]">No pages with this diagnosis.</td></tr>
+              <tr><td colSpan={7} className="py-6 text-center text-[#9CA3AF]">No pages with this diagnosis.</td></tr>
             </tbody>
           )}
         </table>
