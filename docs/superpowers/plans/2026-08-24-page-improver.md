@@ -858,7 +858,7 @@ export async function generateProposal(input: ImprovementInput): Promise<Improve
 
 **Files:** Create `src/app/admin/(panel)/analytics/seo/power/improve/actions.ts`
 
-- [ ] **Step 1: The actions** — follow the repo's admin auth pattern exactly (session + DB re-validation, audit M3):
+- [x] **Step 1: The actions** — follow the repo's admin auth pattern exactly (session + DB re-validation, audit M3):
 
 ```typescript
 "use server";
@@ -959,7 +959,7 @@ export async function dismissImprovementAction(id: string): Promise<{ error?: st
 }
 ```
 
-- [ ] **Step 2: `npx tsc --noEmit` → exit 0. Commit.**
+- [x] **Step 2: `npx tsc --noEmit` → exit 0. Commit.**
 
 ---
 
