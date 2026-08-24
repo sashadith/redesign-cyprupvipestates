@@ -1,16 +1,20 @@
 import { prisma } from "@/lib/prisma";
 
 // Consecutive pings within this gap belong to the same work session; a
-// bigger gap means the admin stepped away (or closed the tab) and a new
-// session starts on the next ping. 15 min gives comfortable headroom over
-// the 3 min ping throttle (see src/lib/adminActivity.ts) so normal browsing
-// between admin pages never fragments into false session boundaries.
-const SESSION_GAP_MS = 15 * 60_000;
-// A session built from a single ping (or two pings seconds apart) would
-// otherwise report ~0 duration despite the admin clearly having the panel
-// open — floor it to the ping throttle window so "I was there" always shows
-// as some non-zero time.
-const MIN_SESSION_MS = 3 * 60_000;
+// bigger gap means the beats stopped — the user went idle (the tracker's
+// 3-minute dead-tab rule), backgrounded the tab, or closed it — and a new
+// session starts on the next ping. The tracker beats every 60s while the
+// user is genuinely active (see ActivityTracker.tsx), so 4 min tolerates
+// two lost beats (network hiccup, laptop lid) without falsely splitting a
+// real session, while still cutting off within minutes of true idleness.
+// Note the tracker keeps beating for up to 3 min AFTER the last real input
+// (its idle check trails by IDLE_MS) — so a session's counted tail can
+// overrun actual work by at most those 3 minutes, never more.
+const SESSION_GAP_MS = 4 * 60_000;
+// A session built from a single ping (opened the panel, did one thing,
+// closed it) would otherwise report ~0 duration — floor it to one beat
+// interval so "I was there" always shows as some non-zero time.
+const MIN_SESSION_MS = 60_000;
 
 export type ActivitySession = { start: Date; end: Date; durationMs: number };
 export type UserActivityReport = {

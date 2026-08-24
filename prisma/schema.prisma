@@ -294,15 +294,17 @@ model AdminAuditLog {
 }
 
 // Working-hours activity tracking (2026-08-24). One row per throttled
-// heartbeat while a user has an admin panel page open — written from
-// PanelLayout on every request, at most once per PING_THROTTLE_MS per user
-// (see src/lib/adminActivity.ts). Deliberately NOT a login/logout log: a
-// tab left open with no logout, a crashed browser, or a dead network all
-// skip a logout event, so open/close state would drift. Instead the
-// activity report (/admin/users/activity) reconstructs sessions by
-// clustering consecutive pings — a gap larger than the cluster threshold
-// ends a session. Distinct from AdminAuditLog above, which records specific
-// mutating actions, not presence/duration.
+// heartbeat while a user is GENUINELY ACTIVE in the admin panel — written
+// via /api/admin/activity-ping by the client-side ActivityTracker, which
+// only beats while the tab is visible and real input (mouse/keyboard/
+// scroll/touch) occurred within the last 3 minutes; an open-but-idle tab
+// stops producing rows (see src/lib/adminActivity.ts and ActivityTracker.tsx).
+// Deliberately NOT a login/logout log: a tab left open with no logout, a
+// crashed browser, or a dead network all skip a logout event, so open/close
+// state would drift. Instead the activity report (/admin/users/activity)
+// reconstructs sessions by clustering consecutive pings — a gap larger than
+// the cluster threshold ends a session. Distinct from AdminAuditLog above,
+// which records specific mutating actions, not presence/duration.
 model AdminActivityPing {
   id     String   @id @default(uuid())
   userId String

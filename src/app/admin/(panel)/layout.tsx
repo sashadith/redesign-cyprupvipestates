@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { logout } from "../actions";
 import Sidebar, { type NavModule } from "./Sidebar";
 import { getActionCenterItems } from "@/lib/actionCenter";
-import { recordAdminActivity } from "@/lib/adminActivity";
+import ActivityTracker from "./ActivityTracker";
 
 export const dynamic = "force-dynamic";
 
@@ -75,7 +75,6 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   // not only when their JWT expires (audit M3).
   const dbUser = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true, name: true, avatar: true, isOwner: true } });
   if (!dbUser || !dbUser.isActive) redirect("/admin/login");
-  void recordAdminActivity(uid);
   const user = session.user as any;
   const trashCount = await prisma.lead.count({ where: { deletedAt: { not: null } } });
   const activeLeadCount = await prisma.lead.count({ where: { deletedAt: null, status: { notIn: ["LOST", "CLOSED"] } } });
@@ -115,6 +114,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         signOut={logout}
       />
       <main className="flex-1 p-5 md:p-8 overflow-auto">{children}</main>
+      <ActivityTracker />
     </div>
   );
 }

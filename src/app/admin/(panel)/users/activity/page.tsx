@@ -68,9 +68,10 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
       </p>
 
       <p className="text-xs text-[#9CA3AF] max-w-2xl">
-        Reconstructed from admin-panel activity pings, not explicit login/logout events — a tab left open without
-        signing out won&apos;t inflate a session, since a session ends once pings stop for 15+ minutes. Treat this as
-        an approximation, not a precise timesheet.
+        Measures genuine activity: the browser only reports presence while the admin tab is visible and the user
+        produced real input (mouse, keyboard, scrolling) within the last 3 minutes — an open-but-idle tab stops
+        counting after at most 3 minutes, and a session ends once activity stops for a few minutes. Accurate to
+        within a couple of minutes per session; not a legal-grade timesheet.
       </p>
 
       <div className="space-y-4">
