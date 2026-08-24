@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { logout } from "../actions";
 import Sidebar, { type NavModule } from "./Sidebar";
 import { getActionCenterItems } from "@/lib/actionCenter";
+import { recordAdminActivity } from "@/lib/adminActivity";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ const LOGO_SRC = "/uploads/images/05ff9b6142e3a98fa0ef44ae36b302a20bba2e60-2048x
 // The admin is organised into application MODULES. The primary rail shows the
 // modules; multi-page modules (CRM, Website) open a secondary sidebar with their
 // pages. `isAdmin` gates ADMIN-only pages (Footer/site settings, Users module).
-function buildModules(isAdmin: boolean, trashCount: number, activeLeadCount: number, actionCenterCount: number): NavModule[] {
+function buildModules(isAdmin: boolean, isOwner: boolean, trashCount: number, activeLeadCount: number, actionCenterCount: number): NavModule[] {
   const websitePages = [
     { href: "/admin/content/featured", label: "Homepage" },
     { href: "/admin/content/projects", label: "Projects" },
@@ -56,7 +57,12 @@ function buildModules(isAdmin: boolean, trashCount: number, activeLeadCount: num
     { key: "analytics", label: "Analytics", pages: [{ href: "/admin/analytics", label: "Analytics" }, { href: "/admin/analytics/seo", label: "SEO" }, { href: "/admin/analytics/seo/power", label: "Page Power" }, { href: "/admin/analytics/seo/advisor", label: "SEO Advisor" }] },
     { key: "website", label: "Website", pages: websitePages },
     ...(isAdmin
-      ? [{ key: "users", label: "Users", pages: [{ href: "/admin/users", label: "Users" }] }]
+      ? [{
+          key: "users",
+          label: "Users",
+          // Activity (working-hours report on colleagues) is owner-only, not every ADMIN — see users/activity/page.tsx.
+          pages: [{ href: "/admin/users", label: "Users" }, ...(isOwner ? [{ href: "/admin/users/activity", label: "Activity" }] : [])],
+        }]
       : []),
   ];
 }
@@ -67,13 +73,14 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   if (!session || !uid) redirect("/admin/login");
   // Re-validate against the DB so a deactivated user loses access immediately,
   // not only when their JWT expires (audit M3).
-  const dbUser = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true, name: true, avatar: true } });
+  const dbUser = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true, name: true, avatar: true, isOwner: true } });
   if (!dbUser || !dbUser.isActive) redirect("/admin/login");
+  void recordAdminActivity(uid);
   const user = session.user as any;
   const trashCount = await prisma.lead.count({ where: { deletedAt: { not: null } } });
   const activeLeadCount = await prisma.lead.count({ where: { deletedAt: null, status: { notIn: ["LOST", "CLOSED"] } } });
   const actionCenterCount = (await getActionCenterItems()).length;
-  const modules = buildModules(user?.role === "ADMIN", trashCount, activeLeadCount, actionCenterCount);
+  const modules = buildModules(user?.role === "ADMIN", dbUser.isOwner, trashCount, activeLeadCount, actionCenterCount);
 
   // Developer-grouped nav for the Developments module: WITH FEED vs NO FEED, A-Z.
   // "With feed" = the developer has at least one live (URL/API) feed analysis.

@@ -293,6 +293,26 @@ model AdminAuditLog {
   @@map("admin_audit_logs")
 }
 
+// Working-hours activity tracking (2026-08-24). One row per throttled
+// heartbeat while a user has an admin panel page open — written from
+// PanelLayout on every request, at most once per PING_THROTTLE_MS per user
+// (see src/lib/adminActivity.ts). Deliberately NOT a login/logout log: a
+// tab left open with no logout, a crashed browser, or a dead network all
+// skip a logout event, so open/close state would drift. Instead the
+// activity report (/admin/users/activity) reconstructs sessions by
+// clustering consecutive pings — a gap larger than the cluster threshold
+// ends a session. Distinct from AdminAuditLog above, which records specific
+// mutating actions, not presence/duration.
+model AdminActivityPing {
+  id     String   @id @default(uuid())
+  userId String
+  user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pingAt DateTime @default(now())
+
+  @@index([userId, pingAt])
+  @@map("admin_activity_pings")
+}
+
 // One row per cron invocation (publish-scheduled | feed-sync | drive-sync),
 // written in a try/finally so a run that crashes before completing still
 // leaves a row (ok=false, message = the caught error) — a job that dies
@@ -627,6 +647,7 @@ model User {
   // Lead Cockpit (Phase 1 of 4, 2026-07-23) — additive back-relations only.
   emailSettings          UserEmailSettings?
   interactions           LeadInteraction[]
+  activityPings          AdminActivityPing[]
 
   @@map("users")
 }
