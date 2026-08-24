@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { isGscConfigured } from "@/lib/gsc/client";
 import { getPerLocaleTrend, getWeekOverWeekMovers, getCtrWatchlist, getCwvFailingByClass, CTR_WINDOW_DAYS } from "@/lib/seo/queries";
-import { computeTitleSweepComparison } from "@/lib/seo/titleSweepRemeasure";
+import { computeTitleSweepComparison, sweepVerdictLine, isoDay } from "@/lib/seo/titleSweepRemeasure";
 import SeoSparkline from "./SeoSparkline";
 
 export const dynamic = "force-dynamic";
@@ -199,27 +199,91 @@ export default async function SeoAnalyticsPage() {
         {sweeps.length === 0 ? (
           <p className="text-sm text-[#6B7280]">No sweep log found (docs/SEO-TITLE-SWEEP-LOG.md).</p>
         ) : (
-          <div className="space-y-3 divide-y divide-[#F3F4F6]">
+          <div className="space-y-6 divide-y divide-[#F3F4F6]">
             {sweeps.map((sweep) => (
-              <div key={sweep.batchDate.toISOString()} className={sweeps.length > 1 ? "pt-3 first:pt-0" : ""}>
-                {sweep.isDue ? (
-                  <div className="text-sm text-[#374151]">
-                    <p className="mb-1">
-                      <span className="font-semibold text-[#1B4B43]">{sweep.improvedCount}/{sweep.measuredCount}</span> measured pages improved CTR
-                      {sweep.avgCtrDeltaPp != null && (
-                        <span className="text-[#6B7280]"> (avg {sweep.avgCtrDeltaPp >= 0 ? "+" : ""}{sweep.avgCtrDeltaPp.toFixed(2)}pp)</span>
-                      )}
-                    </p>
-                    <p className="text-xs text-[#6B7280]">
-                      Batch from {sweep.batchDate.toISOString().slice(0, 10)}, measured {sweep.daysElapsed} days later ·{" "}
-                      {sweep.rows.length - sweep.measuredCount} of {sweep.rows.length} pages had no recorded baseline or no recent data — full detail in docs/SEO-TITLE-SWEEP-LOG.md.
-                    </p>
-                  </div>
-                ) : (
-                  <p className="text-sm text-[#6B7280]">
-                    Batch from {sweep.batchDate.toISOString().slice(0, 10)} — re-measurement due {sweep.dueDate.toISOString().slice(0, 10)} ({Math.max(0, Math.ceil((sweep.dueDate.getTime() - Date.now()) / 86_400_000))} days remaining).
+              <div key={sweep.batchDate.toISOString()} className={sweeps.length > 1 ? "pt-6 first:pt-0" : ""}>
+                <div className="text-sm text-[#374151]">
+                  <p className="mb-1">
+                    <span className="font-semibold text-[#1B4B43]">{sweep.improvedCount}/{sweep.measuredCount}</span> measured pages improved CTR
+                    {sweep.avgCtrDeltaPp != null && (
+                      <span className="text-[#6B7280]"> (avg {sweep.avgCtrDeltaPp >= 0 ? "+" : ""}{sweep.avgCtrDeltaPp.toFixed(2)}pp)</span>
+                    )}
+                    {sweep.control?.perPage.improvedShare != null && sweep.control.perPage.avgCtrDeltaPp != null && (
+                      <span className="text-[#6B7280]">
+                        {" "}· comparable unswept pages: {(sweep.control.perPage.improvedShare * 100).toFixed(0)}% improved (avg{" "}
+                        {sweep.control.perPage.avgCtrDeltaPp >= 0 ? "+" : ""}{sweep.control.perPage.avgCtrDeltaPp.toFixed(2)}pp, {sweep.control.perPage.pages} pages
+                        {" "}≥{sweep.control.perPage.minImpressions} impressions)
+                      </span>
+                    )}
                   </p>
-                )}
+                  {/* The verdict line is not decoration: improvedCount and
+                      avgCtrDeltaPp on their own read as a verdict on the sweep
+                      when they are largely a verdict on the season. It carries
+                      the control, the position shift and the power. */}
+                  <p className="text-sm text-[#374151] mb-1">{sweepVerdictLine(sweep)}</p>
+                  <p className="text-xs text-[#6B7280]">
+                    Batch from {isoDay(sweep.batchDate)}, measured {sweep.daysElapsed} days later.{" "}
+                    {sweep.baselineWindow && sweep.currentWindow ? (
+                      <>
+                        Baseline {isoDay(sweep.baselineWindow.from)}–{isoDay(sweep.baselineWindow.to)} vs current{" "}
+                        {isoDay(sweep.currentWindow.from)}–{isoDay(sweep.currentWindow.to)}, {sweep.currentWindow.days} days each, computed from Search
+                        Console with both URL variants pooled.{" "}
+                      </>
+                    ) : (
+                      <>No Search Console data covering this batch yet. </>
+                    )}
+                    {sweep.rows.length - sweep.measuredCount} of {sweep.rows.length} pages had no data in one of the two windows.{" "}
+                    {/* isDue still means the same thing it always did — 42 days,
+                        and it is still what fires the Action Center item and the
+                        Telegram push. The figures are simply shown before then
+                        rather than withheld: they are now a like-for-like
+                        comparison rather than a 3-month average against a
+                        28-day one, and a provisional number the team can watch
+                        beats a blank card until the day it flips. */}
+                    {sweep.isDue
+                      ? "Re-measurement window closed " + isoDay(sweep.dueDate) + "."
+                      : "Provisional — re-measurement due " + isoDay(sweep.dueDate) + " (" + Math.max(0, Math.ceil((sweep.dueDate.getTime() - Date.now()) / 86_400_000)) + " days)."}
+                  </p>
+                </div>
+                <div className="overflow-x-auto mt-3">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs text-[#6B7280] border-b border-[#F3F4F6]">
+                        <th className="py-1.5 pr-3 font-medium">Page</th>
+                        {/* Kept, never overwritten: this is what was on the
+                            screen when the rewrite was approved. Where the two
+                            baselines disagree the computed one is the
+                            comparison and this one is the provenance. */}
+                        <th className="py-1.5 px-3 font-medium whitespace-nowrap">Logged baseline (3-mo)</th>
+                        <th className="py-1.5 px-3 font-medium whitespace-nowrap">Computed baseline</th>
+                        <th className="py-1.5 pl-3 font-medium whitespace-nowrap">Current</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F3F4F6]">
+                      {sweep.rows.map((r) => (
+                        <tr key={`${r.locale}:${r.page}`}>
+                          <td className="py-1.5 pr-3">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <LocaleBadge locale={r.locale} />
+                              <a href={`${SITE_URL}${r.page}`} target="_blank" rel="noreferrer" className="truncate text-[#374151] hover:text-[#1B4B43] hover:underline" title={r.page}>
+                                {r.page}
+                              </a>
+                            </div>
+                          </td>
+                          <td className="py-1.5 px-3 tabular-nums text-[#6B7280] whitespace-nowrap">
+                            {r.hasLoggedBaseline ? `#${r.baselinePosition?.toFixed(1)} · ${r.baselineCtr?.toFixed(2)}%` : "—"}
+                          </td>
+                          <td className="py-1.5 px-3 tabular-nums text-[#374151] whitespace-nowrap">
+                            {r.hasBaseline ? `#${r.baselineComputedPosition!.toFixed(1)} · ${r.baselineComputedCtr!.toFixed(2)}% · ${r.baselineComputedImpressions!.toLocaleString("en-GB")} impr` : "no data"}
+                          </td>
+                          <td className="py-1.5 pl-3 tabular-nums text-[#374151] whitespace-nowrap">
+                            {r.hasCurrentData ? `#${r.currentPosition!.toFixed(1)} · ${r.currentCtr!.toFixed(2)}% · ${r.currentImpressions!.toLocaleString("en-GB")} impr` : "no data"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             ))}
           </div>

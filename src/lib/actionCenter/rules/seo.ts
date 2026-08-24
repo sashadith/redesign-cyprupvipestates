@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { ActionItem } from "../types";
-import { computeTitleSweepComparison } from "@/lib/seo/titleSweepRemeasure";
+import { computeTitleSweepComparison, sweepVerdictLine } from "@/lib/seo/titleSweepRemeasure";
 import { getCtrWatchlist, getWeekOverWeekMovers, getCwvFailingByClass, CTR_WINDOW_DAYS } from "@/lib/seo/queries";
 import { getStaleCopyFigures, groupStaleFigures } from "@/lib/seo/staleCopyFigures";
 
@@ -97,7 +97,12 @@ async function titleSweepDue(): Promise<ActionItem[]> {
       severity: "INFO",
       category: "SEO",
       title: `Title-sweep re-measurement ready: ${comparison.improvedCount}/${comparison.measuredCount} pages improved CTR`,
-      description: `Batch from ${batchDateStr}, measured ${comparison.daysElapsed} days later${deltaLabel}.`,
+      // The verdict line rides along because "12/30 improved CTR" in the title
+      // is a number with no scale on it: over batch 1's windows the untouched
+      // rest of the site lost CTR too, and an item that says only the first
+      // half gets acted on as if the sweep caused the second. It carries the
+      // control, the ranking shift and what this many clicks could detect.
+      description: `Batch from ${batchDateStr}, measured ${comparison.daysElapsed} days later${deltaLabel}. ${sweepVerdictLine(comparison)}`,
       deepLink: "/admin/analytics/seo",
       since: comparison.batchDate,
     };
