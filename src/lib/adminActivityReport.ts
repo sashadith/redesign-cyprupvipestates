@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { adminDateKey } from "@/lib/adminTime";
 
 // Consecutive pings within this gap belong to the same work session; a
 // bigger gap means the beats stopped — the user went idle (the tracker's
@@ -16,6 +17,19 @@ const SESSION_GAP_MS = 4 * 60_000;
 // interval so "I was there" always shows as some non-zero time.
 const MIN_SESSION_MS = 60_000;
 
+// Display names for the closed module vocabulary produced by moduleFromPath
+// (src/lib/adminActivity.ts). Order here is the display order in the report.
+export const MODULE_LABELS: Record<string, string> = {
+  crm: "CRM",
+  website: "Website",
+  developments: "Developers",
+  analytics: "Analytics",
+  dashboard: "Dashboard",
+  users: "Users",
+  account: "Account",
+  other: "Other",
+};
+
 export type ActivitySession = { start: Date; end: Date; durationMs: number };
 export type UserActivityReport = {
   userId: string;
@@ -24,6 +38,23 @@ export type UserActivityReport = {
   role: string;
   sessions: ActivitySession[];
   totalMs: number;
+};
+// One row per user per Cyprus calendar day with any activity. sessionCount
+// doubles as the "interruptions" signal (3 sessions = work resumed twice
+// after going idle/away). moduleMinutes: each stored ping represents ~one
+// beat interval (1 min) of genuine activity in that module, so counting
+// pings per module IS the minutes approximation — kept independent of the
+// session-clustered totalMs on purpose (unlabeled pings from old clients
+// would otherwise skew a proportional split).
+export type DailyActivityRow = {
+  dateKey: string; // "2026-08-24", Cyprus calendar day
+  userId: string;
+  name: string;
+  first: Date;
+  last: Date;
+  totalMs: number;
+  sessionCount: number;
+  moduleMinutes: { module: string; label: string; minutes: number }[];
 };
 
 function clusterPings(pings: Date[]): ActivitySession[] {
@@ -41,27 +72,72 @@ function clusterPings(pings: Date[]): ActivitySession[] {
 }
 
 /** from/to are UTC instants (exclusive upper bound). */
-export async function getAdminActivityReport(from: Date, to: Date): Promise<UserActivityReport[]> {
-  const users = await prisma.user.findMany({
+export async function getAdminActivityReport(from: Date, to: Date): Promise<{ users: UserActivityReport[]; daily: DailyActivityRow[] }> {
+  const dbUsers = await prisma.user.findMany({
     select: { id: true, name: true, email: true, role: true },
     orderBy: { name: "asc" },
   });
   const pings = await prisma.adminActivityPing.findMany({
     where: { pingAt: { gte: from, lt: to } },
-    select: { userId: true, pingAt: true },
+    select: { userId: true, pingAt: true, module: true },
     orderBy: { pingAt: "asc" },
   });
-  const byUser = new Map<string, Date[]>();
+
+  const byUser = new Map<string, { pingAt: Date; module: string | null }[]>();
   for (const p of pings) {
     const arr = byUser.get(p.userId) ?? [];
-    arr.push(p.pingAt);
+    arr.push(p);
     byUser.set(p.userId, arr);
   }
-  return users.map((u) => {
-    const sessions = clusterPings(byUser.get(u.id) ?? []);
+
+  const users: UserActivityReport[] = [];
+  const daily: DailyActivityRow[] = [];
+
+  for (const u of dbUsers) {
+    const userPings = byUser.get(u.id) ?? [];
+    const sessions = clusterPings(userPings.map((p) => p.pingAt));
     const totalMs = sessions.reduce((sum, s) => sum + s.durationMs, 0);
-    return { userId: u.id, name: u.name, email: u.email, role: u.role, sessions, totalMs };
-  });
+    users.push({ userId: u.id, name: u.name, email: u.email, role: u.role, sessions, totalMs });
+
+    // Per-day rollup. A session is assigned wholly to the Cyprus calendar
+    // day it STARTED on — nobody here works across midnight often enough to
+    // justify split logic, and a stable rule beats a clever one in a report
+    // meant for eyeballing.
+    const dayAgg = new Map<string, { first: Date; last: Date; totalMs: number; sessionCount: number }>();
+    for (const s of sessions) {
+      const key = adminDateKey(s.start);
+      const d = dayAgg.get(key);
+      if (!d) {
+        dayAgg.set(key, { first: s.start, last: s.end, totalMs: s.durationMs, sessionCount: 1 });
+      } else {
+        if (s.start < d.first) d.first = s.start;
+        if (s.end > d.last) d.last = s.end;
+        d.totalMs += s.durationMs;
+        d.sessionCount += 1;
+      }
+    }
+    // Module minutes bucket by the ping's own day (not the session's start
+    // day) — self-consistent for the breakdown column, and unlabeled pings
+    // (pre-module data) are simply not counted here.
+    const dayModules = new Map<string, Map<string, number>>();
+    for (const p of userPings) {
+      if (!p.module) continue;
+      const key = adminDateKey(p.pingAt);
+      const mods = dayModules.get(key) ?? new Map<string, number>();
+      mods.set(p.module, (mods.get(p.module) ?? 0) + 1);
+      dayModules.set(key, mods);
+    }
+    dayAgg.forEach((d, dateKey) => {
+      const mods = dayModules.get(dateKey);
+      const moduleMinutes = Object.keys(MODULE_LABELS)
+        .filter((m) => mods?.has(m))
+        .map((m) => ({ module: m, label: MODULE_LABELS[m], minutes: mods!.get(m)! }));
+      daily.push({ dateKey, userId: u.id, name: u.name, first: d.first, last: d.last, totalMs: d.totalMs, sessionCount: d.sessionCount, moduleMinutes });
+    });
+  }
+
+  daily.sort((a, b) => (a.dateKey === b.dateKey ? a.name.localeCompare(b.name) : b.dateKey.localeCompare(a.dateKey)));
+  return { users, daily };
 }
 
 /** "3h 42m" / "0m" — never blank, so an admin with no activity still reads as zero, not missing. */

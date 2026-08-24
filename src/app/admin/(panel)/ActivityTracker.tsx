@@ -41,8 +41,15 @@ export default function ActivityTracker() {
     listeners.forEach(([ev, fn]) => window.addEventListener(ev, fn, { passive: true }));
 
     const beat = () => {
+      // window.location (not usePathname) so the interval closure always
+      // reads the CURRENT path without re-running this effect on navigation.
       // keepalive so a beat fired right before tab close still goes out.
-      fetch("/api/admin/activity-ping", { method: "POST", keepalive: true }).catch(() => {});
+      fetch("/api/admin/activity-ping", {
+        method: "POST",
+        keepalive: true,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ path: window.location.pathname }),
+      }).catch(() => {});
     };
 
     beat(); // opening the panel is itself activity — start the session at t=0, not t=1min

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { adminDateTime, CYPRUS_TZ } from "@/lib/adminTime";
+import { adminDateTime, adminClockTime, adminDateKey, CYPRUS_TZ } from "@/lib/adminTime";
 import { cyprusWallTimeToUtc } from "@/lib/booking/timezone";
 import { getAdminActivityReport, formatDuration } from "@/lib/adminActivityReport";
 
@@ -9,17 +9,18 @@ export const dynamic = "force-dynamic";
 
 const DAY_MS = 24 * 60 * 60_000;
 
-// "2026-08-24" in Cyprus time, for the date inputs' default value and for
-// parsing/validating whatever the query string sends back.
-function cyprusDateString(d: Date): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: CYPRUS_TZ }).format(d); // en-CA = ISO yyyy-mm-dd
-}
-
 function parseDateParam(v: string | string[] | undefined, fallback: Date): Date {
   const s = Array.isArray(v) ? v[0] : v;
   if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return fallback;
   const [y, m, d] = s.split("-").map(Number);
   return cyprusWallTimeToUtc(y, m, d, 0, 0);
+}
+
+/** "Mon, 24 Aug" from a Cyprus date key. Noon UTC keeps the calendar day stable in any zone. */
+function dayLabel(dateKey: string): string {
+  return new Date(`${dateKey}T12:00:00Z`).toLocaleDateString("en-GB", {
+    timeZone: CYPRUS_TZ, weekday: "short", day: "2-digit", month: "short",
+  });
 }
 
 export default async function AdminActivityPage({ searchParams }: { searchParams: { from?: string; to?: string } }) {
@@ -31,7 +32,7 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
   const viewer = uid ? await prisma.user.findUnique({ where: { id: uid }, select: { isOwner: true } }) : null;
   if (!viewer?.isOwner) redirect("/admin");
 
-  const todayCyprus = cyprusDateString(new Date());
+  const todayCyprus = adminDateKey(new Date());
   const [ty, tm, td] = todayCyprus.split("-").map(Number);
   const defaultTo = cyprusWallTimeToUtc(ty, tm, td, 0, 0); // start of today, Cyprus time
   const defaultFrom = new Date(defaultTo.getTime() - 6 * DAY_MS); // 7-day window inclusive of today
@@ -40,11 +41,11 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
   const toStart = parseDateParam(searchParams.to, defaultTo);
   const to = new Date(toStart.getTime() + DAY_MS); // query is exclusive-upper, so include the whole "to" day
 
-  const fromInput = cyprusDateString(from);
-  const toInput = cyprusDateString(toStart);
+  const fromInput = adminDateKey(from);
+  const toInput = adminDateKey(toStart);
 
-  const report = await getAdminActivityReport(from, to);
-  const grandTotalMs = report.reduce((sum, r) => sum + r.totalMs, 0);
+  const { users, daily } = await getAdminActivityReport(from, to);
+  const grandTotalMs = users.reduce((sum, r) => sum + r.totalMs, 0);
 
   return (
     <div className="space-y-6">
@@ -74,8 +75,51 @@ export default async function AdminActivityPage({ searchParams }: { searchParams
         within a couple of minutes per session; not a legal-grade timesheet.
       </p>
 
+      {/* ── Daily overview ─────────────────────────────────────────────── */}
+      <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-x-auto">
+        <div className="px-4 py-3 border-b border-[#E5E7EB] bg-[#F8F9FA] font-medium">Daily overview</div>
+        {daily.length === 0 ? (
+          <p className="px-4 py-3 text-sm text-[#9CA3AF]">No activity in this range.</p>
+        ) : (
+          <table className="w-full text-sm min-w-[720px]">
+            <thead className="text-[#6B7280]">
+              <tr>
+                <th className="text-left font-medium px-4 py-2">Day</th>
+                <th className="text-left font-medium px-4 py-2">User</th>
+                <th className="text-left font-medium px-4 py-2">First</th>
+                <th className="text-left font-medium px-4 py-2">Last</th>
+                <th className="text-left font-medium px-4 py-2">Active</th>
+                <th className="text-left font-medium px-4 py-2">Sessions</th>
+                <th className="text-left font-medium px-4 py-2">Worked on</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#E5E7EB]">
+              {daily.map((row, i) => {
+                const firstOfDay = i === 0 || daily[i - 1].dateKey !== row.dateKey;
+                return (
+                  <tr key={`${row.dateKey}-${row.userId}`} className={firstOfDay && i > 0 ? "border-t-2 border-t-[#D1D5DB]" : undefined}>
+                    <td className="px-4 py-2 whitespace-nowrap">{firstOfDay ? dayLabel(row.dateKey) : ""}</td>
+                    <td className="px-4 py-2">{row.name}</td>
+                    <td className="px-4 py-2 tabular-nums">{adminClockTime(row.first)}</td>
+                    <td className="px-4 py-2 tabular-nums">{adminClockTime(row.last)}</td>
+                    <td className="px-4 py-2 font-medium tabular-nums">{formatDuration(row.totalMs)}</td>
+                    <td className="px-4 py-2 tabular-nums">{row.sessionCount}</td>
+                    <td className="px-4 py-2 text-[#6B7280]">
+                      {row.moduleMinutes.length === 0
+                        ? "—"
+                        : row.moduleMinutes.map((m) => `${m.label} ${formatDuration(m.minutes * 60_000)}`).join(" · ")}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* ── Per-user session detail ────────────────────────────────────── */}
       <div className="space-y-4">
-        {report.map((r) => (
+        {users.map((r) => (
           <div key={r.userId} className="bg-white rounded-lg border border-[#E5E7EB] overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-[#E5E7EB] bg-[#F8F9FA]">
               <div>

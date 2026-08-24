@@ -39,4 +39,16 @@ export function adminDateTime(d: DateInput): string {
   });
 }
 
+/** Time only, Cyprus time — "20:08". */
+export function adminClockTime(d: DateInput): string {
+  return new Date(d).toLocaleTimeString("en-GB", {
+    timeZone: CYPRUS_TZ, hour: "2-digit", minute: "2-digit", hour12: false,
+  });
+}
+
+/** ISO date key as the calendar day reads in Cyprus — "2026-08-24" (en-CA locale = yyyy-mm-dd). */
+export function adminDateKey(d: DateInput): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: CYPRUS_TZ }).format(new Date(d));
+}
+
 export { CYPRUS_TZ };

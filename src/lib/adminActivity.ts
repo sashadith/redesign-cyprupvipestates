@@ -21,7 +21,26 @@ import { prisma } from "@/lib/prisma";
 const PING_THROTTLE_MS = 50_000;
 const lastPing = new Map<string, number>();
 
-export async function recordAdminActivity(userId: string): Promise<void> {
+// Closed vocabulary of module labels, aligned with the sidebar's module
+// structure (buildModules in the panel layout): media/settings/content all
+// live under the "Website" module there, so they aggregate the same way
+// here. The client sends its raw pathname; only a value derived HERE is
+// ever stored — an admin scripting fake paths can at worst mislabel their
+// own minutes, never inject arbitrary strings into the report.
+export function moduleFromPath(path: string): string {
+  const rest = path.startsWith("/admin") ? path.slice("/admin".length) : null;
+  if (rest === null) return "other";
+  if (rest === "" || rest === "/") return "dashboard";
+  if (rest.startsWith("/crm")) return "crm";
+  if (rest.startsWith("/content") || rest.startsWith("/media") || rest.startsWith("/settings")) return "website";
+  if (rest.startsWith("/developments") || rest.startsWith("/developers") || rest.startsWith("/feeds")) return "developments";
+  if (rest.startsWith("/analytics")) return "analytics";
+  if (rest.startsWith("/users")) return "users";
+  if (rest.startsWith("/account")) return "account";
+  return "other";
+}
+
+export async function recordAdminActivity(userId: string, module?: string | null): Promise<void> {
   const now = Date.now();
   const last = lastPing.get(userId) ?? 0;
   if (now - last < PING_THROTTLE_MS) return;
@@ -31,7 +50,7 @@ export async function recordAdminActivity(userId: string): Promise<void> {
     // until they interact and get bounced — those beats must not count.
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { isActive: true } });
     if (!user?.isActive) return;
-    await prisma.adminActivityPing.create({ data: { userId } });
+    await prisma.adminActivityPing.create({ data: { userId, module: module ?? null } });
   } catch {
     // Activity logging must never break the admin panel itself.
   }

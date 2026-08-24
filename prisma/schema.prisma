@@ -309,6 +309,14 @@ model AdminActivityPing {
   id     String   @id @default(uuid())
   userId String
   user   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Coarse admin module the user was in when this beat fired ("crm",
+  // "website", "developments", ... — see moduleFromPath in
+  // src/lib/adminActivity.ts for the closed set). Derived SERVER-side from
+  // the beat's pathname, never stored raw: a closed vocabulary keeps the
+  // report aggregatable and avoids persisting full URLs (which can embed
+  // lead ids etc.). Nullable — beats from before this column existed, or
+  // from an old client bundle still POSTing without a body, have no module.
+  module String?
   pingAt DateTime @default(now())
 
   @@index([userId, pingAt])
