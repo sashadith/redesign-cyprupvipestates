@@ -370,6 +370,7 @@ export default function PropertyMatching({
               <th className="px-3 py-2 w-14"></th>
               <th className="px-3 py-2 font-medium">Project</th>
               <th className="px-3 py-2 font-medium">Location</th>
+              <th className="px-3 py-2 font-medium">Delivery</th>
               <th className="px-3 py-2 font-medium">Price from</th>
               <th className="px-3 py-2 font-medium text-right">Available</th>
               <th className="px-3 py-2 font-medium text-right">Match</th>
@@ -378,7 +379,7 @@ export default function PropertyMatching({
           </thead>
           <tbody className="divide-y divide-[#F3F4F6]">
             {results.length === 0 && !loading && (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-[#9CA3AF]">No published developments match these filters.</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-[#9CA3AF]">No published developments match these filters.</td></tr>
             )}
             {results.map((m) => {
               const d = m.development;
@@ -424,6 +425,7 @@ export default function PropertyMatching({
                       {d.developer && <span className="ml-1.5 font-normal text-[#9CA3AF]">{d.developer}</span>}
                     </td>
                     <td className="px-3 py-2 text-[#6B7280]">{[d.district || d.town, d.area].filter(Boolean).join(" · ") || "—"}</td>
+                    <td className="px-3 py-2 text-[#6B7280]">{d.completion || "—"}</td>
                     <td className="px-3 py-2 text-[#6B7280]">{fmtPrice(priceFromSelection)}</td>
                     <td className="px-3 py-2 text-right text-[#6B7280]">{d.unitsAvailable}</td>
                     <td className="px-3 py-2 text-right">
@@ -435,7 +437,7 @@ export default function PropertyMatching({
                   </tr>
                   {isOpen && (
                     <tr>
-                      <td colSpan={8} className="px-4 py-3 bg-[#FAFAFA]">
+                      <td colSpan={9} className="px-4 py-3 bg-[#FAFAFA]">
                         {selectedDevs.has(d.id) && (
                           <input
                             value={comments.get(d.id) ?? ""}

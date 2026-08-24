@@ -1,3 +1,5 @@
+import { resolveRelativeCompletion } from "@/lib/completionDate";
+
 // Admin-entered descriptions (DevelopmentOverride.descriptionEN/DE/PL/RU) are
 // stored as plain text with CRLF line breaks ("\r\n\r\n" between paragraphs,
 // occasionally a lone "\r\n" mid-paragraph) — never HTML. Two renderers used
@@ -30,6 +32,9 @@ export function splitDescriptionParagraphs(text: string): string[][] {
 // rendered component again; resolve it to a plain string here, once.
 export function resolveCompletionYear(raw: string | null | undefined): string {
   if (!raw) return "";
-  const m = String(raw).match(/(19|20)\d{2}/);
+  // "24 months from signing" carries no year to extract — resolve it to a
+  // concrete quarter first, then pull the year out of that. See
+  // resolveRelativeCompletion; anything else passes through untouched.
+  const m = resolveRelativeCompletion(raw).match(/(19|20)\d{2}/);
   return m ? m[0] : "";
 }

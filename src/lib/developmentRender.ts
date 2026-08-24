@@ -4,7 +4,7 @@ import type { Development, DevelopmentOverride, DevelopmentUnit } from "@prisma/
 import type { ProjectVM } from "@/app/preview-project/feeds";
 import type { UnitVM } from "@/app/preview-project/UnitsView";
 import type { SeoOverride } from "@/lib/developmentSeo";
-import { resolveDevelopmentPrice, resolveDevelopmentLocation } from "@/lib/developmentCard";
+import { resolveDevelopmentPrice, resolveDevelopmentLocation, resolveRelativeCompletion } from "@/lib/developmentCard";
 import { developmentCopy } from "@/lib/developmentCopy";
 
 /* Render a development straight from the DB (Phase 1, Increment 4). Reads the
@@ -80,7 +80,7 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
     id: d.feedProjectId, dev: d.dev, publicName: ov?.alias || d.publicName, developerName: d.developerName, developer: d.developer ?? "",
     location: resolveDevelopmentLocation(district, town, area), district, town, area,
     status: d.status ?? "", category: d.category ?? undefined,
-    stage: ov?.stage || d.stage || undefined, completion: ov?.completion || d.completion || "", energy: ov?.energy || d.energy || "",
+    stage: ov?.stage || d.stage || undefined, completion: resolveRelativeCompletion(ov?.completion || d.completion), energy: ov?.energy || d.energy || "",
     priceFrom, priceTo, currency: d.currency ?? "EUR",
     description: ({ en: ov?.descriptionEN, de: ov?.descriptionDE, pl: ov?.descriptionPL, ru: ov?.descriptionRU } as Record<string, string | null | undefined>)[lang] || ov?.descriptionEN || d.description || "",
     gallery: finalGallery, plans: arr<string>(d.plans), renders: [], amenities,

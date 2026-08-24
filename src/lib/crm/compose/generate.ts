@@ -1,3 +1,4 @@
+import { resolveRelativeCompletion } from "@/lib/completionDate";
 import { prisma } from "@/lib/prisma";
 import { anthropic } from "@/lib/ai/anthropic";
 import { matchDevelopmentsForLead, type DevelopmentMatch } from "@/lib/crm/matching";
@@ -64,12 +65,14 @@ type IdentifiedProject = { name: string; completion: string | null; priceFrom: n
 
 // Project.completionDate is occasionally a raw "YYYY-MM-DD" string (unlike
 // Development.completion, which is already free-form like "Q2 2027") —
-// reformat only when it parses cleanly as an ISO date; otherwise pass through
-// unchanged so a value that's already free-form text isn't mangled.
+// reformat only when it parses cleanly as an ISO date; otherwise hand it to
+// resolveRelativeCompletion, which turns a "24 months from signing" phrase
+// into a real quarter and passes every other free-form value through
+// unchanged, so nothing already well-formed gets mangled.
 function formatCompletion(raw: string | null): string | null {
   if (!raw) return null;
   const isoMatch = raw.match(/^(\d{4})-(\d{2})-\d{2}$/);
-  if (!isoMatch) return raw;
+  if (!isoMatch) return resolveRelativeCompletion(raw) || null;
   const [, year, month] = isoMatch;
   const quarter = Math.floor((Number(month) - 1) / 3) + 1;
   return `Q${quarter} ${year}`;
@@ -92,7 +95,7 @@ async function resolveIdentifiedProject(pageSource: string | null): Promise<Iden
     where: { slug, publishStatus: { in: ["published", "ready"] } },
     select: { publicName: true, completion: true, priceFrom: true, currency: true },
   });
-  if (dev) return { name: dev.publicName, completion: dev.completion, priceFrom: dev.priceFrom, currency: dev.currency ?? "EUR" };
+  if (dev) return { name: dev.publicName, completion: formatCompletion(dev.completion), priceFrom: dev.priceFrom, currency: dev.currency ?? "EUR" };
 
   const proj = await prisma.project.findFirst({
     where: { slug, status: "PUBLISHED" },
@@ -106,7 +109,7 @@ async function resolveIdentifiedProject(pageSource: string | null): Promise<Iden
   if (!proj) return null;
   const superseding = proj.supersededByDevelopment;
   if (superseding && ["published", "ready"].includes(superseding.publishStatus)) {
-    return { name: superseding.publicName, completion: superseding.completion, priceFrom: superseding.priceFrom, currency: superseding.currency ?? "EUR" };
+    return { name: superseding.publicName, completion: formatCompletion(superseding.completion), priceFrom: superseding.priceFrom, currency: superseding.currency ?? "EUR" };
   }
   return {
     name: proj.title,

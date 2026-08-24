@@ -1,3 +1,5 @@
+import { resolveRelativeCompletion } from "@/lib/completionDate";
+
 const localeMap: Record<string, string> = {
   en: "en-US",
   de: "de-DE",
@@ -28,11 +30,14 @@ export function formatMonthYear(
   lang: string = "en",
   opts?: { numeric?: boolean; capitalize?: boolean }
 ): string {
-  const iso = normalizeToIso(dateStr);
-  if (!iso) return dateStr;
+  // "24 months from signing" → "Q3 2028"; a quarter has no month to format, so
+  // it's returned as-is (same as the already-"Q3 2028" values in the data).
+  const resolved = resolveRelativeCompletion(dateStr);
+  const iso = normalizeToIso(resolved);
+  if (!iso) return resolved;
 
   const d = new Date(iso);
-  if (isNaN(d.getTime())) return dateStr;
+  if (isNaN(d.getTime())) return resolved;
 
   // numeric: "05-2026"
   if (opts?.numeric) {

@@ -448,6 +448,7 @@ export default function PresentationEditor({
                     <th className="px-3 py-2 w-14"></th>
                     <th className="px-3 py-2 font-medium">Project</th>
                     <th className="px-3 py-2 font-medium">Location</th>
+                    <th className="px-3 py-2 font-medium">Delivery</th>
                     <th className="px-3 py-2 font-medium">Price from</th>
                     <th className="px-3 py-2 font-medium text-right">Match</th>
                     <th className="px-3 py-2 w-8"></th>
@@ -455,7 +456,7 @@ export default function PresentationEditor({
                 </thead>
                 <tbody className="divide-y divide-[#F3F4F6]">
                   {addableResults.length === 0 && !addLoading && (
-                    <tr><td colSpan={7} className="px-4 py-8 text-center text-[#9CA3AF]">No other developments match these filters.</td></tr>
+                    <tr><td colSpan={8} className="px-4 py-8 text-center text-[#9CA3AF]">No other developments match these filters.</td></tr>
                   )}
                   {addableResults.map((m) => {
                     const d = m.development;
@@ -467,15 +468,19 @@ export default function PresentationEditor({
                         <tr className="hover:bg-[#F8F9FA]">
                           <td className="px-3 py-2"><input type="checkbox" checked={addSelected.has(d.id)} onChange={() => toggleAddDev(d.id)} className="h-4 w-4 rounded border-[#D1D5DB] text-[#1B4B43]" /></td>
                           <td className="px-3 py-2">{d.mainImage ? <img src={d.mainImage} alt="" className="w-12 h-9 object-cover rounded" /> : <div className="w-12 h-9 rounded bg-[#F3F4F6]" />}</td>
-                          <td className="px-3 py-2 font-medium text-[#111827]">{d.publicName}</td>
+                          <td className="px-3 py-2 font-medium text-[#111827]">
+                            {d.publicName}
+                            {d.developer && <span className="ml-2 font-normal text-[#9CA3AF]">{d.developer}</span>}
+                          </td>
                           <td className="px-3 py-2 text-[#6B7280]">{[d.district || d.town, d.area].filter(Boolean).join(" · ") || "—"}</td>
+                          <td className="px-3 py-2 text-[#6B7280]">{d.completion || "—"}</td>
                           <td className="px-3 py-2 text-[#6B7280]">{fmtPrice(d.priceFrom)}</td>
                           <td className="px-3 py-2 text-right"><span className="inline-block rounded-full px-2 py-0.5 text-xs font-semibold" style={{ background: scoreBg(m.score), color: scoreColor(m.score) }}>{m.score}%</span></td>
                           <td className="px-3 py-2 text-center"><button type="button" onClick={() => toggleAddExpand(d.id)} className="text-[#6B7280] hover:text-[#111827]">{isOpen ? "▾" : "▸"}</button></td>
                         </tr>
                         {isOpen && (
                           <tr>
-                            <td colSpan={7} className="px-4 py-3 bg-[#FAFAFA]">
+                            <td colSpan={8} className="px-4 py-3 bg-[#FAFAFA]">
                               {addSelected.has(d.id) && (
                                 <input
                                   value={addComments.get(d.id) ?? ""}

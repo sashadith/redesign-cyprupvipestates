@@ -10,6 +10,7 @@
 // re-implement any of this inline again on either surface.
 
 import { isListedUnit } from "@/lib/developmentAvailability";
+import { resolveRelativeCompletion } from "@/lib/completionDate";
 
 type UnitLike = { status?: string | null; price?: number | null; beds?: string | null; type?: string | null; areaBuilt?: string | null };
 
@@ -217,6 +218,8 @@ export function matchesPropertyTypeFilter(resolvedType: string, filterValue: str
 // (2026-08-13) — only ever shows a value it's confident about; anything it
 // can't parse into a clean "QN YYYY" is treated the same as no date at all
 // (omitted), never guessed or shown malformed.
+export { resolveRelativeCompletion };
+
 const MONTH_TO_QUARTER: Record<string, number> = {
   january: 1, february: 1, march: 1,
   april: 2, may: 2, june: 2,
@@ -224,7 +227,9 @@ const MONTH_TO_QUARTER: Record<string, number> = {
   october: 4, november: 4, december: 4,
 };
 export function toDeliveryQuarter(completion: string | null | undefined): string | null {
-  const s = (completion ?? "").trim();
+  // Defensive: the two render funnels (mapRowToVM, mapDevelopmentRowToCard)
+  // already resolve the relative form, but this is also called with raw values.
+  const s = resolveRelativeCompletion(completion);
   if (!s) return null;
   const direct = s.match(/^Q([1-4])\s+(\d{4})$/i);
   if (direct) return `Q${direct[1]} ${direct[2]}`;

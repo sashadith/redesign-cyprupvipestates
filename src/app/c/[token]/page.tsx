@@ -100,8 +100,21 @@ export default async function ClientPresentationPage({ params }: { params: { tok
   const locale = asPLocale(presentation.locale);
   const c = COPY[locale];
 
-  const devMap = await getDbProjectsByIds(presentation.items.map((i) => i.developmentId), locale);
-  const items: PresentationDevelopmentVM[] = presentation.items
+  // Properties added to an already-sent presentation lead the grid (newest
+  // addition first), so a returning client sees what's new without hunting for
+  // the "New for you" badge. Ordered by newAddedAt and NOT by isNew on purpose:
+  // isNew clears itself on first overlay view (POST /api/c/[token]/view), which
+  // would make the order jump around mid-visit. Items from the original
+  // presentation have no newAddedAt and keep the advisor's own sortIndex order
+  // below them.
+  const orderedItems = [...presentation.items].sort((a, b) => {
+    const ta = a.newAddedAt?.getTime() ?? 0;
+    const tb = b.newAddedAt?.getTime() ?? 0;
+    return ta !== tb ? tb - ta : a.sortIndex - b.sortIndex;
+  });
+
+  const devMap = await getDbProjectsByIds(orderedItems.map((i) => i.developmentId), locale);
+  const items: PresentationDevelopmentVM[] = orderedItems
     .map((it): PresentationDevelopmentVM | null => {
       const vm = devMap[it.developmentId];
       if (!vm) return null;

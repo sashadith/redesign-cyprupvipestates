@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { soldOutFromCounts } from "@/lib/developmentAvailability";
+import { resolveRelativeCompletion } from "@/lib/completionDate";
 
 /* Scores every published Development against a lead's criteria for the Client
    Presentation system (see prisma/schema.prisma ClientPresentation models and
@@ -58,6 +59,9 @@ export type MatchedDevelopment = {
   // — same publishStatus+slug gate PropertyOverlay.tsx already uses for its
   // own "View on site" button, since slug is only ever set on publish.
   developer: string | null;
+  /** Delivery/completion label — override wins, "N months from signing"
+   *  already resolved to a quarter (see resolveRelativeCompletion). */
+  completion: string | null;
   slug: string | null;
   publishStatus: string | null;
   // 2026-08-11 correction — used to be every available unit regardless of
@@ -279,7 +283,8 @@ export async function matchDevelopmentsForLead(lead: LeadLike, filters: MatchFil
         id: d.id, publicName: ov?.alias || d.publicName, town, district, area,
         priceFrom, priceTo: d.priceTo, currency: d.currency || "EUR",
         mainImage, unitsAvailable: matchedUnits.length, unitsAvailableAll: available.length, unitsTotal: d.units.length,
-        developer: d.developer, slug: d.slug, publishStatus: d.publishStatus,
+        developer: d.developer, completion: resolveRelativeCompletion(ov?.completion || d.completion) || null,
+        slug: d.slug, publishStatus: d.publishStatus,
       },
       score,
       matchedUnits,

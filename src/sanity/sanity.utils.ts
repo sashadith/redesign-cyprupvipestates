@@ -9,7 +9,8 @@ import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
 import { localizedHref, isLocale } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
-import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances, districtWithParent } from "@/lib/developmentCard";
+import { completionSortKey } from "@/lib/completionDate";
+import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances, districtWithParent, resolveRelativeCompletion } from "@/lib/developmentCard";
 import { soldOutFromCounts, computeAvailability } from "@/lib/developmentAvailability";
 import { isNewStyleProjectsBlock, projectsBlockHasCriteria } from "@/lib/projectsBlockValidation";
 import { Homepage } from "@/types/homepage";
@@ -1138,7 +1139,7 @@ type ProjectListItem = {
   distances?: Record<string, string> | null;
 };
 const getNumericPrice = (p: ProjectListItem) => Number(p?.keyFeatures?.price ?? 0);
-const getCompletionTimestamp = (p: ProjectListItem) => { const r = p?.keyFeatures?.completionDate; if (!r) return null; const t = new Date(r).getTime(); return Number.isNaN(t) ? null : t; };
+const getCompletionTimestamp = (p: ProjectListItem) => completionSortKey(p?.keyFeatures?.completionDate);
 const getProjectScore = (p: ProjectListItem) => { let s = 0; if (p.isFeatured) s += 100000; s += (p.listingPriority ?? 0) * 1000; if (p.videoId) s += 200; if (p.isNew) s += 100; return s; };
 const getPriceSegment = (price: number): "low" | "mid" | "high" | "luxury" => (price < 300000 ? "low" : price < 600000 ? "mid" : price < 1000000 ? "high" : "luxury");
 function sortWithinBucket(ps: ProjectListItem[]) { return [...ps].sort((a, b) => { const s = getProjectScore(b) - getProjectScore(a); if (s) return s; const pr = getNumericPrice(b) - getNumericPrice(a); if (pr) return pr; return (a.title || "").localeCompare(b.title || ""); }); }
@@ -1223,7 +1224,7 @@ export function mapDevelopmentRowToCard(d: any) {
     excerpt: null as string | null, previewImage, images: gallery,
     keyFeatures: {
       city: resolveDevelopmentLocation(district, town, area), propertyType: resolveDevelopmentType(d.category, d.units),
-      bedrooms: bedRange, coveredArea: areaRange, completionDate: ov?.completion || d.completion || "", energyEfficiency: ov?.energy || d.energy || "",
+      bedrooms: bedRange, coveredArea: areaRange, completionDate: resolveRelativeCompletion(ov?.completion || d.completion), energyEfficiency: ov?.energy || d.energy || "",
       price: devPriceFrom, vatApplies: ov?.vatApplies ?? null,
     },
     // KNOWN GAP (2026-07-27, found while diagnosing the ProjectLink null-price
