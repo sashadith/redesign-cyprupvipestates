@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { driveConfigured, folderIdFromUrl, getAccessToken, listFolder, findPriceFile, getSpreadsheetText, findSubfolder, findInfoDocuments, collectMedia, downloadFile, type DriveFile } from "./googleDrive";
+import { driveConfigured, folderIdFromUrl, getAccessToken, listFolder, findPriceFile, listProjectFolders, getSpreadsheetText, findSubfolder, findInfoDocuments, collectMedia, downloadFile, type DriveFile } from "./googleDrive";
 import { extractAvailabilityFromPricelist, buildCanonicalMatcher, type ExtractedPricelistProject, type ExtractStats } from "./ai/pricelistExtract";
+import { toTitleCaseName } from "@/lib/textCase";
+import { folderProjectName, matchProjectByName, scopeSheetToProject } from "@/lib/driveFolderNames";
 import { extractPricelistFromPdf } from "./ai/pdfPricelistExtract";
 import { generateProjectDescription } from "./ai/projectDescription";
 import { extractTextFromDocx, extractTextFromPdf } from "./ai/projectInfoExtract";
@@ -73,9 +75,32 @@ export type DriveSyncResult = {
   // doc comment on the prunable block) — how many stale units were removed
   // and how many remain, per project, for post-sync review.
   pruned?: { project: string; deleted: number; remaining: number }[];
+  /** How the run's projects were sourced (2026-08-24) — the folder-first split.
+   *  `skipped` is the whole point of these fields: a project folder that produced
+   *  nothing must say so out loud. Silence is what let four Olias folders sit
+   *  unsynced for seven weeks without anything anywhere reporting a problem. */
+  fromFolders?: number;
+  fromMaster?: number;
+  folderIssues?: { folder: string; reason: string }[];
 };
 
-async function writeProject(developerAccountId: string, accountName: string, p: ExtractedPricelistProject, content: boolean, files: DriveFile[], at: string, richUnits: boolean = content): Promise<{ avail: number; mediaChanged: boolean; pruned?: { deleted: number; remaining: number } }> {
+/** Everything a folder-sourced project already KNOWS about itself, so writeProject
+ *  never has to re-derive it by fuzzy matching (2026-08-24). Empty for the
+ *  master-sheet path, which has no folder to start from. */
+type ProjectHints = {
+  /** The project's own Drive subfolder id, straight from the scan that found its
+   *  price list there. Skips findSubfolder entirely — that function's word-overlap
+   *  fallback is what pulled the WRONG folder's images in the Venara/Venara View
+   *  case, and a folder we literally just read the price list out of is not a guess. */
+  folderId?: string | null;
+  /** The already-existing Development's feedProjectId. The feedKey MUST come from
+   *  this and not from a fresh slug(publicName): the two are only equal as long as
+   *  nobody ever changes publicName, and the day they diverge, re-slugging silently
+   *  creates a SECOND Development row for a project that already exists. */
+  feedProjectId?: string | null;
+};
+
+async function writeProject(developerAccountId: string, accountName: string, p: ExtractedPricelistProject, content: boolean, files: DriveFile[], at: string, richUnits: boolean = content, hints: ProjectHints = {}): Promise<{ avail: number; mediaChanged: boolean; pruned?: { deleted: number; remaining: number } }> {
   // Project-level fields sourced straight from the price-list TEXT (category, completion,
   // amenities, area, map link) cost nothing extra to refresh — no image download, no PDF
   // conversion, no document analysis — so they should update on a fast units-only sync too,
@@ -83,7 +108,7 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
   // documents) and images/floor-plans stay gated to `content` specifically, further below.
   const richProject = content || richUnits;
   let mediaChanged = false;
-  const projSlug = slug(p.project) || Math.random().toString(36).slice(2, 8);
+  const projSlug = hints.feedProjectId || slug(p.project) || Math.random().toString(36).slice(2, 8);
   const feedKey = `drive:${developerAccountId}:${projSlug}`;
   const avail = p.units.filter((u) => u.status === "available").length;
   const prices = p.units.map((u) => u.price).filter((x): x is number => typeof x === "number");
@@ -93,7 +118,13 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
   // fallback right below, the info-document description source further down, and
   // images/plans at the end. `findSubfolder` only reads the already-fetched `files`
   // listing (no extra API call), so resolving it this early costs nothing.
-  const subId = content ? (await findSubfolder(files, p.project, at))?.id ?? null : null;
+  //
+  // A folder-sourced project passes its folder in and skips the lookup altogether:
+  // it is known, not inferred. It is also resolved on a LIGHT sync for those (the
+  // findSubfolder branch stays gated on `content` — that one costs an API call per
+  // nested candidate), which is what lets driveFolderId get backfilled below without
+  // waiting for someone to run a full import.
+  const subId = hints.folderId ?? (content ? (await findSubfolder(files, p.project, at))?.id ?? null : null);
 
   // The price list's "Location:" row is often a goo.gl/maps.app shortlink that
   // doesn't carry coordinates itself — resolve it via redirect so the map location
@@ -139,6 +170,15 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
     update: { unitsTotal: p.units.length, unitsAvailable: avail, syncedAt: new Date(), ...rich },
     include: { override: true },
   });
+
+  // The folder link, recorded on EVERY sync path — not only inside the media block
+  // far below, which runs on a full import only. A folder-sourced project is matched
+  // back to its folder by exactly this column on the next scan, so it has to be
+  // there from the first light sync onwards, otherwise the match silently degrades
+  // to name-based fuzzy matching on every subsequent run.
+  if (subId && dev.driveFolderId !== subId) {
+    await prisma.development.update({ where: { id: dev.id }, data: { driveFolderId: subId } });
+  }
 
   // Auto recompute (haversine, src/lib/developmentDistances.ts) — resolves
   // override lat/lng first (so a corrected admin pin always wins over the
@@ -355,6 +395,150 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
   return { avail, mediaChanged, ...(pruned ? { pruned } : {}) };
 }
 
+/* ── Folder-first project discovery (2026-08-24, Olias Homes) ───────────────
+   A developer whose projects each carry their own price list inside their own
+   Drive folder. See googleDrive.ts's listProjectFolders for the why; this half
+   is the identity resolution: which Development row (if any) a folder IS. */
+
+type FolderProject = {
+  folder: DriveFile;
+  price: DriveFile;
+  /** Resolved public name — an existing row's, or the cleaned folder name. */
+  project: string;
+  /** Non-null only when this folder resolved to a Development that already exists. */
+  feedProjectId: string | null;
+};
+type FolderScan = { usable: FolderProject[]; issues: { folder: string; reason: string }[] };
+
+/** Every source file this run reads, as one signature. Sorted so folder listing
+ *  order can never make an unchanged source set look changed. */
+const sourceSignature = (master: DriveFile | null, projects: FolderProject[]) =>
+  [master ? `${master.id}:${master.modifiedTime}` : "-", ...projects.map((f) => `${f.price.id}:${f.price.modifiedTime}`).sort()].join("|");
+
+/** A Development as the folder resolver needs to see it. Narrow on purpose: this
+ *  function must stay pure and directly testable against real folder names and
+ *  real rows, without a Drive round trip. */
+export type ExistingProjectRow = { id: string; publicName: string; feedProjectId: string; driveFolderId: string | null; dev: string };
+
+/* The identity half of the scan, pure: which Development each project folder IS.
+   Split out from the I/O so it can be exercised against production folder names
+   and production rows directly — this is the part where a mistake is expensive
+   (a hijacked row, or a duplicate Development whose sync then prunes the original's
+   units), and "it compiles" is not evidence that it maps correctly. */
+export function resolveFolderProjects(folders: { folder: DriveFile; price: DriveFile | null }[], existing: ExistingProjectRow[]): FolderScan {
+  const byFolderId = new Map(existing.filter((e) => e.driveFolderId).map((e) => [e.driveFolderId!, e]));
+
+  const usable: FolderProject[] = [];
+  const issues: { folder: string; reason: string }[] = [];
+  const claimedKeys = new Set<string>();
+
+  for (const { folder, price } of folders) {
+    if (!price) { issues.push({ folder: folder.name, reason: "no price list in this folder" }); continue; }
+    const cleaned = folderProjectName(folder.name);
+
+    // driveFolderId first: an id we stored ourselves is a fact and outranks every
+    // name comparison. It is also what disambiguates the genuinely ambiguous pairs
+    // — "Tenera Homes - Geroskipou" vs "Tenera Villas" score identically against
+    // "Tenera Villas 1A & 1B" on word overlap alone, and only the stored folder id
+    // decides that correctly rather than by a length tie-break.
+    let hit = byFolderId.get(folder.id) ?? null;
+    if (!hit) {
+      // Both the cleaned name and the raw folder name are offered, so a developer
+      // whose stored publicName happens to keep the location suffix still matches.
+      const m = matchProjectByName([cleaned, folder.name], (e) => e.publicName, existing);
+      if (m.ambiguous.length) {
+        issues.push({ folder: folder.name, reason: `matches more than one existing project (${m.ambiguous.map((e) => `“${e.publicName}”`).join(", ")}) — left alone, resolve by hand` });
+        continue;
+      }
+      hit = m.hit;
+    }
+
+    // Never adopt a row this adapter doesn't own (hand-entered projects, another
+    // source's rows) — the same rule dropboxAvailabilitySync.ts applies to Kuutio's
+    // three manual entries. Reported rather than silently skipped.
+    if (hit && hit.dev !== "drive") {
+      issues.push({ folder: folder.name, reason: `matches existing “${hit.publicName}” (dev:${hit.dev}) — not owned by the Drive sync, left untouched` });
+      continue;
+    }
+
+    // Two folders resolving to the same Development would each call writeProject
+    // for the same feedKey, and the second would prune away everything the first
+    // just wrote — neither knows the other exists. Structurally excluded here,
+    // the same way mergedBySlug does it for the master-sheet path.
+    const projectKey = hit?.feedProjectId ?? slug(cleaned);
+    if (claimedKeys.has(projectKey)) {
+      issues.push({ folder: folder.name, reason: `resolves to the same project as an earlier folder (“${hit?.publicName ?? cleaned}”) — skipped` });
+      continue;
+    }
+    claimedKeys.add(projectKey);
+
+    // An existing row keeps its publicName verbatim: FEED-ADAPTER-GUIDE.md §3 —
+    // published projects are frozen, names are never re-derived from the source.
+    // toTitleCaseName applies only where a name is born from raw source text.
+    usable.push({ folder, price, project: hit ? hit.publicName : toTitleCaseName(cleaned), feedProjectId: hit?.feedProjectId ?? null });
+  }
+  return { usable, issues };
+}
+
+async function scanProjectFolders(developerAccountId: string, rootFiles: DriveFile[], at: string): Promise<FolderScan> {
+  const folders = await listProjectFolders(rootFiles, at);
+  if (!folders.length) return { usable: [], issues: [] };
+  // Scoped to THIS developer's own rows, always — FEED-ADAPTER-GUIDE.md §4:
+  // a matching function must never be able to reach across developers.
+  const existing = await prisma.development.findMany({
+    where: { developerAccountId },
+    select: { id: true, publicName: true, feedProjectId: true, driveFolderId: true, dev: true },
+  });
+  return resolveFolderProjects(folders, existing);
+}
+
+export type DriveFolderPreview = {
+  folder: string;
+  priceFile: string | null;
+  project: string;
+  status: "existing" | "new" | "skipped";
+  reason?: string;
+};
+
+/* Read-only dry run of the scan above: which folder maps to which project, which
+   file it would read, and — the part that matters — which folders produce nothing
+   and why. No AI calls, no downloads, no writes; just listings. Exists so "why is
+   this project not on the site?" is a question with an answer in the admin panel
+   rather than a code-reading exercise. */
+export async function previewDriveFolders(developerAccountId: string): Promise<{ ok: boolean; message: string; rows: DriveFolderPreview[] }> {
+  if (!driveConfigured()) return { ok: false, message: "Google Drive is not configured (GOOGLE_* env vars).", rows: [] };
+  const acct = await prisma.developerAccount.findUnique({ where: { id: developerAccountId } });
+  if (!acct?.driveFolderUrl) return { ok: false, message: "No Drive folder link set for this developer.", rows: [] };
+  if (isDropboxShareUrl(acct.driveFolderUrl)) return { ok: false, message: "This developer uses Dropbox, not Google Drive.", rows: [] };
+  const folderId = folderIdFromUrl(acct.driveFolderUrl);
+  if (!folderId) return { ok: false, message: "Could not read a folder id from the Drive link.", rows: [] };
+
+  const at = await getAccessToken();
+  const rootFiles = await listFolder(folderId, at);
+  const scan = await scanProjectFolders(developerAccountId, rootFiles, at);
+  const master = findPriceFile(rootFiles);
+
+  const rows: DriveFolderPreview[] = [
+    ...scan.usable.map((f): DriveFolderPreview => ({
+      folder: f.folder.name,
+      priceFile: f.price.name,
+      project: f.project,
+      status: f.feedProjectId ? "existing" : "new",
+    })),
+    ...scan.issues.map((i): DriveFolderPreview => ({ folder: i.folder, priceFile: null, project: "—", status: "skipped", reason: i.reason })),
+  ].sort((a, b) => a.folder.localeCompare(b.folder));
+
+  const created = rows.filter((r) => r.status === "new").length;
+  return {
+    ok: true,
+    message:
+      `${scan.usable.length} folder${scan.usable.length === 1 ? "" : "s"} with their own price list` +
+      (created ? `, ${created} of which would be created as a new project` : "") +
+      `. Master sheet: ${master ? `“${master.name}”` : "none"}.`,
+    rows,
+  };
+}
+
 export async function syncDeveloperDrive(developerAccountId: string, opts: { force?: boolean; content?: boolean; richUnits?: boolean; onlyFeedProjectId?: string } = {}): Promise<DriveSyncResult> {
   if (!driveConfigured()) return { ok: false, message: "Google Drive is not configured (GOOGLE_* env vars)." };
   const acct = await prisma.developerAccount.findUnique({ where: { id: developerAccountId } });
@@ -371,43 +555,100 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
   if (!folderId) return { ok: false, message: "Could not read a folder id from the Drive link." };
 
   const at = await getAccessToken();
-  const files = await listFolder(folderId, at);
+  const rootFiles = await listFolder(folderId, at);
 
-  // Single-project sync ("Sync with Drive" on one development's own page): some
-  // developers keep an authoritative, project-specific price list inside that
-  // project's own subfolder (e.g. "Arbeo Park_Sales.xlsx" inside "Arbeo Park/"),
-  // separate from — and more current than — the developer-wide master sheet.
-  // Prefer that file when it exists; only fall back to the master sheet if the
-  // project has no subfolder or no price-list-looking file inside it.
-  let price: DriveFile | null = null;
-  // Set ONLY when the price list came out of the project's own subfolder. If we
-  // fall back to the developer-wide master sheet below, that file covers many
-  // projects and forcing a single name onto every row would be flatly wrong.
-  let knownProject: string | null = null;
-  if (opts.onlyFeedProjectId) {
-    const existingDev = await prisma.development.findFirst({
-      where: { developerAccountId, feedProjectId: opts.onlyFeedProjectId },
-      select: { publicName: true, driveFolderId: true },
-    });
-    const subId = existingDev?.driveFolderId || (await findSubfolder(files, existingDev?.publicName ?? "", at))?.id || null;
-    if (subId) {
-      const subFiles = await listFolder(subId, at);
-      price = findPriceFile(subFiles);
-      if (price) knownProject = existingDev?.publicName ?? null;
-    }
-  }
-  if (!price) price = findPriceFile(files);
-  if (!price) return { ok: false, message: "No price-list spreadsheet found in the folder." };
-
-  if (!opts.force && !opts.content && acct.driveFileId === price.id && acct.driveFileModified === price.modifiedTime) {
-    return { ok: true, skipped: true, message: `Unchanged since last sync (${price.name}).` };
+  /* Source discovery, in strict priority order (2026-08-24):
+       1. every project folder's OWN price list — folder = project identity
+       2. the developer-wide master sheet at the root, for whatever (1) did not cover
+     (1) winning is not a preference, it is the correctness rule: where a developer
+     keeps both, the per-project sheet is the one they actually maintain. Olias Homes'
+     root master sheet is a stale partial copy that does not even mention four of
+     their projects (Amalfi Homes, Birch Park, Caldera Estate, Osmia Bee Home) —
+     each of which has had a folder and its own "Sales Catalogue - <Project>.xlsx"
+     for weeks, and simply never existed for us, because project creation only ever
+     read that one master sheet. (2) is still required and not a legacy path: Alder
+     Park, Pine Park and Triangle House exist ONLY in the master sheet, with no
+     folder of their own at all. */
+  const scan = await scanProjectFolders(developerAccountId, rootFiles, at);
+  const master = findPriceFile(rootFiles);
+  if (!scan.usable.length && !master) {
+    return { ok: false, message: "No price list found — neither in the folder root nor in any project subfolder.", folderIssues: scan.issues };
   }
 
+  // The change-signature now spans EVERY source file, not just the master sheet:
+  // with per-project price lists, "the root sheet hasn't changed" says nothing about
+  // whether a project's own catalogue has. Deliberately a composite string rather
+  // than a new column — driveFileModified has no other reader (checked), and one
+  // signature for "the source set as a whole" keeps the skip decision honest: any
+  // file added, removed or touched anywhere invalidates it.
+  const sig = sourceSignature(master, scan.usable);
+  const sourceCount = scan.usable.length + (master ? 1 : 0);
+  if (!opts.force && !opts.content && !opts.onlyFeedProjectId && acct.driveFileModified === sig) {
+    return { ok: true, skipped: true, message: `Unchanged since last sync (${sourceCount} source file${sourceCount === 1 ? "" : "s"}).` };
+  }
+
+  const content = !!opts.content;
+  const richUnits = content || !!opts.richUnits;
   // The extra project-level calls (location/mapsUrl/type/completion/amenities/notes)
   // only read the same spreadsheet text — no media involved — so run them for the
   // units-only sync too, not just a full import.
-  const richness = !!opts.content || !!opts.richUnits;
-  let extracted: ExtractedPricelistProject[];
+  const richness = content || richUnits;
+
+  let totalAvail = 0;
+  let mediaChanged = false;
+  let fromFolders = 0;
+  let fromMaster = 0;
+  const pruned: { project: string; deleted: number; remaining: number }[] = [];
+  const folderIssues = [...scan.issues];
+  // Everything pass 1 owns. Pass 2 must not touch any of it: the master sheet's
+  // stale copy of the same project would treat its own thinner row set as the
+  // complete truth and prune away what the project's own catalogue just wrote.
+  const claimed = new Set<string>();
+  const claimedNames: string[] = [];
+
+  // ── Pass 1 — each project folder's own price list ────────────────────────
+  // Every project this developer has a folder for — the only names a stray tab in
+  // one project's workbook may be recognised as belonging to somebody else.
+  const siblingNames = scan.usable.map((f) => f.project);
+  const folderProjects = opts.onlyFeedProjectId
+    ? scan.usable.filter((f) => (f.feedProjectId ?? slug(f.project)) === opts.onlyFeedProjectId)
+    : scan.usable;
+
+  for (const fp of folderProjects) {
+    let extracted: ExtractedPricelistProject[];
+    try {
+      const text = scopeSheetToProject(await getSpreadsheetText(fp.price, at), fp.project, siblingNames);
+      // knownProject — identity is a FACT here (this file was read out of that
+      // project's own folder), so the catalog call and buildCanonicalMatcher's
+      // fuzzy word-overlap scoring are skipped entirely. Nothing can be dropped
+      // for "belonging to no known project", which is exactly the master-sheet
+      // failure mode that cost Arbeo Park 22 of its 28 flats (2026-08-23).
+      extracted = await extractAvailabilityFromPricelist(text, richness, { knownProject: fp.project });
+    } catch (e: any) {
+      // One unreadable project sheet must never fail the other fifteen.
+      folderIssues.push({ folder: fp.folder.name, reason: `could not read “${fp.price.name}” (${String(e?.message ?? e).slice(0, 120)})` });
+      continue;
+    }
+    const p = extracted[0];
+    if (!p?.units?.length) {
+      // "No result" is not "this project has no units" — write nothing, say so.
+      folderIssues.push({ folder: fp.folder.name, reason: `no units extracted from “${fp.price.name}”` });
+      continue;
+    }
+    // knownProject already forces this, but the write path derives feedKey from it —
+    // pin it explicitly rather than trusting an extraction invariant.
+    p.project = fp.project;
+    claimed.add(fp.feedProjectId ?? slug(fp.project));
+    claimed.add(slug(fp.project));
+    claimedNames.push(fp.project);
+    const r = await writeProject(developerAccountId, acct.name, p, content, rootFiles, at, richUnits, { folderId: fp.folder.id, feedProjectId: fp.feedProjectId });
+    fromFolders++;
+    totalAvail += r.avail;
+    if (r.mediaChanged) mediaChanged = true;
+    if (r.pruned) pruned.push({ project: p.project, ...r.pruned });
+  }
+
+  // ── Pass 2 — the developer-wide master sheet, for what pass 1 did not own ──
   // Surfaced in the sync's own result message. The canonical-name filter used to
   // discard rows in total silence — Arbeo Park lost 22 of 28 flats that way and
   // it only came to light because the survivors showed up as duplicates next to
@@ -416,104 +657,147 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
   // callback, which TypeScript's control-flow analysis cannot see, so a plain
   // variable narrows to `never` by the time the message is built.
   const extractStats: { value: ExtractStats | null } = { value: null };
-  if (price.mimeType === "application/pdf") {
-    // PDF price list (2026-08-12, Motive Point) — status comes from the document's
-    // own text color, never from AI reading; see pdfPricelistExtract.ts's doc
-    // comment. A blocked result means too many units had unresolvable color —
-    // nothing gets written, same as the "no price-list found" case below.
-    const buf = await downloadFile(price.id, at);
-    const result = await extractPricelistFromPdf(buf, richness);
-    if (result.blocked) return { ok: false, message: result.message };
-    extracted = result.projects;
-  } else {
-    const text = await getSpreadsheetText(price, at);
-    extracted = await extractAvailabilityFromPricelist(text, richness, {
-      knownProject: knownProject ?? undefined,
-      onStats: (s) => { extractStats.value = s; },
-    });
-  }
-  if (!extracted.length) return { ok: false, message: "Could not extract any projects from the price list." };
+  // A single-project sync that pass 1 already served has no business re-reading
+  // the whole master sheet — that would be one full extraction of every other
+  // project's rows just to throw them away.
+  const needMaster = !!master && (!opts.onlyFeedProjectId || folderProjects.length === 0);
 
-  // Extra stability layer: once a project has been synced before, its stored
-  // publicName is a more reliable ground truth than a fresh in-document catalog
-  // match — the AI's own catalog read isn't fully deterministic run to run. Every
-  // extracted project name gets re-resolved against what's already in the DB for
-  // this developer BEFORE anything else, so a rephrased catalog entry this run
-  // can't silently fork an already-known project into a duplicate Development.
-  const existingProjects = await prisma.development.findMany({ where: { developerAccountId, dev: "drive" }, select: { publicName: true } });
-  if (existingProjects.length) {
-    const toExisting = buildCanonicalMatcher(existingProjects.map((d) => d.publicName));
+  if (master && needMaster) {
+    let extracted: ExtractedPricelistProject[] = [];
+    if (master.mimeType === "application/pdf") {
+      // PDF price list (2026-08-12, Motive Point) — status comes from the document's
+      // own text color, never from AI reading; see pdfPricelistExtract.ts's doc
+      // comment. A blocked result means too many units had unresolvable color —
+      // nothing gets written, same as the "no price-list found" case.
+      const buf = await downloadFile(master.id, at);
+      const result = await extractPricelistFromPdf(buf, richness);
+      if (result.blocked) {
+        // Fails the run only when pass 1 produced nothing either — a blocked master
+        // sheet must not discard projects already written from their own catalogues.
+        if (!fromFolders) return { ok: false, message: result.message, folderIssues };
+        folderIssues.push({ folder: master.name, reason: result.message });
+      } else extracted = result.projects;
+    } else {
+      const text = await getSpreadsheetText(master, at);
+      extracted = await extractAvailabilityFromPricelist(text, richness, {
+        onStats: (s) => { extractStats.value = s; },
+      });
+    }
+
+    // Extra stability layer: once a project has been synced before, its stored
+    // publicName is a more reliable ground truth than a fresh in-document catalog
+    // match — the AI's own catalog read isn't fully deterministic run to run. Every
+    // extracted project name gets re-resolved against what's already in the DB for
+    // this developer BEFORE anything else, so a rephrased catalog entry this run
+    // can't silently fork an already-known project into a duplicate Development.
+    const existingProjects = await prisma.development.findMany({ where: { developerAccountId, dev: "drive" }, select: { publicName: true } });
+    if (extracted.length && existingProjects.length) {
+      const toExisting = buildCanonicalMatcher(existingProjects.map((d) => d.publicName));
+      for (const p of extracted) {
+        const { name, matched } = toExisting(p.project);
+        if (matched) p.project = name;
+      }
+    }
+
+    // Merge entries that now share the same canonical project (2026-08-13
+    // incident) — the extraction can non-deterministically split one real
+    // project into two separate result entries within a single run (confirmed
+    // on real data: Olivelia Homes fragmented into a 20-unit and a handful-
+    // unit entry in the same sync), and the reconciliation pass above only
+    // reassigns each entry's OWN `.project` string — it never merges the
+    // underlying unit arrays. Two entries that still share a name after that
+    // pass would otherwise both call writeProject() independently for the
+    // SAME feedKey/Development row below, each treating its own partial list
+    // as "the complete fresh extraction" — the second call then prunes
+    // everything the first call had just correctly written, since neither
+    // knows the other exists. Grouping by the exact same slug() used for
+    // feedKey guarantees this structurally: anything that would ever target
+    // the same Development row is combined into one entry before any write.
+    const mergedBySlug = new Map<string, ExtractedPricelistProject>();
     for (const p of extracted) {
-      const { name, matched } = toExisting(p.project);
-      if (matched) p.project = name;
+      const k = slug(p.project);
+      const existingEntry = mergedBySlug.get(k);
+      if (existingEntry) existingEntry.units.push(...p.units);
+      else mergedBySlug.set(k, p);
+    }
+
+    // Drop everything pass 1 already wrote. Slug equality catches the ordinary case;
+    // the name match catches the master sheet writing the same project slightly
+    // differently ("Tenera Villas" vs the row's "Tenera Villas 1A & 1B"), which slug
+    // equality alone sails straight past and then prunes. Same deterministic matcher
+    // as the folder pass, and for the same reason — word overlap here would have
+    // excluded Blossom Park from the master sheet because Birch Park was claimed.
+    // An ambiguous name counts as owned: skipping a project for one run is
+    // recoverable, writing it onto the wrong row is not.
+    const ownedByFolder = (name: string) => {
+      if (!claimedNames.length) return false;
+      const m = matchProjectByName([name], (n) => n, claimedNames);
+      return !!m.hit || m.ambiguous.length > 0;
+    };
+    let rest = Array.from(mergedBySlug.values()).filter((p) => !claimed.has(slug(p.project)) && !ownedByFolder(p.project));
+    // Scope to a single project (its own "Sync with Drive" button) — the whole sheet
+    // still has to be extracted (the AI reads it as one document), but only this
+    // project's Development/units get written, leaving its siblings untouched.
+    if (opts.onlyFeedProjectId) rest = rest.filter((p) => slug(p.project) === opts.onlyFeedProjectId);
+
+    for (const p of rest) {
+      if (!p.project || !p.units?.length) continue;
+      const r = await writeProject(developerAccountId, acct.name, p, content, rootFiles, at, richUnits);
+      fromMaster++;
+      totalAvail += r.avail;
+      if (r.mediaChanged) mediaChanged = true;
+      if (r.pruned) pruned.push({ project: p.project, ...r.pruned });
     }
   }
 
-  // Merge entries that now share the same canonical project (2026-08-13
-  // incident) — the extraction can non-deterministically split one real
-  // project into two separate result entries within a single run (confirmed
-  // on real data: Olivelia Homes fragmented into a 20-unit and a handful-
-  // unit entry in the same sync), and the reconciliation pass above only
-  // reassigns each entry's OWN `.project` string — it never merges the
-  // underlying unit arrays. Two entries that still share a name after that
-  // pass would otherwise both call writeProject() independently for the
-  // SAME feedKey/Development row below, each treating its own partial list
-  // as "the complete fresh extraction" — the second call then prunes
-  // everything the first call had just correctly written, since neither
-  // knows the other exists. Grouping by the exact same slug() used for
-  // feedKey guarantees this structurally: anything that would ever target
-  // the same Development row is combined into one entry before any write.
-  const mergedBySlug = new Map<string, ExtractedPricelistProject>();
-  for (const p of extracted) {
-    const k = slug(p.project);
-    const existingEntry = mergedBySlug.get(k);
-    if (existingEntry) existingEntry.units.push(...p.units);
-    else mergedBySlug.set(k, p);
-  }
-  extracted = Array.from(mergedBySlug.values());
-
-  // Scope to a single project (its own "Sync with Drive" button) — the whole sheet
-  // still has to be extracted (the AI reads it as one document), but only this
-  // project's Development/units get written, leaving its siblings untouched.
-  const projects = opts.onlyFeedProjectId ? extracted.filter((p) => slug(p.project) === opts.onlyFeedProjectId) : extracted;
-  if (opts.onlyFeedProjectId && !projects.length) return { ok: false, message: "This project wasn't found in the current price list (it may have been renamed in the sheet)." };
-
-  const richUnits = !!opts.content || !!opts.richUnits;
-  let totalAvail = 0;
-  let mediaChanged = false;
-  const pruned: { project: string; deleted: number; remaining: number }[] = [];
-  for (const p of projects) {
-    if (!p.project || !p.units?.length) continue;
-    const r = await writeProject(developerAccountId, acct.name, p, !!opts.content, files, at, richUnits);
-    totalAvail += r.avail;
-    if (r.mediaChanged) mediaChanged = true;
-    if (r.pruned) pruned.push({ project: p.project, ...r.pruned });
+  const total = fromFolders + fromMaster;
+  if (!total) {
+    return {
+      ok: false,
+      message: opts.onlyFeedProjectId
+        ? "This project wasn't found in any current price list (it may have been renamed, or its folder's catalogue is unreadable)."
+        : "Could not extract any projects from the available price lists.",
+      folderIssues,
+    };
   }
 
-  // Only the whole-developer sync (no single-project scope) tracks the price
-  // file's own change-signature — a single-project resync shouldn't mark the
-  // whole sheet "seen" and make the next scheduled full sync skip other projects.
+  // Only the whole-developer sync (no single-project scope) tracks the source
+  // signature — a single-project resync shouldn't mark the whole source set
+  // "seen" and make the next scheduled full sync skip other projects.
   if (!opts.onlyFeedProjectId) {
     await prisma.developerAccount.update({
       where: { id: developerAccountId },
-      data: { driveFileId: price.id, driveFileModified: price.modifiedTime, driveSyncedAt: new Date() },
+      data: { driveFileId: master?.id ?? null, driveFileModified: sig, driveSyncedAt: new Date() },
     });
   }
 
   // New images/plans were mirrored → restart so Next serves them (best-effort).
   if (mediaChanged) scheduleAppRestart();
 
+  const sources: string[] = [];
+  if (fromFolders) sources.push(`${fromFolders} from their own project price list`);
+  if (fromMaster && master) sources.push(`${fromMaster} from “${master.name}”`);
   return {
     ok: true,
     message:
-      `${opts.content ? "Imported" : "Synced"} ${projects.length} project${projects.length === 1 ? "" : "s"} from “${price.name}”.` +
+      `${content ? "Imported" : "Synced"} ${total} project${total === 1 ? "" : "s"}` +
+      (sources.length ? ` (${sources.join(", ")}).` : ".") +
       // Only when rows were actually discarded — a clean run stays quiet.
       (extractStats.value && extractStats.value.dropped > 0
         ? ` ${extractStats.value.dropped} of ${extractStats.value.extracted} extracted rows were discarded as belonging to no known project` +
           (extractStats.value.droppedNames.length ? ` (${extractStats.value.droppedNames.slice(0, 4).join(", ")})` : "") + "."
+        : "") +
+      // The folders that contributed nothing, named. This is the diagnostic the
+      // old adapter never had: a project sitting in Drive and not on the site
+      // now says why, in the sync's own result, instead of just not being there.
+      (folderIssues.length
+        ? ` ${folderIssues.length} folder${folderIssues.length === 1 ? "" : "s"} contributed nothing: ` +
+          folderIssues.slice(0, 5).map((i) => `${i.folder} — ${i.reason}`).join("; ") +
+          (folderIssues.length > 5 ? ", …" : "") + "."
         : ""),
-    projects: projects.length, unitsAvailable: totalAvail,
+    projects: total, unitsAvailable: totalAvail, fromFolders, fromMaster,
     ...(pruned.length ? { pruned } : {}),
+    ...(folderIssues.length ? { folderIssues } : {}),
   };
 }
 

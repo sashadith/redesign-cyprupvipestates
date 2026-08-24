@@ -302,7 +302,11 @@ export async function extractAvailabilityFromPricelist(text: string, full = fals
   const sections = splitSections(text.slice(0, 400000)).map((s) => s.slice(0, 30000));
 
   const [catalog, perSection] = await Promise.all([
-    callTool(client, PROMPT_CATALOG + wholeDoc, SCHEMA_CATALOG),
+    // Skipped entirely when the caller already knows the project (2026-08-24):
+    // canonicalNames below ignores `catalog` in that case, so the call was pure
+    // waste — and with per-project price lists it is paid once PER PROJECT on
+    // every scheduled sync, not once per developer.
+    opts.knownProject ? Promise.resolve([] as any[]) : callTool(client, PROMPT_CATALOG + wholeDoc, SCHEMA_CATALOG),
     mapWithConcurrency(sections, 4, (body) => callTool(client, PROMPT_UNITS + body, SCHEMA_UNITS)),
   ]);
   const unitItems = perSection.flat();

@@ -103,6 +103,36 @@ Belege aus der Praxis:
   — `publicName` ist für published-Projekte eingefroren (siehe §3). Ein
   bestehender Versalien-Name bleibt bestehen, bis er von Hand korrigiert
   oder gezielt nachgezogen wird.
+- **Wo der Bauträger pro Projekt eine eigene Preisliste pflegt, ist der ORDNER
+  die Projekt-Identität — nicht ein gemeinsames Master-Sheet.** Olias Homes
+  (2026-08-24): jeder Projektordner in der Drive enthält seine eigene "Sales
+  Catalogue - <Projekt>"-Datei, das Master-Sheet im Wurzelverzeichnis ist eine
+  veraltete Teilkopie. Vier Projekte hatten wochenlang Ordner samt eigener
+  Preisliste, standen aber in keiner Zeile des Master-Sheets — und existierten
+  für uns damit gar nicht, weil die Projektanlage ausschließlich dieses eine
+  Sheet las. Reihenfolge deshalb: erst jeder Ordner mit eigener Preisliste,
+  danach das Master-Sheet nur noch für das, was keinen eigenen Ordner hat
+  (bei Olias: Alder Park, Pine Park, Triangle House). Dieselbe Logik wie bei
+  Kuutio/Dropbox, aus demselben Grund: eine aus der Quellstruktur GELESENE
+  Identität ist eine Tatsache, eine von der KI aus einem Sammeldokument
+  GERATENE nicht.
+- **Für die Ordner→Projekt-Zuordnung nie `buildCanonicalMatcher()` verwenden.**
+  Dessen Wort-Overlap-Score akzeptiert ab 0.5 — innerhalb eines Bauträger-
+  Portfolios endet aber fast jeder Name auf dasselbe Substantiv, ein einziges
+  gemeinsames Wort reicht also. An den echten Olias-Daten gemessen: "Amalfi
+  Homes" traf "Olivelia Homes", "Birch Park" traf "Blossom Park" — beide neuen
+  Projekte wären auf die Zeile eines bestehenden, veröffentlichten Projekts
+  geschrieben worden und hätten dessen Units gegen eine völlig fremde
+  Preisliste weggeprunt. Stattdessen `matchProjectByName()`
+  (`src/lib/driveFolderNames.ts`): gespeicherte `driveFolderId` zuerst, dann
+  exakter normalisierter Namensschlüssel, dann Präfix-Beziehung ab 6 Zeichen —
+  und mehr als ein Treffer ist AMBIG und ergibt nichts. Lieber ein Ordner, der
+  gemeldet nicht zugeordnet werden konnte, als ein falsch zugeordneter.
+- **MIME-Typen von Drive kleingeschrieben vergleichen.** Drive liefert `.xlsm`
+  als `application/vnd.ms-excel.sheet.macroenabled.12` — nicht in der bei IANA
+  registrierten CamelCase-Schreibweise `…macroEnabled.12`. Gegen die Spec
+  verglichen las Calderas Ordner trotz vorhandener Preisliste als "keine
+  Preisliste". Erkannt werden `.xlsx`, `.xlsm`, `.xls` und native Google Sheets.
 - **Zuordnung von Quell-Ordnern/-Einträgen zu Datensätzen bleibt strikt pro
   Bauträger.** `buildCanonicalMatcher()` (`pricelistExtract.ts`) darf NIE mit
   Namen aus mehreren Bauträgern gleichzeitig aufgerufen werden — beide

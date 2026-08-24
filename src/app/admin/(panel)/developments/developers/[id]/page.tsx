@@ -7,6 +7,7 @@ import AnalyzeForm from "./analyze-form";
 import DeveloperContact from "./DeveloperContact";
 import DeveloperPageLink from "./DeveloperPageLink";
 import DriveSyncButton from "./DriveSyncButton";
+import DriveFolderPreviewButton from "./DriveFolderPreviewButton";
 import DriveIntervalSelect from "./DriveIntervalSelect";
 import BackLink from "../../BackLink";
 import { computeAvailability } from "@/lib/developmentAvailability";
@@ -189,11 +190,12 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
             <h2 className="text-sm font-semibold text-[#111827]">Drive sync</h2>
             <div className="flex items-center gap-3 flex-wrap">
               <DriveIntervalSelect developerAccountId={dev.id} value={dev.driveSyncInterval ?? "daily"} />
+              <DriveFolderPreviewButton developerAccountId={dev.id} />
               <DriveSyncButton developerAccountId={dev.id} />
             </div>
           </div>
           <p className="text-xs text-[#6B7280]">
-            “Sync Drive now” does a full import — price list + project folders → developments, units, amenities, description &amp; images (as drafts). The scheduled job (interval above) then refreshes availability. Last synced: {dev.driveSyncedAt ? fmt(dev.driveSyncedAt) : "never"}.
+            Each project folder’s own price list is the source; the folder-wide sheet in the root only covers projects that have no folder of their own. “Check folders” is a read-only dry run of that mapping — it names every folder that would contribute nothing, and why. “Sync Drive now” does a full import → developments, units, amenities, description &amp; images (as drafts). The scheduled job (interval above) then refreshes availability. Last synced: {dev.driveSyncedAt ? fmt(dev.driveSyncedAt) : "never"}.
           </p>
         </div>
       )}

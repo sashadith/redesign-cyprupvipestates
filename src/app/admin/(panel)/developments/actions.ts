@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { syncAll, syncDeveloper } from "@/lib/feedSync";
-import { syncDeveloperDrive, type DriveSyncResult } from "@/lib/driveAvailabilitySync";
+import { syncDeveloperDrive, previewDriveFolders, type DriveSyncResult, type DriveFolderPreview } from "@/lib/driveAvailabilitySync";
 import { syncErrorMessage } from "@/lib/syncErrorMessage";
 
 // Manual "Sync Drive now" = full content import (rich data + description + images), force.
@@ -21,6 +21,18 @@ export async function syncDeveloperDriveAction(developerAccountId: string): Prom
     return r;
   } catch (e) {
     return { ok: false, message: syncErrorMessage(e) };
+  }
+}
+
+// Read-only dry run of the folder scan (2026-08-24) — no AI, no downloads, no
+// writes. Answers "why is this Drive folder not on the site?" in the panel itself:
+// every project folder, the price list found in it, the project it resolves to, and
+// the reason when it resolves to nothing.
+export async function previewDriveFoldersAction(developerAccountId: string): Promise<{ ok: boolean; message: string; rows: DriveFolderPreview[] }> {
+  try {
+    return await previewDriveFolders(developerAccountId);
+  } catch (e) {
+    return { ok: false, message: syncErrorMessage(e), rows: [] };
   }
 }
 

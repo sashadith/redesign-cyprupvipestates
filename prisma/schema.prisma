@@ -966,8 +966,14 @@ model DeveloperAccount {
   email             String?
   developerCloudUrl String? // login/cloud portal link
   driveFolderUrl    String? // Google/OneDrive shared folder used as a no-feed source
-  driveFileId       String? // last price file synced (Drive file id)
-  driveFileModified String? // that file's modifiedTime — skip sync when unchanged
+  driveFileId       String? // developer-wide master price list, when there is one (Drive file id)
+  // Signature of EVERY price list the last sync read — the root master sheet AND each
+  // project folder's own catalogue — as "<id>:<modifiedTime>|…", sorted. Was just the
+  // master file's modifiedTime until 2026-08-24; that stopped being a sufficient skip
+  // condition once per-project price lists became the primary source (an unchanged root
+  // sheet says nothing about whether a project's own file changed). See sourceSignature()
+  // in src/lib/driveAvailabilitySync.ts — its only reader/writer.
+  driveFileModified String?
   driveSyncedAt     DateTime? // last successful drive availability sync
   driveSyncInterval String?   @default("daily") // daily | 2day | weekly | off
   notes             String?
