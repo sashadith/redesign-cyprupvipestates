@@ -290,6 +290,24 @@ export type LandingProjectsBlock = {
     | "Office"
     | "Shop"
     | "Commercial";
+  // Live distance-to-beach ceiling in minutes (Development.distances.beach /
+  // Project.distances.beach). Optional -- absent on every existing block, so
+  // old blocks keep querying exactly as before. A row with no beach value, or
+  // one that doesn't parse to a number, is excluded (never treated as 0).
+  maxBeachMinutes?: number;
+  // Generic post-filter: drop rows whose resolved property type is in this
+  // list, regardless of filterPropertyType. Not specific to any one type --
+  // e.g. used to keep a residential page free of Office/Shop/Commercial rows
+  // without requiring a single-type filterPropertyType match.
+  excludePropertyTypes?: (
+    | "Apartment"
+    | "Villa"
+    | "Townhouse"
+    | "Semi-detached villa"
+    | "Office"
+    | "Shop"
+    | "Commercial"
+  )[];
   projects: Project[];
   filteredProjects?: Project[];
 };

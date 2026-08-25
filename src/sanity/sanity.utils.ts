@@ -206,7 +206,39 @@ async function resolveProjectRefs(refs: any[], lang: string) {
 // legacy Project.isSold, so this is the only place that pushes sold legacy
 // rows to the true end. ProjectsSectionBlockComponent's bySoldLast is a no-op
 // safety net on top of this (kept for the manual-array/non-filtered path).
-type ComputeFilteredProjectsOpts = { priceMin?: number | null; priceMax?: number | null };
+type ComputeFilteredProjectsOpts = {
+  priceMin?: number | null;
+  priceMax?: number | null;
+  // Both optional and both default to "no restriction" -- absent on every
+  // call site except the one landing block that opts in, so no existing
+  // page's result set can move. See computeFilteredProjects for how each is
+  // applied (post-fetch, before the MAX_FILTERED_PROJECTS cap).
+  maxBeachMinutes?: number | null;
+  excludePropertyTypes?: string[] | null;
+};
+
+// distances.beach is stored inconsistently at the raw-DB level (Development:
+// number, Project: numeric string) but by the time a Development row reaches
+// this function it has already passed through mapDevelopmentRowToCard's
+// toCardDistances(), which stringifies it for card display -- so in practice
+// both sources are strings here. Coerced defensively anyway rather than
+// relying on that staying true. Returns null for anything missing or that
+// doesn't parse to a finite number -- callers must treat null as "exclude",
+// never as 0, since an unmeasured property is not the same as a beachfront one.
+function beachMinutes(distances: any): number | null {
+  const raw = distances?.beach;
+  if (raw == null) return null;
+  const n = typeof raw === "number" ? raw : parseFloat(String(raw).replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+
+// Project rows carry a top-level `propertyType`; Development cards (already
+// mapped via mapDevelopmentRowToCard by the time they reach this function)
+// carry it nested under keyFeatures, matching matchesPropertyTypeFilter's own
+// read of the same field elsewhere in this file.
+function resolvedPropertyType(row: any): string | undefined {
+  return row?.propertyType ?? row?.keyFeatures?.propertyType;
+}
 
 // Data-layer cap for computeFilteredProjects' RETURNED array — separate from
 // (and upstream of) any block's own client-side pageSize slicing in
@@ -241,10 +273,44 @@ async function computeFilteredProjects(lang: string, filterCity?: string, filter
     },
   });
   const withImage = rows.filter((p: any) => p.previewImage);
-  const available = withImage.filter((p: any) => !p.isSold);
-  const sold = withImage.filter((p: any) => p.isSold);
+  let available = withImage.filter((p: any) => !p.isSold);
+  let sold = withImage.filter((p: any) => p.isSold);
 
-  const devRows = await queryFilteredDevelopmentRows({ city: filterCity, propertyType: filterPropertyType, priceFrom: priceMin, priceTo: priceMax });
+  let devRows = await queryFilteredDevelopmentRows({ city: filterCity, propertyType: filterPropertyType, priceFrom: priceMin, priceTo: priceMax });
+
+  // Both filters below run BEFORE sortProjectsRecommended/the MAX_FILTERED_PROJECTS
+  // cap (not after) -- filtering post-cap would silently drop qualifying listings
+  // whenever a broad city/type query already filled the cap with non-qualifying rows.
+  const maxBeachMinutes = opts?.maxBeachMinutes ?? null;
+  if (maxBeachMinutes != null) {
+    const withinBeach = (p: any) => {
+      const m = beachMinutes(p.distances);
+      return m != null && m <= maxBeachMinutes;
+    };
+    available = available.filter(withinBeach);
+    sold = sold.filter(withinBeach);
+    devRows = devRows.filter(withinBeach);
+  }
+
+  const excludePropertyTypes = opts?.excludePropertyTypes ?? null;
+  if (excludePropertyTypes && excludePropertyTypes.length) {
+    // Substring match against the resolved type, not exact equality --
+    // resolveDevelopmentType() joins multiple distinct listed-unit types with
+    // " · " (e.g. "Office · Shop"), so a Development with mixed units never
+    // exactly equals any single excludePropertyTypes value. This mirrors the
+    // matching convention matchesPropertyTypeFilter already uses elsewhere in
+    // this file for the same reason.
+    const excludeLower = excludePropertyTypes.map((v) => v.toLowerCase());
+    const notExcluded = (p: any) => {
+      const t = resolvedPropertyType(p);
+      if (!t) return true;
+      const resolved = t.toLowerCase();
+      return !excludeLower.some((ex) => resolved.includes(ex));
+    };
+    available = available.filter(notExcluded);
+    sold = sold.filter(notExcluded);
+    devRows = devRows.filter(notExcluded);
+  }
 
   const recommended = sortProjectsRecommended([...available, ...devRows] as any);
   const full = [...recommended, ...sold].slice(0, MAX_FILTERED_PROJECTS);
@@ -391,11 +457,18 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string): Pr
         // 2026-07-22 bug — a real published article's hand-picked selection
         // rendered nothing because the guard treated it like a weak query).
         b._hasLiveCriteria = hasCriteria;
-      } else if (b.filterCity || b.filterPropertyType) {
+      } else if (b.filterCity || b.filterPropertyType || b.maxBeachMinutes != null) {
         // Only compute the live query when a page actually opts in — avoids an
         // unbounded Project+Development query (now uncapped, for pagination) on
         // every one of the other manual-array pages that never read this field.
-        b.filteredProjects = await computeFilteredProjects(lang, b.filterCity, b.filterPropertyType);
+        // maxBeachMinutes/excludePropertyTypes are undefined on every existing
+        // old-style block, so this call is byte-identical to before for all of
+        // them -- only a block that explicitly sets one of the new fields sees
+        // different behavior.
+        b.filteredProjects = await computeFilteredProjects(lang, b.filterCity, b.filterPropertyType, {
+          maxBeachMinutes: b.maxBeachMinutes,
+          excludePropertyTypes: b.excludePropertyTypes,
+        });
       }
     }
     // Inline Related Article: hydrate the referenced internal blog's title/excerpt/slug.
