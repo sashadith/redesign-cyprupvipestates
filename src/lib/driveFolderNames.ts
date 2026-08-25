@@ -86,3 +86,33 @@ export function scopeSheetToProject(text: string, project: string, siblings: str
  *  publicName, so keeping it here would fork every one of them into a duplicate. */
 export const folderProjectName = (name: string) =>
   name.replace(/\s*\([^)]*\)\s*$/, "").replace(/\s+[-–—]\s+[^-–—]+$/, "").trim() || name.trim();
+
+/* Sanitises the "Location:" value a price list yields before it becomes a
+   Development's `area` (2026-08-25). Per-project sheets put the location in a
+   two-cell row — label in one cell, value in the next — and the extraction reads
+   the wrong cell often enough to matter. Measured on the real folders after the
+   first full folder-first sync: Lazzero Park got the raw maps URL, The Cove got
+   "THE COVE" (its own name), Amalfi Homes "Location:" and Nexus House "Location"
+   — the label itself. `area` is public (it drives the location line and the area
+   description lookup), and Nexus House is published, so this is visible, not
+   cosmetic.
+
+   Returns null for anything that clearly isn't a place, which lets writeProject's
+   keepIfEmpty hold on to whatever was stored before instead of overwriting a good
+   value with a bad one. Applied to the STORED value as well, so the three rows
+   already polluted repair themselves on the next sync rather than keeping the
+   junk forever on the strength of "the fresh one is empty". */
+export function cleanArea(raw: string | null | undefined, projectName: string): string | null {
+  const v = (raw ?? "").trim();
+  if (!v) return null;
+  if (/^https?:\/\//i.test(v)) return null;                             // a maps link, not a place
+  if (/^(location|address|area|map|maps|town|city|district)\s*:?$/i.test(v)) return null; // the row's own label
+  if (nameKey(v) === nameKey(projectName)) return null;                 // the project's own name
+  if (v.length > 60) return null;                                       // a sentence, not a place name
+  // "Moutallos, Plot 752" — the plot number is not part of the area.
+  return v.replace(/[,;]?\s*plot\s*(?:no\.?|number)?\s*\d+[a-z]?\s*$/i, "").trim() || null;
+}
+
+/** A "Location:" cell that holds a Google Maps link is not an area — but it IS
+ *  the map link, which is otherwise missing for these projects. */
+export const MAPS_LINK_RE = /^https?:\/\/(?:maps\.app\.goo\.gl|goo\.gl\/maps|(?:www\.)?google\.[a-z.]+\/maps)\S*/i;

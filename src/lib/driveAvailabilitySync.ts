@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { driveConfigured, folderIdFromUrl, getAccessToken, listFolder, findPriceFile, listProjectFolders, getSpreadsheetText, findSubfolder, findInfoDocuments, collectMedia, downloadFile, type DriveFile } from "./googleDrive";
 import { extractAvailabilityFromPricelist, buildCanonicalMatcher, type ExtractedPricelistProject, type ExtractStats } from "./ai/pricelistExtract";
 import { toTitleCaseName } from "@/lib/textCase";
-import { folderProjectName, matchProjectByName, scopeSheetToProject } from "@/lib/driveFolderNames";
+import { folderProjectName, matchProjectByName, scopeSheetToProject, cleanArea, MAPS_LINK_RE } from "@/lib/driveFolderNames";
 import { extractPricelistFromPdf } from "./ai/pdfPricelistExtract";
 import { generateProjectDescription } from "./ai/projectDescription";
 import { extractTextFromDocx, extractTextFromPdf } from "./ai/projectInfoExtract";
@@ -133,7 +133,13 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
   // it only shows up in the project's own "Project Information" doc — so fall back
   // to scanning that document's text for a maps.app.goo.gl / google.com/maps link
   // when the price list itself didn't have one.
+  // The area value the sheet gave us, minus the label/URL/own-name artefacts a
+  // two-cell "Location:" row produces — see cleanArea.
+  const areaText = cleanArea(p.location, p.project);
   let mapsUrl = p.mapsUrl;
+  // A "Location:" cell holding the maps link itself: useless as an area, but it is
+  // exactly the link the geocoding step needs and would otherwise never see.
+  if (!mapsUrl && MAPS_LINK_RE.test((p.location ?? "").trim())) mapsUrl = (p.location as string).trim();
   if (content && !mapsUrl && subId) {
     try {
       const topFiles = await listFolder(subId, at);
@@ -153,7 +159,9 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
         category: keepIfEmpty(nn(p.propertyType), existingDev?.category ?? null),
         completion: keepIfEmpty(nn(p.completion), existingDev?.completion ?? null),
         amenities: keepIfEmpty((p.amenities ?? []).filter(Boolean), (existingDev?.amenities as string[]) ?? []),
-        priceFrom, area: keepIfEmpty(nn(p.location), existingDev?.area ?? null),
+        // cleanArea on BOTH sides: a junk value already in the database must not
+        // survive just because this run's own value came back empty.
+        priceFrom, area: keepIfEmpty(areaText, cleanArea(existingDev?.area, p.project)),
         latitude: keepIfEmpty(geo?.lat ?? null, existingDev?.latitude ?? null),
         longitude: keepIfEmpty(geo?.lng ?? null, existingDev?.longitude ?? null),
       }
@@ -316,7 +324,7 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
       }
 
       const texts = await generateProjectDescription({
-        district: "", town: "", area: p.location ?? "",
+        district: "", town: "", area: areaText ?? "",
         category: nn(p.propertyType) ?? undefined, completion: nn(p.completion) ?? undefined,
         priceFrom, projectAmenities: (p.amenities ?? []).filter(Boolean), unitAmenities: unitFeatures,
         unitSummary: [`${p.units.length} units`, beds.length ? beds.join("/") + "-bedroom" : "", sizes.length ? `${sizes[0]}–${sizes[sizes.length - 1]}` : ""].filter(Boolean).join(", "),
