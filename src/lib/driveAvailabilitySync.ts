@@ -6,7 +6,7 @@ import { folderProjectName, matchProjectByName, scopeSheetToProject } from "@/li
 import { extractPricelistFromPdf } from "./ai/pdfPricelistExtract";
 import { generateProjectDescription } from "./ai/projectDescription";
 import { extractTextFromDocx, extractTextFromPdf } from "./ai/projectInfoExtract";
-import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart } from "./imageMirror";
+import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart, beginSyncWindow } from "./imageMirror";
 import { resolveMapsUrlToGeo } from "./mapsGeo";
 import { normalizeRef } from "./unitRef";
 import { recomputeDevelopmentDistances } from "./developmentDistances";
@@ -554,6 +554,11 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
   const folderId = folderIdFromUrl(acct.driveFolderUrl);
   if (!folderId) return { ok: false, message: "Could not read a folder id from the Drive link." };
 
+  // Held for the whole run: a minutes-long job that mirrors images, which any
+  // OTHER mirror-triggered restart would kill mid-loop — exactly what the 4am
+  // feed-sync cron did to it on 2026-08-25. See beginSyncWindow in imageMirror.ts.
+  const releaseSyncWindow = beginSyncWindow(`drive:${acct.name}`);
+  try {
   const at = await getAccessToken();
   const rootFiles = await listFolder(folderId, at);
 
@@ -799,6 +804,11 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
     ...(pruned.length ? { pruned } : {}),
     ...(folderIssues.length ? { folderIssues } : {}),
   };
+  } finally {
+    // Released before scheduleAppRestart's waiter can see it, on every exit path —
+    // early "no price list" returns and thrown errors included.
+    releaseSyncWindow();
+  }
 }
 
 // Every developer with a Drive link. Daily cron uses content=false (availability

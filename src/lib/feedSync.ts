@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getPreviewProject, listProjectIds, type ProjectVM } from "@/app/preview-project/feeds";
 import type { UnitVM } from "@/app/preview-project/UnitsView";
-import { mirrorAll, mirrorImage, devKeyFor, scheduleAppRestart, sourceUrlHash, hashFromMirroredUrl, classifyByContent } from "@/lib/imageMirror";
+import { mirrorAll, mirrorImage, devKeyFor, scheduleAppRestart, beginSyncWindow, sourceUrlHash, hashFromMirroredUrl, classifyByContent } from "@/lib/imageMirror";
 import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
 import { recomputeDevelopmentDerivedState } from "@/lib/developmentDerivedState";
 
@@ -603,17 +603,32 @@ async function syncDeveloperCore(dev: string, opts: { mirror?: boolean; forceMir
 // re-hit already-mirrored images (skip-if-exists), and scheduleAppRestart()
 // itself is now debounced too (see imageMirror.ts), so this is belt-and-suspenders
 // against restart-storming a routine "nothing changed" sync.
+// beginSyncWindow (2026-08-25): both entries below run for minutes and mirror
+// images. Two directions to protect — this run must not be cut short by someone
+// else's mirror-triggered restart, and its OWN restart at the end must not cut
+// short whatever else is running. The 4am cron calling syncAll() is what killed a
+// manual Drive import mid-loop; see beginSyncWindow's doc comment in imageMirror.ts.
 export async function syncDeveloper(dev: string, opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncResult> {
-  const result = await syncDeveloperCore(dev, opts);
-  if (opts.mirror && result.mirroredNewFiles) scheduleAppRestart();
-  return result;
+  const releaseSyncWindow = beginSyncWindow(`feed:${dev}`);
+  try {
+    const result = await syncDeveloperCore(dev, opts);
+    if (opts.mirror && result.mirroredNewFiles) scheduleAppRestart();
+    return result;
+  } finally {
+    releaseSyncWindow();
+  }
 }
 
 export async function syncAll(opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncResult[]> {
-  const out: SyncResult[] = [];
-  for (const d of SYNCED_DEVS) out.push(await syncDeveloperCore(d, opts));
-  if (opts.mirror && out.some((r) => r.mirroredNewFiles)) scheduleAppRestart();
-  return out;
+  const releaseSyncWindow = beginSyncWindow("feed:all");
+  try {
+    const out: SyncResult[] = [];
+    for (const d of SYNCED_DEVS) out.push(await syncDeveloperCore(d, opts));
+    if (opts.mirror && out.some((r) => r.mirroredNewFiles)) scheduleAppRestart();
+    return out;
+  } finally {
+    releaseSyncWindow();
+  }
 }
 
 // Admin "Units aus Feed neu ziehen" (Force-Sync, Teil 2) — syncs exactly one

@@ -12,7 +12,7 @@ import { normalizeRef } from "./unitRef";
 import { recomputeDevelopmentDistances } from "./developmentDistances";
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { resolveMapsUrlToGeo } from "./mapsGeo";
-import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart } from "./imageMirror";
+import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart, beginSyncWindow } from "./imageMirror";
 import { workbookToText } from "@/lib/sheetToText";
 
 // Higher than driveAvailabilitySync.ts's MAX_IMAGES=10 — Kuutio's Dropbox
@@ -298,6 +298,10 @@ export async function writeKuutioDraft(developerAccountId: string, opts: { force
   const acct = await prisma.developerAccount.findUnique({ where: { id: developerAccountId } });
   if (!acct?.driveFolderUrl) throw new Error("Developer account or its Dropbox link not found");
   const shareUrl = acct.driveFolderUrl;
+  // Same protection as the Drive adapter: this run mirrors images over several
+  // minutes and must not be cut short by somebody else's restart.
+  const releaseSyncWindow = beginSyncWindow("dropbox:kuutio");
+  try {
   const at = await getDropboxAccessToken();
   const results = await previewKuutioSync(developerAccountId);
 
@@ -490,4 +494,7 @@ export async function writeKuutioDraft(developerAccountId: string, opts: { force
   if (mediaChanged) scheduleAppRestart();
 
   return { created, skippedExisting, skippedEmpty };
+  } finally {
+    releaseSyncWindow();
+  }
 }

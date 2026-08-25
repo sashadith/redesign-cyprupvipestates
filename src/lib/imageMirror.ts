@@ -1,7 +1,7 @@
 import sharp from "sharp";
 import { createHash } from "crypto";
 import { mkdir, writeFile, access, mkdtemp, readdir, readFile, rm } from "fs/promises";
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync, mkdirSync, unlinkSync, utimesSync, existsSync, statSync, readdirSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import { spawn } from "child_process";
@@ -33,7 +33,64 @@ const SIZES: [string, number][] = [["small", 640], ["medium", 1280], ["large", 1
 // live bug it used to be (confirmed via pm2's restart counter: cve-staging
 // had silently absorbed every prod mirror-triggered restart for weeks).
 const RESTART_DEBOUNCE_MS = 15_000;
-const restartLockFile = () => join(process.cwd(), "public", "uploads", ".restart-lock");
+const uploadsDir = () => join(process.cwd(), "public", "uploads");
+const restartLockFile = () => join(uploadsDir(), ".restart-lock");
+// A waiter has been spawned and WILL restart once the syncs are done. Removed by
+// that waiter immediately before it restarts, so a crashed waiter can't block
+// restarts forever (it also expires, see PENDING_STALE_MS).
+const restartPendingFile = () => join(uploadsDir(), ".restart-pending");
+// One file per in-flight long sync, heartbeated while it runs. A directory rather
+// than a single flag: several syncs legitimately overlap (the 4am feed-sync cron
+// and an admin-triggered Drive import), and a refcount in a single file cannot be
+// updated safely from two cluster workers at once.
+const syncLockDir = () => join(uploadsDir(), ".sync-locks");
+const SYNC_HEARTBEAT_MS = 60_000;
+// A lock older than this is from a process that died — it stops holding restarts
+// back. Comfortably above the heartbeat, low enough that a crash costs minutes.
+const SYNC_LOCK_STALE_MIN = 5;
+// Absolute cap on how long a restart may be deferred. Serving a stale bundle for
+// half an hour is bad; never restarting at all is worse.
+const MAX_RESTART_WAIT_MIN = 30;
+const PENDING_STALE_MS = (MAX_RESTART_WAIT_MIN + 5) * 60_000;
+
+/* Marks a long-running sync as in flight, so scheduleAppRestart() waits for it
+   instead of killing it (2026-08-25).
+
+   The incident: a manual Drive import was writing project 11 of 16 when the 4am
+   feed-sync cron finished mirroring two new Square One projects and called
+   scheduleAppRestart(). Four seconds later `pm2 restart` took both cluster
+   workers down, the import died mid-loop, and the browser showed a raw
+   "undefined is not an object (evaluating 'e.ok')" — the server action's
+   response had simply never arrived. Five projects were left unsynced and the
+   run's final bookkeeping (source signature, driveSyncedAt) never happened.
+
+   Nothing about that was specific to those two jobs: any mirror-triggered
+   restart lands on whatever else is running, and mirroring happens on every
+   admin image upload too.
+
+   Returns the release function. ALWAYS call it from a finally block — a lock
+   that is never released delays restarts until it goes stale. */
+export function beginSyncWindow(label: string): () => void {
+  try {
+    const dir = syncLockDir();
+    mkdirSync(dir, { recursive: true });
+    const file = join(dir, `${label.replace(/[^A-Za-z0-9_-]+/g, "_").slice(0, 40)}-${process.pid}-${Math.random().toString(36).slice(2, 8)}`);
+    writeFileSync(file, new Date().toISOString());
+    // Keeps the mtime fresh for as long as this really is running, which is what
+    // lets the staleness window stay short without cutting long imports off.
+    const beat = setInterval(() => { try { const t = new Date(); utimesSync(file, t, t); } catch { /* gone already */ } }, SYNC_HEARTBEAT_MS);
+    beat.unref?.();
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      clearInterval(beat);
+      try { unlinkSync(file); } catch { /* already gone */ }
+    };
+  } catch {
+    return () => {};
+  }
+}
 
 export function scheduleAppRestart() {
   try {
@@ -42,10 +99,54 @@ export function scheduleAppRestart() {
     let last = 0;
     try { last = Number(readFileSync(lockPath, "utf8")) || 0; } catch { /* no lock yet */ }
     if (now - last < RESTART_DEBOUNCE_MS) return; // already scheduled recently
+    // A waiter is already queued — it restarts AFTER the running syncs finish and
+    // will pick up whatever has been mirrored by then, this call included. Without
+    // this, every sync that finishes during a long wait would queue its own waiter
+    // and they would all restart one after another.
+    try {
+      const st = statSync(restartPendingFile());
+      if (now - st.mtimeMs < PENDING_STALE_MS) return;
+    } catch { /* no waiter pending */ }
     writeFileSync(lockPath, String(now));
+    writeFileSync(restartPendingFile(), String(now));
     const app = process.env.PM2_APP_NAME || "cyprusvipestates";
-    spawn("sh", ["-c", `sleep 4 && /usr/bin/pm2 restart ${app}`], { detached: true, stdio: "ignore" }).unref();
+    // Detached and unref'd, as before: this shell has to outlive the restart it
+    // performs. The wait loop polls for any sync lock touched within the staleness
+    // window and gives up after MAX_RESTART_WAIT_MIN, so a stuck sync delays the
+    // restart but can never cancel it.
+    spawn("sh", ["-c", buildRestartCommand(app, syncLockDir(), restartPendingFile())], { detached: true, stdio: "ignore" }).unref();
   } catch { /* ignore */ }
+}
+
+/* The waiter's shell script, built here so it can be exercised directly (see the
+   harness note in the commit): a `find` for any sync lock touched within the
+   staleness window, polled every 10s, capped at MAX_RESTART_WAIT_MIN, then the
+   restart — unconditionally. A stuck sync may DELAY the restart; it must never
+   be able to cancel it, because the app serves 404s for freshly mirrored images
+   until it restarts. `restartCmd` is injectable for the same reason. */
+export function buildRestartCommand(app: string, lockDir: string, pendingFile: string, restartCmd = "/usr/bin/pm2 restart"): string {
+  return (
+    `sleep 4; i=0; ` +
+    `while [ $i -lt ${MAX_RESTART_WAIT_MIN * 6} ] && [ -n "$(find '${lockDir}' -type f -mmin -${SYNC_LOCK_STALE_MIN} 2>/dev/null | head -n 1)" ]; ` +
+    `do sleep 10; i=$((i+1)); done; ` +
+    `rm -f '${pendingFile}'; ${restartCmd} ${app}`
+  );
+}
+
+/** True while any long sync holds a fresh lock — for status display only; the
+ *  restart decision itself is made by the spawned shell above, which has to work
+ *  across cluster workers and across the restart it performs. */
+export function syncWindowActive(): boolean {
+  try {
+    const dir = syncLockDir();
+    if (!existsSync(dir)) return false;
+    const cutoff = Date.now() - SYNC_LOCK_STALE_MIN * 60_000;
+    return readdirSync(dir).some((f) => {
+      try { return statSync(join(dir, f)).mtimeMs > cutoff; } catch { return false; }
+    });
+  } catch {
+    return false;
+  }
 }
 const root = () => join(process.cwd(), "public", "uploads", "developments");
 const hash = (s: string) => createHash("sha1").update(s).digest("hex").slice(0, 16);

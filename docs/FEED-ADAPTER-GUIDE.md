@@ -103,6 +103,20 @@ Belege aus der Praxis:
   — `publicName` ist für published-Projekte eingefroren (siehe §3). Ein
   bestehender Versalien-Name bleibt bestehen, bis er von Hand korrigiert
   oder gezielt nachgezogen wird.
+- **Jeder lange Sync muss ein `beginSyncWindow()` halten.** `scheduleAppRestart()`
+  macht ein hartes `pm2 restart` und schneidet damit jede laufende Anfrage ab.
+  Am 25.08.2026 hat der 4-Uhr-feed-sync-Cron (2 neue Square-One-Projekte →
+  neue Bilder gespiegelt → Restart) einen manuellen Drive-Import bei Projekt 11
+  von 16 abgeschossen; im Browser kam nur ein rohes „undefined is not an object
+  (evaluating 'e.ok')" an, weil die Server-Action-Antwort nie eintraf, und der
+  Abschluss-Schritt des Imports (Quellsignatur, `driveSyncedAt`) lief nie.
+  `beginSyncWindow(label)` aus `src/lib/imageMirror.ts` legt eine
+  Heartbeat-Datei an, auf die der Restart wartet — Freigabe IMMER im
+  `finally`. Gilt für jeden neuen Adapter mit langem Import, in beide
+  Richtungen: er wird nicht abgeschossen und schießt selbst nichts ab. Die
+  Wartezeit ist bei 30 Minuten gedeckelt und ein Lock ohne Heartbeat verfällt
+  nach 5 Minuten — ein hängender Sync darf einen Neustart verzögern, nie
+  verhindern (sonst liefert die App 404 für frisch gespiegelte Bilder).
 - **Wo der Bauträger pro Projekt eine eigene Preisliste pflegt, ist der ORDNER
   die Projekt-Identität — nicht ein gemeinsames Master-Sheet.** Olias Homes
   (2026-08-24): jeder Projektordner in der Drive enthält seine eigene "Sales
