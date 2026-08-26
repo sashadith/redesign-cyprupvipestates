@@ -4,6 +4,7 @@ import { computePublishGate, areaSlugOf } from "@/lib/developmentPublishGate";
 import { SYNCED_DEVS } from "@/lib/feedSync";
 import { WARM_CONTACT_STATUSES } from "./crm";
 import { developerGroupExists } from "@/lib/developerLink";
+import { isDropboxShareUrl } from "@/lib/dropbox";
 import type { ActionItem } from "../types";
 
 const DAY = 86_400_000;
@@ -207,10 +208,34 @@ async function feedSyncFailures(): Promise<ActionItem[]> {
   const latestByJob = new Map<string, (typeof rows)[number]>();
   for (const r of rows) if (!latestByJob.has(r.job)) latestByJob.set(r.job, r);
 
+  /* "Latest row per job" only tells the truth while the job still runs. When a
+     developer STOPS being covered by drive-sync, its last row is frozen as
+     whatever it was — and if that was a failure, this rule reports it forever,
+     because no later success can ever arrive to supersede it.
+
+     That is not hypothetical: Kuutio moved to Dropbox on 2026-08-13, the
+     nightly drive-sync kept picking it up and failing ("Could not read a folder
+     id from the Drive link.") until commit 1e530e1 taught syncAllDrives to skip
+     Dropbox accounts on 2026-08-14 — and that correct fix is precisely what
+     froze the failure row in place. The URGENT item survived its own cause by
+     12 days and went out in the digest again on 2026-08-22.
+
+     A Dropbox developer has its own job ("kuutio-sync", watched by
+     systemRules()'s cron-health JOBS list), so nothing goes unwatched here;
+     what is dropped is only a stale claim about a job that no longer runs.
+     Matched by developer NAME because that is exactly how the drive-sync
+     route keys its per-developer rows ("drive-sync:<acct.name>"). */
+  const dropboxNames = new Set(
+    (await prisma.developerAccount.findMany({ where: { NOT: { driveFolderUrl: null } }, select: { name: true, driveFolderUrl: true } }))
+      .filter((a) => isDropboxShareUrl(a.driveFolderUrl))
+      .map((a) => a.name),
+  );
+
   const items: ActionItem[] = [];
   for (const [job, row] of Array.from(latestByJob)) {
     if (row.ok) continue;
     const isDrive = job.startsWith("drive-sync:");
+    if (isDrive && dropboxNames.has(job.slice("drive-sync:".length))) continue;
     const devKey = job.slice(job.indexOf(":") + 1);
     items.push({
       id: `sync-fail:${job}`, severity: "URGENT", category: "DEVELOPERS",

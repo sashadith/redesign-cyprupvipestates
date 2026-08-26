@@ -128,10 +128,12 @@ async function morningSyncSummaryLines(): Promise<string[]> {
   });
   const aggFeed = rows.find((r) => r.job === "feed-sync");
   const aggDrive = rows.find((r) => r.job === "drive-sync");
-  // kuutio-sync isn't on a schedule yet (manual-trigger only — see that
-  // route's own comment), so unlike feed-sync/drive-sync it only gets a line
-  // when it actually ran, never a "did not run" warning for an interval
-  // that doesn't exist.
+  // Scheduled since 2026-08-26 (`0 3 * * *`, inside this 4h lookback window on
+  // purpose), so it is now reported exactly like feed-sync/drive-sync —
+  // including a "did not run" warning, which before that date would have been
+  // a false alarm against a schedule that did not exist. A night where the
+  // developer's own weekly interval says "not due" still produces a row and
+  // reads as a normal ✅.
   const aggKuutio = rows.find((r) => r.job === "kuutio-sync");
 
   // No own section header (2026-08-15 digest restructure) — the caller now
@@ -139,12 +141,12 @@ async function morningSyncSummaryLines(): Promise<string[]> {
   // the top of the message. See runDigest().
   const lines: string[] = [];
   if (!aggFeed && !aggDrive && !aggKuutio) {
-    lines.push(`⚠️ Neither feed-sync nor drive-sync ran in the last ${MORNING_SUMMARY_WINDOW_HOURS}h — the cron itself may not have fired.`);
+    lines.push(`⚠️ None of feed-sync, drive-sync or kuutio-sync ran in the last ${MORNING_SUMMARY_WINDOW_HOURS}h — the cron itself may not have fired.`);
     return lines;
   }
   lines.push(aggFeed ? `Feed sync: ${aggFeed.ok ? "✅" : "❌"} ${escapeHtml(aggFeed.message ?? "")}` : "Feed sync: ⚠️ did not run");
   lines.push(aggDrive ? `Drive sync: ${aggDrive.ok ? "✅" : "❌"} ${escapeHtml(aggDrive.message ?? "")}` : "Drive sync: ⚠️ did not run");
-  if (aggKuutio) lines.push(`Kuutio sync: ${aggKuutio.ok ? "✅" : "❌"} ${escapeHtml(aggKuutio.message ?? "")}`);
+  lines.push(aggKuutio ? `Kuutio sync: ${aggKuutio.ok ? "✅" : "❌"} ${escapeHtml(aggKuutio.message ?? "")}` : "Kuutio sync: ⚠️ did not run");
 
   const seen = new Set<string>();
   const perDev = rows

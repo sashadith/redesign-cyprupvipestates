@@ -286,7 +286,21 @@ export type KuutioWriteResult = {
   created: { project: string; units: number }[];
   skippedExisting: { project: string; reason: string }[];
   skippedEmpty: string[];
+  notDue?: string; // set when a SCHEDULED run was skipped by driveSyncInterval — nothing was read or written
 };
+
+// Same vocabulary as the Drive adapter's per-developer interval (daily |
+// 2day | weekly | off, DeveloperAccount.driveSyncInterval — the admin
+// panel's own dropdown writes it for every developer regardless of
+// provider). Deliberately re-stated here rather than imported from
+// driveAvailabilitySync.ts: this module's whole premise is that it shares no
+// code path with the Drive adapter (see the header comment above), and one
+// four-branch map is not worth breaking that for. Until the Dropbox sync
+// joined the crontab (2026-08-26) this setting did nothing at all for
+// Kuutio — the dropdown was in the UI and silently ignored, because
+// syncAllDrives (its only reader) skips Dropbox accounts entirely.
+const intervalMs = (i: string | null | undefined) =>
+  i === "off" ? Infinity : i === "weekly" ? 7 * 864e5 : i === "2day" ? 2 * 864e5 : 864e5;
 
 // Writes DRAFT-only. A folder that matches an existing Development is NEVER
 // touched, full stop — regardless of dev value, not just dev:"manual" (all
@@ -294,10 +308,26 @@ export type KuutioWriteResult = {
 // doesn't rely on that staying true). A folder with zero extracted units
 // writes nothing for that folder — structural, not a threshold: no result
 // is not the same as "this project has no units".
-export async function writeKuutioDraft(developerAccountId: string, opts: { force?: boolean } = {}): Promise<KuutioWriteResult> {
+export async function writeKuutioDraft(developerAccountId: string, opts: { force?: boolean; respectInterval?: boolean } = {}): Promise<KuutioWriteResult> {
   const acct = await prisma.developerAccount.findUnique({ where: { id: developerAccountId } });
   if (!acct?.driveFolderUrl) throw new Error("Developer account or its Dropbox link not found");
   const shareUrl = acct.driveFolderUrl;
+
+  // Checked BEFORE beginSyncWindow and before the first Dropbox call: a run
+  // that isn't due must cost nothing and must not hold the sync window (which
+  // defers unrelated app restarts) for even a moment. Only the scheduled
+  // caller passes respectInterval — the admin panel's own button is an
+  // explicit human decision and always runs.
+  if (opts.respectInterval && !opts.force) {
+    const iv = intervalMs(acct.driveSyncInterval);
+    const last = acct.driveSyncedAt ? new Date(acct.driveSyncedAt).getTime() : null;
+    if (iv === Infinity || (last !== null && Date.now() - last < iv)) {
+      const notDue = iv === Infinity
+        ? "Interval is off — scheduled run skipped."
+        : `Not due yet (${acct.driveSyncInterval ?? "daily"}, last synced ${new Date(last!).toISOString()}).`;
+      return { created: [], skippedExisting: [], skippedEmpty: [], notDue };
+    }
+  }
   // Same protection as the Drive adapter: this run mirrors images over several
   // minutes and must not be cut short by somebody else's restart.
   const releaseSyncWindow = beginSyncWindow("dropbox:kuutio");
@@ -492,6 +522,18 @@ export async function writeKuutioDraft(developerAccountId: string, opts: { force
   // imageMirror.ts; googleDrive-sourced syncs hit the exact same
   // requirement).
   if (mediaChanged) scheduleAppRestart();
+
+  // Same bookkeeping the Drive adapter does at the end of its own successful
+  // run (driveAvailabilitySync.ts's `driveSyncedAt: new Date()`), and the
+  // reason the admin panel read "Last synced: never" for Kuutio even after
+  // five successful Dropbox syncs: driveSyncedAt had exactly one writer, in
+  // the other adapter. It is also what the interval check above reads, so
+  // without this a scheduled run would be due every single night forever.
+  // driveFileId/driveFileModified are deliberately NOT touched — they hold
+  // Drive file ids and a Drive-modifiedTime signature, and there is no
+  // Dropbox equivalent stored anywhere yet (a Dropbox skip-signature would
+  // be a separate change, not a side effect of this one).
+  await prisma.developerAccount.update({ where: { id: developerAccountId }, data: { driveSyncedAt: new Date() } });
 
   return { created, skippedExisting, skippedEmpty };
   } finally {

@@ -387,7 +387,8 @@ hardcoded in the crontab):
 | Schedule | Job | Target |
 |---|---|---|
 | `*/5 * * * *` | `publish-scheduled` (publishes scheduled content) | production, `Authorization: Bearer $CRON_SECRET` |
-| `30 4 * * *` | `drive-sync` | production, `?key=$CRON_SECRET` |
+| `30 4 * * *` | `drive-sync` | production, `?key=$CRON_SECRET` — Google-Drive developers only; it skips Dropbox-linked accounts by URL (see `kuutio-sync` below) |
+| `0 3 * * *` | `kuutio-sync` (Kuutio's Dropbox shared-link sync — see src/lib/dropboxAvailabilitySync.ts) | production, `?key=$CRON_SECRET&scheduled=1` — installed 2026-08-26. `scheduled=1` is what lets the developer's own `driveSyncInterval` (weekly for Kuutio) skip a run; without it the route always syncs, which is what a manual `curl` should do. Slot chosen so a ~12-min run overlaps nothing (psi-sync 02:00 ends ~02:21, feed-sync starts 04:00) while still landing inside `action-digest`'s 4h lookback window. Until this entry existed, **no scheduled job was responsible for Dropbox developers at all** — Kuutio's 6 projects / 93 units sat unrefreshed from 2026-08-13 to 2026-08-26 |
 | `0 4 * * *` | `feed-sync` | production, `?key=$CRON_SECRET` |
 | `30 3 * * *` | `cvp-db-backup.sh` | DB dump, not app-specific |
 | `0 5 * * 0` | `cvp-uploads-backup.sh` | shared uploads dir, weekly |

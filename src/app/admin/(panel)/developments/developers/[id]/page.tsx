@@ -13,6 +13,7 @@ import BackLink from "../../BackLink";
 import { computeAvailability } from "@/lib/developmentAvailability";
 import { resolveLinkedDeveloper, developerGroupExists, listDeveloperPageOptions } from "@/lib/developerLink";
 import { adminDateTime } from "@/lib/adminTime";
+import { isDropboxShareUrl } from "@/lib/dropbox";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,8 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
     },
   });
   if (!dev) notFound();
+
+  const isDropbox = isDropboxShareUrl(dev.driveFolderUrl);
 
   const hasFeed = dev.analyses.some((a) => a.sourceType === "URL" || a.sourceType === "API")
     || dev.developments.some((d) => d.dev && d.dev !== "manual");
@@ -183,19 +186,35 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
         <p className="text-xs text-[#9CA3AF]">After creating, open the development to scan a developer PDF with Claude — it fills the description and units automatically.</p>
       </div>
 
-      {/* Drive availability sync */}
+      {/* Drive / Dropbox availability sync. Which one a developer uses is read
+          off the link itself — DeveloperAccount has no provider column, both
+          share driveFolderUrl, and the sync code decides the same way. */}
       {dev.driveFolderUrl && (
         <div className="bg-white rounded-lg border border-[#E5E7EB] p-6 space-y-3">
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <h2 className="text-sm font-semibold text-[#111827]">Drive sync</h2>
+            <h2 className="text-sm font-semibold text-[#111827]">{isDropbox ? "Dropbox sync" : "Drive sync"}</h2>
             <div className="flex items-center gap-3 flex-wrap">
               <DriveIntervalSelect developerAccountId={dev.id} value={dev.driveSyncInterval ?? "daily"} />
-              <DriveFolderPreviewButton developerAccountId={dev.id} />
-              <DriveSyncButton developerAccountId={dev.id} />
+              {/* Drive-only: previewDriveFolders reads a Drive folder listing and
+                  refuses a Dropbox account outright. The Dropbox adapter has no
+                  equally cheap dry run — its scan downloads and AI-extracts every
+                  price list — so a "Check folders" button here would be a
+                  12-minute operation masquerading as a safe one. */}
+              {!isDropbox && <DriveFolderPreviewButton developerAccountId={dev.id} />}
+              <DriveSyncButton developerAccountId={dev.id} provider={isDropbox ? "dropbox" : "drive"} />
             </div>
           </div>
           <p className="text-xs text-[#6B7280]">
-            Each project folder’s own price list is the source; the folder-wide sheet in the root only covers projects that have no folder of their own. “Check folders” is a read-only dry run of that mapping — it names every folder that would contribute nothing, and why. “Sync Drive now” does a full import → developments, units, amenities, description &amp; images (as drafts). The scheduled job (interval above) then refreshes availability. Last synced: {dev.driveSyncedAt ? fmt(dev.driveSyncedAt) : "never"}.
+            {isDropbox ? (
+              <>
+                Each project folder in the shared Dropbox link is one project, matched by folder name — never AI-guessed. “Sync Dropbox now” creates missing projects (as drafts), refreshes units and prices, and gathers photos, plans, amenities and description for any project that has none yet; projects entered by hand are never touched. The nightly job runs at the interval above. A full run reads and extracts every price list and can take 10–15 minutes — it finishes on the server even if this page gives up waiting first, so check back rather than pressing again.
+              </>
+            ) : (
+              <>
+                Each project folder’s own price list is the source; the folder-wide sheet in the root only covers projects that have no folder of their own. “Check folders” is a read-only dry run of that mapping — it names every folder that would contribute nothing, and why. “Sync Drive now” does a full import → developments, units, amenities, description &amp; images (as drafts). The scheduled job (interval above) then refreshes availability.
+              </>
+            )}{" "}
+            Last synced: {dev.driveSyncedAt ? fmt(dev.driveSyncedAt) : "never"}.
           </p>
         </div>
       )}

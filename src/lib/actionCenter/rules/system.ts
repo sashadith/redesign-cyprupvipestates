@@ -32,6 +32,13 @@ const JOBS: { job: string; label: string; expectedMs: number }[] = [
   { job: "seo-advisor", label: "seo-advisor", expectedMs: 7 * 24 * HOUR },
   { job: "email-inbound", label: "email-inbound", expectedMs: 5 * MIN },
   { job: "booking-reminders", label: "booking-reminders", expectedMs: 5 * MIN },
+  // 2026-08-26 — added the day kuutio-sync got its `0 3 * * *` crontab entry,
+  // exactly as that route's own comment said it would be. DAILY here even
+  // though Kuutio's driveSyncInterval is weekly: this watches whether the
+  // cron FIRED, and a not-due night still writes its own ok row. The gap this
+  // closes is the one nobody saw for 13 days — a Dropbox developer that no
+  // scheduled job was responsible for at all.
+  { job: "kuutio-sync", label: "kuutio-sync", expectedMs: 24 * HOUR },
 ];
 
 // 2026-08-11 (analytics bot-traffic incident) — two exact user-agent strings
