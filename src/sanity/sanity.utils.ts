@@ -475,6 +475,15 @@ export async function listProjectsForPicker(lang: string) {
 async function resolveBlocks(blocks: any[] | null | undefined, lang: string, page?: number): Promise<any[]> {
   if (!Array.isArray(blocks)) return [];
   const out: any[] = [];
+  // Set true only inside the pagesEnabled branch below -- if a page > 1 was
+  // explicitly requested but nothing on this page ever turns it into a real
+  // query, that's just as invalid as a page number beyond totalPages (see
+  // the check after the loop). Both cases 404 via the same
+  // PageOutOfRangeError, which _getSinglePageByLang already converts to a
+  // `null` return -- generateMetadata and SinglePage both already treat
+  // `!page` as "don't build a canonical/title, just 404/return {}", so
+  // fixing it here fixes both call sites without touching either.
+  let pageConsumed = false;
   for (const block of blocks) {
     if (!block || typeof block !== "object") { out.push(block); continue; }
     const b: AnyRow = { ...block };
@@ -524,6 +533,7 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string, pag
         // Only a block explicitly flipped on (direct DB write, same pattern
         // as every other field on this block type) gets real pagination.
         if (b.pagesEnabled) {
+          pageConsumed = true;
           const requestedPage = page ?? 1;
           const paged = await computeFilteredProjectsPaged(lang, b.filterCity, b.filterPropertyType, liveOpts, requestedPage, MAX_FILTERED_PROJECTS);
           if (requestedPage > paged.totalPages) throw new PageOutOfRangeError();
@@ -546,6 +556,15 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string, pag
         : null;
     }
     out.push(D(b));
+  }
+  // A page > 1 was explicitly requested but no block on this page ever
+  // turned it into a real paginated query -- e.g. ?page=2 on a page with no
+  // pagesEnabled block at all, or none anywhere on the site yet. Without
+  // this, generateMetadata/SinglePage would happily build a unique
+  // canonical + "Page N" title for content that's byte-identical to page 1
+  // -- an unbounded set of self-canonicalizing duplicate-content URLs.
+  if (page != null && page > 1 && !pageConsumed) {
+    throw new PageOutOfRangeError();
   }
   return out;
 }
