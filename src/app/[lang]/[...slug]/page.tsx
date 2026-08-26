@@ -1,6 +1,6 @@
 // app/[lang]/[[...slug]]/page.tsx
 import React from "react";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import AccordionContainer from "@/app/components/AccordionContainer/AccordionContainer";
 import Footer from "@/app/components/Footer/Footer";
 import Header from "@/app/components/Header/Header";
@@ -80,7 +80,41 @@ type Props = {
     lang: string;
     slug: string[];
   };
+  // Only read for pagination (?page=N) — every other page on this shared
+  // dispatcher ignores it, since nothing currently links to it except the
+  // pager this change adds, and only on a block with pagesEnabled set.
+  searchParams: { page?: string };
 };
+
+// Locale suffix appended to <title>/meta description on page 2+, so
+// paginated URLs don't carry an identical title to page 1 despite
+// self-canonicalizing to their own ?page=N URL (a soft duplicate-content
+// signal otherwise). H1 is deliberately left unchanged.
+const PAGE_TITLE_SUFFIX: Record<string, (n: number) => string> = {
+  en: (n) => ` — Page ${n}`,
+  de: (n) => ` — Seite ${n}`,
+  pl: (n) => ` — Strona ${n}`,
+  ru: (n) => ` — Страница ${n}`,
+};
+
+// No ?page= at all -> "default" (render as page 1, no redirect: the bare URL
+// already IS page 1's canonical address). An explicit "?page=1" -> redirect,
+// so page 1 never has two addresses. Anything that isn't a plain positive
+// integer ("abc", "0", "-1", "1.5", "1e2") -> invalid, 404s rather than
+// silently coercing to something else. A real "?page=2"+ integer is handled
+// once we know the block's actual totalPages (see PageOutOfRangeError).
+type RequestedPage =
+  | { kind: "default" }
+  | { kind: "redirectToCanonical" }
+  | { kind: "invalid" }
+  | { kind: "page"; page: number };
+
+function parseRequestedPage(raw: string | undefined): RequestedPage {
+  if (raw == null) return { kind: "default" };
+  if (!/^[1-9]\d*$/.test(raw)) return { kind: "invalid" };
+  const n = Number(raw);
+  return n === 1 ? { kind: "redirectToCanonical" } : { kind: "page", page: n };
+}
 
 // export const dynamicParams = false;
 export const revalidate = 60;
@@ -131,16 +165,35 @@ export async function generateStaticParams(): Promise<Props["params"][]> {
 /**
  * Динамическая SEO-мета
  */
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const { lang, slug = [] } = params;
   const current = slug[slug.length - 1] || "";
-  const page = (await getSinglePageByLang(lang, current)) as Singlepage | null;
+  const requested = parseRequestedPage(searchParams?.page);
+  // Invalid page -> the page component will 404. "?page=1" -> it will
+  // redirect. Either way this response's body never ships, so there's
+  // nothing worth fetching data for -- return empty metadata without
+  // touching the DB.
+  if (requested.kind === "invalid" || requested.kind === "redirectToCanonical") {
+    return {};
+  }
+  const requestedPage = requested.kind === "page" ? requested.page : 1;
+  // Must match SinglePage's own call below exactly (same three arguments) --
+  // getSinglePageByLang is wrapped in React's per-request cache(), so a
+  // mismatched page number here vs. there would silently serve one of the
+  // two callers the wrong page's data instead of erroring.
+  const page = (await getSinglePageByLang(lang, current, requestedPage)) as Singlepage | null;
 
   if (!page) {
     return {};
   }
 
-  const canonical = abs(localizedPath(lang, slug));
+  // Self-canonicalizing: page 2+ points at its own ?page=N URL, not back at
+  // page 1 -- deliberately not mirroring /projects's pattern of always
+  // canonicalizing to the bare path (see the pagination scoping discussion).
+  // Harmless no-op for every page that never receives a ?page=2+ request,
+  // i.e. every landingProjectsBlock page other than the one with
+  // pagesEnabled set, since nothing links to ?page=2+ on them.
+  const canonical = abs(localizedPath(lang, slug)) + (requestedPage > 1 ? `?page=${requestedPage}` : "");
 
   // hreflang for every sibling language. Top-level pages use the leaf slug directly;
   // nested pages resolve the full ancestor path per language via getAllPathsForLang
@@ -166,8 +219,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   // Page-specific OG/Twitter image (was inheriting the generic site-logo default). Use the
   // landing page's own previewImage; fall back to the logo only when the page has none.
-  const ogTitle = page?.seo?.metaTitle || page?.title;
-  const ogDesc = page?.seo?.metaDescription || page?.excerpt;
+  const pageSuffix = requestedPage > 1 ? (PAGE_TITLE_SUFFIX[lang] ?? PAGE_TITLE_SUFFIX.en)(requestedPage) : "";
+  const ogTitle = (page?.seo?.metaTitle || page?.title) + pageSuffix;
+  const ogDesc = (page?.seo?.metaDescription || page?.excerpt) + pageSuffix;
   const ogImage = (page as any)?.previewImage
     ? urlFor((page as any).previewImage).width(1200).height(630).url()
     : DEFAULT_OG_IMAGE;
@@ -240,10 +294,28 @@ const getFaqItemsFromBlocks = (blocks: any[] = []) => {
   });
 };
 
-const SinglePage = async ({ params }: Props) => {
+const SinglePage = async ({ params, searchParams }: Props) => {
   const { lang, slug } = params;
   const current = slug[slug.length - 1] || "";
-  const page = (await getSinglePageByLang(lang, current)) as Singlepage | null;
+  // Pure function of params, no DB -- computed before any fetch so the
+  // ?page=1 redirect below doesn't need to wait on data it'll never render.
+  const pagePath = localizedPath(lang, slug);
+
+  const requested = parseRequestedPage(searchParams?.page);
+  if (requested.kind === "invalid") {
+    notFound();
+  }
+  if (requested.kind === "redirectToCanonical") {
+    // 308, not a literal 301 -- Next's permanentRedirect() issues 308
+    // (method-preserving permanent redirect), which browsers, Google, and
+    // every other crawler treat as equivalent to 301 for GET requests. The
+    // permanent-cacheable semantics you asked for hold either way.
+    permanentRedirect(pagePath);
+  }
+  const requestedPage = requested.kind === "page" ? requested.page : 1;
+  // Must match generateMetadata's own call above exactly -- see the comment
+  // there on why (React cache() dedup keys on arguments).
+  const page = (await getSinglePageByLang(lang, current, requestedPage)) as Singlepage | null;
 
   if (!page) {
     notFound();
@@ -518,12 +590,12 @@ const SinglePage = async ({ params }: Props) => {
         const b = block as LandingProjectsBlock;
         // Если поле projects отсутствует или null — считаем его пустым массивом
         const manual = Array.isArray(b.projects) ? b.projects : [];
-        const projectsToShow =
-          manual.length > 0
-            ? manual
-            : Array.isArray(b.filteredProjects)
-              ? b.filteredProjects
-              : [];
+        const usingManual = manual.length > 0;
+        const projectsToShow = usingManual
+          ? manual
+          : Array.isArray(b.filteredProjects)
+            ? b.filteredProjects
+            : [];
 
         return (
           <LandingProjectsBlockComponent
@@ -533,8 +605,14 @@ const SinglePage = async ({ params }: Props) => {
               _type: b._type,
               title: b.title,
               projects: projectsToShow,
+              // Only ever set on the live-query path -- a manual/pinned list
+              // has nothing to paginate, so no pager renders for it even if
+              // pagesEnabled happens to also be set on the same block.
+              totalPages: usingManual ? undefined : b.totalPages,
+              currentPage: usingManual ? undefined : b.currentPage,
             }}
             lang={lang}
+            pagePath={pagePath}
           />
         );
       case "landingFaqBlock":

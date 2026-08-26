@@ -308,8 +308,21 @@ export type LandingProjectsBlock = {
     | "Shop"
     | "Commercial"
   )[];
+  // Opt-in for real server-side pagination via ?page=N. Absent/false on every
+  // existing block, so no page's rendering changes unless explicitly flipped
+  // on (direct DB write, same pattern as every other field here). Unrelated
+  // to projectsSectionBlock's own `paginate` render-time signal below -- that
+  // one paginates client-side over an already-capped set; this one is real
+  // pagination over the full match count, deliberately not the same field so
+  // the two mechanisms can never be confused with each other.
+  pagesEnabled?: boolean;
   projects: Project[];
   filteredProjects?: Project[];
+  // Render-time only (set by resolveBlocks, never persisted) -- present only
+  // when pagesEnabled is true. totalPages is always >= 1; currentPage is
+  // clamped into [1, totalPages].
+  totalPages?: number;
+  currentPage?: number;
 };
 // === Конец типов для LandingProjectsBlock ===
 

@@ -256,8 +256,20 @@ function resolvedPropertyType(row: any): string | undefined {
 // anything available.
 const MAX_FILTERED_PROJECTS = 60;
 
-async function computeFilteredProjects(lang: string, filterCity?: string, filterPropertyType?: string, opts?: ComputeFilteredProjectsOpts) {
-  if (!isLocale(lang)) return [];
+// Thrown by resolveBlocks when a requested ?page=N exceeds a pagesEnabled
+// block's real totalPages -- caught in _getSinglePageByLang and converted to
+// a `null` return, reusing the exact same "page not found" contract every
+// caller (generateMetadata, SinglePage) already handles. Local to this file;
+// nothing outside it needs to know this exists.
+class PageOutOfRangeError extends Error {}
+
+// Shared fetch+filter core for computeFilteredProjects and its pagination
+// sibling below -- everything through the beach/exclude-type filters is
+// identical for both; only what happens to the result (hard-capped slice vs.
+// a requested page window) differs, and that's decided by each caller, not
+// here.
+async function fetchFilteredProjectsRaw(lang: string, filterCity?: string, filterPropertyType?: string, opts?: ComputeFilteredProjectsOpts) {
+  if (!isLocale(lang)) return { available: [] as any[], sold: [] as any[], devRows: [] as any[] };
   const priceMin = opts?.priceMin ?? null;
   const priceMax = opts?.priceMax ?? null;
   const rows = await prisma.project.findMany({
@@ -279,9 +291,10 @@ async function computeFilteredProjects(lang: string, filterCity?: string, filter
 
   let devRows = await queryFilteredDevelopmentRows({ city: filterCity, propertyType: filterPropertyType, priceFrom: priceMin, priceTo: priceMax });
 
-  // Both filters below run BEFORE sortProjectsRecommended/the MAX_FILTERED_PROJECTS
-  // cap (not after) -- filtering post-cap would silently drop qualifying listings
-  // whenever a broad city/type query already filled the cap with non-qualifying rows.
+  // Both filters below run BEFORE sortProjectsRecommended/either caller's cap
+  // or page window (not after) -- filtering afterward would silently drop
+  // qualifying listings whenever a broad city/type query already filled the
+  // cap/window with non-qualifying rows.
   const maxBeachMinutes = opts?.maxBeachMinutes ?? null;
   if (maxBeachMinutes != null) {
     const withinBeach = (p: any) => {
@@ -313,31 +326,70 @@ async function computeFilteredProjects(lang: string, filterCity?: string, filter
     devRows = devRows.filter(notExcluded);
   }
 
-  const recommended = sortProjectsRecommended([...available, ...devRows] as any);
-  const full = [...recommended, ...sold].slice(0, MAX_FILTERED_PROJECTS);
+  return { available, sold, devRows };
+}
 
-  return full.map((p: any) => ({
+// Full field parity with getDeveloperCatalogByLang's own toCardData
+// (developers/[slug]/page.tsx) — 2026-08-06. Every field below is a pure
+// pass-through, no new query: `rows` (Project) has no `select`, so every
+// scalar column (distances, isNew, isFeatured) is already in memory:
+// devRows (mapDevelopmentRowToCard) already computes distances (pre-
+// adapted via toCardDistances()), isNew/isFeatured (hardcoded false —
+// Developments never carry these), and unitsAvailable/unitsTotal. Legacy
+// Project rows have no unit concept, so unitsAvailable/unitsTotal are
+// simply undefined for them — same as the developer page's own handling.
+function toProjectCard(p: any) {
+  return {
     _id: p.sanityId,
     title: p.title,
     slug: p.slug,
     previewImage: D(p.previewImage),
     keyFeatures: p.keyFeatures,
     isSold: !!p.isSold,
-    // Full field parity with getDeveloperCatalogByLang's own toCardData
-    // (developers/[slug]/page.tsx) — 2026-08-06. Every field below is a pure
-    // pass-through, no new query: `rows` (Project) has no `select`, so every
-    // scalar column (distances, isNew, isFeatured) is already in memory:
-    // devRows (mapDevelopmentRowToCard) already computes distances (pre-
-    // adapted via toCardDistances()), isNew/isFeatured (hardcoded false —
-    // Developments never carry these), and unitsAvailable/unitsTotal. Legacy
-    // Project rows have no unit concept, so unitsAvailable/unitsTotal are
-    // simply undefined for them — same as the developer page's own handling.
     distances: p.distances ?? null,
     isNew: !!p.isNew,
     isFeatured: !!p.isFeatured,
     unitsAvailable: p.unitsAvailable,
     unitsTotal: p.unitsTotal,
-  }));
+  };
+}
+
+async function computeFilteredProjects(lang: string, filterCity?: string, filterPropertyType?: string, opts?: ComputeFilteredProjectsOpts) {
+  const { available, sold, devRows } = await fetchFilteredProjectsRaw(lang, filterCity, filterPropertyType, opts);
+  const recommended = sortProjectsRecommended([...available, ...devRows] as any);
+  const full = [...recommended, ...sold].slice(0, MAX_FILTERED_PROJECTS);
+  return full.map(toProjectCard);
+}
+
+// Server-side pagination sibling of computeFilteredProjects -- same fetch,
+// filter, and sort, but returns a requested page-sized window over the FULL
+// match count instead of a hard-capped first-60 slice, plus the total so the
+// caller can render a real pager. computeFilteredProjects itself is
+// untouched by this addition; every existing call site keeps calling it
+// exactly as before. Only a landingProjectsBlock with pagesEnabled set calls
+// this instead -- see resolveBlocks.
+async function computeFilteredProjectsPaged(
+  lang: string,
+  filterCity: string | undefined,
+  filterPropertyType: string | undefined,
+  opts: ComputeFilteredProjectsOpts | undefined,
+  page: number,
+  pageSize: number,
+) {
+  const { available, sold, devRows } = await fetchFilteredProjectsRaw(lang, filterCity, filterPropertyType, opts);
+  const recommended = sortProjectsRecommended([...available, ...devRows] as any);
+  const full = [...recommended, ...sold];
+  const totalMatched = full.length;
+  const totalPages = Math.max(1, Math.ceil(totalMatched / pageSize));
+  // No clamping: `page` is used exactly as given (already validated as a
+  // positive integer by the caller). An out-of-range page still gets a
+  // truthful totalPages back -- resolveBlocks compares the two and 404s
+  // rather than silently serving a lower page under a higher page's URL,
+  // which would otherwise be an unbounded set of duplicate-content crawl
+  // traps (?page=99, ?page=1000, ... all returning 200 with page 5's items).
+  const start = (page - 1) * pageSize;
+  const items = full.slice(start, start + pageSize).map(toProjectCard);
+  return { items, totalMatched, totalPages, currentPage: page };
 }
 
 // ---- Admin-insertable "Projects" block (2026-07-24): pin/exclude layering ----
@@ -420,7 +472,7 @@ export async function listProjectsForPicker(lang: string) {
 }
 
 // Walk a page-builder contentBlocks array, resolving form/project refs, then deref assets.
-async function resolveBlocks(blocks: any[] | null | undefined, lang: string): Promise<any[]> {
+async function resolveBlocks(blocks: any[] | null | undefined, lang: string, page?: number): Promise<any[]> {
   if (!Array.isArray(blocks)) return [];
   const out: any[] = [];
   for (const block of blocks) {
@@ -466,10 +518,21 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string): Pr
         // old-style block, so this call is byte-identical to before for all of
         // them -- only a block that explicitly sets one of the new fields sees
         // different behavior.
-        b.filteredProjects = await computeFilteredProjects(lang, b.filterCity, b.filterPropertyType, {
-          maxBeachMinutes: b.maxBeachMinutes,
-          excludePropertyTypes: b.excludePropertyTypes,
-        });
+        const liveOpts = { maxBeachMinutes: b.maxBeachMinutes, excludePropertyTypes: b.excludePropertyTypes };
+        // pagesEnabled is absent/false on every existing block -- this branch
+        // is unreachable for all of them, so their rendering is unaffected.
+        // Only a block explicitly flipped on (direct DB write, same pattern
+        // as every other field on this block type) gets real pagination.
+        if (b.pagesEnabled) {
+          const requestedPage = page ?? 1;
+          const paged = await computeFilteredProjectsPaged(lang, b.filterCity, b.filterPropertyType, liveOpts, requestedPage, MAX_FILTERED_PROJECTS);
+          if (requestedPage > paged.totalPages) throw new PageOutOfRangeError();
+          b.filteredProjects = paged.items;
+          b.totalPages = paged.totalPages;
+          b.currentPage = paged.currentPage;
+        } else {
+          b.filteredProjects = await computeFilteredProjects(lang, b.filterCity, b.filterPropertyType, liveOpts);
+        }
       }
     }
     // Inline Related Article: hydrate the referenced internal blog's title/excerpt/slug.
@@ -571,7 +634,7 @@ export async function getFormStandardDocumentByLang(lang: string): Promise<FormS
   return { _id: row?.sanityId, form: d.form, language: row?.language } as unknown as FormStandardDocument;
 }
 
-async function _getSinglePageByLang(lang: string, slug: string): Promise<Singlepage | null> {
+async function _getSinglePageByLang(lang: string, slug: string, page?: number): Promise<Singlepage | null> {
   if (!isLocale(lang)) return null;
   const row = await prisma.singlepage.findFirst({ where: { language: lang as any, slug, ...draftFilter() } });
   if (!row) return null;
@@ -580,11 +643,22 @@ async function _getSinglePageByLang(lang: string, slug: string): Promise<Singlep
     const p = await prisma.singlepage.findUnique({ where: { sanityId: row.parentSanityId } });
     if (p) parentPage = { _id: p.sanityId, title: p.title, slug: slugObj(p), _translations: await translationsFor(prisma.singlepage as any, p.translationGroupId) };
   }
+  let contentBlocks: any[];
+  try {
+    contentBlocks = await resolveBlocks(row.contentBlocks as any[], lang, page);
+  } catch (e) {
+    // A requested ?page=N beyond a pagesEnabled block's real totalPages --
+    // treat it exactly like "page not found", the same contract every
+    // caller (generateMetadata, SinglePage) already handles via `!page`.
+    // Any other error propagates normally.
+    if (e instanceof PageOutOfRangeError) return null;
+    throw e;
+  }
   const out: AnyRow = {
     ...base(row, "singlepage"),
     title: row.title, slug: slugObj(row), seo: row.seo, excerpt: row.excerpt,
     previewImage: D(row.previewImage), allowIntroBlock: row.allowIntroBlock,
-    contentBlocks: await resolveBlocks(row.contentBlocks as any[], lang),
+    contentBlocks,
     parentPage, language: row.language,
     relatedLandingPages: row.relatedLandingPages ?? null,
     _translations: await translationsFor(prisma.singlepage as any, row.translationGroupId),
