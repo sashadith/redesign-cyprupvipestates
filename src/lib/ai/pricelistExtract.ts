@@ -218,6 +218,27 @@ export async function extractUnitsForSection(sectionText: string): Promise<any[]
 const key = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
 const words = (s: string) => (s || "").toLowerCase().match(/[a-z0-9]+/g) || [];
 
+/* A price-list section starts with the project's name on its own row, and the
+   extraction intermittently returns that row as if it were a unit — ref "Alder
+   Park", no price, status defaulting to available. Confirmed 2026-08-26: Alder
+   Park, Pine Park and Triangle House each grew a unit named after themselves,
+   against sheets holding exactly 8, 12 and 1 (Grato Homes 2 had the same thing
+   earlier).
+
+   It oscillates rather than accumulating — one run creates the row, the next
+   prunes it as no longer present — so these unit counts have been quietly
+   wobbling by one for weeks. A deterministic guard rather than a prompt change:
+   the model gets this right most of the time, and "most of the time" is exactly
+   the problem.
+
+   A ref that IS the project's own name carries no unit identity anyway, so
+   dropping it costs nothing even in the contrived case of a single-unit project
+   whose developer really did label its one unit after the project. */
+export function isSectionTitleRow(ref: string, project: string): boolean {
+  const r = key(ref);
+  return !!r && r === key(project);
+}
+
 // Resolve a per-call project-name guess to one canonical name from the catalogue,
 // by word overlap (normalized so an abbreviated guess like "Lazzero" or "Grato 2" —
 // or a guess a section-level call polluted with an internal sub-group like "Arbeo
@@ -343,6 +364,11 @@ export async function extractAvailabilityFromPricelist(text: string, full = fals
     if (!u?.project || !u?.ref) continue;
     const { name: matchedName, matched } = toCanonical(u.project);
     if (canonicalNames.length && !matched) { droppedNames.add(String(u.project)); continue; }
+    // The section's own title row, misread as a unit — see isSectionTitleRow.
+    // Ahead of kept++ so it never reaches the counter, unitsTotal, the pruning
+    // comparison or the database; key() is case-insensitive, so comparing against
+    // the pre-Title-Case name is equivalent and avoids reordering the block below.
+    if (isSectionTitleRow(String(u.ref), matchedName)) continue;
     kept++;
     // Title Case regardless of how the source (spreadsheet header, PDF title)
     // delivered it — GROSSER AUFTRAG / Kuutio decision, 2026-08-13. Applied
