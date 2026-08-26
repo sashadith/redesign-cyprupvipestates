@@ -51,15 +51,24 @@
 // 1 manually-added "sold" row + 3 feed "reserved" rows, every price null) hit
 // this and got zero alternatives while 76 genuine Paphos candidates existed.
 // The funnel used to bail out here (`currentPrice == null → return []`)
-// because every stage filtered on a price band. It now runs the SAME four
-// stages with the price band simply not applied — developer, location and
-// type carry the ranking on their own — instead of guessing a price. Ordering
-// degrades the same way: without a price to be close to, candidates sort by
-// developer, then location, then type match, then cheapest first (a stable,
-// explainable order — never random). Everything else is unchanged: the
-// commercial/residential boundary, the sold-out exclusion, and the
-// MIN_ALTERNATIVES floor all still apply, so a price-less project with a thin
-// pool still shows no block rather than a weak one.
+// because every stage filtered on a price band. It now runs its OWN four
+// stages (see the `currentPrice == null` branch below), deliberately not the
+// priced order with the band switched off — that first attempt shipped and
+// was wrong: it kept the priced funnel's "developer or location, type
+// dropped" stage ahead of "same type anywhere", and offered a sold-out Sea
+// Caves luxury villa four of its own developer's Paphos APARTMENT projects.
+// Without a price band there is nothing left to stop a mismatch like that,
+// so type moves up and the developer stops being a filter:
+//   1. same neighbourhood AND same type   2. same location AND same type
+//   3. same type anywhere                 4. developer OR location, no type
+// Ranking within a stage: neighbourhood → type → district → closest built
+// area → same developer → cheapest. Built area stands in for price proximity
+// (a 205 m² villa and a 341 m² villa aren't the same market even on the same
+// hillside); developer ranks last, as a tie-breaker, never as a reason.
+// Everything else is unchanged: the commercial/residential boundary, the
+// sold-out exclusion and the MIN_ALTERNATIVES floor all still apply, so a
+// price-less project with a thin pool still shows no block rather than a weak
+// one.
 //
 // Commercial developments skip this funnel entirely (2026-08-06): with only
 // 5 published commercial developments total, developer/location/price
@@ -86,13 +95,52 @@ const PRICE_BAND_LOOSE = 0.6; // ±60% — stages 3 and 4 (last resorts)
 const MIN_ALTERNATIVES = 3;
 const MAX_ALTERNATIVES = 4;
 
-type UnitLike = { status: string | null; type: string | null; price: number | null };
+type UnitLike = { status: string | null; type: string | null; price: number | null; areaBuilt?: string | null; beds?: string | null };
+
+// Feed vocabularies disagree on number and wording for the SAME property type:
+// "villa" (286 units) vs "villas" (222), "apartment" (1032) vs "apartments"
+// (89), and — where a development has no unit types at all — a free-text
+// category like "High-End Luxury Villas" or "Luxury Villas" standing in for
+// one (resolveDevelopmentType falls back to the category). Token equality on
+// those raw strings meant a villa project never type-matched another villa
+// project unless both feeds happened to spell it identically, and a
+// category-only project never matched anything at all (Grato Homes 2,
+// 2026-08-24: its type resolves to the string "High-End Luxury Villas", which
+// equals nothing, so every type-filtered stage was empty for it).
+// Each raw string is folded to ONE canonical token, longest/most specific
+// pattern first — "townhouse" and "penthouse" must be decided before the
+// generic "house", or both would collapse into it. Anything that matches no
+// pattern keeps its own lower-cased text, so unusual feed types
+// ("restaurant", "boutique hotel") still only match their own kind.
+const TYPE_CANON: [RegExp, string][] = [
+  [/semi[-\s]?detached/, "semi-detached"],
+  [/maisonette/, "maisonette"],
+  [/town\s?house/, "townhouse"],
+  [/pent\s?house/, "penthouse"],
+  [/duplex/, "duplex"],
+  [/bungalow/, "bungalow"],
+  [/villa/, "villa"],
+  [/apartment|flat|condo/, "apartment"],
+  [/studio/, "studio"],
+  [/plot|land/, "plot"],
+  [/office/, "office"],
+  [/shop|retail/, "shop"],
+  [/hotel/, "hotel"],
+  [/house/, "house"],
+];
+
+function canonType(raw: string): string {
+  const t = raw.trim().toLowerCase();
+  if (!t) return "";
+  for (const [re, canon] of TYPE_CANON) if (re.test(t)) return canon;
+  return t;
+}
 
 function typeTokens(category: string | null, units: UnitLike[]): Set<string> {
   return new Set(
     resolveDevelopmentType(category, units as any)
       .split(" · ")
-      .map((s) => s.trim().toLowerCase())
+      .map((s) => canonType(s))
       .filter(Boolean),
   );
 }
@@ -136,6 +184,54 @@ function inBand(price: number, center: number, band: number): boolean {
   return price >= center * (1 - band) && price <= center * (1 + band);
 }
 
+// Place names are compared as normalized tokens, and the AREA and TOWN columns
+// are pooled into one "micro-location" set rather than compared column-to-
+// column. The feeds disagree about which column a neighbourhood belongs in:
+// Grato Homes 2 is area "Sea Caves" / town "Peyia", Viewpoint Hills is area
+// "Peyia" / town null, Velaro Homes is area "Sea Caves" / town "Peyia". An
+// area↔area comparison (all this funnel did until 2026-08-24) makes those
+// three strangers to each other even though they are the same hillside. The
+// ph→f fold is the same one the project page's own location column uses, so
+// "Paphos" and "Pafos" don't read as two places.
+const normLoc = (s: string | null | undefined) => (s || "").toLowerCase().replace(/ph/g, "f").replace(/[^a-z]/g, "");
+
+function microTokens(area: string | null | undefined, town: string | null | undefined): Set<string> {
+  return new Set([area, town].map(normLoc).filter(Boolean));
+}
+
+function sharesMicro(a: Set<string>, b: Set<string>): boolean {
+  if (!a.size || !b.size) return false;
+  return Array.from(a).some((t) => b.has(t));
+}
+
+// Stand-in for price proximity when the current development has no price at
+// all (2026-08-24). Built area is the closest thing to a price signal the
+// remaining data offers — a 205 m² 4-bed villa and a 341 m² 5-bed villa are
+// not in the same market even when they share a hillside and a property type.
+// Taken over ALL units for the current development (a sold-out one has no
+// available rows left, same reason cheapestOfAnyStatus exists) and over
+// available units for a candidate, which is what a buyer could actually buy.
+const numOf = (v: string | null | undefined) => {
+  const m = (v || "").replace(",", ".").match(/[\d.]+/);
+  const n = m ? parseFloat(m[0]) : NaN;
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+
+function builtAreas(units: UnitLike[], availableOnly: boolean): number[] {
+  return units
+    .filter((u) => (availableOnly ? u.status === "available" : true))
+    .map((u) => numOf(u.areaBuilt))
+    .filter((n): n is number => n != null);
+}
+
+// Distance from `basis` to the CLOSEST unit the candidate offers — a
+// development with a 160-240 m² range covers a 205 m² brief exactly, and
+// shouldn't be scored on its midpoint.
+function sizeDistance(basis: number, areas: number[]): number {
+  if (!areas.length) return Number.POSITIVE_INFINITY;
+  return Math.min(...areas.map((a) => Math.abs(a - basis)));
+}
+
 export async function getAlternativeDevelopments(currentSlug: string, lang: string): Promise<ProjectCardData[]> {
   const current = await prisma.development.findUnique({
     where: { slug: currentSlug },
@@ -146,7 +242,8 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
       district: true,
       priceFrom: true,
       category: true,
-      units: { select: { status: true, type: true, price: true } },
+      town: true,
+      units: { select: { status: true, type: true, price: true, areaBuilt: true } },
       // area/district ARE admin-editable (DevelopmentOverride, sync never
       // touches that table — same protection every other admin field there
       // has). Reading only the raw Development columns meant an admin
@@ -154,7 +251,7 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
       // 2026-08-06 tracing why Lazzero Park's own district was null despite
       // being clearly Paphos. Resolve override-first, same as every other
       // surface (mapDevelopmentRowToCard: `ov?.district || d.district`).
-      override: { select: { area: true, district: true } },
+      override: { select: { area: true, district: true, town: true } },
     },
   });
   if (!current) return [];
@@ -165,8 +262,11 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
 
   const currentTypes = typeTokens(current.category, current.units);
   const currentIsCommercial = isCommercial(current.category, current.units);
-  const currentArea = current.override?.area || current.area;
-  const currentDistrict = current.override?.district || current.district;
+  const currentMicro = microTokens(current.override?.area || current.area, current.override?.town || current.town);
+  const currentDistrict = normLoc(current.override?.district || current.district);
+  // Only consulted on the price-less path (see the header comment).
+  const currentBuiltAreas = builtAreas(current.units, false);
+  const currentBuilt = currentBuiltAreas.length ? Math.min(...currentBuiltAreas) : null;
 
   const rows = await prisma.development.findMany({
     where: { publishStatus: "published", id: { not: current.id } },
@@ -178,12 +278,20 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
       district: true,
       priceFrom: true,
       category: true,
-      units: { select: { status: true, type: true, price: true } },
-      override: { select: { area: true, district: true } },
+      town: true,
+      units: { select: { status: true, type: true, price: true, areaBuilt: true } },
+      override: { select: { area: true, district: true, town: true } },
     },
   });
 
-  type Candidate = (typeof rows)[number] & { price: number; sameDeveloper: boolean; sameLocation: boolean; typeMatch: boolean };
+  type Candidate = (typeof rows)[number] & {
+    price: number;
+    sameDeveloper: boolean;
+    sameMicro: boolean;
+    sameLocation: boolean;
+    typeMatch: boolean;
+    sizeGap: number;
+  };
 
   const candidates: Candidate[] = [];
   for (const d of rows) {
@@ -194,38 +302,43 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
     if (price == null) continue;
     if (isCommercial(d.category, d.units) !== currentIsCommercial) continue; // categorical boundary — excluded from the pool entirely, no stage can reintroduce it
     const sameDeveloper = !!current.developerAccountId && d.developerAccountId === current.developerAccountId;
-    const dArea = d.override?.area || d.area;
-    const dDistrict = d.override?.district || d.district;
-    const sameArea = !!currentArea && !!dArea && currentArea.toLowerCase() === dArea.toLowerCase();
-    const sameDistrict = !!currentDistrict && !!dDistrict && currentDistrict.toLowerCase() === dDistrict.toLowerCase();
-    const sameLocation = sameArea || sameDistrict;
+    const sameMicro = sharesMicro(currentMicro, microTokens(d.override?.area || d.area, d.override?.town || d.town));
+    const dDistrict = normLoc(d.override?.district || d.district);
+    const sameDistrict = !!currentDistrict && !!dDistrict && currentDistrict === dDistrict;
+    const sameLocation = sameMicro || sameDistrict;
     const typeMatch = sharesType(currentTypes, typeTokens(d.category, d.units));
-    candidates.push({ ...d, price, sameDeveloper, sameLocation, typeMatch });
+    const sizeGap = currentBuilt == null ? Number.POSITIVE_INFINITY : sizeDistance(currentBuilt, builtAreas(d.units, true));
+    candidates.push({ ...d, price, sameDeveloper, sameMicro, sameLocation, typeMatch, sizeGap });
   }
 
-  // Price band, applied only where there is a price to compare against — a
-  // price-less development passes every candidate through untouched (header
-  // comment) rather than being filtered down to nothing.
-  const withinBand = (price: number, band: number) => {
-    if (currentPrice == null) return true;
-    return inBand(price, currentPrice, band);
+  // Closest price first — the moment a price basis exists. Without one, rank
+  // by the signals that DO exist, in the order a buyer would weigh them:
+  // same neighbourhood, same property type, same district, closest size —
+  // and only then the developer. Developer LAST is the correction of
+  // 2026-08-24: ranking it first handed a sold-out Sea Caves luxury villa
+  // four of its developer's Paphos apartment projects (Arbeo/Roble/Lazzero/
+  // Blossom Park) while the villa projects one hillside over went unshown.
+  // Sharing a developer is a nice-to-have; sharing a market is the point.
+  const rank = (a: Candidate, b: Candidate) => {
+    if (a.sameMicro !== b.sameMicro) return a.sameMicro ? -1 : 1;
+    if (a.typeMatch !== b.typeMatch) return a.typeMatch ? -1 : 1;
+    if (a.sameLocation !== b.sameLocation) return a.sameLocation ? -1 : 1;
+    // Infinity on both sides (no built-area data anywhere) must compare equal,
+    // not NaN — fall through to the next criterion instead.
+    const gapA = Number.isFinite(a.sizeGap) ? a.sizeGap : Number.MAX_SAFE_INTEGER;
+    const gapB = Number.isFinite(b.sizeGap) ? b.sizeGap : Number.MAX_SAFE_INTEGER;
+    if (gapA !== gapB) return gapA - gapB;
+    if (a.sameDeveloper !== b.sameDeveloper) return a.sameDeveloper ? -1 : 1;
+    return a.price - b.price;
   };
 
-  // Closest price first — the moment a price basis exists. Without one, rank
-  // by the signals that DO exist (developer → location → type), cheapest
-  // first as the final tie-breaker.
   const byRelevance = (list: Candidate[]) => {
     const sorted = [...list];
     if (currentPrice != null) {
       const basis = currentPrice;
       return sorted.sort((a, b) => Math.abs(a.price - basis) - Math.abs(b.price - basis));
     }
-    return sorted.sort((a, b) => {
-      if (a.sameDeveloper !== b.sameDeveloper) return a.sameDeveloper ? -1 : 1;
-      if (a.sameLocation !== b.sameLocation) return a.sameLocation ? -1 : 1;
-      if (a.typeMatch !== b.typeMatch) return a.typeMatch ? -1 : 1;
-      return a.price - b.price;
-    });
+    return sorted.sort(rank);
   };
 
   const fill = (chosen: Candidate[], pool: Candidate[]) => {
@@ -253,10 +366,33 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
     // No developer/location/price filtering — see the header comment above
     // for why. Just every other commercial development, best price match first.
     chosen = byRelevance(candidates).slice(0, MAX_ALTERNATIVES);
+  } else if (currentPrice == null) {
+    // ---- Price-less funnel (2026-08-24) ----
+    // Its own stage order, NOT the priced one with the band switched off: the
+    // priced funnel drops the type preference (stage 3) before it ever tries
+    // "same type anywhere" (stage 4), which is only safe because the price
+    // band is doing the real filtering underneath. With no band, that order
+    // offers apartments to villa buyers. Here type outranks everything except
+    // the immediate neighbourhood, and the developer is never a filter at all.
+    //   1. same neighbourhood (area/town pooled) AND same type
+    //   2. same location (neighbourhood or district) AND same type
+    //   3. same type anywhere — neighbourhood-first within the stage (rank)
+    //   4. last resort: same developer OR same location, type dropped
+    chosen = byRelevance(candidates.filter((c) => c.sameMicro && c.typeMatch)).slice(0, MAX_ALTERNATIVES);
+    if (chosen.length < MAX_ALTERNATIVES) {
+      chosen = fill(chosen, candidates.filter((c) => c.sameLocation && c.typeMatch));
+    }
+    if (chosen.length < MAX_ALTERNATIVES) {
+      chosen = fill(chosen, candidates.filter((c) => c.typeMatch));
+    }
+    if (chosen.length < MAX_ALTERNATIVES) {
+      chosen = fill(chosen, candidates.filter((c) => c.sameDeveloper || c.sameLocation));
+    }
   } else {
+    const basis = currentPrice;
     // Stage 1: developer AND location, type required, tight price band.
     chosen = byRelevance(
-      candidates.filter((c) => c.sameDeveloper && c.sameLocation && c.typeMatch && withinBand(c.price, PRICE_BAND_TIGHT)),
+      candidates.filter((c) => c.sameDeveloper && c.sameLocation && c.typeMatch && inBand(c.price, basis, PRICE_BAND_TIGHT)),
     ).slice(0, MAX_ALTERNATIVES);
 
     // Stage 2: developer OR location, type still required, tight price band.
@@ -266,7 +402,7 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
     if (chosen.length < MAX_ALTERNATIVES) {
       chosen = fill(
         chosen,
-        candidates.filter((c) => (c.sameDeveloper || c.sameLocation) && c.typeMatch && withinBand(c.price, PRICE_BAND_TIGHT)),
+        candidates.filter((c) => (c.sameDeveloper || c.sameLocation) && c.typeMatch && inBand(c.price, basis, PRICE_BAND_TIGHT)),
       );
     }
 
@@ -274,7 +410,7 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
     if (chosen.length < MAX_ALTERNATIVES) {
       chosen = fill(
         chosen,
-        candidates.filter((c) => (c.sameDeveloper || c.sameLocation) && withinBand(c.price, PRICE_BAND_LOOSE)),
+        candidates.filter((c) => (c.sameDeveloper || c.sameLocation) && inBand(c.price, basis, PRICE_BAND_LOOSE)),
       );
     }
 
@@ -288,7 +424,7 @@ export async function getAlternativeDevelopments(currentSlug: string, lang: stri
     if (chosen.length < MAX_ALTERNATIVES) {
       chosen = fillLocationFirst(
         chosen,
-        candidates.filter((c) => c.typeMatch && withinBand(c.price, PRICE_BAND_LOOSE)),
+        candidates.filter((c) => c.typeMatch && inBand(c.price, basis, PRICE_BAND_LOOSE)),
       );
     }
   }
