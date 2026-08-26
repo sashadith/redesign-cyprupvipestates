@@ -282,6 +282,114 @@ export async function previewKuutioSync(developerAccountId: string): Promise<Kuu
   return results;
 }
 
+export type KuutioDryRunProject = {
+  folder: string;
+  project: string;
+  sourceFile: string;
+  matched: { publicName: string; dev: string; publishStatus: string } | null;
+  /** What this run WOULD do to the row, given the same rules writeKuutioDraft applies. */
+  wouldDo: "create" | "update" | "skip (foreign row — never overwritten)" | "skip (no units extracted)";
+  dropbox: { units: number; available: number; priceFrom: number | null };
+  db: { units: number; available: number } | null;
+  /** Per-unit differences against the row that exists today. Empty when nothing differs. */
+  diff: {
+    onlyInDropbox: { ref: string; status: string; price: number | null }[];
+    onlyInDb: { ref: string; status: string; price: number | null }[];
+    statusChanged: { ref: string; db: string; dropbox: string }[];
+    priceChanged: { ref: string; db: number | null; dropbox: number | null }[];
+  };
+};
+
+/* Read-only answer to "does the price list in Dropbox still agree with what we
+   publish?" (2026-08-26). It exists for the three projects the sync refuses to
+   touch — Aion, Noble and Quatrro are dev:"manual", hand-entered on 2026-07-12,
+   and skippedExisting on every single run since. Their folders ARE read and
+   their units ARE extracted; the result is then discarded, so a unit that sold
+   in Dropbox months ago still shows as available on a published page and
+   nothing in the system can notice.
+
+   This does not change that rule — it makes its cost visible, per unit, so the
+   decision to keep hand-maintaining those rows (or not) is an informed one.
+   Writes nothing, for any project, ever: no upsert, no image mirroring, no
+   driveSyncedAt, no restart. It is as expensive as a real sync, though (every
+   price list is downloaded and AI-extracted), so it is a deliberate call, not
+   something to put on a schedule. */
+export async function dryRunKuutioSync(developerAccountId: string): Promise<{ projects: KuutioDryRunProject[]; summary: string }> {
+  const results = await previewKuutioSync(developerAccountId);
+  const out: KuutioDryRunProject[] = [];
+
+  for (const r of results) {
+    const dropboxUnits = r.units.filter((u) => String(u.ref || "").trim());
+    const prices = dropboxUnits.map((u) => u.price).filter((p): p is number => typeof p === "number");
+    const foreign = !!r.matchedExisting && r.matchedExisting.dev !== "dropbox";
+
+    // Same precedence writeKuutioDraft uses, restated in the same order so the
+    // two can be compared line by line: foreign match wins over emptiness.
+    const wouldDo: KuutioDryRunProject["wouldDo"] = foreign
+      ? "skip (foreign row — never overwritten)"
+      : !dropboxUnits.length
+        ? "skip (no units extracted)"
+        : r.matchedExisting
+          ? "update"
+          : "create";
+
+    const existingUnits = r.matchedExisting
+      ? await prisma.developmentUnit.findMany({
+          where: { developmentId: r.matchedExisting.id },
+          select: { ref: true, status: true, price: true },
+        })
+      : [];
+
+    // Keyed by normalizeRef, the same reconciliation key the writer uses — a
+    // diff keyed on raw strings would report every unit as changed the moment
+    // one sheet writes "A101" and the other "Block A 101".
+    const dbByKey = new Map(existingUnits.filter((u) => u.ref).map((u) => [refKey(u.ref!, r.projectName), u]));
+    const dropByKey = new Map(dropboxUnits.map((u) => [refKey(u.ref, r.projectName), u]));
+
+    const diff: KuutioDryRunProject["diff"] = { onlyInDropbox: [], onlyInDb: [], statusChanged: [], priceChanged: [] };
+    for (const [k, u] of Array.from(dropByKey)) {
+      const db = dbByKey.get(k);
+      if (!db) { diff.onlyInDropbox.push({ ref: u.ref, status: u.status, price: u.price }); continue; }
+      if ((db.status ?? "") !== u.status) diff.statusChanged.push({ ref: u.ref, db: db.status ?? "—", dropbox: u.status });
+      const dbPrice = db.price ?? null;
+      const dropPrice = typeof u.price === "number" ? Math.round(u.price) : null;
+      if (dbPrice !== dropPrice) diff.priceChanged.push({ ref: u.ref, db: dbPrice, dropbox: dropPrice });
+    }
+    for (const [k, u] of Array.from(dbByKey)) {
+      if (!dropByKey.has(k)) diff.onlyInDb.push({ ref: u.ref!, status: u.status ?? "—", price: u.price ?? null });
+    }
+
+    out.push({
+      folder: r.folder,
+      project: r.projectName,
+      sourceFile: r.sourceFile,
+      matched: r.matchedExisting
+        ? { publicName: r.matchedExisting.publicName, dev: r.matchedExisting.dev, publishStatus: r.matchedExisting.publishStatus }
+        : null,
+      wouldDo,
+      dropbox: {
+        units: dropboxUnits.length,
+        available: dropboxUnits.filter((u) => u.status === "available").length,
+        priceFrom: prices.length ? Math.min(...prices) : null,
+      },
+      db: r.matchedExisting
+        ? { units: existingUnits.length, available: existingUnits.filter((u) => u.status === "available").length }
+        : null,
+      diff,
+    });
+  }
+
+  const drifted = out.filter((p) => p.diff.onlyInDropbox.length || p.diff.onlyInDb.length || p.diff.statusChanged.length || p.diff.priceChanged.length);
+  const frozen = drifted.filter((p) => p.wouldDo.startsWith("skip (foreign"));
+  return {
+    projects: out,
+    summary:
+      `${out.length} folder(s) read. ${drifted.length} differ from what is in the database` +
+      (frozen.length ? `, ${frozen.length} of which the sync will never correct on its own (${frozen.map((p) => p.project).join(", ")})` : "") +
+      ".",
+  };
+}
+
 export type KuutioWriteResult = {
   created: { project: string; units: number }[];
   skippedExisting: { project: string; reason: string }[];
