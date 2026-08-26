@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { syncAll, syncDeveloper } from "@/lib/feedSync";
 import { syncDeveloperDrive, previewDriveFolders, type DriveSyncResult, type DriveFolderPreview } from "@/lib/driveAvailabilitySync";
 import { writeKuutioDraft } from "@/lib/dropboxAvailabilitySync";
+import { writeKorantinaDraft } from "@/lib/sharepointAvailabilitySync";
 import { syncErrorMessage } from "@/lib/syncErrorMessage";
 
 // Manual "Sync Drive now" = full content import (rich data + description + images), force.
@@ -46,6 +47,33 @@ export async function syncDeveloperDropboxAction(developerAccountId: string): Pr
     return {
       ok: true,
       message: `${r.created.length} project(s) synced, ${r.skippedExisting.length} skipped (existing), ${r.skippedEmpty.length} skipped (no units).`,
+    };
+  } catch (e) {
+    return { ok: false, message: syncErrorMessage(e) };
+  }
+}
+
+/* The same button for a SHAREPOINT-linked developer (Korantina, 2026-08-26).
+   Added together WITH the adapter rather than left for later: without it the
+   panel falls through to the Drive path, which now refuses a SharePoint account
+   with "sync via the Korantina SharePoint sync route instead" — a route
+   reachable only by curl, which is exactly the dead end the Dropbox button
+   above had to be written to fix.
+
+   Not force:true, for the same reason as the Dropbox button: `force` re-downloads
+   and REPLACES every project's gallery and floor plans wholesale and discards any
+   manual curation of those fields. The plain run creates missing projects,
+   refreshes units and prices, and backfills content only where the gallery is
+   still empty — which is what "Sync now" should mean. */
+export async function syncDeveloperSharePointAction(developerAccountId: string): Promise<DriveSyncResult> {
+  try {
+    const r = await writeKorantinaDraft(developerAccountId);
+    revalidatePath(`/admin/developments/developers/${developerAccountId}`);
+    revalidatePath("/admin/developments");
+    const notes = r.notes.length ? ` ${r.notes.length} note(s) — see the korantina-sync dry run for detail.` : "";
+    return {
+      ok: true,
+      message: `${r.created.length} created, ${r.updated.length} updated, ${r.skippedExisting.length} skipped (existing), ${r.skippedEmpty.length} skipped (no units).${notes}`,
     };
   } catch (e) {
     return { ok: false, message: syncErrorMessage(e) };

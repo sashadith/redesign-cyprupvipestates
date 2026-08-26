@@ -14,6 +14,7 @@ import { computeAvailability } from "@/lib/developmentAvailability";
 import { resolveLinkedDeveloper, developerGroupExists, listDeveloperPageOptions } from "@/lib/developerLink";
 import { adminDateTime } from "@/lib/adminTime";
 import { isDropboxShareUrl } from "@/lib/dropbox";
+import { isSharePointShareUrl } from "@/lib/sharepoint";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,8 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
   if (!dev) notFound();
 
   const isDropbox = isDropboxShareUrl(dev.driveFolderUrl);
+  const isSharePoint = isSharePointShareUrl(dev.driveFolderUrl);
+  const provider = isDropbox ? "dropbox" : isSharePoint ? "sharepoint" : "drive";
 
   const hasFeed = dev.analyses.some((a) => a.sourceType === "URL" || a.sourceType === "API")
     || dev.developments.some((d) => d.dev && d.dev !== "manual");
@@ -192,20 +195,27 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
       {dev.driveFolderUrl && (
         <div className="bg-white rounded-lg border border-[#E5E7EB] p-6 space-y-3">
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <h2 className="text-sm font-semibold text-[#111827]">{isDropbox ? "Dropbox sync" : "Drive sync"}</h2>
+            <h2 className="text-sm font-semibold text-[#111827]">{isDropbox ? "Dropbox sync" : isSharePoint ? "SharePoint sync" : "Drive sync"}</h2>
             <div className="flex items-center gap-3 flex-wrap">
               <DriveIntervalSelect developerAccountId={dev.id} value={dev.driveSyncInterval ?? "daily"} />
               {/* Drive-only: previewDriveFolders reads a Drive folder listing and
                   refuses a Dropbox account outright. The Dropbox adapter has no
                   equally cheap dry run — its scan downloads and AI-extracts every
                   price list — so a "Check folders" button here would be a
-                  12-minute operation masquerading as a safe one. */}
-              {!isDropbox && <DriveFolderPreviewButton developerAccountId={dev.id} />}
-              <DriveSyncButton developerAccountId={dev.id} provider={isDropbox ? "dropbox" : "drive"} />
+                  12-minute operation masquerading as a safe one. The SharePoint
+                  adapter is the same: its dry run reads and extracts every PDF,
+                  so it stays a deliberate `&dry=1` call against its cron route
+                  rather than a button that looks free. */}
+              {provider === "drive" && <DriveFolderPreviewButton developerAccountId={dev.id} />}
+              <DriveSyncButton developerAccountId={dev.id} provider={provider} />
             </div>
           </div>
           <p className="text-xs text-[#6B7280]">
-            {isDropbox ? (
+            {isSharePoint ? (
+              <>
+                Each availability list in the shared SharePoint link is one project — a folder with two lists (Soho’s towers), or one list holding two tables (Hill Residences and Hill Panorama, Golden View’s two phases), becomes two projects. Unit numbers, prices, areas and status are read from the PDF’s own table layout, never guessed; a row whose price cell cannot be read is left out and reported rather than shown as available. “Sync SharePoint now” creates missing projects (as drafts), refreshes units and prices, and gathers photos, plans, amenities and description for any project that has none yet; projects entered by hand are never touched. Run <code>?dry=1</code> against the korantina-sync route first to see the full folder → table → project mapping and every row that would be skipped.
+              </>
+            ) : isDropbox ? (
               <>
                 Each project folder in the shared Dropbox link is one project, matched by folder name — never AI-guessed. “Sync Dropbox now” creates missing projects (as drafts), refreshes units and prices, and gathers photos, plans, amenities and description for any project that has none yet; projects entered by hand are never touched. The nightly job runs at the interval above. A full run reads and extracts every price list and can take 10–15 minutes — it finishes on the server even if this page gives up waiting first, so check back rather than pressing again.
               </>

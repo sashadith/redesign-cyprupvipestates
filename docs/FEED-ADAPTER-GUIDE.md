@@ -169,3 +169,44 @@ Belege aus der Praxis:
   editierbar. Der Match läuft ausschließlich über `feedRef` — und die
   Bitte an den Bauträger lautet entsprechend, seine eigene Referenz nie
   neu zu vergeben, nicht unseren Anzeigewert.
+
+## §5 Korantina Homes (SharePoint, 26.08.2026) — die Checkliste beantwortet
+
+Erster Bauträger, dessen Preislisten ausschließlich als **PDF** vorliegen, und
+erster über einen **anonymen SharePoint-Freigabelink**. Beides ist unten
+beantwortet, damit der nächste Adapter dieser Art nicht wieder bei null anfängt.
+
+| §1-Punkt | Befund bei Korantina |
+|---|---|
+| Bildauflösung | `/_api/v2.0/drives/…/items/…/content` liefert das **Original**, keine Transformation — gemessen, nicht angenommen: vier Gardens-View-Renders kamen byte-identisch zur von SharePoint gemeldeten Dateigröße zurück. Keine Größenvarianten, kein Thumbnail-Suffix. Größte Datei im Baum: 13,8 MB JPEG. |
+| Statusfeld pro Unit | Ja, aber nicht als eigene Spalte: die **Preisspalte** enthält entweder einen Preis oder wörtlich `SOLD` / `RESERVED`. Wird deterministisch gelesen (`readOutcome`), nie von der KI. Eine Zelle, die sich nicht auflösen lässt, führt zum Verwerfen der Zeile — nie zu „available". |
+| Vollständigkeit | 443 Units über 19 Tabellen, gegen die Rohtext-Zählung jedes PDFs gegengeprüft (SOLD/RESERVED/€-Vorkommen). 21 nicht importierte Zeilen, alle absichtlich: Etagen-Zwischenüberschriften, eine `CLUBHOUSE`-Zeile ohne Preis, zweizeilige Objektnamen im ohnehin ignorierten Resale-Ordner. |
+| Flächenfelder | Getrennt ausgewiesen und je Projekt unterschiedlich benannt: Covered Area, Covered Verandas, Uncovered Verandas, Basement, Covered Parking, Storage/Mech. room, Communal Area, Roof Garden, Building Area. Bekannte Felder werden gemappt, alles Übrige landet als `attrs` mit Klartext-Label — nichts geht verloren. |
+| Grundstücksgröße | Ja, bei allen Villenprojekten (`Plot`/`Plot Size`); bei Apartments erwartungsgemäß nicht. |
+| Koordinaten | **Nein** — nirgends im Baum. Lat/Lng bleiben leer und müssen im Admin gesetzt werden; ohne sie berechnet `recomputeDevelopmentDistances()` keine Entfernungen. |
+| Echte Projektnamen | Ordnernamen sind echte Marketingnamen. Achtung: ein Ordner ist **nicht** gleich ein Projekt (siehe unten). |
+| Beschreibungen | Nur EN, und nur in den Broschüren — die Preislisten enthalten keinerlei Fließtext. Vier Sprachen entstehen wie üblich über `generateProjectDescription()`. |
+| Ausverkaufte Projekte | Bleiben im Bestand, mit allen Zeilen auf `SOLD` (Riviera, Sunset, Seafront sind zu 100 % verkauft). „Fehlt in der Liste" taugt hier also als Signal — wird trotzdem als `unlisted` behandelt, nie als `sold`. |
+
+Drei Dinge, die bei diesem Bauträger neu sind:
+
+- **Eine Verfügbarkeitstabelle = ein Development, nicht ein Ordner.** Golden
+  View stapelt „MAIN PHASE" und „PHASE 6" mit unterschiedlichen Spalten auf
+  einer Seite, Hill Residences und Hill Panorama sind zwei Tabellen in einer
+  Datei, Royal Bay hat Villen und Apartments auf zwei Seiten. Aus 16 PDFs
+  werden dadurch 18 Projekte. Der `feedKey` besteht aus Ordnerpfad + Ordnungs-
+  zahl der Tabelle im Dokument — beides sieht die KI nie.
+- **Werte kommen aus der Geometrie, nur Spalten-LABELS aus der KI.** Der
+  Text-Layer allein reicht nicht: leere Zellen sind darin unsichtbar (Sunset
+  View lässt „Cov. Parking" in 19 von 26 Zeilen leer), und ein reiner
+  Links-nach-rechts-Textdump verschiebt ab dort jede weitere Spalte. Gelesen
+  wird über `x`-Positionen (`scripts/pdf-table-extract-worker.mjs`); die KI
+  beantwortet pro Tabelle genau eine Frage — welche Überschrift welches Feld
+  ist — und ihre Antwort wird gegen die Daten der Spalte selbst validiert
+  (`validateMapping`), bevor eine einzige Unit entsteht.
+- **Der Freigabelink ist ein Bearer-Credential.** Wer ihn hat, liest den
+  gesamten Ordner. Er liegt in `DeveloperAccount.driveFolderUrl`, nie im
+  Repo — genauso wie Kuutios Dropbox-Link. Wird er zurückgezogen oder auf
+  „bestimmte Personen" umgestellt, scheitert `openShare()` mit einer
+  eindeutigen Meldung, statt einen leeren Ordner als „Bauträger hat alle
+  Projekte gelöscht" durchzureichen.

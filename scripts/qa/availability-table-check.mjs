@@ -1,0 +1,207 @@
+#!/usr/bin/env node
+/* Regression check for the deterministic half of the Korantina availability-list
+   reader (src/lib/ai/availabilityTable.ts) — the half that produces every unit
+   VALUE and every unit STATUS, and therefore the half that must never drift.
+
+   Self-contained: it feeds synthetic pdf.js page data straight into
+   tablesFromPages(), so it needs no PDF files, no network and no API key. Every
+   case below is a real defect found while building the adapter against Korantina's
+   16 live availability lists on 2026-08-26, written down here so the next change
+   to the geometry cannot quietly undo one of them.
+
+     node scripts/qa/availability-table-check.mjs
+
+   Exits non-zero on the first failed assertion. */
+import { build } from "esbuild";
+import { writeFileSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
+
+const bundlePath = join(tmpdir(), `availability-table-check-${process.pid}.mjs`);
+const built = await build({ entryPoints: ["src/lib/ai/availabilityTable.ts"], bundle: true, platform: "node", format: "esm", write: false });
+writeFileSync(bundlePath, built.outputFiles[0].text);
+const AT = await import(bundlePath);
+rmSync(bundlePath, { force: true });
+
+let failures = 0;
+function check(name, actual, expected) {
+  const a = JSON.stringify(actual), e = JSON.stringify(expected);
+  if (a === e) { console.log(`  ok   ${name}`); return; }
+  failures++;
+  console.log(`  FAIL ${name}\n       expected ${e}\n       actual   ${a}`);
+}
+
+/* Builds a page from a compact "column x-position -> text" description. Cell
+   widths are approximated from the text length, which is all the column
+   clustering needs (it works on centres). */
+const COL_X = [30, 90, 150, 210, 270, 330, 390, 450];
+const row = (y, cells) => ({
+  y,
+  cells: cells.flatMap((t, i) => (t === null || t === "" ? [] : [{ x: COL_X[i], w: Math.min(50, String(t).length * 5), t: String(t) }])),
+});
+const page = (n, rows) => ({ page: n, width: 842, height: 595, rows });
+
+/* 1. An empty cell must stay empty and must NOT shift the columns after it.
+      Sunset View leaves "Cov. Parking" blank on 19 of 26 rows; a left-to-right
+      text read moved the total area and the price one column left on exactly
+      those rows. */
+{
+  const p = page(1, [
+    row(500, ["Villa No", "Type", "Plot", "Covered", "Parking", "Total", "Price"]),
+    row(470, ["1", "A", "285", "160.65", null, "194.3", "SOLD"]),
+    row(450, ["2", "A", "305", "160.65", "16.8", "211.1", "€ 545,000"]),
+  ]);
+  const { tables } = AT.tablesFromPages([p]);
+  check("blank cell keeps its column", tables[0].rows[0], ["1", "A", "285", "160.65", "", "194.3", "SOLD"]);
+  const mapping = { title: "", unitKind: "Villa", labels: tables[0].headers, corrections: [],
+    columns: ["ref", "type", "areaPlot", "areaInternal", "attr", "areaBuilt", "price"] };
+  const { units } = AT.unitsFromTable(tables[0], mapping);
+  check("blank-cell row parses", [units[0].ref, units[0].areaBuilt, units[0].status], ["1", "194.3", "sold"]);
+  check("second row price", [units[1].price, units[1].status], [545000, "available"]);
+}
+
+/* 2. A price column split in two by centring. Hill Panorama centres "SOLD" and
+      "€ 2.850.000" far enough apart that clustering saw two columns — sold units
+      in one, priced units in the other. Whichever half had been mapped as `price`,
+      every unit in the other half would have been dropped. */
+{
+  const p = page(1, [
+    row(500, ["Villa", "Plot", "Beds", "Total", "Price"]),
+    // "SOLD" sits at x 390, the euro amounts at x 450 — two clusters, one column.
+    { y: 470, cells: [{ x: 30, w: 10, t: "1" }, { x: 90, w: 20, t: "955" }, { x: 150, w: 10, t: "5" }, { x: 210, w: 30, t: "365.35" }, { x: 390, w: 30, t: "SOLD" }] },
+    { y: 450, cells: [{ x: 30, w: 10, t: "2" }, { x: 90, w: 20, t: "930" }, { x: 150, w: 10, t: "6" }, { x: 210, w: 30, t: "400.40" }, { x: 450, w: 60, t: "€ 2.850.000" }] },
+    { y: 430, cells: [{ x: 30, w: 10, t: "3" }, { x: 90, w: 20, t: "975" }, { x: 150, w: 10, t: "5" }, { x: 210, w: 30, t: "393.90" }, { x: 390, w: 30, t: "SOLD" }] },
+  ]);
+  const { tables } = AT.tablesFromPages([p]);
+  check("split price column is merged", tables[0].rows.map((r) => r[r.length - 1]), ["SOLD", "€ 2.850.000", "SOLD"]);
+}
+
+/* 3. Two tables with DIFFERENT columns on one page (Golden View's MAIN PHASE and
+      PHASE 6). Clustering per page merged them into one phantom 18-column table. */
+{
+  const p = page(1, [
+    row(560, ["VILLA", "PLOT", "BEDROOMS", "TOTAL", "PRICE"]),
+    row(540, ["V47", "123", "3", "124.55", "SOLD"]),
+    row(520, ["V58", "250", "3", "148", "SOLD"]),
+    row(430, ["Villa No", "Plot Size", "BDR", "Covered", "Veranda", "Total", "Net Price"]),
+    row(410, ["1", "210", "4", "135.00", "28.50", "183.10", "SOLD"]),
+    row(390, ["2", "201", "4", "135.00", "28.50", "184.00", "€ 520.000"]),
+  ]);
+  const { tables } = AT.tablesFromPages([p]);
+  check("two tables on one page", tables.length, 2);
+  check("first table columns", tables[0].rows[0].length, 5);
+  check("second table columns", tables[1].rows[0].length, 7);
+  check("second table header not polluted by the first table's rows", tables[1].headers[0], "Villa No");
+}
+
+/* 4. A table continued on the next page (Soho's towers run 4 pages) must be ONE
+      table, or each tower becomes two "projects". Identical headers only —
+      Royal Bay's villa page and apartment page must stay separate. */
+{
+  const hdr = ["APT NO.", "FLOOR", "BEDS", "TOTAL", "PRICE"];
+  const p1 = page(2, [row(500, hdr), row(470, ["A-01", "1", "3", "193", "SOLD"]), row(450, ["A-02", "1", "2", "158", "SOLD"])]);
+  const p2 = page(3, [row(500, hdr), row(470, ["A-03", "2", "2", "149", "€1.250.000"]), row(450, ["A-04", "2", "3", "189", "SOLD"])]);
+  const p3 = page(4, [row(500, ["VILLA", "TYPE", "PLOT", "TOTAL", "PRICE"]), row(470, ["V1", "F", "814", "375", "SOLD"]), row(450, ["V2", "B", "757", "423", "SOLD"])]);
+  const { tables } = AT.tablesFromPages([p1, p2, p3]);
+  check("continuation page merges", tables.length, 2);
+  check("merged table row count", tables[0].rows.length, 4);
+  check("different headers stay separate", tables[1].rows.length, 2);
+}
+
+/* 5. Price and status parsing. Both thousands separators appear in the same
+      developer's own documents, and four different "not applicable" spellings do
+      too. An unreadable cell must yield null — never a default of "available". */
+{
+  check("dot separator", AT.parsePrice("€ 1.800.000"), 1800000);
+  check("comma separator", AT.parsePrice("€ 995,000"), 995000);
+  check("no space after symbol", AT.parsePrice("€1.250.000"), 1250000);
+  check("bare digits", AT.parsePrice("545000"), 545000);
+  check("not a price", AT.parsePrice("SOLD"), null);
+  check("area is not a price", AT.parsePrice("194.3"), null);
+
+  check("sold", AT.readOutcome("SOLD"), { status: "sold", price: null });
+  check("reserved with trailing space", AT.readOutcome("RESERVED "), { status: "reserved", price: null });
+  check("developer's own RESRVED typo", AT.readOutcome("RESRVED"), { status: "reserved", price: null });
+  check("priced is available", AT.readOutcome("€ 598,000"), { status: "available", price: 598000 });
+  for (const blank of ["", "--", "---", "===", "n/a", "N/A", "TBC"]) {
+    check(`unresolved "${blank}" is never available`, AT.readOutcome(blank), null);
+  }
+}
+
+/* 6. A row whose outcome cannot be read is dropped and reported, and a block
+      column is prefixed onto the ref UNCONDITIONALLY — Cap St Georges genuinely
+      has a villa 1 in phase H and another in phase P. */
+{
+  const p = page(1, [
+    row(500, ["Phase", "Villa No", "Type", "Beds", "Plot", "Covered", "Price"]),
+    row(470, ["H", "1", "A", "3", "662.0", "275.75", "€ 1.800.000"]),
+    row(450, ["P", "1", "C", "5", "915", "306", "RESERVED"]),
+    row(430, ["P", "2", "C", "5", "915", "306", "SOLD"]),
+  ]);
+  const { tables } = AT.tablesFromPages([p]);
+  const mapping = { title: "", unitKind: "Villa", labels: ["Phase", "Villa No", "Type", "Beds", "Plot", "Covered", "Price"], corrections: [],
+    columns: ["block", "ref", "type", "beds", "areaPlot", "areaBuilt", "price"] };
+  const { units } = AT.unitsFromTable(tables[0], mapping);
+  check("block-prefixed refs are unique", units.map((u) => u.ref), ["H 1", "P 1", "P 2"]);
+  check("label is human-readable", units[0].label, "Phase H · 1");
+  check("variant letter is a spec, not the property type", [units[0].type, units[0].attrs[0]], ["Villa", { name: "Type", value: "A" }]);
+}
+
+/* 7. A model answer that mis-maps a sparse column must be corrected against the
+      column's own data. City Colors' vertically-merged FLOOR cell lands on one row
+      in five and looks exactly like an identifier; accepted as `ref`, four of every
+      five units would arrive with no reference. */
+{
+  const p = page(1, [
+    row(500, ["FLOOR", "APARTMENT NO", "BDR", "INTERNAL", "TOTAL", "PRICE"]),
+    row(470, [null, "101", "3", "115", "162", "€ 598,000"]),
+    row(450, ["1ST FLOOR", "102", "3", "113", "152", "€ 585,000"]),
+    row(430, [null, "103", "1", "52", "65", "RESERVED"]),
+    row(410, [null, "104", "2", "81", "103", "SOLD"]),
+    row(390, [null, "105", "2", "94", "133", "€ 495,000"]),
+  ]);
+  const { tables } = AT.tablesFromPages([p]);
+  const bad = ["ref", "attr", "beds", "areaInternal", "areaBuilt", "price"]; // FLOOR wrongly chosen as ref
+  const fixed = AT.validateMapping(tables[0], bad);
+  check("sparse ref column is rejected", fixed.columns[0] !== "ref", true);
+  check("a real ref column is chosen instead", fixed.columns[1], "ref");
+  check("the override is reported", fixed.corrections.length > 0, true);
+  const { units } = AT.unitsFromTable(tables[0], { title: "", unitKind: "Apartment", labels: tables[0].headers, ...fixed });
+  check("every unit keeps its reference", units.map((u) => u.ref), ["101", "102", "103", "104", "105"]);
+  check("statuses survive the correction", units.map((u) => u.status), ["available", "available", "reserved", "sold", "available"]);
+}
+
+/* 8. Greek lookalike letters. Korantina type their lists on a Greek keyboard, so
+      villa type "Α" is U+0391, not "A". Two spellings of one ref would create the
+      same unit twice the day they fix their template. */
+{
+  check("Greek Alpha normalised", AT.deGreek("Α4"), "A4");
+  check("Greek Nu normalised", AT.deGreek("Νο"), "No");
+  check("Latin text untouched", AT.deGreek("Villa 12"), "Villa 12");
+}
+
+/* 9. A page holding a priced row but no readable table must be REPORTED, while a
+      cover page or a prose description must not be — City Landmark's commercial
+      floors are the one case that matters, and burying it among cover pages is how
+      it would be missed. */
+{
+  const commercial = page(2, [
+    row(500, ["FLOOR", "BLOCK", "USE", "COVERED", "TOTAL", "PRICE"]),
+    row(470, ["GROUND", "B", "Office", "76", "126", "€ 2.000.000"]),
+    row(450, ["1ST", "B", "Office", "76", "126", null]),
+    row(430, ["2ND", "B", "Office/Apt", "67", "114", null]),
+  ]);
+  const prose = page(1, [
+    row(500, ["SOHO is the new best residential address, featuring the first High Rise Buildings"]),
+    row(480, ["located in one of the most privileged areas of Kato Paphos."]),
+    row(460, ["The elegant community boasts exceptional facilities including reception,"]),
+    row(440, ["concierge, a full treatment and relaxation area with spa, gym and sauna."]),
+  ]);
+  const a = AT.tablesFromPages([commercial]);
+  check("unreadable priced page is reported", a.unparsedPages, [2]);
+  const b = AT.tablesFromPages([prose]);
+  check("prose cover page is not reported", b.unparsedPages, []);
+}
+
+console.log(failures ? `\n${failures} FAILED` : "\nall checks passed");
+process.exit(failures ? 1 : 0);

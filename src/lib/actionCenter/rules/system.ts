@@ -39,6 +39,12 @@ const JOBS: { job: string; label: string; expectedMs: number }[] = [
   // closes is the one nobody saw for 13 days — a Dropbox developer that no
   // scheduled job was responsible for at all.
   { job: "kuutio-sync", label: "kuutio-sync", expectedMs: 24 * HOUR },
+  // 2026-08-26 — registered together WITH the Korantina SharePoint adapter, not
+  // after its first silent night. Same reasoning as kuutio-sync above: DAILY,
+  // because this watches whether the cron FIRED (a not-due night still writes an
+  // ok row), and syncAllDrives deliberately skips SharePoint accounts, so this
+  // route is the only thing responsible for Korantina's 18 projects.
+  { job: "korantina-sync", label: "korantina-sync", expectedMs: 24 * HOUR },
 ];
 
 // 2026-08-11 (analytics bot-traffic incident) — two exact user-agent strings

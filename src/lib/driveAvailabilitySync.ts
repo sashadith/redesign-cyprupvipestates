@@ -12,6 +12,7 @@ import { normalizeRef } from "./unitRef";
 import { recomputeDevelopmentDistances } from "./developmentDistances";
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { isDropboxShareUrl } from "./dropbox";
+import { isSharePointShareUrl } from "./sharepoint";
 import type { ExtractedUnit } from "./ai/pricelistExtract";
 
 const MAX_IMAGES = 10;
@@ -518,6 +519,7 @@ export async function previewDriveFolders(developerAccountId: string): Promise<{
   const acct = await prisma.developerAccount.findUnique({ where: { id: developerAccountId } });
   if (!acct?.driveFolderUrl) return { ok: false, message: "No Drive folder link set for this developer.", rows: [] };
   if (isDropboxShareUrl(acct.driveFolderUrl)) return { ok: false, message: "This developer uses Dropbox, not Google Drive.", rows: [] };
+  if (isSharePointShareUrl(acct.driveFolderUrl)) return { ok: false, message: "This developer uses SharePoint/OneDrive, not Google Drive.", rows: [] };
   const folderId = folderIdFromUrl(acct.driveFolderUrl);
   if (!folderId) return { ok: false, message: "Could not read a folder id from the Drive link.", rows: [] };
 
@@ -558,6 +560,9 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
   // read a folder id" this would otherwise throw for any Dropbox account.
   if (isDropboxShareUrl(acct.driveFolderUrl)) {
     return { ok: false, message: "This developer uses Dropbox, not Google Drive — sync via the Kuutio Dropbox sync route instead." };
+  }
+  if (isSharePointShareUrl(acct.driveFolderUrl)) {
+    return { ok: false, message: "This developer uses SharePoint/OneDrive, not Google Drive — sync via the Korantina SharePoint sync route instead." };
   }
   const folderId = folderIdFromUrl(acct.driveFolderUrl);
   if (!folderId) return { ok: false, message: "Could not read a folder id from the Drive link." };
@@ -839,7 +844,11 @@ export async function syncAllDrives(force = false, content = false): Promise<{ d
     // Dropbox developer too — without this, folderIdFromUrl() below throws
     // "Could not read a folder id from the Drive link." every scheduled run
     // (confirmed root cause of Kuutio's 2026-08-14 digest failure).
-    if (isDropboxShareUrl(d.driveFolderUrl)) continue;
+    // Same for SharePoint/OneDrive (Korantina, 2026-08-26 — see
+    // src/lib/sharepoint.ts): its own route is api/cron/korantina-sync. Added
+    // WITH the adapter rather than after the first failed night, which is how
+    // the Dropbox case above was found.
+    if (isDropboxShareUrl(d.driveFolderUrl) || isSharePointShareUrl(d.driveFolderUrl)) continue;
     // Respect the per-developer interval for the scheduled (non-forced) availability run.
     if (!force && !content) {
       const iv = intervalMs(d.driveSyncInterval);
