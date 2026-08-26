@@ -9,7 +9,7 @@
 // Why it needed a schedule at all: between the last manual run (2026-08-13)
 // and 2026-08-26, NOTHING refreshed Kuutio's inventory. syncAllDrives skips
 // Dropbox accounts by design, so the nightly drive-sync never covered them —
-// 6 projects / 93 units sat frozen for 13 days with no job responsible for them.
+// 6 projects / 87 units sat frozen for 13 days with no job responsible for them.
 //
 // The cron fires DAILY; how often a run actually does anything is the
 // developer's own driveSyncInterval (weekly for Kuutio today), enforced by
@@ -18,7 +18,7 @@
 // detection honest.
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { writeKuutioDraft } from "@/lib/dropboxAvailabilitySync";
+import { writeKuutioDraft, dryRunKuutioSync } from "@/lib/dropboxAvailabilitySync";
 import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
 import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 
@@ -49,6 +49,28 @@ export async function GET(req: NextRequest) {
   }
   const force = req.nextUrl.searchParams.get("force") === "1";
   const scheduled = req.nextUrl.searchParams.get("scheduled") === "1";
+
+  /* &dry=1 — read Dropbox, write nothing, and report what differs from the
+     database (see dryRunKuutioSync). Exists for the projects the sync refuses
+     to touch: Aion/Noble/Quatrro are dev:"manual" and skipped on every run,
+     so a unit that sold in Dropbox months ago still shows as available on a
+     published page and nothing can notice.
+       curl -s "http://127.0.0.1:3000/api/cron/kuutio-sync?key=$CRON_SECRET&dry=1"
+
+     Handled BEFORE withCronLog on purpose: a dry run writes no "kuutio-sync"
+     row. It is not a sync, and one run at lunchtime would otherwise satisfy
+     cron-health's "did the job fire" check and the morning digest's own
+     lookback for a night the real job never ran. */
+  if (req.nextUrl.searchParams.get("dry") === "1") {
+    const acct = await prisma.developerAccount.findFirst({ where: { name: { contains: "Kuutio", mode: "insensitive" } } });
+    if (!acct) return NextResponse.json({ ok: false, error: "Kuutio developer account not found" }, { status: 404 });
+    try {
+      return NextResponse.json({ dryRun: true, at: new Date().toISOString(), ...(await dryRunKuutioSync(acct.id)) });
+    } catch (e) {
+      return NextResponse.json({ dryRun: true, ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
+    }
+  }
+
   try {
     const result = await withCronLog(
       "kuutio-sync",
