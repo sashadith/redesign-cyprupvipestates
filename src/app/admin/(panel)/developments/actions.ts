@@ -6,6 +6,7 @@ import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { syncAll, syncDeveloper } from "@/lib/feedSync";
 import { syncDeveloperDrive, previewDriveFolders, type DriveSyncResult, type DriveFolderPreview } from "@/lib/driveAvailabilitySync";
+import { writeKuutioDraft } from "@/lib/dropboxAvailabilitySync";
 import { syncErrorMessage } from "@/lib/syncErrorMessage";
 
 // Manual "Sync Drive now" = full content import (rich data + description + images), force.
@@ -19,6 +20,33 @@ export async function syncDeveloperDriveAction(developerAccountId: string): Prom
     revalidatePath(`/admin/developments/developers/${developerAccountId}`);
     revalidatePath("/admin/developments");
     return r;
+  } catch (e) {
+    return { ok: false, message: syncErrorMessage(e) };
+  }
+}
+
+/* The same button for a DROPBOX-linked developer (2026-08-26). Until now the
+   panel only ever offered the Drive path, which refuses a Dropbox account
+   with "sync via the Kuutio Dropbox sync route instead" — a route reachable
+   only by curl, so the button was a dead end for Kuutio and would have been
+   for any future Dropbox developer.
+
+   Deliberately NOT force:true, unlike the Drive button above. `force` in the
+   Dropbox adapter re-downloads and REPLACES each project's gallery and floor
+   plans wholesale (~12 minutes, and it discards any manual curation of those
+   fields); the plain run still creates missing projects, refreshes units and
+   prices, and backfills content for anything whose gallery is still empty,
+   which is what "Sync now" should mean. A deliberate full re-import stays a
+   conscious `&force=1` call against the cron route. */
+export async function syncDeveloperDropboxAction(developerAccountId: string): Promise<DriveSyncResult> {
+  try {
+    const r = await writeKuutioDraft(developerAccountId);
+    revalidatePath(`/admin/developments/developers/${developerAccountId}`);
+    revalidatePath("/admin/developments");
+    return {
+      ok: true,
+      message: `${r.created.length} project(s) synced, ${r.skippedExisting.length} skipped (existing), ${r.skippedEmpty.length} skipped (no units).`,
+    };
   } catch (e) {
     return { ok: false, message: syncErrorMessage(e) };
   }
