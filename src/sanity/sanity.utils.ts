@@ -271,6 +271,7 @@ async function computeFilteredProjects(lang: string, filterCity?: string, filter
         : {}),
       sanityId: { notIn: HIDDEN_PROJECT_IDS },
     },
+    orderBy: { id: "asc" },
   });
   const withImage = rows.filter((p: any) => p.previewImage);
   let available = withImage.filter((p: any) => !p.isSold);
@@ -1215,7 +1216,13 @@ const getNumericPrice = (p: ProjectListItem) => Number(p?.keyFeatures?.price ?? 
 const getCompletionTimestamp = (p: ProjectListItem) => completionSortKey(p?.keyFeatures?.completionDate);
 const getProjectScore = (p: ProjectListItem) => { let s = 0; if (p.isFeatured) s += 100000; s += (p.listingPriority ?? 0) * 1000; if (p.videoId) s += 200; if (p.isNew) s += 100; return s; };
 const getPriceSegment = (price: number): "low" | "mid" | "high" | "luxury" => (price < 300000 ? "low" : price < 600000 ? "mid" : price < 1000000 ? "high" : "luxury");
-function sortWithinBucket(ps: ProjectListItem[]) { return [...ps].sort((a, b) => { const s = getProjectScore(b) - getProjectScore(a); if (s) return s; const pr = getNumericPrice(b) - getNumericPrice(a); if (pr) return pr; return (a.title || "").localeCompare(b.title || ""); }); }
+// Final tiebreak is `sanityId`, not a raw `.id` -- by this point in the pipeline
+// Development-origin items have already passed through mapDevelopmentRowToCard,
+// which exposes only `sanityId: d.id`, never a bare `.id`. Project-origin raw
+// rows carry both, but `sanityId` is the one field guaranteed present and
+// unique on EITHER shape here -- using `.id` would be undefined for every
+// Development-origin item and throw calling .localeCompare on it.
+function sortWithinBucket(ps: ProjectListItem[]) { return [...ps].sort((a, b) => { const s = getProjectScore(b) - getProjectScore(a); if (s) return s; const pr = getNumericPrice(b) - getNumericPrice(a); if (pr) return pr; const t = (a.title || "").localeCompare(b.title || ""); if (t) return t; return String((a as any).sanityId ?? "").localeCompare(String((b as any).sanityId ?? "")); }); }
 function interleaveByPriceSegments(ps: ProjectListItem[]) {
   const buckets: Record<"low" | "mid" | "high" | "luxury", ProjectListItem[]> = { low: [], mid: [], high: [], luxury: [] };
   for (const p of ps) buckets[getPriceSegment(getNumericPrice(p))].push(p);
@@ -1330,6 +1337,7 @@ async function queryFilteredDevelopmentRows(f: ProjectFilters) {
 
   const devs = await prisma.development.findMany({
     where: { publishStatus: "published", supersedesProjects: { none: { status: "PUBLISHED" } } },
+    orderBy: { id: "asc" },
     include: { override: true, units: { select: { beds: true, status: true, price: true, type: true, areaBuilt: true } } },
   });
 
