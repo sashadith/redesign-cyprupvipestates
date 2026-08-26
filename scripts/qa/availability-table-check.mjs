@@ -12,16 +12,45 @@
      node scripts/qa/availability-table-check.mjs
 
    Exits non-zero on the first failed assertion. */
-import { build } from "esbuild";
 import { writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-const bundlePath = join(tmpdir(), `availability-table-check-${process.pid}.mjs`);
-const built = await build({ entryPoints: ["src/lib/ai/availabilityTable.ts"], bundle: true, platform: "node", format: "esm", write: false });
-writeFileSync(bundlePath, built.outputFiles[0].text);
+/* esbuild is a TRANSITIVE dependency here, not a declared one — it is present
+   because something else pulls it in, and a future dependency change could remove
+   it without any signal. Declaring it just for this dev-only script would force a
+   `CVP_RUN_INSTALL=1` on the next production deploy for something that never runs
+   in production, so it is imported defensively instead: a missing esbuild must say
+   so, not crash with a bare module-not-found. */
+let build;
+try {
+  ({ build } = await import("esbuild"));
+} catch {
+  console.error("esbuild is not installed (it is only a transitive dependency).\n  npm i -D esbuild   — or run this check from a tree where it is present.");
+  process.exit(2);
+}
+
+async function bundle(entry, name, stubs = false) {
+  const path = join(tmpdir(), `${name}-${process.pid}.mjs`);
+  // sharepointAvailabilitySync pulls in Prisma and the whole sync stack; only its
+  // pure naming/media helpers are under test, so those imports are stubbed out.
+  const stubPlugin = {
+    name: "stub",
+    setup(b) {
+      b.onResolve({ filter: /^@\/lib\/prisma$|^\.\/(prisma|dropboxAvailabilitySync|developmentDistances|developmentDerivedState|imageMirror|unitRef)$|^\.\/ai\/(availabilityTable|projectInfoExtract|projectDescription)$/ }, (a) => ({ path: a.path, namespace: "stub" }));
+      b.onLoad({ filter: /.*/, namespace: "stub" }, () => ({ contents: "export const prisma={};export const extractPdfTables=async()=>({tables:[],unparsedPages:[]});export const mapTableColumns=async()=>({});export const unitsFromTable=()=>({units:[],dropped:[]});export const extractTextFromPdf=async()=>'';export const generateProjectDescription=async()=>null;export const extractAmenitiesFromText=async()=>[];export const normalizeRef=(s)=>s.toLowerCase();export const recomputeDevelopmentDistances=async()=>{};export const recomputeDevelopmentDerivedState=async()=>{};export const storeUploadedImage=async()=>null;export const devKeyFor=(s)=>s;export const pdfPagesToJpegs=async()=>[];export const scheduleAppRestart=()=>{};export const beginSyncWindow=()=>()=>{};", loader: "js" }));
+    },
+  };
+  const out = await build({ entryPoints: [entry], bundle: true, platform: "node", format: "esm", write: false, ...(stubs ? { plugins: [stubPlugin] } : {}) });
+  writeFileSync(path, out.outputFiles[0].text);
+  return path;
+}
+
+const bundlePath = await bundle("src/lib/ai/availabilityTable.ts", "availability-table-check");
+const bundleSync = await bundle("src/lib/sharepointAvailabilitySync.ts", "sharepoint-sync-check", true);
+const bundleSp = await bundle("src/lib/sharepoint.ts", "sharepoint-check");
 const AT = await import(bundlePath);
-rmSync(bundlePath, { force: true });
+process.on("exit", () => { for (const p of [bundlePath, bundleSync, bundleSp]) rmSync(p, { force: true }); });
 
 let failures = 0;
 function check(name, actual, expected) {
@@ -201,6 +230,54 @@ const page = (n, rows) => ({ page: n, width: 842, height: 595, rows });
   check("unreadable priced page is reported", a.unparsedPages, [2]);
   const b = AT.tablesFromPages([prose]);
   check("prose cover page is not reported", b.unparsedPages, []);
+}
+
+/* 10. Table naming. The 2026-08-26 dry run against production showed the model
+       naming page 2 of Hill's list "Hill Residences" — the name of page 1 — and
+       returning nothing at all for Royal Bay's two tables, which also silently
+       collapsed their photo/plan split onto one project. */
+{
+  const SS = await import(bundleSync);
+  const hdrHill1 = ["Villa No", "Villa Type", "Plot (m2)", "Bedrooms", "Ground & 1st Floors", "Basement Floor", "Covered Verandas", "Total Covered Area", "Price (+VAT)"];
+  const hdrHill2 = ["Villa No", "Plot (m2)", "Bedrooms", "Ground Floor", "First Floor", "Covered Verandas", "Storage - Mech. room", "Total Covered Area", "Price (+VAT)"];
+  const hill = SS.resolveTableNames("/Hill Residences & Hill Panorama by Cap St. Georges", [
+    { title: "", unitKind: "Villa", headers: hdrHill1 },
+    { title: "Hill Residences", unitKind: "Villa", headers: hdrHill2 }, // the model's wrong answer
+  ]);
+  check("folder splits on & into per-table names", hill.map((h) => h.name), ["Hill Residences By Cap St. Georges", "Hill Panorama By Cap St. Georges"]);
+  check("the model's mislabel is not used", hill[1].label, "Hill Panorama");
+  check("the shared by-clause is kept out of the matching label", hill.map((h) => h.label), ["Hill Residences", "Hill Panorama"]);
+  const SP0 = await import(bundleSp);
+  check("Panorama photo folder now clears the threshold", SP0.nameOverlap("Pictures Hill Panorama", "Hill Panorama") >= 0.34, true);
+  check("...and does not also match Hill Residences", SP0.nameOverlap("Pictures Hill Panorama", "Hill Residences") < 0.34, true);
+
+  const royal = SS.resolveTableNames("/Royal Bay Resort", [
+    { title: "", unitKind: "Villa", headers: ["VILLA", "TYPE", "PLOT", "BEDROOM", "TOTAL COVERED", "PRICE +VAT"] },
+    { title: "", unitKind: "Apartment", headers: ["Apartment", "Level", "Bedroom", "Total Covered Area", "Price + VAT"] },
+  ]);
+  check("unit kind separates unnamed tables", royal.map((r) => r.name), ["Royal Bay Resort – Villas", "Royal Bay Resort – Apartments"]);
+  check("label is the distinguishing part only", royal.map((r) => r.label), ["Villas", "Apartments"]);
+
+  const golden = SS.resolveTableNames("/Golden View Villas", [
+    { title: "Main Phase", unitKind: "Villa", headers: ["MAIN VILLA", "PHASE PLOT", "BEDROOMS", "PRICE"] },
+    { title: "Phase 6", unitKind: "Villa", headers: ["PHASE 6 Villa No", "Plot Size", "BDR", "Net Price"] },
+  ]);
+  check("a corroborated title is kept", golden.map((r) => r.label), ["Main Phase", "Phase 6"]);
+
+  const invented = SS.resolveTableNames("/Seascape Villas", [
+    { title: "Seaside Collection", unitKind: "Villa", headers: ["Villa No", "Plot", "Price"] },
+    { title: "", unitKind: "Villa", headers: ["Villa No", "Plot", "Price"] },
+  ]);
+  check("an uncorroborated title falls back to Part N", invented.map((r) => r.label), ["Part 1", "Part 2"]);
+
+  const single = SS.resolveTableNames("/Gardens View Villas", [{ title: "", unitKind: "Villa", headers: [] }]);
+  check("one table keeps the plain folder name", single[0].name, "Gardens View Villas");
+
+  // Media matching must survive the singular/plural mismatch between a folder
+  // called "Villas" and a unit kind of "Villa".
+  const SP = await import(bundleSp);
+  check("plural folder matches singular label", SP.nameOverlap("Villas", "Villa") >= 0.34, true);
+  check("apartments folder does not match villas label", SP.nameOverlap("Apartments", "Villas") < 0.34, true);
 }
 
 console.log(failures ? `\n${failures} FAILED` : "\nall checks passed");

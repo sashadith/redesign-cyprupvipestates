@@ -260,10 +260,16 @@ export const isJunkFile = (name: string) => /^(thumbs\.db|\.ds_store|\._.*|deskt
 export const IMAGE_MIME_RE = /^image\/(jpe?g|png|webp)$/i;
 export const isPdf = (f: SharePointFile) => f.mimeType === "application/pdf" || /\.pdf$/i.test(f.name);
 
+// Folder names are plural, the labels they are matched against are often singular
+// ("Pictures/Villas" vs a table whose unit kind is "Villa"). Stripping one trailing
+// "s" from longer words makes that pair score, without collapsing short words where
+// the final s carries meaning.
+const singular = (w: string) => (w.length >= 4 && w.endsWith("s") ? w.slice(0, -1) : w);
+
 /** Word-overlap score in [0,1], normalised by the LARGER word count. */
 export function nameOverlap(a: string, b: string): number {
-  const wa = norm(a).split(" ").filter(Boolean);
-  const wb = norm(b).split(" ").filter(Boolean);
+  const wa = norm(a).split(" ").filter(Boolean).map(singular);
+  const wb = norm(b).split(" ").filter(Boolean).map(singular);
   if (!wa.length || !wb.length) return 0;
   const setB = new Set(wb);
   const hits = wa.filter((w) => setB.has(w)).length;

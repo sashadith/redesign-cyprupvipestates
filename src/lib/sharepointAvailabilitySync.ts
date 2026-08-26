@@ -119,15 +119,78 @@ export function findAvailabilitySources(
   return out;
 }
 
-/** Display name for a table. Folder-derived first; the model's title only qualifies it. */
-export function displayName(src: AvailabilitySource, title: string, tableCount: number, index: number): string {
-  // "Soho Resort/East Tower" must not become just "East Tower" — the root project
-  // name is the half a reader recognises.
-  const base = src.scopePath.split("/").filter(Boolean).map(toTitleCaseName).join(" – ");
-  if (tableCount <= 1) return base;
-  const suffix = title.trim() || `Part ${index + 1}`;
-  // Skip the suffix when it merely repeats what the folder already says.
-  return nameOverlap(base, suffix) >= 0.9 ? base : `${base} – ${toTitleCaseName(suffix)}`;
+/* Names for the tables ONE availability list produced.
+
+   The model's own suggestion is the LAST resort here, not the first, because the
+   dry run of 2026-08-26 showed exactly how it fails: asked to name page 2 of
+   AL_HR.pdf — a page whose only clue is the folder it sits in — it answered "Hill
+   Residences", which is the name of page 1. A confidently wrong label is worse
+   than no label: a reviewer trusts it, and it also drives which photo folders the
+   project gets (see assignMediaUnits).
+
+   So the label is taken from evidence the code can check, in this order:
+
+   1. THE FOLDER NAMES THE PARTS. "Hill Residences & Hill Panorama by Cap St.
+      Georges" splits on "&" into exactly as many parts as the file has tables, in
+      page order — so page 1 is Hill Residences and page 2 is Hill Panorama, which
+      the Plans subfolders ("Phase 1 (Hill Residences)", "Phase 2 (Hill Panorama)")
+      independently agree with. Each part becomes the WHOLE name, not a suffix.
+   2. THE MODEL'S TITLE, CORROBORATED. Accepted only when its words actually appear
+      in that table's own header text — Golden View's "Phase 6" is printed on the
+      page and survives; Hill's invented "Hill Residences" is nowhere in AL_HR's
+      headers and is dropped.
+   3. THE UNIT KIND, when the tables disagree about it. Royal Bay's two tables are
+      villas and apartments, evidenced by their own column headers, and neither
+      carries a name of its own.
+   4. "Part N" — honest about knowing nothing, and still unique.
+
+   The label is ALSO what media folders are matched against, so it has to be the
+   distinguishing part ("Hill Panorama", "Villas") rather than the full display
+   name — "Royal Bay Resort – Villas" shares three of four words with the other
+   table's name and would match both folders equally. */
+export function resolveTableNames(
+  scopePath: string,
+  tables: { title: string; unitKind: string; headers: string[] }[],
+): { name: string; label: string }[] {
+  const base = scopePath.split("/").filter(Boolean).map(toTitleCaseName).join(" – ");
+  if (tables.length <= 1) return [{ name: base, label: "" }];
+
+  const lastSegment = scopePath.split("/").filter(Boolean).slice(-1)[0] ?? "";
+  const parts = lastSegment.split(/\s*&\s*|\s+and\s+/i).map((p) => p.trim()).filter(Boolean);
+  if (parts.length === tables.length) {
+    /* "Hill Residences & Hill Panorama by Cap St. Georges" parses as "(A & B) by
+       X": the trailing by-clause qualifies BOTH parts, so it belongs in the
+       display name but not in the matching label. Left in, it diluted the label to
+       six words and dropped "Pictures Hill Panorama" from 0.67 to 0.33 overlap —
+       just under the threshold, which sent all 44 of Hill Panorama's photos and
+       all 24 of its floor plans to the wrong project. Only stripped when the tail
+       appears on the LAST part alone, which is what makes it a shared qualifier
+       rather than part of that project's own name. */
+    const tail = parts.length > 1 && !/\s+by\s+/i.test(parts[0]) ? (parts[parts.length - 1].match(/\s+by\s+.+$/i)?.[0] ?? "") : "";
+    const cores = parts.map((p) => (tail && p.endsWith(tail) ? p.slice(0, -tail.length) : p).trim());
+    return cores.map((core) => ({ name: toTitleCaseName(`${core}${tail}`), label: toTitleCaseName(core) }));
+  }
+
+  const kinds = tables.map((t) => t.unitKind.trim());
+  const kindsUsable = kinds.every(Boolean) && new Set(kinds.map((k) => k.toLowerCase())).size === tables.length;
+
+  const suffixes = tables.map((t, i) => {
+    const title = t.title.trim();
+    // Corroboration: every significant word of the suggestion must appear in this
+    // table's own headers. Short words are ignored so "of"/"by" cannot carry it.
+    const headerText = t.headers.join(" ").toLowerCase();
+    const words = title.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+    const significant = words.filter((w) => w.length >= 3);
+    const corroborated = !!title && significant.length > 0 && significant.every((w) => headerText.includes(w));
+    if (corroborated) return title;
+    if (kindsUsable) return `${kinds[i]}s`;
+    return `Part ${i + 1}`;
+  });
+
+  return suffixes.map((suffix) => ({
+    name: nameOverlap(base, suffix) >= 0.9 ? base : `${base} – ${toTitleCaseName(suffix)}`,
+    label: suffix,
+  }));
 }
 
 /* ── Preview (read-only) ────────────────────────────────────────────────── */
@@ -136,6 +199,8 @@ export type KorantinaTableResult = {
   feedProjectId: string;
   feedKey: string;
   projectName: string;
+  /** Distinguishing part of the name ("Hill Panorama", "Villas", "Part 1"); "" when the document had one table. What media folders are matched against. */
+  tableLabel: string;
   scopePath: string;
   scopeFolderId: string;
   rootFolderName: string;
@@ -193,9 +258,19 @@ export async function previewKorantinaSync(developerAccountId: string): Promise<
       for (const p of unparsedPages) unreadablePages.push(`${src.filePath} page ${p}`);
       if (!rawTables.length) { foldersWithoutList.push(`${src.filePath} (no readable table)`); continue; }
 
+      // Every table of this document is mapped BEFORE any of them is named:
+      // resolveTableNames compares the tables against each other (do they disagree
+      // about unit kind? does the folder name split into exactly this many parts?),
+      // which is not answerable one table at a time.
+      const mapped: { raw: RawTable; mapping: Awaited<ReturnType<typeof mapTableColumns>> }[] = [];
       for (const raw of rawTables) {
         const context = `Developer: Korantina Homes. Folder: "${src.scopePath}". File: "${src.file.name}". Page ${raw.page}, table ${raw.index + 1} of ${rawTables.length}.`;
-        const mapping = await mapTableColumns(raw, context);
+        mapped.push({ raw, mapping: await mapTableColumns(raw, context) });
+      }
+      const names = resolveTableNames(src.scopePath, mapped.map((m) => ({ title: m.mapping.title, unitKind: m.mapping.unitKind, headers: m.raw.headers })));
+
+      for (let i = 0; i < mapped.length; i++) {
+        const { raw, mapping } = mapped[i];
         const { units, dropped } = unitsFromTable(raw, mapping);
 
         // Ordinal ALWAYS included, even for a single-table document: keying it
@@ -208,7 +283,8 @@ export async function previewKorantinaSync(developerAccountId: string): Promise<
         tables.push({
           feedProjectId,
           feedKey,
-          projectName: displayName(src, mapping.title, rawTables.length, raw.index),
+          projectName: names[i].name,
+          tableLabel: names[i].label,
           scopePath: src.scopePath,
           scopeFolderId: src.scopeFolderId,
           rootFolderName: src.rootFolderName,
@@ -567,7 +643,7 @@ export async function writeKorantinaDraft(
           const siblings = group.filter((g) => g.scopePath === t.scopePath);
           const otherScopes = Array.from(new Set(group.map((g) => g.scopePath)));
           const units_ = mediaUnitsFor(tree, `/${t.rootFolderName}`, t.scopePath, otherScopes, siblings.length > 1);
-          const titles = siblings.map((g) => g.tableTitle);
+          const titles = siblings.map((g) => g.tableLabel);
           const assignment = assignMediaUnits(units_, titles);
           const myIndex = siblings.indexOf(t);
           const mine = units_.filter((_, i) => assignment[i] === myIndex);
