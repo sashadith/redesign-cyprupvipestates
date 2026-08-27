@@ -1,14 +1,14 @@
 // Shared lead list filtering/sorting — used by the CRM list page and the CSV export
 // route so both honour exactly the same query parameters.
 import type { Prisma } from "@prisma/client";
-import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
+import { EXCLUDE_NEWSLETTER, bucketOf } from "@/lib/crm/leadBucket";
 
 export const LEAD_STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"];
 export const LEAD_SOURCES = ["CONTACT_FORM", "PROJECT_ENQUIRY", "BLOG_ENQUIRY", "WHATSAPP", "PHONE", "REFERRAL", "MANUAL", "PARTNER", "ROI_CALCULATOR", "NEWSLETTER", "OTHER"];
 // The Leads page's own dropdown. NEWSLETTER is missing on purpose: those leads
 // live on their own page now, so filtering the leads list by it could only ever
 // return an empty list.
-export const LEAD_LIST_SOURCES = LEAD_SOURCES.filter((s) => s !== "NEWSLETTER");
+export const LEAD_LIST_SOURCES = LEAD_SOURCES.filter((s) => bucketOf(s) !== "newsletter");
 export const LEAD_LOCALES = ["en", "de", "pl", "ru"];
 
 export type LeadSearchParams = Record<string, string | string[] | undefined>;

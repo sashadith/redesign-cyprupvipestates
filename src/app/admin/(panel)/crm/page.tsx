@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { FaFire } from "react-icons/fa";
 import { prisma } from "@/lib/prisma";
 import { ELEVATED_NO_CONTACT_STATUSES } from "@/lib/actionCenter/rules/crm";
+import { bucketOf } from "@/lib/crm/leadBucket";
 import CollapsibleLeadsPanel from "./CollapsibleLeadsPanel";
 import LeadBlockRows from "./LeadBlockRows";
 import LeadRow from "./LeadRow";
@@ -155,7 +156,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
     bandById.set(l.id, b);
     if (l.hotAt) {
       hot.push(l);
-    } else if (l.source === "PARTNER") {
+    } else if (bucketOf(l.source) === "partner") {
       // Partner leads get their own block rather than scattering across the
       // colour bands — same exclusivity rule as HOT and KEEP_CONTACT above.
       // Placed AFTER the hotAt check on purpose: hot is the stronger signal,

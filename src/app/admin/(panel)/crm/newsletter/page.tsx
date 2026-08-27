@@ -6,6 +6,10 @@ import MoveLeadMenu from "../MoveLeadMenu";
 
 export const dynamic = "force-dynamic";
 
+// This is the one lead list designed to grow without limit (the pipeline
+// board caps at 2000 for the same reason — see board/page.tsx's BOARD_CAP).
+const NEWSLETTER_CAP = 1000;
+
 // Deliberately NOT the leads table. No colour dot, no status popover, no hot
 // flame: those are sales instruments, and a subscriber is not a sales process.
 // The only action offered here is moving one out — a subscriber who turns into
@@ -14,12 +18,14 @@ export default async function CrmNewsletter() {
   const leads = await prisma.lead.findMany({
     where: { deletedAt: null, ...ONLY_NEWSLETTER },
     orderBy: { createdAt: "desc" },
+    take: NEWSLETTER_CAP,
     select: {
       id: true, email: true, source: true, createdAt: true,
       languagePreference: true, sourceLocale: true,
       firstName: true, lastName: true,
     },
   });
+  const capped = leads.length === NEWSLETTER_CAP;
 
   return (
     <div>
@@ -33,6 +39,7 @@ export default async function CrmNewsletter() {
         Newsletter subscribers, kept out of the leads list, the pipeline and the Action Center.
         Move one to Leads when they turn into a real enquiry.
       </p>
+      {capped && <p className="text-xs text-[#9CA3AF] mb-4">Showing the {NEWSLETTER_CAP} most recently-subscribed leads.</p>}
 
       <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-x-auto">
         <table className="w-full text-sm">

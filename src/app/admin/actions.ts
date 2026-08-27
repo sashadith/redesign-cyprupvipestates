@@ -765,7 +765,7 @@ export async function moveLeadToBucket(id: string, bucket: string) {
   const session = await requireSession();
   if (!isLeadBucket(bucket)) throw new Error("Invalid bucket");
 
-  const lead = await prisma.lead.findUnique({ where: { id }, select: { source: true } });
+  const lead = await prisma.lead.findFirst({ where: { id, deletedAt: null }, select: { source: true } });
   if (!lead) throw new Error("Lead not found");
   // Already there: return before writing anything. A no-op must not leave a
   // timeline entry claiming a change that did not happen.
@@ -1163,11 +1163,30 @@ export async function mergeLeads(targetId: string, sourceId: string) {
   const session = await requireSession();
   if (!targetId || !sourceId || targetId === sourceId) throw new Error("Invalid merge");
   const [target, source] = await Promise.all([
-    prisma.lead.findFirst({ where: { id: targetId, deletedAt: null }, select: { id: true } }),
+    prisma.lead.findFirst({ where: { id: targetId, deletedAt: null }, select: { id: true, source: true } }),
     prisma.lead.findFirst({ where: { id: sourceId, deletedAt: null } }),
   ]);
   if (!target || !source) throw new Error("Lead not found");
   const summary = `Merged duplicate: ${source.firstName} ${source.lastName} <${source.email}> · ${source.source.replace(/_/g, " ")} · ${source.createdAt.toISOString().slice(0, 10)}`;
+
+  // A merge must never bury a real prospect in the newsletter bucket. The
+  // survivor is whichever lead the operator had open, and opening a subscriber
+  // and merging their real enquiry into it is an easy mistake to make now that
+  // the Newsletter page exists. Adopt the real lead's source, and record it the
+  // same way moveLeadToBucket would.
+  if (bucketOf(target.source) === "newsletter" && bucketOf(source.source) !== "newsletter") {
+    await prisma.lead.update({ where: { id: target.id }, data: { source: source.source } });
+    await prisma.leadActivity.create({
+      data: {
+        leadId: target.id,
+        type: "SOURCE_CHANGE",
+        content: `Moved to Leads — source changed from ${target.source} to ${source.source} by merge`,
+        createdBy: session.user?.name ?? "admin",
+        createdById: (session.user as any)?.id ?? null,
+      },
+    });
+  }
+
   await prisma.$transaction([
     prisma.leadActivity.updateMany({ where: { leadId: sourceId }, data: { leadId: targetId } }),
     prisma.leadInteraction.updateMany({ where: { leadId: sourceId }, data: { leadId: targetId } }),

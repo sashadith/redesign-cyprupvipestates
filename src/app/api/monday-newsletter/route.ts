@@ -95,7 +95,21 @@ export async function POST(request: Request) {
         //
         // Guarded on source so a genuine RE-subscription by an existing
         // subscriber stays the silent no-op it has always been.
-        await recordInboundLead({ leadId: existing.id, source: "NEWSLETTER", email: emailNorm, page, notifyTelegram: false });
+        //
+        // Written inline rather than through recordInboundLead: that helper sets
+        // direction "INBOUND", and the Cockpit reads the newest interaction with
+        // a non-null direction as "last contact". Routing a newsletter sign-up
+        // through it would reset a months-cold prospect's last-contact to now —
+        // from a public, unauthenticated form — while the colour dot and the
+        // Action Center, which key off interaction TYPE, still called them
+        // overdue. The event is worth recording; it is not a contact.
+        const subscribed = "Subscribed to the newsletter";
+        await prisma.leadActivity.create({
+          data: { leadId: existing.id, type: "NEWSLETTER_SIGNUP", content: subscribed, createdBy: "website" },
+        });
+        await prisma.leadInteraction.create({
+          data: { leadId: existing.id, type: "SYSTEM", channel: "SYSTEM", direction: null, body: subscribed, metadata: { page }, createdByName: "website" },
+        });
       }
     } catch (e) {
       console.error("Newsletter lead persist error:", e);
