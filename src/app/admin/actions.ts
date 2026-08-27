@@ -1175,14 +1175,33 @@ export async function mergeLeads(targetId: string, sourceId: string) {
   // the Newsletter page exists. Adopt the real lead's source, and record it the
   // same way moveLeadToBucket would.
   if (bucketOf(target.source) === "newsletter" && bucketOf(source.source) !== "newsletter") {
+    const mergeSourceChangeContent = `Moved to Leads — source changed from ${target.source} to ${source.source} by merge`;
     await prisma.lead.update({ where: { id: target.id }, data: { source: source.source } });
     await prisma.leadActivity.create({
       data: {
         leadId: target.id,
         type: "SOURCE_CHANGE",
-        content: `Moved to Leads — source changed from ${target.source} to ${source.source} by merge`,
+        content: mergeSourceChangeContent,
         createdBy: session.user?.name ?? "admin",
         createdById: (session.user as any)?.id ?? null,
+      },
+    });
+    // Mirrors moveLeadToBucket's own LeadInteraction write so this bucket
+    // change shows up in the Cockpit's unified timeline, which renders from
+    // LeadInteraction, not LeadActivity — the activity row above alone would
+    // be invisible where the operator actually looks for history.
+    // direction is deliberately omitted (same as moveLeadToBucket): a merge
+    // is not a conversation, and the Cockpit reads the newest interaction
+    // with a non-null direction as "last contact".
+    await prisma.leadInteraction.create({
+      data: {
+        leadId: target.id,
+        type: "SYSTEM",
+        channel: "SYSTEM",
+        body: mergeSourceChangeContent,
+        metadata: { fromSource: target.source, toSource: source.source, toBucket: bucketOf(source.source), viaMerge: true },
+        createdByUserId: (session.user as any)?.id ?? null,
+        createdByName: session.user?.name ?? "admin",
       },
     });
   }
