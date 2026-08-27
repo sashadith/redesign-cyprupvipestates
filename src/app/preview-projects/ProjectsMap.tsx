@@ -402,7 +402,18 @@ function MiniFit({ markers }: { markers: MapMarker[] }) {
     }
     const b = new maplibregl.LngLatBounds(pts[0], pts[0]);
     for (const p of pts) b.extend(p);
-    map.fitBounds(b, { animate, maxZoom: 11, padding: 48 });
+    // Widen the frame the way the Leaflet version's .pad(0.2) did — dropped in
+    // the port, which is why the teaser sat too close on the island. maxZoom 9
+    // (was 11) keeps a single-city result set from filling the tile, so the
+    // preview still reads as "Cyprus" rather than one town.
+    const sw = b.getSouthWest(), ne = b.getNorthEast();
+    const padLng = Math.max((ne.lng - sw.lng) * 0.2, 0.05);
+    const padLat = Math.max((ne.lat - sw.lat) * 0.2, 0.05);
+    const padded = new maplibregl.LngLatBounds(
+      [sw.lng - padLng, sw.lat - padLat],
+      [ne.lng + padLng, ne.lat + padLat],
+    );
+    map.fitBounds(padded, { animate, maxZoom: 9, padding: 16 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sig, map]);
   return null;
