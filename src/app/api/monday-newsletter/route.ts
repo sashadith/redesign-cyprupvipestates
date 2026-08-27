@@ -43,10 +43,15 @@ export async function POST(request: Request) {
 
     const langNorm = String(body.lang ?? "").toLowerCase();
 
-    // Persist to the CRM (system of record). Light dedupe: one NEWSLETTER lead per email.
+    // Persist to the CRM (system of record). Light dedupe: one lead per email address, whatever bucket it is in.
     try {
+      // Match on the address alone, NOT on source as well. A subscriber can be
+      // moved out of the newsletter bucket (see moveLeadToBucket in
+      // src/app/admin/actions.ts) — matching on source too would stop
+      // recognising them and create a second lead with the same address the next
+      // time they subscribed.
       const existing = await prisma.lead.findFirst({
-        where: { email: emailNorm, source: "NEWSLETTER" },
+        where: { email: emailNorm },
         select: { id: true },
       });
       if (!existing) {
