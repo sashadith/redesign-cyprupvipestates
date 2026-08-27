@@ -9,7 +9,7 @@ import LeadRow from "./LeadRow";
 import LeadFilterBar from "./LeadFilterBar";
 import {
   buildLeadWhere, orderForSort, leadQueryString,
-  LEAD_STATUSES, LEAD_SOURCES, LEAD_LOCALES, type LeadSearchParams,
+  LEAD_STATUSES, LEAD_LIST_SOURCES, LEAD_LOCALES, type LeadSearchParams,
 } from "./filters";
 import {
   LAST_CONTACT_TYPES, BAND_STYLE, computeBand, type ColorBand, type LeadRowData,
@@ -184,7 +184,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
         </div>
       </div>
 
-      <LeadFilterBar statuses={LEAD_STATUSES} sources={LEAD_SOURCES} locales={LEAD_LOCALES} users={users} />
+      <LeadFilterBar statuses={LEAD_STATUSES} sources={LEAD_LIST_SOURCES} locales={LEAD_LOCALES} users={users} />
 
       {/* 2026-08-11 — legend extended with HOT and KEEP CONTACT; the dot's
           meaning was previously only ever visible via hover (title attribute

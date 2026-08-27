@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { updateLeadStatus } from "../../../actions";
 import { adminDate } from "@/lib/adminTime";
+import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,7 @@ const COL_ACCENT: Record<string, string> = {
 const BOARD_CAP = 2000;
 
 export default async function CrmBoard() {
-  const leads = await prisma.lead.findMany({ where: { deletedAt: null }, orderBy: { updatedAt: "desc" }, take: BOARD_CAP });
+  const leads = await prisma.lead.findMany({ where: { deletedAt: null, ...EXCLUDE_NEWSLETTER }, orderBy: { updatedAt: "desc" }, take: BOARD_CAP });
   const capped = leads.length === BOARD_CAP;
   const byStatus: Record<string, typeof leads> = Object.fromEntries(PIPELINE.map((s) => [s, []]));
   for (const l of leads) (byStatus[l.status] ??= []).push(l);

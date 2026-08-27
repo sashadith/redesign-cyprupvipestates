@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import type { ActionItem } from "../types";
 
 const DAY = 86_400_000;
@@ -158,7 +159,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 async function noFollowUp(): Promise<ActionItem[]> {
   const leads = await prisma.lead.findMany({
-    where: { status: { in: [...ACTIVE_LEAD_STATUSES] }, deletedAt: null },
+    where: { status: { in: [...ACTIVE_LEAD_STATUSES] }, deletedAt: null, ...EXCLUDE_NEWSLETTER },
     select: {
       id: true, firstName: true, lastName: true, createdAt: true, status: true, viewingScheduledAt: true,
       interactions: { where: { type: { in: [...REAL_CONTACT_TYPES] } }, orderBy: { occurredAt: "desc" }, take: 1, select: { occurredAt: true } },

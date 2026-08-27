@@ -3,6 +3,7 @@ import { computeAvailability, availabilityContradiction } from "@/lib/developmen
 import { computePublishGate, areaSlugOf } from "@/lib/developmentPublishGate";
 import { SYNCED_DEVS } from "@/lib/feedSync";
 import { WARM_CONTACT_STATUSES } from "./crm";
+import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { developerGroupExists } from "@/lib/developerLink";
 import { isDropboxShareUrl } from "@/lib/dropbox";
 import type { ActionItem } from "../types";
@@ -396,7 +397,11 @@ async function backInStockReminders(): Promise<ActionItem[]> {
     if (available <= 0) continue; // sold out again within the window — not currently "back in stock"
     const leadCount = d.slug
       ? await prisma.lead.count({
-          where: { pageSource: { contains: `/projects/${d.slug}` }, status: { in: [...WARM_CONTACT_STATUSES] }, deletedAt: null },
+          // Newsletter leads carry a pageSource too — the sign-up form records
+          // the page it was submitted from — so without this a subscriber who
+          // joined while reading a project page would be reported as someone
+          // who "had enquired about this project".
+          where: { pageSource: { contains: `/projects/${d.slug}` }, status: { in: [...WARM_CONTACT_STATUSES] }, deletedAt: null, ...EXCLUDE_NEWSLETTER },
         })
       : 0;
     const leadsClause = leadCount > 0
