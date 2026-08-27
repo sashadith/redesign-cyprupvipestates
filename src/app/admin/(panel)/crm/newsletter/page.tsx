@@ -17,6 +17,7 @@ export default async function CrmNewsletter() {
     select: {
       id: true, email: true, source: true, createdAt: true,
       languagePreference: true, sourceLocale: true,
+      firstName: true, lastName: true,
     },
   });
 
@@ -48,14 +49,28 @@ export default async function CrmNewsletter() {
               <tr><td colSpan={4} className="px-4 py-8 text-center text-[#6B7280]">No subscribers yet.</td></tr>
             ) : leads.map((l) => (
               <tr key={l.id} className="hover:bg-[#F8F9FA]">
-                <td className="px-4 py-2.5 font-medium text-[#111827]">
-                  {/* Linked to the full lead page: the row here is intentionally
-                      thin, and everything else about the person lives there. */}
-                  <Link href={`/admin/crm/${l.id}`} className="hover:underline">{l.email ?? "—"}</Link>
+                <td className="px-4 py-2.5">
+                  {/* A subscriber's firstName is just the email's local part, so
+                      the address is the better identifier — but a lead MOVED into
+                      this bucket can be a real person with no email at all
+                      (WhatsApp-only leads exist), and would otherwise render as a
+                      row with nothing on it to recognise.
+                      `||`, not `??`, throughout: an empty `firstName`/`lastName`
+                      trims to "", and "" must still fall through to the next
+                      fallback — `??` only catches null/undefined, so it would not. */}
+                  <Link href={`/admin/crm/${l.id}`} className="font-medium text-[#111827] hover:underline">
+                    {l.email || (`${l.firstName} ${l.lastName}`.trim() || "—")}
+                  </Link>
+                  {l.email && `${l.firstName} ${l.lastName}`.trim() && l.firstName !== l.email.split("@")[0] ? (
+                    <div className="text-xs text-[#9CA3AF]">{`${l.firstName} ${l.lastName}`.trim()}</div>
+                  ) : null}
                 </td>
                 <td className="px-4 py-2.5 text-[#6B7280]">{adminDate(l.createdAt)}</td>
-                <td className="px-4 py-2.5 text-[#6B7280]">
-                  {(l.languagePreference ?? l.sourceLocale ?? "—").toUpperCase()}
+                <td
+                  className="px-4 py-2.5 text-[#6B7280]"
+                  title={l.languagePreference ? "Preferred language" : l.sourceLocale ? "Site locale at sign-up" : undefined}
+                >
+                  {l.languagePreference ? l.languagePreference.toUpperCase() : l.sourceLocale ? l.sourceLocale.toUpperCase() : "—"}
                 </td>
                 <td className="px-4 py-2.5 text-right"><MoveLeadMenu id={l.id} source={l.source} /></td>
               </tr>

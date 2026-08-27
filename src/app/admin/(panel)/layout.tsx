@@ -78,9 +78,11 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const dbUser = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true, name: true, avatar: true, isOwner: true } });
   if (!dbUser || !dbUser.isActive) redirect("/admin/login");
   const user = session.user as any;
-  const trashCount = await prisma.lead.count({ where: { deletedAt: { not: null } } });
-  const activeLeadCount = await prisma.lead.count({ where: { deletedAt: null, status: { notIn: ["LOST", "CLOSED"] }, ...EXCLUDE_NEWSLETTER } });
-  const newsletterCount = await prisma.lead.count({ where: { deletedAt: null, ...ONLY_NEWSLETTER } });
+  const [trashCount, activeLeadCount, newsletterCount] = await Promise.all([
+    prisma.lead.count({ where: { deletedAt: { not: null } } }),
+    prisma.lead.count({ where: { deletedAt: null, status: { notIn: ["LOST", "CLOSED"] }, ...EXCLUDE_NEWSLETTER } }),
+    prisma.lead.count({ where: { deletedAt: null, ...ONLY_NEWSLETTER } }),
+  ]);
   const actionCenterCount = (await getActionCenterItems()).length;
   const modules = buildModules(user?.role === "ADMIN", dbUser.isOwner, trashCount, activeLeadCount, newsletterCount, actionCenterCount);
 
