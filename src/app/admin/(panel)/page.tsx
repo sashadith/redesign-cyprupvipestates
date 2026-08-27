@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getActionCenterGrouped } from "@/lib/actionCenter";
 import ActionCenterPanel, { type ActionCenterGroupVM } from "./ActionCenterPanel";
 import { adminDateTime } from "@/lib/adminTime";
+import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 
 export const dynamic = "force-dynamic";
 
@@ -31,14 +32,18 @@ export default async function Dashboard() {
   }));
 
   const [leadsTotal, leads7d, leads30d, projects, blogs, pages, recent, byStatus, bySource, supersededActive] = await Promise.all([
-    prisma.lead.count({ where: { deletedAt: null } }),
-    prisma.lead.count({ where: { deletedAt: null, createdAt: { gte: since7 } } }),
-    prisma.lead.count({ where: { deletedAt: null, createdAt: { gte: since30 } } }),
+    prisma.lead.count({ where: { deletedAt: null, ...EXCLUDE_NEWSLETTER } }),
+    prisma.lead.count({ where: { deletedAt: null, createdAt: { gte: since7 }, ...EXCLUDE_NEWSLETTER } }),
+    prisma.lead.count({ where: { deletedAt: null, createdAt: { gte: since30 }, ...EXCLUDE_NEWSLETTER } }),
     prisma.project.count(),
     prisma.blog.count(),
     prisma.singlepage.count(),
-    prisma.lead.findMany({ where: { deletedAt: null }, orderBy: { createdAt: "desc" }, take: 8 }),
-    prisma.lead.groupBy({ by: ["status"], _count: true, where: { deletedAt: null } }),
+    prisma.lead.findMany({ where: { deletedAt: null, ...EXCLUDE_NEWSLETTER }, orderBy: { createdAt: "desc" }, take: 8 }),
+    prisma.lead.groupBy({ by: ["status"], _count: true, where: { deletedAt: null, ...EXCLUDE_NEWSLETTER } }),
+    // NOT excluded, unlike the five above: this is a census of where leads come
+    // from, and hiding one source from a source breakdown would misreport the
+    // very thing it exists to show. The metrics above are work queues; this is
+    // a tally.
     prisma.lead.groupBy({ by: ["source"], _count: true, where: { deletedAt: null } }),
     // Phase 5.4: legacy projects linked to a now-published Development that are
     // still live themselves — each one is a candidate for the admin to deactivate.

@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
+import { EXCLUDE_NEWSLETTER, bucketOf } from "@/lib/crm/leadBucket";
 import type { ActionItem } from "../types";
 
 const DAY = 86_400_000;
@@ -287,13 +287,16 @@ async function engagedNoFollowUp(): Promise<ActionItem[]> {
     where: { status: "active" },
     select: {
       id: true, leadId: true,
-      lead: { select: { firstName: true, lastName: true, status: true, deletedAt: true, activities: { select: { createdAt: true }, orderBy: { createdAt: "desc" }, take: 1 } } },
+      lead: { select: { firstName: true, lastName: true, status: true, deletedAt: true, source: true, activities: { select: { createdAt: true }, orderBy: { createdAt: "desc" }, take: 1 } } },
       views: { where: { developmentId: null }, select: { createdAt: true }, orderBy: { createdAt: "desc" } },
     },
   });
   const items: ActionItem[] = [];
   for (const p of presentations) {
-    if (!p.lead || p.lead.deletedAt || ["CLOSED", "LOST"].includes(p.lead.status)) continue;
+    // Newsletter subscribers are skipped here as everywhere else: a presentation
+    // can be created for any lead, so a subscriber could otherwise trigger
+    // "keeps viewing their presentation — call them".
+    if (!p.lead || p.lead.deletedAt || bucketOf(p.lead.source) === "newsletter" || ["CLOSED", "LOST"].includes(p.lead.status)) continue;
     if (p.views.length < ENGAGED_VIEW_THRESHOLD) continue;
     const lastView = p.views[0].createdAt;
     const lastActivity = p.lead.activities[0]?.createdAt ?? null;
@@ -315,10 +318,10 @@ async function expiringSoon(): Promise<ActionItem[]> {
   const horizon = new Date(now.getTime() + EXPIRING_SOON_DAYS * DAY);
   const presentations = await prisma.clientPresentation.findMany({
     where: { status: "active", expiresAt: { gte: now, lte: horizon } },
-    select: { id: true, leadId: true, expiresAt: true, lead: { select: { firstName: true, lastName: true, status: true, deletedAt: true } } },
+    select: { id: true, leadId: true, expiresAt: true, lead: { select: { firstName: true, lastName: true, status: true, deletedAt: true, source: true } } },
   });
   return presentations
-    .filter((p) => p.lead && !p.lead.deletedAt && !["CLOSED", "LOST"].includes(p.lead.status))
+    .filter((p) => p.lead && !p.lead.deletedAt && bucketOf(p.lead.source) !== "newsletter" && !["CLOSED", "LOST"].includes(p.lead.status))
     .map((p) => {
       const days = Math.ceil((p.expiresAt!.getTime() - now.getTime()) / DAY);
       return {
