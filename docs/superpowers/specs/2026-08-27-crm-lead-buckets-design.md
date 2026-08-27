@@ -94,11 +94,31 @@ for "a second, simpler list of leads".
 
 | File | Change |
 | --- | --- |
-| `crm/filters.ts` → `buildLeadWhere` | newsletter leaves the Leads list |
+| `crm/filters.ts` → `buildLeadWhere` | newsletter leaves the Leads list **and the CSV export** |
 | `(panel)/layout.tsx` → `activeLeadCount` | sidebar count 60 → 50 |
 | `crm/board/page.tsx` | leaves the Pipeline |
 | `lib/actionCenter/rules/crm.ts` | no more reminders for subscribers |
-| `crm/export/route.ts` | leaves the CSV export |
+| `lib/actionCenter/rules/developers.ts` | not counted as an "interested lead" |
+
+Two entries were corrected after reading the code, having first been guessed
+from file names:
+
+- **`crm/export/route.ts` needs no edit.** It already calls `buildLeadWhere(sp)`
+  and inherits the exclusion — as it should, since an export that disagreed with
+  the list it came from would be worse than either.
+- **`rules/developers.ts` does need one.** Its `backInStockReminders()` counts
+  leads whose `pageSource` contains a project slug, and the newsletter route
+  stores `pageSource: page`. A subscriber who signed up while reading a project
+  page would otherwise be reported as someone who "had enquired about this
+  project".
+
+**One trap inside `buildLeadWhere`.** It assigns `where.source` from the URL
+filter *after* the base object is built, so a plain `source: { not: "NEWSLETTER" }`
+in the base would be silently overwritten by `?source=NEWSLETTER` — the exclusion
+would evaporate exactly when someone went looking for newsletter leads. It goes
+into an `AND` array instead, where nothing can clobber it. `NEWSLETTER` also
+comes out of the Leads page's source dropdown, since that filter can no longer
+match anything.
 
 The Dashboard (`(panel)/page.tsx`) keeps counting every lead. Its "leads by
 source" breakdown is a census, not a work queue, and hiding a source from a
