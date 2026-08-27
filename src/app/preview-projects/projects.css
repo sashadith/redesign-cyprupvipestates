@@ -272,7 +272,7 @@
 }
 .px__mapoverlay-close:hover { border-color: var(--accent); }
 .px__mapoverlay-map { flex: 1; position: relative; min-height: 0; }
-.px__mapoverlay-map .px-leaflet { height: 100%; width: 100%; }
+.px__mapoverlay-map .px-maplibre { height: 100%; width: 100%; }
 
 /* ---------------- PROJECT CARD ---------------- */
 /* Namespaced `prj*` (NOT `pcard*`): the preview-home design system (tokens.css,
@@ -458,9 +458,7 @@
     radial-gradient(42% 44% at 56% 56%, #000 8%, transparent 70%),
     radial-gradient(46% 46% at 44% 72%, #000 6%, transparent 78%);
 }
-.prjmap__bleed .px-leaflet--mini { pointer-events: none; background: transparent; }
-.prjmap__bleed .px-leaflet--mini .leaflet-tile { filter: brightness(1.32) contrast(0.92); transition: filter var(--dur-sm) var(--ease); }
-.prjmap:hover .prjmap__bleed .px-leaflet--mini .leaflet-tile { filter: brightness(1.6) contrast(0.95); }
+.prjmap__bleed .px-maplibre--mini { pointer-events: none; background: transparent; }
 
 .prjmap__cap { position: relative; z-index: 1; flex: none; padding-top: 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .prjmap__title {
@@ -483,33 +481,53 @@
 .px__pager-link.is-disabled { opacity: 0.4; pointer-events: none; }
 .px__pager-gap { color: var(--text-faint); padding: 0 2px; }
 
-/* ---------------- MAP (leaflet base) ---------------- */
+/* ---------------- MAP (MapLibre vector base) ---------------- */
 .px-map__loading { display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-soft); font-family: var(--font-body), sans-serif; font-size: var(--text-sm); }
-.px-leaflet { height: 100%; width: 100%; background: var(--sea); }
-/* lift the dark Carto tiles a touch (a bit lighter, still premium-dark) */
-.px-leaflet .leaflet-tile { filter: brightness(1.32) contrast(0.92); }
+.px-maplibre { height: 100%; width: 100%; background: var(--sea-deep); }
 
-/* ---------------- LEAFLET: pins, popups, clusters ---------------- */
-.px-pin { background: transparent; border: 0; }
+/* ---------------- MapLibre: pins, popups, clusters ---------------- */
+/* MapLibre markers have no intrinsic size (Leaflet's divIcon set it via
+   iconSize), so the element carries its own box here. */
+.px-pin { width: 28px; height: 36px; background: transparent; border: 0; cursor: pointer; }
+.px-pin.is-active { width: 38px; height: 48px; }
 /* property marker = the CVE skyline-in-a-diamond emblem, glowing champagne so the
    gold line-art reads against the dark map — distinct from the round POI lights */
 .px-pin__mark {
   display: block; width: 100%; height: 100%;
-  filter: drop-shadow(0 0 3px rgba(246, 224, 170, 0.85)) drop-shadow(0 0 8px rgba(246, 224, 170, 0.4));
-  animation: px-pin-glow 4s ease-in-out infinite;
+  object-fit: contain;
+  filter: drop-shadow(0 0 9px rgba(194, 154, 94, 0.95)) drop-shadow(0 0 22px rgba(194, 154, 94, 0.5));
+  animation: px-pin-glow 16s ease-in-out infinite;
 }
-/* idle emblems softly "breathe" their glow; the 6 variants run at different
-   durations/offsets so the markers shimmer independently, never in lockstep */
+/* Only the GLOW flickers — never the emblem's own opacity, which would make the
+   logo itself blink. Two stacked shadows give a bright core plus a wide halo;
+   ease-in-out (not steps) keeps the swells smooth rather than jerky. The six
+   variants run at different durations/offsets so markers never flicker in
+   lockstep with each other. */
 @keyframes px-pin-glow {
-  0%, 100% { filter: drop-shadow(0 0 2px rgba(246, 224, 170, 0.7)) drop-shadow(0 0 6px rgba(246, 224, 170, 0.28)); }
-  50%      { filter: drop-shadow(0 0 4px rgba(246, 224, 170, 1)) drop-shadow(0 0 13px rgba(246, 224, 170, 0.6)); }
+  0%, 11%   { filter: drop-shadow(0 0 9px  rgba(194, 154, 94, 0.95)) drop-shadow(0 0 22px rgba(194, 154, 94, 0.50)); }
+  14%       { filter: drop-shadow(0 0 7px  rgba(194, 154, 94, 0.62)) drop-shadow(0 0 16px rgba(194, 154, 94, 0.30)); }
+  17%       { filter: drop-shadow(0 0 11px rgba(194, 154, 94, 1.00)) drop-shadow(0 0 28px rgba(194, 154, 94, 0.62)); }
+  20%, 30%  { filter: drop-shadow(0 0 9px  rgba(194, 154, 94, 0.95)) drop-shadow(0 0 22px rgba(194, 154, 94, 0.50)); }
+  33%       { filter: drop-shadow(0 0 8px  rgba(194, 154, 94, 0.70)) drop-shadow(0 0 18px rgba(194, 154, 94, 0.36)); }
+  36%, 47%  { filter: drop-shadow(0 0 9px  rgba(194, 154, 94, 0.95)) drop-shadow(0 0 22px rgba(194, 154, 94, 0.50)); }
+  50%       { filter: drop-shadow(0 0 7px  rgba(194, 154, 94, 0.62)) drop-shadow(0 0 16px rgba(194, 154, 94, 0.30)); }
+  53%       { filter: drop-shadow(0 0 11px rgba(194, 154, 94, 1.00)) drop-shadow(0 0 28px rgba(194, 154, 94, 0.62)); }
+  56%, 63%  { filter: drop-shadow(0 0 9px  rgba(194, 154, 94, 0.95)) drop-shadow(0 0 22px rgba(194, 154, 94, 0.50)); }
+  66%       { filter: drop-shadow(0 0 8px  rgba(194, 154, 94, 0.70)) drop-shadow(0 0 18px rgba(194, 154, 94, 0.36)); }
+  69%, 80%  { filter: drop-shadow(0 0 9px  rgba(194, 154, 94, 0.95)) drop-shadow(0 0 22px rgba(194, 154, 94, 0.50)); }
+  83%       { filter: drop-shadow(0 0 7px  rgba(194, 154, 94, 0.62)) drop-shadow(0 0 16px rgba(194, 154, 94, 0.30)); }
+  86%       { filter: drop-shadow(0 0 11px rgba(194, 154, 94, 1.00)) drop-shadow(0 0 28px rgba(194, 154, 94, 0.62)); }
+  89%, 100% { filter: drop-shadow(0 0 9px  rgba(194, 154, 94, 0.95)) drop-shadow(0 0 22px rgba(194, 154, 94, 0.50)); }
 }
-.px-pin--g0 .px-pin__mark { animation-duration: 3.7s; animation-delay: -0.3s; }
-.px-pin--g1 .px-pin__mark { animation-duration: 4.6s; animation-delay: -1.9s; }
-.px-pin--g2 .px-pin__mark { animation-duration: 4.1s; animation-delay: -3.2s; }
-.px-pin--g3 .px-pin__mark { animation-duration: 5.0s; animation-delay: -0.9s; }
-.px-pin--g4 .px-pin__mark { animation-duration: 3.4s; animation-delay: -2.6s; }
-.px-pin--g5 .px-pin__mark { animation-duration: 4.4s; animation-delay: -4.1s; }
+.px-pin--g0 .px-pin__mark { animation-duration: 13.4s; animation-delay: -1.1s; }
+.px-pin--g1 .px-pin__mark { animation-duration: 16.8s; animation-delay: -7.3s; }
+.px-pin--g2 .px-pin__mark { animation-duration: 14.9s; animation-delay: -12.2s; }
+.px-pin--g3 .px-pin__mark { animation-duration: 19.2s; animation-delay: -3.9s; }
+.px-pin--g4 .px-pin__mark { animation-duration: 15.6s; animation-delay: -9.6s; }
+.px-pin--g5 .px-pin__mark { animation-duration: 17.7s; animation-delay: -15.1s; }
+@media (prefers-reduced-motion: reduce) {
+  .px-pin__mark { animation: none; }
+}
 .px-pin.is-active .px-pin__mark {
   filter: drop-shadow(0 0 5px var(--champagne)) drop-shadow(0 0 16px var(--glow-strong)) brightness(1.12);
   animation: none;
@@ -519,9 +537,9 @@
 }
 
 /* dark popup → preview card */
-.px-pop .leaflet-popup-content-wrapper { background: var(--sea-deep); border: 1px solid var(--hairline-strong); border-radius: 14px; box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.8); padding: 0; overflow: hidden; }
-.px-pop .leaflet-popup-content { margin: 0; width: 230px !important; }
-.px-pop .leaflet-popup-tip { background: var(--sea-deep); border: 1px solid var(--hairline-strong); }
+.px-pop .maplibregl-popup-content { background: var(--sea-deep); border: 1px solid var(--hairline-strong); border-radius: 14px; box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.8); padding: 0; overflow: hidden; }
+.px-pop .maplibregl-popup-content { margin: 0; width: 230px; }
+.px-pop .maplibregl-popup-tip { border-top-color: var(--sea-deep); border-bottom-color: var(--sea-deep); }
 .px-pop__card { display: block; text-decoration: none; }
 .px-pop__img { display: block; width: 100%; height: 124px; object-fit: cover; }
 .px-pop__body { display: block; padding: 11px 13px 13px; }
@@ -533,18 +551,62 @@
 .px-pop__dist i { font-style: normal; color: var(--text-soft); }
 .px-pop__dist small { font-size: 0.6rem; color: var(--text-faint); margin-left: 1px; }
 
-/* cluster bubbles → champagne/sea */
-.px-leaflet .marker-cluster { background: rgba(194, 154, 94, 0.22); }
-.px-leaflet .marker-cluster div {
+/* cluster bubbles → champagne/sea. Rendered by us from supercluster output
+   (MapLibre's built-in clustering can only draw GPU layers, which cannot carry
+   the DOM pin the glow animation lives on). */
+.px-cluster {
+  display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(194, 154, 94, 0.22); cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+.px-cluster span {
+  display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%;
   background: var(--champagne); color: var(--sea-deep);
   font-family: var(--font-body), sans-serif; font-weight: 700; font-size: 0.78rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
-/* hide the Leaflet attribution (bottom-right .leaflet-bottom.leaflet-right block) */
-.px-leaflet .leaflet-control-attribution,
-.px-leaflet .leaflet-bottom.leaflet-right { display: none; }
-.px-leaflet .leaflet-bar a { background: var(--sea-deep); color: var(--ivory); border-color: var(--hairline-strong); }
-.px-leaflet .leaflet-bar a:hover { background: var(--sea); }
+/* Zoom control in the same glass/hairline language as the LIFE NEARBY chips:
+   two round 44px discs rather than MapLibre's stacked white rectangle. The
+   :focus selectors are needed because MapLibre's own CSS re-squares the first
+   and last button of a group on focus and paints a blue ring. */
+.px-maplibre .maplibregl-ctrl-group {
+  background: transparent; border: 0; box-shadow: none; border-radius: 0;
+  display: flex; flex-direction: column; gap: 8px; margin: 0 12px 14px 0;
+}
+.px-maplibre .maplibregl-ctrl-group button,
+.px-maplibre .maplibregl-ctrl-group button:focus,
+.px-maplibre .maplibregl-ctrl-group button:focus-visible,
+.px-maplibre .maplibregl-ctrl-group button:first-child,
+.px-maplibre .maplibregl-ctrl-group button:last-child,
+.px-maplibre .maplibregl-ctrl-group button:only-child,
+.px-maplibre .maplibregl-ctrl-group button:focus:first-child,
+.px-maplibre .maplibregl-ctrl-group button:focus:last-child,
+.px-maplibre .maplibregl-ctrl-group button:focus:only-child {
+  width: 44px; height: 44px; border-radius: 999px;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  border: 1px solid var(--hairline-strong);
+  box-shadow: 0 20px 50px -28px rgba(0, 0, 0, 0.85);
+  transition: background var(--dur-sm, 0.3s) var(--ease, ease), border-color var(--dur-sm, 0.3s) var(--ease, ease);
+}
+.px-maplibre .maplibregl-ctrl-group button:hover { background: rgba(255, 255, 255, 0.08); border-color: var(--champagne); }
+.px-maplibre .maplibregl-ctrl-group button:focus,
+.px-maplibre .maplibregl-ctrl-group button:focus-visible {
+  outline: none; border-color: var(--champagne);
+  box-shadow: 0 20px 50px -28px rgba(0, 0, 0, 0.85), 0 0 0 2px var(--glow);
+}
+/* MapLibre ships dark +/- glyphs; on our glass they need inverting. */
+.px-maplibre .maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(1) opacity(0.82); transform: scale(1.15); }
+
+/* OpenStreetMap data is ODbL-licensed, so attribution stays — in MapLibre's
+   compact form (a small disc that expands on click), toned to the dark map
+   instead of the default white pill. */
+.px-maplibre .maplibregl-ctrl-attrib {
+  background: var(--glass-bg); border-radius: 999px; margin: 0 12px 14px 0;
+  -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+}
+.px-maplibre .maplibregl-ctrl-attrib a,
+.px-maplibre .maplibregl-ctrl-attrib { color: var(--text-faint); font-family: var(--font-body), sans-serif; font-size: 0.66rem; }
+.px-maplibre .maplibregl-ctrl-attrib-button { filter: invert(1) opacity(0.6); }
 
 /* ---------------- POI layer (OSM) ---------------- */
 .px-mapwrap { position: relative; height: 100%; width: 100%; }
@@ -582,7 +644,8 @@
 .px-poi__hint.is-load { color: var(--champagne); }
 
 /* POI map pins (colored dots) */
-.px-poi-pin { background: transparent; border: 0; }
+.px-poi-pin { width: 5px; height: 5px; background: transparent; border: 0; }
+.px-poi-ic { width: 40px; height: 40px; display: grid; place-items: center; }
 /* each POI is a small light source glowing constantly in its own colour — a
    bright core wrapped in a soft same-colour halo, like city lights from orbit.
    Diameter + glow halved (2026-07-23): the previous 9px core with a 17px blur
@@ -590,21 +653,15 @@
 .px-poi-pin span {
   display: block; width: 4.5px; height: 4.5px; border-radius: 50%;
   background: var(--c);
-  box-shadow: 0 0 2px 0.5px var(--c), 0 0 5px 1.5px var(--c); /* fallback for no color-mix */
+  box-shadow: 0 0 2.4px 0.6px var(--c), 0 0 6px 1.8px var(--c); /* fallback for no color-mix */
   box-shadow:
     0 0 0 0.5px color-mix(in srgb, var(--c) 50%, #03161a),
-    0 0 2px 0.5px var(--c),
-    0 0 4.5px 1.5px color-mix(in srgb, var(--c) 60%, transparent),
-    0 0 8.5px 3px color-mix(in srgb, var(--c) 30%, transparent);
+    0 0 2.4px 0.6px var(--c),
+    0 0 5.4px 1.8px color-mix(in srgb, var(--c) 60%, transparent),
+    0 0 10.2px 3.6px color-mix(in srgb, var(--c) 30%, transparent);
 }
-/* POI name tooltip */
-.leaflet-tooltip.px-poi-tip {
-  background: var(--sea-deep); color: var(--ivory);
-  border: 1px solid var(--hairline-strong); border-radius: 8px;
-  font-family: var(--font-body), sans-serif; font-size: 0.72rem; padding: 3px 8px;
-  box-shadow: 0 10px 30px -16px rgba(0, 0, 0, 0.85);
-}
-.leaflet-tooltip.px-poi-tip::before { display: none; }
+/* POI names are now the marker's native title attribute — MapLibre has no
+   tooltip primitive and a DOM title needs no styling. */
 
 @media (max-width: 640px) {
   .px-poi { left: 8px; right: 8px; bottom: 10px; max-width: none; gap: 6px; padding: 8px; }

@@ -42,12 +42,11 @@
    on .pp (the project detail page's own root class, which this route
    doesn't carry) — redefined here on .dev-catalog__mapwrap instead of
    wrapping in .pp (which also sets min-height:100vh and other page-root
-   assumptions this isn't). tileStyle="layered" reuses PropertyMap.tsx's
-   exact tile treatment (dark_nolabels base + filtered dark_only_labels
-   overlay + Sea-Deep tint pane) via the SAME .pp-map__base/.pp-map__labels/
-   .pp-map__tint rules (project.css) — this section already carries
-   .pp-mapsection, which those rules are scoped under, so no new CSS was
-   needed for them. "LIFE NEARBY" (.px-poi) is intentionally left alone —
+   assumptions this isn't). The tileStyle="layered" prop this map passes is
+   now inert: it used to pick PropertyMap.tsx's raster treatment (label-free
+   base + a separately-filtered label overlay + a Sea-Deep tint pane), all of
+   which the MapLibre port removed — every map draws the same vector style in
+   the house palette. "LIFE NEARBY" (.px-poi) is intentionally left alone —
    no override here — so ProjectsMap's own default (visible) stands. */
 /* Fixed 600px (not min(51vh, 600px)) — that formula's 51vh side rarely
    clears 600px on any real browser window (would need a >1176px-tall
@@ -64,15 +63,12 @@
    everything else .pp-map provides is untouched. */
 .dev-catalog__mapwrap .pp-map.px-mapwrap { height: 100%; }
 
-/* Zoom control was invisible on this map — but ALSO on the reference page
-   above, confirmed live: a site-wide legacy rule (globals.css:413,
-   `.leaflet-control { display: none !important; }`, written for the old
-   map implementation and never scoped to it) suppresses every Leaflet
-   control everywhere. Not touching the global rule itself (unknown whether
-   something else still depends on it); this scoped override wins the
-   control back just for this map, per explicit request even though the
-   reference page itself doesn't show it either. */
-.dev-catalog__mapwrap .leaflet-control { display: block !important; }
+/* The site-wide `.leaflet-control { display: none !important }` in globals.css
+   hid every Leaflet control everywhere, so this map needed a scoped override to
+   win its zoom control back. Since the MapLibre port that rule no longer matches
+   our maps at all — the zoom control is styled and shown for every map (see
+   .maplibregl-ctrl-group in projects.css), so no override is needed here. The
+   global Leaflet rule stays for the legacy components that still use Leaflet. */
 
 /* ---- Journal-style developer hero (DeveloperJournalIntro.tsx) ---- */
 /* Top stays .ins__hero's own clamp(120px,16vh,210px) — needed for fixed-
