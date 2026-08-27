@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { moveLeadToBucket } from "../../actions";
 import { LEAD_BUCKETS, BUCKET_LABEL, bucketOf, type LeadBucket } from "@/lib/crm/leadBucket";
 
@@ -22,7 +22,15 @@ export default function MoveLeadMenu({
   source: string;
   className?: string;
 }) {
-  const [pending, startTransition] = useTransition();
+  // Pending is held in useState, not taken from useTransition. Under React 18 a
+  // transition does not track an async callback past its first await, so
+  // isPending would flip back to false before the server action even started and
+  // `disabled` would never engage — leaving a double-click free to fire two moves.
+  // DeleteLeadButton next door avoids this by using the synchronous form of
+  // startTransition; that is not available here, because the try/catch needs the
+  // await.
+  const [pending, setPending] = useState(false);
+  const [, startTransition] = useTransition();
   const current = bucketOf(source);
 
   return (
@@ -30,13 +38,15 @@ export default function MoveLeadMenu({
       aria-label="Move lead to another list"
       disabled={pending}
       value=""
-      // The table row is wrapped in a link; without this, opening the menu
-      // navigates to the lead instead.
+      // Defensive, matching DeleteLeadButton next door: the row is a plain <tr>
+      // today, so nothing is intercepted, but a future row-level click-to-open
+      // would otherwise navigate away the moment this menu is opened.
       onClick={(e) => e.stopPropagation()}
       onChange={(e) => {
         const next = e.target.value as LeadBucket;
         if (!next || next === current) return;
         if (!confirm(`Move this lead to ${BUCKET_LABEL[next]}?`)) return;
+        setPending(true);
         startTransition(async () => {
           try {
             await moveLeadToBucket(id, next);
@@ -46,6 +56,8 @@ export default function MoveLeadMenu({
             // not move and the operator is left guessing. One alert is a small
             // price for not silently swallowing a failed write.
             alert(`Could not move the lead: ${err instanceof Error ? err.message : String(err)}`);
+          } finally {
+            setPending(false);
           }
         });
       }}
