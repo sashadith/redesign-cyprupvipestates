@@ -11,6 +11,7 @@
 import { writeFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { LeadSource } from "@prisma/client";
 
 /* esbuild is a TRANSITIVE dependency, not a declared one. Declaring it for a
    dev-only script would force an install on the next production deploy, so it
@@ -40,6 +41,16 @@ function check(name, actual, expected) {
   console.log(`  FAIL ${name}\n       expected ${e}\n       actual   ${a}`);
 }
 
+/* The list below is hand-written, which is what makes the bucketOf assertions
+   exhaustive — and also what would rot silently. Pin it against the real enum so
+   that adding or renaming a LeadSource value fails HERE, loudly, instead of
+   quietly changing which bucket that source lands in. */
+console.log("enum is in sync");
+check("LeadSource values", Object.keys(LeadSource).sort(), [
+  "BLOG_ENQUIRY", "CONTACT_FORM", "MANUAL", "NEWSLETTER", "OTHER", "PARTNER",
+  "PHONE", "PROJECT_ENQUIRY", "REFERRAL", "ROI_CALCULATOR", "WHATSAPP",
+].sort());
+
 /* 1. Every value of the LeadSource enum maps to a bucket. Listed in full and by
       hand: if someone adds a source to the enum, this test still passes, and
       that is correct — a new source belongs in "leads" until somebody decides
@@ -52,8 +63,9 @@ for (const s of ["CONTACT_FORM", "PROJECT_ENQUIRY", "BLOG_ENQUIRY", "WHATSAPP", 
 check("PARTNER -> partner", LB.bucketOf("PARTNER"), "partner");
 check("NEWSLETTER -> newsletter", LB.bucketOf("NEWSLETTER"), "newsletter");
 
-/* 2. A lead read straight from Prisma can have a null source in old rows; it
-      must land in "leads" rather than crashing the list page. */
+/* 2. Defensive, not observed: Lead.source is NOT NULL with a default, so no row
+      has a null source. A partial select or a raw query can still hand bucketOf
+      an undefined, and it must answer "leads" rather than throw. */
 check("null -> leads", LB.bucketOf(null), "leads");
 check("undefined -> leads", LB.bucketOf(undefined), "leads");
 check("unknown string -> leads", LB.bucketOf("SOMETHING_NEW"), "leads");

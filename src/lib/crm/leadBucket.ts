@@ -9,7 +9,10 @@
 //
 // A leaf module on purpose: it imports only Prisma's generated TYPES, which
 // disappear at compile time, so "use client" components can import it too.
-import type { Prisma } from "@prisma/client";
+// `LeadSource` is imported as a type here too — @prisma/client exports it as
+// BOTH a runtime const object and a type, but only the type is used below, so
+// this import still erases fully.
+import type { LeadSource, Prisma } from "@prisma/client";
 
 export const LEAD_BUCKETS = ["leads", "partner", "newsletter"] as const;
 export type LeadBucket = (typeof LEAD_BUCKETS)[number];
@@ -20,12 +23,21 @@ export const BUCKET_LABEL: Record<LeadBucket, string> = {
   newsletter: "Newsletter",
 };
 
+// Compared against typed constants rather than bare string literals. The two
+// query fragments below are already protected — Prisma types LeadWhereInput's
+// `source` against the enum, so a rename breaks them at build time — but a bare
+// literal here would not break anything: bucketOf would simply stop matching and
+// silently refile every partner lead and every subscriber into "leads".
+const NEWSLETTER_SOURCE: LeadSource = "NEWSLETTER";
+const PARTNER_SOURCE: LeadSource = "PARTNER";
+const MANUAL_SOURCE: LeadSource = "MANUAL";
+
 // Anything unrecognised lands in "leads". A source this function has never seen
 // is far more likely to be a new enquiry channel than a new kind of mailing
 // list, and the leads list is the bucket where a human will actually notice it.
 export function bucketOf(source: string | null | undefined): LeadBucket {
-  if (source === "NEWSLETTER") return "newsletter";
-  if (source === "PARTNER") return "partner";
+  if (source === NEWSLETTER_SOURCE) return "newsletter";
+  if (source === PARTNER_SOURCE) return "partner";
   return "leads";
 }
 
@@ -34,10 +46,14 @@ export function bucketOf(source: string | null | undefined): LeadBucket {
 // not restore the original — a lead that arrived as PROJECT_ENQUIRY comes back
 // from Partner as MANUAL. moveLeadToBucket writes the old value into the lead's
 // timeline, which is where that history survives.
-export function sourceForBucket(bucket: LeadBucket): "MANUAL" | "PARTNER" | "NEWSLETTER" {
-  if (bucket === "newsletter") return "NEWSLETTER";
-  if (bucket === "partner") return "PARTNER";
-  return "MANUAL";
+//
+// Returns the full LeadSource type (not a narrower literal union) so the Task 2
+// server action can pass the result straight into `data: { source: ... }`
+// without an `as any` cast.
+export function sourceForBucket(bucket: LeadBucket): LeadSource {
+  if (bucket === "newsletter") return NEWSLETTER_SOURCE;
+  if (bucket === "partner") return PARTNER_SOURCE;
+  return MANUAL_SOURCE;
 }
 
 // The server action receives this straight off a form submission, so it is a
