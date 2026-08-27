@@ -1,16 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
-import { MapContainer, TileLayer, Marker, Pane } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import "leaflet-gesture-handling/dist/leaflet-gesture-handling.css";
-import "leaflet-gesture-handling";
-import { pinIcon, POI_CATS, PoiLayers, GestureZoom } from "@/app/preview-projects/ProjectsMap";
+import { MapContainer, Marker } from "@/app/components/map/MapLibre";
+import { pinMarkup, POI_CATS, PoiLayers, gestureLocale } from "@/app/preview-projects/ProjectsMap";
 import { projectsStrings, type ProjectsStrings } from "@/app/[lang]/projects/projectsI18n";
 
 /* Full-width map block for a SINGLE property: centred on the unit, the property
    marked with our glowing CVE emblem, plus the same nearby-POI toggles as the
-   projects explorer. Reuses ProjectsMap's pin/POI/gesture parts + projects.css. */
+   projects explorer. Reuses ProjectsMap's pin/POI parts + projects.css.
+
+   Since the MapLibre port this is one vector style in the house palette instead
+   of a label-free CARTO base + a separately-tinted label overlay + a Sea-Deep
+   wash pane. Place and street names now render in English (name:en, falling back
+   to name:latin) — the old raster labels were stuck in the local language, which
+   the previous comment here noted would need "a vector provider + key". The
+   vector provider turned out not to need a key. */
 export default function PropertyMap({
   lat,
   lng,
@@ -30,41 +34,21 @@ export default function PropertyMap({
       return next;
     });
 
+  const pin = pinMarkup(true);
+
   return (
     <div className="px-mapwrap pp-map">
       <MapContainer
-        center={[lat, lng]}
+        center={[lng, lat]}
         zoom={14}
         minZoom={9}
-        scrollWheelZoom
-        attributionControl={false}
-        className="px-leaflet"
+        cooperativeGestures
+        locale={gestureLocale(locale)}
+        className="px-maplibre"
         style={{ height: "100%", width: "100%" }}
       >
-        {/* label-free dark base → cleaner, tinted to Sea-Deep in CSS */}
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-          subdomains="abcd"
-          maxZoom={20}
-          className="pp-map__base"
-        />
-        {/* labels (place + street names) — CartoDB renders them in the local
-            language; English (Latin) labels would need a vector provider + key */}
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
-          subdomains="abcd"
-          maxZoom={20}
-          className="pp-map__labels"
-          pane="overlayPane"
-        />
-        {/* Sea-Deep wash over the tiles (below markers, so the emblem stays crisp) */}
-        <Pane name="seatint" style={{ zIndex: 350 }}>
-          <div className="pp-map__tint" />
-        </Pane>
         {/* the property itself — our glowing emblem, prominent (active variant) */}
-        <Marker position={[lat, lng]} icon={pinIcon(true)} />
-        <GestureZoom locale={locale} />
+        <Marker lngLat={[lng, lat]} className={pin.className} html={pin.html} />
         <PoiLayers active={poiActive} onState={setPoiState} />
       </MapContainer>
 

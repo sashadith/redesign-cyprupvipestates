@@ -123,14 +123,14 @@
 }
 .pp-map.px-mapwrap::before { top: 0; }
 .pp-map.px-mapwrap::after { bottom: 0; }
-.pp-map .px-leaflet { height: 100%; width: 100%; }
+.pp-map .px-maplibre { height: 100%; width: 100%; }
 .pp-map--loading { background: linear-gradient(135deg, var(--sea), var(--sea-deep)); }
-/* decluttered map: natural dark base + faint champagne labels, no vignette */
-.pp-mapsection .pp-map__base { filter: brightness(0.88) contrast(1.04); }
-.pp-mapsection .pp-map__labels { filter: sepia(0.55) saturate(0.8) brightness(1.15) hue-rotate(-8deg); opacity: 0.8; }
-/* Sea-Deep wash inside a Leaflet pane (below the marker pane → emblem stays crisp), 40% */
-.pp-map__tint { position: absolute; left: -300vw; top: -300vh; width: 700vw; height: 700vh;
-  background: var(--sea-deep); opacity: 0.5; pointer-events: none; }
+/* The colour treatment that used to live here — a brightness/contrast filter on
+   the base tiles, a sepia/hue-rotate filter on the label tiles and a Sea-Deep
+   wash pane over both — is gone with the MapLibre port. Those existed only to
+   drag a third-party raster basemap towards the house palette. The vector style
+   (components/map/cveMapStyle.ts) is already drawn in our colours, so tinting it
+   would double-darken the map. */
 /* nearby (POI) control: align its left edge with the main container, and keep it
    narrow enough that it wraps after "Supermarkets" (Pharmacies drops to row 2) */
 .pp-map .px-poi {

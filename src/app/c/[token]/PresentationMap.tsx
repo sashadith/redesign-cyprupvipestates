@@ -1,21 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Pane, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import "leaflet-gesture-handling/dist/leaflet-gesture-handling.css";
-import "leaflet-gesture-handling";
-import { pinIcon, POI_CATS, PoiLayers, GestureZoom } from "@/app/preview-projects/ProjectsMap";
+import { MapContainer, Marker, Popup, useMap, maplibregl } from "@/app/components/map/MapLibre";
+import { pinMarkup, POI_CATS, PoiLayers, gestureLocale } from "@/app/preview-projects/ProjectsMap";
 import { COPY, asPLocale } from "./copy";
 
-/* Presentation map: reuses ProjectsMap's pin/POI/gesture parts (same recipe as
+/* Presentation map: reuses ProjectsMap's pin/POI parts (same recipe as
    PropertyMap.tsx) but plots MULTIPLE developments. Pins no longer carry a
    permanent name label (that read as clutter) — instead, hovering or clicking
    a pin shows the same small preview card used on the main Projects page
    (.px-pop / .px-pop__card, already in projects.css), and clicking THAT card
    scrolls the page to the matching property card below. No URL/bounds sync —
-   this page has no filter state to persist. */
+   this page has no filter state to persist.
+
+   This is the surface a lead actually sees when an advisor sends them a link,
+   which is why the CARTO watermark that prompted the MapLibre port mattered
+   most here. */
 
 export type PresentationMarker = {
   id: string; lat: number; lng: number; name: string;
@@ -27,17 +27,25 @@ const fmtPrice = (n: number | null, cur: string) => (n == null ? null : `${cur =
 function FitToMarkers({ markers }: { markers: PresentationMarker[] }) {
   const map = useMap();
   useEffect(() => {
-    if (!markers.length) return;
+    if (!map || !markers.length) return;
     const fit = () => {
-      map.invalidateSize();
-      if (markers.length === 1) map.setView([markers[0].lat, markers[0].lng], 14);
-      else map.fitBounds(L.latLngBounds(markers.map((m) => [m.lat, m.lng] as [number, number])), { padding: [48, 48], maxZoom: 13 });
+      // No map.resize() here — MapContainer's ResizeObserver owns that, and
+      // calling it from a handler that also listens to "resize" recurses
+      // infinitely in MapLibre (see the note in ProjectsMap's FitBounds).
+      if (markers.length === 1) {
+        map.jumpTo({ center: [markers[0].lng, markers[0].lat], zoom: 14 });
+      } else {
+        const pts = markers.map((m) => [m.lng, m.lat] as [number, number]);
+        const b = new maplibregl.LngLatBounds(pts[0], pts[0]);
+        for (const p of pts) b.extend(p);
+        map.fitBounds(b, { padding: 48, maxZoom: 13, animate: false });
+      }
     };
     const raf = requestAnimationFrame(fit);
     const t = setTimeout(fit, 300);
     return () => { cancelAnimationFrame(raf); clearTimeout(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [map]);
   return null;
 }
 
@@ -77,7 +85,7 @@ export default function PresentationMap({
     if (!selectedId) return;
     const onDocClick = (e: MouseEvent) => {
       const t = e.target as HTMLElement | null;
-      if (t && t.closest(".leaflet-marker-icon, .leaflet-popup, .px-poi")) return;
+      if (t && t.closest(".maplibregl-marker, .maplibregl-popup, .px-poi")) return;
       setSelectedId(null);
       setHoveredId(null);
     };
@@ -87,40 +95,48 @@ export default function PresentationMap({
 
   if (markers.length === 0) return null;
 
+  const pin = pinMarkup(true);
+
   return (
     <div className="px-mapwrap pp-map cp-map">
-      <MapContainer center={[markers[0].lat, markers[0].lng]} zoom={10} minZoom={8} scrollWheelZoom attributionControl={false} className="px-leaflet" style={{ height: "100%", width: "100%" }}>
-        <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png" attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>' subdomains="abcd" maxZoom={20} className="pp-map__base" />
-        <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png" subdomains="abcd" maxZoom={20} className="pp-map__labels" pane="overlayPane" />
-        <Pane name="seatint" style={{ zIndex: 350 }}><div className="pp-map__tint" /></Pane>
+      <MapContainer
+        center={[markers[0].lng, markers[0].lat]}
+        zoom={10}
+        minZoom={8}
+        cooperativeGestures
+        locale={gestureLocale(locale)}
+        className="px-maplibre"
+        style={{ height: "100%", width: "100%" }}
+      >
         {markers.map((m) => (
           <Marker
             key={m.id}
-            position={[m.lat, m.lng]}
-            icon={pinIcon(true)}
-            eventHandlers={{
-              click: () => setSelectedId(m.id),
-              ...(canHover
-                ? {
-                    mouseover: () => { cancelHide(); if (!selectedRef.current) setHoveredId(m.id); },
-                    mouseout: () => { if (!selectedRef.current) scheduleHide(); },
-                  }
-                : {}),
-            }}
+            lngLat={[m.lng, m.lat]}
+            className={pin.className}
+            html={pin.html}
+            onClick={() => setSelectedId(m.id)}
+            onMouseEnter={canHover ? () => { cancelHide(); if (!selectedRef.current) setHoveredId(m.id); } : undefined}
+            onMouseLeave={canHover ? () => { if (!selectedRef.current) scheduleHide(); } : undefined}
           />
         ))}
 
         {/* One controlled popup: shows the hovered preview OR the pinned
-            selection (selected wins). Leaflet's own auto-close is disabled —
-            open/close is driven purely by React state, same as ProjectsMap. */}
+            selection (selected wins). Open/close is driven purely by React
+            state, same as ProjectsMap. */}
         {active && (
-          <Popup className="px-pop" position={[active.lat, active.lng]} closeButton={false} autoClose={false} closeOnClick={false} autoPan={false}>
+          <Popup
+            className="px-pop"
+            lngLat={[active.lng, active.lat]}
+            closeButton={false}
+            closeOnClick={false}
+            // See ProjectsMap: the hover bridge must be attached natively here.
+            onMouseEnter={canHover ? cancelHide : undefined}
+            onMouseLeave={canHover ? scheduleHide : undefined}
+          >
             <div
               className="px-pop__card"
               role="button"
               tabIndex={0}
-              onMouseEnter={canHover ? cancelHide : undefined}
-              onMouseLeave={canHover ? scheduleHide : undefined}
               onClick={() => { onSelect(active.id); setSelectedId(null); setHoveredId(null); }}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(active.id); setSelectedId(null); setHoveredId(null); } }}
             >
@@ -134,7 +150,6 @@ export default function PresentationMap({
           </Popup>
         )}
 
-        <GestureZoom locale={locale} />
         <PoiLayers active={poiActive} onState={setPoiState} />
         <FitToMarkers markers={markers} />
       </MapContainer>
