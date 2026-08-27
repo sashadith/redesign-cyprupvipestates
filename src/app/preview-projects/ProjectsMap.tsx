@@ -402,18 +402,27 @@ function MiniFit({ markers }: { markers: MapMarker[] }) {
     }
     const b = new maplibregl.LngLatBounds(pts[0], pts[0]);
     for (const p of pts) b.extend(p);
-    // Widen the frame the way the Leaflet version's .pad(0.2) did — dropped in
-    // the port, which is why the teaser sat too close on the island. maxZoom 9
-    // (was 11) keeps a single-city result set from filling the tile, so the
-    // preview still reads as "Cyprus" rather than one town.
+    // The teaser frames the ISLAND, not just the markers. fitBounds on the
+    // marker bounds alone runs them to the tile edge (projects cluster along the
+    // south coast, so the frame ends up wider than tall and Cyprus gets clipped),
+    // which reads as a crop rather than a map of Cyprus. So the frame is grown
+    // around the markers' centre to a minimum span before fitting: a broad result
+    // set shows essentially the whole island, a single-city one still centres on
+    // that city but keeps enough coast around it to be recognisable.
     const sw = b.getSouthWest(), ne = b.getNorthEast();
-    const padLng = Math.max((ne.lng - sw.lng) * 0.2, 0.05);
-    const padLat = Math.max((ne.lat - sw.lat) * 0.2, 0.05);
-    const padded = new maplibregl.LngLatBounds(
-      [sw.lng - padLng, sw.lat - padLat],
-      [ne.lng + padLng, ne.lat + padLat],
+    const cLng = (sw.lng + ne.lng) / 2, cLat = (sw.lat + ne.lat) / 2;
+    // Cyprus spans about 2.33 deg lng (32.27–34.60) x 0.72 deg lat. Framing 2.9
+    // x 1.05 puts the whole island in the tile with sea around it, so the teaser
+    // reads as "Cyprus" at a glance. The 1.5x factor only takes over for a result
+    // set wider than the island itself, which cannot happen here but keeps the
+    // expression honest.
+    const halfLng = Math.max((ne.lng - sw.lng) / 2 * 1.5, 2.9 / 2);
+    const halfLat = Math.max((ne.lat - sw.lat) / 2 * 1.5, 1.05 / 2);
+    const framed = new maplibregl.LngLatBounds(
+      [cLng - halfLng, cLat - halfLat],
+      [cLng + halfLng, cLat + halfLat],
     );
-    map.fitBounds(padded, { animate, maxZoom: 9, padding: 16 });
+    map.fitBounds(framed, { animate, maxZoom: 9, padding: 12 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sig, map]);
   return null;
