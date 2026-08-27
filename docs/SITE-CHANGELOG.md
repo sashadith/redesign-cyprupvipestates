@@ -181,3 +181,24 @@ The Advisor has re-raised these as if new. All are closed; don't re-suggest.
   loss driver here. Actual cause: the Development is **100% sold out** (0/28 units
   available). Attribute future click/impression decline on this page to sold-out status, not
   to internal-link health, unless unit availability changes.
+
+## 2026-08-26 — Public blog API (blog syndicated to a second portal)
+
+Read-only, key-authenticated API at `/api/public/v1/posts` (`docs/PUBLIC-BLOG-API.md`)
+that hands the full blog — 211 published articles, all four languages, body HTML,
+images, FAQ and metadata — to a second web portal. Nothing about the articles on
+this site changed: no URLs, no content, no indexability. `/api` is already in the
+`robots.txt` disallow list and the endpoints are inert until `BLOG_API_KEYS` is set.
+
+**Why this belongs here anyway:** once the second portal goes live, every article
+exists at two public URLs in four languages. Every payload carries a
+`canonicalUrl` pointing back here and the integration brief makes emitting
+`<link rel="canonical">` (or `noindex`) mandatory — but if that is ever dropped or
+misconfigured on the consuming side, this site's blog will start losing
+impressions to a duplicate it cannot see. Before attributing a blog-wide
+impression or position drop after the second portal's launch date to ranking
+quality, check the consuming pages for a correct canonical first.
+
+Project listings and lead forms are deliberately NOT exported (empty
+`div.cvp-embed` placeholders the consumer fills from its own inventory), so no
+`/projects` URL is duplicated anywhere.
