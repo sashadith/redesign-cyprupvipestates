@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       // time they subscribed.
       const existing = await prisma.lead.findFirst({
         where: { email: emailNorm },
-        select: { id: true },
+        select: { id: true, source: true },
       });
       if (!existing) {
         const lead = await prisma.lead.create({
@@ -70,6 +70,17 @@ export async function POST(request: Request) {
         });
         // Activity only — no Telegram ping (newsletter is high-volume/low-value).
         await recordInboundLead({ leadId: lead.id, source: "NEWSLETTER", email: emailNorm, page, notifyTelegram: false });
+      } else if (existing.source !== "NEWSLETTER") {
+        // A lead who already existed through another channel has now ALSO
+        // subscribed. That is a real event, and widening the dedupe above is
+        // what would otherwise swallow it: before, this person got a second,
+        // duplicate NEWSLETTER lead that at least recorded the fact. Their
+        // source is deliberately NOT changed — they are a real enquiry first,
+        // and a subscriber second; only the timeline gains an entry.
+        //
+        // Guarded on source so a genuine RE-subscription by an existing
+        // subscriber stays the silent no-op it has always been.
+        await recordInboundLead({ leadId: existing.id, source: "NEWSLETTER", email: emailNorm, page, notifyTelegram: false });
       }
     } catch (e) {
       console.error("Newsletter lead persist error:", e);
