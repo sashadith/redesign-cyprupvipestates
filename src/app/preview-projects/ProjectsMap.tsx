@@ -584,13 +584,17 @@ export default function ProjectsMap({
         {/* one controlled popup: shows the hovered preview OR the pinned selection
             (selected wins). Open/close is driven purely by React state. */}
         {active && (
-          <Popup className="px-pop" lngLat={[active.lng, active.lat]} closeButton={false} closeOnClick={false}>
-            <a
-              className="px-pop__card"
-              href={active.href}
-              onMouseEnter={canHover ? cancelHide : undefined}
-              onMouseLeave={canHover ? scheduleHide : undefined}
-            >
+          <Popup
+            className="px-pop"
+            lngLat={[active.lng, active.lat]}
+            closeButton={false}
+            closeOnClick={false}
+            // On the Popup, not on the card: the card lives in a portal that
+            // MapLibre relocates, where React's synthetic mouseenter never fires.
+            onMouseEnter={canHover ? cancelHide : undefined}
+            onMouseLeave={canHover ? scheduleHide : undefined}
+          >
+            <a className="px-pop__card" href={active.href}>
               {active.image && <img className="px-pop__img" src={active.image} alt={active.title} />}
               <span className="px-pop__body">
                 <span className="px-pop__price">{fmtPrice(active.price, s)}</span>

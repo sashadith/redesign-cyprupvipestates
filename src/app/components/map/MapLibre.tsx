@@ -245,6 +245,18 @@ export type PopupProps = {
   closeButton?: boolean;
   closeOnClick?: boolean;
   onClose?: () => void;
+  /**
+   * Pointer handlers for the popup body.
+   *
+   * These are attached natively rather than as React props on the children.
+   * setDOMContent() hands our element to MapLibre, which relocates it into its
+   * own popup DOM — React's delegated mouseenter/mouseleave synthesis does not
+   * survive that move, so `onMouseEnter` written on a child inside the portal
+   * silently never fires. That broke the hover bridge that keeps the preview
+   * card open while the pointer travels from the pin onto the card.
+   */
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
   children: React.ReactNode;
 };
 
@@ -255,6 +267,8 @@ export function Popup({
   closeButton = false,
   closeOnClick = false,
   onClose,
+  onMouseEnter,
+  onMouseLeave,
   children,
 }: PopupProps) {
   const map = useMap();
@@ -288,6 +302,25 @@ export function Popup({
   useEffect(() => {
     popupRef.current?.setLngLat(lngLat);
   }, [lngLat[0], lngLat[1]]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Attached to MapLibre's own popup element, not to our inner content div:
+  // the element we hand to setDOMContent ends up nested inside
+  // .maplibregl-popup-content, so a pointer entering the popup's padding would
+  // not reach it. getElement() is the whole popup box, which is what the user
+  // is aiming at when they move from the pin onto the card.
+  useEffect(() => {
+    const p = popupRef.current;
+    const root = p?.getElement?.();
+    if (!root) return;
+    const enter = () => onMouseEnter?.();
+    const leave = () => onMouseLeave?.();
+    root.addEventListener("mouseenter", enter);
+    root.addEventListener("mouseleave", leave);
+    return () => {
+      root.removeEventListener("mouseenter", enter);
+      root.removeEventListener("mouseleave", leave);
+    };
+  }, [map, el, onMouseEnter, onMouseLeave]);
 
   if (!el) return null;
   return createPortal(children, el);

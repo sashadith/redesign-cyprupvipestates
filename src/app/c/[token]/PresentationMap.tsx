@@ -124,13 +124,19 @@ export default function PresentationMap({
             selection (selected wins). Open/close is driven purely by React
             state, same as ProjectsMap. */}
         {active && (
-          <Popup className="px-pop" lngLat={[active.lng, active.lat]} closeButton={false} closeOnClick={false}>
+          <Popup
+            className="px-pop"
+            lngLat={[active.lng, active.lat]}
+            closeButton={false}
+            closeOnClick={false}
+            // See ProjectsMap: the hover bridge must be attached natively here.
+            onMouseEnter={canHover ? cancelHide : undefined}
+            onMouseLeave={canHover ? scheduleHide : undefined}
+          >
             <div
               className="px-pop__card"
               role="button"
               tabIndex={0}
-              onMouseEnter={canHover ? cancelHide : undefined}
-              onMouseLeave={canHover ? scheduleHide : undefined}
               onClick={() => { onSelect(active.id); setSelectedId(null); setHoveredId(null); }}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(active.id); setSelectedId(null); setHoveredId(null); } }}
             >
