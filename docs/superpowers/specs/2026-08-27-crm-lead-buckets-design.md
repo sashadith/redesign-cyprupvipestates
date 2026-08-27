@@ -90,7 +90,7 @@ popover, no hot toggle. Those are sales instruments, and a subscriber is not a
 sales process. Modelled on `crm/trash/page.tsx`, which is the existing precedent
 for "a second, simpler list of leads".
 
-**Exclusion, in exactly five places:**
+**Exclusion, in eight places:**
 
 | File | Change |
 | --- | --- |
@@ -120,9 +120,41 @@ into an `AND` array instead, where nothing can clobber it. `NEWSLETTER` also
 comes out of the Leads page's source dropdown, since that filter can no longer
 match anything.
 
-The Dashboard (`(panel)/page.tsx`) keeps counting every lead. Its "leads by
-source" breakdown is a census, not a work queue, and hiding a source from a
-source breakdown would be actively misleading.
+The Dashboard needs splitting, not exempting. **This spec first exempted the
+whole page**, on the grounds that its "leads by source" breakdown is a census
+rather than a work queue and hiding a source from a source breakdown would
+misreport the very thing it exists to show. That reasoning is right — but it
+applies to exactly one of the page's six lead queries. The other five are
+volume, recency and pipeline metrics:
+
+| Query | Feeds | Excludes? |
+| --- | --- | --- |
+| `leadsTotal`, `leads7d`, `leads30d` | the stat cards | yes |
+| `recent` | the "Recent leads" panel | yes |
+| `byStatus` groupBy | the pipeline panel, and the Won / Conversion KPIs | yes |
+| `bySource` groupBy | "Leads by source" | **no — census** |
+
+Caught by the completeness review, not by writing this spec. Left as it was,
+the sidebar would have said 50 leads while the Dashboard one click away said
+60 with no explanation, "Recent leads" would have listed people who vanish when
+you click through to the list, and — worst — subscribers would have fed the
+Won/Conversion figures, since a subscriber's detail page leaves the status
+picker fully editable.
+
+Two further surfaces the same review found, both missed here for the same
+reason (this spec reasoned about files, and these are reached through a join or
+live in another module):
+
+- **`src/lib/seo/pagePower/classVerdicts.ts`** counts leads carrying a
+  `pageSource` as evidence that a page generates enquiries. A newsletter
+  sign-up carries `pageSource` too — the identical leak fixed in
+  `rules/developers.ts` above, from a different direction.
+- **`rules/crm.ts` has three rule functions, not one.** Only `noFollowUp`
+  queries `prisma.lead` directly; `engagedNoFollowUp` and `expiringSoon` reach
+  the lead through `prisma.clientPresentation`, so the `where`-fragment does
+  not apply and each guard needs `bucketOf` instead. A presentation can be
+  created for any lead, so without this a subscriber could trigger "keeps
+  viewing their presentation — call them".
 
 ### Feature 2 — moving a lead between buckets
 
