@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { parseAttribution } from "@/lib/attribution";
 import { recordInboundLead } from "@/lib/leadNotify";
 import { ALLOWED_HOSTS, safeUrl, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
+import { bucketOf } from "@/lib/crm/leadBucket";
 
 const MONDAY_API_URL = "https://api.monday.com/v2";
 const NEWSLETTER_BOARD_ID = process.env.MONDAY_NEWSLETTER_BOARD_ID || "1761993654";
@@ -50,8 +51,22 @@ export async function POST(request: Request) {
       // src/app/admin/actions.ts) — matching on source too would stop
       // recognising them and create a second lead with the same address the next
       // time they subscribed.
+      //
+      // deletedAt: null excludes trashed leads — same as every other "is this
+      // person already represented" lookup in the codebase. A trashed lead is
+      // deliberately out of circulation, so someone whose lead was trashed and
+      // who then subscribes gets a FRESH lead, not a silent write onto a record
+      // no admin view will ever show them. That is what already happened before
+      // this branch for every source except NEWSLETTER; this restores it.
+      //
+      // orderBy pins which duplicate wins when more than one lead shares this
+      // address (the very duplication this task exists to stop creating more
+      // of) — the oldest surviving lead is the canonical one, so the timeline
+      // entry below always lands on the same record instead of scattering
+      // across whichever duplicate findFirst happens to return.
       const existing = await prisma.lead.findFirst({
-        where: { email: emailNorm },
+        where: { email: emailNorm, deletedAt: null },
+        orderBy: { createdAt: "asc" },
         select: { id: true, source: true },
       });
       if (!existing) {
@@ -70,7 +85,7 @@ export async function POST(request: Request) {
         });
         // Activity only — no Telegram ping (newsletter is high-volume/low-value).
         await recordInboundLead({ leadId: lead.id, source: "NEWSLETTER", email: emailNorm, page, notifyTelegram: false });
-      } else if (existing.source !== "NEWSLETTER") {
+      } else if (bucketOf(existing.source) !== "newsletter") {
         // A lead who already existed through another channel has now ALSO
         // subscribed. That is a real event, and widening the dedupe above is
         // what would otherwise swallow it: before, this person got a second,
