@@ -63,8 +63,21 @@ const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
 // translationGroupId from the houses-in-limassol group). Same unconditional-
 // on-DB-status behavior as RETIRED_BLOG_REDIRECTS — ships ahead of the
 // unpublish so there's no 404 gap.
+// Second entry (2026-08-27): west-coast-properties-cyprus merged into
+// west-coast-properties-paphos -- confirmed cannibalization via GSC query
+// data (Paphos cluster investigation): both pages target identical
+// filterCity:"Paphos" criteria under different slugs, and paphos wins all
+// 9/9 shared "west coast" queries on position (paphos pos 6.6-18.6 vs
+// cyprus pos 8-65 on the same terms). Unlike villas-limassol above, this
+// merge ALSO archives the losing Singlepage's status (see
+// scripts/tmp-westcoast-cyprus-redirect.mjs) so it drops out of the
+// sitemap -- villas-limassol was left PUBLISHED after its merge (confirmed
+// still status:"PUBLISHED"), so it's still sitemap-listed despite
+// redirecting (see src/app/sitemaps/[type]/route.ts, PUBLISHED-only
+// filter); not replicated here.
 const EN_LANDING_MERGES: Record<string, string> = {
   "villas-limassol": "/houses-in-cyprus/houses-in-limassol",
+  "west-coast-properties-cyprus": "/west-coast-properties-paphos",
 };
 
 export default async function middleware(request: NextRequest) {
