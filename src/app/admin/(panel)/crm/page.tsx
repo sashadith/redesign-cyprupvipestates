@@ -56,7 +56,11 @@ function LeadBlockSection({
         {dot && <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${dot}`} />}
         {title} <span className="font-normal text-[#9CA3AF]">({leads.length})</span>
       </h2>
-      <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-hidden">
+      {/* overflow-x-auto, not overflow-hidden: the actions column now carries a
+          move menu as well as the delete button, and this table sizes its columns
+          automatically. Clipping would put a control out of reach on a narrow
+          window; scrolling only makes it a scroll away. */}
+      <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-x-auto">
         <table className="w-full text-sm">
           {TABLE_HEAD}
           <tbody className="divide-y divide-[#E5E7EB]">

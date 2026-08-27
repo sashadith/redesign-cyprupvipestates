@@ -17,7 +17,7 @@ export default function CollapsibleLeadsPanel({
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-hidden mt-4">
+    <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-x-auto mt-4">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

@@ -85,7 +85,7 @@ export default function LeadRow({
         <div title="Received (site locale at intake)">{l.sourceLocale ? l.sourceLocale.toUpperCase() : "—"}</div>
         <div className="text-[#9CA3AF]" title="Preferred (editable)">{l.languagePreference ? l.languagePreference.toUpperCase() : "—"}</div>
       </td>
-      <td className="px-4 py-2.5 text-right">
+      <td className="px-4 py-2.5">
         <div className="flex items-center justify-end gap-2">
           <MoveLeadMenu id={l.id} source={l.source} />
           <DeleteLeadButton id={l.id} />
