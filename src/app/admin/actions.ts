@@ -21,6 +21,7 @@ import { isManualInteractionType } from "@/lib/crm/interactionHelpers";
 import { findEmptyProjectsBlock } from "@/lib/projectsBlockValidation";
 import { ELEVATED_NO_CONTACT_STATUSES as CONTACT_IMPLYING_STATUSES } from "@/lib/actionCenter/rules/crm";
 import { logWhatsAppSentAction } from "./(panel)/crm/[id]/emailActions";
+import { bucketOf, sourceForBucket, isLeadBucket, BUCKET_LABEL } from "@/lib/crm/leadBucket";
 
 // Convert every `{__html}` rich-text marker (produced by the block editor) into
 // Portable Text via the shared converter — so all blocks store consistent PT and
@@ -750,6 +751,58 @@ export async function updateLeadStatus(id: string, status: string) {
   });
   revalidatePath(`/admin/crm/${id}`);
   revalidatePath("/admin/crm");
+  revalidatePath("/admin");
+}
+
+// Moving a lead between the three CRM buckets (Leads / Partner / Newsletter).
+//
+// `source` IS the bucket — there is no separate column — so this overwrites it,
+// and that write is lossy: a lead that arrived as PROJECT_ENQUIRY comes back
+// from Partner as MANUAL, because sourceForBucket has no way to know what it
+// used to be. The timeline rows below are the only place that history survives,
+// which is why this action writes them even though nothing reads them yet.
+export async function moveLeadToBucket(id: string, bucket: string) {
+  const session = await requireSession();
+  if (!isLeadBucket(bucket)) throw new Error("Invalid bucket");
+
+  const lead = await prisma.lead.findUnique({ where: { id }, select: { source: true } });
+  if (!lead) throw new Error("Lead not found");
+  // Already there: return before writing anything. A no-op must not leave a
+  // timeline entry claiming a change that did not happen.
+  if (bucketOf(lead.source) === bucket) return;
+
+  const fromSource = lead.source;
+  const toSource = sourceForBucket(bucket);
+  await prisma.lead.update({ where: { id }, data: { source: toSource } });
+
+  const content = `Moved to ${BUCKET_LABEL[bucket]} — source changed from ${fromSource} to ${toSource}`;
+  await prisma.leadActivity.create({
+    data: {
+      leadId: id,
+      type: "SOURCE_CHANGE",
+      content,
+      createdBy: session.user?.name ?? "admin",
+      createdById: (session.user as any)?.id ?? null,
+    },
+  });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: id,
+      type: "SYSTEM",
+      channel: "SYSTEM",
+      body: content,
+      // Structured as well as prose, for the same reason updateLeadStatus writes
+      // metadata.toStatus: a later consumer should not have to parse a sentence
+      // to find out where a lead came from.
+      metadata: { fromSource, toSource, toBucket: bucket },
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
+    },
+  });
+
+  revalidatePath(`/admin/crm/${id}`);
+  revalidatePath("/admin/crm");
+  revalidatePath("/admin/crm/newsletter");
   revalidatePath("/admin");
 }
 
