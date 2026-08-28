@@ -131,26 +131,46 @@ Requirements:
   such link whose target slug also exists in this portal's synced set to the
   local URL. Leave the rest pointing at the source — they are valid links.
 
-### SEO — mandatory, not a nice-to-have
+### Indexing — these pages must stay OUT of search
 
-Every article page on this portal **must** emit:
+The articles are published on cyprusvipestates.com first, and this portal does
+not need search traffic from them. So every syndicated article page here is
+excluded from search indexes:
 
 ```html
-<link rel="canonical" href="{canonicalUrl}">
+<meta name="robots" content="noindex, follow">
 ```
 
-using the `canonicalUrl` from the payload, which points at the original on
-cyprusvipestates.com. These articles are published there first; two indexable
-copies without a canonical is duplicate content across four languages and the
-two copies will cannibalise each other in search. If a stakeholder wants these
-pages to rank on `<PORTAL_DOMAIN>` instead, that is a content decision to be
-made deliberately — do not resolve it by quietly dropping the canonical. The
-only acceptable alternative is `noindex` on the synced pages.
+or the equivalent `X-Robots-Tag: noindex, follow` response header. Use `follow`
+so links in the article body still behave like normal links.
 
-Also: build `hreflang` alternates from `translations` (plus the article's own
-language). Note that on the source site English has no URL prefix while
-`de`/`pl`/`ru` do — mirror whatever convention *this* portal already uses, and
-derive the alternates from `translations`, not by string-munging URLs.
+Three rules go with it. Each one is a way this quietly fails:
+
+1. **Do not also emit `rel="canonical"` pointing at cyprusvipestates.com.**
+   `noindex` plus a canonical to a different URL are contradictory signals, and
+   the `noindex` can end up applied to the canonical target — which would
+   deindex the original article on the source site. Pick one mechanism. Here it
+   is `noindex`, so these pages carry a self-referencing canonical or none.
+2. **Do not block these URLs in `robots.txt`.** A blocked URL is never crawled,
+   so the `noindex` is never read — and the URL can still get indexed with no
+   content. The pages must stay crawlable for the `noindex` to do anything.
+3. **No `hreflang`, and keep them out of the sitemap.** A noindexed page has no
+   business in either.
+
+`canonicalUrl` is in every payload regardless. Use it for a visible "originally
+published at" link back to the source — that is an ordinary link and does not
+conflict with `noindex`.
+
+If someone later decides these pages *should* rank on `<PORTAL_DOMAIN>`, that is
+a deliberate decision to take with the owner of the source site, never a side
+effect of a refactor. The order then matters: remove `noindex` first, then add
+`rel="canonical"` pointing at `canonicalUrl` — never both at once.
+
+**This is monitored.** The source site fetches a sample of these pages on a
+schedule and alerts if one becomes indexable. Losing the `noindex` is handled as
+an incident, not a detail. Once the pages are live, send the source-site owner
+3–5 representative article URLs (one per language) so they can be added to that
+check.
 
 ### Task C — adopt the two embed placeholders to local data
 
@@ -246,8 +266,10 @@ Before you report done, run against the live API and show the output:
 3. Pick at least four articles covering: a table, an FAQ accordion, a nested
    list, inline images, and both embed kinds. Render each and confirm no raw
    placeholder `div.cvp-embed` survives in the output.
-4. Confirm every rendered article page emits the correct `<link rel="canonical">`
-   pointing at cyprusvipestates.com.
+4. Confirm every rendered article page is excluded from indexing — a
+   `noindex` in the robots meta tag or the `X-Robots-Tag` header — and that
+   none of them carries a `rel="canonical"` pointing at cyprusvipestates.com
+   alongside it. Check the sitemap does not list them.
 5. Confirm no image renders with a relative or broken `src`.
 6. Confirm an article whose projects embed matches zero local properties
    renders without an empty section.

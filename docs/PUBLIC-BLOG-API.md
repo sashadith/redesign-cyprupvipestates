@@ -181,18 +181,70 @@ its own equivalent. Placeholder ids and `embeds[].id` are in the same order.
 
 Corpus-wide: 122 embeds across the 211 articles.
 
-### Canonical URLs — not optional
+### Indexing — consuming pages carry `noindex`
 
-These articles are published on cyprusvipestates.com first. A second live copy
-without a canonical is duplicate content in four languages, and the two copies
-compete for the same rankings. Every consuming page **must** emit:
+These articles are published on cyprusvipestates.com first. A second indexable
+copy competes with the original for the same rankings, in four languages, and
+the damage is close to invisible from here: it shows up as unexplained
+impression loss, with the cause on a domain we have no Search Console access to.
+
+The agreed setup is therefore that consuming pages are excluded from search:
 
 ```html
-<link rel="canonical" href="{canonicalUrl}">
+<meta name="robots" content="noindex, follow">
 ```
 
-`canonicalUrl` is in every payload. The alternative is `noindex` on the
-consuming pages — there is no third option.
+**`noindex` and `rel="canonical"` pointing here must never appear on the same
+page.** They are contradictory signals, and the `noindex` can end up applied to
+the canonical target — which would deindex the original article on this site.
+One mechanism or the other. `canonicalUrl` ships in every payload regardless and
+is fine as a visible "originally published at" link.
+
+Two related traps, both of which silently defeat the `noindex`: blocking the
+URLs in the consumer's `robots.txt` (a page that is never crawled is never read,
+and can still be indexed URL-only), and listing them in the consumer's sitemap
+or hreflang cluster.
+
+The full rules, written for the consumer, are in
+`docs/PORTAL-BLOG-INTEGRATION-PROMPT.md`.
+
+### The watchdog — `/api/cron/syndication-watch`
+
+None of the above is enforceable from here: we send body HTML, the consumer
+builds the page head. So we check their pages instead.
+
+`SYNDICATION_WATCH_URLS` holds a comma-separated list of live article URLs on
+the consuming portal — ask for 3–5, one per language, once its pages exist. The
+job fetches each and classifies it:
+
+| Verdict | Meaning | Alert |
+| --- | --- | --- |
+| `ok` | `noindex` present (meta or `X-Robots-Tag`), no conflicting canonical | — |
+| `indexable` | No `noindex`, no canonical here — a competing copy | immediate |
+| `conflicting` | `noindex` **and** a canonical pointing here — can deindex the original | immediate |
+| `canonical-only` | No `noindex`, canonical points here — weaker than agreed | throttled |
+| `unreachable` | Fetch failed, URL changed, portal down | throttled |
+| `not-a-consumer` | A cyprusvipestates.com URL was configured by mistake | throttled |
+
+Critical verdicts page immediately over Telegram; the rest are throttled to once
+a day. Every run is written to `CronRunLog` under the job name
+`syndication-watch`, and a manual run returns the alert text in the response
+(`alert`) so you can see what would be sent without triggering a message.
+
+Unset `SYNDICATION_WATCH_URLS` = the job reports `skipped` and does nothing, so
+it can ship before the consuming portal exists.
+
+```
+# crontab on the VPS — daily 04:15 UTC
+15 4 * * * curl -s "http://127.0.0.1:3000/api/cron/syndication-watch?key=$CRON_SECRET" >/dev/null
+```
+
+The job is not yet registered in the Action Center's cron-health list
+(`src/lib/actionCenter/rules/system.ts`), so a silently missing cron would not
+raise a stale-job item — worth adding when that file is next touched.
+
+If a consumer ignores the rules, the lever is the API key: remove its pair from
+`BLOG_API_KEYS` and restart. No deploy of application code needed.
 
 ## Examples
 
