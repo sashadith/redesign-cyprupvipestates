@@ -143,7 +143,13 @@ export type SyncResult = {
 // "agg" removed 2026-08-13 — was never a real feed (a one-time Cloudflare-
 // scrape fixture), AGG is now maintained manually like Luma and every other
 // hand-entered developer (dev: "manual").
-export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone"];
+// "mito" (2026-08-28) is in this list out of necessity, not just for the cron.
+// SYNCED_DEVS also gates the admin sync controls (developments/[id]/page.tsx),
+// and the developer page's own "Sync now" button only renders when the account
+// ALREADY has a development carrying a feed dev key — which Mito, with zero
+// projects, does not. Without this entry there is no way to run a first sync at
+// all, and syncMitoCore would be unreachable code.
+export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone", "mito"];
 // Subset with a real, individually-triggerable feed worth an on-demand pull
 // (the admin Force-Sync button, Teil 2).
 export const FORCE_SYNC_DEVS = SYNCED_DEVS;
