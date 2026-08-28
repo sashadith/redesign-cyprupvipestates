@@ -316,6 +316,15 @@ export type LandingProjectsBlock = {
   // pagination over the full match count, deliberately not the same field so
   // the two mechanisms can never be confused with each other.
   pagesEnabled?: boolean;
+  // Live construction-stage filter, matched case-insensitively against
+  // DevelopmentOverride.stage (falling back to Development.stage per the
+  // documented override-wins precedence) via /^off[\s-]?plan$/i. A row with
+  // no stage value is excluded, never treated as matching. Development-backed
+  // inventory only -- legacy Project rows have no stage field at all and
+  // never match when this is set; see fetchFilteredProjectsRaw. Optional and
+  // absent on every existing block, so no page's rendering changes unless
+  // explicitly set (direct DB write, same pattern as every other field here).
+  filterStage?: "off-plan";
   projects: Project[];
   filteredProjects?: Project[];
   // Render-time only (set by resolveBlocks, never persisted) -- present only

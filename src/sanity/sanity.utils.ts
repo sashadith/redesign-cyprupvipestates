@@ -215,6 +215,10 @@ type ComputeFilteredProjectsOpts = {
   // applied (post-fetch, before the MAX_FILTERED_PROJECTS cap).
   maxBeachMinutes?: number | null;
   excludePropertyTypes?: string[] | null;
+  // Construction-stage filter -- see the LandingProjectsBlock.filterStage doc
+  // comment (src/types/blog.ts) for the exact matching rule and the
+  // Development-only scope. Optional, defaults to "no restriction".
+  filterStage?: "off-plan" | null;
 };
 
 // distances.beach is stored inconsistently at the raw-DB level (Development:
@@ -324,6 +328,21 @@ async function fetchFilteredProjectsRaw(lang: string, filterCity?: string, filte
     available = available.filter(notExcluded);
     sold = sold.filter(notExcluded);
     devRows = devRows.filter(notExcluded);
+  }
+
+  const filterStage = opts?.filterStage ?? null;
+  if (filterStage) {
+    const offPlanRe = /^off[\s-]?plan$/i;
+    // Legacy Project rows have no stage field at all -- they never match a
+    // stage filter, by design, not by accident. A landingProjectsBlock with
+    // filterStage set covers Development-backed inventory only.
+    available = [];
+    sold = [];
+    devRows = devRows.filter((d: any) => {
+      const stage = (d._stage || "").trim();
+      if (!stage) return false; // no stage value -- excluded, never treated as matching
+      return offPlanRe.test(stage);
+    });
   }
 
   return { available, sold, devRows };
@@ -519,15 +538,15 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string, pag
         // 2026-07-22 bug — a real published article's hand-picked selection
         // rendered nothing because the guard treated it like a weak query).
         b._hasLiveCriteria = hasCriteria;
-      } else if (b.filterCity || b.filterPropertyType || b.maxBeachMinutes != null) {
+      } else if (b.filterCity || b.filterPropertyType || b.maxBeachMinutes != null || b.filterStage) {
         // Only compute the live query when a page actually opts in — avoids an
         // unbounded Project+Development query (now uncapped, for pagination) on
         // every one of the other manual-array pages that never read this field.
-        // maxBeachMinutes/excludePropertyTypes are undefined on every existing
-        // old-style block, so this call is byte-identical to before for all of
-        // them -- only a block that explicitly sets one of the new fields sees
-        // different behavior.
-        const liveOpts = { maxBeachMinutes: b.maxBeachMinutes, excludePropertyTypes: b.excludePropertyTypes };
+        // maxBeachMinutes/excludePropertyTypes/filterStage are undefined on
+        // every existing old-style block, so this call is byte-identical to
+        // before for all of them -- only a block that explicitly sets one of
+        // these fields sees different behavior.
+        const liveOpts = { maxBeachMinutes: b.maxBeachMinutes, excludePropertyTypes: b.excludePropertyTypes, filterStage: b.filterStage };
         // pagesEnabled is absent/false on every existing block -- this branch
         // is unreachable for all of them, so their rendering is unaffected.
         // Only a block explicitly flipped on (direct DB write, same pattern
@@ -1420,6 +1439,11 @@ export function mapDevelopmentRowToCard(d: any) {
     _matchLocations: [town, ...districtWithParent(district), area].map((v) => v.toLowerCase()),
     _searchText: `${d.publicName} ${ov?.alias ?? ""}`.toLowerCase(),
     _priceFrom: devPriceFrom, _priceTo: devPriceTo,
+    // Resolved construction stage, override-wins-over-raw-feed-value per the
+    // documented precedence (see DevelopmentOverride.stage) -- for
+    // filterStage matching in fetchFilteredProjectsRaw. Raw/unnormalized;
+    // matching does its own case-insensitive comparison.
+    _stage: (ov?.stage || d.stage || null) as string | null,
     _source: "development" as const,
   };
 }
