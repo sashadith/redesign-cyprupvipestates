@@ -596,6 +596,35 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
   const accountId = await ensureAccount(dev);
   const clusters = await mitoClusters();
 
+  // The same protection checkFeedCompleteness gives the other eight developers.
+  // Mito cannot use that function — it works from listProjectIds, which Mito has
+  // no equivalent of — but it needs the rule, because the rule is about units,
+  // not ids, and Mito's exposure is worse than theirs: a freshly created Mito
+  // project is UNPUBLISHED, and syncOneProject's unpublished path is
+  // deleteMany({source:"feed"}) + createMany. A partial fetch would not flip
+  // units to "unlisted" as it does for a published project — it would delete
+  // them. Every Mito project is unpublished until the operator has named and
+  // published it, so that is the normal state, not an edge case.
+  //
+  // A total fetch failure is already safe: mitoClusters() returns [] and the
+  // loop below never runs. This guards the partial case.
+  const afterCount = clusters.reduce((n, c) => n + c.units.length, 0);
+  const beforeCount = await prisma.developmentUnit.count({ where: { source: "feed", development: { dev } } });
+  if (beforeCount > 0) {
+    const missing = beforeCount - afterCount;
+    const missingPct = missing / beforeCount;
+    if (missing > FEED_INCOMPLETE_ABS_FLOOR && missingPct > FEED_INCOMPLETE_PCT) {
+      const pctLabel = Math.round(missingPct * 100);
+      return {
+        dev, found: clusters.length, created: 0, updated: 0, failed: 0,
+        mirroredNewFiles: false, unitsCreated: 0, unitsUnlisted: [],
+        blocked: true,
+        blockedMessage: `${missing} of ${beforeCount} units are missing from today's feed (${pctLabel} %). Nothing was changed — the catalogue stays as it is until this has been checked.`,
+        blockedMissing: missing, blockedTotal: beforeCount,
+      };
+    }
+  }
+
   const known = await prisma.development.findMany({
     where: { dev, developerAccountId: accountId },
     select: { feedProjectId: true, latitude: true, longitude: true },
