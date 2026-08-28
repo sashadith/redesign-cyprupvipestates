@@ -1014,7 +1014,7 @@ export function clusterMitoProperties(props: any[]): MitoCluster[] {
     // and its generated SEO text for no reason.
     const description = idxs
       .map((i) => descs[i])
-      .sort((a, b) => b.length - a.length || a.localeCompare(b))[0] ?? "";
+      .sort((a, b) => b.length - a.length || (a < b ? -1 : a > b ? 1 : 0))[0] ?? "";
     const withCoords = idxs.map((i) => coords[i]).filter(Boolean) as { lat: number; lng: number }[];
     const center = withCoords.length
       ? { lat: withCoords.reduce((s, c) => s + c.lat, 0) / withCoords.length, lng: withCoords.reduce((s, c) => s + c.lng, 0) / withCoords.length }

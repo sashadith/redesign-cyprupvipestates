@@ -117,19 +117,34 @@ check("A-B by distance, B-C by text, A and C unrelated -> one project",
   ])),
   [["1", "2", "3"]]);
 
-/* 6. A property with no coordinates must not silently join whatever cluster
-      happens to be near 0,0 — it stands alone unless its text matches. */
+/* 6a. The location element is missing entirely. It must not join whatever
+       cluster happens to sit near the origin — it stands alone unless its text
+       matches. */
 console.log("missing coordinates");
-check("no coordinates, unique text -> its own project",
+check("no location element, unique text -> its own project",
   groupsOf(F.clusterMitoProperties([
     prop(1, 34.7, 32.4, "A"),
-    { ...prop(2, 0, 0, "B"), location: undefined },
+    { ...prop(2, 34.7, 32.4, "B"), location: undefined },
   ])),
   [["1"], ["2"]]);
 
-/* 7. The threshold is chosen from the middle of a plateau, not tuned to a cliff:
-      the live feed yields the same four groups at 100, 150, 250 and 400 m. Pin
-      that here so a future edit to the constant has to confront it. */
+/* 6b. The location element is PRESENT but zero — the case mitoCoords' explicit
+       `lat !== 0 && lng !== 0` guard exists for, and one no other case reaches.
+       Cyprus sits around 34.5–35.7 N, 32.2–34.6 E, so a real coordinate can
+       never be zero and a zero means "the feed left it blank". */
+check("literal 0,0 coordinates, unique text -> its own project",
+  groupsOf(F.clusterMitoProperties([
+    prop(1, 34.7, 32.4, "A"),
+    prop(2, 0, 0, "B"),
+  ])),
+  [["1"], ["2"]]);
+
+/* 7. Boundary behaviour at the shipped constant. The plateau itself (the same
+      four projects at 100, 150, 250 and 400 m) is an offline measurement against
+      the live feed and cannot be asserted here; what this pins is that at 150 m
+      the 61 m Paramount pair merges while a distant property stays separate, so
+      a future edit to MITO_SAME_PROJECT_M has to confront a failing test rather
+      than silently changing how projects are cut. */
 console.log("threshold plateau");
 check("150 m groups Paramount and leaves the distant one alone",
   groupsOf(F.clusterMitoProperties([
