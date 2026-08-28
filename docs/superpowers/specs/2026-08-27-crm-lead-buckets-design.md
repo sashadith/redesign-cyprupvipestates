@@ -181,14 +181,43 @@ Writing `metadata` structured rather than only as prose follows the reasoning
 already recorded for `metadata.toStatus` in `updateLeadStatus`: a later consumer
 should not have to parse a sentence.
 
-### One adjacent fix
+### One adjacent fix — proposed, implemented, and then reverted on the operator's call
 
-`/api/monday-newsletter` de-duplicates on `email` **and** `source: "NEWSLETTER"`.
-Once a subscriber can be moved out of the newsletter bucket, a re-subscription
-would no longer match and would create a **second lead with the same address**.
-Drop `source` from that lookup so it matches on email alone.
+**This section originally read:** `/api/monday-newsletter` de-duplicates on
+`email` **and** `source: "NEWSLETTER"`; once a subscriber can be moved out of
+the newsletter bucket, a re-subscription would no longer match and would create
+a second lead with the same address; so drop `source` and match on email alone.
 
-This is one line, and the bug it prevents is one this very feature introduces.
+That was wrong, and the reasoning is worth keeping rather than deleting.
+
+Widening the match makes a person who is already a lead through another channel
+— a contact form, a WhatsApp enquiry — match on their existing row and create
+nothing. No duplicate. But also **no newsletter-scoped row**, and therefore no
+appearance on the Newsletter page. Since the Monday board's API key is dead,
+that page is not a report *about* the mailing list; it **is** the mailing list.
+A subscriber who is not on it cannot be mailed.
+
+So the widening traded a visible duplicate for a silent omission, in the one
+direction where the omission is unrecoverable. The operator chose the duplicate,
+2026-08-27:
+
+| Case | Result |
+| --- | --- |
+| Unknown address subscribes | new `NEWSLETTER` lead |
+| Existing `NEWSLETTER` lead re-subscribes | silent no-op |
+| Existing lead of another source subscribes | **second, newsletter-scoped lead — intended** |
+| Trashed lead subscribes | fresh `NEWSLETTER` lead |
+
+Two changes from the same pass were kept, because they are unrelated to the
+reverted idea and correct on their own: the lookup now filters `deletedAt: null`
+(a trashed lead must not swallow a live sign-up), and it pins
+`orderBy: { createdAt: "asc" }`, because `Lead.email` carries only an index and
+no unique constraint, so `findFirst` without an order is undefined when
+duplicates exist — and duplicates now exist by design.
+
+The proper fix remains the one under "Out of scope": subscribers need their own
+field, so that being a subscriber and being a prospect stop competing for a
+column that holds one value.
 
 ## Out of scope
 
