@@ -1174,37 +1174,17 @@ export async function mergeLeads(targetId: string, sourceId: string) {
   // and merging their real enquiry into it is an easy mistake to make now that
   // the Newsletter page exists. Adopt the real lead's source, and record it the
   // same way moveLeadToBucket would.
-  if (bucketOf(target.source) === "newsletter" && bucketOf(source.source) !== "newsletter") {
-    const mergeSourceChangeContent = `Moved to Leads — source changed from ${target.source} to ${source.source} by merge`;
-    await prisma.lead.update({ where: { id: target.id }, data: { source: source.source } });
-    await prisma.leadActivity.create({
-      data: {
-        leadId: target.id,
-        type: "SOURCE_CHANGE",
-        content: mergeSourceChangeContent,
-        createdBy: session.user?.name ?? "admin",
-        createdById: (session.user as any)?.id ?? null,
-      },
-    });
-    // Mirrors moveLeadToBucket's own LeadInteraction write so this bucket
-    // change shows up in the Cockpit's unified timeline, which renders from
-    // LeadInteraction, not LeadActivity — the activity row above alone would
-    // be invisible where the operator actually looks for history.
-    // direction is deliberately omitted (same as moveLeadToBucket): a merge
-    // is not a conversation, and the Cockpit reads the newest interaction
-    // with a non-null direction as "last contact".
-    await prisma.leadInteraction.create({
-      data: {
-        leadId: target.id,
-        type: "SYSTEM",
-        channel: "SYSTEM",
-        body: mergeSourceChangeContent,
-        metadata: { fromSource: target.source, toSource: source.source, toBucket: bucketOf(source.source), viaMerge: true },
-        createdByUserId: (session.user as any)?.id ?? null,
-        createdByName: session.user?.name ?? "admin",
-      },
-    });
-  }
+  //
+  // Computed here but WRITTEN inside the $transaction below, alongside the
+  // rest of the merge: these rows narrate a merge that, without atomicity,
+  // could half-happen — e.g. another admin hard-deleting the source lead from
+  // Trash between these writes and the delete would roll the delete back but
+  // leave the survivor already carrying the new source and two rows
+  // describing a merge that never completed.
+  const adoptBucket = bucketOf(target.source) === "newsletter" && bucketOf(source.source) !== "newsletter";
+  // The label must name the bucket the survivor actually lands in — source.source
+  // can be PARTNER, in which case this is a move to Partner, not to Leads.
+  const mergeSourceChangeContent = `Moved to ${BUCKET_LABEL[bucketOf(source.source)]} — source changed from ${target.source} to ${source.source} by merge`;
 
   await prisma.$transaction([
     prisma.leadActivity.updateMany({ where: { leadId: sourceId }, data: { leadId: targetId } }),
@@ -1222,6 +1202,36 @@ export async function mergeLeads(targetId: string, sourceId: string) {
         createdByName: session.user?.name ?? "admin",
       },
     }),
+    ...(adoptBucket ? [
+      prisma.lead.update({ where: { id: target.id }, data: { source: source.source } }),
+      prisma.leadActivity.create({
+        data: {
+          leadId: target.id,
+          type: "SOURCE_CHANGE",
+          content: mergeSourceChangeContent,
+          createdBy: session.user?.name ?? "admin",
+          createdById: (session.user as any)?.id ?? null,
+        },
+      }),
+      // Mirrors moveLeadToBucket's own LeadInteraction write so this bucket
+      // change shows up in the Cockpit's unified timeline, which renders from
+      // LeadInteraction, not LeadActivity — the activity row above alone would
+      // be invisible where the operator actually looks for history.
+      // direction is deliberately omitted (same as moveLeadToBucket): a merge
+      // is not a conversation, and the Cockpit reads the newest interaction
+      // with a non-null direction as "last contact".
+      prisma.leadInteraction.create({
+        data: {
+          leadId: target.id,
+          type: "SYSTEM",
+          channel: "SYSTEM",
+          body: mergeSourceChangeContent,
+          metadata: { fromSource: target.source, toSource: source.source, toBucket: bucketOf(source.source), viaMerge: true },
+          createdByUserId: (session.user as any)?.id ?? null,
+          createdByName: session.user?.name ?? "admin",
+        },
+      }),
+    ] : []),
     prisma.lead.delete({ where: { id: sourceId } }),
   ]);
   revalidatePath(`/admin/crm/${targetId}`);
