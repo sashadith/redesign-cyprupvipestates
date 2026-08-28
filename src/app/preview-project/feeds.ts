@@ -1029,6 +1029,61 @@ export async function mitoClusters(): Promise<MitoCluster[]> {
   return clusterMitoProperties(arr((await cachedParse(MITO_URL))?.root?.property));
 }
 
+/* One cluster → one ProjectVM. `id` is supplied by the caller rather than derived
+   here: Mito's identity is anchored in the database (see the Mito sync path in
+   feedSync.ts), because the operator names these projects by hand and a
+   recomputed key would orphan those names the first time the feed shifts. */
+export function mitoVm(cluster: MitoCluster, id: string): ProjectVM {
+  const units: UnitVM[] = cluster.units.map((u: any) => {
+    const ref = txt(u.ref) || txt(u.id);
+    const c = mitoCoords(u);
+    return {
+      ref, name: `Nr. ${ref}`, label: `Nr. ${ref}`,
+      type: toTitleCaseName(clean(u.type)),
+      // No status field anywhere in this feed. Presence IS availability, and a
+      // unit that leaves the feed is pruned by the shared sync path — the same
+      // mechanic as the other XML developers, but with no total to measure it
+      // against, so "N available" here is not "N of M".
+      status: "available", statusLabel: "Available",
+      price: toNum(u.price), currency: clean(u.currency) || "EUR",
+      beds: clean(u.beds) !== "0" ? clean(u.beds) : "",
+      baths: clean(u.baths) !== "0" ? clean(u.baths) : "",
+      areaBuilt: areaM2(u?.surface_area?.built), areaPlot: areaM2(u?.surface_area?.plot), areaVeranda: "",
+      floor: "", attrs: [], features: txt(u.pool) === "1" ? ["Pool"] : [],
+      photos: sizedImages(arr(u?.images?.image).map((im: any) => txt(im?.url)).filter(Boolean)),
+      plans: [], coords: c, description: "",
+    };
+  });
+
+  const first = cluster.units[0] ?? {};
+  const center = cluster.center;
+  const district = districtFor(center) || districtFromText(clean(first.province)) || districtFromText(clean(first.town)) || clean(first.province);
+  const town = clean(first.town);
+  // AVAILABLE units only, exactly as squareOne does — see the Royal Horizon
+  // comment there. Every unit is "available" in this feed, so today this is the
+  // whole set; the shape is kept so it stays correct if a status field ever
+  // appears.
+  const prices = units.filter((u) => u.status === "available").map((u) => u.price).filter((p): p is number => p != null);
+
+  return {
+    id, dev: "mito",
+    // Deliberately the id, not a guess from the description. Two of the four
+    // projects are never named in the feed, and the operator names all of them
+    // by hand through the public-name override.
+    publicName: id, developerName: id, developer: "Mito",
+    location: town || district, district, town,
+    area: town && town.toLowerCase() !== district.toLowerCase() ? town : "",
+    status: "", category: "",
+    priceFrom: prices.length ? Math.min(...prices) : null,
+    priceTo: prices.length ? Math.max(...prices) : null,
+    currency: "EUR",
+    description: cluster.description,
+    gallery: sizedImages(Array.from(new Set(cluster.units.flatMap((p: any) => arr(p?.images?.image).map((im: any) => txt(im?.url))))).filter(Boolean)),
+    plans: [], renders: [], amenities: [],
+    center, units,
+  };
+}
+
 // ---------- dispatcher ----------
 const DEVELOPERS: Record<string, { label: string; default: string }> = {
   "island-blue": { label: "Island Blue", default: "76" },
