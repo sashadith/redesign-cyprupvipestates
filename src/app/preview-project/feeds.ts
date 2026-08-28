@@ -254,6 +254,19 @@ const OVERRIDES: Record<string, Ov> = {
 };
 
 // ==================================================================
+// Mito (Qobrix). Kyero v3, but the properties are siblings of <kyero> under
+// <root> rather than children of it — squareOne's `kyero.property` path does not
+// reach them.
+// ==================================================================
+const MITO_URL = "https://mito-invest.eu1.qobrix.com/api/v2/feeds/7062fe516e5e70b7e38af8207894f5590f9a2c53048626a7dbd116ec508ae809";
+// Two properties belong to the same project when they are within this distance
+// OR share a description. Measured on the live feed 2026-08-28: distances inside
+// a project run 0–9 m, there is a single 61 m case, and the next pair is over
+// 400 m away — so any value from 100 to 400 yields the same four projects. 150
+// sits in the middle of that plateau rather than on either edge of it.
+const MITO_SAME_PROJECT_M = 150;
+
+// ==================================================================
 // Island Blue (two XML feeds: projects + units, linked by ParentProject)
 // ==================================================================
 const IB_PROJECTS = "https://portal.islandbluecyprus.com/v1/api/xml/projects";
@@ -947,6 +960,69 @@ async function squareOne(id: string): Promise<ProjectVM | null> {
     gallery, plans: [], renders: [], amenities, heroVideo: ov.heroVideo, center, units,
     priceFrom: prices[0] ?? null, priceTo: prices[prices.length - 1] ?? null, currency: units[0]?.currency || "EUR",
   };
+}
+
+// ==================================================================
+// Mito (Qobrix) — clustering. The feed carries no project id, no project name
+// field and no <url> — the hook squareOne uses. Projects are therefore derived
+// by grouping properties, and NEITHER available signal is sufficient on its own.
+// Both failure modes are real, measured on the live feed:
+//
+//   - proximity alone splits Mamba, whose 1074 sits 450 m from its own project;
+//   - identical descriptions alone split Paramount, whose four units carry two
+//     different texts.
+//
+// So: same project when within MITO_SAME_PROJECT_M **or** sharing a description,
+// unioned transitively.
+// ==================================================================
+export type MitoCluster = { units: any[]; description: string; center: { lat: number; lng: number } | null };
+
+const mitoCoords = (p: any): { lat: number; lng: number } | null => {
+  const lat = Number(txt(p?.location?.latitude)), lng = Number(txt(p?.location?.longitude));
+  return Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0 && lng !== 0 ? { lat, lng } : null;
+};
+
+const metresBetween = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) =>
+  Math.hypot((a.lat - b.lat) * 111320, (b.lng - a.lng) * 111320 * Math.cos((a.lat * Math.PI) / 180));
+
+// Exported for the QA script — and because a future reader should be able to
+// run the grouping without the network.
+export function clusterMitoProperties(props: any[]): MitoCluster[] {
+  const parent = props.map((_, i) => i);
+  const find = (x: number): number => { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; };
+  const union = (a: number, b: number) => { const ra = find(a), rb = find(b); if (ra !== rb) parent[ra] = rb; };
+
+  const coords = props.map(mitoCoords);
+  const descs = props.map((p) => tidyDesc(txt(p?.desc?.en)));
+  for (let i = 0; i < props.length; i++) {
+    for (let j = i + 1; j < props.length; j++) {
+      const near = coords[i] && coords[j] && metresBetween(coords[i]!, coords[j]!) < MITO_SAME_PROJECT_M;
+      const sameText = !!descs[i] && descs[i] === descs[j];
+      if (near || sameText) union(i, j);
+    }
+  }
+
+  const byRoot = new Map<number, number[]>();
+  props.forEach((_, i) => { const r = find(i); byRoot.set(r, [...(byRoot.get(r) ?? []), i]); });
+
+  return Array.from(byRoot.values()).map((idxs) => {
+    const units = idxs.map((i) => props[i]);
+    // Longest variant wins where a project carries more than one text (Paramount
+    // does). Deterministic on purpose: a tie-break by feed order would let the
+    // description flip between syncs as units come and go.
+    const description = idxs.map((i) => descs[i]).sort((a, b) => b.length - a.length)[0] ?? "";
+    const withCoords = idxs.map((i) => coords[i]).filter(Boolean) as { lat: number; lng: number }[];
+    const center = withCoords.length
+      ? { lat: withCoords.reduce((s, c) => s + c.lat, 0) / withCoords.length, lng: withCoords.reduce((s, c) => s + c.lng, 0) / withCoords.length }
+      : null;
+    return { units, description, center };
+  });
+}
+
+// Fetches and clusters. Separate from clusterMitoProperties so the pure grouping
+// can be tested without the network.
+export async function mitoClusters(): Promise<MitoCluster[]> {
+  return clusterMitoProperties(arr((await cachedParse(MITO_URL))?.root?.property));
 }
 
 // ---------- dispatcher ----------
