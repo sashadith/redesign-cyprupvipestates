@@ -43,10 +43,24 @@ export async function POST(request: Request) {
 
     const langNorm = String(body.lang ?? "").toLowerCase();
 
-    // Persist to the CRM (system of record). Light dedupe: one NEWSLETTER lead per email.
+    // Persist to the CRM (system of record). Light dedupe: one NEWSLETTER lead
+    // per email — scoped to this bucket on purpose. The Monday board's API key
+    // is dead (see below), so this page IS the mailing list; a person who is
+    // already a lead through another channel and then subscribes gets a second,
+    // newsletter-scoped row, deliberately, because a subscriber missing from
+    // this list cannot be mailed. Matching across buckets was tried and reverted
+    // — it silently dropped every dual-role person off the list, which is worse
+    // than the duplicate row it avoided.
+    //
+    // deletedAt/orderBy below are unrelated hardening from a later pass, not
+    // part of that reverted idea: deletedAt excludes trashed leads (a trashed
+    // NEWSLETTER lead must not swallow a fresh sign-up), and orderBy is required
+    // because Lead.email has no unique constraint — without it, which duplicate
+    // matches is undefined.
     try {
       const existing = await prisma.lead.findFirst({
-        where: { email: emailNorm, source: "NEWSLETTER" },
+        where: { email: emailNorm, source: "NEWSLETTER", deletedAt: null },
+        orderBy: { createdAt: "asc" },
         select: { id: true },
       });
       if (!existing) {

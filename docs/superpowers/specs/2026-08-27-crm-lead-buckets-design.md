@@ -90,7 +90,7 @@ popover, no hot toggle. Those are sales instruments, and a subscriber is not a
 sales process. Modelled on `crm/trash/page.tsx`, which is the existing precedent
 for "a second, simpler list of leads".
 
-**Exclusion, in exactly five places:**
+**Exclusion, in eight places:**
 
 | File | Change |
 | --- | --- |
@@ -120,9 +120,41 @@ into an `AND` array instead, where nothing can clobber it. `NEWSLETTER` also
 comes out of the Leads page's source dropdown, since that filter can no longer
 match anything.
 
-The Dashboard (`(panel)/page.tsx`) keeps counting every lead. Its "leads by
-source" breakdown is a census, not a work queue, and hiding a source from a
-source breakdown would be actively misleading.
+The Dashboard needs splitting, not exempting. **This spec first exempted the
+whole page**, on the grounds that its "leads by source" breakdown is a census
+rather than a work queue and hiding a source from a source breakdown would
+misreport the very thing it exists to show. That reasoning is right — but it
+applies to exactly one of the page's six lead queries. The other five are
+volume, recency and pipeline metrics:
+
+| Query | Feeds | Excludes? |
+| --- | --- | --- |
+| `leadsTotal`, `leads7d`, `leads30d` | the stat cards | yes |
+| `recent` | the "Recent leads" panel | yes |
+| `byStatus` groupBy | the pipeline panel, and the Won / Conversion KPIs | yes |
+| `bySource` groupBy | "Leads by source" | **no — census** |
+
+Caught by the completeness review, not by writing this spec. Left as it was,
+the sidebar would have said 50 leads while the Dashboard one click away said
+60 with no explanation, "Recent leads" would have listed people who vanish when
+you click through to the list, and — worst — subscribers would have fed the
+Won/Conversion figures, since a subscriber's detail page leaves the status
+picker fully editable.
+
+Two further surfaces the same review found, both missed here for the same
+reason (this spec reasoned about files, and these are reached through a join or
+live in another module):
+
+- **`src/lib/seo/pagePower/classVerdicts.ts`** counts leads carrying a
+  `pageSource` as evidence that a page generates enquiries. A newsletter
+  sign-up carries `pageSource` too — the identical leak fixed in
+  `rules/developers.ts` above, from a different direction.
+- **`rules/crm.ts` has three rule functions, not one.** Only `noFollowUp`
+  queries `prisma.lead` directly; `engagedNoFollowUp` and `expiringSoon` reach
+  the lead through `prisma.clientPresentation`, so the `where`-fragment does
+  not apply and each guard needs `bucketOf` instead. A presentation can be
+  created for any lead, so without this a subscriber could trigger "keeps
+  viewing their presentation — call them".
 
 ### Feature 2 — moving a lead between buckets
 
@@ -149,14 +181,43 @@ Writing `metadata` structured rather than only as prose follows the reasoning
 already recorded for `metadata.toStatus` in `updateLeadStatus`: a later consumer
 should not have to parse a sentence.
 
-### One adjacent fix
+### One adjacent fix — proposed, implemented, and then reverted on the operator's call
 
-`/api/monday-newsletter` de-duplicates on `email` **and** `source: "NEWSLETTER"`.
-Once a subscriber can be moved out of the newsletter bucket, a re-subscription
-would no longer match and would create a **second lead with the same address**.
-Drop `source` from that lookup so it matches on email alone.
+**This section originally read:** `/api/monday-newsletter` de-duplicates on
+`email` **and** `source: "NEWSLETTER"`; once a subscriber can be moved out of
+the newsletter bucket, a re-subscription would no longer match and would create
+a second lead with the same address; so drop `source` and match on email alone.
 
-This is one line, and the bug it prevents is one this very feature introduces.
+That was wrong, and the reasoning is worth keeping rather than deleting.
+
+Widening the match makes a person who is already a lead through another channel
+— a contact form, a WhatsApp enquiry — match on their existing row and create
+nothing. No duplicate. But also **no newsletter-scoped row**, and therefore no
+appearance on the Newsletter page. Since the Monday board's API key is dead,
+that page is not a report *about* the mailing list; it **is** the mailing list.
+A subscriber who is not on it cannot be mailed.
+
+So the widening traded a visible duplicate for a silent omission, in the one
+direction where the omission is unrecoverable. The operator chose the duplicate,
+2026-08-27:
+
+| Case | Result |
+| --- | --- |
+| Unknown address subscribes | new `NEWSLETTER` lead |
+| Existing `NEWSLETTER` lead re-subscribes | silent no-op |
+| Existing lead of another source subscribes | **second, newsletter-scoped lead — intended** |
+| Trashed lead subscribes | fresh `NEWSLETTER` lead |
+
+Two changes from the same pass were kept, because they are unrelated to the
+reverted idea and correct on their own: the lookup now filters `deletedAt: null`
+(a trashed lead must not swallow a live sign-up), and it pins
+`orderBy: { createdAt: "asc" }`, because `Lead.email` carries only an index and
+no unique constraint, so `findFirst` without an order is undefined when
+duplicates exist — and duplicates now exist by design.
+
+The proper fix remains the one under "Out of scope": subscribers need their own
+field, so that being a subscriber and being a prospect stop competing for a
+column that holds one value.
 
 ## Out of scope
 

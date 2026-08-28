@@ -93,7 +93,7 @@ export const money = (n: number | null) => (n == null ? "—" : `€${n.toLocale
 export type LeadRowData = {
   id: string; firstName: string; lastName: string;
   languagePreference: string | null; sourceLocale: string | null;
-  countryOfResidence: string | null; status: string; createdAt: Date;
+  countryOfResidence: string | null; status: string; source: string; createdAt: Date;
   hotAt: Date | null; budgetMax: number | null; viewingScheduledAt: Date | null;
   email: string | null; phone: string | null;
   assignedTo: { name: string } | null;

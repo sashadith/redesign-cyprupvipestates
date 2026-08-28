@@ -12,6 +12,7 @@ import { listPresentationLocations } from "./presentationActions";
 import PropertyMatching from "./PropertyMatching";
 import ExistingPresentations, { type PresentationRow } from "./ExistingPresentations";
 import DeleteLeadButton from "../DeleteLeadButton";
+import MoveLeadMenu from "../MoveLeadMenu";
 import CockpitCard, { type LastContact, type PresentationSummary } from "./CockpitCard";
 import UnifiedTimeline, { type TimelineRow } from "./UnifiedTimeline";
 import BookingPanel, { type BookingRow } from "./BookingPanel";
@@ -324,7 +325,12 @@ export default async function LeadDetail({ params }: { params: { id: string } })
           the very bottom of the page, below every section, so it's not next
           to anything easy to misclick into. Status duration moved back up
           into the CockpitCard header (next to the locale badge). */}
-      <div className="pt-4 border-t border-[#E5E7EB]">
+      {/* Move sits at the opposite end of the row from Delete. The comment above
+          puts Delete down here so it is not next to anything easy to misclick
+          into; a <select> needs a deliberate second click to commit, so it does
+          not reintroduce that hazard. */}
+      <div className="pt-4 border-t border-[#E5E7EB] flex items-center justify-between">
+        <MoveLeadMenu id={id} source={lead.source} className="rounded-md border border-[#E5E7EB] bg-white text-sm px-3 py-1.5 text-[#6B7280] disabled:opacity-50" />
         <DeleteLeadButton id={id} redirectTo="/admin/crm" label="Delete lead" />
       </div>
     </div>

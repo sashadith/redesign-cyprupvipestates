@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { buildCanonicalMap, canonicalize, localeOfPath } from "@/lib/seo/urlCanonical";
 import { templateClassOf, type TemplateClass } from "@/lib/seo/templateClass";
 import {
@@ -285,7 +286,15 @@ export async function getClassVerdicts(now: Date = new Date()): Promise<ClassVer
       //
       // `Lead.status` is never read: the operator ruled it unusable as a
       // scoring basis.
-      where: { createdAt: { gte: windowStart, lt: windowEnd }, deletedAt: null, pageSource: { not: null } },
+      //
+      // `...EXCLUDE_NEWSLETTER` — the newsletter sign-up route stamps
+      // `pageSource` too, so a subscriber who joined while reading a project
+      // page would otherwise count as proof that page generates enquiries. It
+      // is the same false positive the `deletedAt` entry above describes —
+      // evidence this module should not be trusting — arrived at from a
+      // different direction: not a discarded lead, but one that was never a
+      // sales enquiry to begin with.
+      where: { createdAt: { gte: windowStart, lt: windowEnd }, deletedAt: null, pageSource: { not: null }, ...EXCLUDE_NEWSLETTER },
       select: { pageSource: true },
     }),
   ]);

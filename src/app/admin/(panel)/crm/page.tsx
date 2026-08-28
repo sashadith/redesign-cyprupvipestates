@@ -3,13 +3,14 @@ import type { Prisma } from "@prisma/client";
 import { FaFire } from "react-icons/fa";
 import { prisma } from "@/lib/prisma";
 import { ELEVATED_NO_CONTACT_STATUSES } from "@/lib/actionCenter/rules/crm";
+import { bucketOf } from "@/lib/crm/leadBucket";
 import CollapsibleLeadsPanel from "./CollapsibleLeadsPanel";
 import LeadBlockRows from "./LeadBlockRows";
 import LeadRow from "./LeadRow";
 import LeadFilterBar from "./LeadFilterBar";
 import {
   buildLeadWhere, orderForSort, leadQueryString,
-  LEAD_STATUSES, LEAD_SOURCES, LEAD_LOCALES, type LeadSearchParams,
+  LEAD_STATUSES, LEAD_LIST_SOURCES, LEAD_LOCALES, type LeadSearchParams,
 } from "./filters";
 import {
   LAST_CONTACT_TYPES, BAND_STYLE, computeBand, type ColorBand, type LeadRowData,
@@ -56,7 +57,11 @@ function LeadBlockSection({
         {dot && <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${dot}`} />}
         {title} <span className="font-normal text-[#9CA3AF]">({leads.length})</span>
       </h2>
-      <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-hidden">
+      {/* overflow-x-auto, not overflow-hidden: the actions column now carries a
+          move menu as well as the delete button, and this table sizes its columns
+          automatically. Clipping would put a control out of reach on a narrow
+          window; scrolling only makes it a scroll away. */}
+      <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-x-auto">
         <table className="w-full text-sm">
           {TABLE_HEAD}
           <tbody className="divide-y divide-[#E5E7EB]">
@@ -151,7 +156,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
     bandById.set(l.id, b);
     if (l.hotAt) {
       hot.push(l);
-    } else if (l.source === "PARTNER") {
+    } else if (bucketOf(l.source) === "partner") {
       // Partner leads get their own block rather than scattering across the
       // colour bands — same exclusivity rule as HOT and KEEP_CONTACT above.
       // Placed AFTER the hotAt check on purpose: hot is the stronger signal,
@@ -180,7 +185,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
         </div>
       </div>
 
-      <LeadFilterBar statuses={LEAD_STATUSES} sources={LEAD_SOURCES} locales={LEAD_LOCALES} users={users} />
+      <LeadFilterBar statuses={LEAD_STATUSES} sources={LEAD_LIST_SOURCES} locales={LEAD_LOCALES} users={users} />
 
       {/* 2026-08-11 — legend extended with HOT and KEEP CONTACT; the dot's
           meaning was previously only ever visible via hover (title attribute
