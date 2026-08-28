@@ -1049,7 +1049,7 @@ export function mitoVm(cluster: MitoCluster, id: string): ProjectVM {
       beds: clean(u.beds) !== "0" ? clean(u.beds) : "",
       baths: clean(u.baths) !== "0" ? clean(u.baths) : "",
       areaBuilt: areaM2(u?.surface_area?.built), areaPlot: areaM2(u?.surface_area?.plot), areaVeranda: "",
-      floor: "", attrs: [], features: txt(u.pool) === "1" ? ["Pool"] : [],
+      floor: "", attrs: [], features: [],
       photos: sizedImages(arr(u?.images?.image).map((im: any) => txt(im?.url)).filter(Boolean)),
       plans: [], coords: c, description: "",
     };
@@ -1058,7 +1058,19 @@ export function mitoVm(cluster: MitoCluster, id: string): ProjectVM {
   const first = cluster.units[0] ?? {};
   const center = cluster.center;
   const district = districtFor(center) || districtFromText(clean(first.province)) || districtFromText(clean(first.town)) || clean(first.province);
-  const town = clean(first.town);
+  // The most common town across the cluster, not whichever unit the feed listed
+  // first. Members genuinely disagree: Paramount's 1078 says "Chlorakas" while
+  // three units 61 m away say "Agios Theodoros". Taking units[0] happens to give
+  // the majority value today only because the feed lists one of the three first.
+  // `district` already has an equivalent safeguard — it comes from the cluster's
+  // averaged coordinates rather than any single member.
+  const townCounts = new Map<string, number>();
+  for (const u of cluster.units) {
+    const t = clean(u.town);
+    if (t) townCounts.set(t, (townCounts.get(t) ?? 0) + 1);
+  }
+  const town = Array.from(townCounts.entries())
+    .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))[0]?.[0] ?? "";
   // AVAILABLE units only, exactly as squareOne does — see the Royal Horizon
   // comment there. Every unit is "available" in this feed, so today this is the
   // whole set; the shape is kept so it stays correct if a status field ever
@@ -1071,7 +1083,7 @@ export function mitoVm(cluster: MitoCluster, id: string): ProjectVM {
     // projects are never named in the feed, and the operator names all of them
     // by hand through the public-name override.
     publicName: id, developerName: id, developer: "Mito",
-    location: town || district, district, town,
+    location: joinLoc(district, town), district, town,
     area: town && town.toLowerCase() !== district.toLowerCase() ? town : "",
     status: "", category: "",
     priceFrom: prices.length ? Math.min(...prices) : null,
@@ -1079,7 +1091,14 @@ export function mitoVm(cluster: MitoCluster, id: string): ProjectVM {
     currency: "EUR",
     description: cluster.description,
     gallery: sizedImages(Array.from(new Set(cluster.units.flatMap((p: any) => arr(p?.images?.image).map((im: any) => txt(im?.url))))).filter(Boolean)),
-    plans: [], renders: [], amenities: [],
+    plans: [], renders: [],
+    // Project-level, not per-unit. Every unit carries pool=1 and the feed says
+    // nothing about private versus communal — while one project's own text says
+    // "a spacious communal swimming pool". A chip on each apartment card would
+    // claim a private pool the feed never promised. squareOne solves the same
+    // ambiguity the other way ("Private pool (selected units)") because its feed
+    // marks pools per unit; this one does not.
+    amenities: cluster.units.some((u: any) => txt(u.pool) === "1") ? ["Pool"] : [],
     center, units,
   };
 }
