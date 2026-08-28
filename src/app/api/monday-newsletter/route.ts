@@ -7,7 +7,6 @@ import { prisma } from "@/lib/prisma";
 import { parseAttribution } from "@/lib/attribution";
 import { recordInboundLead } from "@/lib/leadNotify";
 import { ALLOWED_HOSTS, safeUrl, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
-import { bucketOf } from "@/lib/crm/leadBucket";
 
 const MONDAY_API_URL = "https://api.monday.com/v2";
 const NEWSLETTER_BOARD_ID = process.env.MONDAY_NEWSLETTER_BOARD_ID || "1761993654";
@@ -44,30 +43,25 @@ export async function POST(request: Request) {
 
     const langNorm = String(body.lang ?? "").toLowerCase();
 
-    // Persist to the CRM (system of record). Light dedupe: one lead per email address, whatever bucket it is in.
+    // Persist to the CRM (system of record). Light dedupe: one NEWSLETTER lead
+    // per email — scoped to this bucket on purpose. The Monday board's API key
+    // is dead (see below), so this page IS the mailing list; a person who is
+    // already a lead through another channel and then subscribes gets a second,
+    // newsletter-scoped row, deliberately, because a subscriber missing from
+    // this list cannot be mailed. Matching across buckets was tried and reverted
+    // — it silently dropped every dual-role person off the list, which is worse
+    // than the duplicate row it avoided.
+    //
+    // deletedAt/orderBy below are unrelated hardening from a later pass, not
+    // part of that reverted idea: deletedAt excludes trashed leads (a trashed
+    // NEWSLETTER lead must not swallow a fresh sign-up), and orderBy is required
+    // because Lead.email has no unique constraint — without it, which duplicate
+    // matches is undefined.
     try {
-      // Match on the address alone, NOT on source as well. A subscriber can be
-      // moved out of the newsletter bucket (see moveLeadToBucket in
-      // src/app/admin/actions.ts) — matching on source too would stop
-      // recognising them and create a second lead with the same address the next
-      // time they subscribed.
-      //
-      // deletedAt: null excludes trashed leads — same as every other "is this
-      // person already represented" lookup in the codebase. A trashed lead is
-      // deliberately out of circulation, so someone whose lead was trashed and
-      // who then subscribes gets a FRESH lead, not a silent write onto a record
-      // no admin view will ever show them. That is what already happened before
-      // this branch for every source except NEWSLETTER; this restores it.
-      //
-      // orderBy pins which duplicate wins when more than one lead shares this
-      // address (the very duplication this task exists to stop creating more
-      // of) — the oldest surviving lead is the canonical one, so the timeline
-      // entry below always lands on the same record instead of scattering
-      // across whichever duplicate findFirst happens to return.
       const existing = await prisma.lead.findFirst({
-        where: { email: emailNorm, deletedAt: null },
+        where: { email: emailNorm, source: "NEWSLETTER", deletedAt: null },
         orderBy: { createdAt: "asc" },
-        select: { id: true, source: true },
+        select: { id: true },
       });
       if (!existing) {
         const lead = await prisma.lead.create({
@@ -85,31 +79,6 @@ export async function POST(request: Request) {
         });
         // Activity only — no Telegram ping (newsletter is high-volume/low-value).
         await recordInboundLead({ leadId: lead.id, source: "NEWSLETTER", email: emailNorm, page, notifyTelegram: false });
-      } else if (bucketOf(existing.source) !== "newsletter") {
-        // A lead who already existed through another channel has now ALSO
-        // subscribed. That is a real event, and widening the dedupe above is
-        // what would otherwise swallow it: before, this person got a second,
-        // duplicate NEWSLETTER lead that at least recorded the fact. Their
-        // source is deliberately NOT changed — they are a real enquiry first,
-        // and a subscriber second; only the timeline gains an entry.
-        //
-        // Guarded on source so a genuine RE-subscription by an existing
-        // subscriber stays the silent no-op it has always been.
-        //
-        // Written inline rather than through recordInboundLead: that helper sets
-        // direction "INBOUND", and the Cockpit reads the newest interaction with
-        // a non-null direction as "last contact". Routing a newsletter sign-up
-        // through it would reset a months-cold prospect's last-contact to now —
-        // from a public, unauthenticated form — while the colour dot and the
-        // Action Center, which key off interaction TYPE, still called them
-        // overdue. The event is worth recording; it is not a contact.
-        const subscribed = "Subscribed to the newsletter";
-        await prisma.leadActivity.create({
-          data: { leadId: existing.id, type: "NEWSLETTER_SIGNUP", content: subscribed, createdBy: "website" },
-        });
-        await prisma.leadInteraction.create({
-          data: { leadId: existing.id, type: "SYSTEM", channel: "SYSTEM", direction: null, body: subscribed, metadata: { page }, createdByName: "website" },
-        });
       }
     } catch (e) {
       console.error("Newsletter lead persist error:", e);
