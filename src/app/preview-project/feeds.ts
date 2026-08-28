@@ -1008,9 +1008,13 @@ export function clusterMitoProperties(props: any[]): MitoCluster[] {
   return Array.from(byRoot.values()).map((idxs) => {
     const units = idxs.map((i) => props[i]);
     // Longest variant wins where a project carries more than one text (Paramount
-    // does). Deterministic on purpose: a tie-break by feed order would let the
-    // description flip between syncs as units come and go.
-    const description = idxs.map((i) => descs[i]).sort((a, b) => b.length - a.length)[0] ?? "";
+    // does), with a lexical tie-break so the result does not depend on the order
+    // the feed happened to list the units in. Deterministic on purpose: a
+    // description that flipped between syncs would churn the project's content
+    // and its generated SEO text for no reason.
+    const description = idxs
+      .map((i) => descs[i])
+      .sort((a, b) => b.length - a.length || a.localeCompare(b))[0] ?? "";
     const withCoords = idxs.map((i) => coords[i]).filter(Boolean) as { lat: number; lng: number }[];
     const center = withCoords.length
       ? { lat: withCoords.reduce((s, c) => s + c.lat, 0) / withCoords.length, lng: withCoords.reduce((s, c) => s + c.lng, 0) / withCoords.length }

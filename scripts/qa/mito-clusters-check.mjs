@@ -103,15 +103,17 @@ check("61 m apart with different texts -> one project",
   ])),
   [["1059", "1078", "1079"]]);
 
-/* 5. Transitivity. A links to B by distance, B links to C by text; all three are
-      one project. This is what makes union-find the right shape rather than a
-      pairwise pass. */
+/* 5. Transitivity, isolated. A links to B by DISTANCE only, B links to C by TEXT
+      only, and A and C share neither — different text, 22 km apart. All three
+      must still land in one project. This is the case that distinguishes a
+      union-find from a naive "match against the first member of each existing
+      group" pass, which would put A and C in separate groups. */
 console.log("transitivity");
-check("A-B by distance, B-C by text -> one project",
+check("A-B by distance, B-C by text, A and C unrelated -> one project",
   groupsOf(F.clusterMitoProperties([
-    prop(1, 34.7000, 32.4000, "text one"),
-    prop(2, 34.7005, 32.4000, "text one"),
-    prop(3, 34.9000, 32.9000, "text one"),
+    prop(1, 34.7000, 32.4000, "alpha description"),
+    prop(2, 34.7005, 32.4000, "bravo description"),
+    prop(3, 34.9000, 32.9000, "bravo description"),
   ])),
   [["1", "2", "3"]]);
 
