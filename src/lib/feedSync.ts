@@ -26,6 +26,11 @@ export const DEV_ACCOUNT: Record<string, { slug: string; name: string }> = {
   // silently create a THIRD, empty, disconnected account on the next sync
   // instead of attaching to the one already configured.
   medousa: { slug: "medousa-xml", name: "Medousa (XML)" },
+  // slug "mito-xml", not "mito" — the same trap as medousa above. The account
+  // the admin created for this feed on 2026-08-28 has that slug, and
+  // ensureAccount upserts by it; without this entry the first sync would create
+  // a second, empty account and attach every Mito project to it.
+  mito: { slug: "mito-xml", name: "Mito (XML)" },
   agg: { slug: "agg", name: "AGG Luxury Homes" },
   squareone: { slug: "square-one", name: "Square One" },
 };
