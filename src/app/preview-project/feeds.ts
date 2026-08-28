@@ -1146,5 +1146,12 @@ export async function getPreviewProject(dev = "island-blue", id?: string): Promi
   if (dev === "pafilia" || dev === "domenica") return xml2u(dev, target);
   if (dev === "medousa") return medousa(target);
   if (dev === "squareone") return squareOne(target);
-  return islandBlue(target);
+  // Island Blue is the default for its OWN key only. Returning it for anything
+  // unrecognised meant a developer added without an adapter silently received
+  // another developer's projects — found 2026-08-28 while adding Mito, whose
+  // sync path deliberately never reaches this function. Every caller either
+  // catches (feedSync's four call sites) or normalises its input first
+  // ([lang]/preview-project/page.tsx).
+  if (dev === "island-blue") return islandBlue(target);
+  throw new Error(`No feed adapter for developer "${dev}"`);
 }

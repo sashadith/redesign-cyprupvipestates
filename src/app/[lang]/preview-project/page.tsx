@@ -26,7 +26,15 @@ export const metadata: Metadata = { title: "Project page — preview", robots: {
 
 export default async function PreviewProjectPage({ params, searchParams }: { params: { lang: string }; searchParams?: { dev?: string; id?: string; source?: string } }) {
   const { lang } = params;
-  const dev = searchParams?.dev ?? "island-blue";
+  const rawDev = searchParams?.dev ?? "island-blue";
+  // `dev` arrives from an unvalidated public query parameter. Normalise it to a
+  // key that actually has an adapter: getPreviewProject now throws for anything
+  // unrecognised (it used to silently serve Island Blue's feed to any developer
+  // without an adapter), and this page has no error boundary — there is no
+  // error.tsx anywhere in the app — so an unknown ?dev= would be a 500 for
+  // anyone following a stale link. Falling back to the default is what this page
+  // did before, just no longer by accident.
+  const dev = DEV_LIST.some((d) => d.id === rawDev) ? rawDev : "island-blue";
   const target = searchParams?.id ?? DEV_LIST.find((d) => d.id === dev)?.default ?? "";
   const forceFeed = searchParams?.source === "feed";
 
