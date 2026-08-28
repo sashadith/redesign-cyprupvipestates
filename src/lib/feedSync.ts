@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getPreviewProject, listProjectIds, type ProjectVM } from "@/app/preview-project/feeds";
+import { getPreviewProject, listProjectIds, mitoClusters, mitoVm, type MitoCluster, type ProjectVM } from "@/app/preview-project/feeds";
 import type { UnitVM } from "@/app/preview-project/UnitsView";
 import { mirrorAll, mirrorImage, devKeyFor, scheduleAppRestart, beginSyncWindow, sourceUrlHash, hashFromMirroredUrl, classifyByContent } from "@/lib/imageMirror";
 import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
@@ -10,6 +10,12 @@ import { recomputeDevelopmentDerivedState } from "@/lib/developmentDerivedState"
    Development / DevelopmentUnit, keyed by feedKey ("<dev>:<id>"). Admin edits in
    DevelopmentOverride are NEVER touched. Images are stored as the feed URLs for
    now — the mirroring step (Increment 3) rewrites them to our own URLs. */
+
+// A cluster matches an existing Mito development within this distance. Same
+// figure as the clustering threshold in feeds.ts, and for the same reason: on
+// the live feed every gap between two different projects is over 400 m, so 150
+// separates them with room on both sides.
+const MITO_MATCH_M = 150;
 
 export const DEV_ACCOUNT: Record<string, { slug: string; name: string }> = {
   "island-blue": { slug: "island-blue", name: "Island Blue" },
@@ -568,9 +574,79 @@ async function checkFeedCompleteness(
   return { blocked: false, vmsById };
 }
 
+/* Mito's feed carries no project ids, so it cannot use the listProjectIds →
+   getPreviewProject path: that path's premise is a feed that supplies stable
+   ids. Each sync clusters the feed afresh and then RECONCILES those clusters
+   against what is already in the database, matching by proximity.
+
+   Anchoring identity in the DB rather than recomputing it is the whole point.
+   The operator names these projects by hand — two of the four are never named in
+   the feed — so a key that shifted when the feed shifted would leave the name on
+   the old row and create an unnamed twin beside it. Mamba shows how real that
+   is: it is held together by a single shared description, and one unit leaving
+   plus one text edit would re-key it. */
+async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncResult> {
+  const dev = "mito";
+  const accountId = await ensureAccount(dev);
+  const clusters = await mitoClusters();
+
+  const known = await prisma.development.findMany({
+    where: { dev, developerAccountId: accountId },
+    select: { feedProjectId: true, latitude: true, longitude: true },
+  });
+
+  // Each existing project may be claimed once, so two clusters cannot collapse
+  // onto the same row and silently merge two projects into one.
+  const claimed = new Set<string>();
+  const idFor = (cluster: MitoCluster): string => {
+    const center = cluster.center;
+    if (center) {
+      let best: { id: string; m: number } | null = null;
+      for (const k of known) {
+        if (!k.feedProjectId || claimed.has(k.feedProjectId)) continue;
+        if (k.latitude == null || k.longitude == null) continue;
+        const m = Math.hypot(
+          (center.lat - k.latitude) * 111320,
+          (k.longitude - center.lng) * 111320 * Math.cos((center.lat * Math.PI) / 180),
+        );
+        if (m < MITO_MATCH_M && (!best || m < best.m)) best = { id: k.feedProjectId, m };
+      }
+      if (best) { claimed.add(best.id); return best.id; }
+      return `${center.lat.toFixed(5)},${center.lng.toFixed(5)}`;
+    }
+    // No coordinates at all, so proximity matching is impossible. Key on the
+    // lowest ref instead: unstable if that unit sells, but distinct per cluster,
+    // which a shared sentinel would not be — two such clusters would land on one
+    // feedKey and merge into a single project. Every property in the live feed
+    // has coordinates, so this is a guard, not a path in use.
+    const lowest = cluster.units.map((u: any) => String(u?.ref ?? "").trim()).filter(Boolean).sort()[0];
+    return lowest ? `noloc-${lowest}` : "noloc";
+  };
+
+  let created = 0, updated = 0, failed = 0, mirroredNewFiles = false, unitsCreated = 0;
+  const unitsUnlisted: UnitChangeLine[] = [];
+  for (const cluster of clusters) {
+    const id = idFor(cluster);
+    try {
+      const r = await syncOneProject(dev, id, accountId, { ...opts, vm: mitoVm(cluster, id) });
+      if (!r.ok) { failed++; continue; }
+      r.created ? created++ : updated++;
+      if (r.mirroredNewFiles) mirroredNewFiles = true;
+      unitsCreated += r.unitsCreated;
+      for (const u of r.unitsUnlisted) {
+        unitsUnlisted.push({ developmentId: r.developmentId!, development: r.developmentName!, ref: u.ref, label: u.label });
+      }
+    } catch {
+      failed++;
+    }
+  }
+  return { dev, found: clusters.length, created, updated, failed, mirroredNewFiles, unitsCreated, unitsUnlisted };
+}
+
 // Core loop, no restart side-effect — syncAll() calls this per developer so a
 // full run schedules exactly ONE restart at the end, not one per developer.
 async function syncDeveloperCore(dev: string, opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncResult> {
+  if (dev === "mito") return syncMitoCore(opts);
   const accountId = await ensureAccount(dev);
   const ids = await listProjectIds(dev);
 
