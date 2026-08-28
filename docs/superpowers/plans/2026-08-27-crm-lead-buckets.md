@@ -6,7 +6,9 @@
 
 **Architecture:** `Lead.source` already decides the bucket, so no schema change is needed anywhere. A new leaf module `src/lib/crm/leadBucket.ts` owns the mapping and two Prisma `where` fragments; five queries import the exclusion fragment, one page imports its inverse, and one server action writes the field and records the old value in the lead timeline.
 
-**Tech Stack:** Next.js 15 App Router (server components + server actions), Prisma, TypeScript, Tailwind.
+**Tech Stack:** Next.js 14.2.5 App Router (server components + server actions), React 18.3.1, Prisma, TypeScript, Tailwind.
+
+> Corrected mid-execution: this plan first said "Next.js 15". It is **Next 14.2.5 / React 18.3.1**, and the difference is load-bearing — React 18's `startTransition` does not track an `async` callback across its first `await`, so `isPending` never becomes true for a server-action call written that way. `DeleteLeadButton.tsx` uses the synchronous form for exactly this reason. Any component here that needs a pending state around an awaited action must hold it in its own `useState`, set before the `await` and cleared in a `finally`.
 
 **Spec:** `docs/superpowers/specs/2026-08-27-crm-lead-buckets-design.md`
 
