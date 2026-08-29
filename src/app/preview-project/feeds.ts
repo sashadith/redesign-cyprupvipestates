@@ -254,6 +254,19 @@ const OVERRIDES: Record<string, Ov> = {
 };
 
 // ==================================================================
+// Mito (Qobrix). Kyero v3, but the properties are siblings of <kyero> under
+// <root> rather than children of it — squareOne's `kyero.property` path does not
+// reach them.
+// ==================================================================
+const MITO_URL = "https://mito-invest.eu1.qobrix.com/api/v2/feeds/7062fe516e5e70b7e38af8207894f5590f9a2c53048626a7dbd116ec508ae809";
+// Two properties belong to the same project when they are within this distance
+// OR share a description. Measured on the live feed 2026-08-28: distances inside
+// a project run 0–9 m, there is a single 61 m case, and the next pair is over
+// 400 m away — so any value from 100 to 400 yields the same four projects. 150
+// sits in the middle of that plateau rather than on either edge of it.
+const MITO_SAME_PROJECT_M = 150;
+
+// ==================================================================
 // Island Blue (two XML feeds: projects + units, linked by ParentProject)
 // ==================================================================
 const IB_PROJECTS = "https://portal.islandbluecyprus.com/v1/api/xml/projects";
@@ -949,6 +962,147 @@ async function squareOne(id: string): Promise<ProjectVM | null> {
   };
 }
 
+// ==================================================================
+// Mito (Qobrix) — clustering. The feed carries no project id, no project name
+// field and no <url> — the hook squareOne uses. Projects are therefore derived
+// by grouping properties, and NEITHER available signal is sufficient on its own.
+// Both failure modes are real, measured on the live feed:
+//
+//   - proximity alone splits Mamba, whose 1074 sits 450 m from its own project;
+//   - identical descriptions alone split Paramount, whose four units carry two
+//     different texts.
+//
+// So: same project when within MITO_SAME_PROJECT_M **or** sharing a description,
+// unioned transitively.
+// ==================================================================
+export type MitoCluster = { units: any[]; description: string; center: { lat: number; lng: number } | null };
+
+const mitoCoords = (p: any): { lat: number; lng: number } | null => {
+  const lat = Number(txt(p?.location?.latitude)), lng = Number(txt(p?.location?.longitude));
+  return Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0 && lng !== 0 ? { lat, lng } : null;
+};
+
+const metresBetween = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) =>
+  Math.hypot((a.lat - b.lat) * 111320, (b.lng - a.lng) * 111320 * Math.cos((a.lat * Math.PI) / 180));
+
+// Exported for the QA script — and because a future reader should be able to
+// run the grouping without the network.
+export function clusterMitoProperties(props: any[]): MitoCluster[] {
+  const parent = props.map((_, i) => i);
+  const find = (x: number): number => { while (parent[x] !== x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; };
+  const union = (a: number, b: number) => { const ra = find(a), rb = find(b); if (ra !== rb) parent[ra] = rb; };
+
+  const coords = props.map(mitoCoords);
+  const descs = props.map((p) => tidyDesc(txt(p?.desc?.en)));
+  for (let i = 0; i < props.length; i++) {
+    for (let j = i + 1; j < props.length; j++) {
+      const near = coords[i] && coords[j] && metresBetween(coords[i]!, coords[j]!) < MITO_SAME_PROJECT_M;
+      const sameText = !!descs[i] && descs[i] === descs[j];
+      if (near || sameText) union(i, j);
+    }
+  }
+
+  const byRoot = new Map<number, number[]>();
+  props.forEach((_, i) => { const r = find(i); byRoot.set(r, [...(byRoot.get(r) ?? []), i]); });
+
+  return Array.from(byRoot.values()).map((idxs) => {
+    const units = idxs.map((i) => props[i]);
+    // Longest variant wins where a project carries more than one text (Paramount
+    // does), with a lexical tie-break so the result does not depend on the order
+    // the feed happened to list the units in. Deterministic on purpose: a
+    // description that flipped between syncs would churn the project's content
+    // and its generated SEO text for no reason.
+    const description = idxs
+      .map((i) => descs[i])
+      .sort((a, b) => b.length - a.length || (a < b ? -1 : a > b ? 1 : 0))[0] ?? "";
+    const withCoords = idxs.map((i) => coords[i]).filter(Boolean) as { lat: number; lng: number }[];
+    const center = withCoords.length
+      ? { lat: withCoords.reduce((s, c) => s + c.lat, 0) / withCoords.length, lng: withCoords.reduce((s, c) => s + c.lng, 0) / withCoords.length }
+      : null;
+    return { units, description, center };
+  });
+}
+
+// Fetches and clusters. Separate from clusterMitoProperties so the pure grouping
+// can be tested without the network.
+export async function mitoClusters(): Promise<MitoCluster[]> {
+  return clusterMitoProperties(arr((await cachedParse(MITO_URL))?.root?.property));
+}
+
+/* One cluster → one ProjectVM. `id` is supplied by the caller rather than derived
+   here: Mito's identity is anchored in the database (see the Mito sync path in
+   feedSync.ts), because the operator names these projects by hand and a
+   recomputed key would orphan those names the first time the feed shifts. */
+export function mitoVm(cluster: MitoCluster, id: string): ProjectVM {
+  const units: UnitVM[] = cluster.units.map((u: any) => {
+    const ref = txt(u.ref) || txt(u.id);
+    const c = mitoCoords(u);
+    return {
+      ref, name: `Nr. ${ref}`, label: `Nr. ${ref}`,
+      type: toTitleCaseName(clean(u.type)),
+      // No status field anywhere in this feed. Presence IS availability, and a
+      // unit that leaves the feed is pruned by the shared sync path — the same
+      // mechanic as the other XML developers, but with no total to measure it
+      // against, so "N available" here is not "N of M".
+      status: "available", statusLabel: "Available",
+      price: toNum(u.price), currency: clean(u.currency) || "EUR",
+      beds: clean(u.beds) !== "0" ? clean(u.beds) : "",
+      baths: clean(u.baths) !== "0" ? clean(u.baths) : "",
+      areaBuilt: areaM2(u?.surface_area?.built), areaPlot: areaM2(u?.surface_area?.plot), areaVeranda: "",
+      floor: "", attrs: [], features: [],
+      photos: sizedImages(arr(u?.images?.image).map((im: any) => txt(im?.url)).filter(Boolean)),
+      plans: [], coords: c, description: "",
+    };
+  });
+
+  const first = cluster.units[0] ?? {};
+  const center = cluster.center;
+  const district = districtFor(center) || districtFromText(clean(first.province)) || districtFromText(clean(first.town)) || clean(first.province);
+  // The most common town across the cluster, not whichever unit the feed listed
+  // first. Members genuinely disagree: Paramount's 1078 says "Chlorakas" while
+  // three units 61 m away say "Agios Theodoros". Taking units[0] happens to give
+  // the majority value today only because the feed lists one of the three first.
+  // `district` already has an equivalent safeguard — it comes from the cluster's
+  // averaged coordinates rather than any single member.
+  const townCounts = new Map<string, number>();
+  for (const u of cluster.units) {
+    const t = clean(u.town);
+    if (t) townCounts.set(t, (townCounts.get(t) ?? 0) + 1);
+  }
+  const town = Array.from(townCounts.entries())
+    .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))[0]?.[0] ?? "";
+  // AVAILABLE units only, exactly as squareOne does — see the Royal Horizon
+  // comment there. Every unit is "available" in this feed, so today this is the
+  // whole set; the shape is kept so it stays correct if a status field ever
+  // appears.
+  const prices = units.filter((u) => u.status === "available").map((u) => u.price).filter((p): p is number => p != null);
+
+  return {
+    id, dev: "mito",
+    // Deliberately the id, not a guess from the description. Two of the four
+    // projects are never named in the feed, and the operator names all of them
+    // by hand through the public-name override.
+    publicName: id, developerName: id, developer: "Mito",
+    location: joinLoc(district, town), district, town,
+    area: town && town.toLowerCase() !== district.toLowerCase() ? town : "",
+    status: "", category: "",
+    priceFrom: prices.length ? Math.min(...prices) : null,
+    priceTo: prices.length ? Math.max(...prices) : null,
+    currency: "EUR",
+    description: cluster.description,
+    gallery: sizedImages(Array.from(new Set(cluster.units.flatMap((p: any) => arr(p?.images?.image).map((im: any) => txt(im?.url))))).filter(Boolean)),
+    plans: [], renders: [],
+    // Project-level, not per-unit. Every unit carries pool=1 and the feed says
+    // nothing about private versus communal — while one project's own text says
+    // "a spacious communal swimming pool". A chip on each apartment card would
+    // claim a private pool the feed never promised. squareOne solves the same
+    // ambiguity the other way ("Private pool (selected units)") because its feed
+    // marks pools per unit; this one does not.
+    amenities: cluster.units.some((u: any) => txt(u.pool) === "1") ? ["Pool"] : [],
+    center, units,
+  };
+}
+
 // ---------- dispatcher ----------
 const DEVELOPERS: Record<string, { label: string; default: string }> = {
   "island-blue": { label: "Island Blue", default: "76" },
@@ -992,5 +1146,12 @@ export async function getPreviewProject(dev = "island-blue", id?: string): Promi
   if (dev === "pafilia" || dev === "domenica") return xml2u(dev, target);
   if (dev === "medousa") return medousa(target);
   if (dev === "squareone") return squareOne(target);
-  return islandBlue(target);
+  // Island Blue is the default for its OWN key only. Returning it for anything
+  // unrecognised meant a developer added without an adapter silently received
+  // another developer's projects — found 2026-08-28 while adding Mito, whose
+  // sync path deliberately never reaches this function. Every caller either
+  // catches (feedSync's four call sites) or normalises its input first
+  // ([lang]/preview-project/page.tsx).
+  if (dev === "island-blue") return islandBlue(target);
+  throw new Error(`No feed adapter for developer "${dev}"`);
 }

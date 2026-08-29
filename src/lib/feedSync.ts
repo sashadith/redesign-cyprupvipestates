@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { getPreviewProject, listProjectIds, type ProjectVM } from "@/app/preview-project/feeds";
+import { getPreviewProject, listProjectIds, mitoClusters, mitoVm, type MitoCluster, type ProjectVM } from "@/app/preview-project/feeds";
 import type { UnitVM } from "@/app/preview-project/UnitsView";
 import { mirrorAll, mirrorImage, devKeyFor, scheduleAppRestart, beginSyncWindow, sourceUrlHash, hashFromMirroredUrl, classifyByContent } from "@/lib/imageMirror";
 import { recomputeDevelopmentDistances } from "@/lib/developmentDistances";
@@ -10,6 +10,12 @@ import { recomputeDevelopmentDerivedState } from "@/lib/developmentDerivedState"
    Development / DevelopmentUnit, keyed by feedKey ("<dev>:<id>"). Admin edits in
    DevelopmentOverride are NEVER touched. Images are stored as the feed URLs for
    now — the mirroring step (Increment 3) rewrites them to our own URLs. */
+
+// A cluster matches an existing Mito development within this distance. Same
+// figure as the clustering threshold in feeds.ts, and for the same reason: on
+// the live feed every gap between two different projects is over 400 m, so 150
+// separates them with room on both sides.
+const MITO_MATCH_M = 150;
 
 export const DEV_ACCOUNT: Record<string, { slug: string; name: string }> = {
   "island-blue": { slug: "island-blue", name: "Island Blue" },
@@ -26,6 +32,11 @@ export const DEV_ACCOUNT: Record<string, { slug: string; name: string }> = {
   // silently create a THIRD, empty, disconnected account on the next sync
   // instead of attaching to the one already configured.
   medousa: { slug: "medousa-xml", name: "Medousa (XML)" },
+  // slug "mito-xml", not "mito" — the same trap as medousa above. The account
+  // the admin created for this feed on 2026-08-28 has that slug, and
+  // ensureAccount upserts by it; without this entry the first sync would create
+  // a second, empty account and attach every Mito project to it.
+  mito: { slug: "mito-xml", name: "Mito (XML)" },
   agg: { slug: "agg", name: "AGG Luxury Homes" },
   squareone: { slug: "square-one", name: "Square One" },
 };
@@ -132,7 +143,13 @@ export type SyncResult = {
 // "agg" removed 2026-08-13 — was never a real feed (a one-time Cloudflare-
 // scrape fixture), AGG is now maintained manually like Luma and every other
 // hand-entered developer (dev: "manual").
-export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone"];
+// "mito" (2026-08-28) is in this list out of necessity, not just for the cron.
+// SYNCED_DEVS also gates the admin sync controls (developments/[id]/page.tsx),
+// and the developer page's own "Sync now" button only renders when the account
+// ALREADY has a development carrying a feed dev key — which Mito, with zero
+// projects, does not. Without this entry there is no way to run a first sync at
+// all, and syncMitoCore would be unreachable code.
+export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone", "mito"];
 // Subset with a real, individually-triggerable feed worth an on-demand pull
 // (the admin Force-Sync button, Teil 2).
 export const FORCE_SYNC_DEVS = SYNCED_DEVS;
@@ -534,6 +551,16 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
 const FEED_INCOMPLETE_PCT = 0.15;
 const FEED_INCOMPLETE_ABS_FLOOR = 20;
 
+// Mito's own floor, deliberately not the shared FEED_INCOMPLETE_ABS_FLOOR of 20.
+// That figure was tuned against developers carrying 27–506 units; Mito's entire
+// catalogue is 16, so `missing > 20` can never be true and the guard would be
+// decoration. Three is the smallest number that still tolerates an ordinary
+// night's sales: with 16 units, losing 4 trips it (25 %), losing 3 does not.
+// The stricter floor is also the right trade for Mito specifically, because its
+// projects are unpublished and therefore on the hard-delete path, where the
+// other developers' units would merely flip to "unlisted".
+const MITO_INCOMPLETE_ABS_FLOOR = 3;
+
 async function checkFeedCompleteness(
   dev: string,
   ids: string[],
@@ -563,9 +590,136 @@ async function checkFeedCompleteness(
   return { blocked: false, vmsById };
 }
 
+/* Mito's feed carries no project ids, so it cannot use the listProjectIds →
+   getPreviewProject path: that path's premise is a feed that supplies stable
+   ids. Each sync clusters the feed afresh and then RECONCILES those clusters
+   against what is already in the database, matching by proximity.
+
+   Anchoring identity in the DB rather than recomputing it is the whole point.
+   The operator names these projects by hand — two of the four are never named in
+   the feed — so a key that shifted when the feed shifted would leave the name on
+   the old row and create an unnamed twin beside it. Mamba shows how real that
+   is: it is held together by a single shared description, and one unit leaving
+   plus one text edit would re-key it. */
+async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncResult> {
+  const dev = "mito";
+  const accountId = await ensureAccount(dev);
+  // A failed fetch must not take the rest of the nightly run with it: this
+  // throws out of syncAll, and withCronLog re-throws after logging, so one
+  // Qobrix hiccup would skip every later developer's log row, statusOnlySync,
+  // the unit notifications and the purges. An empty result is then genuinely
+  // safe — the loop below never runs and nothing is written. Same guard the
+  // medousa branch of listProjectIds already uses.
+  let clusters: MitoCluster[] = [];
+  try { clusters = await mitoClusters(); } catch { clusters = []; }
+
+  // The same protection checkFeedCompleteness gives the other eight developers.
+  // Mito cannot use that function — it works from listProjectIds, which Mito has
+  // no equivalent of — but it needs the rule, because the rule is about units,
+  // not ids, and Mito's exposure is worse than theirs: a freshly created Mito
+  // project is UNPUBLISHED, and syncOneProject's unpublished path is
+  // deleteMany({source:"feed"}) + createMany. A partial fetch would not flip
+  // units to "unlisted" as it does for a published project — it would delete
+  // them. Every Mito project is unpublished until the operator has named and
+  // published it, so that is the normal state, not an edge case.
+  //
+  // A total fetch failure (network error above, or the feed genuinely returning
+  // zero properties) is caught by this same check, not sidestepped by it: with
+  // clusters=[], afterCount is 0, so an existing catalogue of any size trips
+  // missing > MITO_INCOMPLETE_ABS_FLOOR and blocks rather than silently wiping
+  // every unpublished project down to nothing.
+  const afterCount = clusters.reduce((n, c) => n + c.units.length, 0);
+  const beforeCount = await prisma.developmentUnit.count({ where: { source: "feed", development: { dev } } });
+  if (beforeCount > 0) {
+    const missing = beforeCount - afterCount;
+    const missingPct = missing / beforeCount;
+    if (missing > MITO_INCOMPLETE_ABS_FLOOR && missingPct > FEED_INCOMPLETE_PCT) {
+      const pctLabel = Math.round(missingPct * 100);
+      return {
+        dev, found: clusters.length, created: 0, updated: 0, failed: 0,
+        mirroredNewFiles: false, unitsCreated: 0, unitsUnlisted: [],
+        blocked: true,
+        blockedMessage: `${missing} of ${beforeCount} units are missing from today's feed (${pctLabel} %). Nothing was changed — the catalogue stays as it is until this has been checked.`,
+        blockedMissing: missing, blockedTotal: beforeCount,
+      };
+    }
+  }
+
+  const known = await prisma.development.findMany({
+    where: { dev, developerAccountId: accountId },
+    select: { feedProjectId: true, latitude: true, longitude: true },
+  });
+
+  // Assign globally nearest-first, not greedily per cluster. A per-cluster grab
+  // lets a farther cluster processed earlier claim a row that belongs to a
+  // nearer one processed later — which would diff the wrong project's units
+  // against the operator's hand-named row. The live feed's clusters are 712 m
+  // to 5.7 km apart so nothing competes today, but the operator's names are
+  // exactly what this ordering protects.
+  const idByCluster = new Map<MitoCluster, string>();
+  {
+    const pairs: { cluster: MitoCluster; id: string; m: number }[] = [];
+    for (const cluster of clusters) {
+      const center = cluster.center;
+      if (!center) continue;
+      for (const k of known) {
+        if (!k.feedProjectId) continue;
+        if (k.latitude == null || k.longitude == null) continue;
+        const m = Math.hypot(
+          (center.lat - k.latitude) * 111320,
+          (k.longitude - center.lng) * 111320 * Math.cos((center.lat * Math.PI) / 180),
+        );
+        if (m < MITO_MATCH_M) pairs.push({ cluster, id: k.feedProjectId, m });
+      }
+    }
+    pairs.sort((a, b) => a.m - b.m);
+    const claimedRows = new Set<string>();
+    for (const p of pairs) {
+      if (idByCluster.has(p.cluster) || claimedRows.has(p.id)) continue;
+      idByCluster.set(p.cluster, p.id);
+      claimedRows.add(p.id);
+    }
+    for (const cluster of clusters) {
+      if (idByCluster.has(cluster)) continue;
+      const center = cluster.center;
+      if (center) {
+        idByCluster.set(cluster, `${center.lat.toFixed(5)},${center.lng.toFixed(5)}`);
+        continue;
+      }
+      // No coordinates at all, so proximity matching is impossible. Key on the
+      // lowest ref instead: unstable if that unit sells, but distinct per cluster,
+      // which a shared sentinel would not be — two such clusters would land on one
+      // feedKey and merge into a single project. Every property in the live feed
+      // has coordinates, so this is a guard, not a path in use.
+      const lowest = cluster.units.map((u: any) => String(u?.ref ?? "").trim()).filter(Boolean).sort()[0];
+      idByCluster.set(cluster, lowest ? `noloc-${lowest}` : "noloc");
+    }
+  }
+
+  let created = 0, updated = 0, failed = 0, mirroredNewFiles = false, unitsCreated = 0;
+  const unitsUnlisted: UnitChangeLine[] = [];
+  for (const cluster of clusters) {
+    const id = idByCluster.get(cluster)!;
+    try {
+      const r = await syncOneProject(dev, id, accountId, { ...opts, vm: mitoVm(cluster, id) });
+      if (!r.ok) { failed++; continue; }
+      r.created ? created++ : updated++;
+      if (r.mirroredNewFiles) mirroredNewFiles = true;
+      unitsCreated += r.unitsCreated;
+      for (const u of r.unitsUnlisted) {
+        unitsUnlisted.push({ developmentId: r.developmentId!, development: r.developmentName!, ref: u.ref, label: u.label });
+      }
+    } catch {
+      failed++;
+    }
+  }
+  return { dev, found: clusters.length, created, updated, failed, mirroredNewFiles, unitsCreated, unitsUnlisted };
+}
+
 // Core loop, no restart side-effect — syncAll() calls this per developer so a
 // full run schedules exactly ONE restart at the end, not one per developer.
 async function syncDeveloperCore(dev: string, opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncResult> {
+  if (dev === "mito") return syncMitoCore(opts);
   const accountId = await ensureAccount(dev);
   const ids = await listProjectIds(dev);
 
@@ -640,12 +794,36 @@ export async function syncAll(opts: { mirror?: boolean; forceMirror?: boolean } 
 // silent no-op.
 export type SyncOneDevelopmentResult = { ok: boolean; unitsWritten: number; skippedManual: boolean; error?: string };
 export async function syncOneDevelopment(developmentId: string, opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncOneDevelopmentResult> {
-  const development = await prisma.development.findUnique({ where: { id: developmentId }, select: { dev: true, feedProjectId: true } });
+  const development = await prisma.development.findUnique({ where: { id: developmentId }, select: { dev: true, feedProjectId: true, latitude: true, longitude: true } });
   if (!development?.dev || !development?.feedProjectId) {
     return { ok: false, unitsWritten: 0, skippedManual: false, error: "no feed configured for this development" };
   }
   try {
     const accountId = await ensureAccount(development.dev);
+    // Mito has no project ids, so the generic path's getPreviewProject(dev, id)
+    // cannot serve it — and now throws rather than silently returning another
+    // developer's feed. Re-cluster and pick the cluster nearest this
+    // development's stored coordinates, the same match syncMitoCore makes.
+    if (development.dev === "mito") {
+      if (development.latitude == null || development.longitude == null) {
+        return { ok: false, unitsWritten: 0, skippedManual: false, error: "This Mito project has no coordinates, so its cluster cannot be identified." };
+      }
+      const clusters = await mitoClusters();
+      let best: { cluster: MitoCluster; m: number } | null = null;
+      for (const c of clusters) {
+        if (!c.center) continue;
+        const m = Math.hypot(
+          (c.center.lat - development.latitude) * 111320,
+          (development.longitude - c.center.lng) * 111320 * Math.cos((c.center.lat * Math.PI) / 180),
+        );
+        if (m < MITO_MATCH_M && (!best || m < best.m)) best = { cluster: c, m };
+      }
+      if (!best) return { ok: false, unitsWritten: 0, skippedManual: false, error: "No cluster in today's Mito feed matches this project's location." };
+      const r = await syncOneProject(development.dev, development.feedProjectId, accountId, { ...opts, vm: mitoVm(best.cluster, development.feedProjectId) });
+      if (!r.ok) return { ok: false, unitsWritten: 0, skippedManual: false, error: "feed unavailable or project not found" };
+      if (opts.mirror && r.mirroredNewFiles) scheduleAppRestart();
+      return { ok: true, unitsWritten: r.unitsWritten, skippedManual: r.skippedManual };
+    }
     const r = await syncOneProject(development.dev, development.feedProjectId, accountId, opts);
     if (!r.ok) return { ok: false, unitsWritten: 0, skippedManual: false, error: "feed unavailable or project not found" };
     if (opts.mirror && r.mirroredNewFiles) scheduleAppRestart();

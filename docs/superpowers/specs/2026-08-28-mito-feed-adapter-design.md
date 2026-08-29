@@ -156,6 +156,29 @@ price, type, beds, baths, built and plot area, and its images.
   is the agreed division of labour, and the reason identity stability is the
   first requirement above.
 
+## Two thresholds that were tuned to today's feed
+
+Both are correct now and both are worth revisiting if Mito's catalogue grows.
+
+**`MITO_INCOMPLETE_ABS_FLOOR = 3`**, not the shared 20. The shared figure was
+tuned against developers carrying 27–506 units; Mito's whole catalogue is 16, so
+`missing > 20` is unsatisfiable and the guard would have been decoration — it
+would not have blocked even a total feed outage. Three is deliberately
+conservative because Mito's projects are unpublished, and the unpublished sync
+path hard-deletes where a published one merely flips units to "unlisted". If the
+catalogue ever grows an order of magnitude, that floor becomes twitchy: 20 units
+lost from a future 150-unit catalogue is 13 %, under the percentage line, but
+still over a floor of 3.
+
+**`MITO_MATCH_M = 150`** for matching a cluster to its existing project. The four
+live projects are 712 m to 5.7 km apart, so nothing competes. Ordinary churn is
+safe too: removing any single unit moves its cluster's centroid by at most 86 m,
+measured. The exception is Mamba, held together partly by a shared description
+across a 450 m gap — if its five co-located units sold while the outlier
+remained, the centroid would jump over 400 m, past the threshold, and the project
+would lose its identity along with the operator's hand-typed name. Unlikely, but
+it is the one shape in this feed where that can happen.
+
 ## Verification
 
 - `mitoClusters()` against the live feed returns exactly the four groups in the
