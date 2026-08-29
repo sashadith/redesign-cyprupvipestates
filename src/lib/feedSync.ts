@@ -124,6 +124,20 @@ export type UnitChangeLine = { developmentId: string; development: string; ref: 
 
 export type SyncResult = {
   dev: string; found: number; created: number; updated: number; failed: number; mirroredNewFiles: boolean;
+  // unitsWritten is every feed unit this run put in the database; unitsCreated
+  // counts only the ones that are NEW to an already-published project.
+  //
+  // They differ for a reason, and the difference used to be invisible. An
+  // unpublished development takes the deleteMany + createMany path, which
+  // rewrites its whole unit list every run — so "created" there would be all of
+  // them, every night, and the "N new units awaiting review" notification would
+  // cry wolf. unitsCreated is deliberately left at 0 for that path.
+  //
+  // The cost was that a first import reported `created: 4, unitsCreated: 0` and
+  // read as "four projects, no units" — it briefly fooled the person who wrote
+  // the adapter. unitsWritten says what actually happened without touching what
+  // the notification keys off.
+  unitsWritten: number;
   unitsCreated: number; unitsUnlisted: UnitChangeLine[];
   // Feed-completeness guard tripped (see checkFeedCompleteness below) — this
   // developer's sync was skipped entirely this run, nothing written at all,
@@ -637,7 +651,7 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
       const pctLabel = Math.round(missingPct * 100);
       return {
         dev, found: clusters.length, created: 0, updated: 0, failed: 0,
-        mirroredNewFiles: false, unitsCreated: 0, unitsUnlisted: [],
+        mirroredNewFiles: false, unitsWritten: 0, unitsCreated: 0, unitsUnlisted: [],
         blocked: true,
         blockedMessage: `${missing} of ${beforeCount} units are missing from today's feed (${pctLabel} %). Nothing was changed — the catalogue stays as it is until this has been checked.`,
         blockedMissing: missing, blockedTotal: beforeCount,
@@ -696,7 +710,7 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
     }
   }
 
-  let created = 0, updated = 0, failed = 0, mirroredNewFiles = false, unitsCreated = 0;
+  let created = 0, updated = 0, failed = 0, mirroredNewFiles = false, unitsCreated = 0, unitsWritten = 0;
   const unitsUnlisted: UnitChangeLine[] = [];
   for (const cluster of clusters) {
     const id = idByCluster.get(cluster)!;
@@ -706,6 +720,7 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
       r.created ? created++ : updated++;
       if (r.mirroredNewFiles) mirroredNewFiles = true;
       unitsCreated += r.unitsCreated;
+      unitsWritten += r.unitsWritten;
       for (const u of r.unitsUnlisted) {
         unitsUnlisted.push({ developmentId: r.developmentId!, development: r.developmentName!, ref: u.ref, label: u.label });
       }
@@ -713,7 +728,7 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
       failed++;
     }
   }
-  return { dev, found: clusters.length, created, updated, failed, mirroredNewFiles, unitsCreated, unitsUnlisted };
+  return { dev, found: clusters.length, created, updated, failed, mirroredNewFiles, unitsWritten, unitsCreated, unitsUnlisted };
 }
 
 // Core loop, no restart side-effect — syncAll() calls this per developer so a
@@ -725,10 +740,10 @@ async function syncDeveloperCore(dev: string, opts: { mirror?: boolean; forceMir
 
   const guard = await checkFeedCompleteness(dev, ids);
   if (guard.blocked) {
-    return { dev, found: ids.length, created: 0, updated: 0, failed: 0, mirroredNewFiles: false, unitsCreated: 0, unitsUnlisted: [], blocked: true, blockedMessage: guard.message, blockedMissing: guard.missing, blockedTotal: guard.total };
+    return { dev, found: ids.length, created: 0, updated: 0, failed: 0, mirroredNewFiles: false, unitsWritten: 0, unitsCreated: 0, unitsUnlisted: [], blocked: true, blockedMessage: guard.message, blockedMissing: guard.missing, blockedTotal: guard.total };
   }
 
-  let created = 0, updated = 0, failed = 0, mirroredNewFiles = false, unitsCreated = 0;
+  let created = 0, updated = 0, failed = 0, mirroredNewFiles = false, unitsCreated = 0, unitsWritten = 0;
   const unitsUnlisted: UnitChangeLine[] = [];
   for (const id of ids) {
     try {
@@ -737,6 +752,7 @@ async function syncDeveloperCore(dev: string, opts: { mirror?: boolean; forceMir
       r.created ? created++ : updated++;
       if (r.mirroredNewFiles) mirroredNewFiles = true;
       unitsCreated += r.unitsCreated;
+      unitsWritten += r.unitsWritten;
       for (const u of r.unitsUnlisted) {
         unitsUnlisted.push({ developmentId: r.developmentId!, development: r.developmentName!, ref: u.ref, label: u.label });
       }
@@ -744,7 +760,7 @@ async function syncDeveloperCore(dev: string, opts: { mirror?: boolean; forceMir
       failed++;
     }
   }
-  return { dev, found: ids.length, created, updated, failed, mirroredNewFiles, unitsCreated, unitsUnlisted };
+  return { dev, found: ids.length, created, updated, failed, mirroredNewFiles, unitsWritten, unitsCreated, unitsUnlisted };
 }
 
 // Public single-developer entry (admin "Sync now" for one dev, debug route) —
