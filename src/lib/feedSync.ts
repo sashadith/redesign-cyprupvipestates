@@ -163,7 +163,21 @@ export type SyncResult = {
 // ALREADY has a development carrying a feed dev key — which Mito, with zero
 // projects, does not. Without this entry there is no way to run a first sync at
 // all, and syncMitoCore would be unreachable code.
-export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone", "mito"];
+// "mito" was removed on 2026-08-29, one day after it was added. Its feed carries
+// only a fraction of what the developer actually sells — 16 of 39 units offered
+// across the four projects, and 4 of 22 for Arca alone — so the operator entered
+// all 70 units by hand from Mito's own price lists. Those units are source
+// "manual" and therefore already safe (syncOneProject skips units entirely when
+// any manual unit exists), but that guard protects only the UNITS: priceFrom,
+// priceTo, district, town and the coordinates are not in FROZEN_WHEN_PUBLISHED
+// and would be rewritten from the feed's partial view on every run, putting a
+// four-unit price range back on a 27-unit project.
+//
+// The adapter itself is deliberately kept (syncMitoCore, clusterMitoProperties,
+// mitoVm, DEV_ACCOUNT's mito-xml mapping). Re-adding "mito" to this list is all
+// it takes to switch back on, if Mito ever ships a complete feed with unit
+// numbers and a status field.
+export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone"];
 // Subset with a real, individually-triggerable feed worth an on-demand pull
 // (the admin Force-Sync button, Teil 2).
 export const FORCE_SYNC_DEVS = SYNCED_DEVS;
