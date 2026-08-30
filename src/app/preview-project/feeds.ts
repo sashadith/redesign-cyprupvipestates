@@ -1103,6 +1103,38 @@ export function mitoVm(cluster: MitoCluster, id: string): ProjectVM {
   };
 }
 
+// ==================================================================
+// Leptos Estates (Kyero v3). Unlike Mito, this feed carries project identity:
+// the ref is structured, e.g. A-BAG-Z-206 = Apartment, Bel Air Gardens, block
+// Zefiro, unit 206. Grouping by that code puts 377 in-scope units into 48
+// groups whose members never lie more than 9 m apart (measured 2026-08-30) —
+// so Leptos uses the ordinary id-driven path (listProjectIds /
+// getPreviewProject), not Mito's clustering detour.
+// See docs/superpowers/specs/2026-08-30-leptos-feed-adapter-design.md
+// ==================================================================
+const LEPTOS_URL =
+  "https://www.leptosestates.com/wp-content/themes/leptos-estates/template-export-xml-keyro.php?country=all";
+
+export type LeptosRow = {
+  ref: string; price: number; type: string;
+  town: string; province: string; country: string;
+  h2: string; body: string; descHtml: string;
+  lat: number | null; lng: number | null;
+  images: string[]; plans: string[];
+  features: string[]; benefits: string[];
+  beds: string; baths: string; plot: number | null; covered: number | null;
+};
+
+// Cyprus only, residential + commercial, no land parcels (operator's decision,
+// 2026-08-30). Greece is filtered HERE rather than downstream because
+// districtFor() resolves by longitude with no country check — lng < 32.6 means
+// "Paphos", and Paros (25.15), Crete (23.8), Santorini (25.4) and Athens (23.7)
+// all fall under it. Excluding them at the boundary means that function is
+// never handed a coordinate it would answer wrongly.
+export const leptosInScope = (r: { country: string; type: string }): boolean =>
+  r.country.trim().toLowerCase() === "cyprus" &&
+  r.type.trim().toLowerCase() !== "plots & land parcels";
+
 // ---------- dispatcher ----------
 const DEVELOPERS: Record<string, { label: string; default: string }> = {
   "island-blue": { label: "Island Blue", default: "76" },
