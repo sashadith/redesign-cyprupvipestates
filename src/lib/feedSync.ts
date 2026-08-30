@@ -37,6 +37,13 @@ export const DEV_ACCOUNT: Record<string, { slug: string; name: string }> = {
   // ensureAccount upserts by it; without this entry the first sync would create
   // a second, empty account and attach every Mito project to it.
   mito: { slug: "mito-xml", name: "Mito (XML)" },
+  // slug "leptos-xml", not "leptos" — the same trap as medousa and mito above.
+  // ensureAccount() upserts by this exact slug; without the entry it falls back
+  // to { slug: dev, name: dev } and attaches all 45 projects to a second, empty
+  // account instead of the one the operator configured. No Leptos account
+  // existed when this was added (2026-08-30), so the first sync creates exactly
+  // one, under this slug.
+  leptos: { slug: "leptos-xml", name: "Leptos Estates (XML)" },
   agg: { slug: "agg", name: "AGG Luxury Homes" },
   squareone: { slug: "square-one", name: "Square One" },
 };
@@ -177,7 +184,12 @@ export type SyncResult = {
 // mitoVm, DEV_ACCOUNT's mito-xml mapping). Re-adding "mito" to this list is all
 // it takes to switch back on, if Mito ever ships a complete feed with unit
 // numbers and a status field.
-export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone"];
+// "leptos" (2026-08-30) needs no completeness-guard override: FEED_INCOMPLETE_PCT
+// = 0.15 against 377 units blocks a feed that lost more than 56, and the
+// FEED_INCOMPLETE_ABS_FLOOR = 20 floor only binds below 133 units. Mito's custom
+// floor existed because its 16-unit catalogue made "missing > 20" unsatisfiable —
+// a guard that could never fire. At this size the shared thresholds do the work.
+export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone", "leptos"];
 // Subset with a real, individually-triggerable feed worth an on-demand pull
 // (the admin Force-Sync button, Teil 2).
 export const FORCE_SYNC_DEVS = SYNCED_DEVS;
