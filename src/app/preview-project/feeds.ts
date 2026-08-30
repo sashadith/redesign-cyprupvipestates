@@ -1150,13 +1150,13 @@ export function leptosCode(ref: string): string {
   if (!seg.length) return "";
   const i = seg.length > 1 && LEPTOS_TYPE_PREFIX.has(seg[0].toUpperCase()) ? 1 : 0;
   const code = (seg[i] ?? "").toUpperCase();
-  // Limassol Blu Marine holds two separately branded towers. The tower is the
-  // NEXT segment when it is alphabetic (CT = Cavalli); Poseidon's refs put a
-  // bedroom count there instead (A-LBM-3-2604), so plain "LBM" means Poseidon.
-  if (code === "LBM") {
-    const next = seg[i + 1] ?? "";
-    if (/^[A-Za-z]{2,}$/.test(next)) return `LBM-${next.toUpperCase()}`;
-  }
+  // Limassol Blu Marine holds two separately branded towers. Only three
+  // segments ever follow LBM in the feed — 1, 3 and CT — so CT (Cavalli) is
+  // matched EXACTLY; Poseidon's refs put a bedroom count there instead
+  // (A-LBM-3-2604), and plain "LBM" means Poseidon. Matching "any alphabetic
+  // segment" would mint keys like LBM-PH that no display name covers, silently
+  // splitting Poseidon into one-unit projects.
+  if (code === "LBM" && (seg[i + 1] ?? "").toUpperCase() === "CT") return "LBM-CT";
   return code;
 }
 

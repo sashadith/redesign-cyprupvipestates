@@ -179,14 +179,30 @@ check("studio prefix skipped",          F.leptosCode("S-B08-208-PG"), "B08");
 // 12 km apart. A substring or last-segment rule merges them.
 check("PG in segment 2 is Peyia",       F.leptosCode("A-PG-BLK-D-204"), "PG");
 check("PG in last segment is not read", F.leptosCode("A-A09-109-PG"), "A09");
-// Blu Marine: the tower lives in the segment after LBM.
+// "AP" and "PENT" are the two one-off type spellings; drop either from
+// LEPTOS_TYPE_PREFIX and the type is read as the project code.
+check("AP prefix skipped",              F.leptosCode("AP-VEN-12"), "VEN");
+check("PENT prefix skipped",            F.leptosCode("PENT-DEL-5-b1701"), "DEL");
+// Blu Marine: CT (Cavalli) is the ONLY tower segment that follows LBM in the
+// feed — 1, 3 and CT are the only three that exist at all. Anything else there
+// must stay Poseidon rather than mint a project key with no name behind it.
 check("Cavalli Tower splits off",       F.leptosCode("A-LBM-CT-3-1604"), "LBM-CT");
 check("Poseidon stays plain LBM",       F.leptosCode("A-LBM-3-2604"), "LBM");
 check("LBM with numeric next segment",  F.leptosCode("A-LBM-1-1704"), "LBM");
+check("LBM + PH is still Poseidon",     F.leptosCode("A-LBM-PH-1604"), "LBM");
+check("LBM + one letter is Poseidon",   F.leptosCode("A-LBM-C-1604"), "LBM");
 // Defensive: refs with no type prefix, and junk.
 check("no type prefix",                 F.leptosCode("APHII-2-E2-202"), "APHII");
 check("empty ref",                      F.leptosCode(""), "");
 check("single segment",                 F.leptosCode("KOILI"), "KOILI");
+// A lone type letter has no second segment to fall back to: without the
+// seg.length > 1 guard the code would come out empty.
+check("lone type letter is the code",   F.leptosCode("A"), "A");
+// Normalisation: the feed is not guaranteed to be tidy.
+check("lowercase ref uppercased",       F.leptosCode("a-bag-z-206"), "BAG");
+check("lowercase Cavalli ref",          F.leptosCode("a-lbm-ct-3-1604"), "LBM-CT");
+check("padded segments trimmed",        F.leptosCode(" A - BAG - Z - 206 "), "BAG");
+check("empty segment skipped",          F.leptosCode("A--BAG-Z-206"), "BAG");
 ```
 
 - [ ] **Step 2: Run it to make sure it fails**
@@ -214,13 +230,13 @@ export function leptosCode(ref: string): string {
   if (!seg.length) return "";
   const i = seg.length > 1 && LEPTOS_TYPE_PREFIX.has(seg[0].toUpperCase()) ? 1 : 0;
   const code = (seg[i] ?? "").toUpperCase();
-  // Limassol Blu Marine holds two separately branded towers. The tower is the
-  // NEXT segment when it is alphabetic (CT = Cavalli); Poseidon's refs put a
-  // bedroom count there instead (A-LBM-3-2604), so plain "LBM" means Poseidon.
-  if (code === "LBM") {
-    const next = seg[i + 1] ?? "";
-    if (/^[A-Za-z]{2,}$/.test(next)) return `LBM-${next.toUpperCase()}`;
-  }
+  // Limassol Blu Marine holds two separately branded towers. Only three
+  // segments ever follow LBM in the feed — 1, 3 and CT — so CT (Cavalli) is
+  // matched EXACTLY; Poseidon's refs put a bedroom count there instead
+  // (A-LBM-3-2604), and plain "LBM" means Poseidon. Matching "any alphabetic
+  // segment" would mint keys like LBM-PH that no display name covers, silently
+  // splitting Poseidon into one-unit projects.
+  if (code === "LBM" && (seg[i + 1] ?? "").toUpperCase() === "CT") return "LBM-CT";
   return code;
 }
 ```
@@ -228,7 +244,7 @@ export function leptosCode(ref: string): string {
 - [ ] **Step 4: Run the test and make sure it passes**
 
 Run: `node scripts/qa/leptos-grouping-check.mjs`
-Expected: 18 `ok` lines, `all checks passed`, exit 0.
+Expected: 27 `ok` lines, `all checks passed`, exit 0.
 
 - [ ] **Step 5: Commit**
 
