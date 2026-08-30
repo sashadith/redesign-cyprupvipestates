@@ -1145,8 +1145,11 @@ const LEPTOS_TYPE_PREFIX = new Set(["A", "V", "P", "C", "S", "AP", "PENT"]);
 // last segment (A-A09-109-PG, Kato Paphos), two projects 12 km apart. A
 // substring or last-segment rule merges them. This is the single most likely
 // way a future edit breaks this adapter.
+const leptosSegments = (ref: string): string[] =>
+  String(ref || "").split("-").map((s) => s.trim()).filter(Boolean);
+
 export function leptosCode(ref: string): string {
-  const seg = String(ref || "").split("-").map((s) => s.trim()).filter(Boolean);
+  const seg = leptosSegments(ref);
   if (!seg.length) return "";
   const i = seg.length > 1 && LEPTOS_TYPE_PREFIX.has(seg[0].toUpperCase()) ? 1 : 0;
   const code = (seg[i] ?? "").toUpperCase();
@@ -1160,16 +1163,18 @@ export function leptosCode(ref: string): string {
   return code;
 }
 
-// Two codes that name one project. Both verified on the live feed 2026-08-30:
-// same town, same coordinates, identical heading prefixes.
-const LEPTOS_MERGE: Record<string, string> = {
-  ZAN: "ZANATZIA",
-  // Paphos Gardens puts the project token LAST (A-A09-109-PG), so the
-  // positional rule reads the block as the code and yields four one-unit
-  // projects. Merged under PAPHOSG — deliberately NOT "PG", which already
-  // belongs to Peyia Gardens.
-  A09: "PAPHOSG", B11: "PAPHOSG", B08: "PAPHOSG", B10: "PAPHOSG",
-};
+// Two codes that name one project. Verified on the live feed 2026-08-30: same
+// town, same coordinates, identical heading prefixes.
+const LEPTOS_MERGE: Record<string, string> = { ZAN: "ZANATZIA" };
+
+// Paphos Gardens puts the project token LAST (A-A09-109-PG), so the positional
+// rule reads the BLOCK as the code and yields four one-unit projects. They are
+// merged under PAPHOSG — deliberately NOT "PG", which already belongs to Peyia
+// Gardens. The merge is guarded on the trailing PG rather than applied to the
+// block code alone: all four Paphos Gardens refs carry it, and a bare block
+// code (A-B08-12) belongs to some other project whose block happens to be
+// numbered the same way.
+const LEPTOS_PG_BLOCKS = new Set(["A09", "B11", "B08", "B10"]);
 
 // Display names. The code alone (BAG, AKMT, PRDSGIII) is meaningless in the
 // admin, and the heading is a UNIT title, not a project name — stripping it
@@ -1200,8 +1205,13 @@ export function leptosProjectKey(r: { ref: string; h2: string }): string {
   const code = leptosCode(r.ref);
   // The Ruby is a separately branded tower inside Limassol Del Mar, the same
   // shape as Cavalli inside Blu Marine — but Del Mar's refs give it no segment
-  // of its own, so it is split on the heading instead.
-  if (code === "DEL" && /\bThe Ruby\b/i.test(r.h2 || "")) return "RUBY";
+  // of its own (the tower's own ref is A-DEL-5-b1701), so this one split reads
+  // the heading. Anchored at the START, because a heading is a UNIT title that
+  // opens with its project name: a Del Mar unit whose title merely mentions
+  // the tower would otherwise be mis-keyed into it.
+  if (code === "DEL" && /^The Ruby\b/i.test(r.h2 || "")) return "RUBY";
+  const seg = leptosSegments(r.ref);
+  if (LEPTOS_PG_BLOCKS.has(code) && (seg[seg.length - 1] ?? "").toUpperCase() === "PG") return "PAPHOSG";
   return LEPTOS_MERGE[code] ?? code;
 }
 
