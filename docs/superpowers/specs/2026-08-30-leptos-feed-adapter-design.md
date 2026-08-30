@@ -248,8 +248,9 @@ existing helpers, and `anonymize()` runs as it does for every other developer.
 island-blue, korantina-homes, kuutio-homes-drive, luma, medousa-xml, mito-xml,
 motive-point, olias-homes, pafilia, square-one.
 
-**The operator must create it before the first sync, and `DEV_ACCOUNT` must
-carry its exact slug.** `ensureAccount` falls back to `{ slug: dev, name: dev }`,
+**The account does not have to be created by hand — `ensureAccount` upserts it
+on the first sync — but if the operator does create one first, `DEV_ACCOUNT`
+must carry its exact slug.** `ensureAccount` falls back to `{ slug: dev, name: dev }`,
 so a missing or mismatched entry creates a *second*, empty account beside the
 operator's and attaches all 45 projects to it. This has already happened twice —
 Medousa, then nearly again at Mito — and both times the fix was this one line.
@@ -310,8 +311,15 @@ not assumed.
 - A second sync with the feed unchanged creates no new projects and changes no
   `feedProjectId`.
 - A simulated rewording of a project's description does not re-key it.
-- The first sync creates 45 projects under the operator's existing Leptos
-  account and creates **no** second account.
+- The first sync **creates** the Leptos account itself, under slug
+  `leptos-xml` — no Leptos `DeveloperAccount` exists (re-verified against
+  production 2026-08-30: 15 accounts, none of them Leptos), and
+  `ensureAccount()` upserts by slug, so the account comes into being with the
+  first pull rather than before it. The check afterwards is that **exactly one**
+  Leptos account exists and holds all 45 projects. The warning above still
+  stands for the other case: if the operator creates the account first under a
+  different slug, `DEV_ACCOUNT.leptos` must be changed to match it, or the sync
+  creates a second, empty account beside it.
 - Image URLs carry no `-scaled` suffix where an original exists; spot-check two
   mirrored images at over 4000 px wide.
 - `priceFrom` is above zero for every project containing a zero-priced unit.
