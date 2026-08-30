@@ -1224,6 +1224,19 @@ export function leptosProjectName(key: string, h2: string): string {
   return s.length >= 3 ? s : key;
 }
 
+// 807 of the feed's 2190 image URLs carry WordPress's "-scaled" suffix, which
+// means WordPress downsized an original above its 2560 px threshold and KEPT
+// the original alongside it. Measured 2026-08-30:
+//   03-1-scaled.jpg  1920x1373 (513 KB)  ->  03-1.jpg  4128x2953 (2.1 MB)
+//   04-1-scaled.jpg  1920x1288 (632 KB)  ->  04-1.jpg  4588x3078 (3.4 MB)
+// Sampling 30 of the 807: 30/30 originals exist and every one is larger.
+// No runtime HEAD check — this function is on the public preview page's path,
+// and 807 HEAD requests per render is not a trade worth making. The 807 are
+// verified once, offline, by scripts/qa/leptos-live-check.mjs; a missing
+// original would surface there rather than as a silent downgrade.
+export const leptosFullSize = (u: string): string =>
+  secure(String(u || "")).replace(/-scaled(\.[A-Za-z]{3,4})(?=$|\?)/, "$1");
+
 // ---------- dispatcher ----------
 const DEVELOPERS: Record<string, { label: string; default: string }> = {
   "island-blue": { label: "Island Blue", default: "76" },

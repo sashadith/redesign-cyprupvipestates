@@ -101,5 +101,15 @@ check("unknown code, unusable heading", nameOf("V-XYZ-3-12", "Floor 5"), "XYZ");
 check("Kamares Cypress stays Kamares", nameOf("V-KAM-CYP-003-1_2", "Kamares Village Cypress Villas No. 003 1&2"), "Kamares Village");
 check("Kamares Ambelia stays Kamares", nameOf("V-KAM-AMB-6A6B", "Kamares Village – Two-Villa Package Ambelia No. 6A/6B"), "Kamares Village");
 
+console.log("\nleptosFullSize — WordPress -scaled downsizes back to the original");
+const P = "https://www.leptosestates.com/wp-content/uploads/2023/05/";
+check("scaled jpg upgraded",  F.leptosFullSize(`${P}03-1-scaled.jpg`), `${P}03-1.jpg`);
+check("scaled png upgraded",  F.leptosFullSize(`${P}plan-scaled.png`), `${P}plan.png`);
+check("plain url untouched",  F.leptosFullSize(`${P}13-1.jpg`), `${P}13-1.jpg`);
+// "-scaled" only counts as WordPress's marker directly before the extension.
+check("mid-name scaled kept", F.leptosFullSize(`${P}un-scaled-view.jpg`), `${P}un-scaled-view.jpg`);
+check("http upgraded to https", F.leptosFullSize("http://www.leptosestates.com/a-scaled.jpg"),
+  "https://www.leptosestates.com/a.jpg");
+
 console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
 process.exit(failures ? 1 : 0);
