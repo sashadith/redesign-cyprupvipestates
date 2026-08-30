@@ -620,7 +620,7 @@ export async function leptosGroups(): Promise<LeptosGroup[]> {
 - [ ] **Step 4: Run the test and make sure it passes**
 
 Run: `node scripts/qa/leptos-grouping-check.mjs`
-Expected: 50 `ok` lines, `all checks passed`, exit 0.
+Expected: 79 `ok` lines, `all checks passed`, exit 0.
 
 - [ ] **Step 5: Commit**
 
@@ -645,7 +645,7 @@ console.log("\nleptosVm — the view model handed to the sync");
 const vmRows = [
   row({ ref: "A-BAG-Z-206", price: 258000, h2: "Bel Air Gardens Apartment 206, Block Zefiro",
         lat: 34.75, lng: 32.47, covered: 95, beds: "2", baths: "2",
-        images: ["https://x/a-scaled.jpg"], plans: ["https://x/p1.jpg"],
+        images: ["https://x/a.jpg"], plans: ["https://x/p1.jpg"],
         features: ["Swimming Pool", "Air Conditioning"], benefits: ["AIRPORT 26 min", "SEA 2 min"] }),
   row({ ref: "A-BAG-Z-205", price: 525000, h2: "Bel Air Gardens Apartment 205, Block Zefiro",
         lat: 34.75, lng: 32.47, covered: 110, beds: "3", baths: "2",
@@ -668,7 +668,7 @@ check("amenities deduplicated",       vm.amenities.slice().sort(),
   ["Air Conditioning", "Private Parking", "Swimming Pool"]);
 check("benefits become extraFacts",   vm.extraFacts.find((f) => f.label === "Airport")?.value, "26 min");
 check("benefits deduplicated",        vm.extraFacts.filter((f) => f.label === "Airport").length, 1);
-check("gallery upgraded and merged",  vm.gallery, ["https://x/a.jpg", "https://x/b.jpg"]);
+check("gallery merged across units",  vm.gallery, ["https://x/a.jpg", "https://x/b.jpg"]);
 check("project plans are the union",  vm.plans, ["https://x/p1.jpg", "https://x/p2.jpg"]);
 check("unit keeps its own plans",     vm.units[0].plans, ["https://x/p1.jpg"]);
 check("unit label carries the block", vm.units[0].label, "Block Zefiro · Nr. 206");
@@ -768,7 +768,12 @@ export function leptosVm(g: LeptosGroup): ProjectVM {
 - [ ] **Step 4: Run the test and make sure it passes**
 
 Run: `node scripts/qa/leptos-grouping-check.mjs`
-Expected: 69 `ok` lines, `all checks passed`, exit 0.
+Expected: 97 `ok` lines, `all checks passed`, exit 0.
+
+Note: `leptosRow` is exported (Task 5) purely so the test can reach it. It is
+the ONLY place the `-scaled` image upgrade is applied, so a hand-built
+`LeptosRow` fixture — which is what `row()` produces — cannot exercise it;
+assert the upgrade against `leptosRow` instead.
 
 If `UnitVM` rejects a field, read its definition in `feeds.ts` and match it exactly — do not add fields to the type.
 
