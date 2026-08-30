@@ -21,6 +21,8 @@ export default function ManualReminderSelect({ developerAccountId, value }: { de
           className="rounded-md border border-[#E5E7EB] px-2 py-1 text-sm text-[#111827] outline-none focus:border-[#1B4B43] disabled:opacity-60"
         >
           <option value={0}>off</option>
+          <option value={7}>weekly</option>
+          <option value={14}>every 2 weeks</option>
           <option value={30}>monthly</option>
         </select>
       </label>

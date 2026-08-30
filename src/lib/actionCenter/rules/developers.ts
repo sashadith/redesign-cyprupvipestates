@@ -703,7 +703,7 @@ async function manualSyncDue(): Promise<ActionItem[]> {
     // timestamp, never "today" or a resetting countdown (see soldOutReminders' note
     // on why a resetting countdown quietly broke the archive reminder).
     const since = new Date(last.getTime() + cadence * DAY);
-    const cadenceLabel = cadence >= 28 && cadence <= 31 ? "monthly" : `${cadence}-day`;
+    const cadenceLabel = cadence === 7 ? "weekly" : cadence === 14 ? "2-weekly" : cadence >= 28 && cadence <= 31 ? "monthly" : `${cadence}-day`;
     items.push({
       id: `manual-sync-due:${a.id}`, severity: "ACTION", category: "DEVELOPERS",
       title: `${a.name}: sync due`,

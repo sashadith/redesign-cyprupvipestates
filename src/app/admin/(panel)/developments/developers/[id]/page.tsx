@@ -96,6 +96,41 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
         }
       />
 
+      {/* Manual-sync status — header-level so the developer's freshness is visible
+          at a glance. For hand-synced developers (e.g. AGG, whose source sits behind
+          Cloudflare so the prod cron can't reach it — synced from Claude Code). The
+          cadence feeds the Action Center's manualSyncDue() rule; the badge here is
+          the same condition rendered inline. */}
+      {dev.driveFolderUrl && (() => {
+        const DAY = 86_400_000;
+        const last = dev.driveSyncedAt;
+        const cadence = dev.manualSyncReminderDays;
+        const now = new Date();
+        const daysSince = last ? Math.round((Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - Date.UTC(last.getUTCFullYear(), last.getUTCMonth(), last.getUTCDate())) / DAY) : null;
+        const overdue = cadence != null && daysSince != null && daysSince >= cadence;
+        const nextDue = cadence != null && last ? new Date(last.getTime() + cadence * DAY) : null;
+        const shortDate = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+        return (
+          <div className="flex items-center justify-between gap-3 flex-wrap rounded-lg border border-[#E5E7EB] bg-white px-4 py-2.5">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="font-medium text-[#111827]">Manual sync</span>
+              {overdue ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#FEF3C7] px-2.5 py-0.5 text-xs font-medium text-[#92400E]">
+                  ⚠ Sync due{daysSince != null ? ` — last synced ${daysSince}d ago` : ""}
+                </span>
+              ) : cadence != null ? (
+                <span className="text-xs text-[#6B7280]">
+                  {last ? `synced ${daysSince === 0 ? "today" : `${daysSince}d ago`}` : "never synced"}{nextDue ? ` · next reminder ${shortDate(nextDue)}` : ""}
+                </span>
+              ) : (
+                <span className="text-xs text-[#9CA3AF]">no reminder set</span>
+              )}
+            </div>
+            <ManualReminderSelect developerAccountId={dev.id} value={dev.manualSyncReminderDays} />
+          </div>
+        );
+      })()}
+
       {/* Developments */}
       <div className="bg-white rounded-lg border border-[#E5E7EB] p-6 space-y-4">
         <h2 className="text-sm font-semibold text-[#111827]">
@@ -217,14 +252,6 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
             )}{" "}
             Last synced: {dev.driveSyncedAt ? fmt(dev.driveSyncedAt) : "never"}.
           </p>
-          {/* Manual-sync reminder — for developers synced by hand (e.g. AGG, whose
-              source is behind Cloudflare and the prod cron cannot reach it). Sets a
-              cadence; the Action Center then shows "sync due" once driveSyncedAt is
-              older than that. Independent of the automated interval above. */}
-          <div className="flex items-center justify-between gap-3 flex-wrap border-t border-[#F3F4F6] pt-3">
-            <span className="text-xs text-[#6B7280]">Manual-sync reminder</span>
-            <ManualReminderSelect developerAccountId={dev.id} value={dev.manualSyncReminderDays} />
-          </div>
         </div>
       )}
 
