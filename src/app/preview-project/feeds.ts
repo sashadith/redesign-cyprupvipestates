@@ -1412,6 +1412,7 @@ const DEVELOPERS: Record<string, { label: string; default: string }> = {
   domenica: { label: "Domenica", default: "cirvis" },
   medousa: { label: "Medousa", default: "PRJ-10034" },
   squareone: { label: "Square One", default: "neon" },
+  leptos: { label: "Leptos Estates", default: "BAG" },
 };
 export const DEV_LIST = Object.entries(DEVELOPERS).map(([id, d]) => ({ id, ...d }));
 
@@ -1435,6 +1436,13 @@ export async function listProjectIds(dev: string): Promise<string[]> {
     catch { return []; }
   }
   if (dev === "squareone") return uniq(arr((await cachedParse(SQUAREONE_URL))?.kyero?.property).map((p: any) => projectSlugFrom(p.url)));
+  if (dev === "leptos") {
+    // try/catch as in the medousa branch above: a failed fetch here must not
+    // throw out of syncAll, which would skip every later developer's log row,
+    // statusOnlySync, the unit notifications and the purges.
+    try { return uniq((await leptosGroups()).map((g) => g.key)); }
+    catch { return []; }
+  }
   return [];
 }
 
@@ -1445,6 +1453,10 @@ export async function getPreviewProject(dev = "island-blue", id?: string): Promi
   if (dev === "pafilia" || dev === "domenica") return xml2u(dev, target);
   if (dev === "medousa") return medousa(target);
   if (dev === "squareone") return squareOne(target);
+  if (dev === "leptos") {
+    const g = (await leptosGroups()).find((x) => x.key === target);
+    return g ? leptosVm(g) : null;
+  }
   // Island Blue is the default for its OWN key only. Returning it for anything
   // unrecognised meant a developer added without an adapter silently received
   // another developer's projects — found 2026-08-28 while adding Mito, whose
