@@ -1112,7 +1112,12 @@ export function mitoVm(cluster: MitoCluster, id: string): ProjectVM {
 // getPreviewProject), not Mito's clustering detour.
 // See docs/superpowers/specs/2026-08-30-leptos-feed-adapter-design.md
 // ==================================================================
-const LEPTOS_URL =
+// Exported so scripts/qa/leptos-live-check.mjs reads the raw feed from the SAME
+// URL the adapter does. That check re-parses the feed itself to reach the
+// pre-upgrade "-scaled" image URLs, which leptosRow has already rewritten by the
+// time a LeptosRow exists; a second copy of the URL there would silently check a
+// different feed the day this one moves.
+export const LEPTOS_URL =
   "https://www.leptosestates.com/wp-content/themes/leptos-estates/template-export-xml-keyro.php?country=all";
 
 export type LeptosRow = {
