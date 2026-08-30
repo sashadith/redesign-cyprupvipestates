@@ -236,4 +236,115 @@ check("covered area on unit",         vm.units[0].areaBuilt, "95 m²");
 check("centre from first coords",     vm.center, { lat: 34.75, lng: 32.47 });
 
 console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
+// ---------------------------------------------------------------------------
+// Edge cases beyond the happy path. Each one below was confirmed to bite by
+// mutating the implementation and watching it fail.
+// ---------------------------------------------------------------------------
+
+console.log("\nleptosRow — parsing one <property> out of the feed");
+// This is the ONLY place the -scaled upgrade is wired in. leptosVm receives
+// rows whose images are already full-size, so asserting it on a hand-built
+// LeptosRow (as an earlier draft of this test did) asserts nothing at all.
+const parsed = F.leptosRow({
+  ref: "A-BAG-Z-206", price: "258000", type: "Apartments / Penthouses",
+  town: "Geroskipou", province: "Paphos", country: "Cyprus",
+  desc: { en: "<h2>Bel Air Gardens Apartment 206, Block Zefiro</h2><p>A calm spot &#8211; sea views &amp; more.</p>" },
+  location: { latitude: "34.75", longitude: "32.47" },
+  images: { image: [{ url: "https://x/a-scaled.jpg" }, { url: "https://x/b.jpg" }] },
+  floor_plans: { image: { url: "http://x/p1-scaled.png" } },
+  features: { feature: ["Swimming Pool", "Air Conditioning"] },
+  benefits: { benefit: "AIRPORT 26 min" },
+  beds: "2", baths: "2", sqm: { plot_area: "0", covered_area: "95" },
+});
+check("heading split off the description", parsed.h2, "Bel Air Gardens Apartment 206, Block Zefiro");
+check("body keeps no heading, no tags, decoded entities",
+  parsed.body, "A calm spot – sea views & more.");
+check("image urls upgraded past -scaled", parsed.images, ["https://x/a.jpg", "https://x/b.jpg"]);
+// A single <image> arrives as an object, not an array — and floor plans get
+// the same upgrade and the same http→https as the gallery.
+check("a lone floor plan, upgraded and secured", parsed.plans, ["https://x/p1.png"]);
+check("coordinates parsed", [parsed.lat, parsed.lng], [34.75, 32.47]);
+check("a lone benefit becomes a one-item array", parsed.benefits, ["AIRPORT 26 min"]);
+check("plot_area 0 is absent, not zero", parsed.plot, null);
+check("covered_area parsed", parsed.covered, 95);
+// The feed is not guaranteed to ship every field. A property missing all of
+// them must produce an empty row rather than throw on the way past.
+const bare = F.leptosRow({});
+check("a property with no fields yields an empty row",
+  [bare.ref, bare.price, bare.h2, bare.body, bare.images.length, bare.lat], ["", 0, "", "", 0, null]);
+check("an empty feed yields no groups", F.groupLeptosRows([]), []);
+check("a feed of only empty rows yields no groups", F.groupLeptosRows([bare]), []);
+
+console.log("\nleptosVm — edge cases the happy path does not reach");
+const vmOf = (rows) => F.leptosVm(F.groupLeptosRows(rows)[0]);
+
+// districtFor(null) returns "" by design, so a group with no coordinates at
+// all must fall through to the feed's own town/province text. Without that
+// fallback the district would be blank on every coordinate-less project.
+const noCoords = vmOf([
+  row({ ref: "V-ZANATZIA-43", h2: "Zanatzia Villa 43", town: "", province: "Limassol", lat: null, lng: null }),
+  row({ ref: "V-ZAN-592", h2: "Zanatzia Villa 59/2", town: "", province: "Limassol", lat: null, lng: null }),
+]);
+check("no coordinates anywhere means no centre", noCoords.center, null);
+check("district falls back to the province text", noCoords.district, "Limassol");
+check("units carry no coords either", noCoords.units.map((u) => u.coords), [null, null]);
+check("location is the district alone", noCoords.location, "Limassol");
+
+// resolveDevelopmentPrice() treats priceFrom/priceTo as authoritative, so a
+// project whose every unit is price-on-application must advertise no price at
+// all rather than "from €0".
+const allZero = vmOf([
+  row({ ref: "A-BAG-Z-206", price: 0, h2: "Bel Air Gardens Apartment 206, Block Zefiro" }),
+  row({ ref: "A-BAG-Z-205", price: 0, h2: "Bel Air Gardens Apartment 205, Block Zefiro" }),
+]);
+check("every unit priced 0 leaves priceFrom null", allZero.priceFrom, null);
+check("…and priceTo null, not 0", allZero.priceTo, null);
+check("the units themselves carry null, not 0", allZero.units.map((u) => u.price), [null, null]);
+
+// A benefit that does not carry minutes is not a travel time. Emitting it
+// anyway would put "Sea: nearby" — or a bare label with no value — into the
+// facts panel next to real figures.
+const benefits = vmOf([
+  row({ ref: "A-BAG-Z-206", h2: "Bel Air Gardens Apartment 206, Block Zefiro",
+        benefits: ["AIRPORT 26 min", "LEPTOS MEMBERSHIP", "SEA nearby", "SHOPS 5 min",
+                   "EDUCATION 10min", "Sea 2 min"] }),
+]);
+check("only well-formed travel times survive", benefits.extraFacts,
+  [{ label: "Airport", value: "26 min" }, { label: "Shops", value: "5 min" },
+   { label: "Education", value: "10min" }, { label: "Sea", value: "2 min" }]);
+check("a benefit with no minutes is dropped",
+  benefits.extraFacts.some((f) => f.value === "nearby"), false);
+check("an unknown label is dropped",
+  benefits.extraFacts.some((f) => /leptos|membership/i.test(`${f.label} ${f.value}`)), false);
+// Travel times go to extraFacts, never to distances: developmentDistances.ts
+// owns that field and recomputes it by haversine on every write path.
+check("nothing is written to distances", benefits.distances, undefined);
+
+// A heading that names no unit ("Waterfront Residence") leaves the ref as the
+// only source of a unit number. Without the fallback these units would all
+// share one blank label in the admin's unit list.
+const noNumber = vmOf([
+  row({ ref: "A-XYZ-77", h2: "Waterfront Residence" }),
+  row({ ref: "A-XYZ-78", h2: "" }),
+]);
+check("label falls back to the ref's last segment", noNumber.units[0].label, "Nr. 77");
+check("an empty heading falls back the same way", noNumber.units[1].label, "Nr. 78");
+check("name falls back to the code when the heading is empty too",
+  F.leptosProjectName("XYZ", ""), "XYZ");
+
+// The same render or site plan is attached to every unit of a project. Left
+// alone it would appear once per unit in the project gallery.
+const dupImages = vmOf([
+  row({ ref: "A-BAG-Z-206", h2: "Bel Air Gardens Apartment 206, Block Zefiro",
+        images: ["https://x/dup.jpg", "https://x/a.jpg"], plans: ["https://x/site.jpg"] }),
+  row({ ref: "A-BAG-Z-205", h2: "Bel Air Gardens Apartment 205, Block Zefiro",
+        images: ["https://x/dup.jpg", "https://x/b.jpg"], plans: ["https://x/site.jpg"] }),
+]);
+check("the shared photo appears once in the gallery",
+  dupImages.gallery, ["https://x/dup.jpg", "https://x/a.jpg", "https://x/b.jpg"]);
+check("the shared site plan appears once", dupImages.plans, ["https://x/site.jpg"]);
+check("each unit still keeps its own copy", dupImages.units[1].photos,
+  ["https://x/dup.jpg", "https://x/b.jpg"]);
+
+console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
 process.exit(failures ? 1 : 0);
