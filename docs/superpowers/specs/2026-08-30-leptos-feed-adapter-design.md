@@ -219,7 +219,7 @@ prefer them is a deliberate change to that module, not a quiet second writer.
 ### Units
 
 `ref` → `feedRef` and `ref`; heading → `name`/`label`; `type`, `price`, `beds`,
-`baths`; `covered_area` → `areaInternal`; `plot_area` → `areaPlot`; per-property
+`baths`; `covered_area` → `areaBuilt`; `plot_area` → `areaPlot`; per-property
 `images` → `photos`; `floor_plans` → `plans`; `location` → `coords`.
 
 Blocks (`Block Zefiro`, `Block Sirocco`) are parsed from the heading into the
