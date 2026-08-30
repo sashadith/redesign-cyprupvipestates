@@ -42,6 +42,13 @@ export default function DevelopmentSchema({ p, lang, canonical }: { p: ProjectVM
     },
     geo: { "@type": "GeoCoordinates", latitude: p.center.lat, longitude: p.center.lng },
     ...(listedCount ? { numberOfAccommodationUnits: listedCount } : {}),
+    // Amenities as LocationFeatureSpecification — the schema.org-blessed way to
+    // enumerate what a listing offers (pool, gym, sea view…). numberOfRooms /
+    // floorSize are deliberately omitted: this listing spans many units with
+    // different bed counts and sizes, so a single value would misdescribe it.
+    ...(p.amenities?.length
+      ? { amenityFeature: p.amenities.map((a) => ({ "@type": "LocationFeatureSpecification", name: a, value: true })) }
+      : {}),
     ...(priceFrom != null
       ? {
           offers: {

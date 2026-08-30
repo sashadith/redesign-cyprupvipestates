@@ -221,7 +221,18 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   // landing page's own previewImage; fall back to the logo only when the page has none.
   const pageSuffix = requestedPage > 1 ? (PAGE_TITLE_SUFFIX[lang] ?? PAGE_TITLE_SUFFIX.en)(requestedPage) : "";
   const ogTitle = (page?.seo?.metaTitle || page?.title) + pageSuffix;
-  const ogDesc = (page?.seo?.metaDescription || page?.excerpt) + pageSuffix;
+  // Never emit an empty (or literal "undefined") description: when both the CMS
+  // metaDescription and the excerpt are blank, `x || y` collapsed to undefined
+  // and `undefined + ""` shipped the string "undefined" — or an empty string,
+  // which let Google fall back to the footer disclaimer text in sitelink
+  // snippets. Fall through to a per-language brand default instead.
+  const FALLBACK_DESC: Record<string, string> = {
+    en: "Explore luxury properties, new developments and investment homes for sale across Cyprus with Cyprus VIP Estates.",
+    de: "Entdecken Sie Luxusimmobilien, Neubauprojekte und Anlageobjekte in ganz Zypern mit Cyprus VIP Estates.",
+    pl: "Odkryj luksusowe nieruchomości, nowe inwestycje i apartamenty inwestycyjne na Cyprze z Cyprus VIP Estates.",
+    ru: "Элитная недвижимость, новостройки и инвестиционные объекты на Кипре с Cyprus VIP Estates.",
+  };
+  const ogDesc = (page?.seo?.metaDescription || page?.excerpt || FALLBACK_DESC[lang] || FALLBACK_DESC.en) + pageSuffix;
   const ogImage = (page as any)?.previewImage
     ? urlFor((page as any).previewImage).width(1200).height(630).url()
     : DEFAULT_OG_IMAGE;
