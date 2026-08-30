@@ -114,10 +114,10 @@ function bedsRange(vm: ProjectVM): string | null {
 }
 
 const LABELS: Record<Lang, { in: string; from: string; unitsAvailable: string; completion: string; cyprus: string; soldOut: string; similar: string; cta: string }> = {
-  en: { in: "in", from: "from", unitsAvailable: "units available", completion: "Completion", cyprus: "Cyprus", soldOut: "Sold out", similar: "See similar projects", cta: "View floor plans & prices" },
-  de: { in: "in", from: "ab", unitsAvailable: "Einheiten verfügbar", completion: "Fertigstellung", cyprus: "Zypern", soldOut: "Ausverkauft", similar: "Ähnliche Projekte ansehen", cta: "Grundrisse & Preise ansehen" },
-  pl: { in: "w", from: "od", unitsAvailable: "dostępnych jednostek", completion: "Termin realizacji", cyprus: "Cypr", soldOut: "Wyprzedane", similar: "Zobacz podobne inwestycje", cta: "Zobacz rzuty i ceny" },
-  ru: { in: "в", from: "от", unitsAvailable: "доступных объектов", completion: "Срок сдачи", cyprus: "Кипр", soldOut: "Продано", similar: "Похожие проекты", cta: "Смотреть планировки и цены" },
+  en: { in: "in", from: "from", unitsAvailable: "units available", completion: "Completion", cyprus: "Cyprus", soldOut: "Sold out", similar: "See similar projects", cta: "View availability & prices" },
+  de: { in: "in", from: "ab", unitsAvailable: "Einheiten verfügbar", completion: "Fertigstellung", cyprus: "Zypern", soldOut: "Ausverkauft", similar: "Ähnliche Projekte ansehen", cta: "Verfügbarkeit & Preise ansehen" },
+  pl: { in: "w", from: "od", unitsAvailable: "dostępnych jednostek", completion: "Termin realizacji", cyprus: "Cypr", soldOut: "Wyprzedane", similar: "Zobacz podobne inwestycje", cta: "Zobacz dostępność i ceny" },
+  ru: { in: "в", from: "от", unitsAvailable: "доступных объектов", completion: "Срок сдачи", cyprus: "Кипр", soldOut: "Продано", similar: "Похожие проекты", cta: "Смотреть наличие и цены" },
 };
 
 const fmtPrice = (n: number) => `€${n.toLocaleString("en-US")}`;
@@ -177,7 +177,7 @@ export function autoMetaDescription(vm: ProjectVM, lang: string): string {
   const sentence2 = avail ? `${avail} ${unitsLabel}${priceClause}.` : priceClause ? `${lbl.unitsAvailable}${priceClause}.` : "";
   const sentence3 = vm.completion ? `${lbl.completion}: ${vm.completion}.` : "";
   // CTA rides last so `fit()` only keeps it when the factual clauses leave room
-  // under DESC_MAX — a snippet that ends on an action ("View floor plans &
+  // under DESC_MAX — a snippet that ends on an action ("View availability &
   // prices") reads as more clickable than one trailing off on a completion date.
   return fit([sentence1, sentence2, sentence3, `${lbl.cta}.`].filter(Boolean), DESC_MAX);
 }
