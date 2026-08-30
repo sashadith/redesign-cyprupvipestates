@@ -1264,6 +1264,62 @@ export function leptosProjectName(key: string, h2: string): string {
 export const leptosFullSize = (u: string): string =>
   secure(String(u || "")).replace(/-scaled(\.[A-Za-z]{3,4})(?=$|\?)/, "$1");
 
+export type LeptosGroup = { key: string; name: string; rows: LeptosRow[] };
+
+// Grouping is pure so it can be tested without the network. leptosGroups()
+// below is the only part that touches the feed. Named apart from it
+// deliberately: two functions differing by one character is a bug waiting.
+export function groupLeptosRows(rows: LeptosRow[]): LeptosGroup[] {
+  const byKey = new Map<string, LeptosRow[]>();
+  for (const r of rows) {
+    if (!leptosInScope(r)) continue;
+    const key = leptosProjectKey(r);
+    if (!key) continue;
+    (byKey.get(key) ?? byKey.set(key, []).get(key)!).push(r);
+  }
+  return Array.from(byKey.entries())
+    .map(([key, rs]) => ({ key, name: leptosProjectName(key, rs[0].h2), rows: rs }))
+    // Deterministic order: biggest first, ties broken by key. Sync iterates
+    // this, and a stable order keeps sync logs diffable between nights.
+    .sort((a, b) => b.rows.length - a.rows.length || a.key.localeCompare(b.key));
+}
+
+const leptosDecode = (s: string): string =>
+  s.replace(/&#8211;/g, "–").replace(/&#8217;/g, "'").replace(/&#8216;/g, "'")
+   .replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#(\d+);/g, (_, d) => String.fromCharCode(Number(d)));
+
+function leptosRow(p: any): LeptosRow {
+  const descHtml = leptosDecode(txt(p?.desc?.en));
+  const loc = p?.location ?? {};
+  const lat = toNum(loc?.latitude), lng = toNum(loc?.longitude);
+  return {
+    ref: clean(p?.ref), price: toNum(p?.price) ?? 0, type: clean(p?.type),
+    town: clean(p?.town), province: clean(p?.province), country: clean(p?.country),
+    h2: (descHtml.match(/<h2>([\s\S]*?)<\/h2>/i)?.[1] ?? "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim(),
+    body: descHtml.replace(/<h2>[\s\S]*?<\/h2>/i, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
+    descHtml,
+    lat: lat, lng: lng,
+    images: arr(p?.images?.image).map((i: any) => leptosFullSize(txt(i?.url))).filter(Boolean),
+    plans: arr(p?.floor_plans?.image).map((i: any) => leptosFullSize(txt(i?.url))).filter(Boolean),
+    features: arr(p?.features?.feature).map(txt).filter(Boolean),
+    benefits: arr(p?.benefits?.benefit).map(txt).filter(Boolean),
+    beds: clean(p?.beds), baths: clean(p?.baths),
+    plot: toNum(p?.sqm?.plot_area), covered: toNum(p?.sqm?.covered_area),
+  };
+}
+
+// Memoised on top of cachedParse's 5-minute feed cache: checkFeedCompleteness
+// calls getPreviewProject once per project, so without this the 440-row parse
+// and grouping would run 45 times per sync.
+let leptosMemo: { at: number; groups: LeptosGroup[] } | null = null;
+export async function leptosGroups(): Promise<LeptosGroup[]> {
+  if (leptosMemo && Date.now() - leptosMemo.at < FEED_TTL) return leptosMemo.groups;
+  const doc = await cachedParse(LEPTOS_URL);
+  const groups = groupLeptosRows(arr(doc?.root?.property).map(leptosRow));
+  leptosMemo = { at: Date.now(), groups };
+  return groups;
+}
+
 // ---------- dispatcher ----------
 const DEVELOPERS: Record<string, { label: string; default: string }> = {
   "island-blue": { label: "Island Blue", default: "76" },

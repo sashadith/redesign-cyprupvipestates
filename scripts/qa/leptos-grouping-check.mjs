@@ -175,4 +175,29 @@ check("http upgraded to https", F.leptosFullSize("http://www.leptosestates.com/a
 check("empty url", F.leptosFullSize(""), "");
 
 console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
+console.log("\ngroupLeptosRows — grouping rows into projects");
+const rows = [
+  row({ ref: "A-BAG-Z-206", h2: "Bel Air Gardens Apartment 206, Block Zefiro" }),
+  row({ ref: "A-BAG-S-303", h2: "Bel Air Gardens Penthhouse 303, Block Sirocco" }),
+  row({ ref: "V-ZAN-592",   h2: "Zanatzia Villa 59/2",  town: "Souni-Zanatzia", province: "Limassol" }),
+  row({ ref: "V-ZANATZIA-43", h2: "Zanatzia Villa 43",  town: "Souni-Zanatzia", province: "Limassol" }),
+  row({ ref: "A-LBM-CT-3-201", h2: "Apartment No. 201", town: "Limassol", province: "Limassol" }),
+  row({ ref: "A-LBM-3-2604",   h2: "Apartment No. 2604", town: "Limassol", province: "Limassol" }),
+  row({ ref: "V-MBV-01", h2: "Maleme Beach Villas No. 1", country: "Greece", province: "Paros", town: "Paros" }),
+  row({ ref: "P-OLYMPUS", h2: "Olympus Villas II Land Parcel", type: "Plots & Land Parcels" }),
+];
+const groups = F.groupLeptosRows(rows);
+const byKey = Object.fromEntries(groups.map((g) => [g.key, g]));
+check("out-of-scope rows dropped", groups.reduce((n, g) => n + g.rows.length, 0), 6);
+check("Greece produced no group", byKey["MBV"] === undefined, true);
+check("land parcel produced no group", byKey["OLYMPUS"] === undefined, true);
+check("Bel Air holds both blocks", byKey["BAG"].rows.length, 2);
+check("Bel Air named from table", byKey["BAG"].name, "Bel Air Gardens");
+check("ZAN merged into ZANATZIA", byKey["ZANATZIA"].rows.length, 2);
+check("Cavalli separate from Poseidon", [byKey["LBM-CT"].rows.length, byKey["LBM"].rows.length], [1, 1]);
+check("Cavalli named", byKey["LBM-CT"].name, "Cavalli Tower");
+check("Poseidon named", byKey["LBM"].name, "Poseidon Tower");
+check("groups sorted by size then key", groups[0].key, "BAG");
+
+console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
 process.exit(failures ? 1 : 0);
