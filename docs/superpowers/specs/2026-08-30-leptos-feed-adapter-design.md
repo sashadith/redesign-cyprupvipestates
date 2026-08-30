@@ -270,6 +270,17 @@ fire. At 377 units no such override is needed, and adding one would be cargo
 cult. The arithmetic is stated here so the next reader can check it rather than
 trust it.
 
+**What the arithmetic does not cover, and is accepted anyway.** Mito's floor
+had a second reason, and that one transfers: an unpublished development takes
+`syncOneProject`'s `deleteMany({source:"feed"}) + createMany` path. All 45
+Leptos projects are created as `draft`, so on day 1 a valid-but-short feed
+losing up to 15 % would DELETE those units rather than flip them to
+`"unlisted"` as it would for a published project. The trade is taken knowingly:
+feed rows are recreated whole on the next good pull and hold nothing a human
+typed, and any manual edit turns a unit into `source:"manual"`, which sync
+leaves alone. The cost of a bad night is a day of thinner catalogue on
+unpublished projects, not lost work.
+
 **Price 0 never sets a price.** 4 units in scope carry `price = 0`
 (`V-KAM-3-434A`, and three commercial). `priceFrom`/`priceTo` are computed from
 available units with a price above zero, matching the `squareOne` and `aristo`

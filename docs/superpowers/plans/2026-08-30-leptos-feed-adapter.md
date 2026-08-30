@@ -975,7 +975,11 @@ In `src/lib/feedSync.ts`, add `"leptos"` to the end of `SYNCED_DEVS`:
 export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone", "leptos"];
 ```
 
-No completeness-guard override is needed. `FEED_INCOMPLETE_PCT = 0.15` against 377 units blocks a feed that lost more than 56 units, and the `FEED_INCOMPLETE_ABS_FLOOR = 20` floor binds only below 133 units. Mito needed a custom floor of 3 because its 16-unit catalogue made `missing > 20` unsatisfiable — a guard that could never fire. At 377 units the shared thresholds do the work; adding an override would be cargo cult.
+No completeness-guard override is needed, but say why honestly — Mito's stricter floor was argued on two grounds and only one is arithmetic.
+
+The arithmetic: `FEED_INCOMPLETE_PCT = 0.15` against 377 units blocks a feed that lost more than 56 units, and the `FEED_INCOMPLETE_ABS_FLOOR = 20` floor binds only below 133 units. Mito needed a custom floor of 3 because its 16-unit catalogue made `missing > 20` unsatisfiable — a guard that could never fire. At 377 units the shared thresholds fire on their own.
+
+The second ground transfers and is uncomfortable: Mito's floor was also stricter because its projects are unpublished, and `syncOneProject` sends an unpublished development down `deleteMany({source:"feed"}) + createMany`. All 45 Leptos projects are created as `draft`, so on day 1 every one of them is on that path — a valid-but-short feed would DELETE up to 56 units rather than flip them to `"unlisted"`. That is accepted, not overlooked: feed rows are recreated whole on the next good pull and carry nothing a human typed, and the moment a human edits a unit it becomes `source:"manual"`, which sync never touches. Inventing a floor to claim a safety property the shared thresholds already provide would be cargo cult with a comment attached.
 
 - [ ] **Step 4: Verify types compile**
 
