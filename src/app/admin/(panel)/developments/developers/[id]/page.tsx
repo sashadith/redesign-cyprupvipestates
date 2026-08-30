@@ -9,6 +9,7 @@ import DeveloperPageLink from "./DeveloperPageLink";
 import DriveSyncButton from "./DriveSyncButton";
 import DriveFolderPreviewButton from "./DriveFolderPreviewButton";
 import DriveIntervalSelect from "./DriveIntervalSelect";
+import ManualReminderSelect from "./ManualReminderSelect";
 import BackLink from "../../BackLink";
 import { computeAvailability } from "@/lib/developmentAvailability";
 import { resolveLinkedDeveloper, developerGroupExists, listDeveloperPageOptions } from "@/lib/developerLink";
@@ -216,6 +217,14 @@ export default async function DeveloperDetailPage({ params }: { params: { id: st
             )}{" "}
             Last synced: {dev.driveSyncedAt ? fmt(dev.driveSyncedAt) : "never"}.
           </p>
+          {/* Manual-sync reminder — for developers synced by hand (e.g. AGG, whose
+              source is behind Cloudflare and the prod cron cannot reach it). Sets a
+              cadence; the Action Center then shows "sync due" once driveSyncedAt is
+              older than that. Independent of the automated interval above. */}
+          <div className="flex items-center justify-between gap-3 flex-wrap border-t border-[#F3F4F6] pt-3">
+            <span className="text-xs text-[#6B7280]">Manual-sync reminder</span>
+            <ManualReminderSelect developerAccountId={dev.id} value={dev.manualSyncReminderDays} />
+          </div>
         </div>
       )}
 

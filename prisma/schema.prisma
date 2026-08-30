@@ -976,6 +976,13 @@ model DeveloperAccount {
   driveFileModified String?
   driveSyncedAt     DateTime? // last successful drive availability sync
   driveSyncInterval String?   @default("daily") // daily | 2day | weekly | off
+  // Manual-sync reminder cadence in DAYS (null = no reminder). For developers whose
+  // sync is run by hand (e.g. AGG — its source sits behind Cloudflare and the prod
+  // cron cannot reach it, so it is synced from Claude Code), the Action Center
+  // surfaces a "sync due" item once driveSyncedAt is older than this many days. The
+  // manual sync updates driveSyncedAt, so the reminder clears itself. Set via the
+  // developer admin (ManualReminderSelect). 30 = monthly.
+  manualSyncReminderDays Int?
   notes             String?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt

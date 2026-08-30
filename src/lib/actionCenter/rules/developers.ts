@@ -681,11 +681,44 @@ async function manualDataStaleReminders(): Promise<ActionItem[]> {
   return items;
 }
 
+// (p) Per-ACCOUNT manual-sync reminder on a configurable cadence
+// (DeveloperAccount.manualSyncReminderDays, set in the developer admin). Distinct
+// from manualDataStaleReminders (o) above — that one is per-development and only
+// for dev:"manual" projects, whereas this is ONE item per ACCOUNT that is synced
+// by hand. AGG is the case it was built for: its source sits behind Cloudflare, so
+// the prod cron cannot reach it and it is synced from Claude Code. The manual sync
+// refreshes driveSyncedAt, so this item clears itself once the sync has run.
+async function manualSyncDue(): Promise<ActionItem[]> {
+  const accts = await prisma.developerAccount.findMany({
+    where: { manualSyncReminderDays: { not: null } },
+    select: { id: true, name: true, manualSyncReminderDays: true, driveSyncedAt: true, createdAt: true },
+  });
+  const items: ActionItem[] = [];
+  for (const a of accts) {
+    const cadence = a.manualSyncReminderDays!;
+    const last = a.driveSyncedAt ?? a.createdAt;
+    const days = daysSinceCalendar(last);
+    if (days < cadence) continue;
+    // `since` is the day it BECAME due (last synced + cadence): a fixed real
+    // timestamp, never "today" or a resetting countdown (see soldOutReminders' note
+    // on why a resetting countdown quietly broke the archive reminder).
+    const since = new Date(last.getTime() + cadence * DAY);
+    const cadenceLabel = cadence >= 28 && cadence <= 31 ? "monthly" : `${cadence}-day`;
+    items.push({
+      id: `manual-sync-due:${a.id}`, severity: "ACTION", category: "DEVELOPERS",
+      title: `${a.name}: sync due`,
+      description: `${a.driveSyncedAt ? `Last synced ${days} days ago` : "Never synced"} — ${cadenceLabel} manual sync. Run it from Claude Code; it clears once driveSyncedAt updates.`,
+      deepLink: `/admin/developments/developers/${a.id}`, since,
+    });
+  }
+  return items;
+}
+
 export async function developerRules(): Promise<ActionItem[]> {
-  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o] = await Promise.all([
+  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p] = await Promise.all([
     soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(), backInStockReminders(),
     developerNoPageReminders(), developerLinkBrokenReminders(), overlapCandidatesPending(), developerLinkCollisions(), feedIncompleteWarnings(), imageDriftPending(),
-    emptyDraftReminders(), manualDataStaleReminders(),
+    emptyDraftReminders(), manualDataStaleReminders(), manualSyncDue(),
   ]);
-  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l, ...m, ...n, ...o];
+  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l, ...m, ...n, ...o, ...p];
 }
