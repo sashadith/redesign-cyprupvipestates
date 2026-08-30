@@ -224,15 +224,15 @@ In `feeds.ts`, append after `leptosInScope`:
 // V=Villa, P=Plot, C=Commercial, S=Studio (plus two one-off spellings).
 const LEPTOS_TYPE_PREFIX = new Set(["A", "V", "P", "C", "S", "AP", "PENT"]);
 
+const leptosSegments = (ref: string): string[] =>
+  String(ref || "").split("-").map((s) => s.trim()).filter(Boolean);
+
 // The code is read at a KNOWN POSITION — the segment after the type prefix —
 // never by searching the ref for a token that looks like a code. "PG" is
 // Peyia Gardens in segment 2 (A-PG-BLK-D-204, Peyia) and Paphos Gardens in the
 // last segment (A-A09-109-PG, Kato Paphos), two projects 12 km apart. A
 // substring or last-segment rule merges them. This is the single most likely
 // way a future edit breaks this adapter.
-const leptosSegments = (ref: string): string[] =>
-  String(ref || "").split("-").map((s) => s.trim()).filter(Boolean);
-
 export function leptosCode(ref: string): string {
   const seg = leptosSegments(ref);
   if (!seg.length) return "";
