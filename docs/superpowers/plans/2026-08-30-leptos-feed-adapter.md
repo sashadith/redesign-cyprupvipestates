@@ -1187,11 +1187,37 @@ Expected: **exactly one** row, holding 45 developments. Two rows means `DEV_ACCO
 
 - [ ] **Step 4: Run the sync a second time and confirm identity is stable**
 
-Trigger the sync again. Expected: `created: 0`, `updated: 45`. Any non-zero `created` means a project was re-keyed — investigate before publishing anything.
+Trigger the sync again, **with `&mirror=1`** — a run without it rewrites the
+mirrored local image URLs back to the vendor's (see Step 5). Expected:
+`created: 0`, `updated: 45`, `mirroredNewFiles: false`, and it finishes in
+seconds because every hash already matches. Any non-zero `created` means a project was re-keyed — investigate before publishing anything.
 
-- [ ] **Step 5: Spot-check two mirrored images**
+- [ ] **Step 5: Confirm every image reference is local**
 
-Pick any Leptos project in the admin, open its gallery, and confirm at least one image is over 4000 px wide. If everything is 1920 px, `leptosFullSize` is not being applied before mirroring.
+```bash
+node --env-file=.env.local -e "
+const { PrismaClient } = require('@prisma/client');
+new PrismaClient().development.findMany({ where:{dev:'leptos'},
+  select:{gallery:true,plans:true,units:{select:{photos:true,plans:true}}} }).then(ds => {
+  let loc=0, ext=0;
+  const scan=a=>{for(const u of (a??[])) String(u).startsWith('/uploads') ? loc++ : ext++;};
+  for(const d of ds){ scan(d.gallery); scan(d.plans); for(const u of d.units){ scan(u.photos); scan(u.plans);} }
+  console.log('local', loc, 'external', ext);
+});"
+```
+
+Expected: `external 0`. **Anything above zero means a sync ran without
+`mirror=1`** — that rewrites mirrored local URLs back to the vendor's. Repair
+by re-running WITH `&mirror=1`; it is fast, because the files are already on
+disk and only the references are restored.
+
+- [ ] **Step 5b: Spot-check the mirrored image sizes**
+
+Mirrored files are capped at 1920 px by `imageMirror.ts` (`SIZES`), so do NOT
+expect a 4000 px file — that would mean the cap had been bypassed. Instead
+confirm the upgrade happened upstream: every image reference in the DB must
+start with `/uploads` (see Step 5b), and the `_large.webp` files should be
+1920 px wide rather than the source's smaller dimensions.
 
 - [ ] **Step 6: Confirm unitRef normalisation is inert**
 

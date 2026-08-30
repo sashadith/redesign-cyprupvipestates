@@ -184,7 +184,17 @@ suffix returns the original that WordPress kept:
 | `2023/05/03-1.jpg` | 1920 × 1373 (513 KB) | **4128 × 2953** (2.1 MB) |
 | `2023/05/04-1.jpg` | 1920 × 1288 (632 KB) | **4588 × 3078** (3.4 MB) |
 
-Over four times the pixels. Sampling 30 of the 807: **30 of 30 originals exist
+Over four times the pixels **at the source**. Our own pipeline still caps
+what it stores: `imageMirror.ts`'s `SIZES` is `small 640 / medium 1280 /
+large 1920`, so the mirrored file is 1920 px wide either way. The gain is
+therefore **sharpness, not stored resolution** — 1920 px downsampled from a
+4128 px original instead of 1920 px re-encoded from an already-compressed
+1920 px JPEG, avoiding a second generation of compression loss. Confirmed on
+the mirrored files after the first sync (2026-08-30): every `_large.webp` is
+1920 px or the source's own width where that is smaller.
+
+This is the same thing `imageMirror.ts` already does for other feeds via
+`toLargeVariant` — raising the ceiling we mirror FROM, never the cap. Sampling 30 of the 807: **30 of 30 originals exist
 and every one is larger.** The adapter requests the original and falls back to
 the `-scaled` URL when it is absent — the fallback never fired in the sample,
 but a missing original is a 404 in the mirror pipeline, so it stays.
