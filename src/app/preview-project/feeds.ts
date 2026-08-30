@@ -1288,7 +1288,12 @@ const leptosDecode = (s: string): string =>
   s.replace(/&#8211;/g, "–").replace(/&#8217;/g, "'").replace(/&#8216;/g, "'")
    .replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#(\d+);/g, (_, d) => String.fromCharCode(Number(d)));
 
-function leptosRow(p: any): LeptosRow {
+// Exported for the self-test only: this is where -scaled image URLs are
+// upgraded (leptosFullSize) and where the <h2> heading every keying rule reads
+// is split off the description. Nothing downstream builds a LeptosRow by hand,
+// so if that upgrade is not asserted HERE it is not asserted anywhere —
+// leptosVm receives rows whose images are already full-size by contract.
+export function leptosRow(p: any): LeptosRow {
   const descHtml = leptosDecode(txt(p?.desc?.en));
   const loc = p?.location ?? {};
   const lat = toNum(loc?.latitude), lng = toNum(loc?.longitude);
@@ -1318,6 +1323,83 @@ export async function leptosGroups(): Promise<LeptosGroup[]> {
   const groups = groupLeptosRows(arr(doc?.root?.property).map(leptosRow));
   leptosMemo = { at: Date.now(), groups };
   return groups;
+}
+
+// "AIRPORT 26 min" -> { label: "Airport", value: "26 min" }. These go to
+// extraFacts and deliberately NOT to Development.distances, which
+// developmentDistances.ts owns and recomputes by haversine on every write
+// path. Two writers on one field is how Development.stage got wiped nightly
+// until it was moved to the override table (Celestia, 2026-07-17/18).
+// Leptos's figures are real drive times and better than our straight-line
+// estimate, but preferring them belongs in a deliberate change to that
+// module, not in a quiet second writer here.
+const LEPTOS_BENEFIT_LABEL: Record<string, string> = {
+  AIRPORT: "Airport", SEA: "Sea", SHOPS: "Shops",
+  HEALTHCARE: "Healthcare", EDUCATION: "Education",
+};
+function leptosBenefit(b: string): { label: string; value: string } | null {
+  const m = String(b || "").trim().match(/^([A-Za-z ]+?)\s+(\d+\s*min)$/i);
+  if (!m) return null;
+  const label = LEPTOS_BENEFIT_LABEL[m[1].trim().toUpperCase()];
+  return label ? { label, value: m[2].replace(/\s+/g, " ").toLowerCase() } : null;
+}
+
+// "Bel Air Gardens Apartment 206, Block Zefiro" -> "Block Zefiro · Nr. 206",
+// matching the existing "Block C · Nr. 504" convention.
+function leptosUnitLabel(r: LeptosRow): string {
+  const block = r.h2.match(/\bBlock\s+([A-Za-z0-9''-]+)/i)?.[1] ?? "";
+  const num =
+    r.h2.match(/\b(?:No\.?\s*)([A-Za-z0-9][\w./-]*)/i)?.[1] ??
+    r.h2.match(/\b(?:Apartment|Penthhouse|Penthouse|Villa|Studio|Flat|Shop|Townhouse)\s+([A-Za-z0-9][\w./-]*)/i)?.[1] ??
+    r.ref.split("-").pop() ?? "";
+  return joinLoc(block ? `Block ${block}` : "", num ? `Nr. ${num}` : "");
+}
+
+export function leptosVm(g: LeptosGroup): ProjectVM {
+  const first = g.rows[0];
+  const units: UnitVM[] = g.rows.map((r) => ({
+    ref: r.ref, name: leptosUnitLabel(r) || r.ref, label: leptosUnitLabel(r) || r.ref,
+    type: r.type, status: "available", statusLabel: "Available",
+    price: r.price > 0 ? r.price : null, currency: "EUR",
+    beds: r.beds !== "0" ? r.beds : "", baths: r.baths !== "0" ? r.baths : "",
+    // covered_area -> areaBuilt. UnitVM has no areaInternal field, and
+    // feedSync only maps areaBuilt/areaPlot/areaVeranda onto DevelopmentUnit.
+    areaBuilt: areaM2(r.covered), areaPlot: areaM2(r.plot), areaVeranda: "",
+    floor: "", attrs: [], features: r.features,
+    photos: sizedImages(r.images), plans: sizedImages(r.plans),
+    coords: r.lat != null && r.lng != null ? { lat: r.lat, lng: r.lng } : null,
+    description: "",
+  }));
+
+  const center = units.find((u) => u.coords)?.coords ?? null;
+  const district =
+    districtFor(center) || districtFromText(first.town) || districtFromText(first.province) || first.province;
+  const town = first.town;
+  const area = town && town.toLowerCase() !== district.toLowerCase() ? town : "";
+
+  const amenities = Array.from(new Set(g.rows.flatMap((r) => r.features))).sort();
+  const extraFacts: { label: string; value: string }[] = [];
+  for (const b of g.rows.flatMap((r) => r.benefits)) {
+    const f = leptosBenefit(b);
+    if (f && !extraFacts.some((x) => x.label === f.label)) extraFacts.push(f);
+  }
+
+  // AVAILABLE units with a real price only. Development.priceFrom/priceTo are
+  // treated as authoritative by resolveDevelopmentPrice(), so a zero-priced
+  // unit here would advertise "from €0". 4 in-scope units carry price 0.
+  const prices = units.map((u) => u.price).filter((n): n is number => n != null && n > 0).sort((a, b) => a - b);
+
+  const descBody = tidyDesc(first.body);
+  return {
+    id: g.key, dev: "leptos", publicName: g.name, developerName: g.name, developer: "Leptos Estates",
+    area, district, town: "", location: joinLoc(district, area),
+    status: "Available", category: "Residential", stage: "", completion: "", energy: "",
+    description: anonymize(descBody, g.name, g.name),
+    gallery: sizedImages(Array.from(new Set(g.rows.flatMap((r) => r.images)))),
+    plans: sizedImages(Array.from(new Set(g.rows.flatMap((r) => r.plans)))),
+    renders: [], amenities, extraFacts, center, units,
+    priceFrom: prices[0] ?? null, priceTo: prices[prices.length - 1] ?? null, currency: "EUR",
+  };
 }
 
 // ---------- dispatcher ----------

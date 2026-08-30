@@ -200,4 +200,40 @@ check("Poseidon named", byKey["LBM"].name, "Poseidon Tower");
 check("groups sorted by size then key", groups[0].key, "BAG");
 
 console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
+console.log("\nleptosVm — the view model handed to the sync");
+const vmRows = [
+  row({ ref: "A-BAG-Z-206", price: 258000, h2: "Bel Air Gardens Apartment 206, Block Zefiro",
+        lat: 34.75, lng: 32.47, covered: 95, beds: "2", baths: "2",
+        images: ["https://x/a.jpg"], plans: ["https://x/p1.jpg"],
+        features: ["Swimming Pool", "Air Conditioning"], benefits: ["AIRPORT 26 min", "SEA 2 min"] }),
+  row({ ref: "A-BAG-Z-205", price: 525000, h2: "Bel Air Gardens Apartment 205, Block Zefiro",
+        lat: 34.75, lng: 32.47, covered: 110, beds: "3", baths: "2",
+        images: ["https://x/b.jpg"], plans: ["https://x/p2.jpg"],
+        features: ["Swimming Pool", "Private Parking"], benefits: ["AIRPORT 26 min"] }),
+  // price 0 must never set the "from" price — 4 in-scope units carry it.
+  row({ ref: "A-BAG-Z-204", price: 0, h2: "Bel Air Gardens Apartment 204, Block Zefiro",
+        lat: 34.75, lng: 32.47, covered: 90, beds: "2", baths: "1" }),
+];
+const vm = F.leptosVm(F.groupLeptosRows(vmRows)[0]);
+check("id is the project key",        vm.id, "BAG");
+check("dev key",                      vm.dev, "leptos");
+check("public name from table",       vm.publicName, "Bel Air Gardens");
+check("developer label",              vm.developer, "Leptos Estates");
+check("district from coordinates",    vm.district, "Paphos");
+check("all units carried",            vm.units.length, 3);
+check("priceFrom skips the zero",     vm.priceFrom, 258000);
+check("priceTo",                      vm.priceTo, 525000);
+check("amenities deduplicated",       vm.amenities.slice().sort(),
+  ["Air Conditioning", "Private Parking", "Swimming Pool"]);
+check("benefits become extraFacts",   vm.extraFacts.find((f) => f.label === "Airport")?.value, "26 min");
+check("benefits deduplicated",        vm.extraFacts.filter((f) => f.label === "Airport").length, 1);
+check("gallery merged across units",  vm.gallery, ["https://x/a.jpg", "https://x/b.jpg"]);
+check("project plans are the union",  vm.plans, ["https://x/p1.jpg", "https://x/p2.jpg"]);
+check("unit keeps its own plans",     vm.units[0].plans, ["https://x/p1.jpg"]);
+check("unit label carries the block", vm.units[0].label, "Block Zefiro · Nr. 206");
+check("unit ref is the feed ref",     vm.units[0].ref, "A-BAG-Z-206");
+check("covered area on unit",         vm.units[0].areaBuilt, "95 m²");
+check("centre from first coords",     vm.center, { lat: 34.75, lng: 32.47 });
+
+console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
 process.exit(failures ? 1 : 0);
