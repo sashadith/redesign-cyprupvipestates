@@ -297,9 +297,31 @@ console.log("\nleptosProjectName — table first, heading as fallback");
 const nameOf = (ref, h2) => F.leptosProjectName(F.leptosProjectKey({ ref, h2 }), h2);
 check("table name wins over heading",  nameOf("A-LBM-CT-3-1604", "Apartment No. 1604"), "Cavalli Tower");
 check("Poseidon from table",           nameOf("A-LBM-3-2604", "Apartment No. 2604"), "Poseidon Tower");
+// The unit designation is stripped where it is FOLLOWED BY A UNIT NUMBER, not
+// at the first unit word in the heading: eight of the 45 curated names end in
+// "Villas", so stripping at the first one mis-names the very pattern Leptos
+// itself uses — and this fallback is the only path a project added after
+// today can take.
 check("heading with no table entry",   nameOf("V-XYZ-3-12", "Sunrise Hills Villa No. 12"), "Sunrise Hills");
-check("heading, block suffix dropped", nameOf("A-XYZ-1-1", "Sunrise Hills Apartment 206, Block Zefiro"), "Sunrise Hills");
+check("a name ending in Villas lives", nameOf("V-XYZ-3-3", "Sunset Beach Villas Villa No. 3"), "Sunset Beach Villas");
+check("two-word unit designation",     nameOf("V-XYZ-M1", "Adonis Beach Villas Grand Mansion No. M1"), "Adonis Beach Villas");
+check("a name opening with Villa",     nameOf("V-XYZ-5", "Villa Romana No. 5"), "Villa Romana");
+check("unit number without a No.",     nameOf("A-XYZ-1-1", "Sunrise Hills Apartment 206, Block Zefiro"), "Sunrise Hills");
+// "Floor" is the one unit word normally PRECEDED by its qualifier. Requiring a
+// unit number after it is what keeps "Second Floor Apartment" from collapsing
+// to "Second" while "Floor 5" still falls through to the code.
 check("unknown code, unusable heading", nameOf("V-XYZ-3-12", "Floor 5"), "XYZ");
+check("the qualifier before Floor lives",
+  nameOf("A-XYZ-1-1", "Second Floor Apartment, Kato Paphos"), "Second Floor Apartment, Kato Paphos");
+// The block suffix has its own rule. Every heading above hits a unit
+// designation first, which would truncate the string before "Block" is ever
+// reached — so the case that actually exercises the rule has none.
+check("heading, block suffix dropped", nameOf("A-XYZ-1-1", "Sunrise Hills – Block Zefiro"), "Sunrise Hills");
+check("the Blk spelling too",          nameOf("A-XYZ-1-1", "Sunrise Hills, Blk D"), "Sunrise Hills");
+check("dangling punctuation trimmed",  nameOf("V-XYZ-3-12", "Sunrise Hills – Villa No. 12"), "Sunrise Hills");
+check("ragged whitespace collapsed",   nameOf("V-XYZ-3-12", "  Sunrise   Hills Villa No. 12"), "Sunrise Hills");
+// Two characters of residue is not a project name; the code is.
+check("residue too short to be a name", nameOf("V-XYZ-3-3", "La Villa No. 3"), "XYZ");
 // Kamares Village is ONE development: its Cypress and Ambelia units say so in
 // their own descriptions. The table must not let the heading split it.
 check("Kamares Cypress stays Kamares", nameOf("V-KAM-CYP-003-1_2", "Kamares Village Cypress Villas No. 003 1&2"), "Kamares Village");
@@ -368,16 +390,36 @@ export function leptosProjectKey(r: { ref: string; h2: string }): string {
   return LEPTOS_MERGE[code] ?? code;
 }
 
-// Unit designations to strip when falling back to the heading.
+// Unit designations to strip when falling back to the heading — but ONLY where
+// one is followed by a unit number ("Villa No. 3", "Apartment 206"), never at
+// the first unit word encountered. Leptos names eight of its 45 projects
+// "... Villas", so the first-word rule turns "Sunset Beach Villas Villa No. 3"
+// into "Sunset Beach" — it mis-names exactly the pattern the house uses, on
+// the one path a project added after today will take. Stripping at a comma
+// instead would break the same names ("Coral Bay Villas, Paphos"); the unit
+// number is the only marker that reliably says "the name ended here".
+// "Floor" is in the list for headings like "Floor 5" that are entirely a unit
+// designation. It is also the one word normally PRECEDED by its qualifier, so
+// the unit-number requirement is what keeps "Second Floor Apartment" from
+// collapsing to "Second".
 const LEPTOS_UNIT_WORDS =
-  "Grand Mansion|Townhouse|Maisonette|Penthhouse|Penthouse|Apartment|Restaurant|Mansion|Villas|Villa|Studio|Houses|House|Shops|Shop|Flat";
+  "Grand Mansion|Townhouse|Maisonette|Penthhouse|Penthouse|Apartment|Restaurant|Mansion|Villas|Villa|Studio|Houses|House|Shops|Shop|Flat|Floor";
+// A unit number: "No. M1", "No. 003 1&2", "206", "6A/6B" — the "No." is
+// optional and the number may carry a one- or two-letter prefix.
+const LEPTOS_UNIT_NO = String.raw`(?:No\.?\s*)?[A-Za-z]{0,2}\d`;
+const LEPTOS_UNIT_TAIL = new RegExp(
+  String.raw`\s*\b(?:${LEPTOS_UNIT_WORDS})\b(?=\s+${LEPTOS_UNIT_NO}).*$`, "i");
 
 export function leptosProjectName(key: string, h2: string): string {
   const listed = LEPTOS_NAMES[key];
   if (listed) return listed;
   let s = String(h2 || "").replace(/\s+/g, " ").trim();
   s = s.replace(/\s*[,–-]\s*(Block|Blk)\b.*$/i, "");
-  s = s.replace(new RegExp(`\\s*\\b(${LEPTOS_UNIT_WORDS})\\b.*$`, "i"), "");
+  s = s.replace(LEPTOS_UNIT_TAIL, "");
+  // A name that itself opens with a unit word ("Villa Romana No. 5") keeps its
+  // designation, so its unit number is still attached. That number is not part
+  // of the name either.
+  s = s.replace(new RegExp(String.raw`\s*\bNo\.?\s*[A-Za-z]{0,2}\d.*$`, "i"), "");
   s = s.replace(/[,\s–\-/&]+$/, "").trim();
   // A heading like "Floor 5" carries no project name at all; the code is the
   // only honest answer left, and it is at least stable and greppable.
@@ -388,7 +430,7 @@ export function leptosProjectName(key: string, h2: string): string {
 - [ ] **Step 4: Run the test and make sure it passes**
 
 Run: `node scripts/qa/leptos-grouping-check.mjs`
-Expected: 35 `ok` lines, `all checks passed`, exit 0.
+Expected: 57 `ok` lines, `all checks passed`, exit 0.
 
 - [ ] **Step 5: Commit**
 

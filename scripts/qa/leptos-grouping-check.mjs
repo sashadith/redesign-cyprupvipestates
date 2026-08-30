@@ -120,9 +120,31 @@ console.log("\nleptosProjectName — table first, heading as fallback");
 const nameOf = (ref, h2) => F.leptosProjectName(F.leptosProjectKey({ ref, h2 }), h2);
 check("table name wins over heading",  nameOf("A-LBM-CT-3-1604", "Apartment No. 1604"), "Cavalli Tower");
 check("Poseidon from table",           nameOf("A-LBM-3-2604", "Apartment No. 2604"), "Poseidon Tower");
+// The unit designation is stripped where it is FOLLOWED BY A UNIT NUMBER, not
+// at the first unit word in the heading: eight of the 45 curated names end in
+// "Villas", so stripping at the first one mis-names the very pattern Leptos
+// itself uses — and this fallback is the only path a project added after
+// today can take.
 check("heading with no table entry",   nameOf("V-XYZ-3-12", "Sunrise Hills Villa No. 12"), "Sunrise Hills");
-check("heading, block suffix dropped", nameOf("A-XYZ-1-1", "Sunrise Hills Apartment 206, Block Zefiro"), "Sunrise Hills");
+check("a name ending in Villas lives", nameOf("V-XYZ-3-3", "Sunset Beach Villas Villa No. 3"), "Sunset Beach Villas");
+check("two-word unit designation",     nameOf("V-XYZ-M1", "Adonis Beach Villas Grand Mansion No. M1"), "Adonis Beach Villas");
+check("a name opening with Villa",     nameOf("V-XYZ-5", "Villa Romana No. 5"), "Villa Romana");
+check("unit number without a No.",     nameOf("A-XYZ-1-1", "Sunrise Hills Apartment 206, Block Zefiro"), "Sunrise Hills");
+// "Floor" is the one unit word normally PRECEDED by its qualifier. Requiring a
+// unit number after it is what keeps "Second Floor Apartment" from collapsing
+// to "Second" while "Floor 5" still falls through to the code.
 check("unknown code, unusable heading", nameOf("V-XYZ-3-12", "Floor 5"), "XYZ");
+check("the qualifier before Floor lives",
+  nameOf("A-XYZ-1-1", "Second Floor Apartment, Kato Paphos"), "Second Floor Apartment, Kato Paphos");
+// The block suffix has its own rule. Every heading above hits a unit
+// designation first, which would truncate the string before "Block" is ever
+// reached — so the case that actually exercises the rule has none.
+check("heading, block suffix dropped", nameOf("A-XYZ-1-1", "Sunrise Hills – Block Zefiro"), "Sunrise Hills");
+check("the Blk spelling too",          nameOf("A-XYZ-1-1", "Sunrise Hills, Blk D"), "Sunrise Hills");
+check("dangling punctuation trimmed",  nameOf("V-XYZ-3-12", "Sunrise Hills – Villa No. 12"), "Sunrise Hills");
+check("ragged whitespace collapsed",   nameOf("V-XYZ-3-12", "  Sunrise   Hills Villa No. 12"), "Sunrise Hills");
+// Two characters of residue is not a project name; the code is.
+check("residue too short to be a name", nameOf("V-XYZ-3-3", "La Villa No. 3"), "XYZ");
 // Kamares Village is ONE development: its Cypress and Ambelia units say so in
 // their own descriptions. The table must not let the heading split it.
 check("Kamares Cypress stays Kamares", nameOf("V-KAM-CYP-003-1_2", "Kamares Village Cypress Villas No. 003 1&2"), "Kamares Village");
