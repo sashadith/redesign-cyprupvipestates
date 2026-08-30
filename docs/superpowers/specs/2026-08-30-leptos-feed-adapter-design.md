@@ -315,8 +315,19 @@ not assumed.
 
 - `leptosProjects()` against the live feed returns **45 projects / 377 units**,
   and `Cavalli Tower` (52) and `Poseidon Tower` (8) are separate.
-- Every project's units lie within 200 m of each other where coordinates exist
-  (measured worst case today: 9 m).
+- Every project's units lie within 200 m of each other **where two or more
+  coordinates exist** (measured worst case today: 9 m in Cavalli Tower). Note
+  how little that covers: only 17 of the 45 groups have two coordinate-bearing
+  rows. 22 carry no coordinates at all — Bel Air Gardens, the largest at 47
+  units, among them — and 6 more have a single point, so 139 units are outside
+  this check entirely. The live check prints those counts; the 200 m threshold
+  is not relaxed to make the number look better.
+- No project contains two units rendering the same `UnitVM.label`, and no label
+  needed the ref as a tiebreak. The second is the real check: the first holds by
+  construction.
+- No amenity list carries Leptos branding ("Leptos Lifestyle Membership",
+  "Signature Collection", "First Boutique", "Exclusive Members Bistro") or the
+  non-amenities "Safe & Friendly Area" and "Award-winning Architecture".
 - No project contains a property with `country != "Cyprus"` or
   `type == "Plots & Land Parcels"`.
 - A second sync with the feed unchanged creates no new projects and changes no

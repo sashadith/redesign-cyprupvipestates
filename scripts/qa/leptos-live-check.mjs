@@ -61,16 +61,33 @@ const dist = (a, b) => {
   const x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(x));
 };
-let worst = 0, worstKey = "";
+// It measures far less than its old name ("units within 200 m of each other")
+// claimed. A group needs TWO coordinate-bearing rows to be measurable at all,
+// and most do not have them: 22 of the 45 groups carry no coordinates
+// whatsoever — including the largest, Bel Air Gardens with 47 units — and six
+// more have exactly one point. So this line speaks for 17 groups and is silent
+// about 28, and the count is printed rather than implied. The threshold is not
+// relaxed to compensate: 200 m is what a correct key looks like, and a group
+// that cannot be measured is unproven, not passing.
+let worst = 0, worstKey = "", measured = 0, skipped = 0, skippedUnits = 0;
 for (const g of groups) {
   const pts = g.rows.filter((r) => r.lat != null && r.lng != null);
+  if (pts.length < 2) { skipped++; skippedUnits += g.rows.length; continue; }
+  measured++;
   for (let i = 0; i < pts.length; i++)
     for (let j = i + 1; j < pts.length; j++) {
       const m = dist(pts[i], pts[j]);
       if (m > worst) { worst = m; worstKey = g.key; }
     }
 }
-check(`units within 200 m of each other (worst ${Math.round(worst)} m in ${worstKey || "n/a"})`, worst <= 200);
+const noCoords = groups.filter((g) => !g.rows.some((r) => r.lat != null && r.lng != null));
+console.log(`\ngeography: ${measured} of ${groups.length} groups have 2+ coordinates and were measured; ` +
+  `${skipped} skipped (${noCoords.length} with no coordinates at all, ${skipped - noCoords.length} with a single point), ` +
+  `covering ${skippedUnits} units`);
+check(
+  `the ${measured} measurable groups are within 200 m (worst ${Math.round(worst)} m in ${worstKey || "n/a"}); ` +
+  `${skipped} groups unmeasurable, ${skippedUnits} units unchecked`,
+  worst <= 200);
 
 // Labels: UnitVM.label is what the units table renders, so two units of one
 // project carrying the same one is 45 rows the operator has to correct by hand

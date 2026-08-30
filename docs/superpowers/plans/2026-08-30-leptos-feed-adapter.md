@@ -1063,16 +1063,58 @@ const dist = (a, b) => {
   const x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(x));
 };
-let worst = 0, worstKey = "";
+// It measures far less than its old name ("units within 200 m of each other")
+// claimed. A group needs TWO coordinate-bearing rows to be measurable at all,
+// and most do not have them: 22 of the 45 groups carry no coordinates
+// whatsoever — including the largest, Bel Air Gardens with 47 units — and six
+// more have exactly one point. So this line speaks for 17 groups and is silent
+// about 28, and the count is printed rather than implied. The threshold is not
+// relaxed to compensate: 200 m is what a correct key looks like, and a group
+// that cannot be measured is unproven, not passing.
+let worst = 0, worstKey = "", measured = 0, skipped = 0, skippedUnits = 0;
 for (const g of groups) {
   const pts = g.rows.filter((r) => r.lat != null && r.lng != null);
+  if (pts.length < 2) { skipped++; skippedUnits += g.rows.length; continue; }
+  measured++;
   for (let i = 0; i < pts.length; i++)
     for (let j = i + 1; j < pts.length; j++) {
       const m = dist(pts[i], pts[j]);
       if (m > worst) { worst = m; worstKey = g.key; }
     }
 }
-check(`units within 200 m of each other (worst ${Math.round(worst)} m in ${worstKey})`, worst <= 200);
+const noCoords = groups.filter((g) => !g.rows.some((r) => r.lat != null && r.lng != null));
+console.log(`\ngeography: ${measured} of ${groups.length} groups have 2+ coordinates and were measured; ` +
+  `${skipped} skipped (${noCoords.length} with no coordinates at all, ${skipped - noCoords.length} with a single point), ` +
+  `covering ${skippedUnits} units`);
+check(
+  `the ${measured} measurable groups are within 200 m (worst ${Math.round(worst)} m in ${worstKey || "n/a"}); ` +
+  `${skipped} groups unmeasurable, ${skippedUnits} units unchecked`,
+  worst <= 200);
+
+// Labels: UnitVM.label is what the units table renders, so two units of one
+// project carrying the same one is 45 rows the operator has to correct by hand
+// (which is exactly what the live feed produced on 2026-08-30: Limassol Park
+// had "Nr. 402" four times). Asserted here rather than only synthetically —
+// the disambiguators live in the vendor's own prose, so this is the check that
+// notices the day Leptos stops writing building names into headings.
+const dupLabels = [], refTiebreaks = [];
+for (const g of groups) {
+  const seen = new Map();
+  for (const u of F.leptosVm(g).units) {
+    seen.set(u.label, (seen.get(u.label) ?? 0) + 1);
+    if (u.label.includes(u.ref)) refTiebreaks.push(`${g.key}: ${JSON.stringify(u.label)}`);
+  }
+  for (const [l, n] of seen) if (n > 1) dupLabels.push(`${g.key}: ${JSON.stringify(l)} ×${n}`);
+}
+check("no project has two units sharing a label", dupLabels.length === 0, dupLabels.join(", "));
+// The line above holds by construction — leptosUnitLabels appends the ref to
+// anything it cannot separate, so it can only fail if that last resort is
+// itself broken. THIS is the line that notices the vendor changing their
+// headings: a label carrying its own ref means neither the building name nor
+// the ref's block segment told two units apart, and the operator is looking at
+// "Nr. 1 · A-ZZZ-1" in the units table.
+check("no unit label needed the ref as a tiebreak", refTiebreaks.length === 0,
+  refTiebreaks.slice(0, 10).join(", "));
 
 // Prices: a zero-priced unit must never become the headline.
 for (const g of groups) {
