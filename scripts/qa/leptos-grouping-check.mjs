@@ -84,8 +84,25 @@ check("Poseidon stays plain LBM",       F.leptosCode("A-LBM-3-2604"), "LBM");
 check("LBM with numeric next segment",  F.leptosCode("A-LBM-1-1704"), "LBM");
 check("LBM + PH is still Poseidon",     F.leptosCode("A-LBM-PH-1604"), "LBM");
 check("LBM + one letter is Poseidon",   F.leptosCode("A-LBM-C-1604"), "LBM");
+// An UNKNOWN single-letter type prefix is the dangerous case, and the only one
+// here that merges two real projects rather than splitting one. The feed
+// already carries ad-hoc prefixes ("AP", "PENT"), so the vendor demonstrably
+// mints new ones; the day a "T-" (townhouse?) appears, a leading-segment rule
+// that accepts it as the code files every such ref under project "T". Kamares
+// (Paphos) and Blu Marine (Limassol) would become ONE project 50 km wide,
+// carrying whichever name came first and a price range spanning both — and
+// nothing catches it, because the completeness guard counts units and no unit
+// is lost. The shortest real code in the feed is "PG": one character is never
+// a project.
+check("unknown 1-char prefix skipped",  F.leptosCode("T-KAM-3-12"), "KAM");
+check("…and does not merge with LBM",   F.leptosCode("T-LBM-CT-3-99"), "LBM-CT");
+check("unknown 1-char prefix, lower",   F.leptosCode("t-bag-z-206"), "BAG");
+check("known 2-char code still wins",   F.leptosCode("T-PG-BLK-D-204"), "PG");
 // Defensive: refs with no type prefix, and junk.
 check("no type prefix",                 F.leptosCode("APHII-2-E2-202"), "APHII");
+// The rule is about the LEADING segment only — a one-character segment further
+// in is still just a segment. "A-LBM-C-1604" above already covers that.
+check("2-char lead is a code, not a prefix", F.leptosCode("XY-3-12"), "XY");
 check("empty ref",                      F.leptosCode(""), "");
 check("single segment",                 F.leptosCode("KOILI"), "KOILI");
 // A lone type letter has no second segment to fall back to: without the
@@ -198,6 +215,19 @@ check("Cavalli separate from Poseidon", [byKey["LBM-CT"].rows.length, byKey["LBM
 check("Cavalli named", byKey["LBM-CT"].name, "Cavalli Tower");
 check("Poseidon named", byKey["LBM"].name, "Poseidon Tower");
 check("groups sorted by size then key", groups[0].key, "BAG");
+
+// The merge an unknown type prefix would cause, at the level where it does the
+// damage. Reading "T" as the code files a Kamares row and a Blu Marine row
+// under one key: one project 50 km wide, named after whichever row sorted
+// first, with a price range spanning both. Unit counts stay right, so the
+// completeness guard sees nothing.
+const tPrefix = F.groupLeptosRows([
+  row({ ref: "T-KAM-3-12", h2: "Kamares Village Townhouse No. 12", town: "Tala", province: "Paphos" }),
+  row({ ref: "T-LBM-CT-3-99", h2: "Townhouse No. 99", town: "Limassol", province: "Limassol" }),
+]);
+check("an unknown prefix does not merge two projects", tPrefix.length, 2);
+check("…and each keeps its own key", tPrefix.map((g) => g.key).sort(), ["KAM", "LBM-CT"]);
+check("…and its own name", tPrefix.map((g) => g.name).sort(), ["Cavalli Tower", "Kamares Village"]);
 
 console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
 console.log("\nleptosVm — the view model handed to the sync");

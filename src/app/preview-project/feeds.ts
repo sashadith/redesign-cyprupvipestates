@@ -1147,16 +1147,33 @@ const LEPTOS_TYPE_PREFIX = new Set(["A", "V", "P", "C", "S", "AP", "PENT"]);
 const leptosSegments = (ref: string): string[] =>
   String(ref || "").split("-").map((s) => s.trim()).filter(Boolean);
 
-// The code is read at a KNOWN POSITION — the segment after the type prefix —
-// never by searching the ref for a token that looks like a code. "PG" is
-// Peyia Gardens in segment 2 (A-PG-BLK-D-204, Peyia) and Paphos Gardens in the
-// last segment (A-A09-109-PG, Kato Paphos), two projects 12 km apart. A
+// The code is read at a KNOWN POSITION — the first leading segment that can be
+// a project code — never by searching the ref for a token that looks like one.
+// "PG" is Peyia Gardens in segment 2 (A-PG-BLK-D-204, Peyia) and Paphos Gardens
+// in the last segment (A-A09-109-PG, Kato Paphos), two projects 12 km apart. A
 // substring or last-segment rule merges them. This is the single most likely
 // way a future edit breaks this adapter.
+//
+// A leading segment is skipped when it is a known type prefix OR a single
+// character. The second rule is the load-bearing one: LEPTOS_TYPE_PREFIX is a
+// closed list, and the feed already carries the ad-hoc "AP" and "PENT", so the
+// vendor demonstrably mints new spellings. Accepting an unknown one-letter
+// prefix as the code is not a harmless miss — every ref carrying it lands in
+// ONE group. "T-KAM-3-12" (Kamares, Paphos) and "T-LBM-CT-3-99" (Blu Marine,
+// Limassol) would become a single project 50 km wide, wearing whichever name
+// sorted first and a price range spanning both. Nothing downstream notices:
+// the completeness guard counts units, and no unit is lost. The shortest real
+// code in the feed is "PG" — a project code is never one character, so
+// rejecting one costs nothing and closes the merge.
 export function leptosCode(ref: string): string {
   const seg = leptosSegments(ref);
   if (!seg.length) return "";
-  const i = seg.length > 1 && LEPTOS_TYPE_PREFIX.has(seg[0].toUpperCase()) ? 1 : 0;
+  // Guarded on seg.length - 1: a ref that is nothing BUT skippable segments
+  // ("A") must still yield its last one rather than an empty code, which would
+  // drop the row from grouping entirely.
+  let i = 0;
+  while (i < seg.length - 1 &&
+         (LEPTOS_TYPE_PREFIX.has(seg[i].toUpperCase()) || seg[i].length === 1)) i++;
   const code = (seg[i] ?? "").toUpperCase();
   // Limassol Blu Marine holds two separately branded towers. Only three
   // segments ever follow LBM in the feed — 1, 3 and CT — so CT (Cavalli) is
