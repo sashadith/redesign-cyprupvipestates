@@ -95,6 +95,11 @@ check("land parcel is out", F.leptosInScope(row({ type: "Plots & Land Parcels" }
 check("commercial is in", F.leptosInScope(row({ type: "Shops / Commercial Buildings" })), true);
 check("studio is in", F.leptosInScope(row({ type: "Studio" })), true);
 check("townhouse is in", F.leptosInScope(row({ type: "Townhouses / Maisonettes" })), true);
+// Both fields are trimmed and lower-cased before comparison; the feed's own
+// spelling is not something this adapter gets to assume.
+check("padded, mixed-case country", F.leptosInScope(row({ country: "  CYPRUS  " })), true);
+check("padded, mixed-case land parcel",
+  F.leptosInScope(row({ type: " plots & LAND parcels " })), false);
 
 console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
 process.exit(failures ? 1 : 0);
@@ -146,7 +151,7 @@ export const leptosInScope = (r: { country: string; type: string }): boolean =>
 - [ ] **Step 4: Run the test and make sure it passes**
 
 Run: `node scripts/qa/leptos-grouping-check.mjs`
-Expected: 6 `ok` lines, `all checks passed`, exit 0.
+Expected: 8 `ok` lines, `all checks passed`, exit 0.
 
 - [ ] **Step 5: Commit**
 
@@ -247,7 +252,7 @@ export function leptosCode(ref: string): string {
 - [ ] **Step 4: Run the test and make sure it passes**
 
 Run: `node scripts/qa/leptos-grouping-check.mjs`
-Expected: 27 `ok` lines, `all checks passed`, exit 0.
+Expected: 29 `ok` lines, `all checks passed`, exit 0.
 
 - [ ] **Step 5: Commit**
 
@@ -430,7 +435,7 @@ export function leptosProjectName(key: string, h2: string): string {
 - [ ] **Step 4: Run the test and make sure it passes**
 
 Run: `node scripts/qa/leptos-grouping-check.mjs`
-Expected: 57 `ok` lines, `all checks passed`, exit 0.
+Expected: 59 `ok` lines, `all checks passed`, exit 0.
 
 - [ ] **Step 5: Commit**
 
@@ -457,10 +462,19 @@ const P = "https://www.leptosestates.com/wp-content/uploads/2023/05/";
 check("scaled jpg upgraded",  F.leptosFullSize(`${P}03-1-scaled.jpg`), `${P}03-1.jpg`);
 check("scaled png upgraded",  F.leptosFullSize(`${P}plan-scaled.png`), `${P}plan.png`);
 check("plain url untouched",  F.leptosFullSize(`${P}13-1.jpg`), `${P}13-1.jpg`);
-// "-scaled" only counts as WordPress's marker directly before the extension.
+check("four-letter extension", F.leptosFullSize(`${P}03-1-scaled.jpeg`), `${P}03-1.jpeg`);
+// "-scaled" only counts as WordPress's marker where the extension it precedes
+// ENDS the URL or is followed by a query string. Anywhere else it belongs to
+// the name or to a directory, and rewriting it would 404.
 check("mid-name scaled kept", F.leptosFullSize(`${P}un-scaled-view.jpg`), `${P}un-scaled-view.jpg`);
+check("scaled path segment kept",
+  F.leptosFullSize(`${P}dir-scaled.jpg/b.jpg`), `${P}dir-scaled.jpg/b.jpg`);
+check("scaled directory kept",
+  F.leptosFullSize(`${P}folder-scaled/03-1.jpg`), `${P}folder-scaled/03-1.jpg`);
+check("query string kept", F.leptosFullSize(`${P}03-1-scaled.jpg?w=1200`), `${P}03-1.jpg?w=1200`);
 check("http upgraded to https", F.leptosFullSize("http://www.leptosestates.com/a-scaled.jpg"),
   "https://www.leptosestates.com/a.jpg");
+check("empty url", F.leptosFullSize(""), "");
 ```
 
 - [ ] **Step 2: Run it to make sure it fails**
@@ -480,9 +494,9 @@ In `feeds.ts`, append after `leptosProjectName`:
 //   04-1-scaled.jpg  1920x1288 (632 KB)  ->  04-1.jpg  4588x3078 (3.4 MB)
 // Sampling 30 of the 807: 30/30 originals exist and every one is larger.
 // No runtime HEAD check — this function is on the public preview page's path,
-// and 807 HEAD requests per render is not a trade worth making. The 807 are
-// verified once, offline, by scripts/qa/leptos-live-check.mjs; a missing
-// original would surface there rather than as a silent downgrade.
+// and 807 HEAD requests per render is not a trade worth making. Checking all
+// 807 belongs in the offline live-feed check (Task 9 of the plan), so that a
+// missing original surfaces there rather than as a silent downgrade.
 export const leptosFullSize = (u: string): string =>
   secure(String(u || "")).replace(/-scaled(\.[A-Za-z]{3,4})(?=$|\?)/, "$1");
 ```
@@ -490,7 +504,7 @@ export const leptosFullSize = (u: string): string =>
 - [ ] **Step 4: Run the test and make sure it passes**
 
 Run: `node scripts/qa/leptos-grouping-check.mjs`
-Expected: 40 `ok` lines, `all checks passed`, exit 0.
+Expected: 69 `ok` lines, `all checks passed`, exit 0.
 
 - [ ] **Step 5: Commit**
 

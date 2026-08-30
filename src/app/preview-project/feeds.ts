@@ -1258,9 +1258,9 @@ export function leptosProjectName(key: string, h2: string): string {
 //   04-1-scaled.jpg  1920x1288 (632 KB)  ->  04-1.jpg  4588x3078 (3.4 MB)
 // Sampling 30 of the 807: 30/30 originals exist and every one is larger.
 // No runtime HEAD check — this function is on the public preview page's path,
-// and 807 HEAD requests per render is not a trade worth making. The 807 are
-// verified once, offline, by scripts/qa/leptos-live-check.mjs; a missing
-// original would surface there rather than as a silent downgrade.
+// and 807 HEAD requests per render is not a trade worth making. Checking all
+// 807 belongs in the offline live-feed check (Task 9 of the plan), so that a
+// missing original surfaces there rather than as a silent downgrade.
 export const leptosFullSize = (u: string): string =>
   secure(String(u || "")).replace(/-scaled(\.[A-Za-z]{3,4})(?=$|\?)/, "$1");
 

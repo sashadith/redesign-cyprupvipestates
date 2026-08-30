@@ -57,6 +57,11 @@ check("land parcel is out", F.leptosInScope(row({ type: "Plots & Land Parcels" }
 check("commercial is in", F.leptosInScope(row({ type: "Shops / Commercial Buildings" })), true);
 check("studio is in", F.leptosInScope(row({ type: "Studio" })), true);
 check("townhouse is in", F.leptosInScope(row({ type: "Townhouses / Maisonettes" })), true);
+// Both fields are trimmed and lower-cased before comparison; the feed's own
+// spelling is not something this adapter gets to assume.
+check("padded, mixed-case country", F.leptosInScope(row({ country: "  CYPRUS  " })), true);
+check("padded, mixed-case land parcel",
+  F.leptosInScope(row({ type: " plots & LAND parcels " })), false);
 
 console.log("\nleptosCode — read at a fixed position, never searched for");
 check("type prefix skipped",            F.leptosCode("A-BAG-Z-206"), "BAG");
@@ -155,10 +160,19 @@ const P = "https://www.leptosestates.com/wp-content/uploads/2023/05/";
 check("scaled jpg upgraded",  F.leptosFullSize(`${P}03-1-scaled.jpg`), `${P}03-1.jpg`);
 check("scaled png upgraded",  F.leptosFullSize(`${P}plan-scaled.png`), `${P}plan.png`);
 check("plain url untouched",  F.leptosFullSize(`${P}13-1.jpg`), `${P}13-1.jpg`);
-// "-scaled" only counts as WordPress's marker directly before the extension.
+check("four-letter extension", F.leptosFullSize(`${P}03-1-scaled.jpeg`), `${P}03-1.jpeg`);
+// "-scaled" only counts as WordPress's marker where the extension it precedes
+// ENDS the URL or is followed by a query string. Anywhere else it belongs to
+// the name or to a directory, and rewriting it would 404.
 check("mid-name scaled kept", F.leptosFullSize(`${P}un-scaled-view.jpg`), `${P}un-scaled-view.jpg`);
+check("scaled path segment kept",
+  F.leptosFullSize(`${P}dir-scaled.jpg/b.jpg`), `${P}dir-scaled.jpg/b.jpg`);
+check("scaled directory kept",
+  F.leptosFullSize(`${P}folder-scaled/03-1.jpg`), `${P}folder-scaled/03-1.jpg`);
+check("query string kept", F.leptosFullSize(`${P}03-1-scaled.jpg?w=1200`), `${P}03-1.jpg?w=1200`);
 check("http upgraded to https", F.leptosFullSize("http://www.leptosestates.com/a-scaled.jpg"),
   "https://www.leptosestates.com/a.jpg");
+check("empty url", F.leptosFullSize(""), "");
 
 console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
 process.exit(failures ? 1 : 0);
