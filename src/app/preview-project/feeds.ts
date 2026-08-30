@@ -1135,6 +1135,31 @@ export const leptosInScope = (r: { country: string; type: string }): boolean =>
   r.country.trim().toLowerCase() === "cyprus" &&
   r.type.trim().toLowerCase() !== "plots & land parcels";
 
+// Leading segment is the property TYPE, not the project: A=Apartment,
+// V=Villa, P=Plot, C=Commercial, S=Studio (plus two one-off spellings).
+const LEPTOS_TYPE_PREFIX = new Set(["A", "V", "P", "C", "S", "AP", "PENT"]);
+
+// The code is read at a KNOWN POSITION — the segment after the type prefix —
+// never by searching the ref for a token that looks like a code. "PG" is
+// Peyia Gardens in segment 2 (A-PG-BLK-D-204, Peyia) and Paphos Gardens in the
+// last segment (A-A09-109-PG, Kato Paphos), two projects 12 km apart. A
+// substring or last-segment rule merges them. This is the single most likely
+// way a future edit breaks this adapter.
+export function leptosCode(ref: string): string {
+  const seg = String(ref || "").split("-").map((s) => s.trim()).filter(Boolean);
+  if (!seg.length) return "";
+  const i = seg.length > 1 && LEPTOS_TYPE_PREFIX.has(seg[0].toUpperCase()) ? 1 : 0;
+  const code = (seg[i] ?? "").toUpperCase();
+  // Limassol Blu Marine holds two separately branded towers. The tower is the
+  // NEXT segment when it is alphabetic (CT = Cavalli); Poseidon's refs put a
+  // bedroom count there instead (A-LBM-3-2604), so plain "LBM" means Poseidon.
+  if (code === "LBM") {
+    const next = seg[i + 1] ?? "";
+    if (/^[A-Za-z]{2,}$/.test(next)) return `LBM-${next.toUpperCase()}`;
+  }
+  return code;
+}
+
 // ---------- dispatcher ----------
 const DEVELOPERS: Record<string, { label: string; default: string }> = {
   "island-blue": { label: "Island Blue", default: "76" },

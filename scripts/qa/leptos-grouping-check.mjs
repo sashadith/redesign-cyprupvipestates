@@ -58,5 +58,23 @@ check("commercial is in", F.leptosInScope(row({ type: "Shops / Commercial Buildi
 check("studio is in", F.leptosInScope(row({ type: "Studio" })), true);
 check("townhouse is in", F.leptosInScope(row({ type: "Townhouses / Maisonettes" })), true);
 
+console.log("\nleptosCode — read at a fixed position, never searched for");
+check("type prefix skipped",            F.leptosCode("A-BAG-Z-206"), "BAG");
+check("villa prefix skipped",           F.leptosCode("V-KAM-3-434B"), "KAM");
+check("commercial prefix skipped",      F.leptosCode("C-LMNR-S103"), "LMNR");
+check("studio prefix skipped",          F.leptosCode("S-B08-208-PG"), "B08");
+// PG is Peyia Gardens in segment 2 and Paphos Gardens in the LAST segment,
+// 12 km apart. A substring or last-segment rule merges them.
+check("PG in segment 2 is Peyia",       F.leptosCode("A-PG-BLK-D-204"), "PG");
+check("PG in last segment is not read", F.leptosCode("A-A09-109-PG"), "A09");
+// Blu Marine: the tower lives in the segment after LBM.
+check("Cavalli Tower splits off",       F.leptosCode("A-LBM-CT-3-1604"), "LBM-CT");
+check("Poseidon stays plain LBM",       F.leptosCode("A-LBM-3-2604"), "LBM");
+check("LBM with numeric next segment",  F.leptosCode("A-LBM-1-1704"), "LBM");
+// Defensive: refs with no type prefix, and junk.
+check("no type prefix",                 F.leptosCode("APHII-2-E2-202"), "APHII");
+check("empty ref",                      F.leptosCode(""), "");
+check("single segment",                 F.leptosCode("KOILI"), "KOILI");
+
 console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
 process.exit(failures ? 1 : 0);
