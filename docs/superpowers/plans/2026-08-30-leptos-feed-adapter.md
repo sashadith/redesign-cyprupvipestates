@@ -769,6 +769,47 @@ function leptosUnitLabels(g: LeptosGroup): string[] {
   return labels.map((l, i) => l || g.rows[i].ref);
 }
 
+// ProjectVM.amenities is the raw union of the units' <features>, and Leptos
+// files its own loyalty programme in there. Left alone, "Leptos Lifestyle
+// Membership" (on 318 of 377 units, measured 2026-08-30) lands in the amenity
+// list of nearly all 45 projects — the developer's brand advertised on OUR
+// pages, under a heading the reader takes to mean "what this development has".
+//
+// Note what does NOT do this job: anonymize(descBody, g.name, g.name) below is
+// a guaranteed no-op — it returns early when dev === alias, and both arguments
+// are g.name. It never touched amenities in any case; it rewrites description
+// prose. The list is therefore the only thing standing between the vendor's
+// marketing and the public page, which is why it is explicit rather than
+// pattern-matched: every string here was read on the live feed and decided on,
+// and a genuine amenity ("Restaurant & Bistro", "Spa Facilities", "Concierge
+// Services") stays.
+const LEPTOS_AMENITY_EXCLUDE = new Set([
+  // Vendor branding: a Leptos programme or product line, not a facility.
+  "leptos lifestyle membership",   // 318 units / 45 projects
+  "signature collection",          //  52 units /  1 project
+  "first boutique",                //   4 units /  2 projects
+  "exclusive members bistro",      //   4 units /  2 projects
+  // Not amenities: a claim about the neighbourhood and a claim about the
+  // architect. Neither is a thing the building has.
+  "safe & friendly area",          // 258 units / 43 projects
+  "award-winning architecture",    //  65 units /  5 projects
+]);
+// Kept as an amenity, minus the vendor's internal caveat. "(where applies)" is
+// a note to their sales staff about which units have it; on a public amenity
+// list it reads as a disclaimer on the whole development.
+const LEPTOS_AMENITY_REWRITE: Record<string, string> = {
+  "underfloor heating (where applies)": "Underfloor Heating",
+};
+function leptosAmenities(rows: LeptosRow[]): string[] {
+  const out = new Set<string>();
+  for (const f of rows.flatMap((r) => r.features)) {
+    const key = f.trim().toLowerCase();
+    if (!key || LEPTOS_AMENITY_EXCLUDE.has(key)) continue;
+    out.add(LEPTOS_AMENITY_REWRITE[key] ?? f.trim());
+  }
+  return Array.from(out).sort();
+}
+
 export function leptosVm(g: LeptosGroup): ProjectVM {
   const first = g.rows[0];
   const labels = leptosUnitLabels(g);
@@ -792,7 +833,7 @@ export function leptosVm(g: LeptosGroup): ProjectVM {
   const town = first.town;
   const area = town && town.toLowerCase() !== district.toLowerCase() ? town : "";
 
-  const amenities = Array.from(new Set(g.rows.flatMap((r) => r.features))).sort();
+  const amenities = leptosAmenities(g.rows);
   const extraFacts: { label: string; value: string }[] = [];
   for (const b of g.rows.flatMap((r) => r.benefits)) {
     const f = leptosBenefit(b);

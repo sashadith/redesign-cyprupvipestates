@@ -276,6 +276,36 @@ console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
 // three times, 45 units in 4 projects in total. The disambiguator was present
 // in BOTH sources and thrown away.
 // ---------------------------------------------------------------------------
+// Amenities. ProjectVM.amenities is the raw union of the units' <features>,
+// and Leptos files its own loyalty programme in there: "Leptos Lifestyle
+// Membership" sits on 318 of 377 units, so it reached the amenity list of
+// nearly all 45 projects — the developer's brand advertised on our page.
+// ---------------------------------------------------------------------------
+console.log("\nleptosVm.amenities — the vendor's brand is not a facility");
+const amen = F.leptosVm(F.groupLeptosRows([
+  row({ features: [
+    "Leptos Lifestyle Membership", "Signature Collection", "First Boutique",
+    "Exclusive Members Bistro", "Safe & Friendly Area", "Award-winning Architecture",
+    "Underfloor Heating (where applies)", "Swimming Pool", "Restaurant & Bistro",
+    "Spa Facilities",
+  ] }),
+])[0]).amenities;
+check("branding and non-amenities are gone", amen,
+  ["Restaurant & Bistro", "Spa Facilities", "Swimming Pool", "Underfloor Heating"]);
+// The caveat is a note to Leptos's own sales staff about which units have it.
+// On a public amenity list it reads as a disclaimer over the development.
+check("underfloor heating keeps the amenity, drops the caveat",
+  amen.includes("Underfloor Heating"), true);
+// The exclusion is by exact string, case-insensitively, so a genuine amenity
+// that merely CONTAINS an excluded word survives.
+check("a real bistro is not filtered as branding",
+  F.leptosVm(F.groupLeptosRows([row({ features: ["Exclusive Members Bistro", "Restaurant & Bistro"] })])[0]).amenities,
+  ["Restaurant & Bistro"]);
+check("padding and case do not smuggle branding back in",
+  F.leptosVm(F.groupLeptosRows([row({ features: ["  LEPTOS LIFESTYLE MEMBERSHIP  ", "Lift"] })])[0]).amenities,
+  ["Lift"]);
+
+console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
 console.log("\nleptosUnitLabel — unique inside a project");
 const labelsOf = (rs) => F.leptosVm(F.groupLeptosRows(rs)[0]).units.map((u) => u.label);
 
