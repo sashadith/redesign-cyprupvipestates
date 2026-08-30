@@ -744,9 +744,7 @@ git commit -m "Leptos: register the developer on the id-driven feed path"
 **Files:**
 - Modify: `src/lib/feedSync.ts:20-42` (`DEV_ACCOUNT`), `src/lib/feedSync.ts:180` (`SYNCED_DEVS`)
 
-- [ ] **Step 1: Confirm the account slug before writing it**
-
-The operator must have created the Leptos `DeveloperAccount` first. Read its real slug — do not assume:
+- [ ] **Step 1: Confirm no Leptos account exists yet**
 
 ```bash
 node --env-file=.env.local -e "
@@ -756,7 +754,14 @@ new PrismaClient().developerAccount.findMany({ select: { slug: true, name: true 
 "
 ```
 
-Expected: one row. **If the array is empty, stop** — the account does not exist yet, and syncing would create a second empty one. Ask the operator to create it (recommended: slug `leptos-xml`, name "Leptos Estates (XML)").
+Expected: `[]` — verified on 2026-08-30, there is no Leptos account.
+
+`ensureAccount()` upserts by the slug in `DEV_ACCOUNT`, creating the row when it
+is absent, so the first sync creates exactly one correct account. **If the array
+is NOT empty**, an account was created in the meantime: use its exact slug in
+Step 2 instead of `leptos-xml`, or the sync creates a second, empty one beside
+it. That is the Medousa mistake, and it only bites when an account already
+exists under a different slug than the code expects.
 
 - [ ] **Step 2: Add the account mapping**
 
