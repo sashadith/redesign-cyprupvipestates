@@ -283,6 +283,14 @@ export function Popup({
       closeButton,
       closeOnClick,
       maxWidth: "none",
+      // MapLibre's default focusAfterOpen:true moves keyboard focus onto the
+      // popup the moment it opens. This popup opens on plain hover (the grid's
+      // card-to-pin bridge), and the map often sits scrolled out of view above
+      // a long project list — focusing the popup's link then scrolls it back
+      // into view, yanking the whole page up to the map on the first mouse move
+      // after a back-navigation. It's a hover preview, never a keyboard target,
+      // so opt out of the focus steal entirely.
+      focusAfterOpen: false,
       // Keeps the card fully on screen near the map edges, the way Leaflet's
       // autoPan did — without it a pin near the border opens a clipped popup.
       anchor: undefined,
