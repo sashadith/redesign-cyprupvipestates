@@ -196,12 +196,30 @@ check("Poseidon stays plain LBM",       F.leptosCode("A-LBM-3-2604"), "LBM");
 check("LBM with numeric next segment",  F.leptosCode("A-LBM-1-1704"), "LBM");
 check("LBM + PH is still Poseidon",     F.leptosCode("A-LBM-PH-1604"), "LBM");
 check("LBM + one letter is Poseidon",   F.leptosCode("A-LBM-C-1604"), "LBM");
+// An UNKNOWN single-letter type prefix is the dangerous case, and the only one
+// here that merges two real projects rather than splitting one. The feed
+// already carries ad-hoc prefixes ("AP", "PENT"), so the vendor demonstrably
+// mints new ones; the day a "T-" (townhouse?) appears, a leading-segment rule
+// that accepts it as the code files every such ref under project "T". Kamares
+// (Paphos) and Blu Marine (Limassol) would become ONE project 50 km wide,
+// carrying whichever name came first and a price range spanning both — and
+// nothing catches it, because the completeness guard counts units and no unit
+// is lost. The shortest real code in the feed is "PG": one character is never
+// a project.
+check("unknown 1-char prefix skipped",  F.leptosCode("T-KAM-3-12"), "KAM");
+check("…and does not merge with LBM",   F.leptosCode("T-LBM-CT-3-99"), "LBM-CT");
+check("unknown 1-char prefix, lower",   F.leptosCode("t-bag-z-206"), "BAG");
+check("known 2-char code still wins",   F.leptosCode("T-PG-BLK-D-204"), "PG");
 // Defensive: refs with no type prefix, and junk.
 check("no type prefix",                 F.leptosCode("APHII-2-E2-202"), "APHII");
+// The rule is about the LEADING segment only — a one-character segment further
+// in is still just a segment. "A-LBM-C-1604" above already covers that.
+check("2-char lead is a code, not a prefix", F.leptosCode("XY-3-12"), "XY");
 check("empty ref",                      F.leptosCode(""), "");
 check("single segment",                 F.leptosCode("KOILI"), "KOILI");
 // A lone type letter has no second segment to fall back to: without the
-// seg.length > 1 guard the code would come out empty.
+// i < seg.length - 1 guard the scan would run off the end and the code would
+// come out empty.
 check("lone type letter is the code",   F.leptosCode("A"), "A");
 // Normalisation: the feed is not guaranteed to be tidy.
 check("lowercase ref uppercased",       F.leptosCode("a-bag-z-206"), "BAG");
@@ -227,16 +245,38 @@ const LEPTOS_TYPE_PREFIX = new Set(["A", "V", "P", "C", "S", "AP", "PENT"]);
 const leptosSegments = (ref: string): string[] =>
   String(ref || "").split("-").map((s) => s.trim()).filter(Boolean);
 
-// The code is read at a KNOWN POSITION — the segment after the type prefix —
-// never by searching the ref for a token that looks like a code. "PG" is
-// Peyia Gardens in segment 2 (A-PG-BLK-D-204, Peyia) and Paphos Gardens in the
-// last segment (A-A09-109-PG, Kato Paphos), two projects 12 km apart. A
+// The code is read at a KNOWN POSITION — the first leading segment that can be
+// a project code — never by searching the ref for a token that looks like one.
+// "PG" is Peyia Gardens in segment 2 (A-PG-BLK-D-204, Peyia) and Paphos Gardens
+// in the last segment (A-A09-109-PG, Kato Paphos), two projects 12 km apart. A
 // substring or last-segment rule merges them. This is the single most likely
 // way a future edit breaks this adapter.
+//
+// A leading segment is skipped when it is a known type prefix OR a single
+// character. The second rule is the load-bearing one: LEPTOS_TYPE_PREFIX is a
+// closed list, and the feed already carries the ad-hoc "AP" and "PENT", so the
+// vendor demonstrably mints new spellings. Accepting an unknown one-letter
+// prefix as the code is not a harmless miss — every ref carrying it lands in
+// ONE group. "T-KAM-3-12" (Kamares, Paphos) and "T-LBM-CT-3-99" (Blu Marine,
+// Limassol) would become a single project 50 km wide, wearing whichever name
+// sorted first and a price range spanning both. Nothing downstream notices:
+// the completeness guard counts units, and no unit is lost. The shortest real
+// code in the feed is "PG" — a project code is never one character, so
+// rejecting one costs nothing and closes the merge.
+// Guarded on seg.length - 1: a ref that is nothing BUT skippable segments
+// ("A") must still yield its last one rather than an empty code, which would
+// drop the row from grouping entirely.
+function leptosCodeIndex(seg: string[]): number {
+  let i = 0;
+  while (i < seg.length - 1 &&
+         (LEPTOS_TYPE_PREFIX.has(seg[i].toUpperCase()) || seg[i].length === 1)) i++;
+  return i;
+}
+
 export function leptosCode(ref: string): string {
   const seg = leptosSegments(ref);
   if (!seg.length) return "";
-  const i = seg.length > 1 && LEPTOS_TYPE_PREFIX.has(seg[0].toUpperCase()) ? 1 : 0;
+  const i = leptosCodeIndex(seg);
   const code = (seg[i] ?? "").toUpperCase();
   // Limassol Blu Marine holds two separately branded towers. Only three
   // segments ever follow LBM in the feed — 1, 3 and CT — so CT (Cavalli) is
@@ -247,102 +287,7 @@ export function leptosCode(ref: string): string {
   if (code === "LBM" && (seg[i + 1] ?? "").toUpperCase() === "CT") return "LBM-CT";
   return code;
 }
-```
 
-- [ ] **Step 4: Run the test and make sure it passes**
-
-Run: `node scripts/qa/leptos-grouping-check.mjs`
-Expected: 29 `ok` lines, `all checks passed`, exit 0.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add src/app/preview-project/feeds.ts scripts/qa/leptos-grouping-check.mjs
-git commit -m "Leptos: positional project code, guarding the PG collision"
-```
-
----
-
-## Task 3: Merges, splits and display names
-
-**Files:**
-- Modify: `src/app/preview-project/feeds.ts`
-- Test: `scripts/qa/leptos-grouping-check.mjs`
-
-- [ ] **Step 1: Write the failing test**
-
-Append to `scripts/qa/leptos-grouping-check.mjs`, before the final lines:
-
-```js
-console.log("\nleptosProjectKey — merges and splits from the exception table");
-const keyOf = (ref, h2 = "") => F.leptosProjectKey({ ref, h2 });
-check("ordinary code passes through",  keyOf("A-BAG-Z-206"), "BAG");
-check("ZAN merges into ZANATZIA",      keyOf("V-ZAN-592"), "ZANATZIA");
-check("ZANATZIA stays itself",         keyOf("V-ZANATZIA-43"), "ZANATZIA");
-// All four Paphos Gardens refs carry PG as their LAST segment, and that is the
-// evidence the merge is guarded on: a bare block code with no trailing PG is
-// some other project's block and must not be absorbed.
-check("Paphos Gardens A09 merges",     keyOf("A-A09-109-PG"), "PAPHOSG");
-check("Paphos Gardens B11 merges",     keyOf("A-B11-211-PG"), "PAPHOSG");
-check("Paphos Gardens B08 merges",     keyOf("S-B08-208-PG"), "PAPHOSG");
-check("Paphos Gardens B10 merges",     keyOf("S-B10-210-PG"), "PAPHOSG");
-check("B08 without a trailing PG",     keyOf("A-B08-12", "Block B08 Apartment 12"), "B08");
-check("A09 without a trailing PG",     keyOf("A-A09-109", "Block A09 Apartment 109"), "A09");
-check("Peyia Gardens is NOT merged",   keyOf("A-PG-BLK-D-204"), "PG");
-// The Ruby's real ref is A-DEL-5-b1701: Del Mar's refs give the tower no
-// segment of its own, so this one split has to read the heading. It is
-// anchored at the START — a heading is a unit title that begins with its
-// project name — so a Del Mar unit that merely mentions the tower stays DEL.
-check("Del Mar stays Del Mar",         keyOf("A-DEL-4-c2101", "Limassol Del Mar Penthouse c2101"), "DEL");
-check("The Ruby splits off Del Mar",   keyOf("A-DEL-5-b1701", "The Ruby Penthouse b1701-1702"), "RUBY");
-check("Ruby mentioned, not named",     keyOf("A-DEL-2-c1603", "Limassol Del Mar Apartment c1603, facing The Ruby"), "DEL");
-check("The Rubycon is not The Ruby",   keyOf("A-DEL-2-c1902", "The Rubycon Apartment c1902"), "DEL");
-
-console.log("\nleptosProjectName — table first, heading as fallback");
-const nameOf = (ref, h2) => F.leptosProjectName(F.leptosProjectKey({ ref, h2 }), h2);
-check("table name wins over heading",  nameOf("A-LBM-CT-3-1604", "Apartment No. 1604"), "Cavalli Tower");
-check("Poseidon from table",           nameOf("A-LBM-3-2604", "Apartment No. 2604"), "Poseidon Tower");
-// The unit designation is stripped where it is FOLLOWED BY A UNIT NUMBER, not
-// at the first unit word in the heading: eight of the 45 curated names end in
-// "Villas", so stripping at the first one mis-names the very pattern Leptos
-// itself uses — and this fallback is the only path a project added after
-// today can take.
-check("heading with no table entry",   nameOf("V-XYZ-3-12", "Sunrise Hills Villa No. 12"), "Sunrise Hills");
-check("a name ending in Villas lives", nameOf("V-XYZ-3-3", "Sunset Beach Villas Villa No. 3"), "Sunset Beach Villas");
-check("two-word unit designation",     nameOf("V-XYZ-M1", "Adonis Beach Villas Grand Mansion No. M1"), "Adonis Beach Villas");
-check("a name opening with Villa",     nameOf("V-XYZ-5", "Villa Romana No. 5"), "Villa Romana");
-check("unit number without a No.",     nameOf("A-XYZ-1-1", "Sunrise Hills Apartment 206, Block Zefiro"), "Sunrise Hills");
-// "Floor" is the one unit word normally PRECEDED by its qualifier. Requiring a
-// unit number after it is what keeps "Second Floor Apartment" from collapsing
-// to "Second" while "Floor 5" still falls through to the code.
-check("unknown code, unusable heading", nameOf("V-XYZ-3-12", "Floor 5"), "XYZ");
-check("the qualifier before Floor lives",
-  nameOf("A-XYZ-1-1", "Second Floor Apartment, Kato Paphos"), "Second Floor Apartment, Kato Paphos");
-// The block suffix has its own rule. Every heading above hits a unit
-// designation first, which would truncate the string before "Block" is ever
-// reached — so the case that actually exercises the rule has none.
-check("heading, block suffix dropped", nameOf("A-XYZ-1-1", "Sunrise Hills – Block Zefiro"), "Sunrise Hills");
-check("the Blk spelling too",          nameOf("A-XYZ-1-1", "Sunrise Hills, Blk D"), "Sunrise Hills");
-check("dangling punctuation trimmed",  nameOf("V-XYZ-3-12", "Sunrise Hills – Villa No. 12"), "Sunrise Hills");
-check("ragged whitespace collapsed",   nameOf("V-XYZ-3-12", "  Sunrise   Hills Villa No. 12"), "Sunrise Hills");
-// Two characters of residue is not a project name; the code is.
-check("residue too short to be a name", nameOf("V-XYZ-3-3", "La Villa No. 3"), "XYZ");
-// Kamares Village is ONE development: its Cypress and Ambelia units say so in
-// their own descriptions. The table must not let the heading split it.
-check("Kamares Cypress stays Kamares", nameOf("V-KAM-CYP-003-1_2", "Kamares Village Cypress Villas No. 003 1&2"), "Kamares Village");
-check("Kamares Ambelia stays Kamares", nameOf("V-KAM-AMB-6A6B", "Kamares Village – Two-Villa Package Ambelia No. 6A/6B"), "Kamares Village");
-```
-
-- [ ] **Step 2: Run it to make sure it fails**
-
-Run: `node scripts/qa/leptos-grouping-check.mjs`
-Expected: FAIL — `F.leptosProjectKey is not a function`.
-
-- [ ] **Step 3: Implement the minimal code to make the test pass**
-
-In `feeds.ts`, append after `leptosCode`:
-
-```ts
 // Two codes that name one project. Verified on the live feed 2026-08-30: same
 // town, same coordinates, identical heading prefixes.
 const LEPTOS_MERGE: Record<string, string> = { ZAN: "ZANATZIA" };
@@ -708,19 +653,127 @@ function leptosBenefit(b: string): { label: string; value: string } | null {
 
 // "Bel Air Gardens Apartment 206, Block Zefiro" -> "Block Zefiro · Nr. 206",
 // matching the existing "Block C · Nr. 504" convention.
-function leptosUnitLabel(r: LeptosRow): string {
+//
+// The words a heading uses to introduce a unit number, and equally the words
+// at which a BUILDING name ends. "Plot" and "Parcel" are here because the feed
+// uses both for units that are land inside a development; the plural forms
+// because three Coral Bay listings are a villa pair sold as one
+// ("Coral Bay Villas 233 A & B").
+const LEPTOS_LABEL_DESIG =
+  "Grand Mansions?|Townhouses?|Maisonettes?|Penthhouses?|Penthouses?|Apartments?|Mansions?|Villas?|Studios?|Houses?|Shops?|Restaurants?|Flats?|Floors?|Plots?|Parcels?";
+// The optional letter suffix after a unit number: "221-222 A", "233 A & B".
+// Dropping it merged V-COR-4-221/222A and V-COR-3-221/222B into one label.
+// The trailing \b is what stops it swallowing the first letter of an ordinary
+// following word ("No. 201 Sea View").
+const LEPTOS_NUM_TAIL = String.raw`(?:\s+[A-Z](?:\s*&\s*[A-Z])?)?\b`;
+// An explicit "No." is the feed saying "what follows is the unit number", so
+// it is taken at its word — "Coral Seas Villa No. A-B" has no digit in it and
+// is still a unit number.
+const LEPTOS_NO_RE = new RegExp(String.raw`\bNo\.?\s*([A-Za-z0-9][\w./-]*${LEPTOS_NUM_TAIL})`, "i");
+// Without a "No.", the token after the designation must contain a DIGIT near
+// its start. That requirement is the whole point: "Mandria Gardens Apartment
+// Parcel" was otherwise read as unit number "Parcel" and rendered "Nr. Parcel".
+const LEPTOS_DESIG_NUM_RE = new RegExp(
+  String.raw`\b(?:${LEPTOS_LABEL_DESIG})\s+([A-Za-z]{0,2}\d[\w./-]*${LEPTOS_NUM_TAIL})`, "i");
+// The same words as single tokens, plus the ones that only ever qualify a
+// designation. "Grand" is here because the multi-word "Grand Mansion" cannot
+// match a word-by-word scan: without it, "Adonis Beach Villas Grand Mansion
+// No. M1" hands back "Grand" as a building name.
+const LEPTOS_DESIG_WORD_RE =
+  new RegExp(String.raw`^(?:${LEPTOS_LABEL_DESIG}|Grand|Block|Blk|No\.?)$`, "i");
+
+// The building name is whatever the heading puts BETWEEN the project name and
+// the unit designation: "Limassol Park Mimoza Penthouse No. 403" -> "Mimoza".
+// This is the disambiguator Limassol Park uses, and it is why looking only for
+// a literal "Block <x>" token left 35 of its units sharing eleven labels.
+//
+// The project name is matched WORD BY WORD, not as a string prefix, because the
+// heading does not spell it the same way: project "Coral Bay Villas" against
+// heading "Coral Bay Villa 230A". A string-prefix test fails there, leaves the
+// whole heading standing, and hands back "Coral Bay" as the building name — the
+// project's own name, printed on every unit.
+function leptosBuilding(h2: string, projectName: string): string {
+  // Split on commas too: the feed writes "Koili Hills,Villa B" with no space,
+  // and a whitespace-only split makes "Hills,Villa" one unmatchable token.
+  const words = (s: string) => String(s || "").split(/[\s,]+/).filter(Boolean);
+  const norm = (w: string) => w.toLowerCase().replace(/[.,]+$/, "");
+  const hw = words(h2), nw = words(projectName);
+  let k = 0;
+  while (k < hw.length && k < nw.length && norm(hw[k]) === norm(nw[k])) k++;
+  const out: string[] = [];
+  // Stop at the unit designation, at a "Block"/"No." token, at a dash, or at
+  // anything carrying a digit — past that point the heading describes the
+  // unit. The dash is what a heading uses to open a descriptive clause rather
+  // than name a building: "Kamares Village – Two-Villa Package Ambelia No.
+  // 6A/6B" is a sales note, not a building called "– Two-Villa Package".
+  for (const w of hw.slice(k)) {
+    if (LEPTOS_DESIG_WORD_RE.test(norm(w)) || /^[–—-]+$/.test(w) || /\d/.test(w)) break;
+    out.push(w);
+  }
+  return out.join(" ").replace(/[–\-/&\s]+$/, "").trim();
+}
+
+// The ref's block segment — the one after the project code, and only when a
+// further segment follows it. In "AP-MAND-10" that "10" is the last segment
+// and would be indistinguishable from a unit number ("A-XYZ-77" -> Nr. 77).
+function leptosRefBlock(ref: string): string {
+  const seg = leptosSegments(ref);
+  // +1 for the two-segment "LBM-CT" code, whose block would otherwise be read
+  // as the tower marker itself.
+  const i = leptosCodeIndex(seg) + (leptosCode(ref).includes("-") ? 1 : 0);
+  return seg.length > i + 2 ? seg[i + 1] : "";
+}
+
+function leptosUnitLabel(r: LeptosRow, projectName: string, useRefBlock = false): string {
   const block = r.h2.match(/\bBlock\s+([A-Za-z0-9''-]+)/i)?.[1] ?? "";
-  const num =
-    r.h2.match(/\b(?:No\.?\s*)([A-Za-z0-9][\w./-]*)/i)?.[1] ??
-    r.h2.match(/\b(?:Apartment|Penthhouse|Penthouse|Villa|Studio|Flat|Shop|Townhouse)\s+([A-Za-z0-9][\w./-]*)/i)?.[1] ??
-    r.ref.split("-").pop() ?? "";
-  return joinLoc(block ? `Block ${block}` : "", num ? `Nr. ${num}` : "");
+  const building = block ? "" : leptosBuilding(r.h2, projectName);
+  const num = r.h2.match(LEPTOS_NO_RE)?.[1] ?? r.h2.match(LEPTOS_DESIG_NUM_RE)?.[1] ?? "";
+  // "…Apartment Parcel" is the feed's word for a unit carrying no number of its
+  // own. It is a designation, not a number, so it neither gets a "Nr." nor
+  // falls through to the ref — "Nr. Parcel" and "Nr. PRC" are both wrong.
+  const parcel = !num && /\bParcels?\b/i.test(r.h2);
+  const shown = num || (parcel ? "" : r.ref.split("-").pop() ?? "");
+  const unit = parcel ? "Parcel" : shown ? `Nr. ${shown.replace(/\s+/g, " ").trim()}` : "";
+  const qualifier =
+    block ? `Block ${block}` :
+    building ? building :
+    useRefBlock && leptosRefBlock(r.ref) ? `Block ${leptosRefBlock(r.ref)}` : "";
+  return joinLoc(qualifier, unit);
+}
+
+// UnitVM.label is what the public units table and the admin unit list render,
+// so two units of ONE project carrying the same label is a defect only the
+// operator can clear, by hand, forever. Measured on the live feed 2026-08-30:
+// 45 units across 4 projects did (Limassol Park alone had "Nr. 402" four
+// times). Both sources held the answer and both were being discarded.
+//
+// The ref's block is a SECOND pass, applied to a whole project at once and
+// only when the headings leave a collision, because the segment after the code
+// is not always a block: Coral Bay puts a bedroom count there
+// (V-COR-4-190 is a 4-bed, not block 4), and "Block 4 · Nr. 190" would be an
+// invented fact printed on a page a buyer reads. Applying it to the whole
+// project rather than only the colliding rows keeps one project's unit list
+// from being half one shape and half another.
+function leptosUnitLabels(g: LeptosGroup): string[] {
+  const unique = (ls: string[]) => new Set(ls).size === ls.length;
+  let labels = g.rows.map((r) => leptosUnitLabel(r, g.name));
+  if (!unique(labels)) labels = g.rows.map((r) => leptosUnitLabel(r, g.name, true));
+  if (!unique(labels)) {
+    // Neither source separates them. The ref is unique by construction, so it
+    // is the honest last resort — an ugly label beats two identical ones, and
+    // leptos-live-check.mjs asserts the outcome rather than trusting it.
+    const seen = new Map<string, number>();
+    for (const l of labels) seen.set(l, (seen.get(l) ?? 0) + 1);
+    labels = labels.map((l, i) => (seen.get(l)! > 1 ? joinLoc(l, g.rows[i].ref) : l));
+  }
+  return labels.map((l, i) => l || g.rows[i].ref);
 }
 
 export function leptosVm(g: LeptosGroup): ProjectVM {
   const first = g.rows[0];
-  const units: UnitVM[] = g.rows.map((r) => ({
-    ref: r.ref, name: leptosUnitLabel(r) || r.ref, label: leptosUnitLabel(r) || r.ref,
+  const labels = leptosUnitLabels(g);
+  const units: UnitVM[] = g.rows.map((r, i) => ({
+    ref: r.ref, name: labels[i], label: labels[i],
     type: r.type, status: "available", statusLabel: "Available",
     price: r.price > 0 ? r.price : null, currency: "EUR",
     beds: r.beds !== "0" ? r.beds : "", baths: r.baths !== "0" ? r.baths : "",

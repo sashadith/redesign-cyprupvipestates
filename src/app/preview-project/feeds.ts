@@ -1165,15 +1165,20 @@ const leptosSegments = (ref: string): string[] =>
 // the completeness guard counts units, and no unit is lost. The shortest real
 // code in the feed is "PG" — a project code is never one character, so
 // rejecting one costs nothing and closes the merge.
-export function leptosCode(ref: string): string {
-  const seg = leptosSegments(ref);
-  if (!seg.length) return "";
-  // Guarded on seg.length - 1: a ref that is nothing BUT skippable segments
-  // ("A") must still yield its last one rather than an empty code, which would
-  // drop the row from grouping entirely.
+// Guarded on seg.length - 1: a ref that is nothing BUT skippable segments
+// ("A") must still yield its last one rather than an empty code, which would
+// drop the row from grouping entirely.
+function leptosCodeIndex(seg: string[]): number {
   let i = 0;
   while (i < seg.length - 1 &&
          (LEPTOS_TYPE_PREFIX.has(seg[i].toUpperCase()) || seg[i].length === 1)) i++;
+  return i;
+}
+
+export function leptosCode(ref: string): string {
+  const seg = leptosSegments(ref);
+  if (!seg.length) return "";
+  const i = leptosCodeIndex(seg);
   const code = (seg[i] ?? "").toUpperCase();
   // Limassol Blu Marine holds two separately branded towers. Only three
   // segments ever follow LBM in the feed — 1, 3 and CT — so CT (Cavalli) is
@@ -1368,19 +1373,127 @@ function leptosBenefit(b: string): { label: string; value: string } | null {
 
 // "Bel Air Gardens Apartment 206, Block Zefiro" -> "Block Zefiro · Nr. 206",
 // matching the existing "Block C · Nr. 504" convention.
-function leptosUnitLabel(r: LeptosRow): string {
+//
+// The words a heading uses to introduce a unit number, and equally the words
+// at which a BUILDING name ends. "Plot" and "Parcel" are here because the feed
+// uses both for units that are land inside a development; the plural forms
+// because three Coral Bay listings are a villa pair sold as one
+// ("Coral Bay Villas 233 A & B").
+const LEPTOS_LABEL_DESIG =
+  "Grand Mansions?|Townhouses?|Maisonettes?|Penthhouses?|Penthouses?|Apartments?|Mansions?|Villas?|Studios?|Houses?|Shops?|Restaurants?|Flats?|Floors?|Plots?|Parcels?";
+// The optional letter suffix after a unit number: "221-222 A", "233 A & B".
+// Dropping it merged V-COR-4-221/222A and V-COR-3-221/222B into one label.
+// The trailing \b is what stops it swallowing the first letter of an ordinary
+// following word ("No. 201 Sea View").
+const LEPTOS_NUM_TAIL = String.raw`(?:\s+[A-Z](?:\s*&\s*[A-Z])?)?\b`;
+// An explicit "No." is the feed saying "what follows is the unit number", so
+// it is taken at its word — "Coral Seas Villa No. A-B" has no digit in it and
+// is still a unit number.
+const LEPTOS_NO_RE = new RegExp(String.raw`\bNo\.?\s*([A-Za-z0-9][\w./-]*${LEPTOS_NUM_TAIL})`, "i");
+// Without a "No.", the token after the designation must contain a DIGIT near
+// its start. That requirement is the whole point: "Mandria Gardens Apartment
+// Parcel" was otherwise read as unit number "Parcel" and rendered "Nr. Parcel".
+const LEPTOS_DESIG_NUM_RE = new RegExp(
+  String.raw`\b(?:${LEPTOS_LABEL_DESIG})\s+([A-Za-z]{0,2}\d[\w./-]*${LEPTOS_NUM_TAIL})`, "i");
+// The same words as single tokens, plus the ones that only ever qualify a
+// designation. "Grand" is here because the multi-word "Grand Mansion" cannot
+// match a word-by-word scan: without it, "Adonis Beach Villas Grand Mansion
+// No. M1" hands back "Grand" as a building name.
+const LEPTOS_DESIG_WORD_RE =
+  new RegExp(String.raw`^(?:${LEPTOS_LABEL_DESIG}|Grand|Block|Blk|No\.?)$`, "i");
+
+// The building name is whatever the heading puts BETWEEN the project name and
+// the unit designation: "Limassol Park Mimoza Penthouse No. 403" -> "Mimoza".
+// This is the disambiguator Limassol Park uses, and it is why looking only for
+// a literal "Block <x>" token left 35 of its units sharing eleven labels.
+//
+// The project name is matched WORD BY WORD, not as a string prefix, because the
+// heading does not spell it the same way: project "Coral Bay Villas" against
+// heading "Coral Bay Villa 230A". A string-prefix test fails there, leaves the
+// whole heading standing, and hands back "Coral Bay" as the building name — the
+// project's own name, printed on every unit.
+function leptosBuilding(h2: string, projectName: string): string {
+  // Split on commas too: the feed writes "Koili Hills,Villa B" with no space,
+  // and a whitespace-only split makes "Hills,Villa" one unmatchable token.
+  const words = (s: string) => String(s || "").split(/[\s,]+/).filter(Boolean);
+  const norm = (w: string) => w.toLowerCase().replace(/[.,]+$/, "");
+  const hw = words(h2), nw = words(projectName);
+  let k = 0;
+  while (k < hw.length && k < nw.length && norm(hw[k]) === norm(nw[k])) k++;
+  const out: string[] = [];
+  // Stop at the unit designation, at a "Block"/"No." token, at a dash, or at
+  // anything carrying a digit — past that point the heading describes the
+  // unit. The dash is what a heading uses to open a descriptive clause rather
+  // than name a building: "Kamares Village – Two-Villa Package Ambelia No.
+  // 6A/6B" is a sales note, not a building called "– Two-Villa Package".
+  for (const w of hw.slice(k)) {
+    if (LEPTOS_DESIG_WORD_RE.test(norm(w)) || /^[–—-]+$/.test(w) || /\d/.test(w)) break;
+    out.push(w);
+  }
+  return out.join(" ").replace(/[–\-/&\s]+$/, "").trim();
+}
+
+// The ref's block segment — the one after the project code, and only when a
+// further segment follows it. In "AP-MAND-10" that "10" is the last segment
+// and would be indistinguishable from a unit number ("A-XYZ-77" -> Nr. 77).
+function leptosRefBlock(ref: string): string {
+  const seg = leptosSegments(ref);
+  // +1 for the two-segment "LBM-CT" code, whose block would otherwise be read
+  // as the tower marker itself.
+  const i = leptosCodeIndex(seg) + (leptosCode(ref).includes("-") ? 1 : 0);
+  return seg.length > i + 2 ? seg[i + 1] : "";
+}
+
+function leptosUnitLabel(r: LeptosRow, projectName: string, useRefBlock = false): string {
   const block = r.h2.match(/\bBlock\s+([A-Za-z0-9''-]+)/i)?.[1] ?? "";
-  const num =
-    r.h2.match(/\b(?:No\.?\s*)([A-Za-z0-9][\w./-]*)/i)?.[1] ??
-    r.h2.match(/\b(?:Apartment|Penthhouse|Penthouse|Villa|Studio|Flat|Shop|Townhouse)\s+([A-Za-z0-9][\w./-]*)/i)?.[1] ??
-    r.ref.split("-").pop() ?? "";
-  return joinLoc(block ? `Block ${block}` : "", num ? `Nr. ${num}` : "");
+  const building = block ? "" : leptosBuilding(r.h2, projectName);
+  const num = r.h2.match(LEPTOS_NO_RE)?.[1] ?? r.h2.match(LEPTOS_DESIG_NUM_RE)?.[1] ?? "";
+  // "…Apartment Parcel" is the feed's word for a unit carrying no number of its
+  // own. It is a designation, not a number, so it neither gets a "Nr." nor
+  // falls through to the ref — "Nr. Parcel" and "Nr. PRC" are both wrong.
+  const parcel = !num && /\bParcels?\b/i.test(r.h2);
+  const shown = num || (parcel ? "" : r.ref.split("-").pop() ?? "");
+  const unit = parcel ? "Parcel" : shown ? `Nr. ${shown.replace(/\s+/g, " ").trim()}` : "";
+  const qualifier =
+    block ? `Block ${block}` :
+    building ? building :
+    useRefBlock && leptosRefBlock(r.ref) ? `Block ${leptosRefBlock(r.ref)}` : "";
+  return joinLoc(qualifier, unit);
+}
+
+// UnitVM.label is what the public units table and the admin unit list render,
+// so two units of ONE project carrying the same label is a defect only the
+// operator can clear, by hand, forever. Measured on the live feed 2026-08-30:
+// 45 units across 4 projects did (Limassol Park alone had "Nr. 402" four
+// times). Both sources held the answer and both were being discarded.
+//
+// The ref's block is a SECOND pass, applied to a whole project at once and
+// only when the headings leave a collision, because the segment after the code
+// is not always a block: Coral Bay puts a bedroom count there
+// (V-COR-4-190 is a 4-bed, not block 4), and "Block 4 · Nr. 190" would be an
+// invented fact printed on a page a buyer reads. Applying it to the whole
+// project rather than only the colliding rows keeps one project's unit list
+// from being half one shape and half another.
+function leptosUnitLabels(g: LeptosGroup): string[] {
+  const unique = (ls: string[]) => new Set(ls).size === ls.length;
+  let labels = g.rows.map((r) => leptosUnitLabel(r, g.name));
+  if (!unique(labels)) labels = g.rows.map((r) => leptosUnitLabel(r, g.name, true));
+  if (!unique(labels)) {
+    // Neither source separates them. The ref is unique by construction, so it
+    // is the honest last resort — an ugly label beats two identical ones, and
+    // leptos-live-check.mjs asserts the outcome rather than trusting it.
+    const seen = new Map<string, number>();
+    for (const l of labels) seen.set(l, (seen.get(l) ?? 0) + 1);
+    labels = labels.map((l, i) => (seen.get(l)! > 1 ? joinLoc(l, g.rows[i].ref) : l));
+  }
+  return labels.map((l, i) => l || g.rows[i].ref);
 }
 
 export function leptosVm(g: LeptosGroup): ProjectVM {
   const first = g.rows[0];
-  const units: UnitVM[] = g.rows.map((r) => ({
-    ref: r.ref, name: leptosUnitLabel(r) || r.ref, label: leptosUnitLabel(r) || r.ref,
+  const labels = leptosUnitLabels(g);
+  const units: UnitVM[] = g.rows.map((r, i) => ({
+    ref: r.ref, name: labels[i], label: labels[i],
     type: r.type, status: "available", statusLabel: "Available",
     price: r.price > 0 ? r.price : null, currency: "EUR",
     beds: r.beds !== "0" ? r.beds : "", baths: r.baths !== "0" ? r.baths : "",

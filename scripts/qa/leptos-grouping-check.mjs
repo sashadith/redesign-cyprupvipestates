@@ -106,7 +106,8 @@ check("2-char lead is a code, not a prefix", F.leptosCode("XY-3-12"), "XY");
 check("empty ref",                      F.leptosCode(""), "");
 check("single segment",                 F.leptosCode("KOILI"), "KOILI");
 // A lone type letter has no second segment to fall back to: without the
-// seg.length > 1 guard the code would come out empty.
+// i < seg.length - 1 guard the scan would run off the end and the code would
+// come out empty.
 check("lone type letter is the code",   F.leptosCode("A"), "A");
 // Normalisation: the feed is not guaranteed to be tidy.
 check("lowercase ref uppercased",       F.leptosCode("a-bag-z-206"), "BAG");
@@ -264,6 +265,123 @@ check("unit label carries the block", vm.units[0].label, "Block Zefiro · Nr. 20
 check("unit ref is the feed ref",     vm.units[0].ref, "A-BAG-Z-206");
 check("covered area on unit",         vm.units[0].areaBuilt, "95 m²");
 check("centre from first coords",     vm.center, { lat: 34.75, lng: 32.47 });
+
+console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
+
+// ---------------------------------------------------------------------------
+// Unit labels. UnitVM.label is what the public units table and the admin unit
+// list render, so two units of one project sharing a label is a defect the
+// operator can only fix by hand, 45 times. Measured on the live feed
+// 2026-08-30: Limassol Park had "Nr. 402" four times, Mandria Gardens "Nr. 103"
+// three times, 45 units in 4 projects in total. The disambiguator was present
+// in BOTH sources and thrown away.
+// ---------------------------------------------------------------------------
+console.log("\nleptosUnitLabel — unique inside a project");
+const labelsOf = (rs) => F.leptosVm(F.groupLeptosRows(rs)[0]).units.map((u) => u.label);
+
+// Limassol Park: the number repeats across buildings, and the heading names
+// the building. It does NOT use a "Block <x>" token, which is why looking only
+// for that word left these units indistinguishable.
+check("the heading's building name separates them",
+  labelsOf([
+    row({ ref: "A-LPARK-G-2-402", h2: "Limassol Park Mimoza Penthouse No. 402" }),
+    row({ ref: "A-LPARK-E-2-402", h2: "Limassol Park Begonia Penthouse No. 402" }),
+    row({ ref: "A-LPARK-H-1-207", h2: "Limassol Park Jasmine Apartment No. 207" }),
+  ]),
+  ["Mimoza · Nr. 402", "Begonia · Nr. 402", "Jasmine · Nr. 207"]);
+
+// Coral Gardens: identical headings, no building name anywhere in them. The
+// ref's block segment is the only thing left that tells the two apart.
+check("the ref's block segment is the fallback",
+  labelsOf([
+    row({ ref: "A-CORALG-B4-301", h2: "Coral Gardens Apartment No. 301" }),
+    row({ ref: "A-CORALG-2-301", h2: "Coral Gardens Apartment No. 301" }),
+    row({ ref: "A-CORALG-MB3-M4", h2: "Coral Gardens Villa M4" }),
+  ]),
+  ["Block B4 · Nr. 301", "Block 2 · Nr. 301", "Block MB3 · Nr. M4"]);
+
+// …but only where it is needed. Coral Bay puts a BEDROOM COUNT in that
+// segment, not a block: "Block 4 · Nr. 190" would be an invented fact, printed
+// on a page a buyer reads. So the block fallback is applied per project, and
+// only to a project whose labels collide without it.
+check("no block is invented when the numbers already differ",
+  labelsOf([
+    row({ ref: "V-COR-4-190", h2: "Coral Bay Villa 190" }),
+    row({ ref: "V-COR-3-36", h2: "Coral Bay Villa 36" }),
+  ]),
+  ["Nr. 190", "Nr. 36"]);
+
+// The A/B suffix is the whole difference between these two listings, and it
+// was being dropped: both came out "Nr. 221-222".
+check("the A/B suffix survives",
+  labelsOf([
+    row({ ref: "V-COR-4-221/222A", h2: "Coral Bay Villa 221-222 A" }),
+    row({ ref: "V-COR-3-221/222B", h2: "Coral Bay Villa 221-222 B" }),
+    row({ ref: "V-COR-3-233AB", h2: "Coral Bay Villas 233 A & B" }),
+  ]),
+  ["Nr. 221-222 A", "Nr. 221-222 B", "Nr. 233 A & B"]);
+
+// A project name ending in "Villas" against a heading saying "Villa": the
+// building name is whatever sits between the project name and the unit
+// designation, so a word-by-word prefix match is what keeps "Coral Bay" out of
+// the label.
+check("the project name is not mistaken for a building",
+  labelsOf([row({ ref: "V-COR-3-230A", h2: "Coral Bay Villa 230A" })]), ["Nr. 230A"]);
+
+// "Parcel" is the feed's word for a unit with no number. Read as a number it
+// produced "Nr. Parcel"; the heading's own Block token must still be used, and
+// must not be doubled by the ref-block fallback.
+check("a parcel is not a unit number",
+  labelsOf([
+    row({ ref: "A-MAND-11-PRC", h2: "Mandria Gardens Apartment Parcel" }),
+    row({ ref: "AP-MAND-10", h2: "Mandria Gardens Apartment Parcel Block 10" }),
+  ]),
+  ["Parcel", "Block 10 · Parcel"]);
+// The same two rows inside the real Mandria Gardens, where a colliding pair
+// turns the ref-block pass on for the whole project. "AP-MAND-10" has no block
+// segment in the ref (its "10" is the last one), so its block can only come
+// from the heading — and must not then be printed twice.
+check("…and the heading's block is not doubled by the ref's",
+  labelsOf([
+    row({ ref: "A-MAND-11-PRC", h2: "Mandria Gardens Apartment Parcel" }),
+    row({ ref: "AP-MAND-10", h2: "Mandria Gardens Apartment Parcel Block 10" }),
+    row({ ref: "A-MAND-10-103", h2: "Mandria Gardens Apartment No. 103" }),
+    row({ ref: "A-MAND-15-103", h2: "Mandria Gardens Apartment No. 103" }),
+  ]),
+  ["Block 11 · Parcel", "Block 10 · Parcel", "Block 10 · Nr. 103", "Block 15 · Nr. 103"]);
+
+// "Plot 172-173" in the heading was not recognised as a unit designation, so
+// the label fell back to the ref and printed a raw fragment, underscore and
+// all: "Nr. 172_173".
+check("a plot number comes from the heading, not the ref",
+  labelsOf([row({ ref: "V-COR-172_173", h2: "Coral Bay Villas Plot 172-173" })]),
+  ["Nr. 172-173"]);
+
+// Two ways a heading offers words that are NOT a building name. "Grand
+// Mansion" is a unit type spanning two words, so a word-by-word scan sees only
+// "Grand"; a dash opens a sales note, not a building. Both produced a label
+// nobody would recognise ("Grand · Nr. M1", "– Two-Villa Package Ambelia ·
+// Nr. 6A/6B").
+check("a two-word unit type is not a building",
+  labelsOf([row({ ref: "V-ADN-3-M1", h2: "Adonis Beach Villas Grand Mansion No. M1" })]),
+  ["Nr. M1"]);
+check("a dashed sales note is not a building",
+  labelsOf([row({ ref: "V-KAM-AMB-6A6B", h2: "Kamares Village – Two-Villa Package Ambelia No. 6A/6B" })]),
+  ["Nr. 6A/6B"]);
+// …but a real building name before a real designation is kept.
+check("a building name before the designation is kept",
+  labelsOf([row({ ref: "V-KAM-CYP-003-1_2", h2: "Kamares Village Cypress Villas No. 003 1&2" })]),
+  ["Cypress · Nr. 003"]);
+
+// Last resort: a heading with no number and refs with no block segment, so
+// neither disambiguator exists. Whatever shape Leptos invents next, two units
+// of one project must never render the same string.
+check("with no disambiguator left, the ref is appended",
+  labelsOf([
+    row({ ref: "A-ZZZ-1", h2: "Zed Court" }),
+    row({ ref: "AP-ZZZ-1", h2: "Zed Court" }),
+  ]),
+  ["Nr. 1 · A-ZZZ-1", "Nr. 1 · AP-ZZZ-1"]);
 
 console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
 // ---------------------------------------------------------------------------
