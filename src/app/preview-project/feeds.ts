@@ -1160,6 +1160,70 @@ export function leptosCode(ref: string): string {
   return code;
 }
 
+// Two codes that name one project. Both verified on the live feed 2026-08-30:
+// same town, same coordinates, identical heading prefixes.
+const LEPTOS_MERGE: Record<string, string> = {
+  ZAN: "ZANATZIA",
+  // Paphos Gardens puts the project token LAST (A-A09-109-PG), so the
+  // positional rule reads the block as the code and yields four one-unit
+  // projects. Merged under PAPHOSG — deliberately NOT "PG", which already
+  // belongs to Peyia Gardens.
+  A09: "PAPHOSG", B11: "PAPHOSG", B08: "PAPHOSG", B10: "PAPHOSG",
+};
+
+// Display names. The code alone (BAG, AKMT, PRDSGIII) is meaningless in the
+// admin, and the heading is a UNIT title, not a project name — stripping it
+// splits Kamares Village into three when every one of its units says, in
+// identical words, that it is one development. 45 rows, reviewed once.
+// A code NOT listed here is not an error: it falls back to its heading.
+const LEPTOS_NAMES: Record<string, string> = {
+  "LBM-CT": "Cavalli Tower", LBM: "Poseidon Tower",
+  BAG: "Bel Air Gardens", LPARK: "Limassol Park", KAM: "Kamares Village",
+  CORALG: "Coral Gardens", ADN: "Adonis Beach Villas", MAND: "Mandria Gardens",
+  COR: "Coral Bay Villas", MBV: "Maniki Beach Villas", OLY: "Olympus Village",
+  CORS: "Coral Seas Villas", IAS: "Iasonas Beach Villas", VEN: "Venus Gardens",
+  ZANATZIA: "Zanatzia", AKMT: "Akamantis", PER: "Perneri",
+  ARM: "Armonia Beach Villas", APHS: "Aphrodite Springs", AKAK: "Akakia",
+  KINGC: "Kings Court", DEL: "Limassol Del Mar", RUBY: "The Ruby",
+  PG: "Peyia Gardens", PAPHOSG: "Paphos Gardens", ZEL: "Zelemenos Village",
+  LMNR: "Limnaria Westpark", APHG: "Aphrodite Gardens",
+  TALAC: "Tala Village Corner", BEL: "Belvedere", KOILI: "Koili Hills",
+  KINGG: "Kings Gardens", PSSR: "Pissouri Villas", CBP: "Coral Bay Plaza",
+  AKR: "Akropolis", NEAP: "Neapolis Corporate Center", ATLCEN: "Atlas Centre",
+  KHV: "Kissonerga Hills Villas", WSTPRK: "West Park Court III",
+  PRDSGIII: "Paradise Gardens", STGH: "St. George's Hills",
+  LTCH: "Latchi Beach Villas", BAS: "Basilica Harbour Court",
+  APO: "Apollo Beach Villas", SIV: "Leptos Sivitanidium Megaro",
+};
+
+export function leptosProjectKey(r: { ref: string; h2: string }): string {
+  const code = leptosCode(r.ref);
+  // The Ruby is a separately branded tower inside Limassol Del Mar, the same
+  // shape as Cavalli inside Blu Marine — but Del Mar's refs give it no segment
+  // of its own, so it is split on the heading instead.
+  if (code === "DEL" && /\bThe Ruby\b/i.test(r.h2 || "")) return "RUBY";
+  return LEPTOS_MERGE[code] ?? code;
+}
+
+// Unit designations to strip when falling back to the heading. "Floor" is one
+// of them: a heading of "Floor 5" is entirely a unit designation, and without
+// it here the length guard below never fires — 7 characters of pure unit
+// designation would become a project's display name.
+const LEPTOS_UNIT_WORDS =
+  "Grand Mansion|Townhouse|Maisonette|Penthhouse|Penthouse|Apartment|Restaurant|Mansion|Villas|Villa|Studio|Houses|House|Shops|Shop|Flat|Floor";
+
+export function leptosProjectName(key: string, h2: string): string {
+  const listed = LEPTOS_NAMES[key];
+  if (listed) return listed;
+  let s = String(h2 || "").replace(/\s+/g, " ").trim();
+  s = s.replace(/\s*[,–-]\s*(Block|Blk)\b.*$/i, "");
+  s = s.replace(new RegExp(`\\s*\\b(${LEPTOS_UNIT_WORDS})\\b.*$`, "i"), "");
+  s = s.replace(/[,\s–\-/&]+$/, "").trim();
+  // A heading like "Floor 5" carries no project name at all; the code is the
+  // only honest answer left, and it is at least stable and greppable.
+  return s.length >= 3 ? s : key;
+}
+
 // ---------- dispatcher ----------
 const DEVELOPERS: Record<string, { label: string; default: string }> = {
   "island-blue": { label: "Island Blue", default: "76" },

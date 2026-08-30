@@ -76,5 +76,30 @@ check("no type prefix",                 F.leptosCode("APHII-2-E2-202"), "APHII")
 check("empty ref",                      F.leptosCode(""), "");
 check("single segment",                 F.leptosCode("KOILI"), "KOILI");
 
+console.log("\nleptosProjectKey — merges and splits from the exception table");
+const keyOf = (ref, h2 = "") => F.leptosProjectKey({ ref, h2 });
+check("ordinary code passes through",  keyOf("A-BAG-Z-206"), "BAG");
+check("ZAN merges into ZANATZIA",      keyOf("V-ZAN-592"), "ZANATZIA");
+check("ZANATZIA stays itself",         keyOf("V-ZANATZIA-43"), "ZANATZIA");
+check("Paphos Gardens A09 merges",     keyOf("A-A09-109-PG"), "PAPHOSG");
+check("Paphos Gardens B11 merges",     keyOf("A-B11-211-PG"), "PAPHOSG");
+check("Paphos Gardens B08 merges",     keyOf("S-B08-208-PG"), "PAPHOSG");
+check("Paphos Gardens B10 merges",     keyOf("S-B10-210-PG"), "PAPHOSG");
+check("Peyia Gardens is NOT merged",   keyOf("A-PG-BLK-D-204"), "PG");
+check("Del Mar stays Del Mar",         keyOf("A-DEL-C2101", "Limassol Del Mar Penthouse c2101"), "DEL");
+check("The Ruby splits off Del Mar",   keyOf("A-DEL-RUBY", "The Ruby Penthouse No. 1"), "RUBY");
+
+console.log("\nleptosProjectName — table first, heading as fallback");
+const nameOf = (ref, h2) => F.leptosProjectName(F.leptosProjectKey({ ref, h2 }), h2);
+check("table name wins over heading",  nameOf("A-LBM-CT-3-1604", "Apartment No. 1604"), "Cavalli Tower");
+check("Poseidon from table",           nameOf("A-LBM-3-2604", "Apartment No. 2604"), "Poseidon Tower");
+check("heading with no table entry",   nameOf("V-XYZ-3-12", "Sunrise Hills Villa No. 12"), "Sunrise Hills");
+check("heading, block suffix dropped", nameOf("A-XYZ-1-1", "Sunrise Hills Apartment 206, Block Zefiro"), "Sunrise Hills");
+check("unknown code, unusable heading", nameOf("V-XYZ-3-12", "Floor 5"), "XYZ");
+// Kamares Village is ONE development: its Cypress and Ambelia units say so in
+// their own descriptions. The table must not let the heading split it.
+check("Kamares Cypress stays Kamares", nameOf("V-KAM-CYP-003-1_2", "Kamares Village Cypress Villas No. 003 1&2"), "Kamares Village");
+check("Kamares Ambelia stays Kamares", nameOf("V-KAM-AMB-6A6B", "Kamares Village – Two-Villa Package Ambelia No. 6A/6B"), "Kamares Village");
+
 console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
 process.exit(failures ? 1 : 0);
