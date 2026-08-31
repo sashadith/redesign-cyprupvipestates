@@ -133,7 +133,17 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
           <BackLink label="← Back" />
           <h1 className="text-xl font-semibold text-[#111827] mt-1 flex items-center gap-2 flex-wrap">
             {ov?.alias || d.publicName}
-            {d.developer && <span className="text-sm font-normal text-[#6B7280]">— {d.developer}</span>}
+            {d.developer && (
+              <span className="text-sm font-normal text-[#6B7280]">
+                —{" "}
+                <Link
+                  href={`/admin/developments/developers/${d.developerAccountId}`}
+                  className="underline decoration-[#D1D5DB] underline-offset-4 hover:text-[#1B4B43] hover:decoration-[#1B4B43]"
+                >
+                  {d.developer}
+                </Link>
+              </span>
+            )}
           </h1>
           <p className="text-sm text-[#6B7280]">{d.dev} · {d.developerName} · <span className={`rounded px-2 py-0.5 text-xs capitalize ${STATUS_STYLE[d.publishStatus]}`}>{d.publishStatus}</span>
             <span
@@ -147,12 +157,40 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
             )}
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {d.dev === "drive" && <SyncWithDriveButton developmentId={d.id} />}
-          {driveViewHref && (
-            <a href={driveViewHref} target="_blank" rel="noopener noreferrer" className="rounded-md border border-[#E5E7EB] text-sm px-4 py-2 hover:bg-[#F8F9FA]">View in Drive ↗</a>
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            {d.dev === "drive" && <SyncWithDriveButton developmentId={d.id} />}
+            {driveViewHref && (
+              <a href={driveViewHref} target="_blank" rel="noopener noreferrer" className="rounded-md border border-[#E5E7EB] text-sm px-4 py-2 hover:bg-[#F8F9FA]">View in Drive ↗</a>
+            )}
+            <a href={previewHref} target="_blank" className="rounded-md border border-[#E5E7EB] text-sm px-4 py-2 hover:bg-[#F8F9FA]">View page ↗</a>
+          </div>
+          {/* Turn-by-turn navigation to the project. Both are https universal
+              links, not waze:// or comgooglemaps:// — those dead-end when the
+              app is missing, while these open the app when it is installed and
+              the web version otherwise (which is all a desktop admin can do). */}
+          {lat != null && lng != null && (
+            <div className="flex items-center gap-2">
+              <a
+                href={`https://waze.com/ul?ll=${lat}%2C${lng}&navigate=yes`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={`Navigate to ${lat}, ${lng} with Waze`}
+                className="rounded-md bg-[#33CCFF] text-[#04264A] text-xs font-semibold tracking-wide px-4 py-2 hover:bg-[#12BEEF]"
+              >
+                WAZE ROUTE ↗
+              </a>
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${lat}%2C${lng}&travelmode=driving`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={`Navigate to ${lat}, ${lng} with Google Maps`}
+                className="rounded-md bg-[#4285F4] text-white text-xs font-semibold tracking-wide px-4 py-2 hover:bg-[#3367D6]"
+              >
+                GOOGLE ROUTE ↗
+              </a>
+            </div>
           )}
-          <a href={previewHref} target="_blank" className="rounded-md border border-[#E5E7EB] text-sm px-4 py-2 hover:bg-[#F8F9FA]">View page ↗</a>
         </div>
       </div>
 
