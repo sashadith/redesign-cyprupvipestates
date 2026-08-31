@@ -32,6 +32,7 @@ export type RawSuggestion = {
   impact_estimate: "low" | "med" | "high";
   effort: "clicks" | "small" | "session";
   category: string;
+  targets?: string[];
 };
 
 export type Suggestion = RawSuggestion & { id: string; fingerprint: string };
@@ -44,8 +45,38 @@ function normalizeTitle(title: string): string {
   return title.toLowerCase().trim().replace(/\s+/g, " ");
 }
 
-function fingerprintOf(category: string, title: string): string {
-  return crypto.createHash("sha256").update(`${category.toLowerCase().trim()}::${normalizeTitle(title)}`).digest("hex").slice(0, 24);
+// A path/URL as written by the model, reduced to something that survives
+// harmless variation: absolute URLs lose their origin, trailing slashes and
+// query strings go, case is flattened.
+export function normalizeTarget(t: string): string {
+  let v = String(t ?? "").trim().toLowerCase();
+  v = v.replace(/^https?:\/\/[^/]+/, "");
+  v = v.split(/[?#]/)[0];
+  v = v.replace(/\/+$/, "");
+  return v.startsWith("/") ? v : v ? `/${v}` : "";
+}
+
+// The fingerprint is what the suppression window counts, so it has to name
+// the SAME suggestion across weeks. It used to hash category + title — and
+// the title is written fresh by the model every run. Measured 2026-08-31
+// over 40 suggestions in 10 runs: not one fingerprint ever repeated, so
+// suppression could never fire and never had. Categories recurred constantly
+// in the same period (Internal Linking 7x, CTR 6x), i.e. the repetition was
+// real and only the key failed to see it.
+//
+// Anchoring on the pages instead makes it stable, because a URL is a fact in
+// the payload rather than a phrasing choice. Targets are sorted so the order
+// the model happens to list them in cannot change the key.
+//
+// Without targets we fall back to the old title hash. That is deliberately no
+// worse than before rather than better: a suggestion naming no page is one we
+// cannot recognise again, and pretending otherwise (e.g. keying on category
+// alone) would silence a whole category on one dismissal.
+export function fingerprintOf(category: string, title: string, targets: string[]): string {
+  const cat = category.toLowerCase().trim();
+  const anchor = targets.map(normalizeTarget).filter(Boolean).sort();
+  const key = anchor.length ? `${cat}::${anchor.join("|")}` : `${cat}::${normalizeTitle(title)}`;
+  return crypto.createHash("sha256").update(key).digest("hex").slice(0, 24);
 }
 
 export async function analyzePayload(payload: AdvisorPayload): Promise<Suggestion[]> {
@@ -82,8 +113,13 @@ export async function analyzePayload(payload: AdvisorPayload): Promise<Suggestio
                   impact_estimate: { type: "string", enum: ["low", "med", "high"] },
                   effort: { type: "string", enum: ["clicks", "small", "session"], description: "clicks = a config/content tweak, small = a focused task under an hour, session = a longer focused work session." },
                   category: { type: "string", description: "Short category label, e.g. 'CTR', 'Internal Linking', 'Content Depth', 'Core Web Vitals', 'Locale Strategy'." },
+                  targets: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "The page paths this suggestion is about, exactly as they appear in the data payload (e.g. '/de/blog/haustier-nach-zypern-bringen'). Copy them from the data — never invent or guess a URL. Use a small number of the most specific pages; for a site-wide or template-wide suggestion, return an empty array rather than listing every page.",
+                  },
                 },
-                required: ["title", "rationale", "action", "impact_estimate", "effort", "category"],
+                required: ["title", "rationale", "action", "impact_estimate", "effort", "category", "targets"],
               },
             },
           },
@@ -108,10 +144,11 @@ export async function analyzePayload(payload: AdvisorPayload): Promise<Suggestio
     if (!title || !rationale || !action) continue; // skip malformed entries rather than fail the whole run
     const impact_estimate = IMPACT_VALUES.has(String(s.impact_estimate)) ? (s.impact_estimate as RawSuggestion["impact_estimate"]) : "med";
     const effort = EFFORT_VALUES.has(String(s.effort)) ? (s.effort as RawSuggestion["effort"]) : "small";
+    const targets = Array.isArray(s.targets) ? s.targets.map((t) => String(t ?? "").trim()).filter(Boolean) : [];
     out.push({
       id: crypto.randomUUID(),
-      fingerprint: fingerprintOf(category, title),
-      title, rationale, action, impact_estimate, effort, category,
+      fingerprint: fingerprintOf(category, title, targets),
+      title, rationale, action, impact_estimate, effort, category, targets,
     });
   }
   return out;

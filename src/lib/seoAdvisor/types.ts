@@ -12,6 +12,11 @@ export type StoredSuggestion = {
   impact_estimate: "low" | "med" | "high";
   effort: "clicks" | "small" | "session";
   category: string;
+  // The pages this suggestion is about, as they appear in the payload
+  // (path or full URL). Written by the model, and the anchor the fingerprint
+  // is built from — see fingerprintOf() in analyze.ts for why the title
+  // could not serve that role. Absent on runs created before 2026-08-31.
+  targets?: string[];
   status: SuggestionStatus;
   dismissedAt?: string;
   dismissalReason?: string;
