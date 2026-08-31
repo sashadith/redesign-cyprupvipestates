@@ -128,55 +128,112 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
 
   return (
     <div className="space-y-5 max-w-5xl">
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <BackLink label="← Back" />
-          <h1 className="text-xl font-semibold text-[#111827] mt-1 flex items-center gap-2 flex-wrap">
-            {ov?.alias || d.publicName}
-            {d.developer && (
-              <span className="text-sm font-normal text-[#6B7280]">
-                —{" "}
-                <Link
-                  href={`/admin/developments/developers/${d.developerAccountId}`}
-                  className="underline decoration-[#D1D5DB] underline-offset-4 hover:text-[#1B4B43] hover:decoration-[#1B4B43]"
-                >
-                  {d.developer}
-                </Link>
-              </span>
-            )}
-          </h1>
-          <p className="text-sm text-[#6B7280]">{d.dev} · {d.developerName} · <span className={`rounded px-2 py-0.5 text-xs capitalize ${STATUS_STYLE[d.publishStatus]}`}>{d.publishStatus}</span>
+      {/* Header card. One left axis for everything: the previous header pinned
+          the buttons to the right edge while the text stayed left, which on a
+          phone read as two competing columns and wrapped 2+1+2. */}
+      <div className="relative overflow-hidden rounded-lg border border-[#E5E7EB] bg-white px-4 py-4 sm:px-5">
+        {/* Bronze edges on both sides — they frame the card, they do not encode
+            state; the publish status is the chip's job alone. */}
+        <span aria-hidden className="absolute inset-y-0 left-0 w-1 bg-[var(--bronze)]" />
+        <span aria-hidden className="absolute inset-y-0 right-0 w-1 bg-[var(--bronze)]" />
+
+        <BackLink label="← Back" />
+        <h1 className="mt-1 text-[length:var(--text-h3)] font-semibold leading-tight text-[#111827]">{ov?.alias || d.publicName}</h1>
+
+        {/* Facts. A filled chip is a state someone chose (the publish status);
+            an outlined chip is a fact derived from the data (source, units).
+            Keeping the two apart stops the row reading as five equal blobs. */}
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          {/* The developer leads the row: it is the only chip you can click, so
+              it carries the brand bronze and an arrow rather than a status
+              colour. Text is the darker step #826238, not --bronze itself —
+              #8E6B3D measures 4.42:1 on this tint, just under the AA floor. */}
+          {d.developer && (
+            <Link
+              href={`/admin/developments/developers/${d.developerAccountId}`}
+              className="inline-flex items-center gap-1 rounded-full border border-[#E3D2B4] bg-[#FDF3E3] px-2.5 py-1 text-xs font-medium text-[#826238] hover:border-[var(--bronze)] hover:bg-[#F8EAD3]"
+            >
+              {d.developer}
+              <span aria-hidden>↗</span>
+            </Link>
+          )}
+          <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${STATUS_STYLE[d.publishStatus]}`}>
+            {d.publishStatus}
+          </span>
+          <span
+            title={`Data source — this project is managed by the "${d.dev}" connector`}
+            className="rounded-full border border-[#E5E7EB] px-2.5 py-1 text-xs text-[#6B7280]"
+          >
+            {d.dev}
+          </span>
+          {/* Sold out is the one derived fact that changes what you do next, so
+              it escalates from an outlined chip to the site's own sold badge —
+              carmine #8C2F2F on ivory, the same pair as .prj__badge--sold. */}
+          {soldOut ? (
             <span
               title="Computed from unit data — updates with every sync"
-              className={`ml-1.5 inline-block rounded px-2 py-0.5 text-xs font-medium ${soldOut ? "bg-red-100 text-red-700" : "bg-[#F3F4F6] text-[#6B7280]"}`}
+              className="rounded-full bg-[#8C2F2F] px-2.5 py-1 text-xs font-medium text-[var(--ivory)]"
             >
-              {d.units.length === 0 ? "No unit data" : soldOut ? "SOLD OUT" : `${available}/${d.units.length} available`}
+              Sold out
             </span>
-            {d.dev === "drive" && !d.driveFolderId && (
-              <span title="No matching Google Drive folder — no photos/floor plans" className="ml-1.5 inline-block rounded px-2 py-0.5 text-xs border border-[#FCD34D] bg-[#FFFBEB] text-[#92400E]">No folder</span>
-            )}
-          </p>
+          ) : (
+            <span
+              title="Computed from unit data — updates with every sync"
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] px-2.5 py-1 text-xs text-[#374151]"
+            >
+              <span
+                aria-hidden
+                className={`h-1.5 w-1.5 rounded-full ${d.units.length === 0 ? "bg-[#D1D5DB]" : "bg-[#16A34A]"}`}
+              />
+              {d.units.length === 0 ? "No unit data" : `${available}/${d.units.length} available`}
+            </span>
+          )}
+          {/* The feed's own project name, shown only when it differs from the
+              name on screen — it was printed unconditionally before, which on
+              most projects just repeated the heading word for word. */}
+          {d.developerName !== (ov?.alias || d.publicName) && (
+            <span
+              title="The project's original name in the feed"
+              className="rounded-full border border-dashed border-[#E5E7EB] px-2.5 py-1 text-xs text-[#9CA3AF]"
+            >
+              feed: {d.developerName}
+            </span>
+          )}
+          {d.dev === "drive" && !d.driveFolderId && (
+            <span
+              title="No matching Google Drive folder — no photos/floor plans"
+              className="rounded-full border border-[#FCD34D] bg-[#FFFBEB] px-2.5 py-1 text-xs text-[#92400E]"
+            >
+              No folder
+            </span>
+          )}
         </div>
-        <div className="flex flex-col items-end gap-2">
-          <div className="flex items-center gap-2 flex-wrap justify-end">
-            {d.dev === "drive" && <SyncWithDriveButton developmentId={d.id} />}
-            {driveViewHref && (
-              <a href={driveViewHref} target="_blank" rel="noopener noreferrer" className="rounded-md border border-[#E5E7EB] text-sm px-4 py-2 hover:bg-[#F8F9FA]">View in Drive ↗</a>
-            )}
-            <a href={previewHref} target="_blank" className="rounded-md border border-[#E5E7EB] text-sm px-4 py-2 hover:bg-[#F8F9FA]">View page ↗</a>
-          </div>
+
+        {/* Actions. One left-aligned row that wraps as a whole, so the left edge
+            stays straight at every width. Every control is h-9 — the old row
+            mixed text-sm and text-xs buttons and sat visibly uneven. The
+            navigation pair is its own group behind a divider: it leaves the
+            admin for another app, the others stay inside the tool. */}
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[#F3F4F6] pt-3">
+          {d.dev === "drive" && <SyncWithDriveButton developmentId={d.id} />}
+          {driveViewHref && (
+            <a href={driveViewHref} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center rounded-md border border-[#C7A87A] px-4 text-sm text-[#826238] hover:border-[var(--bronze)] hover:bg-[#FDF3E3]">View in Drive ↗</a>
+          )}
+          <a href={previewHref} target="_blank" className="inline-flex h-9 items-center rounded-md border border-[#C7A87A] px-4 text-sm text-[#826238] hover:border-[var(--bronze)] hover:bg-[#FDF3E3]">View page ↗</a>
+
           {/* Turn-by-turn navigation to the project. Both are https universal
               links, not waze:// or comgooglemaps:// — those dead-end when the
               app is missing, while these open the app when it is installed and
               the web version otherwise (which is all a desktop admin can do). */}
           {lat != null && lng != null && (
-            <div className="flex items-center gap-2">
+            <>
+              <span aria-hidden className="mx-1 hidden h-5 w-px bg-[#E5E7EB] sm:block" />
               <a
                 href={`https://waze.com/ul?ll=${lat}%2C${lng}&navigate=yes`}
                 target="_blank"
                 rel="noopener noreferrer"
                 title={`Navigate to ${lat}, ${lng} with Waze`}
-                className="rounded-md bg-[#33CCFF] text-[#04264A] text-xs font-semibold tracking-wide px-4 py-2 hover:bg-[#12BEEF]"
+                className="inline-flex h-9 items-center rounded-md bg-[#33CCFF] px-4 text-xs font-semibold tracking-wide text-[#04264A] hover:bg-[#12BEEF]"
               >
                 WAZE ROUTE ↗
               </a>
@@ -185,11 +242,11 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
                 target="_blank"
                 rel="noopener noreferrer"
                 title={`Navigate to ${lat}, ${lng} with Google Maps`}
-                className="rounded-md bg-[#4285F4] text-white text-xs font-semibold tracking-wide px-4 py-2 hover:bg-[#3367D6]"
+                className="inline-flex h-9 items-center rounded-md bg-[#4285F4] px-4 text-xs font-semibold tracking-wide text-white hover:bg-[#3367D6]"
               >
                 GOOGLE ROUTE ↗
               </a>
-            </div>
+            </>
           )}
         </div>
       </div>

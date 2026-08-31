@@ -2,6 +2,10 @@
 // provides its own <html>/<body> under [lang]); /admin lives outside [lang], so it needs its own
 // html/body + global stylesheet (Tailwind), otherwise it renders unstyled with no document shell.
 import "@/app/globals.css";
+// Definitions only — no element or utility rules, and no variable name
+// overlaps with globals.css, so this adds the shared type/colour scale to
+// the admin without restyling anything that does not ask for it.
+import "@/app/design-tokens.css";
 import "./admin-mobile.css";
 import type { Metadata, Viewport } from "next";
 

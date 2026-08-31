@@ -40,7 +40,7 @@ export default function SyncWithDriveButton({ developmentId, mode = "full" }: { 
         onClick={run}
         disabled={pending}
         title={mode === "units" ? "Re-read the current price/availability list only — no images or documents" : "Full re-import of this project from the developer's Drive price list"}
-        className="rounded-md border border-[#E5E7EB] text-sm px-4 py-2 hover:bg-[#F8F9FA] disabled:opacity-60 whitespace-nowrap"
+        className="inline-flex h-9 items-center rounded-md border border-[#C7A87A] px-4 text-sm text-[#826238] hover:border-[var(--bronze)] hover:bg-[#FDF3E3] disabled:opacity-60 whitespace-nowrap"
       >
         {pending ? "Syncing…" : "↻ Sync with Drive"}
       </button>
