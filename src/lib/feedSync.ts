@@ -233,6 +233,59 @@ type ProjectSyncOutcome = {
 // Confirmed 2026-08-06 by reading mapRowToVM() directly, not assumed.
 const FROZEN_WHEN_PUBLISHED = ["publicName", "description", "amenities", "gallery", "plans"] as const;
 
+// Where a development IS — frozen once published, but only where we already
+// have a value. These are not content the feed keeps improving; they are
+// facts that do not change, and a published page's map, district filter and
+// area label must not move because a vendor's feed had a thin night.
+//
+// Held apart from FROZEN_WHEN_PUBLISHED because the rule differs: those five
+// are dropped unconditionally, since an admin's curated gallery or name must
+// win even when the feed offers something. Location instead freezes ONLY when
+// set. A published project that has no coordinates yet — 22 of the 45 Leptos
+// projects arrived that way — must still be able to receive them the day the
+// vendor finally supplies them; freezing unconditionally would keep that
+// blank forever and there would be no way to fill it except by hand.
+//
+// Added 2026-08-31 after ten published Leptos projects were found running
+// through the full nightly sync. The unit-level guard people reach for does
+// not cover this: manual units lock the UNITS out of the resync, not the
+// Development row, and Leptos has no manual units at all. Coordinates
+// specifically were already safe by another route (an admin pin lives in
+// DevelopmentOverride, which sync never writes, and every read resolves
+// override-first) — but relying on that meant the raw column silently went
+// back to null every night, so anything reading Development.latitude
+// directly, or any future pin set without an override, was unprotected.
+//
+// priceFrom/priceTo are deliberately NOT here: a price is exactly what the
+// feed should keep current, and freezing it would leave a published page
+// advertising a stale figure. The real exposure there is a partial feed
+// narrowing a range (the Mito failure), which is checkFeedCompleteness's job.
+const FROZEN_WHEN_PUBLISHED_IF_SET = ["district", "area", "town", "latitude", "longitude"] as const;
+
+type ExistingLocation = Partial<Record<(typeof FROZEN_WHEN_PUBLISHED_IF_SET)[number], unknown>>;
+
+/**
+ * Strip from a Development update everything a published row must keep.
+ * Pure and exported so it can be tested without a database — the previous
+ * rule lived inline and had no test at all.
+ */
+export function freezeForPublished<T extends Record<string, unknown>>(
+  fullData: T,
+  existing: ExistingLocation,
+): Partial<T> {
+  const frozen: Partial<T> = { ...fullData };
+  for (const k of FROZEN_WHEN_PUBLISHED) delete (frozen as any)[k];
+  for (const k of FROZEN_WHEN_PUBLISHED_IF_SET) {
+    const current = existing?.[k];
+    // Empty string counts as unset: an area the feed could not resolve is
+    // stored as "" (see leptosVm and squareOne), and treating that as a value
+    // worth protecting would freeze the blank in place.
+    const hasValue = current != null && current !== "";
+    if (hasValue) delete (frozen as any)[k];
+  }
+  return frozen;
+}
+
 // Published developments: never hard-delete a feed-sourced unit that
 // disappears from today's feed pull — a customer may already be looking at
 // it (Client Presentation, browser tab, an earlier email). Diff against the
@@ -387,6 +440,10 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
     where: { feedKey },
     select: {
       id: true, publishStatus: true, gallery: true, plans: true, imageDriftDetectedAt: true,
+      // Read for FROZEN_WHEN_PUBLISHED_IF_SET — without these the freeze
+      // cannot tell "already set" from "never had one" and would either
+      // protect nothing or freeze blanks forever.
+      district: true, area: true, town: true, latitude: true, longitude: true,
       // Gallery drift must compare against every hash the admin has EVER
       // accounted for, not just the currently-displayed set. This is
       // deliberately the UNION of raw Development.gallery (frozen at
@@ -557,9 +614,7 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
   const fullData = developmentRow(vm, dev, id, accountId);
   let updateData: Partial<typeof fullData> & typeof driftPatch = fullData;
   if (existing?.publishStatus === "published") {
-    const frozen = { ...fullData };
-    for (const k of FROZEN_WHEN_PUBLISHED) delete (frozen as any)[k];
-    updateData = frozen;
+    updateData = freezeForPublished(fullData, existing);
   }
   // Never subject to FROZEN_WHEN_PUBLISHED — imageDriftDetectedAt/newFromFeed
   // aren't customer-facing content, they're the admin's own "what changed"
