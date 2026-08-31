@@ -1319,10 +1319,24 @@ model AreaDescription {
 // Retention: purged after 16 months (matches GSC's own retention) by the same
 // cron, piggybacking the pattern used elsewhere (see feed-sync's purge*
 // functions) rather than a separate scheduled job.
-// Note: Postgres allows multiple rows with the same (date, page, locale, NULL)
-// combination since NULL != NULL in a unique index — uniqueness for
-// page-level rows is enforced by always going through upsert in application
-// code, not by the DB constraint alone.
+//
+// Postgres allows multiple rows with the same (date, page, locale, NULL)
+// combination since NULL != NULL in a unique index, so the @@unique below
+// does NOT cover page-level rows (query IS NULL) — confirmed in production
+// 2026-08-31: 438 such duplicate groups had accumulated (see
+// scripts/cleanup-searchmetric-duplicates.mjs for the cleanup and root-cause
+// writeup). That gap is closed at the DB level by a PARTIAL unique index —
+// migration 20260831150000_add_search_metric_page_level_unique:
+//   CREATE UNIQUE INDEX search_metrics_page_level_unique
+//     ON search_metrics (date, page, locale) WHERE query IS NULL;
+// Prisma's schema DSL has no syntax for a filtered/partial unique index, so
+// this constraint is real in Postgres but invisible here — do not "fix" that
+// by running `prisma db pull` and accepting a diff that drops it, and do not
+// re-add a plain `@@unique([date, page, locale])` believing it replaces the
+// comment above: that would also apply to query-level rows and break them.
+// See client.ts's aggregateRows() for the matching application-side half of
+// this fix (rows are pre-merged in memory so a single sync run can never
+// hand this constraint two rows for the same key to begin with).
 model SearchMetric {
   id          String   @id @default(uuid())
   date        DateTime @db.Date
