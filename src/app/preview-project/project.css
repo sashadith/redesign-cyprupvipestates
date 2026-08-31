@@ -3,6 +3,16 @@
    ===================================================================== */
 .pp { position: relative; display: block; background: transparent; color: var(--text); min-height: 100vh;
   font-family: var(--font-body), sans-serif; padding-bottom: 0;
+  /* .pp-units-sec::after is a decorative cloud placed at right:-9%, i.e. ~120px
+     past its section's right edge — deliberately, see "not clipped" below. That
+     section has overflow-x:visible, so the bleed reached the document and gave
+     the page a horizontal scrollbar (measured 54-66px depending on viewport).
+     Clipped here at the page root instead of on the section: the cloud may still
+     bleed past the section, it is only cut at the screen edge where nothing is
+     visible anyway — clipping on the section itself would slice through the
+     visible part of the gradient. `clip` and not `hidden`: hidden would make this
+     a scroll container and break any position:sticky inside the page. */
+  overflow-x: clip;
   /* shared with .pp-map.px-mapwrap::before/::after below — defined once here so
      both the map's contour and any other divider on this page reference the
      same value instead of a second literal gradient. */
