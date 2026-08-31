@@ -28,7 +28,15 @@ export async function GET(req: NextRequest) {
     const result = await withCronLog(
       "seo-advisor",
       run,
-      (r) => (r.skipped ? `skipped: ${r.reason}` : `${r.suggestionCount} suggestion(s), ${r.suppressedCount} suppressed`),
+      // Name what was suppressed, don't just count it. "0 suppressed" read as
+      // "nothing repeated itself" for six weeks, when it actually meant the
+      // filter could not fire at all (its key hashed the model's own wording).
+      // A line that lists the titles makes a dead filter look dead.
+      (r) =>
+        r.skipped
+          ? `skipped: ${r.reason}`
+          : `${r.suggestionCount} suggestion(s), ${r.suppressedCount} suppressed` +
+            (r.suppressed?.length ? ` — ${r.suppressed.map((d) => `${d.reason}: ${d.title}`).join("; ")}` : ""),
     );
     return NextResponse.json({ ok: true, at: new Date().toISOString(), ...result });
   } catch (e) {
