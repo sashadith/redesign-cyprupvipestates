@@ -29,6 +29,12 @@ export type BlogStrings = {
   writtenBy: string; // author card label
   relatedLead: string; // related section title, first part
   relatedAccent: string; // related section title, gold-accented word
+  // Heading for the properties block an article falls back to when it carries
+  // no editor-inserted Projects block of its own (see the blog route). The
+  // {city} variant is used when the article's title/slug names one of the three
+  // cities the projects filter knows.
+  fallbackProperties: string;
+  fallbackPropertiesInCity: string; // contains the literal placeholder {city}
 };
 
 const EN: BlogStrings = {
@@ -53,6 +59,8 @@ const EN: BlogStrings = {
   writtenBy: "Written by",
   relatedLead: "Related",
   relatedAccent: "reading",
+  fallbackProperties: "Recommended properties",
+  fallbackPropertiesInCity: "Recommended properties in {city}",
 };
 
 export const BLOG_STRINGS: Record<string, BlogStrings> = {
@@ -79,6 +87,8 @@ export const BLOG_STRINGS: Record<string, BlogStrings> = {
     writtenBy: "Geschrieben von",
     relatedLead: "Ähnliche",
     relatedAccent: "Beiträge",
+    fallbackProperties: "Empfohlene Objekte",
+    fallbackPropertiesInCity: "Empfohlene Objekte in {city}",
   },
   pl: {
     heroTitle: "Cypr Insights",
@@ -102,6 +112,8 @@ export const BLOG_STRINGS: Record<string, BlogStrings> = {
     writtenBy: "Autor",
     relatedLead: "Powiązane",
     relatedAccent: "artykuły",
+    fallbackProperties: "Polecane nieruchomości",
+    fallbackPropertiesInCity: "Polecane nieruchomości w {city}",
   },
   ru: {
     heroTitle: "Кипр Инсайты",
@@ -125,6 +137,8 @@ export const BLOG_STRINGS: Record<string, BlogStrings> = {
     writtenBy: "Автор",
     relatedLead: "Похожие",
     relatedAccent: "статьи",
+    fallbackProperties: "Рекомендуемые объекты",
+    fallbackPropertiesInCity: "Рекомендуемые объекты в {city}",
   },
 };
 

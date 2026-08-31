@@ -20,6 +20,7 @@ import {
   getBlogPostByLang,
   getFormStandardDocumentByLang,
   getBlogSlugs,
+  getArticleFallbackProjects,
   ALL_LOCALES,
 } from "@/sanity/sanity.utils";
 import { isNewStyleProjectsBlock } from "@/lib/projectsBlockValidation";
@@ -128,6 +129,41 @@ const wordCount = (blocks: any[]) => {
 
 const HOME_LABEL: Record<string, string> = { en: "Home", de: "Startseite", pl: "Strona główna", ru: "Главная" };
 
+/* The three cities ProjectsSectionBlock.filterCity actually accepts, with the
+   spellings that turn up in this site's four locales — RU and PL slugs are
+   transliterated, so "pafos"/"limasol" appear there while the German and English
+   copy uses the standard forms. Matched against the article's title and slug
+   only; anything else falls through to the unfiltered set. */
+const ARTICLE_CITY_TOKENS: Record<"Paphos" | "Limassol" | "Larnaca", string[]> = {
+  Paphos: ["paphos", "pafos", "пафос"],
+  Limassol: ["limassol", "limasol", "лимассол"],
+  Larnaca: ["larnaca", "larnaka", "ларнака"],
+};
+/* Below this a city-filtered set reads as an accident rather than a selection,
+   so the unfiltered recommended set is used instead. */
+const FALLBACK_MIN = 3;
+/* A live city/type query returning fewer than this renders nothing — see the
+   guard in renderArticleBlock. Module-level so that guard and the
+   does-this-article-already-route check below cannot drift apart. */
+const MIN_BLOCK_RESULTS = 3;
+
+/* Whether a Projects block will actually put cards on the page. Mirrors both
+   guards in renderArticleBlock. Needed because "the article has a block" is not
+   the same as "the article routes anywhere": /blog/paphos-vs-limassol-… carries
+   a block with an empty title, no pins, no criteria and no results, which
+   renders null — and that article is precisely the kind the fallback exists for,
+   so testing for the block's mere presence would have skipped it. */
+const projectsBlockRenders = (b: any): boolean => {
+  if (b?._type !== "projectsSectionBlock") return false;
+  const filtered = Array.isArray(b.filteredProjects) ? b.filteredProjects : [];
+  if (isNewStyleProjectsBlock(b)) {
+    if (!filtered.length) return false;
+    return !(b._hasLiveCriteria && filtered.length < MIN_BLOCK_RESULTS);
+  }
+  const manual = Array.isArray(b.projects) ? b.projects : [];
+  return manual.length > 0 || filtered.length > 0;
+};
+
 const PagePost = async ({ params }: Props) => {
   const { lang, slug } = params;
   const blog = await getBlogPostByLang(lang, slug);
@@ -151,6 +187,34 @@ const PagePost = async ({ params }: Props) => {
   const authorUrl = safeUrl(author?.image);
   const related = (blog.relatedArticles ?? []) as any[];
   const contentBlocks = (blog.contentBlocks ?? []) as any[];
+
+  // An article with no Projects block of its own gets one appended, so every
+  // post offers the same step onward into a property. Editor-placed blocks
+  // always win — this only fills the gap, and never adds a second block to an
+  // article that already has one.
+  //
+  // City is read from the article's own title and slug against the three the
+  // projects filter actually supports, rather than guessed: an article about
+  // Paphos then lists Paphos properties. Slugs are transliterated in RU/PL, so
+  // the local spellings are matched too. No match, or too thin a result, falls
+  // back to the unfiltered recommended set rather than showing a near-empty row.
+  const hasProjectsBlock = contentBlocks.some(projectsBlockRenders);
+  const cityHit = hasProjectsBlock
+    ? null
+    : (["Paphos", "Limassol", "Larnaca"] as const).find((city) =>
+        ARTICLE_CITY_TOKENS[city].some((token) =>
+          `${blog.title ?? ""} ${slug}`.toLowerCase().includes(token),
+        ),
+      ) ?? null;
+  const fallbackProjects = hasProjectsBlock
+    ? []
+    : await (async () => {
+        const withCity = cityHit ? await getArticleFallbackProjects(lang, cityHit) : [];
+        return withCity.length >= FALLBACK_MIN ? withCity : getArticleFallbackProjects(lang);
+      })();
+  const fallbackHeading = cityHit
+    ? t.fallbackPropertiesInCity.replace("{city}", cityHit)
+    : t.fallbackProperties;
 
   // Language-switcher translations (same logic as production).
   const translationSlugs = blog?._translations
@@ -205,7 +269,6 @@ const PagePost = async ({ params }: Props) => {
           // deliberate editorial choice and always renders (2026-07-22 bug:
           // a real published article's hand-picked pins rendered nothing
           // because this guard treated the pick like a weak auto-query).
-          const MIN_BLOCK_RESULTS = 3;
           if (b._hasLiveCriteria && results.length < MIN_BLOCK_RESULTS) return null;
           return <ProjectsSectionBlockComponent block={{ ...b, projects: results, paginate: true }} lang={lang} />;
         }
@@ -280,6 +343,21 @@ const PagePost = async ({ params }: Props) => {
                 {contentBlocks.map((b: any) => (
                   <React.Fragment key={b._key}>{renderArticleBlock(b)}</React.Fragment>
                 ))}
+
+                {/* Only when the article carries no Projects block of its own —
+                    see the resolution above. Rendered through the same component
+                    an editor-placed block uses, so it is visually identical. */}
+                {fallbackProjects.length > 0 && (
+                  <ProjectsSectionBlockComponent
+                    block={{
+                      _key: "fallback-projects",
+                      _type: "projectsSectionBlock",
+                      title: fallbackHeading,
+                      projects: fallbackProjects,
+                    } as any}
+                    lang={lang}
+                  />
+                )}
 
                 {author?.name && (
                   <aside className="iart__author">

@@ -380,6 +380,24 @@ async function computeFilteredProjects(lang: string, filterCity?: string, filter
   return full.map(toProjectCard);
 }
 
+/**
+ * Project cards for an article that carries no Projects block of its own.
+ *
+ * The weekly SEO Advisor (2026-08-30) measured the blog-post class routing only
+ * 0.6% of its sessions on to a second property, against 8.7% for the strongest
+ * class. A live check found the cause is simply that the block is optional: of
+ * 14 sampled posts, 7 linked to properties and 7 did not. This gives the other
+ * half the same funnel step without an editor having to remember it.
+ *
+ * Deliberately the SAME resolver the editor-inserted block uses, so the fallback
+ * can never show a different universe (PUBLISHED only, Developments merged in,
+ * "recommended" order) than a hand-placed block on the next article would.
+ */
+export async function getArticleFallbackProjects(lang: string, filterCity?: string, limit = 3) {
+  const cards = await computeFilteredProjects(lang, filterCity);
+  return cards.slice(0, limit);
+}
+
 // Server-side pagination sibling of computeFilteredProjects -- same fetch,
 // filter, and sort, but returns a requested page-sized window over the FULL
 // match count instead of a hard-capped first-60 slice, plus the total so the
