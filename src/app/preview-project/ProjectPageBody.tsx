@@ -30,6 +30,18 @@ import type { GoldPhrase } from "@/lib/developmentCopy";
 // strip — the public slug route omits it entirely (no reason to expose
 // internal feed names or a "Preview" label on an indexable page).
 
+/* Leptos's XML ships its own distance block (Airport / Sea / Shops / Healthcare /
+   Education). We compute distances ourselves from the project's coordinates
+   (src/lib/developmentDistances.ts) and render them in the Distances strip further
+   down, so the feed's copy is redundant — and it disagrees: across the 44 Leptos
+   developments carrying it, 92 of 117 comparable values differ from ours (Apollo
+   Beach Villas: feed says 30 min to the airport, computed says 24).
+
+   Suppressed at render rather than deleted from the row, so a re-sync cannot
+   quietly bring them back. Scoped by adapter key rather than by label alone, so
+   another feed introducing a legitimate "Shops" fact stays unaffected. */
+const LEPTOS_FEED_DISTANCES = new Set(["airport", "sea", "shops", "healthcare", "education"]);
+
 const fmtPrice = (n: number | null | undefined, cur = "EUR", priceOnRequest = "Price on request") =>
   n == null ? priceOnRequest : `${cur === "EUR" ? "€" : cur + " "}${n.toLocaleString("en-US")}`;
 
@@ -126,7 +138,11 @@ export default async function ProjectPageBody({
     // "Total units" from the feed is redundant with the "Units" fact above — drop it.
     // Extra facts are free-text from the feed/admin (no fixed key set), so they
     // can't be localized via a static dictionary — shown as authored.
-    ...(p.extraFacts ?? []).filter((f) => !/^\s*total\s+units\s*$/i.test(f.label)),
+    ...(p.extraFacts ?? []).filter(
+      (f) =>
+        !/^\s*total\s+units\s*$/i.test(f.label) &&
+        !(p.dev === "leptos" && LEPTOS_FEED_DISTANCES.has(f.label.trim().toLowerCase())),
+    ),
   ].filter(Boolean) as { label: string; value: string }[];
 
   return (
