@@ -70,6 +70,24 @@ export async function setDriveSyncInterval(developerAccountId: string, interval:
   revalidatePath(`/admin/developments/developers/${developerAccountId}`);
 }
 
+// Manual-sync reminder cadence (days). 0/empty clears it (null = no reminder).
+// Read by the manualSyncDue() Action Center rule. For hand-synced developers like
+// AGG whose prod cron can't reach the source (Cloudflare) — see the field's note
+// in schema.prisma.
+export async function setManualSyncReminder(developerAccountId: string, days: number) {
+  const value = Number.isFinite(days) && days > 0 ? Math.round(days) : null;
+  await prisma.developerAccount.update({ where: { id: developerAccountId }, data: { manualSyncReminderDays: value } });
+  revalidatePath(`/admin/developments/developers/${developerAccountId}`);
+}
+
+// Stamps driveSyncedAt = now — the manual-sync reminder anchors on this, so it's
+// the "I've just synced this by hand" override. The sync scripts update it too, so
+// this button is only for confirming a sync done outside them.
+export async function markDeveloperSyncedNow(developerAccountId: string) {
+  await prisma.developerAccount.update({ where: { id: developerAccountId }, data: { driveSyncedAt: new Date() } });
+  revalidatePath(`/admin/developments/developers/${developerAccountId}`);
+}
+
 // Mirrors images now (2026-08-04) — previously data-only, which meant a
 // gallery/unit-photo array freshly written by this button could silently
 // contain raw external feed URLs (skipping mirroring, not just deferring it:

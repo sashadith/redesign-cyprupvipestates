@@ -37,6 +37,13 @@ export const DEV_ACCOUNT: Record<string, { slug: string; name: string }> = {
   // ensureAccount upserts by it; without this entry the first sync would create
   // a second, empty account and attach every Mito project to it.
   mito: { slug: "mito-xml", name: "Mito (XML)" },
+  // slug "leptos-xml", not "leptos" — the same trap as medousa and mito above.
+  // ensureAccount() upserts by this exact slug; without the entry it falls back
+  // to { slug: dev, name: dev } and attaches all 45 projects to a second, empty
+  // account instead of the one the operator configured. No Leptos account
+  // existed when this was added (2026-08-30), so the first sync creates exactly
+  // one, under this slug.
+  leptos: { slug: "leptos-xml", name: "Leptos Estates (XML)" },
   agg: { slug: "agg", name: "AGG Luxury Homes" },
   squareone: { slug: "square-one", name: "Square One" },
 };
@@ -177,7 +184,33 @@ export type SyncResult = {
 // mitoVm, DEV_ACCOUNT's mito-xml mapping). Re-adding "mito" to this list is all
 // it takes to switch back on, if Mito ever ships a complete feed with unit
 // numbers and a status field.
-export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone"];
+// "leptos" (2026-08-30) gets no completeness-guard override, and the honest
+// version of that decision is worth writing down, because Mito's floor was
+// argued on TWO grounds and only one of them is arithmetic.
+//
+// The arithmetic: FEED_INCOMPLETE_PCT = 0.15 against 377 units blocks a feed
+// that lost more than 56, and FEED_INCOMPLETE_ABS_FLOOR = 20 binds only below
+// 133 units. Mito's 16-unit catalogue made "missing > 20" unsatisfiable — a
+// guard that could never fire — which is why it needed a floor of 3. At 377
+// units the shared thresholds fire on their own.
+//
+// The second ground TRANSFERS, and it is the uncomfortable one: Mito's floor
+// was also stricter because its projects are unpublished, and syncOneProject
+// sends an unpublished development down deleteMany({source:"feed"}) +
+// createMany. All 45 Leptos projects are created as "draft" (the schema
+// default), so on day 1 every one of them is on that path: a feed that came
+// back valid but 15 % short would DELETE up to 56 units, where a published
+// project's would merely flip to "unlisted".
+//
+// That is accepted rather than papered over. Feed rows are recreated whole on
+// the next good pull, so a bad night costs a day of catalogue, not data: the
+// rows carry nothing a human typed. The moment a human does touch a unit it
+// becomes source:"manual", and syncOneProject skips the feed-unit write
+// entirely for a development holding any manual unit. What a stricter floor
+// would buy here is a shorter window of a thinner catalogue, and inventing one
+// to claim a safety property the shared thresholds already provide would be
+// cargo cult with a comment attached.
+export const SYNCED_DEVS = ["island-blue", "inex", "bbf", "aristo", "pafilia", "domenica", "medousa", "squareone", "leptos"];
 // Subset with a real, individually-triggerable feed worth an on-demand pull
 // (the admin Force-Sync button, Teil 2).
 export const FORCE_SYNC_DEVS = SYNCED_DEVS;

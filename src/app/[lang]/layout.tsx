@@ -142,11 +142,29 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              "@type": "Organization",
+              // RealEstateAgent (a LocalBusiness subtype) unlocks the brand
+              // knowledge panel Google reserves for businesses — address, phone,
+              // and hours — that a plain Organization never qualifies for.
+              "@type": "RealEstateAgent",
               name: "Cyprus VIP Estates",
               alternateName: "Cyprus VIP Estates",
               url: "https://cyprusvipestates.com",
-              logo: "https://cyprusvipestates.com/uploads/images/862e62ebddfc232ff9838efb63eb28685b515eb4-400x208.png",
+              logo: "https://cyprusvipestates.com/uploads/images/c4911e6ba6654becbeda47f9485754fbcfeb407e-500x634.png",
+              image: "https://cyprusvipestates.com/uploads/images/c4911e6ba6654becbeda47f9485754fbcfeb407e-500x634.png",
+              telephone: "+35799278285",
+              email: "office@cyprusvipestates.com",
+              address: {
+                "@type": "PostalAddress",
+                streetAddress: "Palaion Patron Germanou 11",
+                addressLocality: "Paphos",
+                postalCode: "8011",
+                addressCountry: "CY",
+              },
+              areaServed: [
+                { "@type": "Country", name: "Cyprus" },
+                { "@type": "City", name: "Paphos" },
+                { "@type": "City", name: "Limassol" },
+              ],
               sameAs: [
                 "https://www.instagram.com/cyprusvipestates",
                 "https://www.facebook.com/cyprusvipestates",
