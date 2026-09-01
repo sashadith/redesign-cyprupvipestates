@@ -39,9 +39,15 @@ const STATUS_STYLE: Record<string, string> = {
 const SOLD_OUT_STATUS = "sold-out";
 const SOLD_OUT_WHERE = { publishStatus: "published", units: { some: {}, every: { status: { not: "available" } } } };
 
-export default async function DevelopmentsPage({ searchParams }: { searchParams?: { dev?: string; status?: string } }) {
+export default async function DevelopmentsPage({ searchParams }: { searchParams?: { dev?: string; status?: string; sync?: string } }) {
   const dev = searchParams?.dev || "";
   const status = searchParams?.status || "";
+  // Set by runSync (developments/actions.ts) as "<kind>:<message>". The button
+  // used to be silent even when the completeness guard refused the whole run,
+  // which is how Medousa stayed blocked for four days while the operator
+  // pressed it and saw nothing change.
+  const syncKind = (searchParams?.sync ?? "").split(":", 1)[0];
+  const syncMessage = (searchParams?.sync ?? "").slice(syncKind.length + 1);
   // "All statuses" (no explicit filter) excludes archived — archived projects only
   // show up via the dedicated Archived pill, never mixed into the default list/search.
   const where = {
@@ -63,6 +69,8 @@ export default async function DevelopmentsPage({ searchParams }: { searchParams?
 
   const statusCount = Object.fromEntries(byStatus.map((s) => [s.publishStatus, s._count._all]));
   const qp = (o: Record<string, string>) => {
+    // deliberately without `sync`: the outcome belongs to the run that just
+    // happened, not to every filter link on the page afterwards
     const p = new URLSearchParams({ ...(dev ? { dev } : {}), ...(status ? { status } : {}), ...o });
     Object.entries(o).forEach(([k, v]) => (v ? p.set(k, v) : p.delete(k)));
     return "?" + p.toString();
@@ -84,6 +92,23 @@ export default async function DevelopmentsPage({ searchParams }: { searchParams?
           </button>
         </form>
       </div>
+
+      {syncMessage && (
+        <div
+          className={`rounded-md border px-4 py-3 text-sm ${
+            syncKind === "blocked"
+              ? "border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]"
+              : syncKind === "error"
+                ? "border-[#FECACA] bg-[#FEF2F2] text-[#991B1B]"
+                : "border-[#BBF7D0] bg-[#F0FDF4] text-[#166534]"
+          }`}
+        >
+          <span className="font-medium">
+            {syncKind === "blocked" ? "Sync refused — nothing was changed. " : syncKind === "error" ? "Sync failed. " : "Sync finished. "}
+          </span>
+          {syncMessage}
+        </div>
+      )}
 
       {/* developer filter */}
       <div className="flex flex-wrap gap-2 text-sm">

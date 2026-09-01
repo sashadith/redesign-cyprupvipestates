@@ -104,17 +104,41 @@ export async function markDeveloperSyncedNow(developerAccountId: string) {
 // images included, regardless of publish status.
 export async function runSync(formData: FormData) {
   const dev = String(formData.get("dev") ?? "");
+  // Report the outcome back to the page. Without this the button was silent in
+  // the one case that matters most: a sync BLOCKED by the completeness guard
+  // returns a normal result with blocked:true, the old code discarded it, and
+  // the page re-rendered unchanged — indistinguishable from success. Medousa
+  // sat blocked from 2026-08-27 to 2026-08-31 while the operator pressed the
+  // button and saw "nothing happens". An error was equally invisible: it was
+  // logged server-side and swallowed.
+  let outcome: string;
   try {
-    if (dev && dev !== "all") await syncDeveloper(dev, { mirror: true, forceMirror: true });
-    else await syncAll({ mirror: true, forceMirror: true });
+    const results = dev && dev !== "all"
+      ? [await syncDeveloper(dev, { mirror: true, forceMirror: true })]
+      : await syncAll({ mirror: true, forceMirror: true });
+    const blocked = results.filter((r) => r.blocked);
+    if (blocked.length) {
+      // The guard's own sentence, verbatim — it already names the numbers and
+      // says nothing was changed. Re-wording it here would let the two drift.
+      outcome = `blocked:${blocked.map((r) => `${r.dev}: ${r.blockedMessage ?? "feed looks incomplete"}`).join(" | ")}`;
+    } else {
+      const created = results.reduce((n, r) => n + r.created, 0);
+      const updated = results.reduce((n, r) => n + r.updated, 0);
+      const failed = results.reduce((n, r) => n + r.failed, 0);
+      const units = results.reduce((n, r) => n + r.unitsWritten, 0);
+      outcome = `ok:${created} created, ${updated} updated, ${units} units${failed ? `, ${failed} failed` : ""}`;
+    }
   } catch (e) {
-    // No message slot in this plain form (see developments/page.tsx and
-    // developers/[id]/page.tsx) — an uncaught throw here would crash the whole
-    // page render into Next's redacted digest instead of just failing this
-    // sync, so log the real cause server-side and let the page render as-is.
-    console.error(`runSync(${dev || "all"}) failed:`, syncErrorMessage(e));
+    // An uncaught throw here would crash the whole page render into Next's
+    // redacted digest instead of just failing this sync, so keep catching —
+    // but surface it rather than only logging it.
+    const message = syncErrorMessage(e);
+    console.error(`runSync(${dev || "all"}) failed:`, message);
+    outcome = `error:${message}`;
   }
   revalidatePath("/admin/developments");
+  const qs = new URLSearchParams({ ...(dev && dev !== "all" ? { dev } : {}), sync: outcome });
+  redirect(`/admin/developments?${qs.toString()}`);
 }
 
 // Manually create a development for a developer WITHOUT a feed. It gets a "manual"
