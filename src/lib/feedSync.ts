@@ -699,9 +699,28 @@ const MITO_INCOMPLETE_ABS_FLOOR = 3;
 //
 // An archived project still IN the feed keeps counting on both sides and is
 // therefore neutral (Medousa's MEDOUSA RESALES is one).
+//
+// "unlisted" units are excluded for the same reason, one level down. That
+// status is never produced by a feed — no adapter in feeds.ts sets it — it is
+// written by this file (and aggSync/sharepointAvailabilitySync) to mean
+// exactly "was in the feed, is not any more". So an unlisted unit can never
+// appear on the "after" side while it stays unlisted, but counted on the
+// "before" side it inflates the gap permanently, and every further sale widens
+// it. Domenica had reached 20 unlisted of 134 — 19 missing, 14 %, one unit
+// short of blocking, with Thea alone contributing 11.
+//
+// "sold" is deliberately NOT excluded, and the difference matters: sold is a
+// FEED status (Island Blue, Medousa and Aristo all ship sold units in the
+// feed), so those units are present on both sides. Dropping them would leave
+// before far below after — measured 2026-09-01: Island Blue -593 %, Medousa
+// -94 % — and the guard could never fire for those developers again.
 async function feedUnitsAtRisk(dev: string): Promise<number> {
   return prisma.developmentUnit.count({
-    where: { source: "feed", development: { dev, publishStatus: { not: "archived" } } },
+    where: {
+      source: "feed",
+      status: { not: "unlisted" },
+      development: { dev, publishStatus: { not: "archived" } },
+    },
   });
 }
 
