@@ -677,6 +677,34 @@ const FEED_INCOMPLETE_ABS_FLOOR = 20;
 // other developers' units would merely flip to "unlisted".
 const MITO_INCOMPLETE_ABS_FLOOR = 3;
 
+// What the completeness guard measures itself against: every feed unit the
+// sync could still touch. ARCHIVED developments are excluded, and that
+// exclusion is the whole point.
+//
+// An archived project is one the operator has taken out of circulation, and
+// the usual reason is that the developer stopped listing it — so it is
+// legitimately absent from the feed, forever. Counted on the "before" side it
+// looks like permanent, irrecoverable loss: Medousa's archived Business
+// Centre (MBC) carries 105 of its 436 feed units, which reads as 24 % missing
+// every single night and blocked every Medousa sync from 2026-08-27 until this
+// was found on 2026-08-31. Its units were never at risk either way —
+// syncDeveloperCore only iterates listProjectIds, so a project absent from the
+// feed is never written to at all.
+//
+// Deliberately NOT narrowed further to "developments present in today's feed".
+// That sounds tighter and is far worse: a feed that dropped ten published
+// projects would then shrink both sides of the comparison equally and the
+// guard would say nothing — the exact catastrophe it exists to catch. A
+// published or draft project that vanishes must still count as missing.
+//
+// An archived project still IN the feed keeps counting on both sides and is
+// therefore neutral (Medousa's MEDOUSA RESALES is one).
+async function feedUnitsAtRisk(dev: string): Promise<number> {
+  return prisma.developmentUnit.count({
+    where: { source: "feed", development: { dev, publishStatus: { not: "archived" } } },
+  });
+}
+
 async function checkFeedCompleteness(
   dev: string,
   ids: string[],
@@ -689,7 +717,7 @@ async function checkFeedCompleteness(
     vmsById.set(id, vm);
     afterCount += vm?.units.length ?? 0;
   }
-  const beforeCount = await prisma.developmentUnit.count({ where: { source: "feed", development: { dev } } });
+  const beforeCount = await feedUnitsAtRisk(dev);
   if (beforeCount > 0) {
     const missing = beforeCount - afterCount;
     const missingPct = missing / beforeCount;
@@ -745,7 +773,7 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
   // missing > MITO_INCOMPLETE_ABS_FLOOR and blocks rather than silently wiping
   // every unpublished project down to nothing.
   const afterCount = clusters.reduce((n, c) => n + c.units.length, 0);
-  const beforeCount = await prisma.developmentUnit.count({ where: { source: "feed", development: { dev } } });
+  const beforeCount = await feedUnitsAtRisk(dev);
   if (beforeCount > 0) {
     const missing = beforeCount - afterCount;
     const missingPct = missing / beforeCount;
