@@ -40,6 +40,28 @@ const DE_LANDING_MERGES: Record<string, string> = {
   "luxus-haeuser-zum-verkauf-in-paphos": "/de/luxusvillen-in-zypern",
   "haeuser-auf-zypern/strandhaus-auf-zypern": "/de/strandvillen-zypern",
   "strandhaus-auf-zypern": "/de/strandvillen-zypern",
+
+  // German villa-cluster consolidation (2026-09-01): four pages collapsed
+  // into the flagship, confirmed duplicate by DIRECT INVENTORY SET
+  // COMPARISON, not just similar copy -- villen-in-zypern-fuer-investoren,
+  // villen-auf-zypern-fuer-auswanderer, and
+  // villen-zypern-aufenthaltstitel-provisionsfrei all query nothing but
+  // filterPropertyType:"Villa" (no city) and render the byte-identical
+  // 130-listing set as luxusvillen-in-zypern's own live-query siblings did
+  // before this merge -- three titles, one query. luxusvillen-in-zypern/
+  // villen-in-paphos (a projectsSectionBlock fixed list) rendered a set
+  // byte-identical to its own parent page, not a Paphos-filtered subset --
+  // there was no independent page to preserve. Both the nested and flat
+  // leaf forms of villen-in-paphos are included, same reasoning as
+  // haeuser-auf-zypern/luxus-haeuser-zum-verkauf-in-paphos above: without
+  // the flat entry, a flat hit chains through nestedPageRedirects.json's
+  // 308 before ever reaching this 301, a two-hop redirect for anyone who
+  // reaches the page via its bare leaf slug.
+  "villen-in-zypern-fuer-investoren": "/de/luxusvillen-in-zypern",
+  "villen-auf-zypern-fuer-auswanderer": "/de/luxusvillen-in-zypern",
+  "villen-zypern-aufenthaltstitel-provisionsfrei": "/de/luxusvillen-in-zypern",
+  "luxusvillen-in-zypern/villen-in-paphos": "/de/luxusvillen-in-zypern",
+  "villen-in-paphos": "/de/luxusvillen-in-zypern",
 };
 
 // Retired DE blog articles — same shape/mechanism as DE_LANDING_MERGES above
