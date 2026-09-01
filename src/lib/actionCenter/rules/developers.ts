@@ -226,11 +226,15 @@ async function feedSyncFailures(): Promise<ActionItem[]> {
      what is dropped is only a stale claim about a job that no longer runs.
      Matched by developer NAME because that is exactly how the drive-sync
      route keys its per-developer rows ("drive-sync:<acct.name>"). */
-  const dropboxNames = new Set(
-    (await prisma.developerAccount.findMany({ where: { NOT: { driveFolderUrl: null } }, select: { name: true, driveFolderUrl: true } }))
-      .filter((a) => isDropboxShareUrl(a.driveFolderUrl))
-      .map((a) => a.name),
-  );
+  const driveAccounts = await prisma.developerAccount.findMany({
+    where: { NOT: { driveFolderUrl: null } },
+    select: { id: true, name: true, driveFolderUrl: true },
+  });
+  const dropboxNames = new Set(driveAccounts.filter((a) => isDropboxShareUrl(a.driveFolderUrl)).map((a) => a.name));
+  // Drive jobs are keyed "drive-sync:<acct.name>", so the name is the only
+  // handle the row carries — resolve it to an id here so the item can link to
+  // the developer that actually failed.
+  const driveIdByName = new Map(driveAccounts.map((a) => [a.name, a.id]));
 
   const items: ActionItem[] = [];
   for (const [job, row] of Array.from(latestByJob)) {
@@ -243,9 +247,17 @@ async function feedSyncFailures(): Promise<ActionItem[]> {
       title: `${devKey} ${isDrive ? "Drive sync" : "feed"} failed last sync — check logs`,
       description: row.message || "No error detail captured.",
       // Drive developers are keyed by their full display name (spaces/parens),
-      // not a feed-sync devKey the ?dev= filter understands — link to the
-      // developer list instead of a filtered developments view.
-      deepLink: isDrive ? "/admin/developments/developers" : `/admin/developments?dev=${encodeURIComponent(devKey)}`,
+      // not a feed-sync devKey the ?dev= filter understands, so ?dev= is no use
+      // here. This used to link to "/admin/developments/developers" — a route
+      // that does not exist: that segment holds only [id], compare and new, no
+      // page of its own, so the link rendered a client-side exception on a
+      // black screen (reported 2026-09-01, broken since 2026-08-11). Link to
+      // the failing developer itself, which is more useful than the list ever
+      // was, and fall back to the developments overview when the account has
+      // since been renamed or deleted.
+      deepLink: isDrive
+        ? (driveIdByName.has(devKey) ? `/admin/developments/developers/${driveIdByName.get(devKey)}` : "/admin/developments")
+        : `/admin/developments?dev=${encodeURIComponent(devKey)}`,
       since: row.ranAt,
     });
   }
