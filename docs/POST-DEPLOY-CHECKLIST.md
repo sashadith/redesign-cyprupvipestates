@@ -18,15 +18,29 @@ Self-contained — reads `DE_LANDING_MERGES` directly out of the checked-out `sr
 it can never go stale as that table grows. Checks every entry single-hops to a 200 on its `/de/`
 form. See the script's own header comment for why it exists (2026-07-28 incident).
 
+**2026-09-01 addition**: the villa-cluster consolidation added 5 more entries to this same table
+(4 requested merges + the flat leaf form for `villen-in-paphos`) — the script above already covers
+them automatically, no doc update needed for that check. But if you're doing an ad-hoc manual check
+of these specific slugs instead of running the script, know what to expect: these four are now
+**archived pages that 301 to the flagship — expect 301, not 200**. A 200 here would mean the
+archive or the redirect didn't take.
+
+| slug | expected |
+|---|---|
+| `/de/villen-in-zypern-fuer-investoren` | 301 → `/de/luxusvillen-in-zypern` |
+| `/de/villen-auf-zypern-fuer-auswanderer` | 301 → `/de/luxusvillen-in-zypern` |
+| `/de/villen-zypern-aufenthaltstitel-provisionsfrei` | 301 → `/de/luxusvillen-in-zypern` |
+| `/de/luxusvillen-in-zypern/villen-in-paphos` (+ flat `/de/villen-in-paphos`) | 301 → `/de/luxusvillen-in-zypern` |
+
 ## 2. Five Track 1 internal-link targets
 
 Blog articles link into these five pages — a broken one means a live internal-link chain is
 pointing at a dead or degraded page. Card count = links with class `ProjectLink_project__*`
 (landing pages) or unique `/{lang}/projects/{slug}` hrefs (the one fixed-list page below).
 
-| URL | filter | last verified count | verified 2026-08-31 |
+| URL | filter | last verified count | verified 2026-09-01 |
 |---|---|---|---|
-| `/de/luxusvillen-in-zypern` | fixed curated list (`projectsSectionBlock`, 21 project refs) | 20 | 20 |
+| `/de/luxusvillen-in-zypern` | fixed curated list (`projectsSectionBlock`, **25** project refs — broadened 2026-09-01, +4 Limassol villas, was 21) | **24** (was 20 before 2026-09-01) | 24 |
 | `/ru/nedvizhimost-s-vidom-na-more-v-limassole` ("the sea-view page") | `filterCity: Limassol, maxBeachMinutes: 5, excludePropertyTypes: [Office, Shop]` | 44 | 44 |
 | `/ru/kvartiry-v-limassole` | `filterCity: Limassol, filterPropertyType: Apartment` | 54 | 54 |
 | `/ru/villy-v-pafose-dlya-investorov` | `filterCity: Paphos, filterPropertyType: Villa` | 60 (capped — true match 114) | 60 (capped — true match 114) |

@@ -1,0 +1,93 @@
+{
+  "purpose": "Post-consolidation baseline for the German villa-buying query cluster (8 near-identical buy-intent queries, ~2,713 combined impressions, all previously stuck at position 12.8-24.6). Captured the same day four cannibalizing pages were merged into /de/luxusvillen-in-zypern. Compare against a fresh pull of the SAME 8 queries in ~1 month to see whether consolidation moved the flagship into the top 10, and whether the two remaining live competitors' traffic migrates to the flagship or simply disappears.",
+  "caveat": "GSC's own reporting lags several days and keeps revising for roughly a month after each date (see the SearchMetric ingest investigation, 2026-08-31) -- the numbers below reflect data from BEFORE today's changes went live; nothing here yet shows any effect of the consolidation. Position/impression movement measured a month from now could be caused by the consolidation, by ordinary rank drift (this cluster showed real day-to-day and week-to-week drift throughout the investigation, independent of any site change), or by Google still processing the removal of four now-410'd... no, 301'd competing URLs from its index, a process GSC's own documentation says can take weeks. Do not attribute 100% of any observed movement to the consolidation without checking whether comparable, untouched pages moved similarly over the same period as a control -- same discipline as the off-plan baseline (docs/paphos-offplan-baseline-2026-08-27.json).",
+  "capturedAt": "2026-09-01T13:28:29.000Z",
+  "window": {
+    "note": "queries[] and pageLevelTotalsAllTime below are all-time SearchMetric sums for each canonicalized page (query-level rows for the 8-query breakdown, page-level query:null rows for the totals) -- not a fixed rolling window. Freshest SearchMetric data as of capture: 2026-08-31 (normal ~1-day lag after the DAILY_WINDOW_DAYS widening, not stale)."
+  },
+  "queryMethodology": "Query-level SearchMetric rows for the 8 cluster queries, canonicalized via urlCanonical.ts's canonicalize() to pool genuine bare/prefixed duplicates of the SAME live page (e.g. en::/luxusvillen-in-zypern with de::/de/luxusvillen-in-zypern) -- but NOT folded together with stale index carryover from pages that have since 301-redirected here (grosse-villen-zypern, haeuser-auf-zypern, etc.), since blending a live page's position with an already-redirected page's stale, un-refreshed position drags the number down without meaning anything (confirmed directly during the investigation this baseline follows). Same methodology as Part A of the investigation this baseline documents.",
+  "whatChangedToday": {
+    "date": "2026-09-01",
+    "changes": [
+      "luxusvillen-in-zypern's fixed project list broadened from 20 to 24 listings -- added 4 published Limassol villas (Island Villas, Limassol Greens Villas, Seaview Heights Villas, Skyline Villas) so the page's 'in Zypern' (Cyprus-wide) title matches what it actually shows; previously 100% Paphos.",
+      "4 pages merged into luxusvillen-in-zypern via new DE_LANDING_MERGES entries (src/middleware.ts) + archived Singlepage rows, in that order (redirect confirmed live before each archive, no 404 gap): villen-in-zypern-fuer-investoren, villen-auf-zypern-fuer-auswanderer, villen-zypern-aufenthaltstitel-provisionsfrei, luxusvillen-in-zypern/villen-in-paphos (+ its flat leaf villen-in-paphos). All confirmed byte-identical inventory to each other (the first three) or to the flagship itself (the fourth) before merging -- not a judgment call, a direct set comparison.",
+      "9 internal-link sources repointed to the flagship across these 4 merges (5 for villen-in-zypern-fuer-investoren, 2 for villen-auf-zypern-fuer-auswanderer, 0 for villen-zypern-aufenthaltstitel-provisionsfrei -- it had none, 2 for villen-in-paphos). One additional self-referential link (the flagship linking to its own now-archived nested child) was removed outright rather than repointed, since there was no other page to repoint it to.",
+      "2 new commercial links added in DE blog articles that previously had zero: paphos-oder-limassol (anchor \"villenlastig\") and wie-viel-geld-benoetigt-man-fuer-den-kauf-einer-immobilie-auf-zypern (anchor \"Villa\"), both linking to the flagship, both inside existing prose.",
+      "luxusvillen-zypern-ueber-1-mio and strandvillen-zypern were deliberately left untouched -- held for separate decisions (dead price filter; own beachfront-pages pass, respectively). Their baselines below exist specifically to measure whether leaving them alone was the right call."
+    ]
+  },
+  "pages": {
+    "luxusvillen-in-zypern": {
+      "page": "/de/luxusvillen-in-zypern",
+      "role": "flagship -- consolidation target",
+      "pageBlockConfig": {
+        "blockType": "projectsSectionBlock",
+        "refCount": 25,
+        "note": "Fixed curated list, no live query. 21 refs before today (100% Paphos), +4 Limassol villas added today. See whatChangedToday."
+      },
+      "currentRenderedListingCount": {
+        "rendered": 24,
+        "note": "Live-verified via rendered HTML (unique /de/projects/ hrefs), not just ref count -- 25 refs resolve to 24 published listings, matching the pre-change ratio (21 refs -> 20 rendered)."
+      },
+      "queries": [
+        { "query": "villa zypern kaufen", "impressions": 734, "clicks": 10, "avgPosition": 11.0 },
+        { "query": "zypern villa kaufen", "impressions": 782, "clicks": 6, "avgPosition": 11.7 },
+        { "query": "villa in zypern kaufen", "impressions": 479, "clicks": 2, "avgPosition": 10.7 },
+        { "query": "villa auf zypern kaufen", "impressions": 385, "clicks": 1, "avgPosition": 10.3 },
+        { "query": "luxusimmobilien zypern", "impressions": 189, "clicks": 0, "avgPosition": 28.9 },
+        { "query": "luxus villa zypern kaufen", "impressions": 192, "clicks": 0, "avgPosition": 13.8 },
+        { "query": "luxus-villa zypern kaufen", "impressions": 142, "clicks": 0, "avgPosition": 14.5 },
+        { "query": "zypern villa am meer kaufen", "impressions": 162, "clicks": 0, "avgPosition": 19.2 }
+      ],
+      "pageLevelTotalsAllTime": { "impressions": 5142, "clicks": 35, "avgPosition": 17.5 }
+    },
+    "luxusvillen-zypern-ueber-1-mio": {
+      "page": "/de/luxusvillen-zypern-ueber-1-mio",
+      "role": "held -- dead price filter, own decision pending",
+      "pageBlockConfig": {
+        "blockType": "landingProjectsBlock",
+        "note": "filterPropertyType:'Villa' (no city), priceMin:1000000 and a fixed 19-ref projects array both structurally dead -- isNewStyleProjectsBlock() requires _type==='projectsSectionBlock', so this block never reaches the price-aware code path regardless of priceMin being set. Renders every Cyprus-wide villa, identical to the 3 pages merged today, despite the '1 million euro' title/slug promise."
+      },
+      "currentRenderedListingCount": {
+        "trueMatch": 130,
+        "rendered": 60,
+        "note": "Capped by MAX_FILTERED_PROJECTS=60. True match set was byte-identical to the 3 merged pages' set as of 2026-09-01 -- not merged today, held for a separate decision on the price-filter defect."
+      },
+      "queries": [
+        { "query": "villa zypern kaufen", "impressions": 189, "clicks": 0, "avgPosition": 53.9 },
+        { "query": "zypern villa kaufen", "impressions": 183, "clicks": 0, "avgPosition": 49.1 },
+        { "query": "villa in zypern kaufen", "impressions": 131, "clicks": 0, "avgPosition": 57.3 },
+        { "query": "villa auf zypern kaufen", "impressions": 152, "clicks": 0, "avgPosition": 53.2 },
+        { "query": "luxusimmobilien zypern", "impressions": 162, "clicks": 0, "avgPosition": 55.7 },
+        { "query": "luxus villa zypern kaufen", "impressions": 140, "clicks": 0, "avgPosition": 44.6 },
+        { "query": "luxus-villa zypern kaufen", "impressions": 131, "clicks": 0, "avgPosition": 44.9 },
+        { "query": "zypern villa am meer kaufen", "impressions": 147, "clicks": 0, "avgPosition": 57.1 }
+      ],
+      "pageLevelTotalsAllTime": { "impressions": 2079, "clicks": 19, "avgPosition": 43.3 }
+    },
+    "strandvillen-zypern": {
+      "page": "/de/strandvillen-zypern",
+      "role": "held -- criteria narrowing pending, own beachfront-pages pass",
+      "pageBlockConfig": {
+        "blockType": "landingProjectsBlock",
+        "refCount": 18,
+        "note": "Fixed curated list with NO filterCity/filterPropertyType/maxBeachMinutes field at all -- nothing in the config enforces that what's listed is actually a beachfront villa, just editor curation. 50% overlap (10/20) with the flagship's pre-broadening list."
+      },
+      "currentRenderedListingCount": {
+        "rendered": 18,
+        "note": "Live-verified via rendered HTML."
+      },
+      "queries": [
+        { "query": "villa zypern kaufen", "impressions": 98, "clicks": 0, "avgPosition": 69.7 },
+        { "query": "zypern villa kaufen", "impressions": 29, "clicks": 0, "avgPosition": 63.4 },
+        { "query": "villa in zypern kaufen", "impressions": 85, "clicks": 0, "avgPosition": 65.5 },
+        { "query": "villa auf zypern kaufen", "impressions": 77, "clicks": 0, "avgPosition": 61.1 },
+        { "query": "luxusimmobilien zypern", "impressions": 0, "clicks": 0, "avgPosition": null },
+        { "query": "luxus villa zypern kaufen", "impressions": 19, "clicks": 0, "avgPosition": 61.3 },
+        { "query": "luxus-villa zypern kaufen", "impressions": 19, "clicks": 0, "avgPosition": 61.3 },
+        { "query": "zypern villa am meer kaufen", "impressions": 149, "clicks": 0, "avgPosition": 58.5 }
+      ],
+      "pageLevelTotalsAllTime": { "impressions": 739, "clicks": 5, "avgPosition": 55.1 }
+    }
+  }
+}
