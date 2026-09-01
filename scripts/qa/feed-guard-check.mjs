@@ -46,9 +46,9 @@ for (const dev of DEVS) {
   for (const id of ids) {
     try { const vm = await F.getPreviewProject(dev, id); after += vm?.units.length ?? 0; } catch { /* counted as 0, same as the guard */ }
   }
-  const atRisk = await prisma.developmentUnit.count({ where: { source: "feed", development: { dev, publishStatus: { not: "archived" } } } });
+  const atRisk = await prisma.developmentUnit.count({ where: { source: "feed", status: { not: "unlisted" }, development: { dev, publishStatus: { not: "archived" } } } });
   const all = await prisma.developmentUnit.count({ where: { source: "feed", development: { dev } } });
-  const archived = all - atRisk;
+  const archivedOrUnlisted = all - atRisk;
 
   const missing = atRisk - after;
   const pct = atRisk > 0 ? missing / atRisk : 0;
@@ -61,7 +61,7 @@ for (const dev of DEVS) {
 
   console.log(
     `  ${dev.padEnd(13)} feed ${String(after).padStart(4)} | at risk ${String(atRisk).padStart(4)}` +
-    ` | archived ${String(archived).padStart(3)} | missing ${String(missing).padStart(4)} (${String(Math.round(pct * 100)).padStart(3)} %)` +
+    ` | excl ${String(archivedOrUnlisted).padStart(3)} | missing ${String(missing).padStart(4)} (${String(Math.round(pct * 100)).padStart(3)} %)` +
     `  ${blocked ? "BLOCKED" : "ok"}${!blocked && oldBlocked ? "   <- old rule would have blocked on archived units" : ""}`,
   );
 }
