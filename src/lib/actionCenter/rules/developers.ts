@@ -228,9 +228,22 @@ async function feedSyncFailures(): Promise<ActionItem[]> {
      route keys its per-developer rows ("drive-sync:<acct.name>"). */
   const driveAccounts = await prisma.developerAccount.findMany({
     where: { NOT: { driveFolderUrl: null } },
-    select: { id: true, name: true, driveFolderUrl: true },
+    select: { id: true, name: true, driveFolderUrl: true, driveSyncInterval: true },
   });
+  /* Same freeze, second cause. A developer whose scheduled drive run is turned
+     OFF (driveSyncInterval "off") is skipped by syncAllDrives, so no later
+     success can ever arrive to supersede a failure row either — exactly the
+     Dropbox situation above, reached from a different direction.
+
+     AGG (CC) is the case that surfaced it on 2026-09-01: it was moved to a
+     monthly MANUAL sync with its own route (api/cron/agg-sync, which reads
+     driveSyncInterval purely as an on/off switch), while syncAllDrives kept
+     picking it up nightly and failing on a driveFolderUrl that points at
+     agcyprus.com and is not a Drive folder at all. Turning the interval off
+     stops the nightly failures, and without this line that fix would have
+     frozen the URGENT item in place for good. */
   const dropboxNames = new Set(driveAccounts.filter((a) => isDropboxShareUrl(a.driveFolderUrl)).map((a) => a.name));
+  const syncOffNames = new Set(driveAccounts.filter((a) => a.driveSyncInterval === "off").map((a) => a.name));
   // Drive jobs are keyed "drive-sync:<acct.name>", so the name is the only
   // handle the row carries — resolve it to an id here so the item can link to
   // the developer that actually failed.
@@ -240,7 +253,8 @@ async function feedSyncFailures(): Promise<ActionItem[]> {
   for (const [job, row] of Array.from(latestByJob)) {
     if (row.ok) continue;
     const isDrive = job.startsWith("drive-sync:");
-    if (isDrive && dropboxNames.has(job.slice("drive-sync:".length))) continue;
+    const driveName = job.slice("drive-sync:".length);
+    if (isDrive && (dropboxNames.has(driveName) || syncOffNames.has(driveName))) continue;
     const devKey = job.slice(job.indexOf(":") + 1);
     items.push({
       id: `sync-fail:${job}`, severity: "URGENT", category: "DEVELOPERS",
