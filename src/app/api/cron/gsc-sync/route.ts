@@ -11,7 +11,25 @@ export const maxDuration = 300;
 // GSC's own data lags ~2 days behind real time — pulling "today" or
 // "yesterday" would just get zero/partial rows overwritten again tomorrow.
 const LAG_DAYS = 2;
-const DAILY_WINDOW_DAYS = 3; // re-upsert the last 3 available days each run
+// Widened from 3 to 30 (2026-09-01) -- GSC's own performance data is
+// provisional for days after each date and keeps revising for roughly a
+// month as Google finishes processing; a 3-day rolling window captured each
+// date once, 2 days after it occurred, and never revisited it, so every
+// historical row was permanently frozen at its immature, undercounted
+// value. 30 days re-upserts (not re-creates -- upsertOne finds the existing
+// row and updates it in place) the trailing month every run, so each date's
+// figures keep catching up to GSC's own eventual numbers instead of staying
+// stuck at day-2 values forever. Widening the window doesn't add GSC API
+// requests (searchanalytics.query groups by date within one call, so a
+// wider range is still 1 page-level + 1 query-level request/day, same as
+// before) -- it does raise DB write volume roughly 10x (day-3's ~700-1200
+// page rows + ~1200-2000 query rows scales to a full month's worth), still
+// comfortably inside this route's maxDuration=300. Depends on the
+// pre-aggregation fix (aggregateRows() in gsc/client.ts) already being
+// live: without it, a wider window means more same-key GSC-URL-variant
+// collisions per run for the partial unique index
+// (search_metrics_page_level_unique) to hit.
+const DAILY_WINDOW_DAYS = 30;
 const BACKFILL_WINDOW_DAYS = 90;
 const RETENTION_MONTHS = 16; // matches GSC's own retention
 const UPSERT_CONCURRENCY = 20;
