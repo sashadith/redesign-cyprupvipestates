@@ -1,5 +1,7 @@
 import { AboutBlock as AboutBlockType } from "@/types/homepage";
 import React, { FC } from "react";
+// Copy moved to a shared module so the redesigned renderer reads the same source.
+import { BULLETS_ICONS as icons, BULLETS_TEXT as stepsText } from "@/app/preview-landing/blockCopy";
 import styles from "./BulletsBlockComponent.module.scss";
 import Image from "next/image";
 import { BulletsBlock } from "@/types/blog";
@@ -15,49 +17,7 @@ const marginValues: Record<string, string> = {
   large: "clamp(1.25rem, 5vw, 3.75rem)",
 };
 
-const icons = [
-  "/uploads/files/ba3f4d2b7dfab88f974568c6e48bfeb05887cc62.png",
-  "/uploads/files/6b42b682c9ad5404806c7076b27c570cf6f6aaee.png",
-  "/uploads/files/df9081dc26b9a47b1f91875c3d202a8f2312ed0e.png",
-  "/uploads/files/d69fd9657c815c5f89b217219f6a11f28ef08845.png",
-  "/uploads/files/7f24ab0216a613135e82ce4af1781546f1aceadc.png",
-  "/uploads/files/ee54c07265e200b7e25ae8586e474a337c225870.png",
-];
 
-const stepsText: Record<string, string[]> = {
-  de: [
-    "340 SONNENTAGE IM JAHR",
-    "MITGLIED DER EUROPÄISCHEN UNION",
-    "EINES DER BESTEN STEUERSYSTEME",
-    "ausgezeichnete Lebensqualität",
-    "SEHR HOHER BILDUNGSSTANDARD",
-    "MOdernes gesundheitssystem",
-  ],
-  en: [
-    "340 SUNNY DAYS A YEAR",
-    "MEMBER OF THE EUROPEAN UNION",
-    "ONE OF THE BEST TAX SYSTEMS",
-    "excellent quality of life",
-    "VERY HIGH STANDARD OF EDUCATION",
-    "MODERN healthcare system",
-  ],
-  pl: [
-    "340 SŁONECZNYCH DNI W ROKU",
-    "CZŁONEK UNII EUROPEJSKIEJ",
-    "JEDEN Z NAJLEPSZYCH SYSTEMÓW KONTROLI",
-    "doskonała jakość życia",
-    "BARDZO WYSOKIE STANDARDY EDUKACYJNE",
-    "NOWOCZESNY system opieki zdrowotnej",
-  ],
-  ru: [
-    "340 СОЛНЕЧНЫХ ДНЕЙ В ГОДУ",
-    "Расположение в ЕС",
-    "Комфортная налоговая система",
-    "отличное качество жизни",
-    "ВЫСОКИЕ стандарты образования",
-    "СОВРЕМЕННАЯ система здравоохранения",
-  ],
-};
 
 const BulletsBlockComponent: FC<Props> = ({ block, lang }) => {
   const { title, marginTop, marginBottom } = block;

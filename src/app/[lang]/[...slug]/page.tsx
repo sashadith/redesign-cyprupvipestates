@@ -71,6 +71,7 @@ import "@/app/preview-projects/projects.css";
 import "@/app/preview-insights/insights.css";
 import "@/app/preview-landing/landing.css";
 import LandingBody, { isLandingPage } from "@/app/preview-landing/LandingBody";
+import ClassicBody, { isClassicPage } from "@/app/preview-landing/ClassicBody";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 import TableBlockComponent from "@/app/components/TableBlockComponent/TableBlockComponent";
 import NotFoundPageComponent from "@/app/components/NotFoundPageComponent/NotFoundPageComponent";
@@ -619,6 +620,12 @@ const SinglePage = async ({ params, searchParams }: Props) => {
            trail would be a single self-link. The related-page links are kept,
            and passed through. */
         <LandingBody page={page} lang={lang} relatedLinks={relatedPages} />
+      ) : isClassicPage(allBlocks) ? (
+        /* The classic block set — 45 pages with 45 different block orders, so
+           this body walks the blocks rather than laying out a fixed page. The
+           order matters here: a landing page's blocks are not all in the
+           classic set, so the check above always wins for that family. */
+        <ClassicBody page={page} lang={lang} relatedLinks={relatedPages} />
       ) : (
       <main>
         {page.previewImage && page.allowIntroBlock && (

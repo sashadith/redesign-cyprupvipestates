@@ -212,6 +212,82 @@
   max-width: 88ch;
 }
 
+/* ---------------------------------------------------- CLASSIC PAGE PARTS */
+/* The pages built from the classic block set have no hero block, so the title
+   opens the page on its own. */
+.pl-title { padding-top: clamp(96px, 12vh, 160px); padding-bottom: var(--s-6); }
+.pl-title__h {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-size: var(--text-h1);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  margin: 0;
+  text-wrap: balance;
+}
+
+/* "Why Cyprus" — six equal facts, no order between them, so a grid and not a
+   numbered list. */
+.pl-bullets {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--s-5);
+}
+.pl-bullets__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding: var(--s-5);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-ui);
+}
+.pl-bullets__icon { width: 44px; height: 44px; object-fit: contain; flex: none; }
+.pl-bullets__text {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+/* The process. Order carries meaning here, so the step number is the marker —
+   it is information, not decoration, which is why the bullets above have none. */
+.pl-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--s-5);
+  counter-reset: step;
+}
+.pl-steps__item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-ui);
+}
+.pl-steps__n {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--champagne);
+  font-variant-numeric: tabular-nums;
+}
+.pl-steps__icon { width: 40px; height: 40px; object-fit: contain; }
+.pl-steps__text { font-size: var(--text-sm); line-height: 1.5; color: var(--text-soft); }
+
+.pl-btnrow { display: flex; justify-content: center; }
+
+.pl-map { border-radius: var(--r-ui); overflow: hidden; border: 1px solid var(--hairline); }
+
 /* ------------------------------------------------------------ RELATED LINKS */
 /* Editor-curated links to sibling landing pages — up to fifteen of them, so
    they are set as pills rather than a wall of underlined text. Same rounded
