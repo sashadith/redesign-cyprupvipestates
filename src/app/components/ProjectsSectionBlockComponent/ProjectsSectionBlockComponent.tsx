@@ -8,7 +8,8 @@ import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
 import ProjectLink from "../ProjectLink/ProjectLink";
 import { localePrefix } from "@/lib/locale";
-import { ProjectCard, type ProjectCardData } from "@/app/preview-projects/ProjectCard";
+import { ProjectCard } from "@/app/preview-projects/ProjectCard";
+import { toCardData } from "@/app/preview-projects/toCardData";
 import { projectsStrings } from "@/app/[lang]/projects/projectsI18n";
 import { resolveCompletionYear } from "@/lib/text";
 
@@ -25,32 +26,6 @@ type Props = {
 // D()) for legacy Project rows — an object, not a plain string — same
 // {alt, asset:{url}} shape resolved via urlFor(); Development rows carry a
 // plain string already (see mapDevelopmentRowToCard). computeFilteredProjects
-// now supplies isNew/isFeatured/distances/unitsAvailable/unitsTotal too
-// (2026-08-06) — previously a narrower shape than the listing/developer
-// pages' own queries, closed to match.
-function toCardData(project: any, lang: string): ProjectCardData {
-  const kf = project.keyFeatures ?? {};
-  const img = project.previewImage;
-  return {
-    id: project._id,
-    title: project.title,
-    href: `${localePrefix(lang)}/projects/${project.slug}`,
-    image: typeof img === "string" ? img : img ? urlFor(img).url() : undefined,
-    city: kf.city ?? "",
-    price: typeof kf.price === "number" ? kf.price : Number(kf.price) || null,
-    bedrooms: kf.bedrooms ?? "",
-    area: kf.coveredArea ?? "",
-    type: kf.propertyType ?? "",
-    energy: kf.energyEfficiency ?? "",
-    completion: resolveCompletionYear(kf.completionDate),
-    isNew: !!project.isNew,
-    isFeatured: !!project.isFeatured,
-    vatApplies: kf.vatApplies ?? null,
-    distances: project.distances ?? null,
-    unitsAvailable: project.unitsAvailable,
-    unitsTotal: project.unitsTotal,
-  };
-}
 
 const marginValues: Record<string, string> = {
   small: "clamp(0.625rem, 2.5vw, 1.875rem)",

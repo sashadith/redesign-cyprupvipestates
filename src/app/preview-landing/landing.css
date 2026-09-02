@@ -1,0 +1,227 @@
+/* =====================================================================
+   Landing pages in the redesigned language (preview tree).
+
+   Deliberately thin: the type scale, palette, easing and the project card
+   itself all come from the existing redesign files this tree already imports
+   (preview-home/tokens.css, preview-projects/projects.css,
+   preview-insights/insights.css). Only what the landing family needs and
+   the redesign does not already have an equivalent for is defined here — the
+   hero's lead and button, the prose treatment, and the section rhythm. The
+   hero itself is the article hero, reused.
+
+   The page runs on data-theme="dark", the same surface as /projects and
+   /projects/[slug], so every colour below resolves from that token set.
+   ===================================================================== */
+
+.pl {
+  background: var(--sea-deep);
+  color: var(--text);
+  font-family: var(--font-body), sans-serif;
+  /* The hero image bleeds past the grid on wide screens; clip at the page
+     root rather than the section, so a position:sticky inside any child
+     keeps working (`clip`, never `hidden` — see project.css's note). */
+  overflow-x: clip;
+}
+
+.pl__wrap {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+.pl__sec { padding-block: var(--section-y); }
+.pl__sec--tight { padding-block: calc(var(--section-y) * 0.55); }
+
+/* ------------------------------------------------------------------ HERO */
+/* The hero itself is the article hero (.iart__hero in insights.css), reused
+   class for class. Only the two elements an article does not have — a lead
+   paragraph and a call to action — are styled here. */
+
+.pl-hero__lead {
+  font-size: var(--text-lead);
+  line-height: 1.55;
+  color: var(--text-soft);
+  margin: var(--s-4) 0 var(--s-6);
+  max-width: 54ch;
+}
+
+/* --------------------------------------------------------------- HEADINGS */
+.pl__h2 {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-size: var(--text-h2);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--s-6);
+  text-wrap: balance;
+}
+
+.pl__h2--center { text-align: center; }
+
+/* ----------------------------------------------------------------- PROSE */
+/* The landing prose arrives as Portable Text and is rendered with the
+   article components from preview-insights, which are written for a light
+   reading surface. These overrides put them on the dark ground without
+   forking the component set. */
+.pl-prose { font-size: var(--text-body); line-height: 1.7; color: var(--text-soft); }
+.pl-prose :where(h2) {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-size: var(--text-h3);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--text);
+  margin: var(--s-7) 0 var(--s-4);
+}
+.pl-prose :where(h3) {
+  font-size: var(--text-lead);
+  font-weight: 600;
+  color: var(--text);
+  margin: var(--s-6) 0 var(--s-3);
+}
+.pl-prose :where(p) { margin: 0 0 var(--s-4); }
+.pl-prose :where(ul, ol) { margin: 0 0 var(--s-4); padding-left: 1.35em; }
+.pl-prose :where(li) { margin-bottom: var(--s-2); }
+.pl-prose :where(a) { color: var(--champagne); text-underline-offset: 3px; }
+.pl-prose :where(strong) { color: var(--text); font-weight: 600; }
+.pl-prose :where(table) { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.pl-prose :where(th, td) { border-bottom: 1px solid var(--hairline); padding: 10px 14px 10px 0; text-align: left; }
+
+/* Wide prose children (tables) scroll inside their own box so the page
+   itself never gains a horizontal scrollbar. */
+.pl-prose__scroll { overflow-x: auto; }
+
+/* ---------------------------------------------------------- ATMOSPHERE */
+/* The project page's golden clouds, one per dark section and alternating
+   sides down the page. Same gradient and the same cloudDriftA/B keyframes —
+   they live in preview-home/tokens.css, which this tree already loads, so
+   nothing is redefined here.
+
+   Anchored per section rather than to one fixed layer behind the whole page
+   (.pp-atmos on the project page) because the FAQ sits on paper in between:
+   a continuous layer would glow through it. z-index: -1 on the cloud with
+   position: relative + z-index: 0 on the section keeps it behind that
+   section's content without leaking into the one above. The page root's
+   overflow-x: clip cuts whatever reaches past the viewport, so a cloud never
+   adds a horizontal scrollbar.
+
+   Which side a section gets is decided in the page component, not by
+   :nth-child — see the `side()` helper there for why. */
+.pl-atmos { position: relative; z-index: 0; }
+
+.pl-atmos::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 4%;
+  width: min(48vw, 560px);
+  pointer-events: none;
+  border-radius: 50%;
+  aspect-ratio: 1;
+  will-change: transform;
+  background: radial-gradient(circle, rgba(194, 154, 94, 0.16), rgba(194, 154, 94, 0) 66%);
+}
+
+.pl-atmos--left::before { left: -9%; animation: cloudDriftA 27s ease-in-out infinite alternate; }
+.pl-atmos--right::before { right: -9%; animation: cloudDriftB 31s ease-in-out infinite alternate; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pl-atmos::before { animation: none; }
+}
+
+/* -------------------------------------------------------- MARKET SNAPSHOT */
+/* A panel, not a section: the figures are evidence for the page's claim, so
+   they sit on their own raised surface rather than dissolving into the ground
+   the prose uses. Glass rather than a solid fill, matching the hero's button —
+   the clouds behind it stay visible through the panel. */
+.pl-snap {
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-ui);
+  padding: clamp(22px, 3vw, 40px);
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+}
+
+.pl-snap__h {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-size: var(--text-h3);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  margin: 0 0 var(--s-3);
+  text-wrap: balance;
+}
+
+.pl-snap__blurb {
+  font-size: var(--text-body);
+  line-height: 1.7;
+  color: var(--text-soft);
+  margin: 0 0 var(--s-6);
+  max-width: 70ch;
+}
+
+.pl-snap__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 1px;
+  margin: 0 0 var(--s-6);
+  background: var(--hairline);
+  border: 1px solid var(--hairline);
+  border-radius: calc(var(--r-ui) - 6px);
+  overflow: hidden;
+}
+
+.pl-snap__stat {
+  padding: var(--s-4) var(--s-5);
+  background: var(--glass-solid);
+  /* label above value: the label is read first, the number is the payload */
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--s-2);
+}
+
+.pl-snap__label {
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin: 0;
+}
+
+.pl-snap__value {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-size: clamp(1.35rem, 1.1rem + 0.9vw, 1.85rem);
+  font-weight: 400;
+  line-height: 1.05;
+  color: var(--champagne);
+  margin: 0;
+  /* price ranges are long — let them wrap instead of overflowing the cell */
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.pl-snap__cta { margin-bottom: var(--s-5); }
+
+.pl-snap__foot {
+  font-size: var(--text-caption);
+  line-height: 1.6;
+  color: var(--text-faint);
+  margin: 0;
+  max-width: 88ch;
+}
+
+/* --------------------------------------------------------------- PROJECTS */
+.pl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--s-5);
+}
+
+.pl-grid__empty {
+  color: var(--text-faint);
+  font-size: var(--text-sm);
+  text-align: center;
+  padding-block: var(--s-7);
+}

@@ -636,7 +636,12 @@ const SinglePage = async ({ params, searchParams }: Props) => {
           </section>
         );
       default:
-        return <p key={block._key}>Unsupported block type</p>;
+        // Render nothing. This used to emit the literal string "Unsupported
+        // block type" into the page — developer diagnostics shown to visitors,
+        // live on the three off-plan pages for as long as their
+        // offPlanSnapshotBlock had no component. An unknown block is a content
+        // gap, not something a reader should be told about.
+        return null;
     }
   };
 
