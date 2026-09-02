@@ -35,11 +35,20 @@ export default async function PublishingQueuePage({
   const isAdmin = (session?.user as any)?.role === "ADMIN";
 
   const [nonPublished, totalCount, publishedCount, approvedAreas, legacyTitleRows, confirmedPairs] = await Promise.all([
+    // Archived is excluded, not just unpublished. This queue answers "what
+    // still needs publishing", and an archived development is one the operator
+    // has deliberately taken out of circulation — offering it as "Ready to
+    // publish" invites undoing that decision by accident. Left in, it was not
+    // a corner case: on 2026-09-02 all 14 rows the Ready filter showed were
+    // archived, and nothing else was.
     prisma.development.findMany({
-      where: { publishStatus: { not: "published" } },
+      where: { publishStatus: { notIn: ["published", "archived"] } },
       include: { override: true, _count: { select: { units: true } }, units: { select: { status: true } } },
     }),
-    prisma.development.count(),
+    // Counted the same way, so the header's three figures still add up:
+    // published + ready + missing = total. Counting archived here while
+    // excluding it above would leave a permanent unexplained remainder.
+    prisma.development.count({ where: { publishStatus: { not: "archived" } } }),
     prisma.development.count({ where: { publishStatus: "published" } }),
     prisma.areaDescription.findMany({ where: { status: "approved" }, select: { areaSlug: true } }),
     // Titles only, for the counterpart heuristic — a legacy project can have
