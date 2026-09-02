@@ -63,6 +63,14 @@ import FormMinimalBlockComponent from "@/app/components/FormMinimalBlockComponen
 import HowWeWorkBlockComponent from "@/app/components/HowWeWorkBlockComponent/HowWeWorkBlockComponent";
 import BulletsBlockComponent from "@/app/components/BulletsBlockComponent/BulletsBlockComponent";
 import Breadcrumbs from "@/app/components/Breadcrumbs/Breadcrumbs";
+// The landing family renders through the redesigned body, the same split
+// /projects/[slug] uses with preview-project/ProjectPageBody: one body, two
+// routes, the site's shared chrome around it.
+import "@/app/preview-home/tokens.css";
+import "@/app/preview-projects/projects.css";
+import "@/app/preview-insights/insights.css";
+import "@/app/preview-landing/landing.css";
+import LandingBody, { isLandingPage } from "@/app/preview-landing/LandingBody";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 import TableBlockComponent from "@/app/components/TableBlockComponent/TableBlockComponent";
 import LandingIntroBlockComponent from "@/app/components/LandingPage/LandingIntroBlockComponent/LandingIntroBlockComponent";
@@ -661,6 +669,14 @@ const SinglePage = async ({ params, searchParams }: Props) => {
           }}
         />
       )}
+      {isLandingPage(allBlocks) ? (
+        /* Landing family — 105 pages built from one block sequence. The
+           breadcrumb and intro below are skipped deliberately: the redesigned
+           hero carries the title and none of these pages has a parent, so the
+           trail would be a single self-link. The related-page links are kept,
+           and passed through. */
+        <LandingBody page={page} lang={lang} relatedLinks={relatedPages} />
+      ) : (
       <main>
         {page.previewImage && page.allowIntroBlock && (
           <>
@@ -691,6 +707,7 @@ const SinglePage = async ({ params, searchParams }: Props) => {
         <SectionLinks lang={lang} links={childPages} variant="section" />
         <SectionLinks lang={lang} links={relatedPages} variant="related" />
       </main>
+      )}
       <Footer params={params} />
       <ModalBrochure lang={lang} formDocument={formDocument} />
       <WhatsAppButton lang={params.lang} />
