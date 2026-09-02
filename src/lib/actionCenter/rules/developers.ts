@@ -147,13 +147,18 @@ async function availabilityContradictions(): Promise<ActionItem[]> {
 
 // (d) Ready-to-publish batch — one aggregate item, not one per development
 // (per spec: "X developments are ready to publish"). "Ready" reuses the exact
-// same computePublishGate check as the Publishing Queue page, so the two
-// surfaces can never disagree on what "ready" means.
+// same computePublishGate check AND the same candidate set as the Publishing
+// Queue page, so the two surfaces can never disagree on what "ready" means.
+// The gate alone was not enough: this counted every non-published development,
+// archived ones included, while the queue counts only what still awaits
+// publishing. An archived development passes the gate easily — it was usually
+// published once — so the card read "12 ready to publish" while the queue it
+// linked to showed none, for a month.
 async function readyToPublishBatch(): Promise<ActionItem[]> {
   const minAge = new Date(Date.now() - READY_TO_PUBLISH_MIN_AGE_DAYS * DAY);
   const [devs, approvedAreas] = await Promise.all([
     prisma.development.findMany({
-      where: { publishStatus: { not: "published" }, createdAt: { lte: minAge } },
+      where: { publishStatus: { notIn: ["published", "archived"] }, createdAt: { lte: minAge } },
       include: { override: true, units: { select: { status: true } } },
     }),
     prisma.areaDescription.findMany({ where: { status: "approved" }, select: { areaSlug: true } }),
