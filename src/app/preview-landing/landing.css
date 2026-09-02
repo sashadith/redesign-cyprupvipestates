@@ -212,6 +212,56 @@
   max-width: 88ch;
 }
 
+/* ------------------------------------------------------------ RELATED LINKS */
+/* Editor-curated links to sibling landing pages — up to fifteen of them, so
+   they are set as pills rather than a wall of underlined text. Same rounded
+   language as the chips elsewhere in the redesign, sized for a finger rather
+   than for a caption. They sit on the light block with the FAQ. */
+.pl-links { margin-top: var(--section-y); }
+
+.pl-links__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+/* No fill. Measured on this ground, every light surface in the palette sits
+   between 1.07:1 and 1.16:1 against --paper — a filled pill cannot carve
+   itself out here, it only adds a shape nobody can see. So the edge carries
+   the outline (--hairline-strong, 1.64:1, against --hairline's 1.33:1) and
+   the text carries the reading: full ink at 13.7:1 rather than --text-soft,
+   because these are links, not captions. Set at body size for the same
+   reason. */
+.pl-links__item {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 20px;
+  border-radius: 999px;
+  border: 1px solid var(--hairline-strong);
+  background: transparent;
+  color: var(--text);
+  font-size: var(--text-body);
+  line-height: 1.3;
+  text-decoration: none;
+  transition: border-color var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease),
+              background var(--dur-sm) var(--ease);
+}
+
+.pl-links__item:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.pl-links__item:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pl-links__item { transition: none; }
+}
+
 /* --------------------------------------------------------------- PROJECTS */
 .pl-grid {
   display: grid;

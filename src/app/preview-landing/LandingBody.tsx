@@ -6,7 +6,7 @@ import { projectsStrings } from "@/app/[lang]/projects/projectsI18n";
 import LandingProjectsGrid from "./LandingProjectsGrid";
 import OffPlanSnapshot from "./OffPlanSnapshot";
 import FaqAccordion, { type FaqItem } from "@/app/preview-insights/FaqAccordion";
-import SectionLinks from "@/app/components/SectionLinks/SectionLinks";
+import { HEADINGS } from "@/app/components/SectionLinks/SectionLinks";
 import { insightsComponents } from "@/app/preview-insights/insightsBlocks";
 
 /* The landing family's body, held apart from any one route so the live
@@ -168,9 +168,22 @@ export default function LandingBody({
                 <FaqAccordion items={faqItems} />
               </div>
             )}
-            {/* SectionLinks brings its own light-surface styling, so it sits
-                inside this block rather than on the dark ground above. */}
-            {relatedLinks.length > 0 && <SectionLinks lang={lang} links={relatedLinks} variant="related" />}
+            {/* Rendered here rather than through SectionLinks: that component
+                carries its own SCSS module from the old design and stood out
+                against everything around it. The headings are imported from it
+                so the wording stays in one place. */}
+            {relatedLinks.length > 0 && (
+              <div className="pl__wrap pl-links">
+                <h2 className="pl__h2">{HEADINGS.related?.[lang] ?? HEADINGS.related.en}</h2>
+                <ul className="pl-links__list">
+                  {relatedLinks.map((l) => (
+                    <li key={l.href}>
+                      <a className="pl-links__item" href={l.href}>{l.title}</a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </main>
