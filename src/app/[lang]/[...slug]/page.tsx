@@ -73,12 +73,7 @@ import "@/app/preview-landing/landing.css";
 import LandingBody, { isLandingPage } from "@/app/preview-landing/LandingBody";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 import TableBlockComponent from "@/app/components/TableBlockComponent/TableBlockComponent";
-import LandingIntroBlockComponent from "@/app/components/LandingPage/LandingIntroBlockComponent/LandingIntroBlockComponent";
-import LandingTextFirstComponent from "@/app/components/LandingPage/LandingTextFirstComponent/LandingTextFirstComponent";
-import LandingTextSecondComponent from "@/app/components/LandingPage/LandingTextSecondComponent/LandingTextSecondComponent";
-import LandingProjectsBlockComponent from "@/app/components/LandingPage/LandingProjectsBlockComponent/LandingProjectsBlockComponent";
 import NotFoundPageComponent from "@/app/components/NotFoundPageComponent/NotFoundPageComponent";
-import LandingTextStartComponent from "@/app/components/LandingPage/LandingTextStartComponent/LandingTextStartComponent";
 import SectionLinks from "@/app/components/SectionLinks/SectionLinks";
 import { urlFor } from "@/sanity/sanity.client";
 import { abs, localizedPath, DEFAULT_OG_IMAGE } from "@/lib/seo";
@@ -572,68 +567,16 @@ const SinglePage = async ({ params, searchParams }: Props) => {
         return (
           <TableBlockComponent key={block._key} block={block as TableBlock} />
         );
-      case "landingIntroBlock":
-        return (
-          <LandingIntroBlockComponent
-            key={block._key}
-            block={block as LandingIntroBlock}
-            lang={lang}
-          />
-        );
-      case "landingTextStart":
-        return (
-          <LandingTextStartComponent
-            key={block._key}
-            lang={lang}
-            block={block as LandingTextStart}
-          />
-        );
-      case "landingTextFirst":
-        return (
-          <LandingTextFirstComponent
-            key={block._key}
-            lang={lang}
-            block={block as LandingTextFirst}
-          />
-        );
-      case "landingTextSecond":
-        return (
-          <LandingTextSecondComponent
-            key={block._key}
-            lang={lang}
-            block={block as LandingTextSecond}
-            formDocument={formDocument}
-          />
-        );
-      case "landingProjectsBlock":
-        const b = block as LandingProjectsBlock;
-        // Если поле projects отсутствует или null — считаем его пустым массивом
-        const manual = Array.isArray(b.projects) ? b.projects : [];
-        const usingManual = manual.length > 0;
-        const projectsToShow = usingManual
-          ? manual
-          : Array.isArray(b.filteredProjects)
-            ? b.filteredProjects
-            : [];
-
-        return (
-          <LandingProjectsBlockComponent
-            key={b._key}
-            block={{
-              _key: b._key,
-              _type: b._type,
-              title: b.title,
-              projects: projectsToShow,
-              // Only ever set on the live-query path -- a manual/pinned list
-              // has nothing to paginate, so no pager renders for it even if
-              // pagesEnabled happens to also be set on the same block.
-              totalPages: usingManual ? undefined : b.totalPages,
-              currentPage: usingManual ? undefined : b.currentPage,
-            }}
-            lang={lang}
-            pagePath={pagePath}
-          />
-        );
+      // landingIntroBlock, landingTextStart/First/Second and landingProjectsBlock
+      // are no longer rendered here. Any page built only from the landing family
+      // is served by LandingBody instead (see the branch below the block map),
+      // and the components that used to render them here were deleted with this
+      // change — nothing on the site reached them any more.
+      //
+      // The consequence, stated plainly: a page that mixes a landing block with
+      // classic ones stays on this renderer and now drops that landing block,
+      // the same as any unknown type. No published page does today — the only
+      // landing block left on this path is landingFaqBlock, handled below.
       case "landingFaqBlock":
         return (
           <section className="singlepage-faq-block" key={block._key}>
