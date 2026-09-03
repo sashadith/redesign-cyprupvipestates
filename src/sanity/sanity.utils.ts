@@ -1086,6 +1086,38 @@ export async function getAllDevelopersByLang(lang: string): Promise<Developer[]>
   return rows.map((d) => ({ _id: d.sanityId, _updatedAt: d.updatedAt, title: d.title, slug: slugObj(d), slugStr: d.slug, logo: D(d.logo), excerpt: d.excerpt })) as unknown as Developer[];
 }
 
+/* Published project count per developer, for the developer index.
+
+   The join runs through DeveloperAccount.developerTranslationGroupId, the same
+   link getDeveloperCatalogByLang uses. 8 of the 23 developer pages are legacy
+   rows with no linked account; they are simply absent from the map, so the
+   index can leave the number off rather than print a zero that would read as
+   "no projects" when the truth is "not tracked here". Counts only published
+   developments — a draft is not something to advertise. */
+export async function getDeveloperProjectCounts(lang: string): Promise<Record<string, number>> {
+  if (!isLocale(lang)) return {};
+  const [devs, accounts] = await Promise.all([
+    prisma.developer.findMany({
+      where: { language: lang as any, slug: { not: "" } },
+      select: { slug: true, translationGroupId: true },
+    }),
+    prisma.developerAccount.findMany({
+      where: { developerTranslationGroupId: { not: null } },
+      select: {
+        developerTranslationGroupId: true,
+        _count: { select: { developments: { where: { publishStatus: "published" } } } },
+      },
+    }),
+  ]);
+  const byGroup = new Map(accounts.map((a) => [a.developerTranslationGroupId as string, a._count.developments]));
+  const out: Record<string, number> = {};
+  for (const d of devs) {
+    const n = d.translationGroupId ? byGroup.get(d.translationGroupId) : undefined;
+    if (typeof n === "number" && n > 0) out[d.slug] = n;
+  }
+  return out;
+}
+
 async function _getDeveloperByLang(lang: string, slug: string): Promise<Developer | null> {
   if (!isLocale(lang)) return null;
   const row = await prisma.developer.findFirst({ where: { language: lang as any, slug } });

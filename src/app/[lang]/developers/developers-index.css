@@ -1,0 +1,147 @@
+/* =====================================================================
+   Developer index — the redesigned overview.
+
+   Thin on purpose: the dark ground, type scale, gold clouds and the hero's
+   shimmer stripe all come from files this route already imports
+   (preview-home/tokens.css, developer-catalog.css). What is here is the card
+   grid, which the detail page has no equivalent for.
+
+   The cards echo the detail page's signboard rather than cloning it: that
+   sign is 460px wide and built for a hero: twenty-three of them in a grid
+   would be a wall of posts. So the plate — the lit surface the logo sits on —
+   is kept, and the posts are dropped. Same material, right scale.
+   ===================================================================== */
+
+.devx__hero { padding-top: clamp(120px, 15vh, 190px); padding-bottom: clamp(28px, 4vw, 56px); }
+
+.devx__title {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-size: var(--text-h1);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  color: var(--ivory);
+  margin: 0;
+  text-wrap: balance;
+}
+
+/* Doubled class on purpose: .shimmer sets `margin: 0` and carries the same
+   single-class weight, and Next does not guarantee that this file's rules land
+   after tokens.css. Without the extra specificity the stripe sat on the
+   title's descenders — which is exactly what it did. */
+.devx__stripe.devx__stripe {
+  margin: clamp(32px, 3.7vw, 54px) 0 clamp(26px, 2.9vw, 42px);
+  /* Full container width: the stripe reads as a rule across the page rather
+     than an underline sized to the title. .shimmer's own max-width is what
+     held it short, hence the override here too. */
+  max-width: none;
+  background: linear-gradient(90deg, var(--champagne), transparent);
+}
+
+.devx__lead {
+  font-size: var(--text-lead);
+  line-height: 1.55;
+  color: var(--text-soft);
+  margin: 0;
+  max-width: 52ch;
+}
+
+/* ------------------------------------------------------------------ GRID */
+.devx__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: clamp(16px, 1.8vw, 26px);
+  padding-bottom: var(--section-y);
+  list-style: none;
+  margin: 0;
+}
+
+.devx__card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-ui);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color var(--dur-sm) var(--ease), transform var(--dur-sm) var(--ease-soft),
+              box-shadow var(--dur-sm) var(--ease);
+}
+
+.devx__card:hover {
+  border-color: var(--champagne);
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px -22px rgba(0, 0, 0, 0.7);
+}
+
+.devx__card:focus-visible { outline: 2px solid var(--champagne); outline-offset: 3px; }
+
+/* The plate: the same lit, slightly warm surface the signboard uses, so the
+   logo is read as mounted rather than pasted on the card. */
+.devx__plate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 132px;
+  padding: var(--s-5);
+  background: linear-gradient(180deg, rgba(239, 233, 219, 0.10), rgba(239, 233, 219, 0.04));
+  border-bottom: 1px solid var(--hairline);
+}
+
+/* Logos vary wildly in proportion — contain plus a generous box keeps every
+   one centred and undistorted, the same note developer-catalog.css makes. */
+.devx__logo { max-width: 170px; max-height: 66px; width: auto; height: auto; object-fit: contain; }
+
+/* No logo on file: the initials stand in rather than an empty plate. */
+.devx__initials {
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-size: 1.7rem;
+  letter-spacing: 0.06em;
+  color: var(--champagne);
+}
+
+.devx__body { display: flex; flex-direction: column; gap: var(--s-2); padding: var(--s-5); flex: 1 1 auto; }
+
+.devx__name {
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--text-body);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+  margin: 0;
+}
+
+.devx__excerpt {
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text-soft);
+  margin: 0;
+  /* Excerpts run to very different lengths; three lines keeps the grid even. */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Project count. Shown only where the developer is linked to a synced
+   account — 8 of the 23 are not, and printing "0 projects" for those would
+   state something false rather than simply unknown. */
+.devx__count {
+  margin: auto 0 0;
+  padding-top: var(--s-3);
+  font-size: var(--text-caption);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.devx__count b { color: var(--champagne); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .devx__card { transition: none; }
+  .devx__card:hover { transform: none; }
+}
