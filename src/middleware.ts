@@ -29,6 +29,25 @@ const ALL_LOCALES = ["en", "de", "pl", "ru"];
 // this 301, a two-hop redirect for anyone who reaches the page via its bare
 // leaf slug. haeuser-in-limassol-kaufen is deliberately NOT here — held out,
 // its untyped-Limassol duplication is a separate question.
+//
+// AFTER ADDING AN ENTRY, clear the links that still point at the merged page.
+// Other singlepages keep it in relatedLandingPages, and those render as real
+// links to a URL that now 301s — the site links through a redirect to a page
+// that already links back. Nothing warns about it: the renderer filters on
+// status: PUBLISHED, and a merged page is still published, so the entry stays
+// valid-looking forever.
+//
+// Found on 2026-09-03, sweeping the rendered links of all 152 landing pages:
+// ten such links had accumulated — six on /de/luxusvillen-in-zypern itself,
+// pointing back at pages merged into it, and four spread over
+// immobilien-in-limassol, meerblick-immobilien-limassol,
+// haeuser-in-limassol-kaufen and haeuser-in-zypern. All removed; the sweep now
+// reports 809 links across 136 targets, every one of them 200.
+//
+// The check is a sweep, not a query: read relatedLandingPages from the DB and
+// you get the stored refs, which resolve to canonical paths only at render
+// time — asking the database gives false positives in both directions. Fetch
+// the pages and test the hrefs they actually emit.
 const DE_LANDING_MERGES: Record<string, string> = {
   "grosse-villen-zypern": "/de/luxusvillen-in-zypern",
   "haeuser-auf-zypern": "/de/luxusvillen-in-zypern",
