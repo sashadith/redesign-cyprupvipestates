@@ -23,7 +23,8 @@ const fmtPrice = (p?: number) =>
 const Card: React.FC<{ project: FeaturedProject; lang: string }> = ({ project, lang }) => {
   const t = homeStrings(lang);
   const img = safeUrl(project.previewImage);
-  const url = `${localePrefix(lang)}/projects/${project.slug}`;
+  // hrefPath: legacy project folded into a developer overview.
+  const url = `${localePrefix(lang)}${project.hrefPath ?? `/projects/${project.slug}`}`;
   const { price } = project.keyFeatures || {};
 
   return (

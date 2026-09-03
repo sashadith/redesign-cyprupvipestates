@@ -117,6 +117,9 @@ const projectCardString = (p: AnyRow) => ({
   title: p.title,
   excerpt: p.excerpt,
   slug: p.slug, // string
+  // Set only when the card must NOT link at /projects/{slug} — a legacy project
+  // folded into a developer overview. Locale-less; callers prefix it themselves.
+  hrefPath: p.hrefPath as string | undefined,
   previewImage: D(p.previewImage),
   images: p.images ? D(p.images) : undefined,
   keyFeatures: p.keyFeatures,
@@ -179,9 +182,34 @@ async function resolveProjectRefs(refs: any[], lang: string) {
       .filter((entry): entry is [string, string] => !!entry[1])
   );
 
+  // Not every legacy project was superseded by another project: 74 rows redirect
+  // to a DEVELOPER overview instead (the AGG/BBF/Olias/Aristo/Inex/Island Blue
+  // imports, whose individual listings were folded into the developer page). The
+  // slug rewrite above can't express that — its regex only reads a /projects/
+  // segment — so those cards kept the stale project slug and sent visitors
+  // through a 308 to the developer page. Measured 2026-09-03: 225 pinned cards
+  // across 68 published pages. Carry the redirect's own path instead, stripped
+  // of origin and locale prefix so the card can be re-localized at render time
+  // (a de card must not link at an /en path just because the redirect row was
+  // written for en).
+  const hrefPathById = new Map(
+    redirects
+      .filter((r) => !/\/projects\/[^/?#]+/.test(r.targetPath))
+      .map((r) => {
+        const path = r.targetPath.replace(/^https?:\/\/[^/]+/, "");
+        return [r.projectId, path.replace(/^\/(?:en|de|pl|ru)(?=\/)/, "")] as const;
+      })
+      .filter((entry): entry is [string, string] => entry[1].startsWith("/"))
+  );
+
   return mapped.map((p) => {
     const canonicalSlug = targetSlugById.get(p.id);
-    return projectCardString(canonicalSlug ? { ...p, slug: canonicalSlug } : p);
+    const hrefPath = hrefPathById.get(p.id);
+    return projectCardString({
+      ...p,
+      ...(canonicalSlug ? { slug: canonicalSlug } : null),
+      ...(hrefPath ? { hrefPath } : null),
+    });
   });
 }
 

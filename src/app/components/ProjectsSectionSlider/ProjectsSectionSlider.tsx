@@ -31,7 +31,8 @@ const ProjectsSectionSlider: FC<Props> = ({ block, lang }) => {
       <div className={styles.sliderBlog}>
         <SliderMain>
           {projects.map((proj) => {
-            const href = `${basePath}/projects/${proj.slug}`;
+            // hrefPath: legacy project folded into a developer overview.
+            const href = `${basePath}${proj.hrefPath ?? `/projects/${proj.slug}`}`;
 
             return (
               <BlogSlide
