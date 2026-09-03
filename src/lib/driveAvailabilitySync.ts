@@ -824,6 +824,21 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
 const intervalMs = (i: string | null | undefined) =>
   i === "off" ? Infinity : i === "weekly" ? 7 * 864e5 : i === "2day" ? 2 * 864e5 : 864e5;
 
+// Deliberately standalone rather than importing from ./sharepoint: that module
+// is part of the Korantina connector, which is not in the repository (untracked
+// locally, absent from every release — the /api/cron/korantina-sync route
+// returns 404 in production as of 2026-09-03). This guard must work whether or
+// not that connector ever lands.
+function isSharePointFolderUrl(url: string | null | undefined): boolean {
+  if (!url) return false;
+  try {
+    const h = new URL(url).hostname.toLowerCase();
+    return h.endsWith(".sharepoint.com") || h === "onedrive.live.com" || h === "1drv.ms";
+  } catch {
+    return false;
+  }
+}
+
 export async function syncAllDrives(force = false, content = false): Promise<{ developer: string; result: DriveSyncResult }[]> {
   const devs = await prisma.developerAccount.findMany({
     where: { NOT: { driveFolderUrl: null } },
@@ -840,6 +855,18 @@ export async function syncAllDrives(force = false, content = false): Promise<{ d
     // "Could not read a folder id from the Drive link." every scheduled run
     // (confirmed root cause of Kuutio's 2026-08-14 digest failure).
     if (isDropboxShareUrl(d.driveFolderUrl)) continue;
+    // Same story, second provider. Korantina Homes is on SharePoint with its
+    // own route (api/cron/korantina-sync, 03:20 daily) and its own sync
+    // (sharepointAvailabilitySync); this generic 04:30 run collected it anyway
+    // and failed on folderIdFromUrl every time it came due — reported
+    // 2026-09-03, one day after the account fell due again.
+    //
+    // Note this must NOT be solved the way AGG was, by setting
+    // driveSyncInterval to "off": writeKorantinaDraft honours that same field
+    // (respectInterval), so turning it off would silence the sync that
+    // actually works. Skipping by URL leaves the interval free to mean what it
+    // means for the real owner of this developer.
+    if (isSharePointFolderUrl(d.driveFolderUrl)) continue;
     // Respect the per-developer interval for the scheduled (non-forced) availability run.
     if (!force && !content) {
       const iv = intervalMs(d.driveSyncInterval);
