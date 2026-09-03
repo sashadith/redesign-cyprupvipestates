@@ -62,6 +62,21 @@ const DE_LANDING_MERGES: Record<string, string> = {
   "villen-zypern-aufenthaltstitel-provisionsfrei": "/de/luxusvillen-in-zypern",
   "luxusvillen-in-zypern/villen-in-paphos": "/de/luxusvillen-in-zypern",
   "villen-in-paphos": "/de/luxusvillen-in-zypern",
+  /* Not a confirmed duplicate by this table's usual test — that test compares
+     live queries, and these two pages have hand-pinned lists instead, 8 of 11
+     shared. What decided it is search behaviour: over August the page drew 346
+     impressions at position 24.9 and NOT ONE query of its own. Every query it
+     appeared for, /de/luxusvillen-in-zypern also appeared for, and ranked
+     better. Its three unique pins — City Landmark, Infinity, Royal Bay Resort
+     — belong on the target before this goes live, or they lose their only
+     German placement.
+
+     Deliberately NOT merged alongside it: /de/strandvillen-zypern. It looks
+     like the same case (44% shared pins, loses its queries to the same page)
+     but the demand behind it is real — 803 impressions across 17 beach/sea
+     queries since June, 412 on "zypern villa am meer kaufen" alone. There the
+     answer is to make the specialist win its own term, not to remove it. */
+  "luxusimmobilien-auf-zypern": "/de/luxusvillen-in-zypern",
 };
 
 // Retired DE blog articles — same shape/mechanism as DE_LANDING_MERGES above
