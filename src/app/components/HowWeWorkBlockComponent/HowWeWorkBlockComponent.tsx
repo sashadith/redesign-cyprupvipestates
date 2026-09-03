@@ -1,4 +1,6 @@
 import React, { FC } from "react";
+// Copy moved to a shared module so the redesigned renderer reads the same source.
+import { STEPS_ICONS as icons, STEPS_TEXT as stepsText } from "@/app/preview-landing/blockCopy";
 import styles from "./HowWeWorkBlockComponent.module.scss";
 import { HowWeWorkBlock as HowWeWorkBlockType } from "@/types/blog";
 import Image from "next/image";
@@ -16,49 +18,7 @@ const marginValues: Record<string, string> = {
   large: "clamp(1.25rem, 5vw, 3.75rem)",
 };
 
-const icons = [
-  "/uploads/images/010e554d53e8a2f99f7d779b88ad4802ea879931-500x500.svg",
-  "/uploads/images/ea98b4b1814fb2a981c5db0f004a959d3df14989-500x500.svg",
-  "/uploads/images/34191203d1e6add0437bc90f08afd32a2bb00102-500x500.svg",
-  "/uploads/images/fddcb74dc9aa266cf6c1fa5bbafddc4f09f037ad-500x500.svg",
-  "/uploads/images/01fd70faab96a48e121b9588c547e3a711cce430-500x500.svg",
-  "/uploads/images/b2beb1ac8dbcd8bbcc7ce08387c37268c8c162be-500x500.svg",
-];
 
-const stepsText: Record<string, string[]> = {
-  de: [
-    "Sie kontaktieren uns über das Formular auf unserer Website",
-    "Wir melden uns bei Ihnen und gehen Ihre Wünsche durch",
-    "Sie planen mit uns zusammen Ihre Reise nach Zypern",
-    "Wir besichtigen gemeinsam alle passenden Projekte",
-    "Sie unterzeichnen den Kaufvertrag mit dem Bauunternehmer",
-    "Nach Fertigstellung übergeben wir Ihnen feierlich die Schlüssel",
-  ],
-  en: [
-    "You contact us via the form on our website",
-    "We will contact you and discuss your requirements",
-    "You plan your trip to Cyprus with us",
-    "We visit all suitable projects together",
-    "You sign the purchase agreement with the developer",
-    "After completion, we will ceremoniously hand over the keys to you",
-  ],
-  pl: [
-    "Skontaktuj się z nami za pomocą formularza na naszej stronie internetowej",
-    "Wizyta na mieSkontaktujemy się z Tobą i omówimy Twoje życzeniajscu",
-    "Zaplanuj z nami swoją podróż na Cypr",
-    "Wspólnie odwiedzimy wszystkie odpowiednie projekty",
-    "Podpisujesz umowę kupna z wykonawcą",
-    "Po zakończeniu prac uroczyście przekażemy Państwu klucze",
-  ],
-  ru: [
-    "Вы связываетесь с нами через форму на нашем сайте",
-    "Мы быстро ответим вам и обсудим ваши пожелания",
-    "Вы планируете свою поездку на Кипр вместе с нами",
-    "Мы посетим все подходящие объекты вместе",
-    "Вы подписываете договор купли-продажи с подрядчиком",
-    "После завершения строительства мы торжественно передадим вам ключи",
-  ],
-};
 
 const HowWeWorkBlockComponent: FC<Props> = ({ block, lang }) => {
   const { title, marginTop, marginBottom } = block;

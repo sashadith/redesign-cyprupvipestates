@@ -71,6 +71,7 @@ import "@/app/preview-projects/projects.css";
 import "@/app/preview-insights/insights.css";
 import "@/app/preview-landing/landing.css";
 import LandingBody, { isLandingPage } from "@/app/preview-landing/LandingBody";
+import ClassicBody, { isClassicPage } from "@/app/preview-landing/ClassicBody";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 import TableBlockComponent from "@/app/components/TableBlockComponent/TableBlockComponent";
 import NotFoundPageComponent from "@/app/components/NotFoundPageComponent/NotFoundPageComponent";
@@ -600,7 +601,12 @@ const SinglePage = async ({ params, searchParams }: Props) => {
     <>
       <Header params={params} translations={translations} />
       <StructuredData {...structuredDataProps} />
-      {faqItems.length > 0 && (
+      {/* One FAQPage per URL. ClassicBody renders the homepage's Faq section,
+          which emits its own — declaring a second entity for the same page put
+          two FAQPage blocks on it, which is invalid rather than merely
+          redundant. Gating on the body is safe: a page with no FAQ block gives
+          this branch an empty faqItems anyway. */}
+      {faqItems.length > 0 && !isClassicPage(allBlocks) && (
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -612,6 +618,43 @@ const SinglePage = async ({ params, searchParams }: Props) => {
           }}
         />
       )}
+      {/* The redesigned bodies drop the visual breadcrumb — every one of these
+          pages is a root-level page, so the trail was Home → itself. The
+          BreadcrumbList it also carried was a real signal though, and losing it
+          silently on 150 pages was a regression; it is emitted as JSON-LD here
+          instead, without putting the trail back on screen. */}
+      {(isLandingPage(allBlocks) || isClassicPage(allBlocks)) && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                { "@type": "ListItem", position: 1, name: "Home", item: abs(localizedPath(lang, [])) },
+                /* 18 of these pages sit under a parent, and their canonical URL
+                   is the nested one — a two-item trail would have described the
+                   wrong hierarchy for them. The other 132 are root-level and
+                   get the two items. */
+                ...(page.parentPage?.slug?.[lang]?.current
+                  ? [{
+                      "@type": "ListItem",
+                      position: 2,
+                      name: page.parentPage.title ?? "",
+                      item: abs(localizedPath(lang, [page.parentPage.slug[lang].current])),
+                    }]
+                  : []),
+                {
+                  "@type": "ListItem",
+                  position: page.parentPage?.slug?.[lang]?.current ? 3 : 2,
+                  name: page.title,
+                  item: abs(pagePath),
+                },
+              ],
+            }).replace(/</g, "\\u003c"),
+          }}
+        />
+      )}
       {isLandingPage(allBlocks) ? (
         /* Landing family — 105 pages built from one block sequence. The
            breadcrumb and intro below are skipped deliberately: the redesigned
@@ -619,6 +662,12 @@ const SinglePage = async ({ params, searchParams }: Props) => {
            trail would be a single self-link. The related-page links are kept,
            and passed through. */
         <LandingBody page={page} lang={lang} relatedLinks={relatedPages} />
+      ) : isClassicPage(allBlocks) ? (
+        /* The classic block set — 45 pages with 45 different block orders, so
+           this body walks the blocks rather than laying out a fixed page. The
+           order matters here: a landing page's blocks are not all in the
+           classic set, so the check above always wins for that family. */
+        <ClassicBody page={page} lang={lang} relatedLinks={relatedPages} />
       ) : (
       <main>
         {page.previewImage && page.allowIntroBlock && (

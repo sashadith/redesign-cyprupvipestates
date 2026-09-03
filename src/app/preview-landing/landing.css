@@ -32,10 +32,30 @@
 .pl__sec { padding-block: var(--section-y); }
 .pl__sec--tight { padding-block: calc(var(--section-y) * 0.55); }
 
+/* A running-text section needs less air than a feature one: the blocks inside
+   already carry their own vertical margins, so the full section rhythm on top
+   of them left a broad empty band above and below the prose. */
+.pl__sec--flow { padding-block: clamp(20px, 2.4vw, 40px); }
+
+/* And the doubling itself: the first and last block in a section contribute
+   their own outer margin to the section's padding. Collapsed, so the section
+   alone decides the distance to its neighbours. */
+.pl-flow > :first-child { margin-top: 0; }
+.pl-flow > :last-child { margin-bottom: 0; }
+
 /* ------------------------------------------------------------------ HERO */
 /* The hero itself is the article hero (.iart__hero in insights.css), reused
    class for class. Only the two elements an article does not have — a lead
    paragraph and a call to action — are styled here. */
+
+/* Title, stripe, lead — the same three-part opening the homepage sections use.
+   The stripe needs air on both sides to read as a divider rather than an
+   underline, which is also the space the title was asking for. */
+.pl-hero__stripe {
+  margin: clamp(28px, 3.5vw, 48px) 0 clamp(24px, 3vw, 40px);
+  max-width: min(100%, 560px);
+  background: linear-gradient(90deg, var(--champagne), transparent);
+}
 
 .pl-hero__lead {
   font-size: var(--text-lead);
@@ -44,6 +64,8 @@
   margin: var(--s-4) 0 var(--s-6);
   max-width: 54ch;
 }
+/* Where the stripe carries the gap, the lead does not need its own. */
+.pl-hero__stripe + .pl-hero__lead { margin-top: 0; }
 
 /* --------------------------------------------------------------- HEADINGS */
 .pl__h2 {
@@ -212,6 +234,31 @@
   max-width: 88ch;
 }
 
+/* ---------------------------------------------------- CLASSIC PAGE PARTS */
+.pl-btnrow { display: flex; justify-content: center; }
+
+.pl-map { border-radius: var(--r-ui); overflow: hidden; border: 1px solid var(--hairline); }
+
+/* --------------------------------------------- BORROWED HOME SECTIONS */
+/* The homepage sections carry a 540px min-height with their content centred
+   inside it. On the homepage a paragraph of description fills that; the
+   landing pages pass none, so the same box left a broad empty band above and
+   below every medallion row. Scoped to .pl, so the homepage is untouched. */
+.pl .about { min-height: 0; }
+
+/* The gap under the gold stripe is carried by .about__desc's own margin on the
+   homepage. These pages have no description, so the stripe came to rest
+   directly on the medallions. The spacing is put back where the paragraph
+   would have been, rather than by re-introducing an empty paragraph. */
+.pl .about__stripe + .about__bullets { margin-top: var(--s-7); }
+
+/* doubleTextBlock arrives through the article renderer, which sets it in two
+   columns from 700px up. That reads on a narrow article column; across the
+   full width of a landing page it splits one continuous argument into two
+   short stacks the eye has to jump between. One column here, article and blog
+   untouched. */
+.pl .iart__double { grid-template-columns: 1fr; }
+
 /* ------------------------------------------------------------ RELATED LINKS */
 /* Editor-curated links to sibling landing pages — up to fifteen of them, so
    they are set as pills rather than a wall of underlined text. Same rounded
@@ -263,6 +310,11 @@
 }
 
 /* --------------------------------------------------------------- PROJECTS */
+/* Adjacent siblings collapse their margins to the larger of the two, so the
+   distance is set here rather than on the heading — .pl__h2's own 32px bottom
+   margin would otherwise win and the cards sat too close under the title. */
+.pl__h2 + .pl-grid { margin-top: clamp(40px, 5vw, 72px); }
+
 .pl-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

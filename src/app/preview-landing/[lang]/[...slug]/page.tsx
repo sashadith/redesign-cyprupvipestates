@@ -9,7 +9,8 @@ import type { Translation } from "@/types/homepage";
 
 import Nav from "@/app/preview-home/sections/Nav";
 import Footer from "@/app/preview-home/sections/Footer";
-import LandingBody from "../../LandingBody";
+import LandingBody, { isLandingPage } from "../../LandingBody";
+import ClassicBody, { isClassicPage } from "../../ClassicBody";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +44,22 @@ export default async function PreviewLandingPage({ params }: Params) {
   return (
     <>
       <Nav lang={lang} translations={translations} homeHref={localizedHref(lang)} />
-      <LandingBody page={page} lang={lang} />
+      {isLandingPage(page.contentBlocks) ? (
+        <LandingBody page={page} lang={lang} />
+      ) : isClassicPage(page.contentBlocks) ? (
+        <ClassicBody page={page} lang={lang} />
+      ) : (
+        /* Neither body covers every block on this page — say so here rather
+           than render a page with holes in it. */
+        <main className="pl" data-theme="dark">
+          <div className="pl__wrap pl-title">
+            <h1 className="pl-title__h">{page.title}</h1>
+            <p className="pl-hero__lead">
+              This page uses a block type neither body renders yet.
+            </p>
+          </div>
+        </main>
+      )}
       <Footer lang={lang} />
     </>
   );
