@@ -327,3 +327,67 @@
   text-align: center;
   padding-block: var(--s-7);
 }
+
+/* ------------------------------------------------------------------- 404 */
+/* The not-found page reuses the article hero wholesale (iart__hero--image,
+   the shimmer stripe, .btn--glass). Only the numeral above the headline and
+   the button's gap are specific to it. */
+.nf__code {
+  margin: 0 0 var(--s-3);
+  font-family: var(--font-display), var(--font-display-cyr), serif;
+  font-size: clamp(56px, 9vw, 128px);
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--champagne);
+  opacity: 0.65;
+  text-shadow: 0 2px 40px rgba(8, 21, 18, 0.5);
+}
+
+/* The numeral already fills the top of the hero, so the headline sits closer
+   to it than an article title would to the top of its own hero. */
+.nf .iart__hero-inner { padding-bottom: clamp(48px, 7vw, 96px); }
+.nf__title { max-width: 14ch; }
+
+.nf__cta { margin-top: clamp(24px, 3vw, 40px); }
+
+/* The 404 art is an illustration at 800x605, not a photographic cover. The
+   inherited rule (object-fit: cover + scale(1.06) across a full-bleed 86vh
+   hero) both cropped it and blew it up well past its native size. Show it
+   whole on its own half of the hero, never wider than the file actually is,
+   and give the copy the other half. */
+.nf .iart__hero--image { min-height: clamp(520px, 74vh, 760px); }
+.nf .iart__hero { justify-content: center; padding-top: clamp(104px, 13vh, 168px); }
+
+.nf .iart__hero-bg { left: auto; width: min(52%, 800px); }
+.nf .iart__hero-bg img { object-fit: contain; object-position: center right; transform: none; }
+
+/* The scrim is a child of the (now half-width) bg, so it only has to fade the
+   illustration's left edge into the hero's own --sea-deep ground. */
+.nf .iart__hero-scrim {
+  background:
+    linear-gradient(90deg, var(--sea-deep) 0%, rgba(8, 21, 18, 0.55) 20%, rgba(8, 21, 18, 0) 52%),
+    linear-gradient(180deg, rgba(8, 21, 18, 0) 62%, rgba(8, 21, 18, 0.5) 88%, var(--sea-deep) 100%);
+}
+
+/* Keep the copy clear of the artwork. */
+.nf .nf__code,
+.nf .nf__title,
+.nf .pl-hero__stripe,
+.nf .pl-hero__lead,
+.nf .nf__cta { max-width: min(560px, 46%); }
+
+/* Too narrow to sit side by side: the artwork drops behind the copy as a
+   backdrop rather than shrinking into illegibility. */
+@media (max-width: 900px) {
+  .nf .iart__hero-bg { left: 0; width: 100%; opacity: 0.42; }
+  .nf .iart__hero-bg img { object-position: center; }
+  .nf .iart__hero-scrim {
+    background: linear-gradient(180deg, rgba(8, 21, 18, 0.5) 0%, rgba(8, 21, 18, 0.2) 40%, rgba(8, 21, 18, 0.8) 84%, var(--sea-deep) 100%);
+  }
+  .nf .nf__code,
+  .nf .nf__title,
+  .nf .pl-hero__stripe,
+  .nf .pl-hero__lead,
+  .nf .nf__cta { max-width: 100%; }
+}
