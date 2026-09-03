@@ -8,6 +8,20 @@ import { developerGroupExists } from "@/lib/developerLink";
 import { isDropboxShareUrl } from "@/lib/dropbox";
 import type { ActionItem } from "../types";
 
+// Standalone rather than imported from lib/sharepoint: that module belongs to
+// the Korantina connector, which is not in the repository (untracked locally,
+// absent from every release — /api/cron/korantina-sync returns 404 in
+// production as of 2026-09-03). This must work whether or not it ever lands.
+function isSharePointHost(url: string | null | undefined): boolean {
+  if (!url) return false;
+  try {
+    const h = new URL(url).hostname.toLowerCase();
+    return h.endsWith(".sharepoint.com") || h === "onedrive.live.com" || h === "1drv.ms";
+  } catch {
+    return false;
+  }
+}
+
 const DAY = 86_400_000;
 const SOLD_OUT_ARCHIVE_REMINDER_DAYS = 60;
 const NEW_DEV_WINDOW_DAYS = 7;
@@ -247,7 +261,14 @@ async function feedSyncFailures(): Promise<ActionItem[]> {
      agcyprus.com and is not a Drive folder at all. Turning the interval off
      stops the nightly failures, and without this line that fix would have
      frozen the URGENT item in place for good. */
-  const dropboxNames = new Set(driveAccounts.filter((a) => isDropboxShareUrl(a.driveFolderUrl)).map((a) => a.name));
+  /* Third route to the same freeze: a SharePoint developer is skipped by
+     syncAllDrives too (Korantina Homes, 2026-09-03), so its last failure row
+     can never be superseded either. Suppressed for the same reason and by the
+     same rule as Dropbox — the developer has its own sync that reports its own
+     health. */
+  const dropboxNames = new Set(
+    driveAccounts.filter((a) => isDropboxShareUrl(a.driveFolderUrl) || isSharePointHost(a.driveFolderUrl)).map((a) => a.name),
+  );
   const syncOffNames = new Set(driveAccounts.filter((a) => a.driveSyncInterval === "off").map((a) => a.name));
   // Drive jobs are keyed "drive-sync:<acct.name>", so the name is the only
   // handle the row carries — resolve it to an id here so the item can link to
