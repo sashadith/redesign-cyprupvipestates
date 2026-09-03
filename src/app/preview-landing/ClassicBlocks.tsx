@@ -1,12 +1,14 @@
 import React from "react";
 import { renderInsightsBlock } from "@/app/preview-insights/insightsBlocks";
-import FormMinimalBlockComponent from "@/app/components/FormMinimalBlockComponent/FormMinimalBlockComponent";
+import Form from "@/app/preview-home/sections/Form";
+import HowWeWorkSection from "@/app/preview-home/sections/HowWeWork";
+import FaqSection from "@/app/preview-home/sections/Faq";
 import LandingProjectsGrid from "./LandingProjectsGrid";
 import FaqAccordion, { type FaqItem } from "@/app/preview-insights/FaqAccordion";
 import { insightsComponents } from "@/app/preview-insights/insightsBlocks";
 import { PortableText } from "@portabletext/react";
 import PropertyMap from "@/app/preview-project/PropertyMap";
-import { BULLETS_ICONS, BULLETS_TEXT, STEPS_ICONS, STEPS_TEXT } from "./blockCopy";
+import { BULLETS_ICONS, BULLETS_TEXT, STEPS_ICONS, STEPS_TEXT, FAQ_TITLE } from "./blockCopy";
 
 /* Renderers for the block set the remaining 45 pages are built from.
 
@@ -20,7 +22,7 @@ import { BULLETS_ICONS, BULLETS_TEXT, STEPS_ICONS, STEPS_TEXT } from "./blockCop
    the body decides section rhythm and background, a renderer only draws its
    own content. */
 
-const DELEGATED = new Set(["textContent", "doubleTextBlock", "faqBlock", "accordionBlock", "tableBlock", "imageFullBlock"]);
+const DELEGATED = new Set(["textContent", "doubleTextBlock", "tableBlock", "imageFullBlock"]);
 
 /** Every type this module can draw. A page qualifies for the redesigned body
     only when all of its blocks are in here — same rule as the landing family. */
@@ -28,6 +30,8 @@ export const CLASSIC_RENDERED = new Set(
   // Array.from rather than a spread: the build targets a version where
   // iterating a Set directly needs downlevelIteration.
   Array.from(DELEGATED).concat([
+    "faqBlock",
+    "accordionBlock",
     "projectsSectionBlock",
     "formMinimalBlock",
     "bulletsBlock",
@@ -44,48 +48,22 @@ export function isClassicPage(blocks: any[]): boolean {
   return types.every((t) => CLASSIC_RENDERED.has(t));
 }
 
-/* The six-item "why Cyprus" grid. Its items are not in the CMS — the block
-   carries a title and nothing else — so the copy comes from blockCopy, the
-   same source the old component now reads. */
-function Bullets({ block, lang }: { block: any; lang: string }) {
-  const items = BULLETS_TEXT[lang] ?? BULLETS_TEXT.en;
-  return (
-    <>
-      {block.title && <h2 className="pl__h2 pl__h2--center">{block.title}</h2>}
-      <ul className="pl-bullets">
-        {items.map((text, i) => (
-          <li className="pl-bullets__item" key={i}>
-            {BULLETS_ICONS[i] && <img className="pl-bullets__icon" src={BULLETS_ICONS[i]} alt="" loading="lazy" />}
-            <span className="pl-bullets__text">{text}</span>
-          </li>
-        ))}
-      </ul>
-    </>
-  );
+/* Both fixed-content blocks map onto the homepage's HowWeWork section — the
+   gold medallion row — because that is exactly their shape: an icon and a line
+   of text, six times. Their items are not in the CMS (the block carries only a
+   title), so the copy comes from blockCopy, and the section is handed the same
+   structure the homepage gives it. */
+function asStepsBlock(title: string, icons: string[], texts: string[]) {
+  return {
+    _key: "steps",
+    _type: "howWeWorkBlock" as const,
+    title,
+    description: "",
+    steps: texts.map((text, i) => ({ _key: String(i), _type: "steps" as const, icon: icons[i] as any, text })),
+  };
 }
 
-/* The process. Unlike the bullets, order carries meaning here — these are
-   consecutive steps — so they are numbered, and the number is the marker
-   rather than a decorative counter. */
-function HowWeWork({ block, lang }: { block: any; lang: string }) {
-  const items = STEPS_TEXT[lang] ?? STEPS_TEXT.en;
-  return (
-    <>
-      {block.title && <h2 className="pl__h2 pl__h2--center">{block.title}</h2>}
-      <ol className="pl-steps">
-        {items.map((text, i) => (
-          <li className="pl-steps__item" key={i}>
-            <span className="pl-steps__n" aria-hidden>{String(i + 1).padStart(2, "0")}</span>
-            {STEPS_ICONS[i] && <img className="pl-steps__icon" src={STEPS_ICONS[i]} alt="" loading="lazy" />}
-            <span className="pl-steps__text">{text}</span>
-          </li>
-        ))}
-      </ol>
-    </>
-  );
-}
-
-export function renderClassicBlock(block: any, lang: string, ctaHref: string): React.ReactNode {
+export function renderClassicBlock(block: any, lang: string, ctaHref: string, titleOverride?: string): React.ReactNode {
   const type = String(block?._type ?? "");
 
   if (DELEGATED.has(type)) return renderInsightsBlock(block);
@@ -106,10 +84,10 @@ export function renderClassicBlock(block: any, lang: string, ctaHref: string): R
     }
 
     case "bulletsBlock":
-      return <Bullets block={block} lang={lang} />;
+      return <HowWeWorkSection block={asStepsBlock(block.title, BULLETS_ICONS, BULLETS_TEXT[lang] ?? BULLETS_TEXT.en) as any} variant="facts" />;
 
     case "howWeWorkBlock":
-      return <HowWeWork block={block} lang={lang} />;
+      return <HowWeWorkSection block={asStepsBlock(block.title, STEPS_ICONS, STEPS_TEXT[lang] ?? STEPS_TEXT.en) as any} />;
 
     case "buttonBlock":
       return block.buttonText ? (
@@ -119,32 +97,23 @@ export function renderClassicBlock(block: any, lang: string, ctaHref: string): R
       ) : null;
 
     case "formMinimalBlock":
-      // The real lead form, reused rather than rebuilt — it posts to the CRM,
-      // and the blog already embeds this same component inside the redesign.
-      return (
-        <>
-          {block.title && <h2 className="pl__h2 pl__h2--center">{block.title}</h2>}
-          <FormMinimalBlockComponent form={block.form} lang={lang} offerButtonCustomText={block.buttonText} />
-        </>
-      );
+      // The homepage's own contact section — its own background, heading and
+      // styling. The block's title is the editor's internal label ("Form
+      // Minimal", "Form Final"), never customer copy, so nothing from the CMS
+      // is passed through.
+      return <Form lang={lang} />;
 
+    case "faqBlock":
+    case "accordionBlock":
     case "landingFaqBlock": {
-      // Same accordion as the landing family's FAQ, and the same shape —
-      // { faq: { items: [{ question, answer }] } } with answer as Portable Text.
-      const items: FaqItem[] = (block?.faq?.items ?? []).map((it: any, i: number) => ({
-        key: it?._key ?? `faq-${i}`,
-        question: it?.question ?? "",
-        answer: Array.isArray(it?.answer)
-          ? <PortableText value={it.answer} components={insightsComponents as any} />
-          : <p className="pl-prose">{it?.answer ?? ""}</p>,
-      }));
+      // The homepage's FAQ section, which brings its own surface and emits the
+      // FAQPage schema. Its prop is nested one level deeper than the CMS block.
+      const items = block?.faq?.items ?? block?.items ?? [];
       if (!items.length) return null;
-      return (
-        <>
-          {block.title && <h2 className="pl__h2">{block.title}</h2>}
-          <FaqAccordion items={items} />
-        </>
-      );
+      // titleOverride is the heading lifted out of the prose block above; the
+      // block's own title is empty on nearly every one of these pages.
+      const faqTitle = titleOverride || block.title || FAQ_TITLE[lang] || FAQ_TITLE.en;
+      return <FaqSection section={{ faqTitle, faq: { faq: { items } } } as any} lang={lang} />;
     }
 
     case "locationBlock": {
@@ -168,7 +137,36 @@ export function renderClassicBlock(block: any, lang: string, ctaHref: string): R
   }
 }
 
-/** True when the block wants the light reading surface rather than the dark one. */
-export function wantsLight(type: string): boolean {
-  return type === "faqBlock" || type === "accordionBlock" || type === "landingFaqBlock" || type === "formMinimalBlock";
+/* Blocks rendered by a homepage section, which emits its own <section> with
+   its own background. They must not be wrapped again — the body passes them
+   through untouched. */
+const SELF_CONTAINED = new Set(["faqBlock", "accordionBlock", "landingFaqBlock", "formMinimalBlock", "bulletsBlock", "howWeWorkBlock"]);
+export const isSelfContained = (type: string): boolean => SELF_CONTAINED.has(type);
+
+/* The text of a prose block that is nothing but a heading.
+
+   These pages mostly left the FAQ block's own title empty and authored its
+   heading as a separate text block just above it — which rendered as a lone
+   line in its own dark section, disconnected from the FAQ it belongs to. When
+   such a block sits directly before the FAQ, the body lifts it into the
+   section instead of rendering it as prose. Returns null for anything else, so
+   a real paragraph is never swallowed. */
+export function headingOnlyText(block: any): string | null {
+  if (String(block?._type ?? "") !== "textContent") return null;
+  const nodes = Array.isArray(block.content) ? block.content : [];
+  if (!nodes.length) return null;
+  if (!nodes.every((n: any) => n?._type === "block" && /^h[23]$/.test(String(n?.style ?? "")))) return null;
+  const text = nodes
+    .flatMap((n: any) => (Array.isArray(n.children) ? n.children : []))
+    .map((c: any) => String(c?.text ?? ""))
+    .join("")
+    .trim();
+  return text || null;
 }
+
+/* Blocks that are running text rather than a feature of their own. Consecutive
+   ones share a single section: giving each its own full-height section turned a
+   twelve-block page into twelve stacked panels with a cloud on each, which read
+   as an accordion of empty space instead of an article. */
+const FLOW = new Set(["textContent", "doubleTextBlock", "buttonBlock", "tableBlock", "imageFullBlock"]);
+export const isFlow = (type: string): boolean => FLOW.has(type);

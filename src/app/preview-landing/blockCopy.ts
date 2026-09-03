@@ -94,3 +94,14 @@ export const STEPS_TEXT: Record<string, string[]> = {
     "После завершения строительства мы торжественно передадим вам ключи",
   ],
 };
+
+/* Fallback heading for the FAQ section. Most of these pages never filled the
+   block's title field — they authored the heading as a prose block just above
+   the FAQ instead (26 of 45). That one is lifted into the section; the rest
+   fall back to this, the wording the CMS uses everywhere it was filled in. */
+export const FAQ_TITLE: Record<string, string> = {
+  en: "Frequently asked questions",
+  de: "Häufig gestellte Fragen",
+  pl: "Najczęściej zadawane pytania",
+  ru: "Часто задаваемые вопросы",
+};
