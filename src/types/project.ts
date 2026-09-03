@@ -130,6 +130,10 @@ export type Project = {
   isSold: boolean;
   _updatedAt?: string;
   language: string;
+  /** Set only for a legacy project folded into a developer overview: the
+      locale-less path the card must link at instead of /projects/{slug}.
+      See resolveProjectRefs in src/sanity/sanity.utils.ts. */
+  hrefPath?: string;
   slug: {
     [lang: string]: {
       current: string;

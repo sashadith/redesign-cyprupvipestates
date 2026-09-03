@@ -20,7 +20,10 @@ export function toCardData(project: any, lang: string): ProjectCardData {
   return {
     id: project._id,
     title: project.title,
-    href: `${localePrefix(lang)}/projects/${project.slug}`,
+    // A legacy project folded into a developer overview carries the target
+    // path itself (see resolveProjectRefs) — linking at its stale /projects/
+    // slug would only 308 there anyway.
+    href: `${localePrefix(lang)}${project.hrefPath ?? `/projects/${project.slug}`}`,
     image: typeof img === "string" ? img : img ? urlFor(img).url() : undefined,
     city: kf.city ?? "",
     price: typeof kf.price === "number" ? kf.price : Number(kf.price) || null,
