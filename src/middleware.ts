@@ -96,6 +96,16 @@ const DE_LANDING_MERGES: Record<string, string> = {
      queries since June, 412 on "zypern villa am meer kaufen" alone. There the
      answer is to make the specialist win its own term, not to remove it. */
   "luxusimmobilien-auf-zypern": "/de/luxusvillen-in-zypern",
+  /* Same reasoning as the line above, and the same evidence: 555 of its 560
+     impressions came from queries /de/luxusvillen-in-zypern also served and
+     ranked better for — 5 were its own. Position 45.5 against the target's 18.4.
+
+     Its list looked like the stronger argument to keep it — 11 pins the target
+     did not have, all genuinely above €1M. Only 3 of those render: Küünal
+     Villas, El Pez and Zeus Villas. The other 8 point at archived projects, so
+     the page has been showing 16 cards for 19 pins. The three are on the target
+     now, and the target's own link to this page is gone (see the note above). */
+  "luxusvillen-zypern-ueber-1-mio": "/de/luxusvillen-in-zypern",
 };
 
 // Retired DE blog articles — same shape/mechanism as DE_LANDING_MERGES above
