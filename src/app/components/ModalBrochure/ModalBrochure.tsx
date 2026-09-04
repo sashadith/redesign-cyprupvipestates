@@ -44,12 +44,17 @@ const COPY: Record<string, { title: string; accent: string; lead: string }> = {
 
 /* One phone mock-up per language, each showing an adviser who actually speaks
    it. Dropped silently if the file is missing, so a locale without artwork
-   degrades to the gradient panel rather than a broken image. */
+   degrades to the gradient panel rather than a broken image.
+
+   WebP at 950px wide (scripts/optimize-contact-art.mjs): the artwork is never
+   shown wider than 462 CSS px, and the 1024x1536 PNG originals were ~1.6 MB
+   each — 6.2 MB fetched across the set, on every page carrying a contact
+   button. Same images at 452 KB total, alpha intact. */
 const ART: Record<string, string> = {
-  en: "/img/contact/iphone-en.png",
-  de: "/img/contact/iphone-de.png",
-  pl: "/img/contact/iphone-pl.png",
-  ru: "/img/contact/iphone-ru.png",
+  en: "/img/contact/iphone-en.webp",
+  de: "/img/contact/iphone-de.webp",
+  pl: "/img/contact/iphone-pl.webp",
+  ru: "/img/contact/iphone-ru.webp",
 };
 
 const ModalBrochure = ({ lang, formDocument }: Props) => {
