@@ -1,29 +1,17 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Modal from "react-modal";
 import { motion, AnimatePresence } from "framer-motion";
-import styles from "./ModalBrochure.module.scss";
+import "./contactModal.css";
 import { useModal } from "@/app/context/ModalContext";
 import { FormStandardDocument } from "@/types/formStandardDocument";
 import FormStandard from "../FormStandard/FormStandard";
 
+/* react-modal paints the overlay and content boxes itself; both are handed over
+   to the stylesheet so the panel can be a single grid with its own framing. */
 const customStyles: ReactModal.Styles = {
-  overlay: {
-    backgroundColor: "rgba(242, 244, 247, 0.7)",
-    zIndex: 1000,
-  },
-  content: {
-    position: "absolute",
-    backgroundColor: "rgba(0, 0, 0, 0.7)",
-    padding: "0",
-    width: "100%",
-    height: "100%",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    border: "none",
-    inset: "0",
-  },
+  overlay: {},
+  content: {},
 };
 
 type Props = {
@@ -31,8 +19,44 @@ type Props = {
   formDocument: FormStandardDocument;
 };
 
+const COPY: Record<string, { title: string; accent: string; lead: string }> = {
+  en: {
+    title: "Speak to an",
+    accent: "adviser",
+    lead: "Leave your details and we will get back to you, usually the same day.",
+  },
+  de: {
+    title: "Sprechen Sie mit einem",
+    accent: "Berater",
+    lead: "Hinterlassen Sie Ihre Daten, wir melden uns — meist noch am selben Tag.",
+  },
+  pl: {
+    title: "Porozmawiaj z",
+    accent: "doradcą",
+    lead: "Zostaw swoje dane, odezwiemy się — zwykle jeszcze tego samego dnia.",
+  },
+  ru: {
+    title: "Поговорите с",
+    accent: "консультантом",
+    lead: "Оставьте свои данные, мы свяжемся с вами — обычно в тот же день.",
+  },
+};
+
+/* One phone mock-up per language, each showing an adviser who actually speaks
+   it. Dropped silently if the file is missing, so a locale without artwork
+   degrades to the gradient panel rather than a broken image. */
+const ART: Record<string, string> = {
+  en: "/img/contact/iphone-en.png",
+  de: "/img/contact/iphone-de.png",
+  pl: "/img/contact/iphone-pl.png",
+  ru: "/img/contact/iphone-ru.png",
+};
+
 const ModalBrochure = ({ lang, formDocument }: Props) => {
   const { isBrochureOpen, closeBrochure } = useModal();
+  const [artFailed, setArtFailed] = useState(false);
+  const copy = COPY[lang] ?? COPY.en;
+  const art = ART[lang] ?? ART.en;
 
   useEffect(() => {
     if (isBrochureOpen) {
@@ -49,65 +73,52 @@ const ModalBrochure = ({ lang, formDocument }: Props) => {
   return (
     <AnimatePresence>
       <Modal
-        closeTimeoutMS={50}
+        closeTimeoutMS={200}
         isOpen={isBrochureOpen}
         onRequestClose={closeBrochure}
         ariaHideApp={false}
         style={customStyles}
+        overlayClassName="cvpm-overlay"
+        className="cvpm-content"
       >
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          transition={{ duration: 0.3 }}
-          style={{ width: "100%" }}
+          className="cvpm"
+          initial={{ opacity: 0, y: 26, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 14, scale: 0.98 }}
+          transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className={styles.popupContent}>
-            <div className={styles.popupContentWrapper}>
-              <div className={styles.formContent}>
-                <div className={styles.formText}>
-                  <h3 className={styles.modalTitle}>
-                    {lang === "ru"
-                      ? "Укажите контакты для связи"
-                      : lang === "de"
-                        ? "Kontaktieren Sie mich!"
-                        : lang === "pl"
-                          ? "Proszę podać swoje dane kontaktowe"
-                          : "Please provide your contact details"}
-                  </h3>
-                  <p className={styles.modalText}>
-                    {lang === "ru"
-                      ? "Свяжемся с вами как можно скорее"
-                      : lang === "de"
-                        ? "Geben Sie Ihre Daten ein, damit wir Sie kontaktieren können"
-                        : lang === "pl"
-                          ? "Skontaktujemy się z Tobą jak najszybciej"
-                          : "We will contact you as soon as possible"}
-                  </p>
-                </div>
+          <button
+            className="cvpm__close"
+            onClick={closeBrochure}
+            aria-label={
+              lang === "de" ? "Schließen" : lang === "pl" ? "Zamknij" : lang === "ru" ? "Закрыть" : "Close"
+            }
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path
+                d="M15 1L1 15M1 1L15 15"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
 
-                <div className={styles.formInner}>
-                  <FormStandard form={formDocument} lang={lang} />
-                </div>
-              </div>
-              <button className={styles.closeButton} onClick={closeBrochure}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 16 16"
-                  fill="#BABABA"
-                >
-                  <path
-                    d="M15 1L1 15M1.00001 1L15 15"
-                    stroke="#BABABA"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
+          <div className="cvpm__panel">
+            <h2 className="cvpm__title">
+              {copy.title} <span className="it">{copy.accent}</span>
+            </h2>
+            <hr className="cvpm__stripe" />
+            <p className="cvpm__lead">{copy.lead}</p>
+
+            <div className="cvpm__form">
+              <FormStandard form={formDocument} lang={lang} />
             </div>
+          </div>
+
+          <div className="cvpm__art" aria-hidden="true">
+            {!artFailed && <img src={art} alt="" onError={() => setArtFailed(true)} />}
           </div>
         </motion.div>
       </Modal>
