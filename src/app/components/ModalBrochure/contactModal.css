@@ -1,0 +1,379 @@
+/* Contact modal — the site's own dark language, applied to a form component
+   that is NOT rewritten.
+
+   FormStandard carries 636 lines of Formik validation, honeypot handling and
+   Meta tracking, and its markup is styled through hashed CSS-module classes.
+   Rather than fork it (and inherit the drift), everything below re-skins it
+   from the outside: a `.cvpm__form` scope plus an element selector beats a
+   single module class on specificity (0,1,1 vs 0,1,0), so no !important and no
+   change to the component itself.
+
+   Tokens are read with fallbacks — the modal mounts on routes that don't all
+   load tokens.css. */
+.cvpm {
+  /* FormStandard's own stylesheet now reads its colours from these, each with
+     the old hardcoded value as fallback — so every other place that renders the
+     form is untouched and only this modal gets the dark palette. Setting them
+     here beats fighting hashed module class names from outside. */
+  /* Opaque, NOT a translucent white. The panel ground is a 200deg gradient that
+     darkens down the column, so one translucent value renders as a different
+     colour at every field position — which is why the phone row never matched
+     its neighbours no matter what value was set. A fixed colour is identical
+     wherever the field sits. */
+  --fs-field-bg: #13241f;
+  --fs-field-bg-hover: #172b25;
+  --fs-field-text: #efe9db;
+  --fs-field-text-hover: #efe9db;
+  --fs-label: rgba(239, 233, 219, 0.55);
+  --fs-legend: rgba(239, 233, 219, 0.72);
+  --fs-accent: #c29a5e;
+  --fs-accent-ink: #10201b;
+  /* The error overlay sits ON the field (position:absolute, height:100%). Any
+     solid colour here repaints that one row and it stops matching its
+     neighbours — first as a white block, then as a lighter green one. Left
+     transparent, the field keeps its own surface and only the message is
+     added on top. */
+  --fs-error-bg: transparent;
+  --fs-error: #d8a59b;
+  --fs-agree: rgba(239, 233, 219, 0.66);
+  --fs-check-bg: rgba(255, 255, 255, 0.06);
+  --fs-check-border: rgba(194, 154, 94, 0.45);
+
+  --cvpm-ink: var(--sea-deep, #081512);
+  --cvpm-gold: var(--champagne, #c29a5e);
+  --cvpm-bronze: var(--bronze, #8e6b3d);
+  --cvpm-ivory: var(--ivory, #efe9db);
+  --cvpm-line: rgba(194, 154, 94, 0.22);
+  --cvpm-field: #13241f;
+  --cvpm-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ---------------------------------------------------------------- overlay */
+.cvpm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(12px, 3vw, 40px);
+  background: rgba(4, 11, 9, 0.72);
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  animation: cvpmOverlayIn 0.32s ease both;
+}
+@keyframes cvpmOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* react-modal's own content box: we do all the framing on .cvpm inside it. */
+.cvpm-content:focus,
+.cvpm-content:focus-visible { outline: none; }
+
+.cvpm-content {
+  position: relative;
+  inset: auto;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  overflow: visible;
+  width: min(1120px, 100%);
+  max-height: 100%;
+}
+
+/* ------------------------------------------------------------------ panel */
+.cvpm {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.78fr);
+  border-radius: 18px;
+  overflow: hidden;
+  /* One ground across both columns. The art column used to carry its own
+     gradient, which drew a visible seam down the middle; that gradient now
+     belongs to the whole panel and the art column is transparent. */
+  background:
+    radial-gradient(90% 70% at 78% 14%, rgba(194, 154, 94, 0.26), rgba(194, 154, 94, 0) 62%),
+    linear-gradient(200deg, #14312a 0%, var(--cvpm-ink) 78%);
+  box-shadow: 0 40px 120px -30px rgba(0, 0, 0, 0.8), inset 0 0 0 1px var(--cvpm-line);
+  max-height: calc(100vh - clamp(24px, 6vw, 80px));
+}
+
+/* ------------------------------------------------------------------- copy */
+.cvpm__panel {
+  padding: clamp(28px, 3.4vw, 52px) clamp(24px, 3vw, 48px);
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.cvpm__title {
+  margin: 0;
+  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-weight: 400;
+  /* Sized so the LONGEST of the four headlines still fits on one line, not so
+     the English one looks good. Measured at 1512px: "Sprechen Sie mit einem
+     Berater" needed 574px against 480px of column — hence both the wider text
+     column above and this smaller ceiling. */
+  font-size: clamp(22px, 2.6vw, 38px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  color: var(--cvpm-ivory);
+}
+
+/* Only guaranteed in the two-column layout. Below that the panel is narrow
+   enough that forcing one line would push the headline out of the box, and a
+   two-line headline is fine there. */
+@media (min-width: 861px) {
+  .cvpm__title { white-space: nowrap; }
+}
+
+.cvpm__stripe {
+  height: 1px;
+  border: 0;
+  margin: clamp(16px, 2vw, 24px) 0 clamp(12px, 1.6vw, 18px);
+  /* Full column width, so it lines up with the email field below it. */
+  max-width: none;
+  background: linear-gradient(90deg, var(--cvpm-gold), transparent);
+  opacity: 0.75;
+}
+
+.cvpm__lead {
+  margin: 0 0 clamp(20px, 2.6vw, 32px);
+  font-size: clamp(14px, 1.1vw, 16px);
+  line-height: 1.55;
+  color: rgba(239, 233, 219, 0.66);
+  max-width: 42ch;
+}
+
+/* ------------------------------------------------------------------ close */
+.cvpm__close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 3;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid var(--cvpm-line);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  color: var(--cvpm-ivory);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+.cvpm__close:hover { border-color: var(--cvpm-gold); background: rgba(255, 255, 255, 0.12); transform: rotate(90deg); }
+.cvpm__close:focus-visible { outline: 2px solid var(--cvpm-gold); outline-offset: 2px; }
+
+/* ----------------------------------------------------------------- visual */
+.cvpm__art {
+  position: relative;
+  /* No clipping here: the image's drop-shadow reaches past this column and was
+     being cut off at its edge, which read as a vertical seam down the middle
+     of the panel. .cvpm already clips to the rounded corners. */
+  background: transparent;
+}
+.cvpm__art img {
+  position: absolute;
+  bottom: -4%;
+  right: 0;
+  left: auto;
+  width: min(112%, 462px);
+  transform: none;
+  filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.55));
+  animation: cvpmArtIn 0.7s 0.12s var(--cvpm-ease) both;
+}
+@keyframes cvpmArtIn {
+  from { opacity: 0; transform: translate(26px, 30px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* --------------------------------------------------------- the form skin */
+/* Every rule below is `.cvpm__form <element>` so it outweighs FormStandard's
+   own single-class module styles without touching that file. */
+.cvpm__form { min-width: 0; }
+
+.cvpm__form label,
+.cvpm__form legend {
+  color: rgba(239, 233, 219, 0.72);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
+.cvpm__form input[type="text"],
+.cvpm__form input[type="email"],
+.cvpm__form input[type="tel"],
+.cvpm__form input[type="number"],
+.cvpm__form select {
+  background: var(--cvpm-field);
+  border: 1px solid var(--cvpm-line);
+  border-radius: 10px;
+  color: var(--cvpm-ivory);
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+/* FormStandard sizes fields for a page section (70px tall on desktop). At modal
+   width that is 20% too much, and the phone widget's own container never got
+   the field treatment at all — it is a div, so the input selectors above miss
+   it. Both are settled here. */
+.cvpm__form input[type="text"],
+.cvpm__form input[type="email"],
+.cvpm__form input[type="tel"],
+.cvpm__form .PhoneInput {
+  height: 56px;
+  padding-block: 0;
+}
+.cvpm__form .PhoneInput {
+  /* Stated explicitly rather than inherited from .inputField, so the phone row
+     is the same surface as the other fields by construction. */
+  background: var(--cvpm-field);
+  border: 1px solid var(--cvpm-line);
+  border-radius: 10px;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+.cvpm__form .PhoneInput:focus-within {
+  border-color: var(--cvpm-gold);
+  background: var(--fs-field-bg-hover);
+  box-shadow: 0 0 0 3px rgba(194, 154, 94, 0.14);
+}
+.cvpm__form .PhoneInput input { height: 100%; }
+
+.cvpm__form input::placeholder { color: rgba(239, 233, 219, 0.4); }
+.cvpm__form input[type="text"]:focus,
+.cvpm__form input[type="email"]:focus,
+.cvpm__form input[type="tel"]:focus,
+.cvpm__form select:focus {
+  outline: none;
+  border-color: var(--cvpm-gold);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 0 0 3px rgba(194, 154, 94, 0.14);
+}
+
+/* Sized like the lead paragraph and centred directly over the options, rather
+   than sitting left as a small caption a full line above them. */
+.cvpm__form legend {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: clamp(14px, 1.1vw, 16px);
+  color: rgba(239, 233, 219, 0.66);
+  margin-top: 4px;
+  margin-bottom: 14px;
+}
+
+/* The three contact-preference options read as a segmented control. */
+.cvpm__form fieldset { border: 0; }
+.cvpm__form fieldset label {
+  background: var(--cvpm-field);
+  border: 1px solid var(--cvpm-line);
+  border-radius: 999px;
+  color: rgba(239, 233, 219, 0.8);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+.cvpm__form fieldset label:hover { border-color: var(--cvpm-gold); color: var(--cvpm-ivory); }
+.cvpm__form fieldset label:has(input:checked) {
+  border-color: var(--cvpm-gold);
+  background: rgba(194, 154, 94, 0.16);
+  color: var(--cvpm-ivory);
+}
+.cvpm__form fieldset input[type="radio"] { accent-color: var(--cvpm-gold); }
+
+/* FormStandard sizes this button for a full-width page section: 20/28 padding
+   and a clamp that reaches 30px of type. At modal width that reads as a slab,
+   so it is taken back to a restrained bar with a lettered label. */
+.cvpm__form button[type="submit"] {
+  background: var(--cvpm-gold);
+  border: 1px solid var(--cvpm-gold);
+  border-radius: 10px;
+  /* Same 56px as every input, set explicitly — the module sizes this button for
+     a full-width page section and its padding alone lands well above that. */
+  height: 56px;
+  padding: 0 26px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #10201b;
+  margin-bottom: 18px;
+  cursor: pointer;
+  transition: box-shadow 0.25s, transform 0.15s, background 0.2s;
+}
+.cvpm__form button[type="submit"]:hover {
+  background: #d3ae74;
+  border-color: #d3ae74;
+  box-shadow: 0 12px 40px -14px rgba(194, 154, 94, 0.85);
+}
+.cvpm__form button[type="submit"]:active { transform: scale(0.995); }
+.cvpm__form button[type="submit"]:focus-visible { outline: 2px solid var(--cvpm-ivory); outline-offset: 3px; }
+
+/* react-phone-number-input ships its own light styling on global class names
+   (not module-hashed), so these selectors reach it directly. The container's
+   own surface is set further up with the other fields — it must NOT be reset
+   to transparent here: that leftover line sat later in the file, won on source
+   order, and left the phone row as the only field with no background at all.
+   Measured, not guessed: rgb(19,36,31) on every other input, rgba(0,0,0,0)
+   here. */
+/* The inner field IS an input[type="tel"], so the generic field rule above
+   matched it and drew a second bordered box inside the first. Three classes
+   plus the element outrank it without !important. */
+.cvpm__form .PhoneInput input.PhoneInputInput {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  height: 100%;
+  color: var(--cvpm-ivory);
+}
+.cvpm__form .PhoneInput input.PhoneInputInput:focus {
+  outline: none;
+  background: transparent;
+  box-shadow: none;
+}
+/* Flag and number read as one field. */
+.cvpm__form .PhoneInputCountry { margin-right: 12px; }
+.cvpm__form .PhoneInputCountryIcon {
+  background: transparent;
+  box-shadow: none;
+}
+.cvpm__form .PhoneInputCountrySelectArrow { color: var(--cvpm-gold); opacity: 0.8; }
+
+.cvpm__form input[type="checkbox"] { accent-color: var(--cvpm-gold); }
+.cvpm__form a { color: var(--cvpm-gold); text-decoration: none; }
+.cvpm__form a:hover { color: var(--cvpm-ivory); }
+
+/* Fields fade up one after another. Staggered here rather than in the form
+   component so FormStandard stays untouched. */
+.cvpm__form form > * { animation: cvpmFieldIn 0.5s var(--cvpm-ease) both; }
+.cvpm__form form > *:nth-child(1) { animation-delay: 0.10s; }
+.cvpm__form form > *:nth-child(2) { animation-delay: 0.16s; }
+.cvpm__form form > *:nth-child(3) { animation-delay: 0.22s; }
+.cvpm__form form > *:nth-child(4) { animation-delay: 0.28s; }
+.cvpm__form form > *:nth-child(5) { animation-delay: 0.34s; }
+.cvpm__form form > *:nth-child(n + 6) { animation-delay: 0.40s; }
+@keyframes cvpmFieldIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ----------------------------------------------------------------- narrow */
+@media (max-width: 860px) {
+  .cvpm { grid-template-columns: 1fr; }
+  /* The phone mock-up is the first thing seen on a phone, so it becomes a
+     short banner rather than disappearing. */
+  .cvpm__art { order: -1; min-height: 190px; }
+  .cvpm__art img {
+    width: min(74%, 300px);
+    bottom: -14%;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cvpm-overlay,
+  .cvpm__art img,
+  .cvpm__form form > * { animation: none; }
+}

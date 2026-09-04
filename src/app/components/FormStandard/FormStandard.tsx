@@ -614,6 +614,10 @@ const FormStandard: FC<ContactFormProps> = ({
                   className={styles.errorCheckbox}
                 />
 
+                {/* The consent line can carry a second link (e.g. terms AND
+                    privacy policy). Everything after the first link is optional,
+                    so a locale that links only one document renders exactly as
+                    it did before these fields existed. */}
                 <label htmlFor={`${uid}-agreedToPolicy`}>
                   {dataForm.agreementText}{" "}
                   <Link
@@ -623,6 +627,19 @@ const FormStandard: FC<ContactFormProps> = ({
                   >
                     {dataForm.agreementLinkLabel}
                   </Link>
+                  {dataForm.agreementLink2Label && dataForm.agreementLink2Destination && (
+                    <>
+                      {dataForm.agreementText2 ? ` ${dataForm.agreementText2} ` : " "}
+                      <Link
+                        className={styles.policyLink}
+                        href={dataForm.agreementLink2Destination}
+                        target="_blank"
+                      >
+                        {dataForm.agreementLink2Label}
+                      </Link>
+                    </>
+                  )}
+                  {dataForm.agreementTextEnd ? ` ${dataForm.agreementTextEnd}` : ""}
                 </label>
               </div>
             </Form>

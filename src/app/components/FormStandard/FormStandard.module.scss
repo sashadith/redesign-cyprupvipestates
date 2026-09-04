@@ -38,7 +38,7 @@
   font-size: 1rem;
   line-height: 1.5rem;
   font-weight: 300;
-  color: rgb(55 65 81 / 70%);
+  color: var(--fs-label, rgb(55 65 81 / 70%));
   position: absolute;
   top: 50%;
   left: 50px;
@@ -61,10 +61,10 @@
   padding: 20px 28px;
   font-size: 1rem;
   // border: 1px solid #ccc;
-  background: #F5F5F5;
+  background: var(--fs-field-bg, #F5F5F5);
   outline: none;
   transition: all 0.2s ease;
-  color: #000;
+  color: var(--fs-field-text, #000);
 
   @media screen and (min-width: 768px) {
     padding: 20px 45px;
@@ -102,10 +102,10 @@
   justify-content: center;
   margin-inline: auto;
   margin-bottom: clamp(0.813rem, 0.594rem + 0.88vw, 1.25rem);
-  border: 1px solid #bd8948;
-  background: #bd8948;
+  border: 1px solid var(--fs-accent, #bd8948);
+  background: var(--fs-accent, #bd8948);
   padding: 20px 28px;
-  color: #FFF;
+  color: var(--fs-accent-ink, #FFF);
   text-align: center;
   font-size: clamp(0.938rem, 0.597rem + 1.7vw, 1.875rem);
   font-style: normal;
@@ -122,8 +122,8 @@
   }
 
   &:hover {
-    background-color: #fff;
-    color: #ac8559;
+    background-color: var(--fs-field-bg-hover, #fff);
+    color: var(--fs-field-text-hover, #ac8559);
   }
 }
 
@@ -141,8 +141,8 @@
 .inputField:-webkit-autofill:hover, 
 .inputField:-webkit-autofill:focus, 
 .inputField:-webkit-autofill:active  {
-    -webkit-text-fill-color: #000 !important; /* Цвет текста */
-    -webkit-box-shadow: 0 0 0px 1000px #fff inset; /* Фон поля, замените на желаемый цвет */
+    -webkit-text-fill-color: var(--fs-field-text, #000) !important; /* Цвет текста */
+    -webkit-box-shadow: 0 0 0px 1000px var(--fs-field-bg-hover, #fff) inset; /* Фон поля, замените на желаемый цвет */
     transition: background-color 5000s ease-in-out 0s; /* Задержка изменения фона, чтобы предотвратить мерцание */
 }
 
@@ -153,7 +153,7 @@
   left: 50%;
   transform: translateX(-50%);
   font-size: 12px;
-  color: #e61212;
+  color: var(--fs-error, #e61212);
   width: 100%;
   text-align: center;
 }
@@ -165,7 +165,7 @@
   left: 50%;
   transform: translateX(-50%);
   font-size: 12px;
-  color: #e61212;
+  color: var(--fs-error, #e61212);
   width: 100%;
   text-align: center;
 }
@@ -175,8 +175,8 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background-color: #bd8948;
-  color: #fff;
+  background-color: var(--fs-accent, #bd8948);
+  color: var(--fs-accent-ink, #fff);
   padding: clamp(1.25rem, 1.023rem + 1.14vw, 1.875rem);
   max-width: 90%;
   width: 85%;
@@ -202,7 +202,7 @@
 }
 
 .radioGroupLabel {
-  color: #000;
+  color: var(--fs-legend, #000);
   font-size: 16px;
   font-style: normal;
   font-weight: 300;
@@ -217,7 +217,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background: #F5F5F5;
+  background: var(--fs-error-bg, #F5F5F5);
   height: 100%;
   padding: 5px;
   
@@ -241,7 +241,7 @@
 }
 
 .radioOption input[type="radio"] {
-  accent-color: #bd8948; // например, фирменный зеленый Cyprus VIP Estates
+  accent-color: var(--fs-accent, #bd8948); // например, фирменный зеленый Cyprus VIP Estates
 }
 
 .customCheckbox {
@@ -261,14 +261,14 @@
   position: relative;
   padding-left: 30px; /* Отступ для визуального индикатора */
   cursor: pointer;
-  color: #FFF;
+  color: var(--fs-agree, #FFF);
   font-size: 12px;
   font-style: normal;
   font-weight: 300;
   line-height: normal;
 
   @media screen and (min-width: 768px) {
-    color: #FFF;
+    color: var(--fs-agree, #FFF);
     font-size: 14px;
     font-style: normal;
     line-height: normal;
@@ -284,14 +284,14 @@
   transform: translateY(-50%);
   width: 20px;
   height: 20px;
-  border: 2px solid #ccc; /* Граница неотмеченного чекбокса */
+  border: 2px solid var(--fs-check-border, #ccc); /* Граница неотмеченного чекбокса */
   border-radius: 4px; /* Скругление углов для круглого чекбокса можно убрать */
-  background-color: white; /* Фон неотмеченного чекбокса */
+  background-color: var(--fs-check-bg, white); /* Фон неотмеченного чекбокса */
 }
 
 .customCheckbox input[type="checkbox"]:checked + label::before {
-  background-color: #bd8948; /* Цвет фона при активации */
-  border-color: #bd8948; /* Цвет границы при активации */
+  background-color: var(--fs-accent, #bd8948); /* Цвет фона при активации */
+  border-color: var(--fs-accent, #bd8948); /* Цвет границы при активации */
 }
 
 .customCheckbox input[type="checkbox"]:checked + label::after {
@@ -299,7 +299,7 @@
   position: absolute;
   left: 4px;
   top: -3px;
-  color: white; /* Цвет галочки */
+  color: var(--fs-accent-ink, white); /* Цвет галочки */
   font-size: 15px;
 
   @media screen and (min-width: 768px) {
