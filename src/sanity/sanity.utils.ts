@@ -588,11 +588,18 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string, pag
         // Only compute the live query when a page actually opts in — avoids an
         // unbounded Project+Development query (now uncapped, for pagination) on
         // every one of the other manual-array pages that never read this field.
-        // maxBeachMinutes/excludePropertyTypes/filterStage are undefined on
-        // every existing old-style block, so this call is byte-identical to
-        // before for all of them -- only a block that explicitly sets one of
-        // these fields sees different behavior.
-        const liveOpts = { maxBeachMinutes: b.maxBeachMinutes, excludePropertyTypes: b.excludePropertyTypes, filterStage: b.filterStage };
+        // maxBeachMinutes/excludePropertyTypes/filterStage/priceMin/priceMax are
+        // undefined on every existing old-style block except the 4 locale twins
+        // of the villa-over-1M page (2026-09-04 fix — priceMin was already set
+        // on all 4, silently unread until now: isNewStyleProjectsBlock() gates
+        // the price-aware branch above on _type==="projectsSectionBlock", which
+        // this block type never is), so this call is byte-identical to before
+        // for every other old-style block -- confirmed by enumerating every
+        // landingProjectsBlock site-wide with priceMin/priceMax set: exactly
+        // those 4. fetchFilteredProjectsRaw already reads opts.priceMin/priceMax
+        // (proven live via the new-style branch above) -- this just lets the
+        // old-style branch reach the same, already-working code.
+        const liveOpts = { maxBeachMinutes: b.maxBeachMinutes, excludePropertyTypes: b.excludePropertyTypes, filterStage: b.filterStage, priceMin: b.priceMin, priceMax: b.priceMax };
         // pagesEnabled is absent/false on every existing block -- this branch
         // is unreachable for all of them, so their rendering is unaffected.
         // Only a block explicitly flipped on (direct DB write, same pattern
