@@ -368,6 +368,13 @@
   /* The phone mock-up ate roughly a third of the viewport before any field
      was visible. Hidden below the breakpoint; desktop is untouched. */
   .cvpm__art { display: none; }
+  /* Desktop never has this problem — .cvpm__close sits over the art column,
+     not the panel, in the two-column layout. Single-column mobile puts the
+     button directly over the title's own top-right corner instead, so DE/PL
+     (the two longest headlines) wrapped a line under it. Padding, not a
+     fixed width, so it reserves the button's exact footprint (40px width +
+     14px right offset + a small gap) regardless of viewport width. */
+  .cvpm__title { padding-right: 40px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

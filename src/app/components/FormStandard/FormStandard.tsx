@@ -588,23 +588,6 @@ const FormStandard: FC<ContactFormProps> = ({
                 />
               </fieldset>
 
-              <div>
-                <button
-                  type="submit"
-                  className={styles.sentBtn}
-                  disabled={isSubmitting}
-                  onClick={handleButtonClick}
-                >
-                  {isSubmitting ? (
-                    <div className={styles.loader}></div>
-                  ) : offerButtonCustomText ? (
-                    offerButtonCustomText
-                  ) : (
-                    dataForm.buttonText
-                  )}
-                </button>
-              </div>
-
               <Field
                 type="text"
                 name="fax"
@@ -614,6 +597,9 @@ const FormStandard: FC<ContactFormProps> = ({
                 aria-hidden="true"
               />
 
+              {/* Above the submit button, not below it — a visitor who taps
+                  CONTACT ME before checking this box needs to see why the
+                  submit was rejected, not discover the checkbox afterward. */}
               <div className={styles.customCheckbox}>
                 <Field
                   type="checkbox"
@@ -657,6 +643,23 @@ const FormStandard: FC<ContactFormProps> = ({
                   )}
                   {dataForm.agreementTextEnd ? ` ${dataForm.agreementTextEnd}` : ""}
                 </label>
+              </div>
+
+              <div>
+                <button
+                  type="submit"
+                  className={styles.sentBtn}
+                  disabled={isSubmitting}
+                  onClick={handleButtonClick}
+                >
+                  {isSubmitting ? (
+                    <div className={styles.loader}></div>
+                  ) : offerButtonCustomText ? (
+                    offerButtonCustomText
+                  ) : (
+                    dataForm.buttonText
+                  )}
+                </button>
               </div>
             </Form>
           );

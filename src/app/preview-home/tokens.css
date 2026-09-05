@@ -471,6 +471,13 @@ img { max-width: 100%; display: block; }
 
 /* ===================== ABOUT — "Who We Are" (light ivory section) ===================== */
 .about { min-height: 540px; display: flex; flex-direction: column; justify-content: center; }
+/* .wrap's own margin-inline:auto is an auto cross-axis margin on a column-flex
+   child, which disables align-items:stretch per spec — .wrap was sizing to
+   its own fit-content width instead of filling .about, and on mobile that
+   fit-content width came out wider than the viewport (causing the page's
+   horizontal scroll). width:100% restores the fill; max-width still caps it
+   the same as before at every breakpoint, so desktop is unaffected. */
+.about > .wrap { width: 100%; }
 .about__title {
   font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
   font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em;
@@ -487,10 +494,15 @@ img { max-width: 100%; display: block; }
 }
 .about__bullets {
   list-style: none; margin: 0; padding: 0; display: grid;
-  gap: clamp(24px, 3vw, 44px); grid-template-columns: repeat(2, 1fr);
+  /* minmax(0, 1fr), not bare 1fr: an implicit 1fr track's minimum is auto
+     (its content's min-content width), so one unbreakable word ("EUROPÄISCHEN")
+     was forcing its column past its fair share and the whole grid past the
+     viewport. minmax(0, ...) lets the track shrink and wrap instead — visually
+     identical everywhere none of the labels are actually that tight. */
+  gap: clamp(24px, 3vw, 44px); grid-template-columns: repeat(2, minmax(0, 1fr));
 }
-@media (min-width: 768px) { .about__bullets { grid-template-columns: repeat(3, 1fr); } }
-@media (min-width: 1024px) { .about__bullets { grid-template-columns: repeat(6, 1fr); } }
+@media (min-width: 768px) { .about__bullets { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .about__bullets { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 .about__bullet { display: flex; flex-direction: column; align-items: center; gap: 29px; text-align: center; } /* circle→label gap +80% */
 .about__medallion {
   width: 95px; height: 95px; border-radius: 999px; display: grid; place-items: center; flex: none;
