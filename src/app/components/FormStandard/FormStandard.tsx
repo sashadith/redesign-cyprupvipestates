@@ -14,7 +14,7 @@ import * as Yup from "yup";
 import axios from "axios";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
-import { parsePhoneNumberFromString } from "libphonenumber-js";
+import { AsYouType, parsePhoneNumberFromString } from "libphonenumber-js";
 
 import styles from "./FormStandard.module.scss";
 import { Form as FormType } from "@/types/form";
@@ -32,6 +32,20 @@ function tpl(str: string | undefined, vars: Record<string, string | number>) {
   return String(str ?? "").replace(/\{(\w+)\}/g, (_, k) =>
     vars[k] !== undefined ? String(vars[k]) : `{${k}}`,
   );
+}
+
+// react-phone-number-input's value is a full E.164 string ("+375...") that
+// includes the country calling code, so a plain .length counts the dial code
+// as entered digits. AsYouType parses progressively — even a dial-code-only
+// value like "+375" resolves to a national number of "" — so this measures
+// what the visitor actually typed after the flag.
+function phoneSubscriberDigitCount(value: string | undefined | null): number {
+  const raw = String(value ?? "").trim();
+  if (!raw) return 0;
+  const asYouType = new AsYouType();
+  asYouType.input(raw);
+  const nationalNumber = asYouType.getNumber()?.nationalNumber;
+  return nationalNumber ? String(nationalNumber).length : 0;
 }
 
 export type FormData = {
@@ -201,7 +215,7 @@ const FormStandard: FC<ContactFormProps> = ({
     phone: Yup.string()
       .required(dataForm.validationPhoneRequired)
       .test("phone-min", function (value) {
-        const current = String(value ?? "").trim().length;
+        const current = phoneSubscriberDigitCount(value);
         if (current >= PHONE_MIN) return true;
         return this.createError({
           message: tpl(dataForm.validationPhoneTooShort, {
@@ -211,7 +225,7 @@ const FormStandard: FC<ContactFormProps> = ({
         });
       })
       .test("phone-max", function (value) {
-        const current = String(value ?? "").trim().length;
+        const current = phoneSubscriberDigitCount(value);
         if (current <= PHONE_MAX) return true;
         return this.createError({
           message: tpl(dataForm.validationPhoneTooLong, {
@@ -354,6 +368,8 @@ const FormStandard: FC<ContactFormProps> = ({
         }}
         initialValues={initialValues}
         validationSchema={validationSchema}
+        validateOnChange={false}
+        validateOnBlur={true}
         onSubmit={onSubmit}
       >
         {({ isSubmitting, setFieldValue, values }) => {

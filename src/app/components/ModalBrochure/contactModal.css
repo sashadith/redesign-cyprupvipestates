@@ -49,10 +49,14 @@
 }
 
 /* ---------------------------------------------------------------- overlay */
+/* z-index above the site header's 2000 (header-footer.css .nav) — both are
+   position:fixed elements competing in the same top-level stacking context,
+   so the higher number wins outright. Stays below the photo lightbox's
+   intentional ceiling of 10000. */
 .cvpm-overlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 5000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -97,6 +101,7 @@
     linear-gradient(200deg, #14312a 0%, var(--cvpm-ink) 78%);
   box-shadow: 0 40px 120px -30px rgba(0, 0, 0, 0.8), inset 0 0 0 1px var(--cvpm-line);
   max-height: calc(100vh - clamp(24px, 6vw, 80px));
+  overflow-y: auto;
 }
 
 /* ------------------------------------------------------------------- copy */
@@ -360,16 +365,9 @@
 /* ----------------------------------------------------------------- narrow */
 @media (max-width: 860px) {
   .cvpm { grid-template-columns: 1fr; }
-  /* The phone mock-up is the first thing seen on a phone, so it becomes a
-     short banner rather than disappearing. */
-  .cvpm__art { order: -1; min-height: 190px; }
-  .cvpm__art img {
-    width: min(74%, 300px);
-    bottom: -14%;
-    right: auto;
-    left: 50%;
-    transform: translateX(-50%);
-  }
+  /* The phone mock-up ate roughly a third of the viewport before any field
+     was visible. Hidden below the breakpoint; desktop is untouched. */
+  .cvpm__art { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

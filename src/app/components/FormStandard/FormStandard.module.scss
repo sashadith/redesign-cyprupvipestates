@@ -10,10 +10,10 @@
 }
 
 .inputWrapper {
-  margin-bottom: 10px;
+  margin-bottom: 38px;
   position: relative;
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .icon {
@@ -58,7 +58,11 @@
 
 .inputField {
   width: 100%;
-  padding: 20px 28px;
+  // Left padding is fixed at 50px (not responsive) so typed text and the
+  // placeholder-style label both clear the icon (left:20px, 20px wide) at
+  // every width — the icon didn't move, only the desktop-only right padding
+  // used to imply it did.
+  padding: 20px 28px 20px 50px;
   font-size: 1rem;
   // border: 1px solid #ccc;
   background: var(--fs-field-bg, #F5F5F5);
@@ -67,13 +71,17 @@
   color: var(--fs-field-text, #000);
 
   @media screen and (min-width: 768px) {
-    padding: 20px 45px;
+    padding: 20px 45px 20px 50px;
   }
 }
 
 .phoneInput {
   @extend .inputField;
-  padding-inline: 20px;
+  // No custom icon here — the leading element is react-phone-number-input's
+  // own flag + dial code, so it gets the same 50px clearance as the icon in
+  // every other field instead of the flat 20px it had at every width.
+  padding-left: 50px;
+  padding-right: 20px;
   display: flex;
   align-items: center;
   width: 100%;
@@ -147,12 +155,17 @@
 }
 
 .error {
+  // Below the field, not on top of it — .inputWrapper's own margin-bottom
+  // reserves room for up to two lines of this so it never shifts the field
+  // that follows when it appears or disappears.
   position: absolute;
   z-index: 1;
-  bottom: 3px;
+  top: 100%;
+  margin-top: 4px;
   left: 50%;
   transform: translateX(-50%);
   font-size: 12px;
+  line-height: 1.35;
   color: var(--fs-error, #e61212);
   width: 100%;
   text-align: center;
