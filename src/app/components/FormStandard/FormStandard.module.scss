@@ -10,10 +10,18 @@
 }
 
 .inputWrapper {
-  margin-bottom: 38px;
+  // Original desktop value, restored — the previous round's margin-bottom
+  // increase (10px -> 38px) was meant to reserve room for a wrapped error
+  // message, but wasn't scoped to mobile and inflated desktop's field
+  // spacing too. Desktop stays at 10px; mobile gets its own tight value below.
+  margin-bottom: 10px;
   position: relative;
   max-width: 100%;
   overflow: visible;
+
+  @media screen and (max-width: 767px) {
+    margin-bottom: 5px;
+  }
 }
 
 .icon {
@@ -77,11 +85,12 @@
 
 .phoneInput {
   @extend .inputField;
-  // No custom icon here — the leading element is react-phone-number-input's
-  // own flag + dial code, so it gets the same 50px clearance as the icon in
-  // every other field instead of the flat 20px it had at every width.
-  padding-left: 50px;
-  padding-right: 20px;
+  // Reverted: this padding applies to the whole field container, so raising
+  // it moved the flag/dial-code along with the text instead of just clearing
+  // text from the flag. The flag's original position was correct — restored
+  // here. (Text/dial-code clearance, if it ever needs it, belongs on
+  // .PhoneInputInput or PhoneInputCountry's own spacing, not this container.)
+  padding-inline: 20px;
   display: flex;
   align-items: center;
   width: 100%;
