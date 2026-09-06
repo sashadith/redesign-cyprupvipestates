@@ -17,6 +17,7 @@ import {
   HUMAN_TOUCH_TYPES,
   isUntouchedNewLead, BAND_STYLE, computeBand, type ColorBand, type LeadRowData,
 } from "./leadListShared";
+import { STATUS_STYLES } from "@/app/admin/status-badge";
 
 const LOST_CAP = 200;
 const CLOSED_CAP = 200;
@@ -60,8 +61,12 @@ function LeadBlockSection({
       <h2 className="flex items-center gap-2 text-sm font-semibold text-[#374151] mb-2">
         {dot && <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${dot}`} />}
         {title}
+        {/* Same blue as the NEW status pill in the rows below — the two say the
+            same word about the same leads, so a second colour for it would read
+            as a second meaning. Taken from STATUS_STYLES rather than restated,
+            so the block follows if that palette ever moves. */}
         {badge && (
-          <span className="rounded-full bg-[#DCFCE7] text-[#166534] text-[10px] font-semibold tracking-wide px-2 py-0.5">
+          <span className={`rounded-full text-[10px] font-semibold tracking-wide px-2 py-0.5 ${STATUS_STYLES.NEW}`}>
             {badge}
           </span>
         )}
