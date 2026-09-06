@@ -1,4 +1,4 @@
-const STATUS_STYLES: Record<string, string> = {
+export const STATUS_STYLES: Record<string, string> = {
   NEW: "bg-blue-100 text-blue-700",
   CONTACTED: "bg-yellow-100 text-yellow-800",
   // Batch B (2026-07-25): new status between CONTACTED and VIEWING_SCHEDULED —
