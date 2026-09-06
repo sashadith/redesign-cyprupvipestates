@@ -88,6 +88,37 @@ export function computeBand(
   return { band: "GREEN", reason: `Follow-up due in ${Math.ceil(diff / DAY_MS)} days` };
 }
 
+/* An interaction a PERSON made, as opposed to one the system recorded about
+   itself. LAST_CONTACT_TYPES above is deliberately narrower — it answers "when
+   did we last reach out", which is not the same question as "has anyone touched
+   this lead at all". NOTE belongs here and not there: writing a note is work on
+   the lead, but it is not contact with the lead. */
+export const HUMAN_TOUCH_TYPES = [...LAST_CONTACT_TYPES, "NOTE"] as const;
+
+/* A lead nobody has done anything with yet.
+   Deliberately strict: assigning it, drafting a presentation, leaving a note or
+   scheduling a follow-up all count as having worked it, even though none of
+   them is contact with the lead. Kevin Glaubitt is the case that set this
+   boundary (2026-09-06) — 47 interactions, all of them SYSTEM and
+   PRESENTATION_EVENT, so every "has this lead been contacted" test called him
+   untouched while the operator had plainly been working on him for weeks.
+   SYSTEM/PRESENTATION_EVENT/STATUS_CHANGE rows are therefore not evidence by
+   themselves; the deliberate acts above are. */
+export function isUntouchedNewLead(lead: {
+  status: string;
+  assignedTo: { name: string } | null;
+  nextFollowUpAt: Date | null;
+  _count: { interactions: number; presentations: number };
+}): boolean {
+  return (
+    lead.status === "NEW" &&
+    !lead.assignedTo &&
+    !lead.nextFollowUpAt &&
+    lead._count.interactions === 0 &&
+    lead._count.presentations === 0
+  );
+}
+
 export const money = (n: number | null) => (n == null ? "—" : `€${n.toLocaleString("en-GB")}`);
 
 export type LeadRowData = {
@@ -98,4 +129,10 @@ export type LeadRowData = {
   email: string | null; phone: string | null;
   assignedTo: { name: string } | null;
   interactions: { occurredAt: Date; type: string }[];
+  // Read only by isUntouchedNewLead() above — see the note there on why the
+  // last-contact interaction list cannot answer that question. `interactions`
+  // here is the HUMAN_TOUCH_TYPES count from the query, not the length of the
+  // (capped, contact-only) list above it.
+  nextFollowUpAt: Date | null;
+  _count: { interactions: number; presentations: number };
 };
