@@ -174,16 +174,15 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
     }
     const b = computeBand(l, l.interactions.length > 0, now);
     bandById.set(l.id, b);
-    if (isUntouchedNewLead(l)) {
-      // Ahead of HOT on purpose, unlike the partner block below. A lead nobody
-      // has touched is the one case where the block IS the whole story: there
-      // is nothing else to know about it yet, and the point of the block is
-      // that it empties out. Hot/partner leads that HAVE been worked keep their
-      // own blocks; a hot lead in here still shows its flame, so nothing about
-      // it is hidden by being listed one section higher.
-      fresh.push(l);
-    } else if (l.hotAt) {
+    if (l.hotAt) {
       hot.push(l);
+    } else if (isUntouchedNewLead(l)) {
+      // HOT wins over New, on the operator's call (2026-09-06): a lead marked
+      // hot is already the strongest signal on the page, and moving it into a
+      // block that empties out would bury it the moment someone worked it.
+      // New-leads therefore holds only leads that are not hot and not partner —
+      // the ones nothing else would surface.
+      fresh.push(l);
     } else if (bucketOf(l.source) === "partner") {
       // Partner leads get their own block rather than scattering across the
       // colour bands — same exclusivity rule as HOT and KEEP_CONTACT above.

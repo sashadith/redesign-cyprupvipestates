@@ -23,11 +23,53 @@ export type FollowUpTrigger = "presentation_sent" | "presentation_viewed" | "man
 const DAY_MS = 86_400_000;
 const MAX_AUTO_FOLLOWUPS = 3;
 
+/* A logged call, email or WhatsApp means the lead has been contacted, so NEW
+   is no longer true. Set here rather than at each of the four call sites
+   (addCallLog, addEmailLog and the two in crm/[id]/emailActions) because this
+   is the one function every one of them already goes through, and a fifth
+   contact channel added later would otherwise quietly skip it.
+
+   Only NEW is promoted. Every other status is a decision someone made —
+   VIEWING_SCHEDULED, NEGOTIATING, KEEP_CONTACT — and logging a call must never
+   walk one of those backwards to CONTACTED.
+
+   NOTE deliberately does not reach here: addLeadNote writes no cadence trigger,
+   and an internal note is work on the lead, not contact with it. The same
+   distinction the rest of the CRM already draws (LAST_CONTACT_TYPES excludes
+   NOTE, so does REAL_CONTACT_TYPES in actionCenter/rules/crm.ts).
+
+   Writes the same two timeline rows updateLeadStatus does, with the same
+   metadata.toStatus the Action Center reads — a status that changed itself
+   must be as visible and as machine-readable as one a human clicked. */
+async function promoteNewToContacted(leadId: string): Promise<void> {
+  const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { status: true } });
+  if (lead?.status !== "NEW") return;
+  const content = "Status changed to CONTACTED (contact logged)";
+  await prisma.lead.update({ where: { id: leadId }, data: { status: "CONTACTED" } });
+  await prisma.leadActivity.create({
+    data: { leadId, type: "STATUS_CHANGE", content, createdBy: "system" },
+  });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId,
+      type: "STATUS_CHANGE",
+      channel: "SYSTEM",
+      body: content,
+      metadata: { toStatus: "CONTACTED", automatic: true },
+      createdByName: "system",
+    },
+  });
+}
+
 export async function applyFollowUpCadence(
   leadId: string,
   trigger: FollowUpTrigger,
   opts?: { leadReacted?: boolean },
 ): Promise<void> {
+  // Before the early returns below: the cap and the leadReacted branches both
+  // return without touching the lead, and a contact still happened either way.
+  if (trigger === "manual_contact") await promoteNewToContacted(leadId);
+
   const lead = await prisma.lead.findUnique({ where: { id: leadId }, select: { autoFollowUpCount: true } });
   if (!lead) return;
 

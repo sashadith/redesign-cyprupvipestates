@@ -79,5 +79,28 @@ check("STATUS_CHANGE does NOT count",      HUMAN_TOUCH_TYPES.includes("STATUS_CH
 // NOTE is work on the lead but not contact with it, so the two lists differ.
 check("NOTE is not a last-contact type",   LAST_CONTACT_TYPES.includes("NOTE"), false);
 
+
+console.log("\nbucket order — HOT wins over New (operator's call, 2026-09-06)");
+/* Mirrors the chain in crm/page.tsx exactly. Kept here because the ordering is
+   the whole behaviour: reversing two branches silently moves leads between
+   blocks and nothing else would notice. */
+function bucketOf(l) {
+  if (l.status === "KEEP_CONTACT") return "keep";
+  if (l.hotAt) return "hot";
+  if (isUntouchedNewLead(l)) return "new";
+  if (l.source === "PARTNER") return "partner";
+  return "band";
+}
+const untouchedHot = { ...untouched, hotAt: new Date() };
+check("an untouched HOT lead goes to Hot, not New", bucketOf(untouchedHot), "hot");
+check("an untouched plain lead goes to New",        bucketOf(untouched), "new");
+check("an untouched PARTNER lead goes to New",      bucketOf({ ...untouched, source: "PARTNER" }), "new");
+check("a worked partner lead goes to Partner",
+  bucketOf({ ...untouched, source: "PARTNER", assignedTo: { name: "Sascha Dith" } }), "partner");
+check("KEEP_CONTACT still wins over everything",
+  bucketOf({ ...untouched, status: "KEEP_CONTACT", hotAt: new Date() }), "keep");
+check("a worked lead falls through to the colour bands",
+  bucketOf({ ...untouched, assignedTo: { name: "Sascha Dith" } }), "band");
+
 console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
 process.exit(failures ? 1 : 0);
