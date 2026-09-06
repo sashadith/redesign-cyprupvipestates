@@ -13,7 +13,9 @@ import {
   LEAD_STATUSES, LEAD_LIST_SOURCES, LEAD_LOCALES, type LeadSearchParams,
 } from "./filters";
 import {
-  LAST_CONTACT_TYPES, BAND_STYLE, computeBand, type ColorBand, type LeadRowData,
+  LAST_CONTACT_TYPES,
+  HUMAN_TOUCH_TYPES,
+  isUntouchedNewLead, BAND_STYLE, computeBand, type ColorBand, type LeadRowData,
 } from "./leadListShared";
 
 const LOST_CAP = 200;
@@ -42,10 +44,12 @@ const TABLE_HEAD = (
 // when empty (same "don't render empty sections" rule the old Lost/Closed
 // panels already followed).
 function LeadBlockSection({
-  title, dot, leads, bandById, contactImplyingStatuses,
+  title, dot, badge, leads, bandById, contactImplyingStatuses,
 }: {
   title: string;
   dot?: string;
+  /** Small pill next to the heading — used by the New-leads block. */
+  badge?: string;
   leads: LeadRowData[];
   bandById?: Map<string, { band: ColorBand; reason: string }>;
   contactImplyingStatuses: readonly string[];
@@ -55,7 +59,13 @@ function LeadBlockSection({
     <div className="mb-6">
       <h2 className="flex items-center gap-2 text-sm font-semibold text-[#374151] mb-2">
         {dot && <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${dot}`} />}
-        {title} <span className="font-normal text-[#9CA3AF]">({leads.length})</span>
+        {title}
+        {badge && (
+          <span className="rounded-full bg-[#DCFCE7] text-[#166534] text-[10px] font-semibold tracking-wide px-2 py-0.5">
+            {badge}
+          </span>
+        )}
+        <span className="font-normal text-[#9CA3AF]">({leads.length})</span>
       </h2>
       {/* overflow-x-auto, not overflow-hidden: the actions column now carries a
           move menu as well as the delete button, and this table sizes its columns
@@ -113,6 +123,15 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
       take: 1,
       select: { occurredAt: true, type: true },
     },
+    // Counted, not listed: the New-leads block only needs to know whether a
+    // person has touched this lead at all, and the interaction list above is
+    // capped at one row and filtered to contact types, so it cannot answer it.
+    _count: {
+      select: {
+        interactions: { where: { type: { in: [...HUMAN_TOUCH_TYPES] } } },
+        presentations: true,
+      },
+    },
   };
 
   // Pagination removed (2026-08-11 spec) — every active lead is fetched and
@@ -140,6 +159,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
   // doesn't mean a lead stops being overdue/due-soon/on-track; the dot still
   // needs to say which, right there in the HOT block.
   const now = Date.now();
+  const fresh: LeadRowData[] = [];
   const hot: LeadRowData[] = [];
   const keepContact: LeadRowData[] = [];
   const partner: LeadRowData[] = [];
@@ -154,7 +174,15 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
     }
     const b = computeBand(l, l.interactions.length > 0, now);
     bandById.set(l.id, b);
-    if (l.hotAt) {
+    if (isUntouchedNewLead(l)) {
+      // Ahead of HOT on purpose, unlike the partner block below. A lead nobody
+      // has touched is the one case where the block IS the whole story: there
+      // is nothing else to know about it yet, and the point of the block is
+      // that it empties out. Hot/partner leads that HAVE been worked keep their
+      // own blocks; a hot lead in here still shows its flame, so nothing about
+      // it is hidden by being listed one section higher.
+      fresh.push(l);
+    } else if (l.hotAt) {
       hot.push(l);
     } else if (bucketOf(l.source) === "partner") {
       // Partner leads get their own block rather than scattering across the
@@ -169,7 +197,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
       (b.band === "RED" ? red : b.band === "YELLOW" ? yellow : green).push(l);
     }
   }
-  const shownActive = hot.length + red.length + yellow.length + green.length + partner.length + keepContact.length;
+  const shownActive = fresh.length + hot.length + red.length + yellow.length + green.length + partner.length + keepContact.length;
   const lostDefaultOpen = hasActiveFilter && lostTotal > 0;
   const closedDefaultOpen = hasActiveFilter && closedTotal > 0;
 
@@ -211,6 +239,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
         </div>
       ) : (
         <>
+          <LeadBlockSection title="New leads" badge="NEW" leads={fresh} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
           <LeadBlockSection title="Hot leads" leads={hot} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
           <LeadBlockSection title="Overdue" dot={BAND_STYLE.RED.dot} leads={red} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
           <LeadBlockSection title="Due soon" dot={BAND_STYLE.YELLOW.dot} leads={yellow} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
