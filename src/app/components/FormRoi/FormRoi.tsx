@@ -17,7 +17,9 @@ import "react-phone-number-input/style.css";
 
 import styles from "../FormStandard/FormStandard.module.scss";
 import Link from "next/link";
-import { localizedHref } from "@/lib/locale";
+import "../formFeedback.css";
+import { formErrorText } from "../formFeedbackCopy";
+import { consentCopy } from "../consentCopy";
 import {
   RoiCalculationResult,
   RoiCalculatorInput,
@@ -129,14 +131,7 @@ const FormRoi: FC<Props> = ({
           : lang === "pl"
             ? "Wysłaliśmy kalkulację na Twój e-mail i otrzymaliśmy jej kopię."
             : "We sent the calculation to your email and received a copy.",
-    errorMessage:
-      lang === "ru"
-        ? "Произошла ошибка. Попробуйте еще раз."
-        : lang === "de"
-          ? "Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
-          : lang === "pl"
-            ? "Wystąpił błąd. Spróbuj ponownie."
-            : "Something went wrong. Please try again.",
+    errorMessage: formErrorText(lang),
     validationNameRequired:
       lang === "ru"
         ? "Введите имя"
@@ -249,32 +244,6 @@ const FormRoi: FC<Props> = ({
           : lang === "pl"
             ? "Musisz zaakceptować politykę"
             : "You must accept the policy",
-    agreementText:
-      lang === "ru"
-        ? "Я принимаю"
-        : lang === "de"
-          ? "Ich akzeptiere"
-          : lang === "pl"
-            ? "Akceptuję"
-            : "I accept",
-    agreementLinkDestination: localizedHref(
-      lang,
-      lang === "ru"
-        ? "politika-privatnosti"
-        : lang === "de"
-          ? "datenschutzrichtlinie"
-          : lang === "pl"
-            ? "polityka-prywatnosci"
-            : "privacy-policy",
-    ),
-    agreementLinkLabel:
-      lang === "ru"
-        ? "политику конфиденциальности"
-        : lang === "de"
-          ? "die Datenschutzerklärung"
-          : lang === "pl"
-            ? "politykę prywatności"
-            : "the privacy policy",
   };
 
   useEffect(() => {
@@ -502,7 +471,7 @@ const FormRoi: FC<Props> = ({
 
         onFormSubmitSuccess?.();
         setMessage(copy.successMessage);
-        setTimeout(() => setMessage(null), 5000);
+        setTimeout(() => setMessage(null), 10000);
       } else {
         throw new Error("roi_submit_failed");
       }
@@ -516,7 +485,7 @@ const FormRoi: FC<Props> = ({
         copy.errorMessage;
 
       setMessage(apiMessage);
-      setTimeout(() => setMessage(null), 7000);
+      setTimeout(() => setMessage(null), 12000);
     } finally {
       setSubmitting(false);
     }
@@ -524,7 +493,7 @@ const FormRoi: FC<Props> = ({
 
   return (
     <>
-      {message && <div className={styles.popup} role="alert" aria-live="assertive">{message}</div>}
+      {message && <div className={`${styles.popup} form-feedback`} role="alert" aria-live="assertive">{message}</div>}
 
       <Formik
         innerRef={(inst) => {
@@ -741,7 +710,7 @@ const FormRoi: FC<Props> = ({
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
-                  <div className={styles.loader}></div>
+                  <div className={`${styles.loader} form-spinner`}></div>
                 ) : offerButtonCustomText ? (
                   offerButtonCustomText
                 ) : (
@@ -774,14 +743,15 @@ const FormRoi: FC<Props> = ({
                 className={styles.errorCheckbox}
               />
               <label htmlFor={`${uid}-agreedToPolicy`}>
-                {copy.agreementText}{" "}
-                <Link
-                  className={styles.policyLink}
-                  href={copy.agreementLinkDestination!}
-                  target="_blank"
-                >
-                  {copy.agreementLinkLabel}
+                {consentCopy(lang).lead}
+                <Link className={styles.policyLink} href={consentCopy(lang).termsHref} target="_blank">
+                  {consentCopy(lang).termsLabel}
                 </Link>
+                {consentCopy(lang).mid}
+                <Link className={styles.policyLink} href={consentCopy(lang).privacyHref} target="_blank">
+                  {consentCopy(lang).privacyLabel}
+                </Link>
+                {consentCopy(lang).tail}
               </label>
             </div>
           </Form>

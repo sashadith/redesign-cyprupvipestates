@@ -18,6 +18,9 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 
 import styles from "./FormMinimalBlockComponent.module.scss";
 import Link from "next/link";
+import "../formFeedback.css";
+import { formSuccessText, formErrorText } from "../formFeedbackCopy";
+import { consentCopy } from "../consentCopy";
 
 export type FormData = {
   name: string;
@@ -31,11 +34,23 @@ export type FormData = {
   formStartTime: number;
 };
 
+/* The consent line, per locale.
+
+   It used to name a "user agreement" / "Benutzervereinbarung" while linking
+   only the privacy policy — the document it named was not reachable at all, so
+   a visitor ticked a box agreeing to terms they could not read. Both documents
+   are linked now, matching the contact modal word for word. Every href below
+   was verified live (2026-09-06). */
 export interface ContactFormProps {
   onFormSubmitSuccess?: () => void;
   form: any;
   lang: string;
   offerButtonCustomText?: string;
+  /* Drop the free-text message field (and its required-rule). Opt-in, so the
+     other two routes that render this block are unaffected. Used by the blog,
+     where the article itself is the context and a message box only lengthens
+     the form. */
+  hideMessage?: boolean;
 }
 
 const FormMinimalBlockComponent: FC<ContactFormProps> = ({
@@ -43,6 +58,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
   form,
   lang,
   offerButtonCustomText,
+  hideMessage = false,
 }) => {
   const uid = useId();
   const [message, setMessage] = useState<string | null>(null);
@@ -108,9 +124,15 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
       .email(`${dataForm.validationEmailInvalid}`)
       .required(`${dataForm.validationEmailRequired}`),
 
-    message: Yup.string()
-      .transform((v) => (typeof v === "string" ? v.trim() : v))
-      .required(dataForm.validationMessageRequired!),
+    // Only required while the field is actually shown — a required rule on a
+    // field the visitor cannot see would silently block every submission.
+    ...(hideMessage
+      ? {}
+      : {
+          message: Yup.string()
+            .transform((v) => (typeof v === "string" ? v.trim() : v))
+            .required(dataForm.validationMessageRequired!),
+        }),
 
     preferredContact: Yup.string()
       .oneOf(["phone", "whatsapp", "email"])
@@ -184,16 +206,10 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
 
         setMessage(
           dataForm.successMessage ||
-            (lang === "ru"
-              ? "Мы получили вашу заявку и свяжемся с вами в ближайшее время."
-              : lang === "de"
-                ? "Wir haben Ihre Anfrage erhalten und werden uns in Kürze bei Ihnen melden."
-                : lang === "pl"
-                  ? "Otrzymaliśmy Twoje zapytanie i skontaktujemy się z Tobą wkrótce."
-                  : "We have received your request and will contact you shortly."),
+            formSuccessText(lang),
         );
 
-        setTimeout(() => setMessage(null), 5000);
+        setTimeout(() => setMessage(null), 10000);
       } else {
         console.warn("Form blocked/failed:", response.data);
         throw new Error(response.data?.blocked || "blocked_or_failed");
@@ -205,12 +221,12 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
       const okFalse = error?.response?.data?.ok === false;
 
       if (blocked || okFalse) {
-        setMessage(dataForm.spamBlockedMessage || dataForm.errorMessage);
+        setMessage(dataForm.spamBlockedMessage || dataForm.errorMessage || formErrorText(lang));
       } else {
-        setMessage(dataForm.errorMessage);
+        setMessage(dataForm.errorMessage || formErrorText(lang));
       }
 
-      setTimeout(() => setMessage(null), 7000);
+      setTimeout(() => setMessage(null), 12000);
     } finally {
       setSubmitting(false);
     }
@@ -224,7 +240,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
     <>
       <div className={styles.formMinimal}>
         <div className="container">
-          {message && <div className={styles.popup} role="alert" aria-live="assertive">{message}</div>}
+          {message && <div className={`${styles.popup} form-feedback`} role="alert" aria-live="assertive">{message}</div>}
 
           <Formik
             innerRef={(inst) => {
@@ -457,34 +473,36 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                     />
                   </fieldset>
 
-                  <div className={styles.inputWrapper}>
-                    <label
-                      htmlFor={`${uid}-message`}
-                      className={`${styles.label} ${styles.labelMessage} ${
-                        isMessageFilled ? styles.filled : ""
-                      }`}
-                    >
-                      {dataForm.inputMessage}
-                    </label>
+                  {!hideMessage && (
+                    <div className={styles.inputWrapper}>
+                      <label
+                        htmlFor={`${uid}-message`}
+                        className={`${styles.label} ${styles.labelMessage} ${
+                          isMessageFilled ? styles.filled : ""
+                        }`}
+                      >
+                        {dataForm.inputMessage}
+                      </label>
 
-                    <Field name="message">
-                      {({ field }: any) => (
-                        <textarea
-                          {...field}
-                          id={`${uid}-message`}
-                          autoComplete="off"
-                          className={styles.inputField}
-                          onBlur={field.onBlur}
-                        />
-                      )}
-                    </Field>
+                      <Field name="message">
+                        {({ field }: any) => (
+                          <textarea
+                            {...field}
+                            id={`${uid}-message`}
+                            autoComplete="off"
+                            className={styles.inputField}
+                            onBlur={field.onBlur}
+                          />
+                        )}
+                      </Field>
 
-                    <ErrorMessage
-                      name="message"
-                      component="div"
-                      className={styles.error}
-                    />
-                  </div>
+                      <ErrorMessage
+                        name="message"
+                        component="div"
+                        className={styles.error}
+                      />
+                    </div>
+                  )}
 
                   <Field
                     type="text"
@@ -512,41 +530,15 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                     />
 
                     <label htmlFor={`${uid}-agreedToPolicy`}>
-                      {lang === "ru"
-                        ? "Я согласен с "
-                        : lang === "de"
-                          ? "Ich habe die Bedingungen der "
-                          : lang === "pl"
-                            ? "Zgadzam się z "
-                            : "I agree with the terms of the "}
-                      <Link
-                        className={styles.policyLink}
-                        href={
-                          lang === "ru"
-                            ? "/ru/politika-privatnosti"
-                            : lang === "de"
-                              ? "/de/datenschutzrichtlinie"
-                              : lang === "pl"
-                                ? "/pl/polityka-prywatnosci"
-                                : "/privacy-policy"
-                        }
-                        target="_blank"
-                      >
-                        {lang === "ru"
-                          ? "Пользовательским соглашением"
-                          : lang === "de"
-                            ? "Benutzervereinbarung"
-                            : lang === "pl"
-                              ? "Umowa użytkownika"
-                              : "User agreement"}
+                      {consentCopy(lang).lead}
+                      <Link className={styles.policyLink} href={consentCopy(lang).termsHref} target="_blank">
+                        {consentCopy(lang).termsLabel}
                       </Link>
-                      {lang === "ru"
-                        ? " прочитал и принимаю их"
-                        : lang === "de"
-                          ? " gelesen und akzeptiere sie"
-                          : lang === "pl"
-                            ? " przeczytałem i akceptuję je"
-                            : " read and accept them"}
+                      {consentCopy(lang).mid}
+                      <Link className={styles.policyLink} href={consentCopy(lang).privacyHref} target="_blank">
+                        {consentCopy(lang).privacyLabel}
+                      </Link>
+                      {consentCopy(lang).tail}
                     </label>
                   </div>
 
@@ -558,7 +550,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                       onClick={handleButtonClick}
                     >
                       {isSubmitting ? (
-                        <div className={styles.loader}></div>
+                        <div className={`${styles.loader} form-spinner`}></div>
                       ) : offerButtonCustomText ? (
                         offerButtonCustomText
                       ) : (

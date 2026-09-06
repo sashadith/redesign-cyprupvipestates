@@ -278,22 +278,27 @@
   transform: translateY(-50%);
   width: 20px;
   height: 20px;
-  border: 2px solid #ccc; /* Граница неотмеченного чекбокса */
+  border: 2px solid var(--fs-check-border, #ccc); /* Граница неотмеченного чекбокса */
   border-radius: 4px; /* Скругление углов для круглого чекбокса можно убрать */
-  background-color: white; /* Фон неотмеченного чекбокса */
+  background-color: var(--fs-check-bg, white); /* Фон неотмеченного чекбокса */
 }
 
-.customCheckbox input[type="checkbox"]:checked + label::before {
-  background-color: #bd8948; /* Цвет фона при активации */
-  border-color: #bd8948; /* Цвет границы при активации */
+/* `~` and not `+`: the checked state has to survive the error message.
+   Formik renders that message BETWEEN the input and the label, so with an
+   adjacent-sibling selector the drawn box silently stops showing a tick from
+   the first failed submit onwards — the value toggles, the box does not.
+   A general sibling selector does not care what sits in between. */
+.customCheckbox input[type="checkbox"]:checked ~ label::before {
+  background-color: var(--fs-accent, #bd8948); /* Цвет фона при активации */
+  border-color: var(--fs-accent, #bd8948); /* Цвет границы при активации */
 }
 
-.customCheckbox input[type="checkbox"]:checked + label::after {
+.customCheckbox input[type="checkbox"]:checked ~ label::after {
   content: '✔';
   position: absolute;
   left: 4px;
   top: -3px;
-  color: white; /* Цвет галочки */
+  color: var(--fs-accent-ink, white); /* Цвет галочки */
   font-size: 15px;
 
   @media screen and (min-width: 768px) {

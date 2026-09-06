@@ -1,0 +1,367 @@
+/* The in-article contact block (FormMinimalBlockComponent), re-skinned to the
+   site's light-section language.
+
+   That component is a near-clone of FormStandard, styled through hashed CSS
+   module classes, and it was written for a DARK background: its radio legend
+   and consent label are both `color: #fff`. On the article's cream ground that
+   made two lines of real copy invisible — including the consent text a visitor
+   is asked to agree to. It also kept the old grey fields and the flat bronze
+   button while every other form on the site moved on.
+
+   Nothing in the component is touched. Every rule below is scoped to `.artform`
+   and uses an element (or two) alongside it, which outranks a single module
+   class without !important:
+     .artform form label   (0,1,2)  beats  .customCheckbox label  (0,1,1)
+     .artform form legend  (0,1,2)  beats  .radioGroupLabel       (0,1,0)
+
+   Values are taken from `.formsec` in tokens.css — the contact section further
+   down the same article — so the two forms on one page read as one system. */
+
+/* A quiet card spanning the article column's full width, with the phone
+   artwork on the right — the same per-language asset the contact modal uses. */
+.artform {
+  margin-block: clamp(32px, 4vw, 56px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.6fr);
+  align-items: stretch;
+  background: var(--surface-raised);
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.artform__form {
+  padding: clamp(24px, 3vw, 40px);
+  min-width: 0;
+
+  /* FormStandard's stylesheet reads its colours from these (each with the old
+     hardcoded value as a fallback). Without them the drawn checkbox fell back
+     to #BD8948 and a white/#ccc box — the only parts of this form still in the
+     old palette. */
+  --fs-accent: var(--accent);
+  --fs-accent-ink: var(--accent-ink);
+  --fs-check-bg: var(--glass-bg);
+  --fs-check-border: var(--hairline-strong);
+}
+
+/* Two caps, both meant for a full-bleed page section, both released here:
+   the component root carries max-width:60% with auto side margins, and the
+   .container inside it adds its own. Together they squeezed the form to 296px
+   of the 574px column and centred it — which is also why the three contact
+   options wrapped onto two lines with room to spare. */
+.artform__form > div {
+  max-width: none;
+  width: 100%;
+  margin-inline: 0;
+}
+
+.artform .container {
+  max-width: none;
+  width: 100%;
+  padding-inline: 0;
+  margin-inline: 0;
+}
+
+.artform__art {
+  position: relative;
+  min-height: 260px;
+  /* No gradient: the card already has its own ground, and a second one behind
+     the cut-out phone only read as a stray cloud. */
+  background: transparent;
+}
+.artform__art img {
+  position: absolute;
+  right: 0;
+  bottom: -6%;
+  width: min(118%, 393px);
+  /* A global `img { max-width: 100% }` capped this to the column's own width,
+     so the +15% never took effect. */
+  max-width: none;
+  /* A hand holding a phone is never perfectly still. Two slow cycles of
+     different lengths (7s rise/fall, 11s tilt) never line up, so the movement
+     reads as breathing rather than as a loop. Amplitudes: 7px and 2deg.
+     Both cycles start and end at rest, so nothing snaps when they begin.
+     No background glow or ripple: the gradient behind this image was removed
+     on purpose, and motion alone carries it. */
+  animation: artFloat 7s ease-in-out infinite, artTilt 11s ease-in-out infinite;
+  transform-origin: 55% 100%;
+  will-change: transform;
+  /* Matches the asset (950x1425). Without it the absolutely-positioned image
+     has zero height until it loads, never intersects the viewport, and
+     loading="lazy" therefore never fires — the image simply never appears.
+     Declaring the ratio gives it a real box up front and also removes the
+     layout shift. */
+  aspect-ratio: 950 / 1425;
+  height: auto;
+  object-fit: contain;
+  object-position: bottom right;
+}
+
+/* ------------------------------------------------------------------ fields */
+.artform form input[type="text"],
+.artform form input[type="email"],
+.artform form input[type="tel"],
+.artform form textarea,
+.artform form .PhoneInput {
+  width: 100%;
+  padding: 13px 15px;
+  border-radius: 12px;
+  color: var(--text);
+  background: var(--glass-bg);
+  border: 1px solid var(--hairline-strong);
+  font-family: var(--font-body), sans-serif;
+  font-size: 1rem;
+  /* 20% shorter than the column, so the fields read as a form rather than as
+     full-width bars. Only the fields — the options row, the consent line and
+     the button keep the full width. */
+  max-width: 80%;
+  transition: border-color var(--dur-sm) var(--ease), box-shadow var(--dur-sm) var(--ease);
+}
+.artform form input[type="text"]:focus,
+.artform form input[type="email"]:focus,
+.artform form input[type="tel"]:focus,
+.artform form textarea:focus,
+.artform form .PhoneInput:focus-within {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* The phone widget's container carries the field surface; the inner input is
+   itself an input[type="tel"], so it has to be reset explicitly or it draws a
+   second bordered box inside the first. */
+.artform form .PhoneInput input.PhoneInputInput {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  width: 100%;
+}
+.artform form .PhoneInput input.PhoneInputInput:focus { outline: none; box-shadow: none; }
+
+/* Name, surname and email each carry an absolutely positioned icon at left:20px,
+   20px wide — so the text must start clear of 40px. The generic 15px padding
+   above ran the typed value straight over the icon. 50px matches the floating
+   label's own left offset, so placeholder and value line up exactly.
+   The phone row is excluded: it has no icon, its flag is a laid-out child. */
+.artform form input[type="text"],
+.artform form input[type="email"] {
+  padding-left: 50px;
+}
+.artform form .PhoneInputCountry { margin-right: 12px; }
+.artform form .PhoneInputCountryIcon { background: transparent; box-shadow: none; }
+
+/* --------------------------------------------------------------- the copy */
+/* Both of these were #fff — invisible on this ground. */
+.artform form label,
+.artform form legend {
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--text-sm);
+  letter-spacing: 0.02em;
+  color: var(--text-soft);
+}
+
+.artform form legend {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+/* --accent-ink is the colour of text ON the accent, and on a light section it
+   resolves to #FFFFFF — which is why the policy link was invisible on the
+   card. --accent is the accent itself (bronze here). */
+/* --accent-ink is the colour of text ON the accent, and on a light section it
+   resolves to #FFFFFF — which is why the policy link was invisible on the
+   card. --accent is the accent itself (bronze here).
+   No underline, per the brief; the weight keeps the links recognisable by
+   something other than colour alone, and the underline returns on hover. */
+.artform form a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+.artform form a:hover { text-decoration: underline; text-underline-offset: 2px; }
+
+/* The submit confirmation, matched to the field width rather than the form's.
+   Set here rather than in formFeedback.css, because the 80% cap is specific to
+   this article layout — the modal and the page sections run their fields full
+   width and their confirmation should follow suit. */
+.artform [role="alert"] {
+  max-width: 80%;
+}
+
+/* ------------------------------------------------------------------ errors */
+/* The module positions these absolutely, on top of the field — which is why
+   the message sat inside the input, over the placeholder. Each error div is
+   the element right after its control, so an adjacent-sibling selector reaches
+   it without needing the hashed class:
+     .artform form input + div   (0,1,2)  beats  .error  (0,1,0)  */
+.artform form input + div,
+.artform form textarea + div,
+.artform form .PhoneInput + div,
+.artform form fieldset > div + div {
+  position: static;
+  /* All four of these have to be undone, not just `position`: the module also
+     sets left:50% and transform:translateX(-50%) to centre the message over
+     the field. With position:static the offsets stop applying but the
+     TRANSFORM does not — it kept shifting each message half its own width to
+     the left, out of the card. */
+  transform: none;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  height: auto;
+  width: auto;
+  max-width: 100%;
+  background: transparent;
+  padding: 0;
+  margin-top: 6px;
+  display: block;
+  text-align: left;
+  font-size: 12.5px;
+  line-height: 1.35;
+  /* The champagne family, but the deeper end of it. True champagne (#C29A5E)
+     measures only 2.47:1 on this cream card — unreadable for a message the
+     visitor has to act on. #7E5E35 is the same hue at 5.64:1. */
+  color: #7e5e35;
+}
+/* The consent error is rendered BETWEEN the hidden checkbox and the label it
+   belongs to, so in source order it lands above that line. `order` only works
+   on a flex child, and the wrapper is a plain block — :has() reaches it (no
+   hashed class needed) and turns it into a row, after which the error can be
+   pushed below. */
+.artform form div:has(> input[type="checkbox"]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+}
+.artform form input[type="checkbox"] + div {
+  order: 2;
+  width: 100%;
+  margin-top: 8px;
+}
+
+
+/* The real checkbox is rendered but invisible, instead of display:none.
+
+   The module hides it outright and draws the box with label::before, relying on
+   the browser forwarding a label click to a control that is not rendered at
+   all. WebKit has long been unreliable about exactly that, which is the most
+   likely reason the box does not respond in Safari while it toggles correctly
+   under test here. Keeping the input in the layout (1x1, transparent, out of
+   the way) makes the forwarding the ordinary, well-supported case. The drawn
+   box stays exactly as it is — nothing about the appearance changes.
+
+   The selector has to out-specify `.customCheckbox input[type="checkbox"]`
+   (0,1,1); a plain scope + element tied with it and lost on source order, so
+   the input stayed display:none. Wrapping it in :has() lifts it clear. */
+.artform form div:has(> input[type="checkbox"]) { position: relative; }
+.artform form div:has(> input[type="checkbox"]) > input[type="checkbox"] {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+/* -------------------------------------------------------- contact options */
+.artform form fieldset { border: 0; padding: 0; min-width: 0; }
+/* The module lays the options out in a nowrap flex row; in this column the
+   third one ran past the card's edge. */
+.artform form fieldset > div:first-of-type {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.artform form fieldset label {
+  background: var(--glass-bg);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 999px;
+  padding: 9px 16px;
+  cursor: pointer;
+  transition: border-color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease);
+}
+.artform form fieldset label:hover { border-color: var(--accent); }
+.artform form fieldset label:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text);
+}
+.artform form input[type="radio"],
+.artform form input[type="checkbox"] { accent-color: var(--accent); }
+
+/* ------------------------------------------------------------------ submit */
+/* The module sizes this for a full-width page section and paints it bronze.
+   The article's own contact section uses the dark bar, so this matches it. */
+.artform form button[type="submit"] {
+  margin-top: var(--s-6);
+  /* The module centres it with margin-inline:auto and stretches it to 100%;
+     both are taken back so it sits at the start of the column. */
+  margin-inline: 0;
+  margin-right: auto;
+  /* Same 80% as the input fields above it, so the column has one edge. */
+  width: 80%;
+  min-width: 0;
+  height: 52px;
+  padding: 0 28px;
+  border-radius: 12px;
+  background: var(--bronze);
+  border: 1px solid var(--bronze);
+  color: var(--ivory);
+  font-family: var(--font-body), sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: box-shadow var(--dur-sm) var(--ease), transform 0.15s var(--ease);
+}
+.artform form button[type="submit"]:hover {
+  background: #9c7743;
+  border-color: #9c7743;
+  box-shadow: 0 10px 34px -14px rgba(142, 107, 61, 0.7);
+}
+.artform form button[type="submit"]:active { transform: scale(0.995); }
+.artform form button[type="submit"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+@media (max-width: 900px) {
+  .artform { grid-template-columns: 1fr; }
+  .artform__art { min-height: 200px; order: -1; }
+  .artform__art img { width: min(70%, 260px); right: 50%; transform: translateX(50%); bottom: -10%; }
+}
+
+@media (max-width: 640px) {
+  .artform form button[type="submit"] { width: 100%; }
+}
+
+/* ------------------------------------------------------------- motion */
+@keyframes artFloat {
+  0%, 100% { translate: 0 0; }
+  50%      { translate: 0 -7px; }
+}
+@keyframes artTilt {
+  /* Starts and ends at rest, swinging both ways in between. The earlier
+     version began at -2deg while the element sat at 0, so the moment the
+     animation started it snapped 2 degrees — visible as a jolt when the modal
+     opens and the delay expires. Same amplitude, no jump, and 0 -> 0 loops
+     seamlessly. */
+  0%   { rotate: 0deg; }
+  25%  { rotate: 2deg; }
+  75%  { rotate: -2deg; }
+  100% { rotate: 0deg; }
+}
+
+/* Independent properties (translate/rotate) rather than one transform, so the
+   two animations compose instead of overwriting each other. */
+
+@media (prefers-reduced-motion: reduce) {
+  .artform__art img { animation: none; }
+}

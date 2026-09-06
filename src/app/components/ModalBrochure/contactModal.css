@@ -34,7 +34,10 @@
      transparent, the field keeps its own surface and only the message is
      added on top. */
   --fs-error-bg: transparent;
-  --fs-error: #d8a59b;
+  /* White. Brighter than the ivory body text (#efe9db), so the message still
+     stands out from the labels around it without an alarm-red register.
+     15.6:1 on the panel. */
+  --fs-error: #ffffff;
   --fs-agree: rgba(239, 233, 219, 0.66);
   --fs-check-bg: rgba(255, 255, 255, 0.06);
   --fs-check-border: rgba(194, 154, 94, 0.45);
@@ -147,7 +150,11 @@
   font-size: clamp(14px, 1.1vw, 16px);
   line-height: 1.55;
   color: rgba(239, 233, 219, 0.66);
-  max-width: 42ch;
+  /* Full column width, matching the fields below. A 42ch measure is the right
+     call for a long text column, but here it broke a two-line sentence after
+     "meist" while the fields ran on well past it — the ragged edge read as a
+     mistake rather than as typography. */
+  max-width: none;
 }
 
 /* ------------------------------------------------------------------ close */
@@ -181,17 +188,49 @@
 }
 .cvpm__art img {
   position: absolute;
-  bottom: -4%;
+  /* 30px lower than the panel's own -4% bleed. */
+  bottom: calc(-4% - 30px);
   right: 0;
   left: auto;
   width: min(112%, 462px);
   transform: none;
   filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.55));
-  animation: cvpmArtIn 0.7s 0.12s var(--cvpm-ease) both;
+  /* Entrance, then the same idle motion the in-article form uses: two slow
+     cycles of different lengths (7s rise/fall, 11s tilt) that never line up,
+     so it reads as breathing rather than as a loop. The idle pair starts once
+     the entrance has settled.
+
+     They use the independent `translate`/`rotate` properties while the
+     entrance animates `transform`, so the three compose instead of
+     overwriting each other. */
+  animation:
+    cvpmArtIn 0.7s 0.12s var(--cvpm-ease) both,
+    cvpmArtFloat 7s 0.9s ease-in-out infinite,
+    cvpmArtTilt 11s 0.9s ease-in-out infinite;
+  transform-origin: 55% 100%;
 }
 @keyframes cvpmArtIn {
   from { opacity: 0; transform: translate(26px, 30px); }
   to { opacity: 1; transform: none; }
+}
+@keyframes cvpmArtFloat {
+  0%, 100% { translate: 0 0; }
+  50%      { translate: 0 -7px; }
+}
+@keyframes cvpmArtTilt {
+  /* Starts and ends at rest, swinging both ways in between. The earlier
+     version began at -2deg while the element sat at 0, so the moment the
+     animation started it snapped 2 degrees — visible as a jolt when the modal
+     opens and the delay expires. Same amplitude, no jump, and 0 -> 0 loops
+     seamlessly. */
+  0%   { rotate: 0deg; }
+  25%  { rotate: 2deg; }
+  75%  { rotate: -2deg; }
+  100% { rotate: 0deg; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cvpm__art img { animation: none; }
 }
 
 /* --------------------------------------------------------- the form skin */
@@ -265,6 +304,81 @@
   margin-top: 4px;
   margin-bottom: 14px;
 }
+
+/* ------------------------------------------------------------------ errors */
+/* FormStandard positions each message absolutely OVER its field, centred with
+   left:50% + transform:translateX(-50%). On the page-section layout it was
+   meant to sit inside the field; here it landed half-behind the NEXT field.
+   Each message is the element right after its control, so an adjacent-sibling
+   selector reaches it without the hashed class, and all four offsets have to
+   be undone — position:static alone leaves the transform shifting it half its
+   own width to the left. */
+.cvpm__form input + div,
+.cvpm__form textarea + div,
+.cvpm__form .PhoneInput + div,
+.cvpm__form fieldset > div + div {
+  position: static;
+  transform: none;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  height: auto;
+  width: auto;
+  max-width: 100%;
+  background: transparent;
+  padding: 0;
+  margin-top: 6px;
+  display: block;
+  text-align: left;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--fs-error);
+}
+
+/* The consent message is rendered BETWEEN the hidden checkbox and its label,
+   so in source order it lands above the line it belongs to. `order` needs a
+   flex parent; :has() reaches that wrapper without a hashed class. */
+.cvpm__form div:has(> input[type="checkbox"]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 10px;
+}
+.cvpm__form input[type="checkbox"] + div {
+  order: 2;
+  width: 100%;
+  margin-top: 8px;
+}
+
+
+/* The real checkbox is rendered but invisible, instead of display:none.
+
+   The module hides it outright and draws the box with label::before, relying on
+   the browser forwarding a label click to a control that is not rendered at
+   all. WebKit has long been unreliable about exactly that, which is the most
+   likely reason the box does not respond in Safari while it toggles correctly
+   under test here. Keeping the input in the layout (1x1, transparent, out of
+   the way) makes the forwarding the ordinary, well-supported case. The drawn
+   box stays exactly as it is — nothing about the appearance changes.
+
+   The selector has to out-specify `.customCheckbox input[type="checkbox"]`
+   (0,1,1); a plain scope + element tied with it and lost on source order, so
+   the input stayed display:none. Wrapping it in :has() lifts it clear. */
+.cvpm__form div:has(> input[type="checkbox"]) { position: relative; }
+.cvpm__form div:has(> input[type="checkbox"]) > input[type="checkbox"] {
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 
 /* The three contact-preference options read as a segmented control. */
 .cvpm__form fieldset { border: 0; }

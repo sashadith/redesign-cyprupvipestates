@@ -6,6 +6,7 @@
 // fonts (Fraunces/Mulish/Playfair) are already global via [lang]/layout.tsx.
 import "@/app/preview-home/tokens.css";
 import "@/app/preview-insights/insights.css";
+import "@/app/preview-insights/articleForm.css";
 // .prj/.prj__* card styles for ProjectsSectionBlockComponent's reuse of the
 // /projects listing's own ProjectCard — same stylesheet the listing page and
 // the project detail page (for AlternativesBlock) already import; global
@@ -277,7 +278,36 @@ const PagePost = async ({ params }: Props) => {
         return <ProjectsSectionSlider block={{ ...b, projects: projectsToShow }} lang={lang} />;
       }
       case "formMinimalBlock":
-        return <FormMinimalBlockComponent form={block.form} lang={lang} offerButtonCustomText={block.buttonText} />;
+        // Wrapped so articleForm.css can re-skin it from the outside. The
+        // component itself is a dark-background clone of FormStandard — on this
+        // cream ground its radio legend and consent label rendered white on
+        // white. See articleForm.css for what the scope fixes and why.
+        //
+        // The phone artwork is the same per-language asset the contact modal
+        // uses, so the two forms a reader meets in one article show the same
+        // adviser. Dropped by CSS on narrow screens rather than by JS, so this
+        // stays a server component.
+        return (
+          <div className="artform">
+            <div className="artform__form">
+              <FormMinimalBlockComponent
+                form={block.form}
+                lang={lang}
+                offerButtonCustomText={block.buttonText}
+                hideMessage
+              />
+            </div>
+            <div className="artform__art" aria-hidden="true">
+              {/* No loading="lazy": the artwork is part of the block's design, not
+                  a below-fold extra, and the same 125KB asset loads eagerly in
+                  the contact modal. Lazy also proved fragile here — absolutely
+                  positioned, it has no height until it loads, so it can fail to
+                  intersect and never load at all (the aspect-ratio in
+                  articleForm.css guards that, but eager is simply certain). */}
+              <img src={`/img/contact/iphone-${["en", "de", "pl", "ru"].includes(lang) ? lang : "en"}.webp`} alt="" />
+            </div>
+          </div>
+        );
       default:
         return renderInsightsBlock(block);
     }

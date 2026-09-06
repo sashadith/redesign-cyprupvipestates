@@ -20,6 +20,8 @@ import styles from "./FormStandard.module.scss";
 import { Form as FormType } from "@/types/form";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import "../formFeedback.css";
+import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 
 const NAME_MIN = 2;
 const NAME_MAX = 22;
@@ -322,17 +324,11 @@ const FormStandard: FC<ContactFormProps> = ({
         onFormSubmitSuccess && onFormSubmitSuccess();
         setMessage(
           dataForm.successMessage ||
-            (lang === "ru"
-              ? "Мы получили вашу заявку и свяжемся с вами в ближайшее время."
-              : lang === "de"
-                ? "Wir haben Ihre Anfrage erhalten und werden uns in Kürze bei Ihnen melden."
-                : lang === "pl"
-                  ? "Otrzymaliśmy Twoje zapytanie i skontaktujemy się z Tobą wkrótce."
-                  : "We have received your request and will contact you shortly."),
+            formSuccessText(lang),
         );
         setTimeout(() => {
           setMessage(null);
-        }, 5000);
+        }, 10000);
       } else {
         console.warn("Form blocked/failed:", response.data);
         throw new Error(response.data?.blocked || "blocked_or_failed");
@@ -343,13 +339,13 @@ const FormStandard: FC<ContactFormProps> = ({
       const okFalse = error?.response?.data?.ok === false;
 
       if (blocked || okFalse) {
-        setMessage(dataForm.spamBlockedMessage || dataForm.errorMessage);
+        setMessage(dataForm.spamBlockedMessage || dataForm.errorMessage || formErrorText(lang));
       } else {
-        setMessage(dataForm.errorMessage);
+        setMessage(dataForm.errorMessage || formErrorText(lang));
       }
       setTimeout(() => {
         setMessage(null);
-      }, 7000);
+      }, 12000);
     } finally {
       setSubmitting(false);
     }
@@ -361,7 +357,7 @@ const FormStandard: FC<ContactFormProps> = ({
 
   return (
     <>
-      {message && <div className={styles.popup} role="alert" aria-live="assertive">{message}</div>}
+      {message && <div className={`${styles.popup} form-feedback`} role="alert" aria-live="assertive">{message}</div>}
       <Formik
         innerRef={(inst) => {
           formikRef.current = inst;
@@ -653,7 +649,7 @@ const FormStandard: FC<ContactFormProps> = ({
                   onClick={handleButtonClick}
                 >
                   {isSubmitting ? (
-                    <div className={styles.loader}></div>
+                    <div className={`${styles.loader} form-spinner`}></div>
                   ) : offerButtonCustomText ? (
                     offerButtonCustomText
                   ) : (

@@ -18,6 +18,8 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 
 import styles from "./FormStatic.module.scss";
 import Link from "next/link";
+import "../formFeedback.css";
+import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 
 export type FormData = {
   name: string;
@@ -198,38 +200,22 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
 
         onFormSubmitSuccess && onFormSubmitSuccess();
 
-        setMessage(
-          lang === "ru"
-            ? "Мы получили вашу заявку и свяжемся с вами в ближайшее время."
-            : lang === "de"
-              ? "Wir haben Ihre Anfrage erhalten und werden uns in Kürze bei Ihnen melden."
-              : lang === "pl"
-                ? "Otrzymaliśmy Twoje zapytanie i skontaktujemy się z Tobą wkrótce."
-                : "We have received your request and will contact you shortly.",
-        );
+        setMessage(formSuccessText(lang));
 
         setTimeout(() => {
           setMessage(null);
-        }, 5000);
+        }, 10000);
       } else {
         throw new Error("Failed to send lead to monday.com");
       }
     } catch (error) {
       console.error("Error:", error);
 
-      setMessage(
-        lang === "ru"
-          ? "Произошла ошибка при отправке заявки. Попробуйте позже."
-          : lang === "de"
-            ? "Beim Senden der Anfrage ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut."
-            : lang === "pl"
-              ? "Wystąpił błąd podczas wysyłania zapytania. Spróbuj ponownie później."
-              : "An error occurred while sending the request. Please try again later.",
-      );
+      setMessage(formErrorText(lang));
 
       setTimeout(() => {
         setMessage(null);
-      }, 7000);
+      }, 12000);
     } finally {
       setSubmitting(false);
     }
@@ -241,7 +227,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
 
   return (
     <>
-      {message && <div className={styles.popup} role="alert" aria-live="assertive">{message}</div>}
+      {message && <div className={`${styles.popup} form-feedback`} role="alert" aria-live="assertive">{message}</div>}
 
       <Formik
         innerRef={(inst) => {
@@ -514,7 +500,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                         onClick={handleButtonClick}
                       >
                         {isSubmitting ? (
-                          <div className={styles.loader}></div>
+                          <div className={`${styles.loader} form-spinner`}></div>
                         ) : lang === "ru" ? (
                           "Отправить"
                         ) : lang === "de" ? (

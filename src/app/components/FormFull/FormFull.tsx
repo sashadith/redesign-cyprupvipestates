@@ -18,6 +18,8 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 
 import styles from "./FormFull.module.scss";
 import Link from "next/link";
+import "../formFeedback.css";
+import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 
 export type FormData = {
   name: string;
@@ -205,16 +207,10 @@ const FormFull: FC<ContactFormProps> = ({
 
         setMessagePopup(
           dataForm.successMessage ||
-            (lang === "ru"
-              ? "Мы получили вашу заявку и свяжемся с вами в ближайшее время."
-              : lang === "de"
-                ? "Wir haben Ihre Anfrage erhalten und werden uns in Kürze bei Ihnen melden."
-                : lang === "pl"
-                  ? "Otrzymaliśmy Twoje zapytanie i skontaktujemy się z Tobą wkrótce."
-                  : "We have received your request and will contact you shortly."),
+            formSuccessText(lang),
         );
 
-        setTimeout(() => setMessagePopup(null), 5000);
+        setTimeout(() => setMessagePopup(null), 10000);
       } else {
         console.warn("Form blocked/failed:", response.data);
         throw new Error(response.data?.blocked || "blocked_or_failed");
@@ -226,20 +222,12 @@ const FormFull: FC<ContactFormProps> = ({
       const okFalse = error?.response?.data?.ok === false;
 
       if (blocked || okFalse) {
-        setMessagePopup(dataForm.spamBlockedMessage || dataForm.errorMessage);
+        setMessagePopup(dataForm.spamBlockedMessage || dataForm.errorMessage || formErrorText(lang));
       } else {
-        setMessagePopup(
-          lang === "ru"
-            ? "Произошла ошибка при отправке заявки. Попробуйте позже."
-            : lang === "de"
-              ? "Beim Senden der Anfrage ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut."
-              : lang === "pl"
-                ? "Wystąpił błąd podczas wysyłania zapytania. Spróbuj ponownie później."
-                : "An error occurred while sending the request. Please try again later.",
-        );
+        setMessagePopup(formErrorText(lang));
       }
 
-      setTimeout(() => setMessagePopup(null), 7000);
+      setTimeout(() => setMessagePopup(null), 12000);
     } finally {
       setSubmitting(false);
     }
@@ -247,7 +235,7 @@ const FormFull: FC<ContactFormProps> = ({
 
   return (
     <>
-      {messagePopup && <div className={styles.popup} role="alert" aria-live="assertive">{messagePopup}</div>}
+      {messagePopup && <div className={`${styles.popup} form-feedback`} role="alert" aria-live="assertive">{messagePopup}</div>}
 
       <Formik
         innerRef={(inst) => {
@@ -572,7 +560,7 @@ const FormFull: FC<ContactFormProps> = ({
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
-                    <div className={styles.loader}></div>
+                    <div className={`${styles.loader} form-spinner`}></div>
                   ) : offerButtonCustomText ? (
                     offerButtonCustomText
                   ) : (

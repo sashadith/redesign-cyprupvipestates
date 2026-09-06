@@ -1,0 +1,141 @@
+/* Submit feedback — the spinner and the confirmation, shared by every form.
+
+   Seven components (FormStandard, FormMinimalBlockComponent, FormFull,
+   FormStatic, FormPartners, FormRoi and the homepage contact section) are
+   clones of one another, each with its own hashed CSS module. Their submit
+   feedback was inherited from that common ancestor and never revisited:
+
+   - the confirmation was a fixed box covering 85% of the viewport width, in
+     flat #bd8948 with a black drop-shadow offset up and to the LEFT (-3px -6px),
+     which reads as lighting from below;
+   - the spinner was the box-shadow "mulShdSpin" trick — eight dots chasing each
+     other, at font-size 10px so it rendered about 10px across.
+
+   Neither can be reached by class name from outside, so both are addressed
+   structurally, and both selectors outrank a single module class without
+   !important:
+
+     .form-feedback   the confirmation, marked in each component
+     .form-spinner     the spinner is the button's only child
+                                          while submitting            (0,1,3)
+
+   Imported by each form component directly rather than from a route, so it is
+   present wherever a form is. */
+
+/* ------------------------------------------------------------ the spinner */
+.form-spinner {
+  width: 18px;
+  height: 18px;
+  font-size: 0;
+  text-indent: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: currentColor;
+  /* The module animates box-shadow to draw its dots; that has to stop, or the
+     eight dots keep orbiting inside the new ring. */
+  box-shadow: none;
+  animation: formSpin 0.7s linear infinite;
+}
+
+@keyframes formSpin {
+  to { rotate: 360deg; }
+}
+
+/* --------------------------------------------------------- the confirmation */
+/* A banner at the top of the form, IN FLOW — deliberately not a fixed toast.
+   A fixed toast is unreliable here: ArticleMotion sets a GSAP transform on
+   every direct child of .iart__content, including the card a form sits in, and
+   a transformed ancestor becomes the containing block for position:fixed. The
+   toast then anchors itself inside the card instead of the viewport. Measured
+   2026-09-06: transform: matrix(1,0,0,1,0,26) still present after the reveal.
+   In flow it behaves the same in the modal, in an article and in a page
+   section, with no z-index and no containing-block surprises. */
+.form-feedback {
+  position: static;
+  inset: auto;
+  transform: none;
+  translate: 0;
+  z-index: auto;
+
+  display: block;
+  width: 100%;
+  max-width: none;
+  margin: 0 0 20px;
+  padding: 15px 18px 15px 50px;
+  position: relative;
+
+  /* Bronze, but a shade deeper than the brand's #8E6B3D: ivory on that lands
+     at 4.02:1, just under the 4.5:1 WCAG AA needs for body text. #7E5E35
+     reads the same and measures 4.90:1. */
+  background: #7e5e35;
+  color: #efe9db;
+  border: 1px solid rgba(239, 233, 219, 0.28);
+  border-radius: 12px;
+  box-shadow: none;
+  filter: none;
+
+  font-family: var(--font-body), sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: left;
+  letter-spacing: 0;
+
+  animation: formAlertIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* A check mark, drawn rather than shipped as an asset. */
+.form-feedback::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  border-radius: 50%;
+  background: rgba(239, 233, 219, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(239, 233, 219, 0.5);
+}
+.form-feedback::after {
+  content: "";
+  position: absolute;
+  left: 22px;
+  top: 50%;
+  width: 8px;
+  height: 4px;
+  margin-top: -4px;
+  border-left: 1.5px solid #efe9db;
+  border-bottom: 1.5px solid #efe9db;
+  rotate: -45deg;
+}
+
+/* The drawn tick would be a lie on a failure, so the error state swaps it for
+   an exclamation. Same banner otherwise — the message itself carries the tone,
+   and a second colour would compete with the brand bronze. */
+.form-feedback--error::after {
+  content: "!";
+  left: 16px;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  border: 0;
+  rotate: none;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-body), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  color: #efe9db;
+}
+
+@keyframes formAlertIn {
+  from { opacity: 0; translate: 0 -8px; }
+  to   { opacity: 1; translate: 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form-spinner { animation-duration: 1.4s; }
+  .form-feedback { animation: none; }
+}

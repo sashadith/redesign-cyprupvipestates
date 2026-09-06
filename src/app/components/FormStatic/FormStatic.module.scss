@@ -349,12 +349,17 @@
   background: #f5f5f5;
 }
 
-.customCheckbox input[type="checkbox"]:checked + label::before {
+/* `~` and not `+`: the checked state has to survive the error message.
+   Formik renders that message BETWEEN the input and the label, so with an
+   adjacent-sibling selector the drawn box silently stops showing a tick from
+   the first failed submit onwards — the value toggles, the box does not.
+   A general sibling selector does not care what sits in between. */
+.customCheckbox input[type="checkbox"]:checked ~ label::before {
   background: #d2ae82;
   border-color: #fff;
 }
 
-.customCheckbox input[type="checkbox"]:checked + label::after {
+.customCheckbox input[type="checkbox"]:checked ~ label::after {
   content: "✔";
   position: absolute;
   left: 4px;
