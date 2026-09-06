@@ -945,9 +945,15 @@ img { max-width: 100%; display: block; }
    FAQ page's "Your question" textarea) — no-op at 1 column */
 .formsec__field--full { grid-column: 1 / -1; }
 .formsec__label { font-family: var(--font-body), sans-serif; font-size: var(--text-sm); letter-spacing: 0.02em; color: var(--text-soft); }
+/* One height for every field. react-phone-number-input gives .PhoneInputInput
+   height:100%, so the phone row was sized by the country box (48px) while the
+   text inputs sized themselves from their own padding and came out at 55.2px.
+   An explicit height settles it; inputs and selects centre their text
+   vertically on their own, so the vertical padding goes with it. The textarea
+   opts back out below — it has to grow. */
 .formsec__input,
 .formsec .PhoneInputInput {
-  width: 100%; padding: 13px 15px; border-radius: 12px; color: var(--text);
+  width: 100%; height: 48px; padding: 0 15px; border-radius: 12px; color: var(--text);
   background: var(--glass-bg); border: 1px solid var(--hairline-strong);
   font-family: var(--font-body), sans-serif; font-size: 1rem;
   transition: border-color var(--dur-sm) var(--ease), box-shadow var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease);
@@ -960,7 +966,20 @@ img { max-width: 100%; display: block; }
 }
 /* addon on top of .formsec__input — same border/background/focus treatment,
    just the sizing a multi-line field needs */
-.formsec__textarea { resize: vertical; min-height: 110px; line-height: 1.5; }
+.formsec__textarea { height: auto; padding: 13px 15px; resize: vertical; min-height: 110px; line-height: 1.5; }
+/* Same, for the one <select> in the form (the optional budget range). The UA
+   arrow is replaced by a drawn chevron so the control matches the text inputs
+   across browsers; padding-right keeps the longest option clear of it. */
+.formsec__select {
+  appearance: none;
+  padding: 0 40px 0 15px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238a8578' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+}
+.formsec__select:invalid,
+.formsec__select option[value=""] { color: var(--text-faint); }
 /* react-phone-number-input layout on dark */
 .formsec .PhoneInput { display: flex; align-items: center; gap: 10px; }
 .formsec .PhoneInputCountry {
@@ -982,11 +1001,23 @@ img { max-width: 100%; display: block; }
 .formsec__radio-option input { accent-color: var(--champagne); }
 .formsec__radio-option:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
 
-/* !important so the CSS minifier can't drop the deep-green as "overridden" vs
-   .btn--primary (it strips it from both 1- and 2-class non-hover selectors) */
-.formsec__submit { margin-top: var(--s-6); min-width: 180px; justify-content: center; background: var(--sea-deep) !important; color: var(--ivory) !important; border-color: var(--hairline-strong); }
-.formsec__submit:hover { border-color: var(--accent); }
-.formsec__loader { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(8, 21, 18, 0.35); border-top-color: var(--sea-deep); animation: spin 0.7s linear infinite; }
+/* Bronze, with white as the ink: white on bronze measures 4.86:1 and clears
+   AA, ivory would only reach 4.02:1. The hover is a shade deeper (5.93:1).
+   Named literally rather than through --accent, so the button stays bronze
+   even where the surrounding scope switches --accent to champagne.
+   !important so the CSS minifier can't drop these as "overridden" vs
+   .btn--primary (it strips them from both 1- and 2-class non-hover selectors) */
+/* The confirmation lines up with the field grid rather than the full column,
+   and sits centred between the consent line and the button: the shared banner
+   brings margin 0 0 20px, and the button adds its own 32px on top of that, so
+   without these two rules it clings to the consent line with a 52px gap below. */
+.formsec__feedback { max-width: 100%; margin: var(--s-5) 0 0; }
+.formsec__feedback + .formsec__submit { margin-top: var(--s-5); }
+@media (min-width: 560px) { .formsec__feedback { max-width: 90%; } }
+.formsec__submit { margin-top: var(--s-6); min-width: 180px; justify-content: center; background: var(--bronze) !important; color: #ffffff !important; border-color: var(--bronze); }
+.formsec__submit:hover { background: #7e5e35 !important; border-color: #7e5e35; }
+/* The spinner sits inside the button, so it is drawn in the button's ink. */
+.formsec__loader { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.35); border-top-color: #ffffff; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .formsec__consent { margin-top: var(--s-5); display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--text-soft); }
@@ -997,28 +1028,23 @@ img { max-width: 100%; display: block; }
 
 .formsec__aside { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--s-4); }
 /* image, divider and caption share the portrait width and sit at the same left edge */
-.formsec__consultant-wrap { position: relative; width: min(320px, 80%); }
+.formsec__consultant-wrap { position: relative; width: min(384px, 96%); }
 .formsec__consultant { width: 100%; height: auto; border-radius: var(--r-ui); display: block; }
 /* static golden divider flush under the consultant, fading out left and right */
 .formsec__consultant-wrap::after {
   content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
   background: linear-gradient(90deg, transparent, #c29a5e 30%, #c29a5e 70%, transparent);
 }
-.formsec__caption { display: flex; flex-direction: column; gap: 2px; width: min(320px, 80%); align-items: flex-start; text-align: left; }
+.formsec__caption { display: flex; flex-direction: column; gap: 2px; width: min(384px, 96%); align-items: flex-start; text-align: left; }
 .formsec__caption strong { font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: 1.25rem; color: var(--text); }
 .formsec__caption span { font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--accent); letter-spacing: 0.04em; }
 /* desktop: nudge the portrait (and its divider) 150px left and float the caption to
    the lower-right of the image, at roughly jacket-pocket height */
 @media (min-width: 940px) {
   .formsec__consultant-wrap { transform: translateX(-150px); }
-  .formsec__caption { position: absolute; left: 54%; bottom: 18%; width: max-content; }
+  .formsec__caption { position: absolute; left: calc(54% + 10px); bottom: calc(18% + 30px); width: max-content; }
 }
 
-.formsec__popup {
-  position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 80; max-width: 92vw;
-  padding: 14px 22px; border-radius: 999px; background: var(--sea); border: 1px solid var(--accent);
-  color: var(--ivory); font-family: var(--font-body), sans-serif; font-size: var(--text-sm); box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.7);
-}
 
 /* ===================== FOOTER (dark) ===================== */
 /* match the original .footer: small top padding (no big bottom), .container geometry */

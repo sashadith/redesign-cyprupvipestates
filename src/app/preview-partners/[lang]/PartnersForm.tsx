@@ -9,6 +9,7 @@ import "react-phone-number-input/style.css";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { getAttribution } from "@/lib/attribution";
 import { partnersCopy } from "./copy";
+import "@/app/components/formFeedback.css";
 
 /* Partner registration form — redesign styling (reuses the shared .formsec__*
    design-system classes from tokens.css, same as preview-home/sections/Form.tsx),
@@ -96,7 +97,6 @@ export default function PartnersForm({ lang }: { lang: string }) {
 
   return (
     <>
-      {message && <div className="formsec__popup" role="alert" aria-live="assertive">{message}</div>}
 
       <Formik
         innerRef={(inst) => { formikRef.current = inst; }}
@@ -172,10 +172,6 @@ export default function PartnersForm({ lang }: { lang: string }) {
             {/* honeypot */}
             <Field type="text" name="company" style={{ display: "none" }} tabIndex={-1} autoComplete="new-password" aria-hidden="true" />
 
-            <button type="submit" className="btn btn--primary formsec__submit" disabled={isSubmitting}>
-              {isSubmitting ? <span className="formsec__loader" /> : t.formSubmit}
-            </button>
-
             <div className="formsec__consent">
               <Field
                 type="checkbox"
@@ -190,6 +186,11 @@ export default function PartnersForm({ lang }: { lang: string }) {
               </label>
               <ErrorMessage name="agreedToPolicy" component="div" className="formsec__error" />
             </div>
+
+            {message && <div className="form-feedback formsec__feedback" role="alert" aria-live="assertive">{message}</div>}
+            <button type="submit" className="btn btn--primary formsec__submit" disabled={isSubmitting}>
+              {isSubmitting ? <span className="formsec__loader form-spinner" /> : t.formSubmit}
+            </button>
           </FormikForm>
         )}
       </Formik>
