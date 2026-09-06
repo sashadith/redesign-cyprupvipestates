@@ -10,7 +10,7 @@ import { recordInboundLead } from "@/lib/leadNotify";
 import { matchDevelopmentsForLead } from "@/lib/crm/matching";
 import { ALLOWED_HOSTS, safeUrl, escapeHtml, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
 import nodemailer from "nodemailer";
-import { PROPERTY_VALUES } from "@/app/components/qualifierFields";
+import { PROPERTY_VALUES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
 
 const LOCALES = new Set(["en", "de", "pl", "ru"]);
 
@@ -149,12 +149,35 @@ export async function POST(request: Request) {
       }
     } catch (e) { console.error("Auto-match error:", e); }
 
+    /* Everything the visitor actually answered, in both channels. Before, the
+       notifications carried name/email/phone/preferred/page only — the
+       qualification the form had just collected was visible in the CRM but not
+       in the message that reaches whoever picks the lead up. Each line is
+       omitted when its field is empty, so a bare enquiry looks unchanged. */
+    const qualification: Array<[string, string]> = [];
+    const budgetLabel = leadBudgetLabel(budgetMin, budgetMax);
+    if (budgetLabel) qualification.push(["Budget", budgetLabel]);
+    const timelineLabel = leadTimelineLabel(timeline);
+    if (timelineLabel) qualification.push(["Timeline", timelineLabel]);
+    const financingLabel = leadFinancingLabel(financing);
+    if (financingLabel) qualification.push(["Financing", financingLabel]);
+    if (propertyTypeInterest.length) qualification.push(["Property interest", propertyTypeInterest.join(", ")]);
+    if (nationality) qualification.push(["Nationality", nationality]);
+
+    const tgQualification = qualification
+      .map(([k, v]) => `${k}: ${escapeHtml(v)}\n`)
+      .join("");
+    const mailQualification = qualification
+      .map(([k, v]) => `<p><b>${k}:</b> ${escapeHtml(v)}</p>`)
+      .join("\n          ");
+
     // Telegram notification (non-fatal)
     const tg =
       `<b>New Lead — Cyprus VIP Estates</b>\n\n` +
       `<b>${escapeHtml(fullName || "-")}</b>\n` +
       `Email: ${escapeHtml(emailNorm)}\nPhone: ${escapeHtml(phoneNorm)}\n` +
       `Preferred: ${escapeHtml(preferred)}\n` +
+      tgQualification +
       (messageNorm ? `Message: ${escapeHtml(messageNorm)}\n` : "") +
       `Page: ${escapeHtml(page)}\n` +
       matchLines +
@@ -170,12 +193,15 @@ export async function POST(request: Request) {
         from: process.env.EMAIL_USER!,
         to: process.env.EMAIL_TO || "office@cyprusvipestates.com",
         subject: `New Lead: ${fullName}`,
-        text: `New lead ${fullName} — ${emailNorm} / ${phoneNorm}. CRM: ${crmLink}`,
+        text: `New lead ${fullName} — ${emailNorm} / ${phoneNorm}\n`
+          + qualification.map(([k, v]) => `${k}: ${v}`).join("\n")
+          + `${qualification.length ? "\n" : ""}Page: ${page}\nCRM: ${crmLink}`,
         html: `<h2>New Lead — Cyprus VIP Estates</h2>
           <p><b>Name:</b> ${escapeHtml(fullName)}</p>
           <p><b>Email:</b> ${escapeHtml(emailNorm)}</p>
           <p><b>Phone:</b> ${escapeHtml(phoneNorm)}</p>
           <p><b>Preferred:</b> ${escapeHtml(preferred)}</p>
+          ${mailQualification}
           ${messageNorm ? `<p><b>Message:</b><br/>${escapeHtml(messageNorm).replace(/\n/g, "<br/>")}</p>` : ""}
           <hr/><p><b>Page:</b> ${escapeHtml(page)}</p>
           <p><a href="${crmLink}">Open in CRM</a></p>`,

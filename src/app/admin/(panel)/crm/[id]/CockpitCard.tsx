@@ -4,6 +4,7 @@ import GenerateReplyButton from "./GenerateReplyButton";
 import BookingButton from "./BookingButton";
 import StatusPopover from "../StatusPopover";
 import { adminDateTime } from "@/lib/adminTime";
+import { leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
 
 // The Lead Cockpit's hero card (Phase 1 of 4, 2026-07-23; consolidated in the
 // correction batch, 2026-07-23) — a single glance-able summary that now
@@ -324,9 +325,9 @@ export default function CockpitCard({
       <dl className="mt-5 pt-4 border-t border-[#E5E7EB]">
         {groupLabel("Qualification")}
         <div className={groupGrid}>
-          {field("Budget", lead.budgetMin || lead.budgetMax ? `€${lead.budgetMin ?? "?"} – €${lead.budgetMax ?? "?"}` : null)}
-          {field("Timeline", lead.timeline)}
-          {field("Financing", lead.financing)}
+          {field("Budget", leadBudgetLabel(lead.budgetMin, lead.budgetMax))}
+          {field("Timeline", leadTimelineLabel(lead.timeline))}
+          {field("Financing", leadFinancingLabel(lead.financing))}
           {field("Property interest", lead.propertyTypeInterest)}
           {field("Internal note (intake)", lead.notes)}
           {field("Project interest", lead.projectInterestTitle)}

@@ -153,3 +153,45 @@ export const LEAD_TIMELINE_OPTIONS = [
   { v: "THREE_MONTHS", l: "Within 3 months (retired)" },
   { v: "SIX_MONTHS", l: "Within 6 months (retired)" },
 ] as const;
+
+/* Readable versions of what is STORED on a lead, for the places that show a
+   lead rather than collect one: the CRM card and the team notifications.
+   English, like the rest of the internal surface.
+
+   These read the stored columns (enum, budgetMin/budgetMax), not the form's
+   wire values, so they also cover leads an admin typed in by hand and the
+   older leads whose bucket no longer exists in the form. */
+
+export function leadTimelineLabel(v: string | null | undefined): string | null {
+  if (!v) return null;
+  return LEAD_TIMELINE_OPTIONS.find((o) => o.v === v)?.l ?? v;
+}
+
+const FINANCING_LABELS: Record<string, string> = {
+  CASH: "Cash purchase",
+  MORTGAGE: "Mortgage",
+  UNDECIDED: "Undecided",
+};
+export function leadFinancingLabel(v: string | null | undefined): string | null {
+  if (!v) return null;
+  return FINANCING_LABELS[v] ?? v;
+}
+
+/* 200000 -> "€200k", 1000000 -> "€1M", 1500000 -> "€1.5M" */
+function money(n: number): string {
+  if (n >= 1_000_000) {
+    const m = n / 1_000_000;
+    return `€${Number.isInteger(m) ? m : m.toFixed(1)}M`;
+  }
+  if (n >= 1_000) return `€${Math.round(n / 1_000)}k`;
+  return `€${n}`;
+}
+
+/* An open-ended bucket reads as "Under X" / "X+" rather than printing a "?"
+   where the missing bound would be. */
+export function leadBudgetLabel(min: number | null | undefined, max: number | null | undefined): string | null {
+  if (min == null && max == null) return null;
+  if (min == null) return `Under ${money(max!)}`;
+  if (max == null) return `${money(min)}+`;
+  return `${money(min)} – ${money(max)}`;
+}
