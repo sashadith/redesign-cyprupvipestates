@@ -202,7 +202,7 @@ export default async function ProjectPageBody({
             <AlternativesBlock cards={alternatives} lang={lang} heading={t.alternativesHeading} prominent />
 
             <div id="enquiry">
-              <Form lang={lang} title={goldPhrase(t.offMarketCtaHeadline)} subtitle={t.offMarketCtaBody} showQuestionField />
+              <Form lang={lang} title={goldPhrase(t.offMarketCtaHeadline)} subtitle={t.offMarketCtaBody} showQuestionField showQualifiers />
             </div>
           </>
         )}
@@ -315,7 +315,7 @@ export default async function ProjectPageBody({
         {!isSold && (
           <>
             <div id="enquiry">
-              <Form lang={lang} />
+              <Form lang={lang} title={goldPhrase(t.enquiryHeadline(p.publicName))} showQualifiers />
             </div>
 
             {/* Same alternatives ranking, shown dezent below the enquiry form

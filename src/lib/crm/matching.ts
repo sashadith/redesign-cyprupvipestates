@@ -105,6 +105,12 @@ const TYPE_ALIASES: Record<string, string> = {
   villa: "villa", house: "villa",
   townhouse: "townhouse",
   penthouse: "penthouse",
+  /* Commercial stock: 68 units are typed "Office", ~50 more carry a commercial
+     label ("Shops / Commercial Buildings", "Commercial", "Shop"). Without these
+     aliases normalizeType returns null for all of them, so an Office lead would
+     silently match nothing. Existing leads are unaffected — none of them can
+     carry "Office", the value only became selectable now. */
+  office: "office", commercial: "office", shop: "office", retail: "office",
 };
 function normalizeType(raw: string | null | undefined): string | null {
   const s = (raw || "").trim().toLowerCase();

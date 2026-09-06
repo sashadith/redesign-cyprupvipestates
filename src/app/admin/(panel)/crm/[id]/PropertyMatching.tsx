@@ -6,6 +6,7 @@ import type { DevelopmentMatch, MatchFilters } from "@/lib/crm/matching";
 import { normalizeRef } from "@/lib/unitRef";
 import ComposeEmailModal from "./ComposeEmailModal";
 import { PRESENTATION_EMAIL_TEMPLATE } from "@/lib/crm/presentationMessages";
+import { PROPERTY_VALUES } from "@/app/components/qualifierFields";
 
 type LeadBrief = {
   firstName: string;
@@ -20,7 +21,7 @@ type LeadBrief = {
 
 const LOCALES = ["en", "de", "pl", "ru"] as const;
 type Locale = (typeof LOCALES)[number];
-const PROPERTY_TYPES = ["Apartment", "Villa", "Townhouse", "Penthouse"];
+const PROPERTY_TYPES = PROPERTY_VALUES;
 const BED_OPTIONS = [0, 1, 2, 3, 4, 5]; // 5 = "5+"
 
 // Just the name — the public page (src/app/c/[token]/page.tsx) already builds

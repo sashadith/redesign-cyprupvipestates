@@ -1,11 +1,12 @@
 "use client";
 import { useFormState, useFormStatus } from "react-dom";
 import { COUNTRIES } from "@/lib/countries";
+import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS } from "@/app/components/qualifierFields";
 
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
-const TIMELINES = ["", "IMMEDIATE", "THREE_MONTHS", "SIX_MONTHS", "ONE_YEAR", "JUST_LOOKING"];
+const TIMELINES = [{ v: "", l: "—" }, ...LEAD_TIMELINE_OPTIONS];
 const FINANCING = ["", "CASH", "MORTGAGE", "UNDECIDED"];
-const PROP_TYPES = ["Apartment", "Villa", "Townhouse", "Penthouse"];
+const PROP_TYPES = PROPERTY_VALUES;
 
 function SubmitBtn() {
   const { pending } = useFormStatus();
@@ -59,7 +60,7 @@ export default function EditLeadForm({ action, lead }: { action: any; lead: any 
           <div><label className="block text-sm mb-1">Budget min (€)</label><input name="budgetMin" type="number" min="0" defaultValue={lead.budgetMin ?? ""} className={input} /></div>
           <div><label className="block text-sm mb-1">Budget max (€)</label><input name="budgetMax" type="number" min="0" defaultValue={lead.budgetMax ?? ""} className={input} /></div>
           <div><label className="block text-sm mb-1">Timeline</label>
-            <select name="timeline" className={input} defaultValue={lead.timeline ?? ""}>{TIMELINES.map((t) => <option key={t} value={t}>{t ? t.replace(/_/g, " ") : "—"}</option>)}</select>
+            <select name="timeline" className={input} defaultValue={lead.timeline ?? ""}>{TIMELINES.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}</select>
           </div>
           <div><label className="block text-sm mb-1">Financing</label>
             <select name="financing" className={input} defaultValue={lead.financing ?? ""}>{FINANCING.map((f) => <option key={f} value={f}>{f || "—"}</option>)}</select>

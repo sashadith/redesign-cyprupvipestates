@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { matchLeadAction, type LocationOptions } from "../../../presentationActions";
 import type { DevelopmentMatch, MatchFilters } from "@/lib/crm/matching";
 import { normalizeRef } from "@/lib/unitRef";
+import { PROPERTY_VALUES } from "@/app/components/qualifierFields";
 
 const LOCALES = ["en", "de", "pl", "ru"] as const;
 type Locale = (typeof LOCALES)[number];
-const PROPERTY_TYPES = ["Apartment", "Villa", "Townhouse", "Penthouse"];
+const PROPERTY_TYPES = PROPERTY_VALUES;
 const BED_OPTIONS = [0, 1, 2, 3, 4, 5]; // 5 = "5+"
 
 const fmtPrice = (n: number | null) => (n == null ? "—" : `€${n.toLocaleString("en-US")}`);

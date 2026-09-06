@@ -10,6 +10,7 @@ import { recordInboundLead } from "@/lib/leadNotify";
 import { matchDevelopmentsForLead } from "@/lib/crm/matching";
 import { ALLOWED_HOSTS, safeUrl, escapeHtml, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
 import nodemailer from "nodemailer";
+import { PROPERTY_VALUES } from "@/app/components/qualifierFields";
 
 const LOCALES = new Set(["en", "de", "pl", "ru"]);
 
@@ -78,9 +79,12 @@ export async function POST(request: Request) {
       "1000000-2000000": [1000000, 2000000],
       "2000000-": [2000000, null],
     };
-    const TIMELINES: Record<string, string> = { now: "IMMEDIATE", "3m": "THREE_MONTHS", "6m": "SIX_MONTHS", "1y": "ONE_YEAR", exploring: "JUST_LOOKING" };
+    /* 3m/6m are no longer offered but stay mapped: a page cached in someone's
+       browser can still post them, and dropping the key would silently null the
+       answer instead of storing it. */
+    const TIMELINES: Record<string, string> = { now: "IMMEDIATE", "3m": "THREE_MONTHS", "6m": "SIX_MONTHS", "1y": "ONE_YEAR", "2y": "TWO_YEARS", exploring: "JUST_LOOKING" };
     const FINANCING: Record<string, string> = { cash: "CASH", mortgage: "MORTGAGE", undecided: "UNDECIDED" };
-    const PROP_TYPES = ["Apartment", "Villa", "Townhouse", "Penthouse"];
+    const PROP_TYPES: readonly string[] = PROPERTY_VALUES;
 
     const nationality = String(body.nationality ?? "").trim() || null;
     const [budgetMin, budgetMax] = BUDGETS[String(body.budget ?? "")] ?? [null, null];

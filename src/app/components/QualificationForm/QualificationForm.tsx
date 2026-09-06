@@ -7,7 +7,8 @@ import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import Link from "next/link";
-import { localizedHref } from "@/lib/locale";
+import { consentCopy } from "../consentCopy";
+import { PROPERTY_VALUES, TIMELINE_VALUES, qualifierCopy } from "@/app/components/qualifierFields";
 
 type Lang = "en" | "de" | "pl" | "ru";
 
@@ -18,10 +19,10 @@ interface Props {
 }
 
 const T: Record<Lang, Record<string, string>> = {
-  en: { heading: "Request a consultation", firstName: "First name", lastName: "Last name", email: "Email", phone: "Phone", nationality: "Nationality", budget: "Budget range", timeline: "Timeline", financing: "Financing", propertyType: "Property interest", message: "Message (optional)", consent: "I agree to the", privacy: "privacy policy", submit: "Send request", sending: "Sending…", success: "Thank you — we have received your request and will contact you shortly.", error: "Something went wrong. Please try again or contact us directly.", required: "Please complete the required fields.", choose: "Please choose…" },
-  de: { heading: "Beratung anfragen", firstName: "Vorname", lastName: "Nachname", email: "E-Mail", phone: "Telefon", nationality: "Nationalität", budget: "Budget", timeline: "Zeitrahmen", financing: "Finanzierung", propertyType: "Interesse", message: "Nachricht (optional)", consent: "Ich stimme der", privacy: "Datenschutzrichtlinie zu", submit: "Anfrage senden", sending: "Senden…", success: "Vielen Dank — wir haben Ihre Anfrage erhalten und melden uns in Kürze.", error: "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.", required: "Bitte füllen Sie die Pflichtfelder aus.", choose: "Bitte wählen…" },
-  pl: { heading: "Zamów konsultację", firstName: "Imię", lastName: "Nazwisko", email: "E-mail", phone: "Telefon", nationality: "Narodowość", budget: "Budżet", timeline: "Termin", financing: "Finansowanie", propertyType: "Zainteresowanie", message: "Wiadomość (opcjonalnie)", consent: "Akceptuję", privacy: "politykę prywatności", submit: "Wyślij zapytanie", sending: "Wysyłanie…", success: "Dziękujemy — otrzymaliśmy Twoje zapytanie i wkrótce się skontaktujemy.", error: "Coś poszło nie tak. Spróbuj ponownie.", required: "Uzupełnij wymagane pola.", choose: "Wybierz…" },
-  ru: { heading: "Запросить консультацию", firstName: "Имя", lastName: "Фамилия", email: "Email", phone: "Телефон", nationality: "Гражданство", budget: "Бюджет", timeline: "Сроки", financing: "Финансирование", propertyType: "Интерес", message: "Сообщение (необязательно)", consent: "Я согласен с", privacy: "политикой конфиденциальности", submit: "Отправить", sending: "Отправка…", success: "Спасибо — мы получили вашу заявку и свяжемся с вами в ближайшее время.", error: "Что-то пошло не так. Попробуйте ещё раз.", required: "Пожалуйста, заполните обязательные поля.", choose: "Выберите…" },
+  en: { heading: "Request a consultation", firstName: "First name", lastName: "Last name", email: "Email", phone: "Phone", nationality: "Nationality", budget: "Budget range", timeline: "Timeline", financing: "Financing", propertyType: "Property interest", message: "Message (optional)", submit: "Send request", sending: "Sending…", success: "Thank you — your enquiry has reached us. An adviser will be in touch, usually the same day.", error: "Your enquiry could not be sent. Please try again, or reach us at office@cyprusvipestates.com or +357 99 278 285.", required: "Please complete the required fields.", choose: "Please choose…" },
+  de: { heading: "Beratung anfragen", firstName: "Vorname", lastName: "Nachname", email: "E-Mail", phone: "Telefon", nationality: "Nationalität", budget: "Budget", timeline: "Zeitrahmen", financing: "Finanzierung", propertyType: "Interesse", message: "Nachricht (optional)", submit: "Anfrage senden", sending: "Senden…", success: "Vielen Dank — Ihre Anfrage ist bei uns eingegangen. Ein Berater meldet sich, meist noch am selben Tag.", error: "Ihre Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder erreichen Sie uns unter office@cyprusvipestates.com oder +357 99 278 285.", required: "Bitte füllen Sie die Pflichtfelder aus.", choose: "Bitte wählen…" },
+  pl: { heading: "Zamów konsultację", firstName: "Imię", lastName: "Nazwisko", email: "E-mail", phone: "Telefon", nationality: "Narodowość", budget: "Budżet", timeline: "Termin", financing: "Finansowanie", propertyType: "Zainteresowanie", message: "Wiadomość (opcjonalnie)", submit: "Wyślij zapytanie", sending: "Wysyłanie…", success: "Dziękujemy — Twoje zapytanie do nas dotarło. Doradca odezwie się, zwykle jeszcze tego samego dnia.", error: "Nie udało się wysłać zapytania. Spróbuj ponownie lub skontaktuj się z nami: office@cyprusvipestates.com albo +357 99 278 285.", required: "Uzupełnij wymagane pola.", choose: "Wybierz…" },
+  ru: { heading: "Запросить консультацию", firstName: "Имя", lastName: "Фамилия", email: "Email", phone: "Телефон", nationality: "Гражданство", budget: "Бюджет", timeline: "Сроки", financing: "Финансирование", propertyType: "Интерес", message: "Сообщение (необязательно)", submit: "Отправить", sending: "Отправка…", success: "Спасибо — ваша заявка получена. Консультант свяжется с вами, обычно в тот же день.", error: "Не удалось отправить заявку. Попробуйте ещё раз или напишите на office@cyprusvipestates.com либо позвоните: +357 99 278 285.", required: "Пожалуйста, заполните обязательные поля.", choose: "Выберите…" },
 };
 
 const NATIONALITIES = ["German", "British", "Polish", "Russian", "Ukrainian", "Other"];
@@ -32,19 +33,13 @@ const BUDGETS = [
   { v: "1000000-2000000", l: "€1M – €2M" },
   { v: "2000000-", l: "€2M+" },
 ];
-const TIMELINES = [
-  { v: "now", l: "Ready to buy now" },
-  { v: "3m", l: "Within 3 months" },
-  { v: "6m", l: "Within 6 months" },
-  { v: "1y", l: "Within 1 year" },
-  { v: "exploring", l: "Just exploring" },
-];
+const TIMELINES = TIMELINE_VALUES.map((v) => ({ v, l: qualifierCopy("en").timelines[v] }));
 const FINANCING = [
   { v: "cash", l: "Cash purchase" },
   { v: "mortgage", l: "Mortgage" },
   { v: "undecided", l: "Undecided" },
 ];
-const PROP_TYPES = ["Apartment", "Villa", "Townhouse", "Penthouse"];
+const PROP_TYPES = PROPERTY_VALUES;
 
 const field = "w-full rounded-none border border-[#C8C0B4] bg-white px-3 py-2.5 text-[15px] text-[#1A1A1A] outline-none focus:border-[#C29A5E] transition-colors";
 const label = "block text-[13px] tracking-wide text-[#2C2C2C] mb-1.5";
@@ -186,7 +181,13 @@ const QualificationForm: FC<Props> = ({ lang, projectSlug, projectTitle }) => {
 
       <label className="flex items-start gap-2 text-[13px] text-[#6B6B6B]">
         <input type="checkbox" name="agreedToPolicy" required className="mt-0.5" />
-        <span>{t.consent} <Link href={localizedHref(lang, lang === "ru" ? "politika-privatnosti" : lang === "de" ? "datenschutzrichtlinie" : lang === "pl" ? "polityka-prywatnosci" : "privacy-policy")} className="text-[#1B4B43] underline">{t.privacy}</Link> *</span>
+        <span>
+          {consentCopy(lang).lead}
+          <Link href={consentCopy(lang).termsHref} className="text-[#1B4B43] underline" target="_blank">{consentCopy(lang).termsLabel}</Link>
+          {consentCopy(lang).mid}
+          <Link href={consentCopy(lang).privacyHref} className="text-[#1B4B43] underline" target="_blank">{consentCopy(lang).privacyLabel}</Link>
+          {consentCopy(lang).tail} *
+        </span>
       </label>
 
       {status === "err" && errMsg && <p className="text-[14px] text-[#C0392B]" role="alert" aria-live="assertive">{errMsg}</p>}

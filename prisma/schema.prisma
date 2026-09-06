@@ -77,9 +77,11 @@ enum LeadSource {
 
 enum LeadTimeline {
   IMMEDIATE
+  // Retired from the forms 2026-09-06 — kept because four leads carry them.
   THREE_MONTHS
   SIX_MONTHS
   ONE_YEAR
+  TWO_YEARS
   JUST_LOOKING
 }
 

@@ -65,6 +65,12 @@ export type DevelopmentStrings = {
   soldOutBannerBodyNoAlternatives: string;
   offMarketCtaHeadline: GoldPhrase;
   offMarketCtaBody: string;
+  /* Heading above the enquiry form on an available project. Takes the project
+     name so the form reads as part of THIS page instead of repeating the
+     homepage's generic invitation; the name is the gold-accented phrase.
+     Deliberately the same wording as QualificationForm's heading on the legacy
+     project pages, so both templates ask the same question. */
+  enquiryHeadline: (name: string) => GoldPhrase;
 
   // ---- alternatives block ----
   alternativesHeading: string; // dezent placement on an available project's page
@@ -151,6 +157,7 @@ const EN: DevelopmentStrings = {
   soldOutBannerBody: "Homes like these move quickly, and fortunately Cyprus isn't done building beautiful ones. These projects come closest to what brought you here — and are still open:",
   soldOutBannerBodyNoAlternatives: "Homes like these move quickly, and fortunately Cyprus isn't done building beautiful ones. Tell us what brought you here — we'll find what comes closest.",
   offMarketCtaHeadline: { lead: "Get there ", gold: "before the listing", trail: " does." },
+  enquiryHeadline: (name) => ({ lead: "Request a consultation — ", gold: name, trail: "" }),
   offMarketCtaBody: "Describe your ideal home in one message — we often know about units before they go public, and when we do, we'll think of you first.",
   alternativesHeading: "Similar projects",
   tagDistrict: "District",
@@ -213,6 +220,7 @@ const DE: DevelopmentStrings = {
   soldOutBannerBody: "Solche Objekte bleiben nicht lange, und zum Glück ist Zypern mit dem Bauen schöner Projekte noch nicht fertig. Diese kommen dem, was Sie hierhergeführt hat, am nächsten — und sind noch zu haben:",
   soldOutBannerBodyNoAlternatives: "Solche Objekte bleiben nicht lange, und zum Glück ist Zypern mit dem Bauen schöner Projekte noch nicht fertig. Sagen Sie uns, was Sie hierhergeführt hat — wir finden, was dem am nächsten kommt.",
   offMarketCtaHeadline: { lead: "Seien Sie ", gold: "schneller", trail: " als das Inserat." },
+  enquiryHeadline: (name) => ({ lead: "Beratung anfragen — ", gold: name, trail: "" }),
   offMarketCtaBody: "Beschreiben Sie uns Ihr Wunschobjekt in einer Nachricht — wir wissen oft von Einheiten, bevor sie öffentlich werden, und denken dann zuerst an Sie.",
   alternativesHeading: "Ähnliche Projekte",
   tagDistrict: "Bezirk",
@@ -275,6 +283,7 @@ const PL: DevelopmentStrings = {
   soldOutBannerBody: "Takie rezydencje nie czekają długo, ale na szczęście Cypr nie skończył jeszcze budować pięknych projektów. Te są najbliżej tego, co Cię tu przyciągnęło — i wciąż dostępne:",
   soldOutBannerBodyNoAlternatives: "Takie rezydencje nie czekają długo, ale na szczęście Cypr nie skończył jeszcze budować pięknych projektów. Powiedz nam, co Cię tu przyciągnęło — znajdziemy to, co jest najbliżej.",
   offMarketCtaHeadline: { lead: "Bądź ", gold: "szybszy niż", trail: " ogłoszenie." },
+  enquiryHeadline: (name) => ({ lead: "Zamów konsultację — ", gold: name, trail: "" }),
   offMarketCtaBody: "Opisz nam swoją idealną nieruchomość w jednej wiadomości — często wiemy o rezydencjach, zanim staną się publiczne, i wtedy pomyślimy najpierw o Tobie.",
   alternativesHeading: "Podobne projekty",
   tagDistrict: "Okręg",
@@ -338,6 +347,7 @@ const RU: DevelopmentStrings = {
   soldOutBannerBody: "Такие резиденции не задерживаются, но, к счастью, Кипр ещё не закончил строить красивое. Эти проекты ближе всего к тому, что привело вас сюда — и они ещё доступны:",
   soldOutBannerBodyNoAlternatives: "Такие резиденции не задерживаются, но, к счастью, Кипр ещё не закончил строить красивое. Расскажите, что привело вас сюда — мы найдём то, что ближе всего.",
   offMarketCtaHeadline: { lead: "Опередите ", gold: "объявление.", trail: "" },
+  enquiryHeadline: (name) => ({ lead: "Запросить консультацию — ", gold: name, trail: "" }),
   offMarketCtaBody: "Опишите нам идеальный объект в одном сообщении — мы часто узнаём о резиденциях до их публикации, и тогда в первую очередь вспомним о вас.",
   alternativesHeading: "Похожие проекты",
   tagDistrict: "Округ",

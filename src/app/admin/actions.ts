@@ -22,6 +22,7 @@ import { findEmptyProjectsBlock } from "@/lib/projectsBlockValidation";
 import { ELEVATED_NO_CONTACT_STATUSES as CONTACT_IMPLYING_STATUSES } from "@/lib/actionCenter/rules/crm";
 import { logWhatsAppSentAction } from "./(panel)/crm/[id]/emailActions";
 import { bucketOf, sourceForBucket, isLeadBucket, BUCKET_LABEL } from "@/lib/crm/leadBucket";
+import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS } from "@/app/components/qualifierFields";
 
 // Convert every `{__html}` rich-text marker (produced by the block editor) into
 // Portable Text via the shared converter — so all blocks store consistent PT and
@@ -1038,9 +1039,9 @@ export async function assignLead(id: string, userId: string) {
 
 // Manually create a lead from the admin (same data shape + validation as the
 // public lead API). Marked with source = MANUAL.
-const LEAD_TIMELINES = ["IMMEDIATE", "THREE_MONTHS", "SIX_MONTHS", "ONE_YEAR", "JUST_LOOKING"];
+const LEAD_TIMELINES: string[] = LEAD_TIMELINE_OPTIONS.map((o) => o.v);
 const LEAD_FINANCING = ["CASH", "MORTGAGE", "UNDECIDED"];
-const LEAD_PROP_TYPES = ["Apartment", "Villa", "Townhouse", "Penthouse"];
+const LEAD_PROP_TYPES: readonly string[] = PROPERTY_VALUES;
 const LEAD_SALUTATIONS = ["UNKNOWN", "MR", "MS"];
 
 export async function createLead(_prev: any, formData: FormData): Promise<{ error?: string }> {

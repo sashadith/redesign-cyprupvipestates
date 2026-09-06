@@ -8,6 +8,9 @@ import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { getAttribution } from "@/lib/attribution";
+import { qualifierCopy, BUDGET_VALUES, PROPERTY_VALUES, TIMELINE_VALUES } from "@/app/components/qualifierFields";
+import { consentCopy } from "@/app/components/consentCopy";
+import "@/app/components/formFeedback.css";
 
 /* Contact form — redesign styling. Submission / validation / tracking logic is
    preserved verbatim from the live FormStatic (lead → /api/monday → /api/leads,
@@ -25,6 +28,12 @@ export type FormData = {
   company: string;
   formStartTime: number;
   question: string;
+  /* Optional qualifiers, only present when showQualifiers is set. The whole
+     values object is spread into the POST body, so these reach /api/leads
+     under exactly the names its lookup tables expect. */
+  budget: string;
+  timeline: string;
+  propertyTypeInterest: string[];
 };
 
 const CONSULTANT_IMAGE = "/uploads/files/50b0d355d8507f9aadbe785a65e8a7233dd8f2e6.png";
@@ -32,7 +41,6 @@ const CONSULTANT_IMAGE = "/uploads/files/50b0d355d8507f9aadbe785a65e8a7233dd8f2e
 type Strings = {
   labelName: string; labelSurname: string; labelPhone: string; labelEmail: string;
   legend: string; optPhone: string; optEmail: string; send: string;
-  consentPre: string; consentLink: string; consentPost: string; policyHref: string;
   vName: string; vSurname: string; vPhone: string; vEmailInvalid: string; vEmail: string;
   vContact: string; vConsentReq: string; vConsentOne: string;
   success: string; error: string;
@@ -46,44 +54,40 @@ const DICT: Record<string, Strings> = {
   en: {
     labelName: "Your name", labelSurname: "Surname", labelPhone: "Phone", labelEmail: "Email",
     legend: "What’s the best way to contact you?", optPhone: "Phone call", optEmail: "Email", send: "Send",
-    consentPre: "I agree with the terms of the ", consentLink: "User agreement", consentPost: " read and accept them", policyHref: "/privacy-policy",
     vName: "Name is required", vSurname: "Surname is required", vPhone: "Phone is required",
     vEmailInvalid: "Invalid email address", vEmail: "Email is required", vContact: "What’s the best way to contact you?",
     vConsentReq: "Consent is required", vConsentOne: "Consent required",
-    success: "We have received your request and will contact you shortly.",
-    error: "An error occurred while sending the request. Please try again later.",
+    success: "Thank you — your enquiry has reached us. An adviser will be in touch, usually the same day.",
+    error: "Your enquiry could not be sent. Please try again, or reach us at office@cyprusvipestates.com or +357 99 278 285.",
     labelQuestion: "Your question", placeholderQuestion: "What would you like to know?",
     vQuestion: "Please enter your question",
   },
   de: {
     labelName: "Ihr Vorname", labelSurname: "Ihr Nachname", labelPhone: "Telefon", labelEmail: "E-Mail Adresse",
     legend: "Wie möchten Sie am besten kontaktiert werden?", optPhone: "Telefon", optEmail: "E-Mail", send: "Absenden",
-    consentPre: "Ich habe die Bedingungen der ", consentLink: "Benutzervereinbarung", consentPost: " gelesen und akzeptiere sie", policyHref: "/de/datenschutzrichtlinie",
     vName: "Name ist erforderlich", vSurname: "Nachname ist erforderlich", vPhone: "Telefon ist erforderlich",
     vEmailInvalid: "Ungültige E-Mail Adresse", vEmail: "E-Mail ist erforderlich", vContact: "Wie können wir Sie am besten kontaktieren?",
     vConsentReq: "Zustimmung erforderlich", vConsentOne: "Einverständnis erforderlich",
-    success: "Wir haben Ihre Anfrage erhalten und werden uns in Kürze bei Ihnen melden.",
-    error: "Beim Senden der Anfrage ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.",
+    success: "Vielen Dank — Ihre Anfrage ist bei uns eingegangen. Ein Berater meldet sich, meist noch am selben Tag.",
+    error: "Ihre Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder erreichen Sie uns unter office@cyprusvipestates.com oder +357 99 278 285.",
   },
   pl: {
     labelName: "Imię", labelSurname: "Nazwisko", labelPhone: "Telefon", labelEmail: "E-mail",
     legend: "W jaki sposób najlepiej się z Tobą skontaktować?", optPhone: "Telefonicznie", optEmail: "E-mail", send: "Wyślij",
-    consentPre: "Zgadzam się z ", consentLink: "Umowa użytkownika", consentPost: " przeczytałem i akceptuję je", policyHref: "/pl/polityka-prywatnosci",
     vName: "Imię jest wymagane", vSurname: "Nazwisko jest wymagane", vPhone: "Telefon jest wymagany",
     vEmailInvalid: "Nieprawidłowy format email", vEmail: "Email jest wymagany", vContact: "Wybierz preferowaną formę kontaktu",
     vConsentReq: "Zgoda jest wymagana", vConsentOne: "Wymagane wyrażenie zgody",
-    success: "Otrzymaliśmy Twoje zapytanie i skontaktujemy się z Tobą wkrótce.",
-    error: "Wystąpił błąd podczas wysyłania zapytania. Spróbuj ponownie później.",
+    success: "Dziękujemy — Twoje zapytanie do nas dotarło. Doradca odezwie się, zwykle jeszcze tego samego dnia.",
+    error: "Nie udało się wysłać zapytania. Spróbuj ponownie lub skontaktuj się z nami: office@cyprusvipestates.com albo +357 99 278 285.",
   },
   ru: {
     labelName: "Ваше имя", labelSurname: "Фамилия", labelPhone: "Телефон", labelEmail: "Ваш email",
     legend: "Как с вами лучше связаться?", optPhone: "Телефон", optEmail: "Email", send: "Отправить",
-    consentPre: "Я согласен с ", consentLink: "Пользовательским соглашением", consentPost: " прочитал и принимаю их", policyHref: "/ru/politika-privatnosti",
     vName: "Имя обязательно", vSurname: "Фамилия обязательна", vPhone: "Телефон обязателен",
     vEmailInvalid: "Неверный формат email", vEmail: "Email обязателен", vContact: "Как с вами лучше связаться?",
     vConsentReq: "Согласие обязательно", vConsentOne: "Требуется согласие",
-    success: "Мы получили вашу заявку и свяжемся с вами в ближайшее время.",
-    error: "Произошла ошибка при отправке заявки. Попробуйте позже.",
+    success: "Спасибо — ваша заявка получена. Консультант свяжется с вами, обычно в тот же день.",
+    error: "Не удалось отправить заявку. Попробуйте ещё раз или напишите на office@cyprusvipestates.com либо позвоните: +357 99 278 285.",
   },
 };
 
@@ -103,21 +107,31 @@ const titleNode = (lang: string) => {
 // showQuestionField: opt-in "Your question" textarea (FAQ page only today) —
 // defaults to false, so the field is absent from both the DOM and validation
 // for every other existing usage of this shared component.
-const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactNode; showQuestionField?: boolean }> = ({
-  lang = "en", title, subtitle, showQuestionField = false,
+// showQualifiers: opt-in budget + property-interest fields, both optional.
+// Off by default, so the homepage and every other existing usage is untouched;
+// switched on where the visitor's intent is concrete enough to answer them
+// (project pages today). Filling them is what lets /api/leads run its
+// development matching — left empty the lead is stored exactly as before.
+const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactNode; showQuestionField?: boolean; showQualifiers?: boolean }> = ({
+  lang = "en", title, subtitle, showQuestionField = false, showQualifiers = false,
 }) => {
   const t = DICT[lang] ?? DICT.en;
+  const q = qualifierCopy(lang);
   const questionLabel = t.labelQuestion ?? "Your question";
   const questionPlaceholder = t.placeholderQuestion ?? "What would you like to know?";
   const questionRequired = t.vQuestion ?? "Please enter your question";
   const uid = useId();
   const [message, setMessage] = useState<string | null>(null);
+  /* The banner shows both outcomes, so it has to know which one — the tick
+     it draws is wrong on a failure. */
+  const [messageIsError, setMessageIsError] = useState(false);
   const [formStartTime] = useState(() => Date.now());
   const formikRef = useRef<FormikProps<FormData> | null>(null);
 
   const initialValues: FormData = {
     name: "", surname: "", phone: "", email: "",
     preferredContact: "", agreedToPolicy: false, company: "", formStartTime, question: "",
+    budget: "", timeline: "", propertyTypeInterest: [],
   };
 
   const validationSchema = Yup.object({
@@ -165,15 +179,17 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
             page_url: window.location.href,
           });
         }
+        setMessageIsError(false);
         setMessage(t.success);
-        setTimeout(() => setMessage(null), 5000);
+        setTimeout(() => setMessage(null), 10000);
       } else {
         throw new Error("Failed to send lead");
       }
     } catch (error) {
       console.error("Error:", error);
+      setMessageIsError(true);
       setMessage(t.error);
-      setTimeout(() => setMessage(null), 7000);
+      setTimeout(() => setMessage(null), 12000);
     } finally {
       setSubmitting(false);
     }
@@ -181,8 +197,6 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
 
   return (
     <section className="section is-light formsec">
-      {message && <div className="formsec__popup" role="alert" aria-live="assertive">{message}</div>}
-
       <div className="wrap">
         <div className="formsec__grid">
           <div className="formsec__main">
@@ -252,6 +266,55 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
                       <ErrorMessage name="email" component="div" className="formsec__error" />
                     </div>
 
+                    {showQualifiers && (
+                      <>
+                        {/* What, then how much, then when — the order a person
+                            actually thinks in. Multi-select: Formik keeps
+                            propertyTypeInterest as an array when the checkboxes
+                            share one name and carry a value, which is the shape
+                            /api/leads filters. */}
+                        <div className="formsec__field formsec__field--full">
+                          <span className="formsec__label">{q.propertyLabel}</span>
+                          <div className="formsec__radio-options">
+                            {PROPERTY_VALUES.map((v) => (
+                              <label key={v} className="formsec__radio-option">
+                                <Field type="checkbox" name="propertyTypeInterest" value={v} />
+                                <span>{q.properties[v]}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="formsec__field">
+                          <label className="formsec__label" htmlFor={`${uid}-budget`}>{q.budgetLabel}</label>
+                          <Field name="budget">
+                            {({ field }: any) => (
+                              <select {...field} id={`${uid}-budget`} className="formsec__input formsec__select">
+                                <option value="">{q.choose}</option>
+                                {BUDGET_VALUES.map((v) => (
+                                  <option key={v} value={v}>{q.budgets[v]}</option>
+                                ))}
+                              </select>
+                            )}
+                          </Field>
+                        </div>
+
+                        <div className="formsec__field">
+                          <label className="formsec__label" htmlFor={`${uid}-timeline`}>{q.timelineLabel}</label>
+                          <Field name="timeline">
+                            {({ field }: any) => (
+                              <select {...field} id={`${uid}-timeline`} className="formsec__input formsec__select">
+                                <option value="">{q.choose}</option>
+                                {TIMELINE_VALUES.map((v) => (
+                                  <option key={v} value={v}>{q.timelines[v]}</option>
+                                ))}
+                              </select>
+                            )}
+                          </Field>
+                        </div>
+                      </>
+                    )}
+
                     {showQuestionField && (
                       <div className="formsec__field formsec__field--full">
                         <label className="formsec__label" htmlFor={`${uid}-question`}>{questionLabel}</label>
@@ -293,10 +356,6 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
                   {/* honeypot */}
                   <Field type="text" name="company" style={{ display: "none" }} tabIndex={-1} autoComplete="new-password" aria-hidden="true" />
 
-                  <button type="submit" className="btn btn--primary formsec__submit" disabled={isSubmitting}>
-                    {isSubmitting ? <span className="formsec__loader" /> : t.send}
-                  </button>
-
                   <div className="formsec__consent">
                     <Field
                       type="checkbox"
@@ -305,12 +364,23 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFieldValue("agreedToPolicy", e.target.checked)}
                     />
                     <label htmlFor={`${uid}-agreedToPolicy`}>
-                      {t.consentPre}
-                      <a className="formsec__policy" href={t.policyHref} target="_blank" rel="noopener noreferrer">{t.consentLink}</a>
-                      {t.consentPost}
+                      {consentCopy(lang).lead}
+                      <a className="formsec__policy" href={consentCopy(lang).termsHref} target="_blank" rel="noopener noreferrer">{consentCopy(lang).termsLabel}</a>
+                      {consentCopy(lang).mid}
+                      <a className="formsec__policy" href={consentCopy(lang).privacyHref} target="_blank" rel="noopener noreferrer">{consentCopy(lang).privacyLabel}</a>
+                      {consentCopy(lang).tail}
                     </label>
                     <ErrorMessage name="agreedToPolicy" component="div" className="formsec__error" />
                   </div>
+
+
+                  {/* In flow, right above the button: the visitor is looking there when
+                      they press Send. The old .formsec__popup was position:fixed and got
+                      clipped by a transformed ancestor, landing half off-screen. */}
+                  {message && <div className={`form-feedback formsec__feedback${messageIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{message}</div>}
+                  <button type="submit" className="btn btn--primary formsec__submit" disabled={isSubmitting}>
+                    {isSubmitting ? <span className="formsec__loader form-spinner" /> : t.send}
+                  </button>
                 </FormikForm>
               )}
             </Formik>
