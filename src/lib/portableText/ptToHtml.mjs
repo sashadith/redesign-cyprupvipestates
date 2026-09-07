@@ -48,7 +48,10 @@ export function portableTextToHtml(blocks) {
     if (!b || typeof b !== "object") continue;
     if (b._type === "image") {
       flush();
-      const url = refToLocalUrl(b.asset?._ref ?? b.asset?._id);
+      // Standard admin-uploaded ref first; a direct already-local URL (e.g. a
+      // Development gallery photo — see htmlToPt.mjs's matching fallback)
+      // second, so it isn't silently dropped just for lacking a Sanity-style ref.
+      const url = refToLocalUrl(b.asset?._ref ?? b.asset?._id) ?? (b.asset?.url?.startsWith("/uploads/") ? b.asset.url : null);
       if (url) html += `<img src="${esc(url)}" alt="${esc(b.alt ?? "")}">`;
       continue;
     }
