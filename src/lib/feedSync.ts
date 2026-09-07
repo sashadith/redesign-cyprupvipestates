@@ -145,7 +145,10 @@ export type SyncResult = {
   // the adapter. unitsWritten says what actually happened without touching what
   // the notification keys off.
   unitsWritten: number;
-  unitsCreated: number; unitsUnlisted: UnitChangeLine[];
+  unitsCreated: number;
+  // The same units unitsCreated counts, itemized for the digest email.
+  unitsCreatedLines: UnitChangeLine[];
+  unitsUnlisted: UnitChangeLine[];
   // Feed-completeness guard tripped (see checkFeedCompleteness below) — this
   // developer's sync was skipped entirely this run, nothing written at all,
   // found/created/updated/failed are meaningless zeros for it.
@@ -218,7 +221,9 @@ export const FORCE_SYNC_DEVS = SYNCED_DEVS;
 type ProjectSyncOutcome = {
   ok: boolean; created: boolean; unitsWritten: number; skippedManual: boolean; mirroredNewFiles: boolean;
   developmentId?: string; developmentName?: string;
-  unitsCreated: number; unitsUnlisted: { ref: string; label: string }[];
+  unitsCreated: number;
+  unitsCreatedLines: { ref: string; label: string }[];
+  unitsUnlisted: { ref: string; label: string }[];
 };
 
 // Customer-facing catalogue fields, frozen once a Development is published —
@@ -302,7 +307,7 @@ async function syncFeedUnitsPreservingUnlisted(
   developmentId: string,
   freshUnits: UnitVM[],
   opts: { freezeExistingUnitMedia?: boolean } = {},
-): Promise<{ written: number; createdCount: number; unlisted: { ref: string; label: string }[] }> {
+): Promise<{ written: number; created: { ref: string; label: string }[]; unlisted: { ref: string; label: string }[] }> {
   const existing = await prisma.developmentUnit.findMany({
     where: { developmentId, source: "feed" },
     select: { id: true, ref: true, status: true, label: true, name: true },
@@ -311,7 +316,8 @@ async function syncFeedUnitsPreservingUnlisted(
   for (const u of existing) if (u.ref) existingByRef.set(u.ref, u);
   const freshRefs = new Set(freshUnits.map((u) => u.ref).filter(Boolean));
 
-  let written = 0, createdCount = 0;
+  let written = 0;
+  const created: { ref: string; label: string }[] = [];
   for (let i = 0; i < freshUnits.length; i++) {
     const u = freshUnits[i];
     const row = unitRow(u, developmentId, i);
@@ -330,7 +336,9 @@ async function syncFeedUnitsPreservingUnlisted(
       await prisma.developmentUnit.update({ where: { id: match.id }, data });
     } else {
       await prisma.developmentUnit.create({ data: row });
-      createdCount++;
+      // Collected, not just counted: the nightly digest names each new unit so
+      // the reader can go straight to it instead of hunting through a project.
+      created.push({ ref: u.ref, label: u.label || u.name || u.ref });
     }
     written++;
   }
@@ -342,7 +350,7 @@ async function syncFeedUnitsPreservingUnlisted(
     await prisma.developmentUnit.update({ where: { id: old.id }, data: { status: "unlisted" } });
     unlisted.push({ ref: old.ref, label: old.label || old.name || old.ref });
   }
-  return { written, createdCount, unlisted };
+  return { written, created, unlisted };
 }
 
 // Per-project sync body, shared by syncDeveloperCore's loop (all projects of
@@ -432,7 +440,7 @@ async function mirrorEachTracked(urls: string[], devKey: string, concurrency = 4
 
 async function syncOneProject(dev: string, id: string, accountId: string, opts: { mirror?: boolean; vm?: ProjectVM | null; forceMirror?: boolean } = {}): Promise<ProjectSyncOutcome> {
   const vm = opts.vm !== undefined ? opts.vm : await getPreviewProject(dev, id);
-  if (!vm) return { ok: false, created: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, unitsCreated: 0, unitsUnlisted: [] };
+  if (!vm) return { ok: false, created: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, unitsCreated: 0, unitsCreatedLines: [], unitsUnlisted: [] };
   const feedKey = `${dev}:${id}`;
   // Fetched up front (used to be after mirroring) so the freeze check below
   // can gate the download itself, not just the DB write.
@@ -634,19 +642,19 @@ async function syncOneProject(dev: string, id: string, accountId: string, opts: 
   // FROZEN_WHEN_PUBLISHED) — only DevelopmentUnit rows are protected.
   const manualUnits = await prisma.developmentUnit.count({ where: { developmentId: development.id, source: "manual" } });
   if (manualUnits > 0) {
-    return { ok: true, created: !existing, unitsWritten: 0, skippedManual: true, mirroredNewFiles, developmentId: development.id, developmentName: development.publicName, unitsCreated: 0, unitsUnlisted: [] };
+    return { ok: true, created: !existing, unitsWritten: 0, skippedManual: true, mirroredNewFiles, developmentId: development.id, developmentName: development.publicName, unitsCreated: 0, unitsCreatedLines: [], unitsUnlisted: [] };
   }
-  let unitsWritten: number, unitsCreated = 0, unitsUnlisted: { ref: string; label: string }[] = [];
+  let unitsWritten: number, unitsCreated = 0, unitsCreatedLines: { ref: string; label: string }[] = [], unitsUnlisted: { ref: string; label: string }[] = [];
   if (development.publishStatus === "published") {
     const diff = await syncFeedUnitsPreservingUnlisted(development.id, vm.units, { freezeExistingUnitMedia: freezeMirror });
-    unitsWritten = diff.written; unitsCreated = diff.createdCount; unitsUnlisted = diff.unlisted;
+    unitsWritten = diff.written; unitsCreated = diff.created.length; unitsCreatedLines = diff.created; unitsUnlisted = diff.unlisted;
   } else {
     await prisma.developmentUnit.deleteMany({ where: { developmentId: development.id, source: "feed" } });
     if (vm.units.length) await prisma.developmentUnit.createMany({ data: vm.units.map((u, i) => unitRow(u, development.id, i)) });
     unitsWritten = vm.units.length;
   }
   await recomputeDevelopmentDerivedState(development.id);
-  return { ok: true, created: !existing, unitsWritten, skippedManual: false, mirroredNewFiles, developmentId: development.id, developmentName: development.publicName, unitsCreated, unitsUnlisted };
+  return { ok: true, created: !existing, unitsWritten, skippedManual: false, mirroredNewFiles, developmentId: development.id, developmentName: development.publicName, unitsCreated, unitsCreatedLines, unitsUnlisted };
 }
 
 // Guards against a partial/broken feed fetch masquerading as "half the
@@ -800,7 +808,7 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
       const pctLabel = Math.round(missingPct * 100);
       return {
         dev, found: clusters.length, created: 0, updated: 0, failed: 0,
-        mirroredNewFiles: false, unitsWritten: 0, unitsCreated: 0, unitsUnlisted: [],
+        mirroredNewFiles: false, unitsWritten: 0, unitsCreated: 0, unitsCreatedLines: [], unitsUnlisted: [],
         blocked: true,
         blockedMessage: `${missing} of ${beforeCount} units are missing from today's feed (${pctLabel} %). Nothing was changed — the catalogue stays as it is until this has been checked.`,
         blockedMissing: missing, blockedTotal: beforeCount,
@@ -860,6 +868,7 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
   }
 
   let created = 0, updated = 0, failed = 0, mirroredNewFiles = false, unitsCreated = 0, unitsWritten = 0;
+  const unitsCreatedLines: UnitChangeLine[] = [];
   const unitsUnlisted: UnitChangeLine[] = [];
   for (const cluster of clusters) {
     const id = idByCluster.get(cluster)!;
@@ -870,6 +879,9 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
       if (r.mirroredNewFiles) mirroredNewFiles = true;
       unitsCreated += r.unitsCreated;
       unitsWritten += r.unitsWritten;
+      for (const u of r.unitsCreatedLines) {
+        unitsCreatedLines.push({ developmentId: r.developmentId!, development: r.developmentName!, ref: u.ref, label: u.label });
+      }
       for (const u of r.unitsUnlisted) {
         unitsUnlisted.push({ developmentId: r.developmentId!, development: r.developmentName!, ref: u.ref, label: u.label });
       }
@@ -877,7 +889,7 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
       failed++;
     }
   }
-  return { dev, found: clusters.length, created, updated, failed, mirroredNewFiles, unitsWritten, unitsCreated, unitsUnlisted };
+  return { dev, found: clusters.length, created, updated, failed, mirroredNewFiles, unitsWritten, unitsCreated, unitsCreatedLines, unitsUnlisted };
 }
 
 // Core loop, no restart side-effect — syncAll() calls this per developer so a
@@ -889,10 +901,11 @@ async function syncDeveloperCore(dev: string, opts: { mirror?: boolean; forceMir
 
   const guard = await checkFeedCompleteness(dev, ids);
   if (guard.blocked) {
-    return { dev, found: ids.length, created: 0, updated: 0, failed: 0, mirroredNewFiles: false, unitsWritten: 0, unitsCreated: 0, unitsUnlisted: [], blocked: true, blockedMessage: guard.message, blockedMissing: guard.missing, blockedTotal: guard.total };
+    return { dev, found: ids.length, created: 0, updated: 0, failed: 0, mirroredNewFiles: false, unitsWritten: 0, unitsCreated: 0, unitsCreatedLines: [], unitsUnlisted: [], blocked: true, blockedMessage: guard.message, blockedMissing: guard.missing, blockedTotal: guard.total };
   }
 
   let created = 0, updated = 0, failed = 0, mirroredNewFiles = false, unitsCreated = 0, unitsWritten = 0;
+  const unitsCreatedLines: UnitChangeLine[] = [];
   const unitsUnlisted: UnitChangeLine[] = [];
   for (const id of ids) {
     try {
@@ -902,6 +915,9 @@ async function syncDeveloperCore(dev: string, opts: { mirror?: boolean; forceMir
       if (r.mirroredNewFiles) mirroredNewFiles = true;
       unitsCreated += r.unitsCreated;
       unitsWritten += r.unitsWritten;
+      for (const u of r.unitsCreatedLines) {
+        unitsCreatedLines.push({ developmentId: r.developmentId!, development: r.developmentName!, ref: u.ref, label: u.label });
+      }
       for (const u of r.unitsUnlisted) {
         unitsUnlisted.push({ developmentId: r.developmentId!, development: r.developmentName!, ref: u.ref, label: u.label });
       }
@@ -909,7 +925,7 @@ async function syncDeveloperCore(dev: string, opts: { mirror?: boolean; forceMir
       failed++;
     }
   }
-  return { dev, found: ids.length, created, updated, failed, mirroredNewFiles, unitsWritten, unitsCreated, unitsUnlisted };
+  return { dev, found: ids.length, created, updated, failed, mirroredNewFiles, unitsWritten, unitsCreated, unitsCreatedLines, unitsUnlisted };
 }
 
 // Public single-developer entry (admin "Sync now" for one dev, debug route) —

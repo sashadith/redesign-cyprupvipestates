@@ -1,6 +1,7 @@
 import { sendTelegramMessage } from "@/lib/telegram";
 import { sendEmail } from "@/lib/sendEmail";
 import { DEV_ACCOUNT } from "@/lib/feedSync";
+import { absUrl } from "./indexnow";
 
 /* Inventory-change notifications for the 4am feed-sync cron (see
    src/app/api/cron/feed-sync/route.ts) — the event-driven half of the
@@ -14,7 +15,14 @@ export function devLabel(dev: string): string {
   return DEV_ACCOUNT[dev]?.name || dev;
 }
 
-export type RemovedUnitLine = { development: string; ref: string; label: string };
+export type RemovedUnitLine = {
+  // Carried since the digest links each development; the sync's UnitChangeLine
+  // has always provided it, the old count-only message just never used it.
+  developmentId: string;
+  development: string;
+  ref: string;
+  label: string;
+};
 
 const MAX_LISTED_LINES = 15;
 
@@ -25,53 +33,104 @@ function unitLine(l: RemovedUnitLine): string {
 const pluralUnit = (n: number) => (n === 1 ? "unit" : "units");
 const pluralIs = (n: number) => (n === 1 ? "is" : "are");
 
-// Units no longer listed by the developer (flipped to "unlisted" this run) —
-// one message per developer. `nowSoldOut` is the subset of touched
-// developments that computeAvailability now reports as fully sold out as a
-// direct result of this run's removals (0 available units) — surfaced as its
-// own line per development, not folded into the count above it.
-// Returns null when there's nothing to report — every call site already
-// guards on a non-empty `lines` before calling this, but a defensive check
-// here too means it's structurally impossible to ever send "0 units removed".
-export function buildRemovedUnitsMessage(dev: string, lines: RemovedUnitLine[], nowSoldOut: string[]): { subject: string; text: string } | null {
-  const count = lines.length;
-  if (count === 0) return null;
-  const label = devLabel(dev);
-  const shown = lines.slice(0, MAX_LISTED_LINES);
-  const more = count - shown.length;
-  const text = [
-    `📤 ${label} — ${count} ${pluralUnit(count)} removed from the feed`,
-    `No longer listed by the developer, hidden from the catalogue:`,
-    ...shown.map(unitLine),
-    ...(more > 0 ? [`… and ${more} more`] : []),
-    `They will be listed again automatically if they return to the feed.`,
-    ...nowSoldOut.map((name) => `${name} now shows as sold out.`),
-  ].join("\n");
-  return { subject: `${label}: ${count} ${pluralUnit(count)} removed from the feed`, text };
+
+
+
+/* ── One digest instead of one email per developer ──────────────────────────
+   The nightly run used to send a separate message per developer per event
+   type, each carrying a bare count ("Domenica Group: 10 new units awaiting
+   review") with no way to tell WHICH units without opening the admin and
+   hunting. Four developers with new units meant four emails saying almost
+   nothing.
+
+   This builds a single message covering every developer, itemized and linked.
+   Ordering is deliberate: what is BLOCKED comes first (nothing was written and
+   it needs a decision), then removals (the live catalogue already changed),
+   then new units (drafts waiting, no urgency). Within each section developers
+   are alphabetical and units keep their in-project order, so the same feed
+   produces the same email twice running and a diff between two mornings is
+   readable. */
+
+export type NewUnitLine = RemovedUnitLine;
+
+export type FeedDigestInput = {
+  newUnits: { dev: string; lines: NewUnitLine[] }[];
+  removed: { dev: string; lines: RemovedUnitLine[]; nowSoldOut: string[] }[];
+  blocked: { dev: string; missing: number; total: number; message?: string }[];
+};
+
+const devUrl = (dev: string) => absUrl(`/admin/developments?dev=${encodeURIComponent(dev)}`);
+const projectUrl = (id: string) => absUrl(`/admin/developments/${id}`);
+
+/** Groups a developer's unit lines by development, preserving first-seen order. */
+function byDevelopment<T extends RemovedUnitLine>(lines: T[]) {
+  const out = new Map<string, { name: string; id: string; lines: T[] }>();
+  for (const l of lines) {
+    const hit = out.get(l.developmentId);
+    if (hit) hit.lines.push(l);
+    else out.set(l.developmentId, { name: l.development, id: l.developmentId, lines: [l] });
+  }
+  return Array.from(out.values()).sort((a, b) => a.name.localeCompare(b.name));
 }
 
-// New units seen in the feed for the first time this run — one message per
-// developer, an aggregate count only (no per-unit lines, unlike removals —
-// these are new/draft rows awaiting the normal publish review, not yet a
-// live catalogue change worth itemizing).
-export function buildNewUnitsMessage(dev: string, count: number): { subject: string; text: string } | null {
-  if (count <= 0) return null;
-  const label = devLabel(dev);
-  const text = `🆕 ${label} — ${count} new ${pluralUnit(count)} from the feed\nAwaiting review before they go live.`;
-  return { subject: `${label}: ${count} new ${pluralUnit(count)} awaiting review`, text };
+export function buildFeedDigestMessage(input: FeedDigestInput): { subject: string; text: string } | null {
+  const newTotal = input.newUnits.reduce((n, d) => n + d.lines.length, 0);
+  const removedTotal = input.removed.reduce((n, d) => n + d.lines.length, 0);
+  if (!newTotal && !removedTotal && !input.blocked.length) return null;
+
+  const out: string[] = [];
+  const sortByDev = <T extends { dev: string }>(xs: T[]) => [...xs].sort((a, b) => devLabel(a.dev).localeCompare(devLabel(b.dev)));
+
+  if (input.blocked.length) {
+    out.push(`\u26D4 NEEDS A DECISION — ${input.blocked.length} feed${input.blocked.length === 1 ? "" : "s"} refused`);
+    for (const b of sortByDev(input.blocked)) {
+      const pct = b.total > 0 ? Math.round((b.missing / b.total) * 100) : 0;
+      out.push(`  ${devLabel(b.dev)} — ${b.missing} of ${b.total} units missing (${pct} %). Nothing was changed.`);
+      out.push(`  ${devUrl(b.dev)}`);
+    }
+    out.push("");
+  }
+
+  if (removedTotal) {
+    out.push(`\u{1F4E4} REMOVED FROM THE CATALOGUE — ${removedTotal} ${pluralUnit(removedTotal)}`);
+    out.push(`  Already hidden from the public site. They return automatically if the developer lists them again.`);
+    for (const d of sortByDev(input.removed)) {
+      if (!d.lines.length) continue;
+      out.push(`  ${devLabel(d.dev)}`);
+      for (const g of byDevelopment(d.lines)) {
+        out.push(`    ${g.name} (${g.lines.length})  ${projectUrl(g.id)}`);
+        for (const l of g.lines.slice(0, MAX_LISTED_LINES)) out.push(`      · ${l.label || l.ref}`);
+        if (g.lines.length > MAX_LISTED_LINES) out.push(`      … and ${g.lines.length - MAX_LISTED_LINES} more`);
+      }
+      for (const name of d.nowSoldOut) out.push(`    ${name} now shows as sold out.`);
+    }
+    out.push("");
+  }
+
+  if (newTotal) {
+    out.push(`\u{1F195} NEW, AWAITING YOUR REVIEW — ${newTotal} ${pluralUnit(newTotal)}`);
+    out.push(`  Not live yet. Open the project to check price, area and photos, then publish.`);
+    for (const d of sortByDev(input.newUnits)) {
+      if (!d.lines.length) continue;
+      out.push(`  ${devLabel(d.dev)}`);
+      for (const g of byDevelopment(d.lines)) {
+        out.push(`    ${g.name} (${g.lines.length})  ${projectUrl(g.id)}`);
+        for (const l of g.lines.slice(0, MAX_LISTED_LINES)) out.push(`      · ${l.label || l.ref}`);
+        if (g.lines.length > MAX_LISTED_LINES) out.push(`      … and ${g.lines.length - MAX_LISTED_LINES} more`);
+      }
+    }
+    out.push("");
+  }
+
+  // The subject has to survive a phone's notification line, so it carries the
+  // counts in the order the body uses them and nothing else.
+  const bits: string[] = [];
+  if (input.blocked.length) bits.push(`${input.blocked.length} feed${input.blocked.length === 1 ? "" : "s"} refused`);
+  if (removedTotal) bits.push(`${removedTotal} removed`);
+  if (newTotal) bits.push(`${newTotal} new`);
+  return { subject: `Feed sync: ${bits.join(", ")}`, text: out.join("\n").trimEnd() };
 }
 
-// Feed-completeness guard tripped (see checkFeedCompleteness in feedSync.ts)
-// — nothing was written for this developer this run. `missing` is always
-// >20 in practice (the guard's own threshold), but pluralize correctly
-// regardless rather than assume that floor never changes.
-export function buildFeedIncompleteMessage(dev: string, missing: number, total: number): { subject: string; text: string } | null {
-  if (missing <= 0 || total <= 0) return null;
-  const label = devLabel(dev);
-  const pct = Math.round((missing / total) * 100);
-  const text = `⚠️ ${label} — feed looks incomplete\n${missing} of ${total} ${pluralUnit(missing)} ${pluralIs(missing)} missing from today's feed (${pct} %). Nothing was changed — the catalogue stays as it is until this has been checked.`;
-  return { subject: `${label}: feed looks incomplete — nothing changed`, text };
-}
 
 // Drive-sync failure (2026-08-11, Olias incident) — `dev` here is already the
 // DeveloperAccount's own display name (e.g. "Olias Homes (drive)"), not a
