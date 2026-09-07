@@ -3,10 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
-import { getSignatureHtml, stripHtmlToText } from "@/lib/emailSignature";
-import { sendUserEmail, getUserEmailSettingsRow } from "@/lib/crm/sendCrmEmail";
 import { applyFollowUpCadence } from "@/lib/crm/followUpCadence";
-import { bodyToHtml } from "@/lib/crm/emailBodyHtml";
+import { sendLeadEmail } from "@/lib/crm/sendLeadEmail";
 
 // Local, self-contained (mirrors src/app/admin/actions.ts's requireSession —
 // not imported from there since exporting it from that "use server" file
@@ -31,67 +29,10 @@ export async function sendCrmEmailAction(
   opts: { subject: string; body: string; occurredAt?: Date; leadReacted?: boolean; presentationToken?: string; skipCadence?: boolean; aiGenerated?: boolean },
 ): Promise<{ ok?: string; error?: string }> {
   const session = await requireSession();
-  const userId = (session.user as any).id as string;
-
-  const lead = await prisma.lead.findFirst({
-    where: { id: leadId, deletedAt: null },
-    select: { email: true, languagePreference: true },
-  });
-  if (!lead?.email) return { error: "This lead has no email address." };
-
-  const subject = opts.subject.trim();
-  const body = opts.body.trim();
-  if (!subject || !body) return { error: "Subject and body are required." };
-
-  const locale = lead.languagePreference ?? "en";
-  const signatureHtml = await getSignatureHtml(userId, locale);
-  // Explicit spacer (not a trailing newline in `body` — trim() above would
-  // strip that) so there's always a visible blank line before the signature
-  // block, regardless of email client support for CSS margins.
-  const spacer = `<div style="height:16px;line-height:16px;font-size:1px;">&nbsp;</div>`;
-  const html = `${bodyToHtml(body)}${spacer}${signatureHtml}`;
-  const text = stripHtmlToText(html);
-
-  let messageId: string;
-  try {
-    // BCC the sender on every lead email — "BCC an Bearbeiter" — using
-    // their own configured fromAddress.
-    const settingsRow = await getUserEmailSettingsRow(userId);
-    const sent = await sendUserEmail(userId, { to: lead.email, bcc: settingsRow.fromAddress ?? undefined, subject, html, text });
-    messageId = sent.messageId;
-  } catch (e: any) {
-    return { error: e?.message || "Send failed." };
-  }
-
-  const when = opts.occurredAt ?? new Date();
-  await prisma.leadInteraction.create({
-    data: {
-      leadId,
-      type: "EMAIL_OUT",
-      direction: "OUTBOUND",
-      channel: "EMAIL",
-      subject,
-      body,
-      occurredAt: when,
-      createdByUserId: userId,
-      createdByName: session.user?.name ?? "admin",
-      // Phase 4 (email inbound) — lets a lead's reply thread back to this
-      // row via In-Reply-To/References, see docs/EMAIL-INBOUND.md.
-      messageId,
-      metadata: {
-        ...(opts.presentationToken ? { presentationToken: opts.presentationToken } : {}),
-        ...(opts.leadReacted ? { leadReacted: true } : {}),
-        ...(opts.aiGenerated ? { aiGenerated: true } : {}),
-      },
-    },
-  });
-
-  if (!opts.skipCadence) {
-    await applyFollowUpCadence(leadId, "manual_contact", { leadReacted: opts.leadReacted });
-  }
-
+  const result = await sendLeadEmail({ userId: (session.user as any).id as string, userName: session.user?.name ?? "admin" }, leadId, opts);
+  if (!result.ok) return { error: result.error };
   revalidatePath(`/admin/crm/${leadId}`);
-  return { ok: `Email sent to ${lead.email}.` };
+  return { ok: result.interactionError ? `Email sent to ${result.sentTo} — but the timeline entry failed (${result.interactionError}); add it by hand.` : `Email sent to ${result.sentTo}.` };
 }
 
 // No actual send — wa.me is opened client-side (no WhatsApp Business API,
