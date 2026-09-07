@@ -16,6 +16,10 @@ const SORTS: Record<string, (dir: "asc" | "desc") => any[]> = {
   city: (dir) => [{ city: { sort: dir, nulls: "last" } }, { title: "asc" }],
   price: (dir) => [{ price: { sort: dir, nulls: "last" } }, { title: "asc" }],
   status: (dir) => [{ status: dir }, { title: "asc" }],
+  // Prisma cannot express NULLS LAST across a relation (Developer.title is
+  // required, so the ordering input has no `nulls` option) — the handful of
+  // projects with no developer are pushed to the end in JS below instead.
+  developer: (dir) => [{ developer: { title: dir } }, { title: "asc" }],
 };
 // The list's own order when nothing is chosen: featured first, then the manual
 // listing priority, then alphabetical. Kept as the default because it is the
@@ -49,12 +53,22 @@ export default async function ProjectsAdmin({
       where,
       orderBy: sort ? SORTS[sort](dir) : DEFAULT_ORDER,
       take: 300,
-      include: { supersededByDevelopment: { select: { slug: true } } },
+      include: {
+        supersededByDevelopment: { select: { slug: true } },
+        developer: { select: { title: true } },
+      },
     }),
     // Shown next to the filtered count, so "51 of 221" reads as a filter
     // rather than as projects having gone missing.
     prisma.project.count({ where: { language: lang as any } }),
   ]);
+
+  // See SORTS.developer: keep the no-developer rows at the end in both
+  // directions, the way city and price behave.
+  const rows =
+    sort === "developer"
+      ? [...projects.filter((p) => p.developer), ...projects.filter((p) => !p.developer)]
+      : projects;
 
   // Every control has to carry the others, or clicking a sort would silently
   // drop the search and the status filter.
@@ -136,6 +150,7 @@ export default async function ProjectsAdmin({
           <thead className="bg-[#F8F9FA] text-[#6B7280]">
             <tr>
               <SortHead col="title" label="Title" />
+              <SortHead col="developer" label="Developer" />
               <SortHead col="city" label="City" />
               <SortHead col="price" label="Price" />
               <SortHead col="status" label="Status" />
@@ -144,12 +159,13 @@ export default async function ProjectsAdmin({
             </tr>
           </thead>
           <tbody className="divide-y divide-[#E5E7EB]">
-            {projects.map((p) => (
+            {rows.map((p) => (
               <tr key={p.id} className="hover:bg-[#F8F9FA]">
                 <td className="px-4 py-2.5">
                   <Link href={`/admin/content/projects/${p.id}`} className="text-[#1B4B43] font-medium hover:underline">{p.title}</Link>
                   <div className="text-xs text-[#6B7280]">/{p.slug}</div>
                 </td>
+                <td className="px-4 py-2.5 text-[#6B7280]">{p.developer?.title ?? "—"}</td>
                 <td className="px-4 py-2.5 text-[#6B7280]">{p.city ?? "—"}</td>
                 <td className="px-4 py-2.5 text-[#6B7280]">{p.price ? `€${p.price.toLocaleString()}` : "—"}</td>
                 <td className="px-4 py-2.5 text-[#6B7280]">{p.status}</td>
