@@ -3,10 +3,12 @@ import { registerWorklist } from "./worklist";
 import { registerSearchLeads } from "./searchLeads";
 import { registerGetLead } from "./getLead";
 import { registerMatchProperties } from "./matchProperties";
+import { registerGetProject } from "./getProject";
 
 export function registerReadTools(server: McpServer): void {
   registerWorklist(server);
   registerSearchLeads(server);
   registerGetLead(server);
   registerMatchProperties(server);
+  registerGetProject(server);
 }
