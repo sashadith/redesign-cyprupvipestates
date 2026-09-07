@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/server";
+import { registerWorklist } from "./worklist";
 
-export function registerReadTools(_server: McpServer): void {
-  // Tools are added one per task: worklist, searchLeads, getLead, matchProperties, getProject, playbook.
+export function registerReadTools(server: McpServer): void {
+  registerWorklist(server);
 }
