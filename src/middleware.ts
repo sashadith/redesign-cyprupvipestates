@@ -376,7 +376,9 @@ export const config = {
   // 404 the same way) — flagged separately as a pre-existing gap broader
   // than this one file; not fixed wholesale here to avoid touching this
   // matcher's blast radius beyond what's actually needed right now.
+  // `.well-known` (2026-09-07): OAuth discovery documents for the MCP connector
+  // — same class of exclusion as /c/ and /book/ (see docs/BOOKING-PAGE.md).
   matcher: [
-    "/((?!api|_next/static|_next/image|admin|structure|robots|sitemap|uploads|img|favicon.ico|apple-icon.png|icon.png|manifest.webmanifest|sandbox|og|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-home|preview-insights|preview-landing|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
+    "/((?!api|\\.well-known|_next/static|_next/image|admin|structure|robots|sitemap|uploads|img|favicon.ico|apple-icon.png|icon.png|manifest.webmanifest|sandbox|og|preview-about|preview-assets|preview-case-studies|preview-contacts|preview-faq|preview-home|preview-insights|preview-landing|preview-legal|preview-partners|preview-projects|style|c/|book/|3499d71f004393c8d27c96caccbf03d1\\.txt).*)",
   ],
 };
