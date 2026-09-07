@@ -7,6 +7,12 @@
 // advances the follow-up cadence. An inbound message means the lead reacted,
 // so WHATSAPP_IN/EMAIL_IN force leadReacted (they reset the auto-follow-up
 // chain, see followUpCadence.ts).
+//
+// Body is optional: every type needs *some* content except email logs,
+// which the admin's "+ Email log" form has always allowed subject-only
+// (backfilling "sent an email, no need to retype it verbatim" — see
+// addEmailLog in admin/actions.ts). bodyRequirement() below is the one
+// place that rule lives; both logLeadInteraction and its test call it.
 import { prisma } from "@/lib/prisma";
 import { applyFollowUpCadence } from "./followUpCadence";
 import type { EmailActor } from "./sendLeadEmail";
@@ -36,7 +42,7 @@ export function interactionShape(type: LoggableInteractionType): InteractionShap
 
 export type LogInteractionInput = {
   type: LoggableInteractionType;
-  body: string;
+  body?: string | null;
   subject?: string | null;
   occurredAt?: Date;
   leadReacted?: boolean;
@@ -44,9 +50,26 @@ export type LogInteractionInput = {
   via?: "mcp";
 };
 
+// Pure rule for what counts as "enough to log": every type needs a non-empty
+// body, except an email log (EMAIL_OUT/EMAIL_IN) with a subject — the admin's
+// email-log form has always allowed subject-only entries. Returns the
+// trimmed-or-null content/subject alongside whether the combination is
+// loggable at all, so logLeadInteraction and its test share one source of
+// truth instead of duplicating the trim/require logic.
+export function bodyRequirement(
+  type: LoggableInteractionType,
+  body: string | null | undefined,
+  subject: string | null | undefined,
+): { content: string | null; subject: string | null; ok: boolean } {
+  const content = body?.trim() || null;
+  const trimmedSubject = subject?.trim() || null;
+  const ok = !!content || (type.startsWith("EMAIL_") && !!trimmedSubject);
+  return { content, subject: trimmedSubject, ok };
+}
+
 export async function logLeadInteraction(actor: EmailActor, leadId: string, input: LogInteractionInput): Promise<{ interactionId: string }> {
-  const content = input.body.trim();
-  if (!content) throw new Error("Message is required.");
+  const { content, subject, ok } = bodyRequirement(input.type, input.body, input.subject);
+  if (!ok) throw new Error("Message is required.");
   const shape = interactionShape(input.type);
   const when = input.occurredAt ?? new Date();
   const leadReacted = shape.forcesLeadReacted || !!input.leadReacted;
@@ -56,8 +79,13 @@ export async function logLeadInteraction(actor: EmailActor, leadId: string, inpu
     ...(input.via ? { via: input.via } : {}),
   };
   if (shape.activityRow) {
+    // Only NOTE writes an activity row, and `ok` above required a non-empty
+    // `content` for NOTE (it doesn't start with "EMAIL_"), so this is never
+    // the empty-string fallback in practice — the `?? subject ?? ""` just
+    // satisfies TypeScript without a non-null assertion.
+    const activityContent = content ?? subject ?? "";
     await prisma.leadActivity.create({
-      data: { leadId, type: input.type, content, createdAt: when, createdBy: actor.userName, createdById: actor.userId },
+      data: { leadId, type: input.type, content: activityContent, createdAt: when, createdBy: actor.userName, createdById: actor.userId },
     });
   }
   const row = await prisma.leadInteraction.create({
@@ -66,7 +94,7 @@ export async function logLeadInteraction(actor: EmailActor, leadId: string, inpu
       type: input.type,
       direction: shape.direction,
       channel: shape.channel,
-      subject: input.subject?.trim() || null,
+      subject,
       body: content,
       occurredAt: when,
       createdByUserId: actor.userId,
