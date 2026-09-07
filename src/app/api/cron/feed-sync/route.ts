@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { withCronLog, logCronRun } from "@/lib/cronLog";
 import { sweepOverlapCandidates } from "@/lib/overlapSweep";
 import { computeAvailability } from "@/lib/developmentAvailability";
-import { buildRemovedUnitsMessage, buildNewUnitsMessage, buildFeedIncompleteMessage, sendFeedNotification, type RemovedUnitLine } from "@/lib/feedNotifications";
+import { buildFeedDigestMessage, sendFeedNotification, type RemovedUnitLine } from "@/lib/feedNotifications";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -146,12 +146,12 @@ export async function GET(req: NextRequest) {
       touchedDevelopmentIds.add(developmentId);
     };
     for (const r of results) {
-      for (const u of r.unitsUnlisted) pushRemoved(r.dev, { development: u.development, ref: u.ref, label: u.label }, u.developmentId);
+      for (const u of r.unitsUnlisted) pushRemoved(r.dev, { developmentId: u.developmentId, development: u.development, ref: u.ref, label: u.label }, u.developmentId);
     }
     for (const r of statusResults) {
       for (const c of r.changes) {
         if (c.to !== "unlisted") continue;
-        pushRemoved(r.dev, { development: c.developmentName, ref: c.unitRef, label: c.unitRef }, c.developmentId);
+        pushRemoved(r.dev, { developmentId: c.developmentId, development: c.developmentName, ref: c.unitRef, label: c.unitRef }, c.developmentId);
       }
     }
 
@@ -174,21 +174,25 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    // One digest for the whole run instead of a message per developer per event
+    // type. Four developers with new units used to mean four emails, each
+    // carrying only a count; this is one, itemized and linked. See
+    // buildFeedDigestMessage for the section order.
     const notifications: Promise<void>[] = [];
-    for (const [dev, lines] of Array.from(removedByDev)) {
-      const msg = buildRemovedUnitsMessage(dev, lines, Array.from(soldOutNamesByDev.get(dev) ?? []));
-      if (msg) notifications.push(sendFeedNotification(msg.text, msg.subject));
-    }
-    for (const r of results) {
-      if (r.unitsCreated > 0) {
-        const msg = buildNewUnitsMessage(r.dev, r.unitsCreated);
-        if (msg) notifications.push(sendFeedNotification(msg.text, msg.subject));
-      }
-      if (r.blocked) {
-        const msg = buildFeedIncompleteMessage(r.dev, r.blockedMissing ?? 0, r.blockedTotal ?? 0);
-        if (msg) notifications.push(sendFeedNotification(msg.text, msg.subject));
-      }
-    }
+    const digest = buildFeedDigestMessage({
+      newUnits: results
+        .filter((r) => r.unitsCreatedLines.length > 0)
+        .map((r) => ({ dev: r.dev, lines: r.unitsCreatedLines })),
+      removed: Array.from(removedByDev).map(([dev, lines]) => ({
+        dev,
+        lines,
+        nowSoldOut: Array.from(soldOutNamesByDev.get(dev) ?? []),
+      })),
+      blocked: results
+        .filter((r) => r.blocked)
+        .map((r) => ({ dev: r.dev, missing: r.blockedMissing ?? 0, total: r.blockedTotal ?? 0, message: r.blockedMessage })),
+    });
+    if (digest) notifications.push(sendFeedNotification(digest.text, digest.subject));
     // Best-effort: a Telegram/email hiccup must never fail the cron itself —
     // the sync already succeeded and is logged; a missed notification is
     // recoverable from the Action Center (feed-incomplete:/sync-fail: rules)
