@@ -240,7 +240,7 @@ the operator sends via wa.me and logs through `crm_log_interaction`).
    - Render exactly as the real send would: `bodyToHtml(body)` + spacer +
      `getSignatureHtml(userId, lead.languagePreference ?? "en")`.
    - Send the preview to the user's `fromAddress` via `sendUserEmail` —
-     `to` = fromAddress, no BCC, subject `[DRAFT · code ABC123] <subject>`,
+     `to` = fromAddress, no BCC, subject `[DRAFT] <subject>` (the code lives only in the header box — a subject line can be mis-filed by the inbound poller),
      and a header block above the rendered body: *Draft for {lead name} ·
      To: {lead.email} · Approval code: ABC123 · Expires {time} Cyprus · Reply
      in the CVE LEADS chat with "Freigabe ABC123" to send, or tell Claude what
