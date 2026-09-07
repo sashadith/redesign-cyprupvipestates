@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { adminDateTime } from "@/lib/adminTime";
-import { disconnectMcpFamily } from "./actions";
+import { disconnectMcpFamily, openPairingWindow } from "./actions";
+import { verifyPairingToken, pairingSecret, PAIRING_COOKIE } from "@/lib/mcp/auth/pairing";
 
 export const dynamic = "force-dynamic";
 
-export default async function ConnectedAppsPage() {
+export default async function ConnectedAppsPage({ searchParams }: { searchParams: { pairing?: string } }) {
   const session = await auth();
   const uid = (session?.user as any)?.id as string | undefined;
   if (!session || !uid) redirect("/admin/login");
@@ -26,12 +28,31 @@ export default async function ConnectedAppsPage() {
   for (const t of tokens) if (!byFamily.has(t.familyId)) byFamily.set(t.familyId, t);
   const families = Array.from(byFamily.values());
 
+  let windowOpen = false;
+  try { windowOpen = verifyPairingToken(cookies().get(PAIRING_COOKIE)?.value, uid, pairingSecret()); } catch { windowOpen = false; }
+
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold">Connected apps</h1>
         <p className="text-sm text-[#6B7280] mt-1">MCP connectors (e.g. the claude.ai &quot;CVE LEADS&quot; chat) that can read the CRM on your behalf. <Link href="/admin/account" className="underline">Back to account</Link></p>
       </div>
+
+      <section className="rounded-lg border border-[#E5E7EB] bg-white p-4">
+        <h2 className="text-lg font-medium mb-1">Connect a new app</h2>
+        <p className="text-sm text-[#6B7280] mb-3">
+          Connections can only be approved while a pairing window is open in this browser. Open one, then start the connection in claude.ai (Settings → Connectors → Connect) within 10 minutes.
+        </p>
+        {searchParams?.pairing === "missing" && (
+          <p className="text-sm rounded px-3 py-2 mb-3 bg-[#C0392B]/10 text-[#C0392B]">The approval was refused because no pairing window was open. Open one below and click Connect in claude.ai again.</p>
+        )}
+        <form action={openPairingWindow}>
+          <button type="submit" className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-4 py-2 hover:bg-[#142E2D]">
+            {windowOpen ? "Extend the pairing window (10 min)" : "Open a pairing window (10 min)"}
+          </button>
+        </form>
+        {windowOpen && <p className="text-xs text-[#6B7280] mt-2">A pairing window is open in this browser.</p>}
+      </section>
 
       <section>
         <h2 className="text-lg font-medium mb-2">Connections</h2>

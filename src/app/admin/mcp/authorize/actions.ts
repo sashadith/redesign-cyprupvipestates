@@ -1,11 +1,13 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getClient } from "@/lib/mcp/auth/clients";
 import { validateAuthorizeRequest } from "@/lib/mcp/auth/authorizeValidate";
 import { issueAuthCode } from "@/lib/mcp/auth/authorize";
+import { verifyPairingToken, pairingSecret, PAIRING_COOKIE, PAIRING_COOKIE_PATH } from "@/lib/mcp/auth/pairing";
 
 // Self-contained session gate (same reasoning as the other admin action
 // files: never export requireSession from a "use server" module).
@@ -37,6 +39,11 @@ function redirectWith(redirectUri: string, params: Record<string, string>): neve
 // validation is not trusted across the round trip.
 export async function approveAuthorization(formData: FormData) {
   const userId = await requireUserId();
+  // The pairing window is the anti-phishing binding: a posted Allow without a
+  // window open in this browser is refused and the operator is told why.
+  if (!verifyPairingToken(cookies().get(PAIRING_COOKIE)?.value, userId, pairingSecret())) {
+    redirect("/admin/mcp?pairing=missing");
+  }
   const p = paramsFromForm(formData);
   const client = await getClient(p.client_id ?? "");
   const v = validateAuthorizeRequest(p, client);
@@ -45,6 +52,7 @@ export async function approveAuthorization(formData: FormData) {
     throw new Error(v.description);
   }
   const code = await issueAuthCode({ clientId: v.clientId, userId, redirectUri: v.redirectUri, codeChallenge: v.codeChallenge });
+  cookies().set({ name: PAIRING_COOKIE, value: "", path: PAIRING_COOKIE_PATH, maxAge: 0 });
   redirectWith(v.redirectUri, { code, state: v.state });
 }
 
