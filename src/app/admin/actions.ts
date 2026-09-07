@@ -16,8 +16,9 @@ import { pingIndexNow, absUrl } from "@/lib/indexnow";
 import { deepSetString } from "@/lib/homepageFields";
 import { slugify } from "@/lib/slugify";
 import { listProjectsForPicker as listProjectsForPickerQuery } from "@/sanity/sanity.utils";
-import { applyFollowUpCadence, resetFollowUpCadence } from "@/lib/crm/followUpCadence";
+import { resetFollowUpCadence } from "@/lib/crm/followUpCadence";
 import { isManualInteractionType } from "@/lib/crm/interactionHelpers";
+import { logLeadInteraction } from "@/lib/crm/logInteraction";
 import { findEmptyProjectsBlock } from "@/lib/projectsBlockValidation";
 import { ELEVATED_NO_CONTACT_STATUSES as CONTACT_IMPLYING_STATUSES } from "@/lib/actionCenter/rules/crm";
 import { logWhatsAppSentAction } from "./(panel)/crm/[id]/emailActions";
@@ -132,6 +133,10 @@ async function requireSession() {
   const user = await prisma.user.findUnique({ where: { id: uid }, select: { isActive: true } });
   if (!user || !user.isActive) throw new Error("Unauthorized");
   return session;
+}
+// Actor shape the extracted CRM libraries take (src/lib/crm/sendLeadEmail.ts).
+function actorOf(session: any): { userId: string; userName: string } {
+  return { userId: session.user?.id as string, userName: session.user?.name ?? "admin" };
 }
 async function requireAdmin() {
   const session = await requireSession();
@@ -874,22 +879,8 @@ export async function toggleLeadHotAction(formData: FormData) {
 // corrected.
 export async function addLeadNote(id: string, note: string, occurredAt?: Date) {
   const session = await requireSession();
-  const content = note.trim();
-  if (!content) return;
-  const when = occurredAt ?? new Date();
-  await prisma.leadActivity.create({
-    data: { leadId: id, type: "NOTE", content, createdAt: when, createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
-  });
-  await prisma.leadInteraction.create({
-    data: {
-      leadId: id,
-      type: "NOTE",
-      occurredAt: when,
-      body: content,
-      createdByUserId: (session.user as any)?.id ?? null,
-      createdByName: session.user?.name ?? "admin",
-    },
-  });
+  if (!note.trim()) return;
+  await logLeadInteraction(actorOf(session), id, { type: "NOTE", body: note, occurredAt });
   revalidatePath(`/admin/crm/${id}`);
 }
 
@@ -908,24 +899,14 @@ export async function addEmailLog(
   opts: { direction: "OUTBOUND" | "INBOUND"; subject?: string; body?: string; occurredAt?: Date; leadReacted?: boolean },
 ) {
   const session = await requireSession();
-  const when = opts.occurredAt ?? new Date();
-  const subject = opts.subject?.trim() || null;
-  const content = opts.body?.trim() || null;
-  await prisma.leadInteraction.create({
-    data: {
-      leadId: id,
-      type: opts.direction === "INBOUND" ? "EMAIL_IN" : "EMAIL_OUT",
-      direction: opts.direction,
-      channel: "EMAIL",
-      subject,
-      body: content,
-      occurredAt: when,
-      createdByUserId: (session.user as any)?.id ?? null,
-      createdByName: session.user?.name ?? "admin",
-      ...(opts.leadReacted ? { metadata: { leadReacted: true } } : {}),
-    },
+  await logLeadInteraction(actorOf(session), id, {
+    type: opts.direction === "INBOUND" ? "EMAIL_IN" : "EMAIL_OUT",
+    // addEmailLog always accepted an empty body (subject-only log); keep that.
+    body: opts.body?.trim() || (opts.subject?.trim() ? `Subject: ${opts.subject.trim()}` : "(no text)"),
+    subject: opts.subject,
+    occurredAt: opts.occurredAt,
+    leadReacted: opts.leadReacted,
   });
-  await applyFollowUpCadence(id, "manual_contact", { leadReacted: opts.leadReacted });
   revalidatePath(`/admin/crm/${id}`);
 }
 
@@ -952,23 +933,8 @@ export async function resetLeadFollowUpCadenceAction(id: string) {
 // interaction type so it shows with its own icon in the Unified Timeline.
 export async function addCallLog(id: string, note: string, occurredAt?: Date, leadReacted?: boolean) {
   const session = await requireSession();
-  const content = note.trim();
-  if (!content) return;
-  const when = occurredAt ?? new Date();
-  await prisma.leadInteraction.create({
-    data: {
-      leadId: id,
-      type: "CALL",
-      direction: "OUTBOUND",
-      channel: "PHONE",
-      occurredAt: when,
-      body: content,
-      createdByUserId: (session.user as any)?.id ?? null,
-      createdByName: session.user?.name ?? "admin",
-      ...(leadReacted ? { metadata: { leadReacted: true } } : {}),
-    },
-  });
-  await applyFollowUpCadence(id, "manual_contact", { leadReacted });
+  if (!note.trim()) return;
+  await logLeadInteraction(actorOf(session), id, { type: "CALL", body: note, occurredAt, leadReacted });
   revalidatePath(`/admin/crm/${id}`);
 }
 
