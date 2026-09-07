@@ -5,7 +5,7 @@ import { TOOL_CALLS_PER_MINUTE, toolCallLimited } from "./rateLimit";
 import { toolResultFromOutcome } from "./toolResult";
 import type { McpCallContext } from "./context";
 
-export type ToolErrorCode = "validation" | "not_found" | "rate_limited" | "config" | "internal" | "unauthorized";
+export type ToolErrorCode = "validation" | "not_found" | "rate_limited" | "config" | "internal" | "unauthorized" | "smtp";
 
 export class ToolError extends Error {
   constructor(public code: ToolErrorCode, message: string) {
