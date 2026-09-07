@@ -9,6 +9,7 @@ import { registerLogInteraction } from "./logInteraction";
 import { registerUpdateLead } from "./updateLead";
 import { registerDraftEmail } from "./draftEmail";
 import { registerSendEmail } from "./sendEmail";
+import { registerListDrafts } from "./listDrafts";
 
 export function registerReadTools(server: McpServer): void {
   registerWorklist(server);
@@ -26,4 +27,5 @@ export function registerWriteTools(server: McpServer): void {
   registerUpdateLead(server);
   registerDraftEmail(server);
   registerSendEmail(server);
+  registerListDrafts(server);
 }

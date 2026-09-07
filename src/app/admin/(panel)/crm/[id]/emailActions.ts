@@ -51,3 +51,14 @@ export async function logWhatsAppSentAction(
   revalidatePath(`/admin/crm/${leadId}`);
   return { ok: "Logged." };
 }
+
+// Cockpit "Discard" on the pending-draft card. Marks the draft SUPERSEDED so
+// its code is dead; the only send path stays crm_send_email with the code.
+export async function discardEmailDraftAction(formData: FormData): Promise<void> {
+  const session = await requireSession();
+  const draftId = String(formData.get("draftId") ?? "");
+  const draft = await prisma.leadEmailDraft.findFirst({ where: { id: draftId, userId: (session.user as any).id as string }, select: { leadId: true } });
+  if (!draft) return;
+  await prisma.leadEmailDraft.updateMany({ where: { id: draftId, status: "PENDING" }, data: { status: "SUPERSEDED" } });
+  revalidatePath(`/admin/crm/${draft.leadId}`);
+}

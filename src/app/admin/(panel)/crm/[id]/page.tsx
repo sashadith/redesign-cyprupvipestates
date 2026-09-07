@@ -7,7 +7,8 @@ import {
   resetLeadFollowUpCadenceAction, deleteLeadInteraction,
 } from "../../../actions";
 import { ELEVATED_NO_CONTACT_STATUSES } from "@/lib/actionCenter/rules/crm";
-import { sendCrmEmailAction, logWhatsAppSentAction } from "./emailActions";
+import { sendCrmEmailAction, logWhatsAppSentAction, discardEmailDraftAction } from "./emailActions";
+import PendingDraftCard from "./PendingDraftCard";
 import { listPresentationLocations } from "./presentationActions";
 import PropertyMatching from "./PropertyMatching";
 import ExistingPresentations, { type PresentationRow } from "./ExistingPresentations";
@@ -54,6 +55,12 @@ export default async function LeadDetail({ params }: { params: { id: string } })
     prisma.user.findMany({ where: { isActive: true }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
   if (!lead) notFound();
+
+  const pendingDraft = await prisma.leadEmailDraft.findFirst({
+    where: { leadId: id, status: "PENDING" },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, subject: true, body: true, createdAt: true, expiresAt: true },
+  });
 
   // Possible duplicates: same email or phone, different record (audit H2).
   // Matches must be non-empty on BOTH sides — a bare `{ email: lead.email }`
@@ -273,6 +280,8 @@ export default async function LeadDetail({ params }: { params: { id: string } })
       </div>
 
       <BookingPanel bookings={bookingRows} leadName={`${lead.firstName} ${lead.lastName}`.trim()} />
+
+      {pendingDraft && <PendingDraftCard draft={pendingDraft} discardAction={discardEmailDraftAction} />}
 
       {duplicates.length > 0 && (
         <div className="bg-[#FFF7ED] border border-[#FED7AA] rounded-lg p-4 mb-6">
