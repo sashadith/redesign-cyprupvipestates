@@ -32,7 +32,12 @@ export async function sendCrmEmailAction(
   const result = await sendLeadEmail({ userId: (session.user as any).id as string, userName: session.user?.name ?? "admin" }, leadId, opts);
   if (!result.ok) return { error: result.error };
   revalidatePath(`/admin/crm/${leadId}`);
-  return { ok: result.interactionError ? `Email sent to ${result.sentTo} — but the timeline entry failed (${result.interactionError}); add it by hand.` : `Email sent to ${result.sentTo}.` };
+  const ok = result.interactionError
+    ? `Email sent to ${result.sentTo} — but the timeline entry failed (${result.interactionError}); add it by hand.`
+    : result.cadenceError
+      ? `Email sent to ${result.sentTo} and logged — the follow-up date was not advanced (${result.cadenceError}).`
+      : `Email sent to ${result.sentTo}.`;
+  return { ok };
 }
 
 // No actual send — wa.me is opened client-side (no WhatsApp Business API,

@@ -876,11 +876,11 @@ export async function addEmailLog(
 ) {
   const session = await requireSession();
   // addEmailLog always accepted an empty body (subject-only log) — that's
-  // the admin form's contract (UnifiedTimeline.tsx's "+ Email log"), so pass
-  // both straight through and let logLeadInteraction's bodyRequirement rule
-  // decide: an EMAIL_IN/EMAIL_OUT with a subject but no body is fine, both
-  // empty throws "Message is required." (surfaces to the form the same way
-  // a thrown server-action error does elsewhere — no try/catch here).
+  // the admin form's contract (UnifiedTimeline.tsx's "+ Email log"), so a
+  // subject with no body still goes through. Both empty is a no-op, same
+  // as addLeadNote/addCallLog below rather than surfacing logLeadInteraction's
+  // "Message is required." throw to the form.
+  if (!opts.subject?.trim() && !opts.body?.trim()) return;
   await logLeadInteraction(actorOf(session), id, {
     type: opts.direction === "INBOUND" ? "EMAIL_IN" : "EMAIL_OUT",
     body: opts.body,

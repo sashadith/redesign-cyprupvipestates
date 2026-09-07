@@ -71,7 +71,7 @@ export default async function McpAuthorizePage({ searchParams: raw }: { searchPa
       <ul className="text-sm mb-6 list-disc pl-5 space-y-0.5">{WRITE_TOOL_NAMES.map((t) => <li key={t}><code>{t}</code></li>)}</ul>
       {!windowOpen && (
         <p className="text-sm rounded px-3 py-2 mb-4 bg-[#C0392B]/10 text-[#C0392B]">
-          No pairing window is open in this browser, so this request cannot be approved. Open one under <a className="underline" href="/admin/mcp">Account → Connected apps</a>, then click Connect in claude.ai again.
+          This connection request cannot be approved: connections must be started from Account → Connected apps in this browser.
         </p>
       )}
       <div className="flex gap-3">

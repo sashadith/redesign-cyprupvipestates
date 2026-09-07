@@ -24,7 +24,7 @@ export type SendLeadEmailOpts = {
 };
 
 export type SendLeadEmailResult =
-  | { ok: true; sentTo: string; messageId: string; interactionId: string | null; interactionError?: string }
+  | { ok: true; sentTo: string; messageId: string; interactionId: string | null; interactionError?: string; cadenceError?: string }
   | { ok: false; error: string };
 
 export async function sendLeadEmail(actor: EmailActor, leadId: string, opts: SendLeadEmailOpts): Promise<SendLeadEmailResult> {
@@ -77,10 +77,23 @@ export async function sendLeadEmail(actor: EmailActor, leadId: string, opts: Sen
       select: { id: true },
     });
     interactionId = row.id;
-    if (!opts.skipCadence) await applyFollowUpCadence(leadId, "manual_contact", { leadReacted: opts.leadReacted });
   } catch (e: any) {
     interactionError = e?.message || "timeline write failed";
     console.error(`sendLeadEmail: email sent to lead ${leadId} but the timeline write failed:`, interactionError);
   }
-  return { ok: true, sentTo: lead.email, messageId, interactionId, interactionError };
+
+  // Own try/catch, separate from the interaction write above: a cadence
+  // failure must never be reported as "the timeline entry failed" (they're
+  // unrelated writes), and interactionError above must keep meaning only
+  // that the interaction write itself failed.
+  let cadenceError: string | undefined;
+  if (!opts.skipCadence) {
+    try {
+      await applyFollowUpCadence(leadId, "manual_contact", { leadReacted: opts.leadReacted });
+    } catch (e: any) {
+      cadenceError = e?.message || "cadence update failed";
+      console.error(`sendLeadEmail: email sent to lead ${leadId} but the follow-up cadence update failed:`, cadenceError);
+    }
+  }
+  return { ok: true, sentTo: lead.email, messageId, interactionId, interactionError, cadenceError };
 }
