@@ -6,8 +6,9 @@ import { fmtDate } from "./format";
 export const CONTACT_TYPES = [...LAST_CONTACT_TYPES] as LeadInteractionType[];
 
 // The one select every list-style tool uses. Explicit on purpose: nothing
-// that is not listed here can reach the model (no UTM/click ids, no
-// lastMatchFilters, no notes — those are crm_get_lead's business).
+// that is not listed here can reach the model (no UTM/click ids, no notes —
+// those are crm_get_lead's business; lastMatchFilters is never returned raw —
+// crm_match_properties uses it as an input only).
 export const LEAD_ROW_SELECT = {
   id: true, firstName: true, lastName: true, email: true, phone: true, status: true, source: true, countryOfResidence: true,
   languagePreference: true, budgetMin: true, budgetMax: true, hotAt: true, nextFollowUpAt: true, createdAt: true,

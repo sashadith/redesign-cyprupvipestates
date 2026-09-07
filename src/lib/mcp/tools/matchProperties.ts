@@ -40,13 +40,18 @@ export function registerMatchProperties(server: McpServer) {
         });
         if (!lead) throw new ToolError("not_found", "Lead not found.");
         // Same loose treatment of the stored JSON as generate.ts:214 — the admin panel wrote it in MatchFilters shape.
+        // The stored admin filters shape the match (as a default input) but are
+        // never returned to the model — lastMatchFilters is on the never-return
+        // list (spec). filtersUsed below reflects only what the caller passed.
         const effectiveFilters = { ...((lead.lastMatchFilters as MatchFilters | null) ?? {}), ...(filters ?? {}) } as MatchFilters;
         const matches = await matchDevelopmentsForLead(
           { budgetMin: lead.budgetMin, budgetMax: lead.budgetMax, propertyTypeInterest: lead.propertyTypeInterest },
           effectiveFilters,
         );
+        const hasAdminFilters = lead.lastMatchFilters != null && Object.keys(lead.lastMatchFilters as object).length > 0;
         return {
-          filtersUsed: effectiveFilters,
+          filtersUsed: filters ?? {},
+          adminFiltersApplied: hasAdminFilters,
           matches: matches.slice(0, limit).map((m) => ({
             developmentId: m.development.id,
             name: m.development.publicName,
