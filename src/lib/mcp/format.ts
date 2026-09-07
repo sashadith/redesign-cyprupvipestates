@@ -11,14 +11,15 @@ export const MAX_TIMELINE_ROWS = 30;
 export function relative(d: Date, now: Date = new Date()): string {
   const diff = d.getTime() - now.getTime();
   const abs = Math.abs(diff);
-  if (abs < 60_000) return diff <= 0 ? "just now" : "in 1 min";
-  let label: string;
-  if (abs < 3_600_000) label = `${Math.round(abs / 60_000)} min`;
-  else if (abs < 86_400_000) label = `${Math.round(abs / 3_600_000)} h`;
-  else {
-    const days = Math.round(abs / 86_400_000);
-    label = `${days} day${days === 1 ? "" : "s"}`;
-  }
+  if (diff <= 0 && abs <= 60_000) return "just now";
+  if (diff > 0 && abs < 60_000) return "in 1 min";
+  const minutes = Math.round(abs / 60_000);
+  const hours = Math.round(abs / 3_600_000);
+  const days = Math.round(abs / 86_400_000);
+  const label =
+    minutes < 60 ? `${minutes} min`
+    : hours < 24 ? `${hours} h`
+    : `${days} day${days === 1 ? "" : "s"}`;
   return diff < 0 ? `${label} ago` : `in ${label}`;
 }
 

@@ -31,3 +31,12 @@ test("fmtDate returns iso, Cyprus-local and relative", () => {
   assert.equal(typeof r?.relative, "string");
   assert.equal(fmtDate(null), null);
 });
+
+test("relative picks the unit from the rounded value and honours the 60 s boundary", () => {
+  assert.equal(relative(new Date("2026-09-07T11:59:00Z"), now), "just now");
+  assert.equal(relative(new Date("2026-09-07T11:58:59Z"), now), "1 min ago");
+  assert.equal(relative(new Date("2026-09-07T11:00:30Z"), now), "1 h ago");
+  assert.equal(relative(new Date("2026-09-06T12:30:00Z"), now), "1 day ago");
+  assert.equal(relative(new Date("2026-09-06T00:00:00Z"), now), "2 days ago");
+  assert.equal(relative(new Date("2026-09-07T12:01:00Z"), now), "in 1 min");
+});
