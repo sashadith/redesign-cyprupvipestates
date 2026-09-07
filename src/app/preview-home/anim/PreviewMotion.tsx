@@ -67,7 +67,7 @@ export default function PreviewMotion() {
 
       /* ---------- 2.4 LEAD PARAGRAPHS — fade up ---------- */
       const leadSel =
-        ".brochure__desc, .about__desc, .featured__desc, .cities__lead, .newlist__lead, .casestudies__desc, .faq__lead, .content__lead";
+        ".brochure__desc, .about__desc, .featured__desc, .cities__lead, .casestudies__desc, .faq__lead, .content__lead";
       toArr(leadSel).forEach((el) => {
         gsap.from(el, {
           y: 30,

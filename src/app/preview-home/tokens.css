@@ -662,7 +662,11 @@ img { max-width: 100%; display: block; }
 /* title tile — a deep-green island among the photo cards */
 .newlist__intro {
   background: var(--sea); color: var(--ivory); border-radius: var(--r-ui); border: 1px solid var(--hairline-strong);
-  padding: clamp(1.5rem, 1rem + 2.5vw, 2.75rem); min-height: 220px;
+  /* 240px (2026-09-07): matches the mobile-stacked project card's own
+     height exactly (measured, not guessed — content here only needs
+     ~165px, so this floor is what actually renders on mobile). Desktop is
+     unaffected: content there is 281.5px, already well past this floor. */
+  padding: clamp(1.5rem, 1rem + 2.5vw, 2.75rem); min-height: 240px;
   display: flex; flex-direction: column; justify-content: center; gap: var(--s-6);
 }
 .newlist__title {
@@ -671,16 +675,7 @@ img { max-width: 100%; display: block; }
   color: var(--ivory); margin: 0; text-wrap: balance;
 }
 .newlist__head { display: flex; flex-direction: column; gap: var(--s-3); }
-.newlist__lead { margin: 0; max-width: 32ch; font-family: var(--font-body), sans-serif; font-size: clamp(1rem, 0.97rem + 0.18vw, 1.0625rem); line-height: 1.75; color: var(--text-soft); }
 .newlist__cta { align-self: flex-start; }
-.newlist__subcta {
-  display: inline-flex; align-items: center; gap: var(--s-2); align-self: flex-start;
-  font-family: var(--font-body), sans-serif; font-size: 0.875rem; color: var(--champagne);
-  text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px;
-  transition: color var(--dur-sm) var(--ease);
-}
-.newlist__subcta:hover { color: var(--ivory); }
-.newlist__subcta svg { width: 13px; height: 13px; }
 /* project cards reuse the Featured .pcard styles (image-fill + legibility gradient) */
 
 /* ===================== BENEFITS (dark stats band, animated counters) ===================== */
