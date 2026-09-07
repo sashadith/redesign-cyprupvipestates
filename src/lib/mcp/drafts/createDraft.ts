@@ -52,7 +52,8 @@ export async function createEmailDraft(actor: EmailActor, input: { leadId: strin
     previewMessageId = sent.messageId;
   } catch (e: any) {
     if (e instanceof EmailSettingsMissingError) throw new ToolError("config", e.message);
-    throw new ToolError("smtp", `Preview email could not be sent: ${e?.message || "SMTP error"}`);
+    const scrub = (s: string) => s.split(approvalCode).join("••••••");
+    throw new ToolError("smtp", `Preview email could not be sent: ${scrub(e?.message || "SMTP error")}`);
   }
 
   const result = await prisma.$transaction(async (tx) => {

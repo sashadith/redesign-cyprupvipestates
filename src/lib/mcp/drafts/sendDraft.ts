@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { sendLeadEmail, type EmailActor } from "@/lib/crm/sendLeadEmail";
 import { ToolError } from "../toolWrapper";
-import { evaluateSendAttempt } from "./draftState";
+import { evaluateSendAttempt, MAX_CODE_ATTEMPTS } from "./draftState";
 
 // Spec "Draft → approve → send", step 3. The code is checked by the pure
 // reducer; every state change here is an atomic conditional update so two
@@ -20,10 +20,8 @@ export async function sendEmailDraft(actor: EmailActor, draftId: string, approva
     throw new ToolError("validation", decision.message);
   }
   if (decision.action === "wrong_code") {
-    await prisma.leadEmailDraft.updateMany({
-      where: { id: draft.id, status: "PENDING" },
-      data: { failedAttempts: decision.failedAttempts, ...(decision.lock ? { status: "LOCKED" } : {}) },
-    });
+    await prisma.leadEmailDraft.updateMany({ where: { id: draft.id, status: "PENDING" }, data: { failedAttempts: { increment: 1 } } });
+    await prisma.leadEmailDraft.updateMany({ where: { id: draft.id, status: "PENDING", failedAttempts: { gte: MAX_CODE_ATTEMPTS } }, data: { status: "LOCKED" } });
     throw new ToolError("validation", decision.message);
   }
 
@@ -36,10 +34,11 @@ export async function sendEmailDraft(actor: EmailActor, draftId: string, approva
   const result = await sendLeadEmail(actor, draft.leadId, { subject: draft.subject, body: draft.body, aiGenerated: true, via: "mcp", draftId: draft.id });
   if (!result.ok) {
     await prisma.leadEmailDraft.updateMany({ where: { id: draft.id, status: "SENDING" }, data: { status: "PENDING" } });
-    throw new ToolError("smtp", `Send failed, the draft is still pending: ${result.error}`);
+    const scrub = (s: string) => s.split(draft.approvalCode).join("••••••");
+    throw new ToolError("smtp", `Send failed, the draft is still pending: ${scrub(result.error)}`);
   }
-  await prisma.leadEmailDraft.update({
-    where: { id: draft.id },
+  await prisma.leadEmailDraft.updateMany({
+    where: { id: draft.id, status: "SENDING" },
     data: { status: "SENT", sentAt: new Date(), sentInteractionId: result.interactionId },
   });
   return { sentTo: result.sentTo, messageId: result.messageId, interactionId: result.interactionId, interactionError: result.interactionError };

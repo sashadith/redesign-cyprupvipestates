@@ -17,7 +17,7 @@ export function registerDraftEmail(server: McpServer) {
     {
       title: "Draft an email to a lead (needs approval)",
       description:
-        "Stores an email draft for a lead and emails a preview — rendered exactly as the lead would receive it, with an approval code — to the operator's own mailbox. Nothing reaches the lead. The operator replies in the chat with the code (e.g. “Freigabe 7K3PQ2”); only then can crm_send_email send it. A new draft for the same lead supersedes the pending one. Drafts expire after 24 hours.",
+        "Stores an email draft for a lead and emails a preview — rendered exactly as the lead would receive it, with an approval code — to the operator's own mailbox. Nothing reaches the lead. The operator replies in the chat with the code (e.g. “Freigabe 7K3PQ2”); only then can crm_send_email send it. A new draft for the same lead supersedes the pending one. Drafts expire after 24 hours. Never tell the operator an email was sent unless crm_send_email returned sent: true.",
       inputSchema: Input,
       annotations: { readOnlyHint: false, idempotentHint: false, destructiveHint: false },
     },
