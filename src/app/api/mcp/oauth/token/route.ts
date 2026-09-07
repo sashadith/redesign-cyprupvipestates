@@ -6,9 +6,12 @@ import { makeRateLimiter } from "@/lib/antispam";
 
 export const dynamic = "force-dynamic";
 
-// 10 failed exchanges per client id per 15 minutes → 429. Per instance, like
-// the login throttle in src/auth.ts — adequate for one operator.
-const failures = makeRateLimiter();
+// 10 token requests per client id and source IP per 15 minutes → 429. The
+// limiter counts every call (successes included); a healthy client refreshes
+// about once per 8 h, so only abuse gets near the cap, and keying on the IP
+// means a third party who knows the public client_id cannot lock the real
+// client out.
+const tokenRequests = makeRateLimiter();
 const FAIL_WINDOW_MS = 15 * 60_000;
 
 const headers = { "Cache-Control": "no-store", Pragma: "no-cache", "Access-Control-Allow-Origin": "*" };
@@ -31,10 +34,12 @@ export async function POST(req: NextRequest) {
   const parsed = parseTokenRequest(form);
   if (!parsed.ok) return oauthError(parsed.error === "invalid_client" ? 401 : 400, parsed.error, parsed.description);
 
-  const throttleKey = `token:${parsed.clientId}`;
-  if (failures(throttleKey, 10, FAIL_WINDOW_MS)) {
-    // makeRateLimiter counts every call, so a healthy client that refreshes
-    // once every 8 h never gets near 10; only repeated failures do.
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const throttleKey = `token:${parsed.clientId}:${ip}`;
+  if (tokenRequests(throttleKey, 10, FAIL_WINDOW_MS)) {
+    // Keyed on client id AND source IP: client_id is public (it appears in
+    // the /authorize URL), so keying on client_id alone would let a third
+    // party lock out the real client by spamming junk requests with it.
     return oauthError(429, "invalid_request", "Too many token requests — try again later.");
   }
 
