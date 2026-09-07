@@ -8,6 +8,7 @@ import { registerPlaybook } from "./playbook";
 import { registerLogInteraction } from "./logInteraction";
 import { registerUpdateLead } from "./updateLead";
 import { registerDraftEmail } from "./draftEmail";
+import { registerSendEmail } from "./sendEmail";
 
 export function registerReadTools(server: McpServer): void {
   registerWorklist(server);
@@ -24,4 +25,5 @@ export function registerWriteTools(server: McpServer): void {
   registerLogInteraction(server);
   registerUpdateLead(server);
   registerDraftEmail(server);
+  registerSendEmail(server);
 }
