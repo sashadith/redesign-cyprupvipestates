@@ -660,6 +660,10 @@ model User {
   emailSettings          UserEmailSettings?
   interactions           LeadInteraction[]
   activityPings          AdminActivityPing[]
+  // MCP connector (2026-09-07) — additive back-relations only.
+  mcpAuthCodes           McpAuthCode[]
+  mcpTokens              McpToken[]
+  emailDrafts            LeadEmailDraft[]
 
   @@map("users")
 }
@@ -782,6 +786,7 @@ model Lead {
   preferredChannel     LeadPreferredChannel?
   nextFollowUpAt       DateTime?
   interactions         LeadInteraction[]
+  emailDrafts          LeadEmailDraft[]
   // Lead Cockpit correction batch (2026-07-23) — auto-follow-up cadence.
   // Counts automatic nextFollowUpAt writes (presentation sent/viewed, or a
   // manual Call/Note/Email/WhatsApp log), shared across ALL trigger types,
@@ -875,6 +880,114 @@ model LeadInteraction {
   @@index([leadId])
   @@index([leadId, occurredAt])
   @@map("lead_interactions")
+}
+
+// ─── MCP CONNECTOR (2026-09-07; see docs/superpowers/specs/2026-09-07-crm-mcp-connector-design.md) ───
+// Minimal OAuth 2.1 authorization server for the claude.ai "CVE LEADS" custom
+// connector. Tokens and codes are stored as SHA-256 hex only.
+
+model McpOAuthClient {
+  id           String        @id @default(uuid())
+  clientId     String        @unique
+  clientName   String?
+  redirectUris String[]
+  createdAt    DateTime      @default(now())
+  authCodes    McpAuthCode[]
+  tokens       McpToken[]
+
+  @@map("mcp_oauth_clients")
+}
+
+model McpAuthCode {
+  id            String         @id @default(uuid())
+  codeHash      String         @unique
+  clientId      String
+  client        McpOAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  codeChallenge String
+  redirectUri   String
+  expiresAt     DateTime
+  usedAt        DateTime?
+  createdAt     DateTime       @default(now())
+
+  @@index([expiresAt])
+  @@map("mcp_auth_codes")
+}
+
+model McpToken {
+  id               String         @id @default(uuid())
+  familyId         String // constant across refresh rotations — revoke-by-family
+  accessTokenHash  String         @unique
+  refreshTokenHash String         @unique
+  clientId         String
+  client           McpOAuthClient @relation(fields: [clientId], references: [clientId], onDelete: Cascade)
+  userId           String
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  issuedHost       String // "cyprusvipestates.com" | "design.cyprusvipestates.com" — shown on the Connected-apps page
+  expiresAt        DateTime // access token
+  refreshExpiresAt DateTime
+  lastUsedAt       DateTime?
+  revokedAt        DateTime?
+  createdAt        DateTime       @default(now())
+
+  @@index([userId])
+  @@index([familyId])
+  @@map("mcp_tokens")
+}
+
+enum LeadEmailDraftStatus {
+  PENDING
+  SENDING
+  SENT
+  SUPERSEDED
+  EXPIRED
+  LOCKED
+}
+
+// Phase 2 uses this; created now so there is a single migration.
+model LeadEmailDraft {
+  id                String               @id @default(uuid())
+  leadId            String
+  lead              Lead                 @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User                 @relation(fields: [userId], references: [id])
+  subject           String
+  body              String
+  // 6 chars, stored plain on purpose: single-use, 24 h, useless without the
+  // draft id + a valid bearer token. Hashing it would only complicate the
+  // Cockpit's "code was sent by email" hint without adding real protection.
+  approvalCode      String
+  status            LeadEmailDraftStatus @default(PENDING)
+  failedAttempts    Int                  @default(0)
+  expiresAt         DateTime
+  previewMessageId  String?
+  sentAt            DateTime?
+  sentInteractionId String?              @unique
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  @@index([leadId, status])
+  @@index([status, expiresAt])
+  @@map("lead_email_drafts")
+}
+
+// Per-call access log. No relations on purpose: a deleted lead or token must
+// leave its audit rows intact. Never stores arguments or message text.
+model McpToolCall {
+  id         String   @id @default(uuid())
+  userId     String
+  tokenId    String?
+  tool       String
+  leadId     String?
+  ok         Boolean
+  errorCode  String? // "validation" | "not_found" | "rate_limited" | "config" | "internal"
+  durationMs Int
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([leadId])
+  @@map("mcp_tool_calls")
 }
 
 // ─── ANALYTICS (self-hosted) ─────────────────────────────────────────────────
