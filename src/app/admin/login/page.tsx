@@ -13,10 +13,14 @@ const inputClass =
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { error?: string; reset?: string };
+  searchParams: { error?: string; reset?: string; callbackUrl?: string };
 }) {
+  // Only ever an admin-relative path — an absolute URL or anything outside
+  // /admin/ falls back to the dashboard (open-redirect guard). Added for the
+  // MCP consent page, which needs to come back to its own query string.
+  const callbackUrl = searchParams?.callbackUrl?.startsWith("/admin/") && !searchParams.callbackUrl.startsWith("//") ? searchParams.callbackUrl : "/admin";
   const session = await auth();
-  if (session) redirect("/admin");
+  if (session) redirect(callbackUrl);
 
   async function login(formData: FormData) {
     "use server";
@@ -24,10 +28,10 @@ export default async function LoginPage({
       await signIn("credentials", {
         email: formData.get("email"),
         password: formData.get("password"),
-        redirectTo: "/admin",
+        redirectTo: callbackUrl,
       });
     } catch (e) {
-      if (e instanceof AuthError) redirect("/admin/login?error=1");
+      if (e instanceof AuthError) redirect(`/admin/login?error=1${callbackUrl !== "/admin" ? `&callbackUrl=${encodeURIComponent(callbackUrl)}` : ""}`);
       throw e; // re-throw NEXT_REDIRECT (success) and others
     }
   }
