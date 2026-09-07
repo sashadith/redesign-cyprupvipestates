@@ -39,6 +39,8 @@ export function registerWorklist(server: McpServer) {
           prisma.clientPresentation.findMany({
             where: { id: { in: presentationIds }, lead: { deletedAt: null, ...EXCLUDE_NEWSLETTER } },
             select: { id: true, leadId: true, createdAt: true, expiresAt: true, lead: { select: { firstName: true, lastName: true } }, _count: { select: { views: true } } },
+            orderBy: { createdAt: "desc" },
+            take: limit,
           }),
           prisma.lead.count({ where: { deletedAt: null, ...EXCLUDE_NEWSLETTER, createdAt: { gte: new Date(Date.now() - 7 * 86_400_000) } } }),
           prisma.lead.findMany({
