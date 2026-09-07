@@ -6,9 +6,7 @@ Status: Phase 2 (writes + approved email) — live once deployed.
 ## What it is
 
 A remote MCP server inside this app at `/api/mcp`, protected by a minimal OAuth 2.1
-server on the admin login. claude.ai connects to it as a *custom connector* and gets
-six read-only tools: `crm_worklist`, `crm_search_leads`, `crm_get_lead`,
-`crm_match_properties`, `crm_get_project`, `crm_get_playbook`.
+server on the admin login. claude.ai connects to it as a *custom connector* and gets eleven tools — six read tools (`crm_worklist`, `crm_search_leads`, `crm_get_lead`, `crm_match_properties`, `crm_get_project`, `crm_get_playbook`) and five write tools (`crm_log_interaction`, `crm_update_lead`, `crm_draft_email`, `crm_send_email`, `crm_list_drafts`); customer email needs the operator's approval code (see below).
 
 ## Environment
 
@@ -18,7 +16,7 @@ six read-only tools: `crm_worklist`, `crm_search_leads`, `crm_get_lead`,
   the discovery endpoints return 500 with a clear message if it is missing.
 - `CRON_SECRET` — already present; used by `/api/cron/mcp-cleanup`.
 
-## Deploy checklist (Phase 1)
+## Deploy checklist
 
 1. Code on `main`, deployed (`scripts/deploy-prod.sh` / `deploy-staging.sh`).
 2. Migration `20260907120000_add_mcp_connector` applied to the shared DB
@@ -29,6 +27,7 @@ six read-only tools: `crm_worklist`, `crm_search_leads`, `crm_get_lead`,
 5. Verify: `curl -si https://<host>/.well-known/oauth-authorization-server` → 200 JSON,
    no `x-middleware-rewrite` header; `curl -si -X POST https://<host>/api/mcp` → 401 with
    `WWW-Authenticate`.
+6. Phase 2 needs no migration; after deploying, open a pairing window and reconnect claude.ai once so the consent lists the write tools.
 
 ## Connecting claude.ai
 

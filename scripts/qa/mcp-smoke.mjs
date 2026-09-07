@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // End-to-end check of the MCP connector against a running app (default
 // http://localhost:3000): DCR → consent (you click Allow in the browser) →
-// PKCE token exchange → MCP initialize → the read tools. Read-only.
+// PKCE token exchange → MCP initialize → the read tools, crm_list_drafts, and a deliberately failing crm_send_email. No real writes.
 //
 //   MCP_SMOKE_BASE=http://localhost:3000 node scripts/qa/mcp-smoke.mjs
 //
