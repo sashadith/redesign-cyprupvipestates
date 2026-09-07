@@ -473,6 +473,7 @@ Logs never contain tool arguments, bodies, tokens, or codes.
   ship** — e.g. a short code displayed in the claude.ai connector flow that
   the operator has to enter on the consent page, or a one-time approval the
   operator initiates from the admin rather than from a link.
+- **Phase 2 binding (shipped):** the pairing window — a 10-minute signed cookie opened from Connected apps — is a precondition for Allow (see `src/lib/mcp/auth/pairing.ts`).
 
 ## Testing
 

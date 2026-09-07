@@ -43,7 +43,7 @@ const verifier = b64url(randomBytes(32));
 const challenge = b64url(createHash("sha256").update(verifier, "ascii").digest());
 const state = b64url(randomBytes(8));
 const authorizeUrl = `${asm.authorization_endpoint}?${new URLSearchParams({ client_id: reg.client_id, redirect_uri: redirectUri, response_type: "code", code_challenge: challenge, code_challenge_method: "S256", state })}`;
-console.log("\nOpen this URL in a browser where you are logged into the admin, click Allow, then paste the FULL URL you land on (it will be a claude.ai URL that may 404 — that is fine):\n\n" + authorizeUrl + "\n");
+console.log("\nFirst open a pairing window under Admin → Account → Connected apps, then open this URL within 10 minutes, click Allow, then paste the FULL URL you land on (it will be a claude.ai URL that may 404 — that is fine):\n\n" + authorizeUrl + "\n");
 const landed = await new Promise((resolve) => { process.stdin.setEncoding("utf8"); process.stdin.once("data", (d) => resolve(d.trim())); });
 const landedUrl = new URL(landed);
 assert(landedUrl.searchParams.get("state") === state, "state round-tripped");
@@ -68,7 +68,7 @@ await client.connect(transport);
 assert(/crm_get_project/.test(client.getInstructions() || ""), "server instructions received");
 const tools = await client.listTools();
 const names = tools.tools.map((t) => t.name).sort();
-assert(JSON.stringify(names) === JSON.stringify(["crm_get_lead", "crm_get_playbook", "crm_get_project", "crm_match_properties", "crm_search_leads", "crm_worklist"]), `six read tools listed: ${names.join(", ")}`);
+assert(JSON.stringify(names) === JSON.stringify(["crm_draft_email", "crm_get_lead", "crm_get_playbook", "crm_get_project", "crm_list_drafts", "crm_log_interaction", "crm_match_properties", "crm_search_leads", "crm_send_email", "crm_update_lead", "crm_worklist"]), `eleven tools listed: ${names.join(", ")}`);
 
 const parse = (r) => JSON.parse(r.content[0].text);
 const worklist = parse(await client.callTool({ name: "crm_worklist", arguments: { limit: 5 } }));
@@ -94,6 +94,11 @@ const playbook = parse(await client.callTool({ name: "crm_get_playbook", argumen
 assert(playbook.contactPhone && playbook.sections.length > 0, "crm_get_playbook returns sections");
 const proj = parse(await client.callTool({ name: "crm_get_project", arguments: { query: "a" } }));
 assert(Array.isArray(proj.candidates), `crm_get_project query: ${proj.candidates.length} candidates`);
+
+const drafts = parse(await client.callTool({ name: "crm_list_drafts", arguments: {} }));
+assert(Array.isArray(drafts.drafts) && drafts.drafts.every((d) => !("approvalCode" in d)), `crm_list_drafts: ${drafts.drafts.length} pending, no codes`);
+const bogusSend = await client.callTool({ name: "crm_send_email", arguments: { draftId: "00000000-0000-0000-0000-000000000000", approvalCode: "AAAAAA" } });
+assert(bogusSend.isError === true, "crm_send_email with an unknown draft → isError");
 
 const notFound = await client.callTool({ name: "crm_get_lead", arguments: { leadId: "00000000-0000-0000-0000-000000000000" } });
 assert(notFound.isError === true, "unknown lead → isError");
