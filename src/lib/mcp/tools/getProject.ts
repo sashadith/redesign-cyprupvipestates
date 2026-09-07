@@ -12,7 +12,7 @@ const Input = z
     slug: z.string().min(1).max(200).optional(),
     query: z.string().min(2).max(100).optional().describe("Name search when neither id nor slug is known; returns up to 10 candidates instead of one project."),
   })
-  .refine((v) => v.developmentId || v.slug || v.query, { message: "Provide developmentId, slug or query." });
+  .refine((v) => [v.developmentId, v.slug, v.query].filter(Boolean).length === 1, { message: "Provide exactly one of developmentId, slug or query." });
 
 const MAX_UNITS = 50;
 
@@ -22,7 +22,7 @@ export function registerGetProject(server: McpServer) {
     {
       title: "Get project / development",
       description:
-        "One development with its real, current figures: price range, availability computed from the unit list (not the cached counters), completion, location, public URL, and up to 50 units (type, beds, area, price, status). The source of truth for any number you put in a message. With `query`, returns candidate projects to pick from.",
+        "One development with its real, current figures: price range, availability computed from the unit list (not the cached counters), completion, location, public URL, and up to 50 units (type, beds, area, price, status). The source of truth for any number you put in a message. Pass exactly one of `developmentId`, `slug` or `query`; with `query`, returns candidate projects to pick from.",
       inputSchema: Input,
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
