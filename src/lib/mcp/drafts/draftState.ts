@@ -26,6 +26,11 @@ const REJECT: Record<Exclude<DraftStatus, "PENDING">, string> = {
 
 export function evaluateSendAttempt(draft: DraftSnapshot, givenCode: string, now: Date = new Date()): SendDecision {
   if (draft.status !== "PENDING") return { action: "reject", message: REJECT[draft.status] };
+  // A draft can still read PENDING here if the LOCKED write in sendDraft.ts
+  // (a separate updateMany right after the failedAttempts increment) hasn't
+  // landed yet — treat failedAttempts already at the cap the same as LOCKED
+  // rather than letting a correct code slip through the race.
+  if (draft.failedAttempts >= MAX_CODE_ATTEMPTS) return { action: "reject", message: REJECT.LOCKED };
   if (draft.expiresAt.getTime() < now.getTime()) return { action: "expire", message: "This draft expired — create a new draft." };
   if (!approvalCodesMatch(givenCode, draft.approvalCode)) {
     const failedAttempts = draft.failedAttempts + 1;

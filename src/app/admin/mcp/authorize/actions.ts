@@ -44,6 +44,11 @@ export async function approveAuthorization(formData: FormData) {
   if (!verifyPairingToken(cookies().get(PAIRING_COOKIE)?.value, userId, pairingSecret())) {
     redirect("/admin/mcp?pairing=missing");
   }
+  // Past this point the pairing window has done its job — clear it on every
+  // path (success, a redirectable validation error, or the thrown error
+  // below), not only on success, so a failed approval doesn't leave a stale
+  // pairing cookie letting a later, unrelated Allow through unchecked.
+  cookies().set({ name: PAIRING_COOKIE, value: "", path: PAIRING_COOKIE_PATH, maxAge: 0 });
   const p = paramsFromForm(formData);
   const client = await getClient(p.client_id ?? "");
   const v = validateAuthorizeRequest(p, client);
@@ -52,7 +57,6 @@ export async function approveAuthorization(formData: FormData) {
     throw new Error(v.description);
   }
   const code = await issueAuthCode({ clientId: v.clientId, userId, redirectUri: v.redirectUri, codeChallenge: v.codeChallenge });
-  cookies().set({ name: PAIRING_COOKIE, value: "", path: PAIRING_COOKIE_PATH, maxAge: 0 });
   redirectWith(v.redirectUri, { code, state: v.state });
 }
 

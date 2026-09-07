@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { sendLeadEmail, type EmailActor } from "@/lib/crm/sendLeadEmail";
+import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { ToolError } from "../toolWrapper";
 import { evaluateSendAttempt, MAX_CODE_ATTEMPTS } from "./draftState";
 
@@ -25,7 +26,7 @@ export async function sendEmailDraft(actor: EmailActor, draftId: string, approva
     throw new ToolError("validation", decision.message);
   }
 
-  const lead = await prisma.lead.findFirst({ where: { id: draft.leadId, deletedAt: null }, select: { email: true } });
+  const lead = await prisma.lead.findFirst({ where: { id: draft.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER }, select: { email: true } });
   if (!lead?.email) throw new ToolError("validation", "The lead was deleted or has no email address any more — the draft cannot be sent.");
 
   const claimed = await prisma.leadEmailDraft.updateMany({ where: { id: draft.id, status: "PENDING" }, data: { status: "SENDING" } });

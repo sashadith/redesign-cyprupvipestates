@@ -35,7 +35,7 @@ export default async function ConnectedAppsPage({ searchParams }: { searchParams
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold">Connected apps</h1>
-        <p className="text-sm text-[#6B7280] mt-1">MCP connectors (e.g. the claude.ai &quot;CVE LEADS&quot; chat) that can read the CRM on your behalf. <Link href="/admin/account" className="underline">Back to account</Link></p>
+        <p className="text-sm text-[#6B7280] mt-1">MCP connectors (e.g. the claude.ai &quot;CVE LEADS&quot; chat) that can read the CRM, change lead data and send email as you. <Link href="/admin/account" className="underline">Back to account</Link></p>
       </div>
 
       <section className="rounded-lg border border-[#E5E7EB] bg-white p-4">

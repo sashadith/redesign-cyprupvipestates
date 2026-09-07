@@ -30,3 +30,9 @@ test("wrong code counts attempts and locks at the cap without revealing the code
   assert.equal(r5.action === "wrong_code" && r5.lock, true);
   assert.doesNotMatch(JSON.stringify(r5), /7K3PQ2/);
 });
+
+test("failedAttempts already at the cap on a still-PENDING draft → locked, even with the right code", () => {
+  const r = evaluateSendAttempt({ ...base, failedAttempts: 5 }, "7K3PQ2", now);
+  assert.equal(r.action, "reject");
+  assert.match(r.action === "reject" ? r.message : "", /locked/);
+});
