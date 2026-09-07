@@ -7,18 +7,21 @@
 //
 // Requires the migration to be applied on the database the app points at and
 // MCP_PUBLIC_ORIGIN set to the same base URL in the app's env.
-import http from "node:http";
 import { createHash, randomBytes } from "node:crypto";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 
 const BASE = (process.env.MCP_SMOKE_BASE || "http://localhost:3000").replace(/\/$/, "");
 const b64url = (b) => b.toString("base64url");
 const assert = (cond, msg) => { if (!cond) { console.error(`✗ ${msg}`); process.exit(1); } console.log(`✓ ${msg}`); };
+// For every fetch that is expected to succeed: fail loudly with the status and
+// body instead of throwing an opaque "Cannot read properties of undefined"
+// deep inside the assertion that consumes the parsed JSON.
+const jsonOrDie = async (res, label) => { if (!res.ok) { console.error(`✗ ${label}: HTTP ${res.status} ${await res.text()}`); process.exit(1); } return res.json(); };
 
 // 1. Discovery
-const prm = await (await fetch(`${BASE}/.well-known/oauth-protected-resource`)).json();
+const prm = await jsonOrDie(await fetch(`${BASE}/.well-known/oauth-protected-resource`), "protected resource metadata");
 assert(prm.resource === `${BASE}/api/mcp`, "protected resource metadata points at /api/mcp");
-const asm = await (await fetch(`${BASE}/.well-known/oauth-authorization-server`)).json();
+const asm = await jsonOrDie(await fetch(`${BASE}/.well-known/oauth-authorization-server`), "authorization server metadata");
 assert(asm.registration_endpoint === `${BASE}/api/mcp/oauth/register`, "authorization server metadata served");
 
 // 2. Unauthenticated call gets the 401 challenge
@@ -29,10 +32,13 @@ assert(unauth.status === 401 && /resource_metadata=/.test(unauth.headers.get("ww
 //    consent redirect is captured by intercepting it: we register the real
 //    claude.ai callback URL but read the code from the browser's address bar.
 const redirectUri = "https://claude.ai/api/mcp/auth_callback";
-const reg = await (await fetch(asm.registration_endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ client_name: "mcp-smoke", redirect_uris: [redirectUri] }) })).json();
+const reg = await jsonOrDie(await fetch(asm.registration_endpoint, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ client_name: "mcp-smoke", redirect_uris: [redirectUri] }) }), "dynamic client registration");
 assert(reg.client_id, "dynamic client registration returned a client_id");
 
-// 4. Consent — PKCE
+// 4. Consent — PKCE. The authorization code minted after Allow is single-use,
+// 60 s, and PKCE-bound to this verifier, so landing on claude.ai's callback
+// with it in the address bar (which will 404, per the prompt below) is not
+// exploitable — nobody else can redeem it without the verifier we hold here.
 const verifier = b64url(randomBytes(32));
 const challenge = b64url(createHash("sha256").update(verifier, "ascii").digest());
 const state = b64url(randomBytes(8));
@@ -45,13 +51,14 @@ const code = landedUrl.searchParams.get("code");
 assert(code, "authorization code received");
 
 // 5. Token exchange
-const tok = await (await fetch(asm.token_endpoint, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ grant_type: "authorization_code", code, code_verifier: verifier, client_id: reg.client_id, redirect_uri: redirectUri }) })).json();
+const tok = await jsonOrDie(await fetch(asm.token_endpoint, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ grant_type: "authorization_code", code, code_verifier: verifier, client_id: reg.client_id, redirect_uri: redirectUri }) }), "token exchange");
 assert(tok.access_token && tok.refresh_token, "token exchange returned access + refresh tokens");
+// Replay is expected to fail (400) — kept as a raw fetch, not jsonOrDie.
 const replay = await fetch(asm.token_endpoint, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ grant_type: "authorization_code", code, code_verifier: verifier, client_id: reg.client_id, redirect_uri: redirectUri }) });
 assert(replay.status === 400, "replaying the code is rejected");
 
 // 6. Refresh rotation
-const refreshed = await (await fetch(asm.token_endpoint, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: tok.refresh_token, client_id: reg.client_id }) })).json();
+const refreshed = await jsonOrDie(await fetch(asm.token_endpoint, { method: "POST", headers: { "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: tok.refresh_token, client_id: reg.client_id }) }), "refresh token exchange");
 assert(refreshed.access_token && refreshed.refresh_token !== tok.refresh_token, "refresh rotates the refresh token");
 
 // 7. MCP session
@@ -68,7 +75,8 @@ const worklist = parse(await client.callTool({ name: "crm_worklist", arguments: 
 assert(Array.isArray(worklist.followUps) && typeof worklist.newLeadsLast7Days === "number", `crm_worklist: ${worklist.followUps.length} follow-ups, ${worklist.newLeadsLast7Days} new leads`);
 
 const search = parse(await client.callTool({ name: "crm_search_leads", arguments: { pageSize: 3 } }));
-assert(search.total >= 0 && search.leads.every((l) => !("password" in l) && !("utmSource" in l)), `crm_search_leads: ${search.total} leads, no excluded fields`);
+const EXCLUDED_ROW_FIELDS = ["password", "utmSource", "lastMatchFilters", "notes", "message", "utmCampaign"];
+assert(search.total >= 0 && search.leads.every((l) => EXCLUDED_ROW_FIELDS.every((f) => !(f in l))), `crm_search_leads: ${search.total} leads, no excluded fields`);
 
 const firstId = worklist.followUps[0]?.leadId ?? search.leads[0]?.leadId;
 if (firstId) {
@@ -78,6 +86,9 @@ if (firstId) {
   assert(!inboundLeak, "inbound bodies only under untrusted_content");
   const match = parse(await client.callTool({ name: "crm_match_properties", arguments: { leadId: firstId, limit: 3 } }));
   assert(Array.isArray(match.matches), `crm_match_properties: ${match.matches.length} matches`);
+  // This call passed only leadId/limit, no filters — filtersUsed must echo
+  // exactly the caller's input, never the lead's stored admin filters.
+  assert(Object.keys(match.filtersUsed).length === 0, "crm_match_properties: filtersUsed excludes stored admin filters when none were passed");
 }
 const playbook = parse(await client.callTool({ name: "crm_get_playbook", arguments: {} }));
 assert(playbook.contactPhone && playbook.sections.length > 0, "crm_get_playbook returns sections");

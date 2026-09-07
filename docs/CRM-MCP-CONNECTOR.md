@@ -36,13 +36,17 @@ six read-only tools: `crm_worklist`, `crm_search_leads`, `crm_get_lead`,
 2. Name: `CVE CRM`. URL: `https://cyprusvipestates.com/api/mcp`. Leave OAuth client id/secret empty
    (the server registers the client automatically).
 3. Click Connect → you land on `/admin/mcp/authorize` (log in if asked) → **Allow**.
+   The consent page shows the client id and registration age — approve only a
+   connection you started yourself moments ago (standard OAuth consent-phishing
+   caution).
 4. In the "CVE LEADS" project, enable the connector and its tools.
 
 ## Disconnecting / reconnecting
 
 Admin → Account → **Connected apps** → Disconnect. Or remove the connector in claude.ai.
-Tokens live 8 h and refresh automatically for 90 days; after 90 days without use,
-reconnect (step 3 above). Deactivating the admin user kills every token immediately.
+Tokens live 8 h and refresh automatically; the refresh chain hard-expires 90 days
+after connecting (regardless of use) — reconnect then (step 3 above). Deactivating
+the admin user kills every token immediately.
 
 ## Audit
 
@@ -65,5 +69,5 @@ after deploy).
 |---|---|
 | claude.ai says it cannot connect / "not an MCP server" | `/.well-known/...` 404 → `.well-known` missing from `src/middleware.ts` matcher, or `MCP_PUBLIC_ORIGIN` unset |
 | Consent page shows "Connection request rejected" | redirect URI not on claude.ai/claude.com or client id unknown (re-add the connector) |
-| Tools return `rate_limited` | 120 calls/min per token; wait a minute |
+| Tools return `rate_limited` | 120 calls/min per token; wait a minute — the limiter is per PM2 instance, so the effective production ceiling is ~240/min across the 2-instance cluster |
 | Tools return `config` | `MCP_PUBLIC_ORIGIN` invalid |
