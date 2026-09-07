@@ -19,7 +19,7 @@ const Input = z.object({
   bucket: z.enum(["leads", "partner"]).default("leads"),
   assignedToMe: z.boolean().default(false),
   hasEmail: z.boolean().optional(),
-  createdAfter: z.string().datetime().optional().describe("ISO 8601"),
+  createdAfter: z.string().datetime({ offset: true }).optional().describe("ISO 8601, with or without a UTC offset"),
   page: z.number().int().min(1).default(1),
   pageSize: z.number().int().min(1).max(50).default(20),
 });

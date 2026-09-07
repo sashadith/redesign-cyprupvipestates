@@ -8,7 +8,7 @@ import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { LEAD_ROW_SELECT, leadRow } from "../leadRow";
 
-const isoOrNull = z.string().datetime().nullable().optional();
+const isoOrNull = z.string().datetime({ offset: true }).nullable().optional().describe("ISO 8601, with or without a UTC offset");
 
 const Input = z.object({
   leadId: z.string().uuid(),
@@ -42,7 +42,7 @@ export function registerUpdateLead(server: McpServer) {
       runTool("crm_update_lead", contextFromAuthInfo(ctx.http?.authInfo), input.leadId, async (c) => {
         const lead = await prisma.lead.findFirst({ where: { id: input.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER }, select: { id: true, status: true, hotAt: true } });
         if (!lead) throw new ToolError("not_found", "Lead not found.");
-        if (input.status === "VIEWING_SCHEDULED" && !input.viewingScheduledAt) {
+        if (input.status === "VIEWING_SCHEDULED" && input.status !== lead.status && !input.viewingScheduledAt) {
           throw new ToolError("validation", "viewingScheduledAt is required when setting status VIEWING_SCHEDULED.");
         }
         const actor = { userId: c.userId, userName: c.userName };
@@ -54,6 +54,7 @@ export function registerUpdateLead(server: McpServer) {
             ...(input.viewingScheduledAt !== undefined ? { viewingScheduledAt: input.viewingScheduledAt ? new Date(input.viewingScheduledAt) : null } : {}),
           });
           changed.push("status");
+          if (input.viewingScheduledAt !== undefined) changed.push("viewingScheduledAt");
         }
 
         const data: Prisma.LeadUpdateInput = {};

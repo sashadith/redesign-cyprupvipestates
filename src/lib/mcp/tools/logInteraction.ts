@@ -11,7 +11,7 @@ const Input = z.object({
   leadId: z.string().uuid(),
   type: z.enum(["CALL", "NOTE", "WHATSAPP_OUT", "WHATSAPP_IN"]),
   body: z.string().trim().min(1).max(4000),
-  occurredAt: z.string().datetime().optional().describe("ISO 8601; defaults to now"),
+  occurredAt: z.string().datetime({ offset: true }).optional().describe("ISO 8601, with or without a UTC offset; defaults to now"),
   leadReacted: z.boolean().optional().describe("The lead responded — resets the auto-follow-up chain (implied for WHATSAPP_IN)"),
 });
 
