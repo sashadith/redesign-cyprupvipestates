@@ -40,9 +40,11 @@ export async function runTool<T>(
       if (e instanceof ToolError) outcome = { ok: false, code: e.code, message: e.message };
       else if (e instanceof McpConfigError) outcome = { ok: false, code: "config", message: e.message };
       else {
+        // Prisma error messages are multi-line and embed query arguments, so
+        // only genuine "at …" stack frames are logged — never the message body.
         console.error(
           `mcp tool ${name} failed: ${e instanceof Error ? e.name : "non-error thrown"}`,
-          e instanceof Error ? (e.stack ?? "").split("\n").slice(1).join("\n") : "",
+          e instanceof Error ? (e.stack ?? "").split("\n").filter((l) => /^\s+at /.test(l)).join("\n") : "",
         );
         outcome = { ok: false, code: "internal", message: "Internal error — details are in the server log." };
       }
