@@ -462,6 +462,17 @@ Logs never contain tool arguments, bodies, tokens, or codes.
   a CSRF'd browser cannot approve a connection silently because the action
   also requires the `state`/`client_id` pair it rendered.
 - `McpToolCall` gives per-record read auditing (GDPR Art. 32 minimum).
+- **Consent phishing is NOT mitigated by showing the redirect host** (finding
+  of the Phase 1 whole-branch review, 2026-09-07): an attacker who adds this
+  server as a connector in *their own* claude.ai account and gets the
+  logged-in operator to open the resulting `/admin/mcp/authorize` link and
+  press Allow receives a token — and the redirect host is `claude.ai` in
+  that flow too. Phase 1 (read-only) accepts the residual risk with an
+  explicit warning, the client id and the client's registration age on the
+  consent page. **Phase 2 must add a stronger binding before write/send tools
+  ship** — e.g. a short code displayed in the claude.ai connector flow that
+  the operator has to enter on the consent page, or a one-time approval the
+  operator initiates from the admin rather than from a link.
 
 ## Testing
 
