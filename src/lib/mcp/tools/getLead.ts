@@ -39,15 +39,22 @@ export function registerGetLead(server: McpServer) {
         });
         if (!lead) throw new ToolError("not_found", "Lead not found.");
 
-        // Last real contact for the compact row needs the filtered query LEAD_ROW_SELECT
-        // defines; the full timeline above overrides `interactions`, so derive it here.
-        const lastContact = lead.interactions.find((i) => CONTACT_TYPES.includes(i.type));
+        // Last real contact from its own query — the timeline above is capped at
+        // MAX_TIMELINE_ROWS and unfiltered, so scanning it would miss a contact
+        // buried under 30+ notes/status rows (crm_search_leads uses the same
+        // targeted select via LEAD_ROW_SELECT).
+        const lastContact = await prisma.leadInteraction.findFirst({
+          where: { leadId, type: { in: CONTACT_TYPES } },
+          orderBy: { occurredAt: "desc" },
+          select: { type: true, occurredAt: true },
+        });
         const row = leadRow({ ...lead, interactions: lastContact ? [{ type: lastContact.type, occurredAt: lastContact.occurredAt }] : [] });
 
         const primary = lead.presentations[0];
         const presentation = primary
           ? { sentAt: primary.createdAt, viewCount: primary.views.length, lastViewedAt: primary.views.length ? new Date(Math.max(...primary.views.map((v) => v.createdAt.getTime()))) : null }
           : null;
+        // State is derived from the newest MAX_TIMELINE_ROWS rows; Compose (generate.ts) uses its own newest-20 window — they can differ for a lead whose only real inbound message sits at rows 21–30.
         const state = determineLeadState(leadStateInput(lead, lead.interactions, presentation));
 
         return {
