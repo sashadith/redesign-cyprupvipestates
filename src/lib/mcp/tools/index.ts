@@ -6,6 +6,7 @@ import { registerMatchProperties } from "./matchProperties";
 import { registerGetProject } from "./getProject";
 import { registerPlaybook } from "./playbook";
 import { registerLogInteraction } from "./logInteraction";
+import { registerUpdateLead } from "./updateLead";
 
 export function registerReadTools(server: McpServer): void {
   registerWorklist(server);
@@ -20,4 +21,5 @@ export function registerReadTools(server: McpServer): void {
 // to the token user and tagged metadata.via = "mcp".
 export function registerWriteTools(server: McpServer): void {
   registerLogInteraction(server);
+  registerUpdateLead(server);
 }
