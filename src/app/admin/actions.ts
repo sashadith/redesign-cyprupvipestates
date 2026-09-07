@@ -19,6 +19,7 @@ import { listProjectsForPicker as listProjectsForPickerQuery } from "@/sanity/sa
 import { resetFollowUpCadence } from "@/lib/crm/followUpCadence";
 import { isManualInteractionType } from "@/lib/crm/interactionHelpers";
 import { logLeadInteraction } from "@/lib/crm/logInteraction";
+import { applyLeadStatusChange, LEAD_STATUSES, type LeadStatusValue } from "@/lib/crm/updateLeadStatus";
 import { findEmptyProjectsBlock } from "@/lib/projectsBlockValidation";
 import { ELEVATED_NO_CONTACT_STATUSES as CONTACT_IMPLYING_STATUSES } from "@/lib/actionCenter/rules/crm";
 import { logWhatsAppSentAction } from "./(panel)/crm/[id]/emailActions";
@@ -728,33 +729,8 @@ export async function saveBlogAll(id: string, _prev: any, formData: FormData): P
 // StatusPopover.tsx.
 export async function updateLeadStatus(id: string, status: string) {
   const session = await requireSession();
-  if (!STATUSES.includes(status)) throw new Error("Invalid status");
-  await prisma.lead.update({ where: { id }, data: { status: status as any } });
-  const statusContent = `Status changed to ${status.replace(/_/g, " ")}`;
-  await prisma.leadActivity.create({
-    data: {
-      leadId: id,
-      type: "STATUS_CHANGE",
-      content: statusContent,
-      createdBy: session.user?.name ?? "admin",
-      createdById: (session.user as any)?.id ?? null,
-    },
-  });
-  await prisma.leadInteraction.create({
-    data: {
-      leadId: id,
-      type: "STATUS_CHANGE",
-      channel: "SYSTEM",
-      body: statusContent,
-      // 2026-08-11 — lets actionCenter/rules/crm.ts's noFollowUp() know the
-      // exact target status without parsing body text (still falls back to
-      // that for historical rows written before this). See
-      // ELEVATED_NO_CONTACT_STATUSES there for why the target matters.
-      metadata: { toStatus: status },
-      createdByUserId: (session.user as any)?.id ?? null,
-      createdByName: session.user?.name ?? "admin",
-    },
-  });
+  if (!(LEAD_STATUSES as readonly string[]).includes(status)) throw new Error("Invalid status");
+  await applyLeadStatusChange(actorOf(session), id, status as LeadStatusValue);
   revalidatePath(`/admin/crm/${id}`);
   revalidatePath("/admin/crm");
   revalidatePath("/admin");
