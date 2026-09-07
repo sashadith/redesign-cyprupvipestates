@@ -20,14 +20,17 @@ export default async function ConnectedAppsPage() {
     }),
     prisma.mcpToolCall.findMany({ where: { userId: uid }, orderBy: { createdAt: "desc" }, take: 100, select: { id: true, tool: true, leadId: true, ok: true, errorCode: true, durationMs: true, createdAt: true } }),
   ]);
-  // One row per family: the newest live token represents the connection.
-  const families = Array.from(new Map(tokens.map((t) => [t.familyId, t])).values());
+  // One row per family: the newest live token represents the connection
+  // (tokens are ordered newest first, so the first occurrence wins).
+  const byFamily = new Map<string, (typeof tokens)[number]>();
+  for (const t of tokens) if (!byFamily.has(t.familyId)) byFamily.set(t.familyId, t);
+  const families = Array.from(byFamily.values());
 
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold">Connected apps</h1>
-        <p className="text-sm text-[#6B7280] mt-1">MCP connectors (e.g. the claude.ai “CVE LEADS” chat) that can read the CRM on your behalf. <Link href="/admin/account" className="underline">Back to account</Link></p>
+        <p className="text-sm text-[#6B7280] mt-1">MCP connectors (e.g. the claude.ai &quot;CVE LEADS&quot; chat) that can read the CRM on your behalf. <Link href="/admin/account" className="underline">Back to account</Link></p>
       </div>
 
       <section>
@@ -61,20 +64,24 @@ export default async function ConnectedAppsPage() {
       <section>
         <h2 className="text-lg font-medium mb-2">Recent activity</h2>
         <p className="text-xs text-[#6B7280] mb-2">Last 100 tool calls. Arguments and message text are never stored.</p>
-        <table className="w-full text-sm">
-          <thead className="text-left text-[#6B7280]"><tr><th className="py-1">When</th><th>Tool</th><th>Lead</th><th>Result</th><th>ms</th></tr></thead>
-          <tbody>
-            {calls.map((c) => (
-              <tr key={c.id} className="border-t border-[#E5E7EB]">
-                <td className="py-1">{adminDateTime(c.createdAt)}</td>
-                <td><code>{c.tool}</code></td>
-                <td>{c.leadId ? <Link href={`/admin/crm/${c.leadId}`} className="underline">{c.leadId.slice(0, 8)}…</Link> : "—"}</td>
-                <td>{c.ok ? "ok" : `error: ${c.errorCode}`}</td>
-                <td>{c.durationMs}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {calls.length === 0 ? (
+          <p className="text-sm text-[#6B7280]">No tool calls yet.</p>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="text-left text-[#6B7280]"><tr><th className="py-1">When</th><th>Tool</th><th>Lead</th><th>Result</th><th>ms</th></tr></thead>
+            <tbody>
+              {calls.map((c) => (
+                <tr key={c.id} className="border-t border-[#E5E7EB]">
+                  <td className="py-1">{adminDateTime(c.createdAt)}</td>
+                  <td><code>{c.tool}</code></td>
+                  <td>{c.leadId ? <Link href={`/admin/crm/${c.leadId}`} className="underline">{c.leadId.slice(0, 8)}…</Link> : "—"}</td>
+                  <td>{c.ok ? "ok" : `error: ${c.errorCode}`}</td>
+                  <td>{c.durationMs}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </section>
     </div>
   );
