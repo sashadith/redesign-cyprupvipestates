@@ -4,6 +4,7 @@ import { registerSearchLeads } from "./searchLeads";
 import { registerGetLead } from "./getLead";
 import { registerMatchProperties } from "./matchProperties";
 import { registerGetProject } from "./getProject";
+import { registerPlaybook } from "./playbook";
 
 export function registerReadTools(server: McpServer): void {
   registerWorklist(server);
@@ -11,4 +12,5 @@ export function registerReadTools(server: McpServer): void {
   registerGetLead(server);
   registerMatchProperties(server);
   registerGetProject(server);
+  registerPlaybook(server);
 }
