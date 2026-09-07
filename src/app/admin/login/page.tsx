@@ -13,12 +13,14 @@ const inputClass =
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { error?: string; reset?: string; callbackUrl?: string };
+  searchParams: { error?: string; reset?: string; callbackUrl?: string | string[] };
 }) {
   // Only ever an admin-relative path — an absolute URL or anything outside
   // /admin/ falls back to the dashboard (open-redirect guard). Added for the
   // MCP consent page, which needs to come back to its own query string.
-  const callbackUrl = searchParams?.callbackUrl?.startsWith("/admin/") && !searchParams.callbackUrl.startsWith("//") ? searchParams.callbackUrl : "/admin";
+  // Next hands repeated query keys back as string[]; take the first value.
+  const rawCallback = Array.isArray(searchParams?.callbackUrl) ? searchParams.callbackUrl[0] : searchParams?.callbackUrl;
+  const callbackUrl = rawCallback?.startsWith("/admin/") && !rawCallback.startsWith("//") ? rawCallback : "/admin";
   const session = await auth();
   if (session) redirect(callbackUrl);
 
