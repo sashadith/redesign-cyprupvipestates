@@ -528,7 +528,10 @@ img { max-width: 100%; display: block; }
 }
 .featured__title {
   font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
-  font-weight: 300; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em;
+  /* Standardized to 400 (2026-09-07) — every other homepage section title
+     (about/cities/descblock/newlist/casestudies/content/faq/formsec) is 400;
+     this was the one outlier at 300. */
+  font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em;
   color: var(--ivory); margin: 0; text-wrap: balance;
 }
 /* (Gold-Shimmer is now applied globally on .it — see the .it rule above) */
@@ -941,6 +944,15 @@ img { max-width: 100%; display: block; }
 .formsec__fields { display: grid; grid-template-columns: 1fr; gap: var(--s-5); }
 @media (min-width: 560px) { .formsec__fields { grid-template-columns: 1fr 1fr; max-width: 90%; } }
 .formsec__field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+/* The CSS grid 0fr->1fr accordion trick (2026-09-07): a permanently-rendered
+   wrapper around the (conditionally-rendered) error text, so its height can
+   transition instead of the field jumping when the error mounts/unmounts —
+   without position:absolute's own containing-block bookkeeping and its
+   fixed-margin trade-off between a tight default gap and overlap on long
+   wrapped messages. See FormStandard.module.scss for the fuller history. */
+.formsec__errorSlot { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--dur-sm, 0.25s) var(--ease, ease-out); }
+.formsec__errorSlot:has(> .formsec__error) { grid-template-rows: 1fr; }
+.formsec__errorSlot > * { overflow: hidden; min-height: 0; }
 /* optional field that spans both columns at the 2-col breakpoint (e.g. the
    FAQ page's "Your question" textarea) — no-op at 1 column */
 .formsec__field--full { grid-column: 1 / -1; }
@@ -987,9 +999,18 @@ img { max-width: 100%; display: block; }
 }
 .formsec .PhoneInputCountrySelectArrow { color: var(--text-soft); opacity: 0.9; }
 .formsec .PhoneInputInput { flex: 1; }
-.formsec__error { color: #B4543A; font-family: var(--font-body), sans-serif; font-size: var(--text-caption); }
+/* In flow, inside .formsec__errorSlot (above) — the slot is what animates
+   the space open/closed, so this is just the message's own text styling. */
+.formsec__error {
+  margin-top: 4px;
+  color: #B4543A;
+  font-family: var(--font-body), sans-serif;
+  font-size: var(--text-caption);
+  line-height: 1.35;
+}
 
 .formsec__radio { margin-top: var(--s-6); border: 0; padding: 0; min-width: 0; }
+.formsec__radio + .formsec__errorSlot { margin-top: var(--s-2); }
 .formsec__radio-legend { font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--text-soft); margin-bottom: var(--s-3); padding: 0; }
 .formsec__radio-options { display: flex; flex-wrap: wrap; gap: 10px; }
 .formsec__radio-option {
@@ -1022,7 +1043,9 @@ img { max-width: 100%; display: block; }
 
 .formsec__consent { margin-top: var(--s-5); display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--text-soft); }
 .formsec__consent input { margin-top: 3px; accent-color: var(--champagne); width: 16px; height: 16px; flex: none; }
-.formsec__consent .formsec__error { grid-column: 1 / -1; }
+/* The consent row is a 2-column grid (checkbox + label); the error slot has
+   to span both to sit full-width below the checkbox+label row. */
+.formsec__consent .formsec__errorSlot { grid-column: 1 / -1; }
 .formsec__policy { color: var(--accent); text-decoration: none; text-underline-offset: 2px; }
 .formsec__policy:hover { color: var(--text); }
 
@@ -1043,6 +1066,14 @@ img { max-width: 100%; display: block; }
 @media (min-width: 940px) {
   .formsec__consultant-wrap { transform: translateX(-150px); }
   .formsec__caption { position: absolute; left: calc(54% + 10px); bottom: calc(18% + 30px); width: max-content; }
+}
+/* Same treatment as the adviser popup's .cvpm__art (contactModal.css) — a
+   decorative photo has no business taking space from the fields on mobile.
+   Same 860px breakpoint so every form on the site behaves alike. The name/
+   role caption stays: unlike the photo it's real attribution text, not
+   decorative. */
+@media (max-width: 860px) {
+  .formsec__consultant-wrap { display: none; }
 }
 
 

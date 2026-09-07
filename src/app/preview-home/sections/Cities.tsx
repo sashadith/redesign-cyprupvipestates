@@ -2,6 +2,7 @@ import React, { FC } from "react";
 import type { CitiesBlock } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client";
 import { homeStrings } from "./homeI18n";
+import { highlightAccents } from "./highlightAccents";
 
 /* "Properties by Location" — light ivory section: a grid of city tiles
    (image + name), each linking to that location. */
@@ -16,10 +17,24 @@ const safeUrl = (img: unknown) => {
 
 const ACCENT_PHRASE = "Properties for Sale";
 
+// DE/PL/RU (2026-09-07 fix): the EN logic below only ever matched literal
+// English words, so translated titles fell all the way through to no
+// highlight at all. These are the words that carry the meaning in each
+// language, not a positional copy of the English phrase — see the words
+// against each locale's actual title.
+const ACCENTS_BY_LANG: Record<string, string[]> = {
+  de: ["Immobilien"],
+  pl: ["nieruchomości na sprzedaż"],
+  ru: ["недвижимость"],
+};
+
 /* Highlight the "Properties for Sale" phrase with the gold accent ("in Cyprus"
    stays in the normal text colour). Falls back to highlighting just "Cyprus"
    if the phrase isn't present (e.g. translated headings). */
-const renderTitle = (title: string) => {
+const renderTitle = (title: string, lang: string) => {
+  if (lang !== "en" && ACCENTS_BY_LANG[lang]) {
+    return highlightAccents(title, ACCENTS_BY_LANG[lang]);
+  }
   const idx = title.toLowerCase().indexOf(ACCENT_PHRASE.toLowerCase());
   if (idx === -1) {
     return title.split(/(Cyprus)/i).map((part, i) =>
@@ -54,7 +69,7 @@ const Cities: FC<Props> = ({ block, lang = "en" }) => {
   return (
     <section className="section is-light cities">
       <div className="wrap">
-        {title && <h2 className="cities__title">{renderTitle(title)}</h2>}
+        {title && <h2 className="cities__title">{renderTitle(title, lang)}</h2>}
         <hr className="shimmer cities__stripe" />
         <p className="cities__lead">{t.citiesLead}</p>
 

@@ -429,7 +429,10 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 
 /* table */
 .iart__table-wrap { margin: clamp(32px, 4vw, 52px) 0; overflow-x: auto; }
-.iart__table { width: 100%; border-collapse: collapse; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); }
+/* Own font-size, not --text-sm (2026-09-07): that token is shared with
+   case-study pages and landing "classic blocks" via the same .iart__table
+   rule — sizing it here keeps the bump scoped to tables only. */
+.iart__table { width: 100%; border-collapse: collapse; font-family: var(--font-body), sans-serif; font-size: 0.9375rem; }
 .iart__table th { text-align: left; padding: 12px 16px; background: var(--accent-soft); color: var(--text); font-weight: 600; border-bottom: 1px solid var(--hairline-strong); }
 .iart__table td { padding: 12px 16px; color: var(--text-soft); border-bottom: 1px solid var(--hairline); }
 

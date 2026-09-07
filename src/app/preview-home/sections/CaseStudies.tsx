@@ -3,6 +3,7 @@ import type { FeaturedCaseStudiesBlock } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client";
 import { localePrefix } from "@/lib/locale";
 import { homeStrings, CASE_CATEGORY_LABELS } from "./homeI18n";
+import { highlightAccents } from "./highlightAccents";
 
 /* Featured Case Studies — dark editorial section: image-top cards with a
    category badge, title + excerpt, linking to each case study. Reuses the
@@ -18,14 +19,27 @@ const safeUrl = (img: unknown) => {
   }
 };
 
-const renderTitle = (title: string) =>
-  title.split(/(Success|Cyprus)/i).map((part, i) =>
+// DE/PL/RU (2026-09-07 fix): see highlightAccents.tsx — the split() below
+// only ever matched literal English words, so translated titles rendered
+// with no highlight at all.
+const ACCENTS_BY_LANG: Record<string, string[]> = {
+  de: ["Erfolgsgeschichten"],
+  pl: ["sukcesu"],
+  ru: ["успеха"],
+};
+
+const renderTitle = (title: string, lang: string) => {
+  if (lang !== "en" && ACCENTS_BY_LANG[lang]) {
+    return highlightAccents(title, ACCENTS_BY_LANG[lang]);
+  }
+  return title.split(/(Success|Cyprus)/i).map((part, i) =>
     /^(success|cyprus)$/i.test(part) ? (
       <span key={i} className="it">{part}</span>
     ) : (
       <React.Fragment key={i}>{part}</React.Fragment>
     )
   );
+};
 
 const ArrowRight = () => (
   <svg width="16" height="16" viewBox="0 0 17 17" fill="none" aria-hidden>
@@ -43,7 +57,7 @@ export default function CaseStudies({ block, lang = "en" }: { block: FeaturedCas
   return (
     <section className="section casestudies">
       <div className="wrap">
-        {title && <h2 className="casestudies__title">{renderTitle(title)}</h2>}
+        {title && <h2 className="casestudies__title">{renderTitle(title, lang)}</h2>}
         <hr className="shimmer casestudies__stripe" />
         {description && <p className="casestudies__desc">{description}</p>}
 

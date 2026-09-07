@@ -100,6 +100,47 @@
 @media (max-width: 640px) {
   .pp-hero__galbtn { top: auto; bottom: 88px; right: var(--gutter); min-height: 44px; }
 }
+/* Mobile hero: swipeable strip instead of the single static image, native
+   scroll-snap rather than a carousel library — swipe only, no arrows/dots/
+   indicator. Only rendered by HeroMedia.tsx when there's more than one
+   photo; the desktop single-image button is CSS-hidden here in that case
+   and shown again above the breakpoint, where the strip itself is hidden. */
+.pp-hero__strip {
+  display: none;
+}
+@media (max-width: 640px) {
+  .pp-hero__img--desktop { display: none; }
+  .pp-hero__strip {
+    display: flex;
+    position: absolute;
+    inset: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    /* Horizontal-only: lets a vertical finger drag fall through to the page
+       instead of being captured by this scroller (belt-and-braces on top of
+       overflow-y:hidden, which already stops it from scrolling itself). */
+    touch-action: pan-y;
+  }
+  .pp-hero__slide {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    cursor: zoom-in;
+    background: var(--sea);
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  .pp-hero__slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* The count is redundant once swiping itself shows there's more than one
+     photo, and desktop's bottom-right badge has no room to also read
+     correctly here (see the mobile-position comment above it). */
+  .pp-hero__galbtn { display: none; }
+}
 .pp-eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
 .pp-loc { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
   color: rgba(255,255,255,0.92); padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14);

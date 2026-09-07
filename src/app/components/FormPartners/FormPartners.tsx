@@ -370,11 +370,11 @@ const FormPartners: FC<ContactFormProps> = ({
                   )}
                 </Field>
 
-                <ErrorMessage
-                  name="name"
-                  component="div"
-                  className={styles.error}
-                />
+                <div className={styles.errorSlot}>
+                  <ErrorMessage name="name">
+                    {(msg) => <div className={styles.error}>{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
 
               <div className={styles.inputWrapper}>
@@ -417,11 +417,11 @@ const FormPartners: FC<ContactFormProps> = ({
                   )}
                 </Field>
 
-                <ErrorMessage
-                  name="surname"
-                  component="div"
-                  className={styles.error}
-                />
+                <div className={styles.errorSlot}>
+                  <ErrorMessage name="surname">
+                    {(msg) => <div className={styles.error}>{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
 
               <div className={styles.inputWrapper}>
@@ -447,11 +447,11 @@ const FormPartners: FC<ContactFormProps> = ({
                   }}
                 />
 
-                <ErrorMessage
-                  name="phone"
-                  component="div"
-                  className={styles.error}
-                />
+                <div className={styles.errorSlot}>
+                  <ErrorMessage name="phone">
+                    {(msg) => <div className={styles.error}>{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
 
               <div className={styles.inputWrapper}>
@@ -486,11 +486,11 @@ const FormPartners: FC<ContactFormProps> = ({
                   )}
                 </Field>
 
-                <ErrorMessage
-                  name="email"
-                  component="div"
-                  className={styles.error}
-                />
+                <div className={styles.errorSlot}>
+                  <ErrorMessage name="email">
+                    {(msg) => <div className={styles.error}>{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
 
               <div className={styles.inputWrapper}>
@@ -533,11 +533,11 @@ const FormPartners: FC<ContactFormProps> = ({
                   )}
                 </Field>
 
-                <ErrorMessage
-                  name="country"
-                  component="div"
-                  className={styles.error}
-                />
+                <div className={styles.errorSlot}>
+                  <ErrorMessage name="country">
+                    {(msg) => <div className={styles.error}>{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
 
               <div>

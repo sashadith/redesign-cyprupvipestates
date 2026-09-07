@@ -298,11 +298,11 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                             )}
                           </Field>
 
-                          <ErrorMessage
-                            name="name"
-                            component="div"
-                            className={styles.error}
-                          />
+                          <div className={styles.errorSlot}>
+                            <ErrorMessage name="name">
+                              {(msg) => <div className={styles.error}>{msg}</div>}
+                            </ErrorMessage>
+                          </div>
                         </div>
 
                         <div className={styles.inputWrapper}>
@@ -344,11 +344,11 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                             )}
                           </Field>
 
-                          <ErrorMessage
-                            name="surname"
-                            component="div"
-                            className={styles.error}
-                          />
+                          <div className={styles.errorSlot}>
+                            <ErrorMessage name="surname">
+                              {(msg) => <div className={styles.error}>{msg}</div>}
+                            </ErrorMessage>
+                          </div>
                         </div>
 
                         <div className={styles.inputWrapper}>
@@ -378,11 +378,11 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                             }}
                           />
 
-                          <ErrorMessage
-                            name="phone"
-                            component="div"
-                            className={styles.error}
-                          />
+                          <div className={styles.errorSlot}>
+                            <ErrorMessage name="phone">
+                              {(msg) => <div className={styles.error}>{msg}</div>}
+                            </ErrorMessage>
+                          </div>
                         </div>
 
                         <div className={styles.inputWrapper}>
@@ -424,11 +424,11 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                             )}
                           </Field>
 
-                          <ErrorMessage
-                            name="email"
-                            component="div"
-                            className={styles.error}
-                          />
+                          <div className={styles.errorSlot}>
+                            <ErrorMessage name="email">
+                              {(msg) => <div className={styles.error}>{msg}</div>}
+                            </ErrorMessage>
+                          </div>
                         </div>
                       </div>
 
@@ -487,11 +487,11 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                         </div>
                       </fieldset>
 
-                      <ErrorMessage
-                        name="preferredContact"
-                        component="div"
-                        className={styles.errorRadio}
-                      />
+                      <div className={styles.errorSlot}>
+                        <ErrorMessage name="preferredContact">
+                          {(msg) => <div className={styles.errorRadio}>{msg}</div>}
+                        </ErrorMessage>
+                      </div>
 
                       <button
                         type="submit"

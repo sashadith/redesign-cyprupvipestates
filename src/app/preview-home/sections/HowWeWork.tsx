@@ -1,6 +1,7 @@
 import React from "react";
 import type { HowWeWorkBlock } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client";
+import { highlightAccents } from "./highlightAccents";
 
 /* How We Work — reuses the About layout (title + stripe + description + a row
    of gold medallions with text). Reuses the original data. */
@@ -17,14 +18,30 @@ const safeUrl = (img: unknown) => {
   }
 };
 
-const renderTitle = (title: string) =>
-  title.split(/(\bWe\b)/i).map((part, i) =>
+// DE/PL/RU (2026-09-07 fix): see highlightAccents.tsx — the split() below
+// only ever matched the literal English word "We", so translated titles
+// rendered with no highlight at all. Polish has no isolated word for "we"
+// here (it's folded into the verb ending, "pracujemy" = "we work"), so the
+// verb itself is the accent — flagged to the user as a judgment call, not a
+// straightforward word-for-word swap.
+const ACCENTS_BY_LANG: Record<string, string[]> = {
+  de: ["wir"],
+  pl: ["pracujemy"],
+  ru: ["мы"],
+};
+
+const renderTitle = (title: string, lang: string) => {
+  if (lang !== "en" && ACCENTS_BY_LANG[lang]) {
+    return highlightAccents(title, ACCENTS_BY_LANG[lang]);
+  }
+  return title.split(/(\bWe\b)/i).map((part, i) =>
     /^we$/i.test(part) ? (
       <span key={i} className="it">{part}</span>
     ) : (
       <React.Fragment key={i}>{part}</React.Fragment>
     )
   );
+};
 
 /* variant "process" is the homepage's own: consecutive steps, joined by the
    gold arrows that .howwork draws between the medallions. "facts" is the same
@@ -35,9 +52,11 @@ const renderTitle = (title: string) =>
 export default function HowWeWork({
   block,
   variant = "process",
+  lang = "en",
 }: {
   block: HowWeWorkBlock;
   variant?: "process" | "facts";
+  lang?: string;
 }) {
   if (!block || !block.steps?.length) return null;
   const { title, steps, description } = block;
@@ -45,7 +64,7 @@ export default function HowWeWork({
   return (
     <section className={`section is-light about${variant === "process" ? " howwork" : ""}`}>
       <div className="wrap">
-        {title && <h2 className="about__title">{renderTitle(title)}</h2>}
+        {title && <h2 className="about__title">{renderTitle(title, lang)}</h2>}
         <hr className="shimmer about__stripe" />
 
         {description && <p className="about__desc">{description}</p>}

@@ -56,10 +56,13 @@ export const insightsComponents = {
       const w = value?.asset?.metadata?.dimensions?.width || 1600;
       const h = value?.asset?.metadata?.dimensions?.height || 1000;
       if (!url) return null;
+      // No visible caption (2026-09-07): the caption text and the alt
+      // attribute were the same field (value.alt) — removing the
+      // figcaption loses nothing but the redundant on-page text; alt
+      // stays exactly as before, on the Image itself.
       return (
         <figure className="iart__figure">
           <Image src={url} alt={value?.alt || "Cyprus VIP Estates"} width={w} height={h} style={{ width: "100%", height: "auto" }} loading="lazy" />
-          {value?.alt && <figcaption className="iart__caption">{value.alt}</figcaption>}
         </figure>
       );
     },
@@ -107,13 +110,14 @@ function ImageFull({ block }: { block: any }) {
   const url = safeUrl(block?.imageMain?.picture);
   if (!url) return null;
   const ratio = block?.imageMain?.aspectRatio === "1:1" ? "1 / 1" : block?.imageMain?.aspectRatio === "4:3" ? "4 / 3" : "16 / 9";
-  const caption = (block?.description?.textItems ?? []).map((t: any) => t.text).join("");
+  // No visible caption (2026-09-07): alt (block.imageMain.picture.alt) is a
+  // separate field from the removed caption (block.description.textItems)
+  // and is untouched below.
   return (
     <figure className="iart__figure iart__figure--full">
       <div className="iart__figure-media" style={{ aspectRatio: ratio }}>
         <img src={url} alt={block?.imageMain?.picture?.alt || block?.title || ""} loading="lazy" />
       </div>
-      {block?.hasDescription && caption && <figcaption className="iart__caption">{caption}</figcaption>}
     </figure>
   );
 }

@@ -537,11 +537,11 @@ const FormRoi: FC<Props> = ({
                     />
                   )}
                 </Field>
-                <ErrorMessage
-                  name="name"
-                  component="div"
-                  className={styles.error}
-                />
+                <div className={styles.errorSlot}>
+                  <ErrorMessage name="name">
+                    {(msg) => <div className={styles.error}>{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
 
               <div className={styles.inputWrapper}>
@@ -576,11 +576,11 @@ const FormRoi: FC<Props> = ({
                     />
                   )}
                 </Field>
-                <ErrorMessage
-                  name="surname"
-                  component="div"
-                  className={styles.error}
-                />
+                <div className={styles.errorSlot}>
+                  <ErrorMessage name="surname">
+                    {(msg) => <div className={styles.error}>{msg}</div>}
+                  </ErrorMessage>
+                </div>
               </div>
             </div>
 
@@ -604,11 +604,11 @@ const FormRoi: FC<Props> = ({
                   formikRef.current?.setFieldTouched("phone", true, true);
                 }}
               />
-              <ErrorMessage
-                name="phone"
-                component="div"
-                className={styles.error}
-              />
+              <div className={styles.errorSlot}>
+                <ErrorMessage name="phone">
+                  {(msg) => <div className={styles.error}>{msg}</div>}
+                </ErrorMessage>
+              </div>
             </div>
 
             <div className={styles.inputWrapper}>
@@ -642,11 +642,11 @@ const FormRoi: FC<Props> = ({
                   />
                 )}
               </Field>
-              <ErrorMessage
-                name="email"
-                component="div"
-                className={styles.error}
-              />
+              <div className={styles.errorSlot}>
+                <ErrorMessage name="email">
+                  {(msg) => <div className={styles.error}>{msg}</div>}
+                </ErrorMessage>
+              </div>
             </div>
 
             <fieldset className={`${styles.inputWrapper} min-w-0`}>
@@ -696,11 +696,11 @@ const FormRoi: FC<Props> = ({
                 </label>
               </div>
 
-              <ErrorMessage
-                name="preferredContact"
-                component="div"
-                className={styles.error}
-              />
+              <div className={styles.errorSlot}>
+                <ErrorMessage name="preferredContact">
+                  {(msg) => <div className={styles.error}>{msg}</div>}
+                </ErrorMessage>
+              </div>
             </fieldset>
 
             <div>

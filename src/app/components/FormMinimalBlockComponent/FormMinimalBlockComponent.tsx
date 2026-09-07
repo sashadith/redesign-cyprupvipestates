@@ -290,11 +290,11 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                       )}
                     </Field>
 
-                    <ErrorMessage
-                      name="name"
-                      component="div"
-                      className={styles.error}
-                    />
+                    <div className={styles.errorSlot}>
+                      <ErrorMessage name="name">
+                        {(msg) => <div className={styles.error}>{msg}</div>}
+                      </ErrorMessage>
+                    </div>
                   </div>
 
                   <div className={styles.inputWrapper}>
@@ -336,11 +336,11 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                       )}
                     </Field>
 
-                    <ErrorMessage
-                      name="surname"
-                      component="div"
-                      className={styles.error}
-                    />
+                    <div className={styles.errorSlot}>
+                      <ErrorMessage name="surname">
+                        {(msg) => <div className={styles.error}>{msg}</div>}
+                      </ErrorMessage>
+                    </div>
                   </div>
 
                   <div className={styles.inputWrapper}>
@@ -366,11 +366,11 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                       }}
                     />
 
-                    <ErrorMessage
-                      name="phone"
-                      component="div"
-                      className={styles.error}
-                    />
+                    <div className={styles.errorSlot}>
+                      <ErrorMessage name="phone">
+                        {(msg) => <div className={styles.error}>{msg}</div>}
+                      </ErrorMessage>
+                    </div>
                   </div>
 
                   <div className={styles.inputWrapper}>
@@ -405,11 +405,11 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                       )}
                     </Field>
 
-                    <ErrorMessage
-                      name="email"
-                      component="div"
-                      className={styles.error}
-                    />
+                    <div className={styles.errorSlot}>
+                      <ErrorMessage name="email">
+                        {(msg) => <div className={styles.error}>{msg}</div>}
+                      </ErrorMessage>
+                    </div>
                   </div>
 
                   <fieldset className={`${styles.inputWrapper} min-w-0`}>
@@ -466,11 +466,11 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                       </label>
                     </div>
 
-                    <ErrorMessage
-                      name="preferredContact"
-                      component="div"
-                      className={styles.error}
-                    />
+                    <div className={styles.errorSlot}>
+                      <ErrorMessage name="preferredContact">
+                        {(msg) => <div className={styles.error}>{msg}</div>}
+                      </ErrorMessage>
+                    </div>
                   </fieldset>
 
                   {!hideMessage && (
@@ -496,11 +496,11 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                         )}
                       </Field>
 
-                      <ErrorMessage
-                        name="message"
-                        component="div"
-                        className={styles.error}
-                      />
+                      <div className={styles.errorSlot}>
+                        <ErrorMessage name="message">
+                          {(msg) => <div className={styles.error}>{msg}</div>}
+                        </ErrorMessage>
+                      </div>
                     </div>
                   )}
 

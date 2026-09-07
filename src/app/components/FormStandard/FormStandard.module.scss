@@ -10,18 +10,39 @@
 }
 
 .inputWrapper {
-  // Original desktop value, restored — the previous round's margin-bottom
-  // increase (10px -> 38px) was meant to reserve room for a wrapped error
-  // message, but wasn't scoped to mobile and inflated desktop's field
-  // spacing too. Desktop stays at 10px; mobile gets its own tight value below.
+  // 10px (2026-09-07): the error's own space is now an animated slot
+  // (.errorSlot below), not a static reserve on this margin — see there for
+  // why. This can go back to being just "the normal gap between fields."
   margin-bottom: 10px;
   position: relative;
   max-width: 100%;
   overflow: visible;
+}
 
-  @media screen and (max-width: 767px) {
-    margin-bottom: 5px;
-  }
+// The CSS grid 0fr->1fr accordion trick: a permanently-rendered wrapper
+// around the (conditionally-rendered) error text, so its height can
+// transition instead of the field just jumping when the error mounts or
+// unmounts. Tried three other approaches first, each with a real problem:
+// static positioning (in-flow, so it works, but every field grows/shrinks
+// the instant an error appears — the original "form jumps" bug); a fixed
+// reserve on .inputWrapper's own margin sized for the worst-case 2-line
+// message (no jump, but the default gap between EVERY field has to be as
+// big as the rare worst case, ~46px, to avoid overlap); position:absolute
+// (no reflow at all when a checkbox/radio-group error is a flex/grid
+// participant elsewhere, that shortcut breaks — this needed per-context
+// exceptions). This slot animates only when there's actually something to
+// show, works the same inside any parent layout, and needs no exceptions.
+.errorSlot {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease-out;
+}
+.errorSlot:has(> .error) {
+  grid-template-rows: 1fr;
+}
+.errorSlot > * {
+  overflow: hidden;
+  min-height: 0;
 }
 
 .icon {
@@ -164,15 +185,9 @@
 }
 
 .error {
-  // Below the field, not on top of it — .inputWrapper's own margin-bottom
-  // reserves room for up to two lines of this so it never shifts the field
-  // that follows when it appears or disappears.
-  position: absolute;
-  z-index: 1;
-  top: 100%;
+  // In flow, inside .errorSlot (above) — the slot is what animates the
+  // space open/closed, so this is just the message's own text styling.
   margin-top: 4px;
-  left: 50%;
-  transform: translateX(-50%);
   font-size: 12px;
   line-height: 1.35;
   color: var(--fs-error, #e61212);

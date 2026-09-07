@@ -5,19 +5,33 @@ import { PortableText } from "@portabletext/react";
 import { RichText } from "@/app/components/RichText/RichText";
 import type { FaqSection } from "@/types/homepage";
 import { homeStrings } from "./homeI18n";
+import { highlightAccents } from "./highlightAccents";
 
 /* FAQ — dark section, editorial split: heading/context on the left (sticky),
    an accordion of question/answer items on the right. Reuses the original
    data; adds FAQPage JSON-LD for rich-result SEO. */
 
-const renderTitle = (title: string) =>
-  title.split(/(Questions|Cyprus)/i).map((part, i) =>
+// DE/PL/RU (2026-09-07 fix): see highlightAccents.tsx — the split() below
+// only ever matched literal English words, so translated titles rendered
+// with no highlight at all.
+const ACCENTS_BY_LANG: Record<string, string[]> = {
+  de: ["Fragen"],
+  pl: ["pytania"],
+  ru: ["вопросы"],
+};
+
+const renderTitle = (title: string, lang: string) => {
+  if (lang !== "en" && ACCENTS_BY_LANG[lang]) {
+    return highlightAccents(title, ACCENTS_BY_LANG[lang]);
+  }
+  return title.split(/(Questions|Cyprus)/i).map((part, i) =>
     /^(questions|cyprus)$/i.test(part) ? (
       <span key={i} className="it">{part}</span>
     ) : (
       <React.Fragment key={i}>{part}</React.Fragment>
     )
   );
+};
 
 const Chevron = () => (
   <svg width="13" height="13" viewBox="0 0 12 12" fill="none" aria-hidden>
@@ -62,7 +76,7 @@ export default function Faq({ section, lang = "en" }: { section: FaqSection; lan
       <div className="wrap">
         <div className="faq__grid">
           <div className="faq__head">
-            {faqTitle && <h2 className="faq__title">{renderTitle(faqTitle)}</h2>}
+            {faqTitle && <h2 className="faq__title">{renderTitle(faqTitle, lang)}</h2>}
             <hr className="shimmer faq__stripe" />
             <p className="faq__lead">{t.faqLead}</p>
           </div>

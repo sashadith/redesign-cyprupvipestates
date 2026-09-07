@@ -10,10 +10,32 @@
 }
 
 .inputWrapper {
+  // 10px (2026-09-07): the error's own space is now an animated slot
+  // (.errorSlot below), not a static reserve on this margin — see there for
+  // why. This is just the normal gap between fields.
   margin-bottom: 10px;
   position: relative;
   max-width: 100%;
+  overflow: visible;
+}
+
+// The CSS grid 0fr->1fr accordion trick: a permanently-rendered wrapper
+// around the (conditionally-rendered) error text, so its height can
+// transition instead of the field jumping when the error mounts/unmounts,
+// and without the position:absolute approach's overlap risk on long
+// messages or its per-context flex/grid exceptions. See FormStandard's
+// identical rule for the full history.
+.errorSlot {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease-out;
+}
+.errorSlot:has(> .error) {
+  grid-template-rows: 1fr;
+}
+.errorSlot > * {
   overflow: hidden;
+  min-height: 0;
 }
 
 .icon {
@@ -62,6 +84,11 @@
   display: flex;
   align-items: center;
   width: 100%;
+  // Explicit, not just inherited via @extend: the flex row's own children
+  // (flag icon, dial code) can render taller than the padding-derived height
+  // a plain text input gets, so without this the phone field measured taller
+  // than every other field (2026-09-07 fix).
+  height: 64px;
 }
 
 .labelMessage {
@@ -151,12 +178,11 @@
 }
 
 .error {
-  position: absolute;
-  z-index: 1;
-  bottom: 3px;
-  left: 50%;
-  transform: translateX(-50%);
+  // In flow, inside .errorSlot (above) — the slot is what animates the
+  // space open/closed, so this is just the message's own text styling.
+  margin-top: 4px;
   font-size: 12px;
+  line-height: 1.35;
   color: #e61212;
   width: 100%;
   text-align: center;

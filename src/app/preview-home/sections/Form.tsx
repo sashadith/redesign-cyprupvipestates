@@ -222,7 +222,11 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
                           <input {...field} id={`${uid}-name`} type="text" autoComplete="given-name" className="formsec__input" />
                         )}
                       </Field>
-                      <ErrorMessage name="name" component="div" className="formsec__error" />
+                      <div className="formsec__errorSlot">
+                        <ErrorMessage name="name">
+                          {(msg) => <div className="formsec__error">{msg}</div>}
+                        </ErrorMessage>
+                      </div>
                     </div>
 
                     <div className="formsec__field">
@@ -232,7 +236,11 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
                           <input {...field} id={`${uid}-surname`} type="text" autoComplete="family-name" className="formsec__input" />
                         )}
                       </Field>
-                      <ErrorMessage name="surname" component="div" className="formsec__error" />
+                      <div className="formsec__errorSlot">
+                        <ErrorMessage name="surname">
+                          {(msg) => <div className="formsec__error">{msg}</div>}
+                        </ErrorMessage>
+                      </div>
                     </div>
 
                     <div className="formsec__field">
@@ -253,7 +261,11 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
                         onChange={(value) => setFieldValue("phone", value || "", false)}
                         onBlur={() => formikRef.current?.setFieldTouched("phone", true, true)}
                       />
-                      <ErrorMessage name="phone" component="div" className="formsec__error" />
+                      <div className="formsec__errorSlot">
+                        <ErrorMessage name="phone">
+                          {(msg) => <div className="formsec__error">{msg}</div>}
+                        </ErrorMessage>
+                      </div>
                     </div>
 
                     <div className="formsec__field">
@@ -263,7 +275,11 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
                           <input {...field} id={`${uid}-email`} type="email" autoComplete="email" className="formsec__input" />
                         )}
                       </Field>
-                      <ErrorMessage name="email" component="div" className="formsec__error" />
+                      <div className="formsec__errorSlot">
+                        <ErrorMessage name="email">
+                          {(msg) => <div className="formsec__error">{msg}</div>}
+                        </ErrorMessage>
+                      </div>
                     </div>
 
                     {showQualifiers && (
@@ -329,7 +345,11 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
                             />
                           )}
                         </Field>
-                        <ErrorMessage name="question" component="div" className="formsec__error" />
+                        <div className="formsec__errorSlot">
+                          <ErrorMessage name="question">
+                            {(msg) => <div className="formsec__error">{msg}</div>}
+                          </ErrorMessage>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -351,7 +371,11 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
                       </label>
                     </div>
                   </fieldset>
-                  <ErrorMessage name="preferredContact" component="div" className="formsec__error" />
+                  <div className="formsec__errorSlot">
+                    <ErrorMessage name="preferredContact">
+                      {(msg) => <div className="formsec__error">{msg}</div>}
+                    </ErrorMessage>
+                  </div>
 
                   {/* honeypot */}
                   <Field type="text" name="company" style={{ display: "none" }} tabIndex={-1} autoComplete="new-password" aria-hidden="true" />
@@ -370,7 +394,11 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
                       <a className="formsec__policy" href={consentCopy(lang).privacyHref} target="_blank" rel="noopener noreferrer">{consentCopy(lang).privacyLabel}</a>
                       {consentCopy(lang).tail}
                     </label>
-                    <ErrorMessage name="agreedToPolicy" component="div" className="formsec__error" />
+                    <div className="formsec__errorSlot">
+                      <ErrorMessage name="agreedToPolicy">
+                        {(msg) => <div className="formsec__error">{msg}</div>}
+                      </ErrorMessage>
+                    </div>
                   </div>
 
 

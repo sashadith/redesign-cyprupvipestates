@@ -142,13 +142,13 @@ export default async function Home({ params }: Props) {
             ) : undefined
           }
         />
-        <About aboutBlock={homePage.aboutBlock} />
+        <About aboutBlock={homePage.aboutBlock} lang={lang} />
         <FeaturedProjects block={homePage.featuredProjectsBlock} lang={lang} />
         {homePage.citiesBlock && <Cities block={homePage.citiesBlock} lang={lang} />}
-        {homePage.descriptionBlock && <Description block={homePage.descriptionBlock} />}
+        {homePage.descriptionBlock && <Description block={homePage.descriptionBlock} lang={lang} />}
         <LatestDevelopments lang={lang} />
         {homePage.benefitsBlock && <Benefits block={homePage.benefitsBlock} />}
-        {homePage.howWeWorkBlock && <HowWeWork block={homePage.howWeWorkBlock} />}
+        {homePage.howWeWorkBlock && <HowWeWork block={homePage.howWeWorkBlock} lang={lang} />}
         {homePage.featuredCaseStudiesBlock && (
           <CaseStudies block={homePage.featuredCaseStudiesBlock} lang={lang} />
         )}

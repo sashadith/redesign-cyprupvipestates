@@ -45,6 +45,40 @@ line is stale.
 | `/de/luxusimmobilien-auf-zypern` | 301 → `/de/luxusvillen-in-zypern` | **no — still PUBLISHED** |
 | `/de/luxusvillen-zypern-ueber-1-mio` | 301 → `/de/luxusvillen-in-zypern` | **no — still PUBLISHED** |
 
+**2026-09-05 addition — the villa-over-1M price/filter fix (commit `97b3a35`) and this DE merge
+collided**, since the merge (`1264fcb`, 2026-09-03) predates and is an ancestor of the price fix.
+Resolved:
+
+- **DE twin stays merged, permanently.** The planned DE-only copy write ("ab 1 Million" headline,
+  drafted intro/meta) is **cancelled, not deferred**. The merge was correct on its own terms (3 of
+  11 pins rendering is a broken page, and the flagship had already stopped linking here) — a working
+  price filter doesn't undo that. Un-merging would put it back into competition with the flagship
+  across all eight cluster queries, undoing the cannibalization work from two weeks prior. The
+  flagship's own headline ("villa zypern kaufen", 703 impressions) also isn't getting a €1M
+  threshold added — that would wrongly narrow a promise that shouldn't be narrowed.
+- **The price fix has no visible effect on the EN/RU/PL twins**, and did not at the time it
+  shipped either — this was found, not introduced, by this investigation. All three render 14
+  (EN) / 15 (RU) / 15 (PL) villas, not the ~59 originally sized. Root-caused to a **display-layer
+  precedence bug, not the query**:
+  - The query mechanism itself is correct — `queryFilteredDevelopmentRows`'s price filter is the
+    "any-unit" range-overlap test (`priceTo >= priceFrom`) as designed, not a `priceFrom`-only
+    check. Hand-replicating it today (city unset, `filterPropertyType: Villa`, `priceFrom:
+    1,000,000`) against production returns **53** developments — close to the original 59 (2-day
+    inventory drift, not a sizing error).
+  - `filterPropertyType: "Villa"` is set on all four locale blocks and no `filterCity` is present
+    on any of them — Cyprus-wide, exactly as intended, no hidden narrowing.
+  - The actual cause: all four `landingProjectsBlock` documents carry a legacy, hand-curated
+    `projects` array (19 pinned refs, predating the price filter). These four pages render via
+    `LandingBody.tsx` (`src/app/preview-landing/LandingBody.tsx`), whose precedence is `const
+    projects = manual.length > 0 ? manual : filtered` — the pinned list wins outright whenever
+    it's non-empty, so `filteredProjects` (the price-aware query, correctly computing ~53) is
+    computed and then silently discarded. The visible 14/15/15 is just "how many of the 19 old
+    pins still resolve to a live project," unrelated to the €1M threshold.
+  - Not fixed here — read-only investigation per instruction. Whether/how to make these three
+    pages show the live-filtered set (drop the pinned array, or add the same
+    filtered-wins-above-a-threshold logic the `projectsSectionBlock` case already has via
+    `MIN_LIVE_RESULTS`) is an open decision, not a code question.
+
 ## 2. Five Track 1 internal-link targets
 
 Blog articles link into these five pages — a broken one means a live internal-link chain is

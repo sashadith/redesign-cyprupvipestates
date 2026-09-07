@@ -306,30 +306,18 @@
 }
 
 /* ------------------------------------------------------------------ errors */
-/* FormStandard positions each message absolutely OVER its field, centred with
-   left:50% + transform:translateX(-50%). On the page-section layout it was
-   meant to sit inside the field; here it landed half-behind the NEXT field.
-   Each message is the element right after its control, so an adjacent-sibling
-   selector reaches it without the hashed class, and all four offsets have to
-   be undone — position:static alone leaves the transform shifting it half its
-   own width to the left. */
-.cvpm__form input + div,
-.cvpm__form textarea + div,
-.cvpm__form .PhoneInput + div,
-.cvpm__form fieldset > div + div {
-  position: static;
-  transform: none;
-  left: auto;
-  right: auto;
-  top: auto;
-  bottom: auto;
-  height: auto;
-  width: auto;
-  max-width: 100%;
-  background: transparent;
-  padding: 0;
-  margin-top: 6px;
-  display: block;
+/* The wrapper (input + div) is FormStandard's own .errorSlot — a CSS-grid
+   accordion (0fr -> 1fr, see FormStandard.module.scss) that animates the
+   error into normal document flow instead of jumping the layout (2026-09-06:
+   static) or floating it absolutely below the field (2026-09-07: reintroduced
+   overlap on long DE/PL/RU validation strings — see that commit). Leave the
+   wrapper's position/display alone here or the animation breaks; only the
+   popup's colour/type treatment applies, targeting the inner text node the
+   ErrorMessage render-prop renders. */
+.cvpm__form input:not([type="checkbox"]) + div > div,
+.cvpm__form textarea + div > div,
+.cvpm__form .PhoneInput + div > div,
+.cvpm__form fieldset > div + div > div {
   text-align: left;
   font-size: 12.5px;
   line-height: 1.35;

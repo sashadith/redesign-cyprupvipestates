@@ -57,11 +57,34 @@
 }
 
 .inputWrapper {
-  // margin-bottom: 10px;
+  // 10px (2026-09-07): the error's own space is now an animated slot
+  // (.errorSlot below), not a static reserve on this margin — see there for
+  // why. This is just the normal gap between fields.
+  margin-bottom: 10px;
   position: relative;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
   flex: 1;
+}
+
+// The CSS grid 0fr->1fr accordion trick: a permanently-rendered wrapper
+// around the (conditionally-rendered) error text, so its height can
+// transition instead of the field jumping when the error mounts/unmounts,
+// and without the position:absolute approach's overlap risk on long
+// messages or its per-context flex/grid exceptions. See FormStandard's
+// identical rule for the full history.
+.errorSlot {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease-out;
+}
+.errorSlot:has(> .error),
+.errorSlot:has(> .errorRadio) {
+  grid-template-rows: 1fr;
+}
+.errorSlot > * {
+  overflow: hidden;
+  min-height: 0;
 }
 
 .icon {
@@ -200,12 +223,11 @@
 }
 
 .error {
-  position: absolute;
-  z-index: 1;
-  bottom: 3px;
-  left: 50%;
-  transform: translateX(-50%);
+  // In flow, inside .errorSlot (above) — the slot is what animates the
+  // space open/closed, so this is just the message's own text styling.
+  margin-top: 4px;
   font-size: 12px;
+  line-height: 1.35;
   color: #e61212;
   width: 100%;
   text-align: center;
@@ -307,10 +329,13 @@
 }
 
 .errorRadio {
+  // In flow, inside .errorSlot (above) — the slot animates the space
+  // open/closed, so no negative margin is needed to tuck it under the
+  // fieldset's own margin-bottom (a negative margin-top inside a
+  // grid-accordion row risks the overflow:hidden clipping the text).
   color: #fff;
   font-size: 13px;
   font-weight: 600;
-  margin-top: -20px;
   margin-bottom: 15px;
 }
 
