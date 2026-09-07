@@ -8,5 +8,5 @@ export async function registerClient(input: { clientName: string | null; redirec
 }
 
 export async function getClient(clientId: string) {
-  return prisma.mcpOAuthClient.findUnique({ where: { clientId }, select: { clientId: true, clientName: true, redirectUris: true } });
+  return prisma.mcpOAuthClient.findUnique({ where: { clientId }, select: { clientId: true, clientName: true, redirectUris: true, createdAt: true } });
 }

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getClient } from "@/lib/mcp/auth/clients";
 import { validateAuthorizeRequest } from "@/lib/mcp/auth/authorizeValidate";
 import { getMcpPublicOrigin } from "@/lib/mcp/publicOrigin";
+import { relative } from "@/lib/mcp/format";
 import { approveAuthorization, denyAuthorization } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -55,6 +56,9 @@ export default async function McpAuthorizePage({ searchParams: raw }: { searchPa
       <h1 className="text-lg font-semibold mb-1">Connect {client?.clientName || "an MCP client"} to the CRM?</h1>
       <p className="text-sm text-[#6B7280] mb-4">
         Signed in as {user.name} ({user.email}). Host: {origin ?? "unknown"}. After approval, the browser is sent to {new URL(v.redirectUri).host}. The connection can be disconnected at any time under Account → Connected apps.
+      </p>
+      <p className="text-sm rounded px-3 py-2 mb-4 bg-[#C0392B]/10 text-[#C0392B]">
+        Only approve this if you clicked Connect in claude.ai yourself, just now. Client id: {client?.clientId} · registered {client ? relative(client.createdAt) : "unknown"}.
       </p>
       <p className="text-sm font-medium mb-1">It will be able to:</p>
       <ul className="text-sm mb-6 list-disc pl-5 space-y-0.5">
