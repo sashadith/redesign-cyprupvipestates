@@ -5,6 +5,7 @@ import { registerGetLead } from "./getLead";
 import { registerMatchProperties } from "./matchProperties";
 import { registerGetProject } from "./getProject";
 import { registerPlaybook } from "./playbook";
+import { registerLogInteraction } from "./logInteraction";
 
 export function registerReadTools(server: McpServer): void {
   registerWorklist(server);
@@ -13,4 +14,10 @@ export function registerReadTools(server: McpServer): void {
   registerMatchProperties(server);
   registerGetProject(server);
   registerPlaybook(server);
+}
+
+// Phase 2 — writes. Registered after the read tools; each one is attributed
+// to the token user and tagged metadata.via = "mcp".
+export function registerWriteTools(server: McpServer): void {
+  registerLogInteraction(server);
 }

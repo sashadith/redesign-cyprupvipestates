@@ -3,7 +3,7 @@ import type { AuthInfo } from "@modelcontextprotocol/server";
 import { verifyAccessToken } from "@/lib/mcp/auth/tokens";
 import { getMcpPublicOrigin } from "@/lib/mcp/publicOrigin";
 import { MCP_INSTRUCTIONS } from "@/lib/mcp/instructions";
-import { registerReadTools } from "@/lib/mcp/tools";
+import { registerReadTools, registerWriteTools } from "@/lib/mcp/tools";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -13,6 +13,7 @@ export const maxDuration = 60;
 const handler = createMcpHandler(
   (server) => {
     registerReadTools(server);
+    registerWriteTools(server);
   },
   {
     serverInfo: { name: "cyprus-vip-estates-crm", version: "1.0.0" },
