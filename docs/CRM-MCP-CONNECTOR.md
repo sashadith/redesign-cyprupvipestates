@@ -87,7 +87,7 @@ A connection can only be approved while a **pairing window** is open in the same
 
 ## Approving an email
 
-1. Claude calls `crm_draft_email`. You receive `[DRAFT · code ABC123] <subject>` from your own address — the email exactly as the lead would get it, with a grey header (recipient, code, expiry).
+1. Claude calls `crm_draft_email`. You receive `[DRAFT] <subject>` from your own address — the email exactly as the lead would get it, with the approval code in the grey header (recipient, code, expiry).
 2. Happy: type `Freigabe ABC123` in the chat. Claude calls `crm_send_email`; the lead gets the email, you get the BCC, the timeline shows EMAIL_OUT (replies thread back as before).
 3. Not happy: tell Claude what to change → new draft, new code; the old one is `SUPERSEDED`.
 4. Codes expire after 24 h; five wrong codes lock the draft; at most 3 drafts per lead per hour and 30 per day. The Cockpit shows a pending draft with **Discard** — there is no Send button there on purpose.

@@ -8,7 +8,7 @@ const p = buildPreviewEmail({
 });
 
 test("subject carries the DRAFT marker and the code", () => {
-  assert.equal(p.subject, "[DRAFT · code 7K3PQ2] Your villa shortlist");
+  assert.equal(p.subject, "[DRAFT] Your villa shortlist");
 });
 
 test("html has the header box with recipient, code and instructions, then the exact rendered email", () => {

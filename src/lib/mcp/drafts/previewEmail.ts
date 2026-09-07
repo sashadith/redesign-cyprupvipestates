@@ -20,7 +20,7 @@ export function buildPreviewEmail(input: {
     `DRAFT for ${input.leadName} · To: ${input.leadEmail}\nApproval code: ${input.approvalCode} · Expires ${input.expiresAtLabel} Cyprus\n` +
     `Reply in the CVE LEADS chat with "Freigabe ${input.approvalCode}" to send, or tell Claude what to change.\n\n------------------------------\n\n`;
   return {
-    subject: `[DRAFT · code ${input.approvalCode}] ${input.subject}`,
+    subject: `[DRAFT] ${input.subject}`,
     html: `${header}${rendered.html}`,
     text: `${textHeader}${rendered.text}`,
   };

@@ -1,7 +1,7 @@
 import { simpleParser } from "mailparser";
 import { prisma } from "@/lib/prisma";
 import { getImapCredentials, withReadOnlyInbox, fetchNewMessages, ImapNotConfiguredError } from "./imapClient";
-import { matchLeadForInboundEmail } from "./matchLead";
+import { matchLeadForInboundEmail, canonicalizeEmail } from "./matchLead";
 import { stripHtmlBlockquotes, stripQuotedReply, stripSignatureBlock } from "./quoteStrip";
 import { stripHtmlToText } from "@/lib/emailSignature";
 import { sendTelegramMessage } from "@/lib/telegram";
@@ -46,7 +46,8 @@ export type PollResult = { fetched: number; matched: number; ambiguous: number; 
  */
 export async function pollInboundEmailForUser(userId: string): Promise<PollResult> {
   const creds = await getImapCredentials(userId); // throws ImapNotConfiguredError — let the caller decide that's a no-op, not a failure
-  const settings = await prisma.userEmailSettings.findUniqueOrThrow({ where: { userId }, select: { imapLastUid: true, imapUidValidity: true } });
+  const settings = await prisma.userEmailSettings.findUniqueOrThrow({ where: { userId }, select: { imapLastUid: true, imapUidValidity: true, fromAddress: true } });
+  const ownCanonicalAddress = canonicalizeEmail(settings.fromAddress);
 
   return withReadOnlyInbox(creds, async (client, mailbox) => {
     const result = await fetchNewMessages(client, mailbox, settings.imapLastUid, settings.imapUidValidity);
@@ -78,6 +79,19 @@ export async function pollInboundEmailForUser(userId: string): Promise<PollResul
 
         const references = Array.isArray(parsed.references) ? parsed.references : parsed.references ? [parsed.references] : [];
         const fromAddress = parsed.from?.value?.[0]?.address ?? "";
+
+        // A message the operator sent to themselves — a draft preview, a test
+        // send, a BCC of their own outgoing mail — is never a lead reply, no
+        // matter what Lead rows happen to share that address. Skip it before
+        // it ever reaches sender-address matching (matchLead.ts's fallback
+        // path), which is exactly what would otherwise file it onto a Lead
+        // whose email happens to equal the operator's own fromAddress.
+        if (ownCanonicalAddress && canonicalizeEmail(fromAddress) === ownCanonicalAddress) {
+          await prisma.userEmailSettings.update({ where: { userId }, data: { imapLastUid: BigInt(msg.uid), imapUidValidity: result.uidValidity } });
+          skipped++;
+          continue;
+        }
+
         const match = await matchLeadForInboundEmail({ inReplyTo: parsed.inReplyTo ?? null, references, fromAddress });
 
         if (!match) {

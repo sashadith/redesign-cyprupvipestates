@@ -69,6 +69,11 @@ export async function createEmailDraft(actor: EmailActor, input: { leadId: strin
         subject: "Email draft created by Claude (awaiting approval)",
         body: `Subject: ${subject}`,
         createdByUserId: actor.userId, createdByName: actor.userName,
+        // Tag this SYSTEM row with the preview's own Message-ID so the inbound
+        // poller's idempotency guard (processInbound.ts — same messageId already
+        // filed) skips the self-addressed preview instead of turning it into a
+        // second, EMAIL_IN timeline entry the model could then read back.
+        messageId: previewMessageId,
         metadata: { via: "mcp", draftId: draft.id },
       },
     });
