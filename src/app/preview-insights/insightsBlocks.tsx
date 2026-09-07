@@ -175,7 +175,7 @@ function InlineRelatedArticle({ block }: { block: any }) {
       label={block?.label === "Related Guide" ? "Related Guide" : "Related Article"}
       title={r.title}
       excerpt={r.excerpt}
-      href={`/preview-insights/${r.slug}`}
+      href={localizedHref(r.language || "en", ["blog", r.slug])}
       canonical={`${SITE_URL}${localizedHref(r.language || "en", ["blog", r.slug])}`}
       schemaType="BlogPosting"
     />
