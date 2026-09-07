@@ -2,10 +2,14 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { runTool } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { LEAD_ROW_SELECT, leadRow } from "../leadRow";
+
+// Stored Lead.phone values keep whatever punctuation the lead typed in
+// ("+49 151 234"); reduce to digits-only so we can compare against a
+// digits-only query regardless of formatting on either side.
+export const digitsOf = (s: string) => s.replace(/\D/g, "");
 
 const STATUSES = ["NEW", "CONTACTED", "COMMUNICATING", "VIEWING_SCHEDULED", "OFFER", "KEEP_CONTACT", "CLOSED", "LOST"] as const;
 
@@ -31,9 +35,19 @@ export function registerSearchLeads(server: McpServer) {
     },
     async (input, ctx) =>
       runTool("crm_search_leads", contextFromAuthInfo(ctx.http?.authInfo), null, async (c) => {
+        // Stored phone numbers are unnormalised ("+49 151 234"); a plain
+        // `contains` on the input digits misses them. Normalise the column
+        // side with a raw query instead, gated on a minimum digit count so
+        // short/no-digit queries (e.g. a name) don't trigger it.
+        let phoneIds: string[] = [];
+        if (input.query && digitsOf(input.query).length >= 5) {
+          const digits = digitsOf(input.query);
+          const phoneMatches = await prisma.$queryRaw<{ id: string }[]>`SELECT id FROM leads WHERE phone IS NOT NULL AND regexp_replace(phone, '[^0-9]', '', 'g') LIKE ${`%${digits}%`}`;
+          phoneIds = phoneMatches.map((r) => r.id);
+        }
         const where: Prisma.LeadWhereInput = {
           deletedAt: null,
-          ...(input.bucket === "partner" ? { source: "PARTNER" } : { ...EXCLUDE_NEWSLETTER, source: { notIn: ["NEWSLETTER", "PARTNER"] } }),
+          ...(input.bucket === "partner" ? { source: "PARTNER" } : { source: { notIn: ["NEWSLETTER", "PARTNER"] } }),
           ...(input.status ? { status: input.status } : {}),
           ...(input.assignedToMe ? { assignedToId: c.userId } : {}),
           ...(input.hasEmail === true ? { email: { not: null } } : input.hasEmail === false ? { email: null } : {}),
@@ -44,7 +58,8 @@ export function registerSearchLeads(server: McpServer) {
                   { firstName: { contains: input.query, mode: "insensitive" } },
                   { lastName: { contains: input.query, mode: "insensitive" } },
                   { email: { contains: input.query, mode: "insensitive" } },
-                  { phone: { contains: input.query.replace(/\s+/g, "") } },
+                  { phone: { contains: input.query.trim() } },
+                  ...(phoneIds.length ? [{ id: { in: phoneIds } }] : []),
                 ],
               }
             : {}),
