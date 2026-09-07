@@ -7,6 +7,9 @@ export function mapWorklistItems(items: ActionItem[]) {
     .filter((i) => i.id.startsWith("lead-followup:"))
     .map((i) => ({ leadId: i.id.slice("lead-followup:".length), severity: i.severity, title: i.title, description: i.description, since: i.since }))
     .sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || a.since.getTime() - b.since.getTime());
-  const presentationIds = items.filter((i) => i.id.startsWith("presentation-")).map((i) => i.id.split(":")[1]).filter(Boolean);
-  return { leadFollowups, presentationIds };
+  const presentationItems = items
+    .filter((i) => i.id.startsWith("presentation-"))
+    .map((i) => ({ presentationId: i.id.split(":")[1], severity: i.severity, reason: i.title, detail: i.description, since: i.since }))
+    .filter((p) => Boolean(p.presentationId));
+  return { leadFollowups, presentationItems };
 }

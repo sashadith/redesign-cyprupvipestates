@@ -3,6 +3,7 @@ import type { McpServer } from "@modelcontextprotocol/server";
 import type { LeadInteractionType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { crmRules } from "@/lib/actionCenter/rules/crm";
+import { filterSnoozed } from "@/lib/actionCenter/snooze";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { LAST_CONTACT_TYPES } from "@/app/admin/(panel)/crm/leadListShared";
 import { runTool } from "../toolWrapper";
@@ -19,15 +20,19 @@ export function registerWorklist(server: McpServer) {
     {
       title: "Lead worklist",
       description:
-        "Leads that need attention right now, most urgent first — the same follow-up rules as the admin Action Center (never contacted, stale >7 days, viewing without follow-up, due nextFollowUpAt). Call this first in a session. Also returns the count of new leads in the last 7 days.",
+        "Leads that need attention right now, most urgent first — the same follow-up rules as the admin Action Center (never contacted, stale >7 days, viewing without follow-up), plus the leads whose nextFollowUpAt is due (this tool's own query, not subject to Action Center snoozes) and the count of new leads in the last 7 days. Call this first in a session.",
       inputSchema: Input,
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
     async ({ limit }, ctx) =>
       runTool("crm_worklist", contextFromAuthInfo(ctx.http?.authInfo), null, async () => {
-        const items = await crmRules();
-        const { leadFollowups, presentationIds } = mapWorklistItems(items);
-        const leadIds = leadFollowups.slice(0, limit).map((f) => f.leadId);
+        const items = await filterSnoozed(await crmRules());
+        const { leadFollowups, presentationItems } = mapWorklistItems(items);
+        // Query leads/presentations for ALL ids (not pre-sliced by limit) — the
+        // byId.has filter below can drop ids (deleted/newsletter leads), so
+        // slicing before that filter would under-fill the output for no reason.
+        const leadIds = leadFollowups.map((f) => f.leadId);
+        const presentationIds = presentationItems.map((p) => p.presentationId);
         const [leads, presentations, newLeadsLast7Days, dueFollowUps] = await Promise.all([
           prisma.lead.findMany({
             where: { id: { in: leadIds }, deletedAt: null, ...EXCLUDE_NEWSLETTER },
@@ -51,6 +56,7 @@ export function registerWorklist(server: McpServer) {
           }),
         ]);
         const byId = new Map(leads.map((l) => [l.id, l]));
+        const presentationItemById = new Map(presentationItems.map((p) => [p.presentationId, p]));
         return {
           followUps: leadFollowups
             .filter((f) => byId.has(f.leadId))
@@ -65,9 +71,13 @@ export function registerWorklist(server: McpServer) {
               };
             }),
           dueFollowUps: dueFollowUps.map((l) => ({ leadId: l.id, name: `${l.firstName} ${l.lastName}`.trim(), status: l.status, dueAt: fmtDate(l.nextFollowUpAt) })),
-          engagedPresentations: presentations.map((p) => ({
-            leadId: p.leadId, name: `${p.lead.firstName} ${p.lead.lastName}`.trim(), presentationId: p.id, views: p._count.views, sentAt: fmtDate(p.createdAt), expiresAt: fmtDate(p.expiresAt),
-          })),
+          presentationItems: presentations.map((p) => {
+            const item = presentationItemById.get(p.id);
+            return {
+              leadId: p.leadId, name: `${p.lead.firstName} ${p.lead.lastName}`.trim(), presentationId: p.id, views: p._count.views, sentAt: fmtDate(p.createdAt), expiresAt: fmtDate(p.expiresAt),
+              severity: item?.severity ?? null, reason: item?.reason ?? null, detail: item?.detail ?? null, since: fmtDate(item?.since),
+            };
+          }),
           newLeadsLast7Days,
           totalFollowUpItems: leadFollowups.length,
         };

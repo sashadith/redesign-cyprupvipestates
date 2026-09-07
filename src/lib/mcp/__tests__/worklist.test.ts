@@ -14,5 +14,5 @@ test("splits lead follow-ups from presentation items and keeps URGENT first", ()
   ]);
   assert.deepEqual(r.leadFollowups.map((x) => x.leadId), ["L1", "L2"]);
   assert.equal(r.leadFollowups[0].severity, "URGENT");
-  assert.deepEqual(r.presentationIds, ["P1", "P2"]);
+  assert.deepEqual(r.presentationItems.map((x) => [x.presentationId, x.severity]), [["P1", "ACTION"], ["P2", "INFO"]]);
 });
