@@ -103,9 +103,15 @@ where a helper needs a `userId` parameter instead of reading the session
 
 ### Hosts
 
-The server derives its own base URL from the request host, so the same build
-answers on staging (`design.cyprusvipestates.com`) and production. OAuth
-metadata, redirect handling and the protected-resource URL are all host-relative.
+The server's public base URL comes from a runtime env var, `MCP_PUBLIC_ORIGIN`
+(`https://cyprusvipestates.com` on production, `https://design.cyprusvipestates.com`
+on staging, `http://localhost:3000` locally), so the same build answers on
+both hosts. Not derived from the request: nginx's `proxy_set_header`
+configuration lives outside this repo, so forwarding headers cannot be relied
+on, and `NEXT_PUBLIC_SITE_URL` is build-time inlined to `:3000` on the VPS
+(see `src/lib/seo.ts`). If the variable is missing the discovery endpoints
+answer 500 with a clear message rather than emitting wrong URLs. OAuth
+metadata, redirects and the protected-resource URL all use this origin.
 Tokens are not host-bound; a token issued on staging works on production and
 vice versa (same database). This is acceptable for one operator and is noted
 in the admin "Connected apps" page by showing the issuing host.
