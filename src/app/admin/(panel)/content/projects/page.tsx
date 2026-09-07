@@ -6,15 +6,78 @@ import DeactivateControl from "./DeactivateControl";
 export const dynamic = "force-dynamic";
 const LOCALES = ["en", "de", "pl", "ru"];
 
-export default async function ProjectsAdmin({ searchParams }: { searchParams: { lang?: string; q?: string } }) {
+// Sortable columns. Anything not in here is ignored rather than passed to
+// Prisma, so a hand-edited ?sort= cannot reach the query.
+const SORTS: Record<string, (dir: "asc" | "desc") => any[]> = {
+  // city and price are nullable, and Postgres sorts NULLs first on DESC —
+  // which would open the list with rows that have nothing to show. Push them
+  // to the end in both directions instead.
+  title: (dir) => [{ title: dir }],
+  city: (dir) => [{ city: { sort: dir, nulls: "last" } }, { title: "asc" }],
+  price: (dir) => [{ price: { sort: dir, nulls: "last" } }, { title: "asc" }],
+  status: (dir) => [{ status: dir }, { title: "asc" }],
+};
+// The list's own order when nothing is chosen: featured first, then the manual
+// listing priority, then alphabetical. Kept as the default because it is the
+// order the public site uses.
+const DEFAULT_ORDER = [{ isFeatured: "desc" as const }, { listingPriority: "desc" as const }, { title: "asc" as const }];
+
+const STATUS_FILTERS = [
+  { key: "", label: "All" },
+  { key: "PUBLISHED", label: "Active" },
+  { key: "ARCHIVED", label: "Deactivated" },
+];
+
+export default async function ProjectsAdmin({
+  searchParams,
+}: {
+  searchParams: { lang?: string; q?: string; status?: string; sort?: string; dir?: string };
+}) {
   const lang = LOCALES.includes(searchParams.lang ?? "") ? searchParams.lang! : "en";
   const q = (searchParams.q ?? "").trim();
-  const projects = await prisma.project.findMany({
-    where: { language: lang as any, ...(q ? { title: { contains: q, mode: "insensitive" } } : {}) },
-    orderBy: [{ isFeatured: "desc" }, { listingPriority: "desc" }, { title: "asc" }],
-    take: 300,
-    include: { supersededByDevelopment: { select: { slug: true } } },
-  });
+  const status = STATUS_FILTERS.some((s) => s.key && s.key === searchParams.status) ? searchParams.status! : "";
+  const sort = searchParams.sort && SORTS[searchParams.sort] ? searchParams.sort : "";
+  const dir: "asc" | "desc" = searchParams.dir === "desc" ? "desc" : "asc";
+
+  const where = {
+    language: lang as any,
+    ...(q ? { title: { contains: q, mode: "insensitive" as const } } : {}),
+    ...(status ? { status: status as any } : {}),
+  };
+  const [projects, totalForLang] = await Promise.all([
+    prisma.project.findMany({
+      where,
+      orderBy: sort ? SORTS[sort](dir) : DEFAULT_ORDER,
+      take: 300,
+      include: { supersededByDevelopment: { select: { slug: true } } },
+    }),
+    // Shown next to the filtered count, so "51 of 221" reads as a filter
+    // rather than as projects having gone missing.
+    prisma.project.count({ where: { language: lang as any } }),
+  ]);
+
+  // Every control has to carry the others, or clicking a sort would silently
+  // drop the search and the status filter.
+  const qs = (o: Record<string, string>) => {
+    const p = new URLSearchParams({
+      lang,
+      ...(q ? { q } : {}),
+      ...(status ? { status } : {}),
+      ...(sort ? { sort, dir } : {}),
+    });
+    for (const [k, v] of Object.entries(o)) v ? p.set(k, v) : p.delete(k);
+    return `/admin/content/projects?${p.toString()}`;
+  };
+  // Clicking the active column flips direction; a new column starts ascending.
+  const sortHref = (col: string) => qs({ sort: col, dir: sort === col && dir === "asc" ? "desc" : "asc" });
+  const SortHead = ({ col, label, align = "left" }: { col: string; label: string; align?: "left" | "right" }) => (
+    <th className={`text-${align} font-medium px-4 py-2.5`}>
+      <Link href={sortHref(col)} className="inline-flex items-center gap-1 hover:text-[#111827]">
+        {label}
+        <span className={sort === col ? "text-[#1B4B43]" : "text-[#D1D5DB]"}>{sort === col && dir === "desc" ? "\u2193" : "\u2191"}</span>
+      </Link>
+    </th>
+  );
 
   // ACTIVATE/DEACTIVATE cascades across every locale row of the same real
   // project — batch-fetch sibling locales per translationGroupId so the
@@ -41,26 +104,41 @@ export default async function ProjectsAdmin({ searchParams }: { searchParams: { 
       <div className="flex items-center gap-4 mb-4">
         <div className="flex gap-1">
           {LOCALES.map((l) => (
-            <Link key={l} href={`/admin/content/projects?lang=${l}`}
+            <Link key={l} href={qs({ lang: l })}
               className={`rounded-md px-3 py-1.5 text-sm ${l === lang ? "bg-[#1B4B43] text-white" : "bg-white border border-[#E5E7EB] text-[#111827]"}`}>
               {l.toUpperCase()}
             </Link>
           ))}
         </div>
         <form className="flex-1 max-w-xs">
+          {/* Hidden fields, not just the visible input: submitting the search
+              otherwise reloads the page with lang/status/sort dropped. */}
           <input type="hidden" name="lang" value={lang} />
+          {status && <input type="hidden" name="status" value={status} />}
+          {sort && <input type="hidden" name="sort" value={sort} />}
+          {sort && <input type="hidden" name="dir" value={dir} />}
           <input name="q" defaultValue={q} placeholder="Search title…" className="w-full rounded-md border border-[#E5E7EB] px-3 py-1.5 text-sm" />
         </form>
-        <span className="text-sm text-[#6B7280]">{projects.length} shown</span>
+        <div className="flex gap-1">
+          {STATUS_FILTERS.map((f) => (
+            <Link key={f.key || "all"} href={qs({ status: f.key })}
+              className={`rounded-full px-3 py-1 text-sm border ${f.key === status ? "bg-[#1B4B43] text-white border-[#1B4B43]" : "border-[#E5E7EB] text-[#374151] hover:bg-[#F8F9FA]"}`}>
+              {f.label}
+            </Link>
+          ))}
+        </div>
+        <span className="text-sm text-[#6B7280] whitespace-nowrap">
+          {projects.length}{(status || q) && projects.length !== totalForLang ? ` of ${totalForLang}` : ""} shown
+        </span>
       </div>
       <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-[#F8F9FA] text-[#6B7280]">
             <tr>
-              <th className="text-left font-medium px-4 py-2.5">Title</th>
-              <th className="text-left font-medium px-4 py-2.5">City</th>
-              <th className="text-left font-medium px-4 py-2.5">Price</th>
-              <th className="text-left font-medium px-4 py-2.5">Status</th>
+              <SortHead col="title" label="Title" />
+              <SortHead col="city" label="City" />
+              <SortHead col="price" label="Price" />
+              <SortHead col="status" label="Status" />
               <th className="text-left font-medium px-4 py-2.5">Flags</th>
               <th className="text-left font-medium px-4 py-2.5"></th>
             </tr>
