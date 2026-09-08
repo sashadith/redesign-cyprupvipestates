@@ -96,3 +96,10 @@ test("pickPrevSnapshots keeps the oldest row per development", () => {
   assert.equal(m.get("a")?.capturedAt.toISOString(), "2026-09-01T00:00:00.000Z");
   assert.equal(m.get("b")?.capturedAt.toISOString(), "2026-09-02T00:00:00.000Z");
 });
+
+test("diffSnapshot: a priceFrom that starts at 0 reports the move without a percentage", () => {
+  const ref = devRef(d());
+  const prev = { capturedAt: from, publishStatus: "published", priceFrom: 0, priceTo: null, unitsTotal: 0, unitsAvailable: 0, units: [] };
+  const ev = diffSnapshot(ref, prev, { ...prev, priceFrom: 250_000 }, now);
+  assert.deepEqual(ev.map((e) => [e.type, e.from, e.to, e.pct]), [["price_from_changed", 0, 250_000, null]]);
+});

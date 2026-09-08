@@ -80,7 +80,7 @@ export function diffSnapshot(ref: DevRef, prev: SnapshotShape & { capturedAt: Da
     out.push({ ...base, type: "availability_changed", from: prev.unitsAvailable, to: current.unitsAvailable, lastUnits: current.unitsAvailable <= 2 && current.unitsAvailable < prev.unitsAvailable });
   }
   if (prev.priceFrom != null && current.priceFrom != null && prev.priceFrom !== current.priceFrom) {
-    out.push({ ...base, type: "price_from_changed", from: prev.priceFrom, to: current.priceFrom, pct: pct(prev.priceFrom, current.priceFrom) });
+    out.push({ ...base, type: "price_from_changed", from: prev.priceFrom, to: current.priceFrom, pct: prev.priceFrom > 0 ? pct(prev.priceFrom, current.priceFrom) : null });
   }
   const curByKey = new Map(current.units.map((u) => [u.key, u]));
   const statusChanges: { key: string; label: string | null; from: string; to: string; price: number | null }[] = [];
