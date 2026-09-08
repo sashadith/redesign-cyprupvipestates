@@ -180,6 +180,9 @@ export async function GET(req: NextRequest) {
     // buildFeedDigestMessage for the section order.
     const notifications: Promise<void>[] = [];
     const digest = buildFeedDigestMessage({
+      newProjects: results
+        .filter((r) => r.createdProjects.length > 0)
+        .map((r) => ({ dev: r.dev, projects: r.createdProjects })),
       newUnits: results
         .filter((r) => r.unitsCreatedLines.length > 0)
         .map((r) => ({ dev: r.dev, lines: r.unitsCreatedLines })),
@@ -192,7 +195,7 @@ export async function GET(req: NextRequest) {
         .filter((r) => r.blocked)
         .map((r) => ({ dev: r.dev, missing: r.blockedMissing ?? 0, total: r.blockedTotal ?? 0, message: r.blockedMessage })),
     });
-    if (digest) notifications.push(sendFeedNotification(digest.text, digest.subject));
+    if (digest) notifications.push(sendFeedNotification(digest.text, digest.subject, { html: digest.html, telegram: digest.telegram }));
     // Best-effort: a Telegram/email hiccup must never fail the cron itself —
     // the sync already succeeded and is logged; a missed notification is
     // recoverable from the Action Center (feed-incomplete:/sync-fail: rules)
