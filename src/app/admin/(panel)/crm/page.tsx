@@ -78,10 +78,13 @@ const TABLE_HEAD = (
 // when empty (same "don't render empty sections" rule the old Lost/Closed
 // panels already followed).
 function LeadBlockSection({
-  title, dot, badge, leads, bandById, contactImplyingStatuses,
+  title, dot, flame, badge, leads, bandById, contactImplyingStatuses,
 }: {
   title: string;
   dot?: string;
+  /** Flame ahead of the title — the same shape and fire colour the Hot column
+      uses in the rows below, so the heading and the rows say it the same way. */
+  flame?: boolean;
   /** Small pill next to the heading — used by the New-leads block. */
   badge?: string;
   leads: LeadRowData[];
@@ -94,6 +97,7 @@ function LeadBlockSection({
        blocks instead of reading one continuous stream. */
     <div className="mb-6 mt-8 first:mt-0">
       <h2 className="flex items-center gap-2 text-[15px] font-semibold text-[#111827] tracking-[-0.01em] mb-2.5">
+        {flame && <FaFire size={15} className="shrink-0 text-[#D2410A]" />}
         {dot && <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${dot}`} />}
         {title}
         {/* Same blue as the NEW status pill in the rows below — the two say the
@@ -277,7 +281,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
       ) : (
         <>
           <LeadBlockSection title="New leads" badge="NEW" leads={fresh} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
-          <LeadBlockSection title="Hot leads" leads={hot} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
+          <LeadBlockSection title="Hot leads" flame leads={hot} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
           <LeadBlockSection title="Overdue" dot={BAND_STYLE.RED.dot} leads={red} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
           <LeadBlockSection title="Due soon" dot={BAND_STYLE.YELLOW.dot} leads={yellow} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
           <LeadBlockSection title="On track" dot={BAND_STYLE.GREEN.dot} leads={green} bandById={bandById} contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES} />
