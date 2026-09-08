@@ -80,3 +80,19 @@ test("onlyAvailable=false keeps sold-out developments", () => {
   const r = filterAndRank(rows, { onlyAvailable: false }, now);
   assert.ok(r.rows.some((x) => x.name === "Delta" && x.availability.soldOut));
 });
+
+test("query, developer and stage are case-insensitive contains-matches", () => {
+  assert.deepEqual(filterAndRank(rows, { query: "ZET" }, now).rows.map((x) => x.name), ["Zeta"]);
+  const kappa = dev({ id: "j", publicName: "Kappa", developer: "Aristo Developers", units: [unit({ id: "j1", price: 1 })] });
+  assert.equal(filterAndRank([kappa, ...rows], { developer: "aristo" }, now).total, 1);
+  assert.equal(filterAndRank(rows, { developer: "nobody" }, now).total, 0);
+  const lambda = dev({ id: "k", publicName: "Lambda", stage: "Under Construction", units: [unit({ id: "k1", price: 1 })] });
+  assert.deepEqual(filterAndRank([lambda, ...rows], { stage: "construction" }, now).rows.map((x) => x.name), ["Lambda"]);
+});
+
+test("a development without a district is matched on its town", () => {
+  const mu = dev({ id: "m", publicName: "Mu", district: null, town: "Larnaca", units: [unit({ id: "m1", price: 1 })] });
+  const r = filterAndRank([mu, ...rows], { districts: ["larnaca"] }, now);
+  assert.deepEqual(r.rows.map((x) => x.name), ["Mu"]);
+  assert.deepEqual(r.summary.byDistrict, { Larnaca: 1 });
+});
