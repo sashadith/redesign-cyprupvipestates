@@ -7,16 +7,18 @@ const EXPECTED = [
   "crm_get_lead",
   "crm_get_playbook",
   "crm_get_project",
+  "crm_inventory_changes",
   "crm_list_drafts",
   "crm_log_interaction",
   "crm_match_properties",
   "crm_search_leads",
+  "crm_search_projects",
   "crm_send_email",
   "crm_update_lead",
   "crm_worklist",
 ];
 
-test("READ_TOOL_NAMES + WRITE_TOOL_NAMES union is exactly the eleven registered tools", () => {
+test("READ_TOOL_NAMES + WRITE_TOOL_NAMES union is exactly the thirteen registered tools", () => {
   const union = [...READ_TOOL_NAMES, ...WRITE_TOOL_NAMES].slice().sort();
   assert.deepEqual(union, EXPECTED);
 });
