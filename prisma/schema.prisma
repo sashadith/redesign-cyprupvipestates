@@ -990,6 +990,30 @@ model McpToolCall {
   @@map("mcp_tool_calls")
 }
 
+// Nightly catalogue snapshot for crm_inventory_changes (MCP connector Phase 3,
+// 2026-09-08). One row per development per capture; `units` is
+// [{ key, label, status, price }] over listedUnits(), where key is
+// ref || feedRef || id (published developments keep unit rows across syncs
+// and are matched by ref; "ready" ones are rewritten nightly, so only ref
+// survives). Written only by /api/cron/inventory-snapshot, pruned there after
+// 180 days. Deliberately NO relation to Development: an archived project's
+// history must stay readable inside the retention window.
+model DevelopmentSnapshot {
+  id             String   @id @default(uuid())
+  developmentId  String
+  capturedAt     DateTime @default(now())
+  publishStatus  String
+  priceFrom      Int?
+  priceTo        Int?
+  unitsTotal     Int
+  unitsAvailable Int
+  units          Json
+
+  @@index([developmentId, capturedAt])
+  @@index([capturedAt])
+  @@map("development_snapshots")
+}
+
 // ─── ANALYTICS (self-hosted) ─────────────────────────────────────────────────
 model PageView {
   id          Int      @id @default(autoincrement())
