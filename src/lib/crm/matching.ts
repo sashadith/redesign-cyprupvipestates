@@ -92,7 +92,7 @@ const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 
 // "studio" → 0, else the first number found ("2 bed" / "2" / "2-3" → 2). Beds is
 // a free-text string across every feed adapter, never a clean int.
-function parseBeds(raw: string | null | undefined): number | null {
+export function parseBeds(raw: string | null | undefined): number | null {
   const s = (raw || "").trim().toLowerCase();
   if (!s) return null;
   if (s.includes("studio")) return 0;
@@ -100,11 +100,12 @@ function parseBeds(raw: string | null | undefined): number | null {
   return m ? parseInt(m[0], 10) : null;
 }
 
+// Order matters: "townhouse"/"penthouse" contain "house", so they must be matched before the villa aliases.
 const TYPE_ALIASES: Record<string, string> = {
   apartment: "apartment", flat: "apartment",
-  villa: "villa", house: "villa",
   townhouse: "townhouse",
   penthouse: "penthouse",
+  villa: "villa", house: "villa",
   /* Commercial stock: 68 units are typed "Office", ~50 more carry a commercial
      label ("Shops / Commercial Buildings", "Commercial", "Shop"). Without these
      aliases normalizeType returns null for all of them, so an Office lead would
@@ -112,7 +113,7 @@ const TYPE_ALIASES: Record<string, string> = {
      carry "Office", the value only became selectable now. */
   office: "office", commercial: "office", shop: "office", retail: "office",
 };
-function normalizeType(raw: string | null | undefined): string | null {
+export function normalizeType(raw: string | null | undefined): string | null {
   const s = (raw || "").trim().toLowerCase();
   if (!s) return null;
   for (const [k, v] of Object.entries(TYPE_ALIASES)) if (s.includes(k)) return v;
@@ -128,10 +129,27 @@ function inRange(price: number, lo: number | null, hi: number | null): boolean {
   if (hi != null && price > hi) return false;
   return true;
 }
-function rangesOverlap(aLo: number | null, aHi: number | null, bLo: number | null, bHi: number | null): boolean {
+export function rangesOverlap(aLo: number | null, aHi: number | null, bLo: number | null, bHi: number | null): boolean {
   if (aLo != null && bHi != null && aLo > bHi) return false;
   if (aHi != null && bLo != null && aHi < bLo) return false;
   return true;
+}
+
+/** District → area cascade shared by matching and the MCP catalogue search.
+ *  `districts`/`areas` are already lower-cased; a development without a
+ *  district is matched on its town. areaMatches is only ever true inside a
+ *  matching district. */
+export function locationMatch(
+  dev: { district: string | null; town: string | null; area: string | null },
+  districts: string[],
+  areas: string[],
+): { districtMatches: boolean; areaMatches: boolean } {
+  if (districts.length === 0) return { districtMatches: false, areaMatches: false };
+  const devDistrictKey = (dev.district || dev.town || "").toLowerCase();
+  const devAreaKey = (dev.area || "").toLowerCase();
+  const districtMatches = !!devDistrictKey && districts.some((sel) => devDistrictKey.includes(sel) || sel.includes(devDistrictKey));
+  const areaMatches = districtMatches && areas.length > 0 && !!devAreaKey && areas.some((sel) => devAreaKey.includes(sel) || sel.includes(devAreaKey));
+  return { districtMatches, areaMatches };
 }
 
 export async function matchDevelopmentsForLead(lead: LeadLike, filters: MatchFilters = {}): Promise<DevelopmentMatch[]> {
@@ -256,11 +274,8 @@ export async function matchDevelopmentsForLead(lead: LeadLike, filters: MatchFil
     // a different district entirely = 0.
     let locationScore = 12;
     if (hasLocationCriteria) {
-      const devDistrictKey = (district || town || "").toLowerCase();
-      const devAreaKey = (area || "").toLowerCase();
-      const districtMatches = !!devDistrictKey && districts.some((sel) => devDistrictKey.includes(sel) || sel.includes(devDistrictKey));
+      const { districtMatches, areaMatches } = locationMatch({ district, town, area }, districts, areas);
       if (areas.length > 0) {
-        const areaMatches = !!devAreaKey && areas.some((sel) => devAreaKey.includes(sel) || sel.includes(devAreaKey));
         locationScore = areaMatches ? 20 : districtMatches ? 10 : 0;
       } else {
         locationScore = districtMatches ? 20 : 0;
