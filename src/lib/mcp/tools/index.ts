@@ -6,6 +6,7 @@ import { registerMatchProperties } from "./matchProperties";
 import { registerGetProject } from "./getProject";
 import { registerPlaybook } from "./playbook";
 import { registerSearchProjects } from "./searchProjects";
+import { registerInventoryChanges } from "./inventoryChanges";
 import { registerLogInteraction } from "./logInteraction";
 import { registerUpdateLead } from "./updateLead";
 import { registerDraftEmail } from "./draftEmail";
@@ -20,6 +21,7 @@ export function registerReadTools(server: McpServer): void {
   registerGetProject(server);
   registerPlaybook(server);
   registerSearchProjects(server);
+  registerInventoryChanges(server);
 }
 
 // Phase 2 — writes. Registered after the read tools; each one is attributed
