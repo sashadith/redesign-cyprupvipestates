@@ -68,7 +68,7 @@ await client.connect(transport);
 assert(/crm_get_project/.test(client.getInstructions() || ""), "server instructions received");
 const tools = await client.listTools();
 const names = tools.tools.map((t) => t.name).sort();
-assert(JSON.stringify(names) === JSON.stringify(["crm_draft_email", "crm_get_lead", "crm_get_playbook", "crm_get_project", "crm_list_drafts", "crm_log_interaction", "crm_match_properties", "crm_search_leads", "crm_send_email", "crm_update_lead", "crm_worklist"]), `eleven tools listed: ${names.join(", ")}`);
+assert(JSON.stringify(names) === JSON.stringify(["crm_draft_email", "crm_get_lead", "crm_get_playbook", "crm_get_project", "crm_inventory_changes", "crm_list_drafts", "crm_log_interaction", "crm_match_properties", "crm_search_leads", "crm_search_projects", "crm_send_email", "crm_update_lead", "crm_worklist"]), `thirteen tools listed: ${names.join(", ")}`);
 
 const parse = (r) => JSON.parse(r.content[0].text);
 const worklist = parse(await client.callTool({ name: "crm_worklist", arguments: { limit: 5 } }));
@@ -94,6 +94,13 @@ const playbook = parse(await client.callTool({ name: "crm_get_playbook", argumen
 assert(playbook.contactPhone && playbook.sections.length > 0, "crm_get_playbook returns sections");
 const proj = parse(await client.callTool({ name: "crm_get_project", arguments: { query: "a" } }));
 assert(Array.isArray(proj.candidates), `crm_get_project query: ${proj.candidates.length} candidates`);
+
+const catalogue = parse(await client.callTool({ name: "crm_search_projects", arguments: { pageSize: 3 } }));
+assert(catalogue.total > 0 && catalogue.rows.every((r) => r.publishStatus === "published" && r.publicUrl && !("feedKey" in r)), `crm_search_projects: ${catalogue.total} published projects, first page ${catalogue.rows.length}`);
+const badCompletion = await client.callTool({ name: "crm_search_projects", arguments: { completionBefore: "June 2027" } });
+assert(badCompletion.isError === true, "crm_search_projects rejects a non YYYY/YYYY-MM completionBefore");
+const changes = parse(await client.callTool({ name: "crm_inventory_changes", arguments: { days: 30, limit: 5 } }));
+assert(typeof changes.coverage?.snapshotBased === "boolean" && Array.isArray(changes.events), `crm_inventory_changes: ${changes.total} events, snapshotBased=${changes.coverage.snapshotBased}`);
 
 const drafts = parse(await client.callTool({ name: "crm_list_drafts", arguments: {} }));
 assert(Array.isArray(drafts.drafts) && drafts.drafts.every((d) => !("approvalCode" in d)), `crm_list_drafts: ${drafts.drafts.length} pending, no codes`);
