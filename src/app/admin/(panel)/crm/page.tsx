@@ -25,17 +25,48 @@ const BLOCK_PREVIEW = 6;
 
 export const dynamic = "force-dynamic";
 
+/* Every block on this page renders its own <table>, and with the browser's
+   automatic layout each one sized its columns to its own content — so "Status"
+   sat in a different place in Hot leads than in Overdue, and the eye had to
+   re-find each column per block. One shared colgroup plus table-fixed makes
+   the geometry identical everywhere. The percentages are the shared contract;
+   min-w keeps them from crushing on a narrow window, where the wrapper's
+   overflow-x-auto takes over. */
+/* Secondary action button: quiet by default, fills in on hover so it is
+   obvious the whole shape is the target and not just the words. */
+const SECONDARY_BTN =
+  "inline-flex items-center rounded-md border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#1B4B43] transition-colors " +
+  "hover:bg-[#F3F6F5] hover:border-[#1B4B43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B4B43] focus-visible:ring-offset-2";
+
+const TABLE_COLS = (
+  <colgroup>
+    <col className="w-[18%]" />{/* Name */}
+    <col className="w-[5%]" />{/* Hot */}
+    <col className="w-[11%]" />{/* Last contact */}
+    <col className="w-[10%]" />{/* Max budget */}
+    <col className="w-[13%]" />{/* Status */}
+    {/* 10%, not 8%: the two-word header needs the room or it wraps. */}
+    <col className="w-[10%]" />{/* Country / Lang */}
+    <col className="w-[10%]" />{/* Assigned */}
+    <col className="w-[10%]" />{/* Received */}
+    {/* Holds the move button and the delete button side by side. Since the
+        move menu shrank to a 32px square this needs 13%, not the 18% the
+        labelled dropdown used to demand. */}
+    <col className="w-[13%]" />{/* actions */}
+  </colgroup>
+);
+
 const TABLE_HEAD = (
   <thead className="bg-[#F8F9FA] text-[#6B7280]">
     <tr>
       <th className="text-left font-medium px-4 py-2.5">Name</th>
       <th className="text-center font-medium px-4 py-2.5">Hot</th>
       <th className="text-left font-medium px-4 py-2.5">Last contact</th>
-      <th className="text-left font-medium px-4 py-2.5">Max budget</th>
+      <th className="text-right font-medium px-4 py-2.5">Max budget</th>
       <th className="text-left font-medium px-4 py-2.5">Status</th>
-      <th className="text-center font-medium px-4 py-2.5">Country</th>
+      <th className="text-center font-medium px-4 py-2.5">Country / Lang</th>
       <th className="text-left font-medium px-4 py-2.5">Assigned</th>
-      <th className="text-left font-medium px-4 py-2.5">Received / Preferred</th>
+      <th className="text-left font-medium px-4 py-2.5">Received</th>
       <th className="text-right font-medium px-4 py-2.5"></th>
     </tr>
   </thead>
@@ -57,8 +88,10 @@ function LeadBlockSection({
 }) {
   if (!leads.length) return null;
   return (
-    <div className="mb-6">
-      <h2 className="flex items-center gap-2 text-sm font-semibold text-[#374151] mb-2">
+    /* More air above a section than inside it, so the eye groups rows into
+       blocks instead of reading one continuous stream. */
+    <div className="mb-6 mt-8 first:mt-0">
+      <h2 className="flex items-center gap-2 text-[15px] font-semibold text-[#111827] tracking-[-0.01em] mb-2.5">
         {dot && <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${dot}`} />}
         {title}
         {/* Same blue as the NEW status pill in the rows below — the two say the
@@ -70,14 +103,15 @@ function LeadBlockSection({
             {badge}
           </span>
         )}
-        <span className="font-normal text-[#9CA3AF]">({leads.length})</span>
+        <span className="rounded-full bg-[#F3F4F6] px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-[#6B7280]">{leads.length}</span>
       </h2>
       {/* overflow-x-auto, not overflow-hidden: the actions column now carries a
           move menu as well as the delete button, and this table sizes its columns
           automatically. Clipping would put a control out of reach on a narrow
           window; scrolling only makes it a scroll away. */}
       <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[1040px] table-fixed text-sm">
+          {TABLE_COLS}
           {TABLE_HEAD}
           <tbody className="divide-y divide-[#E5E7EB]">
             <LeadBlockRows previewCount={BLOCK_PREVIEW}>
@@ -209,11 +243,15 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
     <div>
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-semibold">CRM / Leads <span className="text-base font-normal text-[#6B7280]">({activeTotal})</span></h1>
-        <div className="flex items-center gap-4">
-          <Link href={`/admin/crm/export${leadQueryString(searchParams, { page: "" })}`} className="text-sm text-[#1B4B43] hover:underline">Export CSV ↓</Link>
-          <Link href="/admin/crm/board" className="text-sm text-[#1B4B43] hover:underline">Pipeline view →</Link>
-          <Link href="/admin/crm/calendar" className="text-sm text-[#1B4B43] hover:underline">Calendar →</Link>
-          <Link href="/admin/crm/new" className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-4 py-2 hover:bg-[#142E2D]">+ New lead</Link>
+        {/* Buttons, not underlined links: these three sit next to a primary
+            button and do the same kind of thing (go somewhere / take something
+            away), so they read as a set of secondary actions with a visible
+            hover and focus state rather than as running text. */}
+        <div className="flex items-center gap-2">
+          <Link href={`/admin/crm/export${leadQueryString(searchParams, { page: "" })}`} className={SECONDARY_BTN}>Export CSV ↓</Link>
+          <Link href="/admin/crm/board" className={SECONDARY_BTN}>Pipeline view →</Link>
+          <Link href="/admin/crm/calendar" className={SECONDARY_BTN}>Calendar →</Link>
+          <Link href="/admin/crm/new" className="rounded-md bg-[#1B4B43] text-white text-sm font-medium px-4 py-2 transition-colors hover:bg-[#142E2D] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B4B43] focus-visible:ring-offset-2">+ New lead</Link>
         </div>
       </div>
 
@@ -223,15 +261,25 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
           meaning was previously only ever visible via hover (title attribute
           on the dot itself), this makes the scheme legible without hovering
           every row. */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3 text-xs text-[#6B7280]">
-        <span className="flex items-center gap-1.5"><FaFire size={12} className="text-[#C29A5E]" />Hot</span>
+      {/* Folded away by default. It explains a colour scheme that takes two
+          days to learn and then never needs reading again, but it sat at full
+          width above every list forever. <details> keeps it one click away
+          with no client JS. */}
+      <details className="mb-3 group">
+        <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-[11px] text-[#9CA3AF] hover:text-[#6B7280]">
+          <span className="transition-transform group-open:rotate-90">›</span>
+          What the colours mean
+        </summary>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[11px] text-[#9CA3AF]">
+        <span className="flex items-center gap-1.5"><FaFire size={12} className="text-[#D2410A]" />Hot</span>
         <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.RED.dot}`} />Overdue</span>
         <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.YELLOW.dot}`} />Due soon / not yet scheduled</span>
         <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.GREEN.dot}`} />On track</span>
         <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500" />Partner lead</span>
         <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-500" />Keep contact</span>
         <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#9CA3AF]" />Lost / Closed</span>
-      </div>
+        </div>
+      </details>
 
       {shownActive === 0 && lostTotal === 0 && closedTotal === 0 ? (
         <div className="bg-white rounded-lg border border-[#E5E7EB] px-4 py-8 text-center text-[#6B7280] text-sm">
@@ -255,7 +303,8 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
 
       {lostTotal > 0 && (
         <CollapsibleLeadsPanel key={`lost-${leadQueryString(searchParams)}`} label="Lost leads" count={lostTotal} defaultOpen={lostDefaultOpen}>
-          <table className="w-full text-sm border-t border-[#E5E7EB]">
+          <table className="w-full min-w-[1040px] table-fixed text-sm border-t border-[#E5E7EB]">
+            {TABLE_COLS}
             {TABLE_HEAD}
             <tbody className="divide-y divide-[#E5E7EB]">
               {rawLostLeads.map((l) => (
@@ -273,7 +322,8 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
 
       {closedTotal > 0 && (
         <CollapsibleLeadsPanel key={`closed-${leadQueryString(searchParams)}`} label="Closed leads" count={closedTotal} defaultOpen={closedDefaultOpen}>
-          <table className="w-full text-sm border-t border-[#E5E7EB]">
+          <table className="w-full min-w-[1040px] table-fixed text-sm border-t border-[#E5E7EB]">
+            {TABLE_COLS}
             {TABLE_HEAD}
             <tbody className="divide-y divide-[#E5E7EB]">
               {rawClosedLeads.map((l) => (
