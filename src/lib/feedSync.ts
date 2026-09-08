@@ -148,6 +148,11 @@ export type SyncResult = {
   unitsCreated: number;
   // The same units unitsCreated counts, itemized for the digest email.
   unitsCreatedLines: UnitChangeLine[];
+  // Projects this run created, itemized for the digest. `created` has always
+  // been a bare count; a new development is saved as a draft (publishStatus
+  // defaults to "draft") and is the one thing in the nightly run that cannot
+  // go live without the operator, so the email has to name it and link it.
+  createdProjects: { developmentId: string; name: string }[];
   unitsUnlisted: UnitChangeLine[];
   // Feed-completeness guard tripped (see checkFeedCompleteness below) — this
   // developer's sync was skipped entirely this run, nothing written at all,
@@ -808,7 +813,7 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
       const pctLabel = Math.round(missingPct * 100);
       return {
         dev, found: clusters.length, created: 0, updated: 0, failed: 0,
-        mirroredNewFiles: false, unitsWritten: 0, unitsCreated: 0, unitsCreatedLines: [], unitsUnlisted: [],
+        mirroredNewFiles: false, unitsWritten: 0, unitsCreated: 0, unitsCreatedLines: [], unitsUnlisted: [], createdProjects: [],
         blocked: true,
         blockedMessage: `${missing} of ${beforeCount} units are missing from today's feed (${pctLabel} %). Nothing was changed — the catalogue stays as it is until this has been checked.`,
         blockedMissing: missing, blockedTotal: beforeCount,
@@ -870,12 +875,14 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
   let created = 0, updated = 0, failed = 0, mirroredNewFiles = false, unitsCreated = 0, unitsWritten = 0;
   const unitsCreatedLines: UnitChangeLine[] = [];
   const unitsUnlisted: UnitChangeLine[] = [];
+  const createdProjects: { developmentId: string; name: string }[] = [];
   for (const cluster of clusters) {
     const id = idByCluster.get(cluster)!;
     try {
       const r = await syncOneProject(dev, id, accountId, { ...opts, vm: mitoVm(cluster, id) });
       if (!r.ok) { failed++; continue; }
       r.created ? created++ : updated++;
+      if (r.created && r.developmentId) createdProjects.push({ developmentId: r.developmentId, name: r.developmentName! });
       if (r.mirroredNewFiles) mirroredNewFiles = true;
       unitsCreated += r.unitsCreated;
       unitsWritten += r.unitsWritten;
@@ -889,7 +896,7 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
       failed++;
     }
   }
-  return { dev, found: clusters.length, created, updated, failed, mirroredNewFiles, unitsWritten, unitsCreated, unitsCreatedLines, unitsUnlisted };
+  return { dev, found: clusters.length, created, updated, failed, mirroredNewFiles, unitsWritten, unitsCreated, unitsCreatedLines, unitsUnlisted, createdProjects };
 }
 
 // Core loop, no restart side-effect — syncAll() calls this per developer so a
@@ -901,17 +908,19 @@ async function syncDeveloperCore(dev: string, opts: { mirror?: boolean; forceMir
 
   const guard = await checkFeedCompleteness(dev, ids);
   if (guard.blocked) {
-    return { dev, found: ids.length, created: 0, updated: 0, failed: 0, mirroredNewFiles: false, unitsWritten: 0, unitsCreated: 0, unitsCreatedLines: [], unitsUnlisted: [], blocked: true, blockedMessage: guard.message, blockedMissing: guard.missing, blockedTotal: guard.total };
+    return { dev, found: ids.length, created: 0, updated: 0, failed: 0, mirroredNewFiles: false, unitsWritten: 0, unitsCreated: 0, unitsCreatedLines: [], unitsUnlisted: [], createdProjects: [], blocked: true, blockedMessage: guard.message, blockedMissing: guard.missing, blockedTotal: guard.total };
   }
 
   let created = 0, updated = 0, failed = 0, mirroredNewFiles = false, unitsCreated = 0, unitsWritten = 0;
   const unitsCreatedLines: UnitChangeLine[] = [];
   const unitsUnlisted: UnitChangeLine[] = [];
+  const createdProjects: { developmentId: string; name: string }[] = [];
   for (const id of ids) {
     try {
       const r = await syncOneProject(dev, id, accountId, { ...opts, vm: guard.vmsById.get(id) ?? null });
       if (!r.ok) { failed++; continue; }
       r.created ? created++ : updated++;
+      if (r.created && r.developmentId) createdProjects.push({ developmentId: r.developmentId, name: r.developmentName! });
       if (r.mirroredNewFiles) mirroredNewFiles = true;
       unitsCreated += r.unitsCreated;
       unitsWritten += r.unitsWritten;
@@ -925,7 +934,7 @@ async function syncDeveloperCore(dev: string, opts: { mirror?: boolean; forceMir
       failed++;
     }
   }
-  return { dev, found: ids.length, created, updated, failed, mirroredNewFiles, unitsWritten, unitsCreated, unitsCreatedLines, unitsUnlisted };
+  return { dev, found: ids.length, created, updated, failed, mirroredNewFiles, unitsWritten, unitsCreated, unitsCreatedLines, unitsUnlisted, createdProjects };
 }
 
 // Public single-developer entry (admin "Sync now" for one dev, debug route) —
