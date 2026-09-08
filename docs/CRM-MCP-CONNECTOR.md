@@ -1,7 +1,8 @@
 # CRM MCP connector (claude.ai "CVE LEADS")
 
-Design: `docs/superpowers/specs/2026-09-07-crm-mcp-connector-design.md`.
-Status: Phase 2 (writes + approved email) — live once deployed.
+Design: `docs/superpowers/specs/2026-09-07-crm-mcp-connector-design.md`,
+`docs/superpowers/specs/2026-09-08-crm-mcp-connector-phase3-design.md`.
+Status: Phase 3 (inventory tools) — Phases 1–2 live since 2026-09-07/08; Phase 3 live once deployed.
 
 ## What it is
 
@@ -14,21 +15,23 @@ server on the admin login. claude.ai connects to it as a *custom connector* and 
   `https://cyprusvipestates.com`, staging `https://design.cyprusvipestates.com`.
   Must be set in the VPS `.env` of each app **before** the connector is used;
   the discovery endpoints return 500 with a clear message if it is missing.
-- `CRON_SECRET` — already present; used by `/api/cron/mcp-cleanup`.
+- `CRON_SECRET` — already present; used by `/api/cron/mcp-cleanup` and `/api/cron/inventory-snapshot`.
 
 ## Deploy checklist
 
 1. Code on `main`, deployed (`scripts/deploy-prod.sh` / `deploy-staging.sh`).
-2. Migration `20260907120000_add_mcp_connector` applied to the shared DB
-   (`CVP_RUN_MIGRATE=1`, or `npx prisma migrate deploy` on the VPS). Additive only —
-   safe to apply before or after the code deploy.
+2. Migrations `20260907120000_add_mcp_connector` and
+   `20260908120000_add_development_snapshots` applied to the shared DB
+   (`CVP_RUN_MIGRATE=1`, or `npx prisma migrate deploy` on the VPS). Both additive only —
+   safe to apply before or after the code deploy. If `20260908120000_add_development_snapshots`
+   is missing, `crm_inventory_changes` degrades instead of erroring (see Inventory tools below).
 3. `MCP_PUBLIC_ORIGIN` in the app's `.env`, app restarted.
 4. Crontab: `15 5 * * * curl -s "http://127.0.0.1:3000/api/cron/mcp-cleanup?key=$CRON_SECRET"`.
 5. Crontab: `50 4 * * * curl -s "http://127.0.0.1:3000/api/cron/inventory-snapshot?key=$CRON_SECRET"` (after drive-sync 04:30, before action-digest 05:00). Trigger it once by hand right after the first deploy so history starts on day one: `curl -s "http://127.0.0.1:3000/api/cron/inventory-snapshot?key=$CRON_SECRET"` on the VPS — never from a local machine.
 6. Verify: `curl -si https://<host>/.well-known/oauth-authorization-server` → 200 JSON,
    no `x-middleware-rewrite` header; `curl -si -X POST https://<host>/api/mcp` → 401 with
    `WWW-Authenticate`.
-7. Phase 2 needs no migration; after deploying, open a pairing window and reconnect claude.ai once so the consent lists the write tools.
+7. Phase 2 needs no migration; Phase 3 adds `development_snapshots`. After deploying, open a pairing window and reconnect claude.ai once so the consent lists the write tools.
 
 ## Connecting claude.ai
 
@@ -91,7 +94,7 @@ A connection can only be approved while a **pairing window** is open in the same
 Two read-only tools over the project database; no lead involved, `McpToolCall.leadId` stays null.
 
 - `crm_search_projects` — the published catalogue with filters (location, type, bedrooms, budget on unit prices, completion "YYYY"/"YYYY-MM", amenity, developer). `includeReady: true` adds unpublished "ready" rows — they carry `publicUrl: null` and the instructions tell the model never to quote them.
-- `crm_inventory_changes` — what changed in the last N days (1–60, default 14). Publish / sold-out / back-on-market / new-unit events come from existing date fields and work from day one. Availability, priceFrom and per-unit status/price events are diffed against the nightly snapshot in `development_snapshots` (cron `inventory-snapshot`, 04:50, 180-day retention); `coverage.note` tells the model when that history starts. Snapshot-based events carry `since` (the snapshot time) instead of an exact `at`.
+- `crm_inventory_changes` — what changed in the last N days (1–60, default 14). Publish / sold-out / back-on-market / new-unit events come from existing date fields and work from day one. Availability, priceFrom and per-unit status/price events are diffed against the nightly snapshot in `development_snapshots` (cron `inventory-snapshot`, 04:50, 180-day retention); `coverage.note` tells the model when that history starts. Snapshot-based events carry `since` (the snapshot time) instead of an exact `at`. If the `development_snapshots` table itself is missing (migration not yet applied), the tool degrades to dated-events-only instead of erroring, with `coverage.note` saying so.
 
 Because tokens are not scoped per tool, the two tools became available to the already-connected claude.ai client without a new consent — acceptable for read-only tools; the consent page lists them for any future connection.
 
