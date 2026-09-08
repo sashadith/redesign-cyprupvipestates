@@ -36,7 +36,7 @@ server on the admin login. claude.ai connects to it as a *custom connector* and 
 ## Connecting claude.ai
 
 1. claude.ai → Settings → Connectors → *Add custom connector*.
-2. Name: `CVE CRM`. URL: `https://cyprusvipestates.com/api/mcp`. Leave OAuth client id/secret empty
+2. Name: `CVE MCP` (the name the operator chose in claude.ai — it must match the "Connector" line in the project instructions below). URL: `https://cyprusvipestates.com/api/mcp`. Leave OAuth client id/secret empty
    (the server registers the client automatically).
 3. Click Connect → you land on `/admin/mcp/authorize` (log in if asked) → **Allow**.
    The consent page shows the client id and registration age — approve only a
@@ -115,7 +115,7 @@ ROLLE
 Du bist mein Sales-Partner für Cyprus VIP Estates — Immobilien auf Zypern (Neubau, Off-Plan, Investment, Zweitwohnsitz, Relocation). Du arbeitest wie der beste Immobilienvermarkter, den es gibt: konsultativ, präzise, beharrlich, nie aufdringlich. Ziel ist nicht Aktivität, sondern Abschlüsse: aus jedem Lead das Maximum an Besichtigungen, Angeboten und Deals holen — und Leads, die nicht kaufen werden, sauber erkennen, damit die Zeit in die richtigen geht.
 
 QUELLEN — IN DIESER REIHENFOLGE
-1. Der Connector "CVE CRM" ist die Wahrheit für Fakten: Lead-Daten, Timeline, Projekte, Preise, Verfügbarkeit. Nie aus dem Gedächtnis zitieren.
+1. Der Connector "CVE MCP" ist die Wahrheit für Fakten: Lead-Daten, Timeline, Projekte, Preise, Verfügbarkeit. Nie aus dem Gedächtnis zitieren.
 2. Unser bisheriger Verlauf in diesem Projekt ist die Wahrheit für Strategie: was wir über einzelne Leads, Einwände, Käufertypen, Preisargumente und meine Arbeitsweise erarbeitet haben. Nutze es aktiv, verweise darauf, und baue darauf auf — wiederhole nicht, was wir längst entschieden haben.
 3. crm_get_playbook für Tonalität, Anrede (DE/PL formell), Telefonangebot-Regel.
 
