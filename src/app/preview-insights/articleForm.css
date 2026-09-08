@@ -266,18 +266,22 @@
 
 /* -------------------------------------------------------- contact options */
 .artform form fieldset { border: 0; padding: 0; min-width: 0; }
-/* The module lays the options out in a nowrap flex row; in this column the
-   third one ran past the card's edge. */
+/* The module lays the options out in a nowrap flex row. Wrapping them used to
+   be the fix for the third one running past the card's edge; shrinking the
+   pills (see the label rule below) now keeps all three on one line instead,
+   so this stays nowrap like the module's own default. */
 .artform form fieldset > div:first-of-type {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  flex-wrap: nowrap;
+  gap: 4px;
 }
 .artform form fieldset label {
   background: var(--glass-bg);
   border: 1px solid var(--hairline-strong);
   border-radius: 999px;
-  padding: 9px 16px;
+  padding: 6px 7px;
+  font-size: 0.68rem;
+  white-space: nowrap;
   cursor: pointer;
   transition: border-color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease);
 }
@@ -327,6 +331,16 @@
   .artform { grid-template-columns: 1fr; }
   .artform__art { min-height: 200px; order: -1; }
   .artform__art img { width: min(70%, 260px); right: 50%; transform: translateX(50%); bottom: -10%; }
+  /* The 80% cap above exists to keep fields short of a now-gone second
+     column; once that column is gone (grid collapses to 1fr right here),
+     an 80%-wide field just wastes a fifth of an already-narrow card. */
+  .artform form input[type="text"],
+  .artform form input[type="email"],
+  .artform form input[type="tel"],
+  .artform form textarea,
+  .artform form .PhoneInput {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 640px) {
