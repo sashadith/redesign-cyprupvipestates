@@ -1,7 +1,8 @@
 # `.projects` refs pointing at archived rows: working today only because of a redirect substitution
 
-**Status:** logged, not fixed. No code or DB changes made — this document is the handover record.
+**Status:** the immediate backlog is cleared (56 → 4 dead refs; see "What's been fixed" below), but the underlying design point stands: the render path stays dependent on a substitution that was written for a different reason and was never a tested contract. One named open case remains (Infinity — a genuine slug collision, not a missing redirect; see below).
 **Found:** 2026-09-08, while investigating a genuine 404 on a RU blog article (`/ru/blog/raznica-mezhdu-kiprom-i-severnym-kiprom` → `/ru/projects/panorama-hills`), which led to checking how many other pages carry the same class of stale reference.
+**Updated:** 2026-09-08, same day — 34 translation groups (109 redirect rows) fixed across several passes: Panorama Hills, a 26-group/78-row backfill, Seaview + Oasis Garden (a wrong developer slug, not a missing row), Gioia West (same), and Aion/Noble Apartments/Konia Aura/Olea Residences (redirects that pointed at a Development which was *itself* archived — fixed to point at the developer's page instead, same pattern as Panorama Hills).
 
 ## Summary
 
@@ -12,26 +13,42 @@
 Queried every **published** Blog, Singlepage, CaseStudy, and homepage `SiteDocument` (all 4 locales) for `.projects` array refs pointing at a sanityId whose `Project` row has `status: "ARCHIVED"`.
 
 - **103 published pages** carry at least one such ref — 99 found via the standard `contentBlocks` scan (blog articles + Singlepage landing pages + case studies), plus **all 4 language homepages**, whose `featuredProjectsBlock` (a separate top-level field, not inside `contentBlocks`) carries 10 dead refs each and was missed by the generic scanner until checked explicitly.
-- **462 distinct archived sanityIds** are referenced this way across those pages (a single page typically pins several archived projects at once).
-- Of those 462: **406 currently render a working link**, purely because `legacyProjectRedirect` has a row for that sanityId and `resolveProjectRefs` substitutes it in.
-- **56 have no redirect row at all** — these are not "fragile," they are already dead right now, rendering a card whose href 404s if clicked, on whichever of the 103 pages happens to pin them.
+- **~466 distinct archived sanityIds** are referenced this way across those pages (a single page typically pins several archived projects at once; the exact count drifts slightly day to day as new archiving happens elsewhere on the site).
+- **As of 2026-09-08 (post-fix): 462 render a working link** via the `legacyProjectRedirect` substitution. **Only 4 remain genuinely dead — all 4 locale rows of "Infinity"** (see "Open case" below). Before today's fixes this was 406 rescued / 56 dead — see "What's been fixed."
 
-## Why this is fragile, not just currently-broken-in-56-places
+## Why this is fragile, even now that the backlog is clear
 
-`resolveProjectRefs`'s redirect substitution was written for one purpose (avoiding an "avoidable extra hop" through a 308 for legacy-vs-canonical-slug drift), not as a load-bearing dead-link-prevention layer. Nothing about its contract promises that behavior, nothing tests for it, and nothing would notice if a future change to that function (or to how `legacyProjectRedirect` rows are queried) silently dropped the substitution. If that happens, all 406 currently-working cards break in the same release — not gradually, not with a warning, all at once, because the one thing keeping them alive is a side effect of a function that exists for a different reason.
+`resolveProjectRefs`'s redirect substitution was written for one purpose (avoiding an "avoidable extra hop" through a 308 for legacy-vs-canonical-slug drift), not as a load-bearing dead-link-prevention layer. Nothing about its contract promises that behavior, nothing tests for it, and nothing would notice if a future change to that function (or to how `legacyProjectRedirect` rows are queried) silently dropped the substitution. If that happens, all ~462 currently-working cards break in the same release — not gradually, not with a warning, all at once, because the one thing keeping them alive is a side effect of a function that exists for a different reason. Fixing today's backlog doesn't change this; it just means there are now more cards riding on the same unstated assumption than there were this morning.
 
-## A related, narrower finding: redirect coverage is itself inconsistent
+## What's been fixed (2026-09-08)
 
-Separately, while investigating the RU Panorama Hills 404: `legacyProjectRedirect` rows are near-100% locale-inconsistent. Of 184 `ARCHIVED`-project translation groups:
+**34 translation groups, 109 redirect rows**, across several passes the same day:
 
-- **154** have a redirect for every locale sibling.
-- **29** have a redirect for **EN only** — RU/DE/PL are all missing it, every time, no exceptions. This is not scattered gaps; it is one systematic pattern (whatever process created these rows only ever wrote the English one).
-- **1** ("Infinity") has no redirect in any locale.
+- **Panorama Hills** — RU/DE/PL redirects added to match EN (`/developers/agg-luxury-homes`); the RU blog article's own hardcoded link repointed directly to the same target, skipping the redirect hop.
+- **26 groups (78 rows)** — a mechanical backfill: every archived translation group that had a redirect for EN only, none for RU/DE/PL. Each derived target was verified live (200) before writing, and the EN source target was checked for chaining first — 2 groups (Seaview, Oasis Garden) failed that check and were held back for the next bullet, not written blind.
+- **Seaview + Oasis Garden** — not a missing-row case: the existing EN redirect pointed at `/developers/mito` (404 — a stale slug; the real one is `mito-developers`), so it had been silently broken since the day it was created. Fixed the EN row, then derived and wrote the 3 missing locale rows from the corrected target.
+- **Gioia West** — same shape: `/developers/agg` (404) → `/developers/agg-luxury-homes`, all 4 locales.
+- **Aion, Noble Apartments, Konia Aura, Olea Residences** — a different, worse case: all 4 locale rows already existed, but pointed at a Development slug (`/projects/aion`, `/projects/noble`, `/projects/aura-konia`, `/projects/olea-residences`) that is itself `publishStatus: "archived"` — a correct-looking redirect to a dead end. Checked each Project row's own `developerId` (not the broken redirect's guess) and confirmed a live developer page in every case, with no live successor Development under that developer to point at instead. Repointed all 4 × 4 = 16 rows to the developer page, same pattern as Panorama Hills.
 
-Panorama Hills is one of the 29. Its EN sibling redirects to `/developers/agg-luxury-homes`; RU/DE/PL do not, which is the direct cause of the 404 that surfaced this investigation.
+## Redirect health, checked deliberately (2026-09-08)
 
-## Not fixed here, on purpose
+The Seaview/Gioia West pattern (a redirect row that exists but points nowhere) was found twice by accident before being checked on purpose. Fetched all **730** `legacyProjectRedirect` rows' targets live: **709 returned 200. 21 did not** (one of those, Triangle House's EN row, was a false positive from the scan script mishandling that row's stored absolute URL — its real target is a clean 200 — so **20 genuinely broken**, now **0** after the fixes above). Two distinct failure classes, both now closed:
+1. **Wrong slug, developer page is live** (Gioia West, Seaview, Oasis Garden) — the redirect's own target string was stale/mistyped.
+2. **Right slug, but the target itself is archived** (Aion, Konia Aura, Noble Apartments, Olea Residences) — the redirect was created correctly at the time, then the Development it pointed to was later archived too, and nothing re-checked the redirect.
 
-Per the scope of the task that produced this document: log the mechanism and the count, do not act. Two independent follow-ups this suggests, neither started:
-1. Backfill the missing RU/DE/PL redirect rows for the 29 partially-covered groups (and decide what "Infinity" should point to).
-2. Decide whether `resolveProjectRefs`'s redirect substitution should become an explicit, tested contract (or whether the real fix is cleaning stale refs out of `.projects` arrays as archival happens, so nothing depends on the substitution at all).
+## Open case: Infinity — a slug collision, not a missing redirect
+
+Two **unrelated** properties both use the slug `infinity`: an archived legacy `Project` (Mito Developers, apartment, €376,000) and a live, published `Development` (an unrelated Medousa-built villa complex, priceFrom €620,000, completely different specs and developer). `/projects/infinity` already returns 200 today — not via any redirect, but because the site's own collision rule at `/projects/[slug]` resolves the live Development first, for any request, before `legacyProjectRedirect` is ever consulted. A `legacyProjectRedirect` row was created for the archived Project (→ the Mito Developers page) and then **deleted again** once this was understood: it would never fire, and leaving it in the table would tell a future reader the case was handled when it was not.
+
+**No redirect can fix this** — the collision resolves upstream of the redirect table entirely. Fixing it for real needs one of:
+- a slug change on one side (most likely the archived legacy Project, since it's already retired) so the two stop colliding, or
+- a deliberate decision that the old Mito listing stays unreachable at this URL and nothing further is done.
+
+Neither has been decided; this is the one open item this document tracks. Left as-is.
+
+**Checked whether this is a class of defect, not a one-off:** scanned every `ARCHIVED` Project row's slug against every published Development's slug — **100 collisions found.** Of those, **96 are the archived Project correctly linked to the exact colliding Development via `supersededByDevelopmentId`** — the same deliberate legacy-slug-reused-by-its-successor pattern as Villa A, Tress, Cap St Georges Resort, etc., confirmed intentional and benign, not a defect. **Only Infinity's 4 rows are unlinked** — a genuine coincidence, not a pattern. One case, not a class.
+
+## What's still open
+
+1. **Infinity** — see above; needs a decision, not a mechanical fix.
+2. **Decide whether `resolveProjectRefs`'s redirect substitution should become an explicit, tested contract, or whether the real fix is cleaning stale refs out of `.projects` arrays at archival time so nothing depends on the substitution at all.** Investigated read-only (2026-09-08): archival happens through exactly one code path, `deactivateProjectWithRedirect` in `src/app/admin/actions.ts` — the only function that ever sets `Project.status = "ARCHIVED"` (`toggleProjectActive` only re-activates). It already archives every locale sibling and writes their `legacyProjectRedirect` in one transaction, but never touches any `.projects` array on any other page. Adding that would mean, inside the same transaction, scanning every published Blog/Singlepage/CaseStudy row's `contentBlocks` plus the homepage's separate `featuredProjectsBlock` field for the newly-archived sanityIds and stripping them from any `projects` array found. For the backlog that already exists rather than what gets archived next, that same scan would need to run once as a standalone migration across the ~103 pages currently carrying a dead-but-rescued ref (not 462 separate writes — several dead refs typically share one page, so one rewrite per page clears all of that page's stale pins at once). Proposed, not built.
