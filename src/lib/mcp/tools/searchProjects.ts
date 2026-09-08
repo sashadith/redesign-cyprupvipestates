@@ -39,6 +39,9 @@ export function registerSearchProjects(server: McpServer) {
         if (parseCompletionBefore(input.completionBefore) === "invalid") {
           throw new ToolError("validation", 'completionBefore must be "YYYY" or "YYYY-MM".');
         }
+        if (input.areas?.length && !input.districts?.length) {
+          throw new ToolError("validation", "areas only narrows a district — pass districts as well.");
+        }
         const r = await searchDevelopments(input);
         return {
           total: r.total,

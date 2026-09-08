@@ -32,7 +32,7 @@ export type SearchFilters = {
   pageSize?: number;
 };
 
-export type SearchUnit = { id: string; ref: string | null; label: string | null; type: string | null; status: string | null; price: number | null; beds: string | null; amenities: unknown };
+export type SearchUnit = { type: string | null; status: string | null; price: number | null; beds: string | null; amenities: unknown };
 
 export type SearchDevelopment = {
   id: string; publicName: string; developerName: string; developer: string | null; category: string | null; stage: string | null; status: string | null;
@@ -230,7 +230,7 @@ export const SEARCH_DEVELOPMENT_SELECT = {
   id: true, publicName: true, developerName: true, developer: true, category: true, stage: true, status: true, completion: true,
   district: true, town: true, area: true, priceFrom: true, priceTo: true, currency: true, amenities: true, slug: true, publishStatus: true,
   syncedAt: true, updatedAt: true,
-  units: { select: { id: true, ref: true, label: true, type: true, status: true, price: true, beds: true, amenities: true } },
+  units: { select: { type: true, status: true, price: true, beds: true, amenities: true } },
   override: { select: { alias: true, district: true, town: true, area: true, completion: true, stage: true, amenities: true } },
 } as const;
 

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { filterAndRank, parseCompletionBefore, type SearchDevelopment } from "@/lib/crm/inventorySearch";
 
 const now = new Date("2026-09-08T10:00:00Z");
-const unit = (o: Partial<SearchDevelopment["units"][number]> & { id: string }) => ({ ref: null, label: null, type: "Apartment", status: "available", price: null, beds: null, amenities: null, ...o });
+const unit = (o: Partial<SearchDevelopment["units"][number]> = {}) => ({ type: "Apartment", status: "available", price: null, beds: null, amenities: null, ...o });
 const dev = (o: Partial<SearchDevelopment> & { id: string; publicName: string }): SearchDevelopment => ({
   developerName: o.publicName, developer: "Dev Co", category: null, stage: null, status: null, completion: null, district: "Paphos", town: "Paphos", area: null,
   priceFrom: null, priceTo: null, currency: "EUR", amenities: null, slug: o.publicName.toLowerCase().replace(/\s+/g, "-"), publishStatus: "published",
@@ -11,13 +11,13 @@ const dev = (o: Partial<SearchDevelopment> & { id: string; publicName: string })
 });
 
 const rows: SearchDevelopment[] = [
-  dev({ id: "a", publicName: "Alpha", units: [unit({ id: "a1", price: 300_000, beds: "2" }), unit({ id: "a2", price: 450_000, beds: "3", type: "Penthouse" })] }),
-  dev({ id: "b", publicName: "Beta", district: "Limassol", town: "Limassol", units: [unit({ id: "b1", price: 900_000, beds: "4", type: "Villas / Houses", amenities: ["Sea View"] })] }),
-  dev({ id: "c", publicName: "Gamma", priceFrom: 200_000, priceTo: 260_000, units: [unit({ id: "c1", price: null, beds: "1" })] }),
-  dev({ id: "d", publicName: "Delta", units: [unit({ id: "d1", price: 500_000, status: "sold" })] }),
-  dev({ id: "e", publicName: "Epsilon", publishStatus: "ready", slug: null, units: [unit({ id: "e1", price: 100_000 })] }),
-  dev({ id: "f", publicName: "Zeta", completion: "Q2 2028", units: [unit({ id: "f1", price: 350_000 })] }),
-  dev({ id: "g", publicName: "Eta", completion: "TBA", units: [unit({ id: "g1", price: 360_000 })] }),
+  dev({ id: "a", publicName: "Alpha", units: [unit({ price: 300_000, beds: "2" }), unit({ price: 450_000, beds: "3", type: "Penthouse" })] }),
+  dev({ id: "b", publicName: "Beta", district: "Limassol", town: "Limassol", units: [unit({ price: 900_000, beds: "4", type: "Villas / Houses", amenities: ["Sea View"] })] }),
+  dev({ id: "c", publicName: "Gamma", priceFrom: 200_000, priceTo: 260_000, units: [unit({ price: null, beds: "1" })] }),
+  dev({ id: "d", publicName: "Delta", units: [unit({ price: 500_000, status: "sold" })] }),
+  dev({ id: "e", publicName: "Epsilon", publishStatus: "ready", slug: null, units: [unit({ price: 100_000 })] }),
+  dev({ id: "f", publicName: "Zeta", completion: "Q2 2028", units: [unit({ price: 350_000 })] }),
+  dev({ id: "g", publicName: "Eta", completion: "TBA", units: [unit({ price: 360_000 })] }),
 ];
 
 test("empty filters: published only, sold-out dropped by default, price_asc sort, summary over the whole set", () => {
@@ -47,13 +47,13 @@ test("budget applies to unit prices, with priceFrom/priceTo fallback when no uni
 test("property type and bedrooms are normalised like the admin panel; 5 means 5+", () => {
   assert.deepEqual(filterAndRank(rows, { propertyTypes: ["villa"] }, now).rows.map((x) => x.name), ["Beta"]);
   assert.deepEqual(filterAndRank(rows, { bedrooms: [3] }, now).rows.map((x) => x.name), ["Alpha"]);
-  assert.deepEqual(filterAndRank([dev({ id: "h", publicName: "Theta", units: [unit({ id: "h1", beds: "6", price: 1 })] })], { bedrooms: [5] }, now).total, 1);
+  assert.deepEqual(filterAndRank([dev({ id: "h", publicName: "Theta", units: [unit({ beds: "6", price: 1 })] })], { bedrooms: [5] }, now).total, 1);
 });
 
 test("districts fall back to town; amenity matches development or unit amenities", () => {
   assert.deepEqual(filterAndRank(rows, { districts: ["limassol"] }, now).rows.map((x) => x.name), ["Beta"]);
   assert.deepEqual(filterAndRank(rows, { amenity: "sea view" }, now).rows.map((x) => x.name), ["Beta"]);
-  const withDevAmenity = dev({ id: "i", publicName: "Iota", amenities: ["Communal Pool"], units: [unit({ id: "i1", price: 1 })] });
+  const withDevAmenity = dev({ id: "i", publicName: "Iota", amenities: ["Communal Pool"], units: [unit({ price: 1 })] });
   assert.deepEqual(filterAndRank([withDevAmenity], { amenity: "pool" }, now).rows.map((x) => x.name), ["Iota"]);
 });
 
@@ -83,15 +83,15 @@ test("onlyAvailable=false keeps sold-out developments", () => {
 
 test("query, developer and stage are case-insensitive contains-matches", () => {
   assert.deepEqual(filterAndRank(rows, { query: "ZET" }, now).rows.map((x) => x.name), ["Zeta"]);
-  const kappa = dev({ id: "j", publicName: "Kappa", developer: "Aristo Developers", units: [unit({ id: "j1", price: 1 })] });
+  const kappa = dev({ id: "j", publicName: "Kappa", developer: "Aristo Developers", units: [unit({ price: 1 })] });
   assert.equal(filterAndRank([kappa, ...rows], { developer: "aristo" }, now).total, 1);
   assert.equal(filterAndRank(rows, { developer: "nobody" }, now).total, 0);
-  const lambda = dev({ id: "k", publicName: "Lambda", stage: "Under Construction", units: [unit({ id: "k1", price: 1 })] });
+  const lambda = dev({ id: "k", publicName: "Lambda", stage: "Under Construction", units: [unit({ price: 1 })] });
   assert.deepEqual(filterAndRank([lambda, ...rows], { stage: "construction" }, now).rows.map((x) => x.name), ["Lambda"]);
 });
 
 test("a development without a district is matched on its town", () => {
-  const mu = dev({ id: "m", publicName: "Mu", district: null, town: "Larnaca", units: [unit({ id: "m1", price: 1 })] });
+  const mu = dev({ id: "m", publicName: "Mu", district: null, town: "Larnaca", units: [unit({ price: 1 })] });
   const r = filterAndRank([mu, ...rows], { districts: ["larnaca"] }, now);
   assert.deepEqual(r.rows.map((x) => x.name), ["Mu"]);
   assert.deepEqual(r.summary.byDistrict, { Larnaca: 1 });

@@ -19,7 +19,7 @@ export function registerInventoryChanges(server: McpServer) {
     {
       title: "What changed in the catalogue",
       description:
-        "What changed in the published catalogue in the last N days — projects published, sold out, back on market, new units, availability moves (with a lastUnits flag), priceFrom moves, and per-unit reservations/sales/price changes. Use it to give a quiet lead a real reason to hear from us (pass the developmentIds from their crm_match_properties result) and to open the day. Dated events carry `at`; snapshot-based events carry `since` (changed between that date and now). Read `coverage.note` — price and unit-level history starts with the first nightly snapshot. Quote figures as returned.",
+        "What changed in the published catalogue in the last N days — projects published, sold out, back on market, new units, availability moves (with a lastUnits flag), priceFrom moves, and per-unit reservations/sales/price changes (each unit carries `key` — the unit's reference code as shown on the site, or an internal id when it has none — plus `label`). Use it to give a quiet lead a real reason to hear from us (pass the developmentIds from their crm_match_properties result) and to open the day. Dated events carry `at`; snapshot-based events carry `since` (changed between that date and now). Read `coverage.note` — price and unit-level history starts with the first nightly snapshot. Quote figures as returned.",
       inputSchema: Input,
       annotations: { readOnlyHint: true, idempotentHint: true },
     },

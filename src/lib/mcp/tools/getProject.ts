@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { prisma } from "@/lib/prisma";
 import { computeAvailability, listedUnits } from "@/lib/developmentAvailability";
+import { publicUrlFor } from "@/lib/crm/inventorySearch";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { fmtDate } from "../format";
@@ -65,7 +66,7 @@ export function registerGetProject(server: McpServer) {
           currency: d.currency,
           availability: { available: availability.available, total: availability.total, soldOut: availability.soldOut, soldOutSince: fmtDate(d.soldOutSince) },
           publishStatus: d.publishStatus,
-          publicUrl: d.slug && d.publishStatus === "published" ? { en: `/en/projects/${d.slug}`, de: `/de/projects/${d.slug}`, pl: `/pl/projects/${d.slug}`, ru: `/ru/projects/${d.slug}` } : null,
+          publicUrl: publicUrlFor(d.slug, d.publishStatus),
           dataUpdatedAt: fmtDate(d.updatedAt),
           units: { total: listed.length, returned: Math.min(listed.length, MAX_UNITS), rows: listed.slice(0, MAX_UNITS) },
         };
