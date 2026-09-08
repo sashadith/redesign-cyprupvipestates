@@ -23,6 +23,38 @@ import { decrypt } from "@/lib/crypto/secretBox";
 
 export class ImapNotConfiguredError extends Error {}
 
+/* ImapFlow's defaults are written for an interactive client, not a poller that
+   runs every five minutes: 90 s to connect, 16 s for the greeting, and 5 MINUTES
+   of socket inactivity. That last one is longer than the poll interval itself,
+   so one unresponsive mailbox can still be waiting when the next run starts.
+
+   That is not hypothetical. On 2026-09-08 the mail server accepted the
+   connection and then stopped answering; two runs sat there for 180 s each
+   (13:22→13:25 and 13:27→13:30 UTC) and only ended because the server closed
+   the socket first — had it stayed open they would have run the full 5 minutes.
+   Reproduced against a fake IMAP server that greets and then goes silent:
+   300 014 ms before these settings, ~8 s after.
+
+   The budget below is deliberately far above what a healthy poll needs (the
+   slowest successful run on record is 4.6 s) and far below the 5-minute
+   cadence, so a hung mailbox fails fast and the next run starts clean. */
+const CONNECTION_TIMEOUT_MS = 20_000;
+const GREETING_TIMEOUT_MS = 10_000;
+const SOCKET_TIMEOUT_MS = 60_000;
+/** Cleanup budget. A logout on a socket the peer already dropped can never be
+    allowed to extend a run that has already failed. */
+const LOGOUT_TIMEOUT_MS = 5_000;
+
+/** Rejects if `p` has not settled within `ms`. Clears its timer either way, so
+    a resolved promise never leaves a handle keeping the process alive. */
+export function withTimeout<T>(p: Promise<T>, ms: number, what: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const limit = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`${what} timed out after ${ms} ms`)), ms);
+  });
+  return Promise.race([p, limit]).finally(() => clearTimeout(timer));
+}
+
 export type ImapCredentials = { host: string; port: number; user: string; pass: string };
 
 export async function getImapCredentials(userId: string): Promise<ImapCredentials> {
@@ -48,7 +80,17 @@ export async function withReadOnlyInbox<T>(
     secure: creds.port === 993,
     auth: { user: creds.user, pass: creds.pass },
     logger: false,
+    connectionTimeout: CONNECTION_TIMEOUT_MS,
+    greetingTimeout: GREETING_TIMEOUT_MS,
+    socketTimeout: SOCKET_TIMEOUT_MS,
   });
+  // ImapFlow surfaces late socket failures on the 'error' event as well as on
+  // the pending call. Without a listener, a connection dying during cleanup
+  // reaches Node as an unhandled rejection ("Already logged out", observed in
+  // the fake-server repro) — the caller already has the real error from the
+  // rejected call, so this listener exists purely to keep the stray copy from
+  // escaping.
+  client.on("error", () => {});
   await client.connect();
   try {
     // The one line that matters: `readOnly: true` sends EXAMINE, not SELECT.
@@ -64,7 +106,11 @@ export async function withReadOnlyInbox<T>(
     }
     return await fn(client, mailbox);
   } finally {
-    await client.logout().catch(() => client.close());
+    // Bounded and non-throwing: this runs after the real result (or the real
+    // error) is already decided, so it may only release the socket — never
+    // extend the run, never replace the error the caller is about to see.
+    await withTimeout(client.logout(), LOGOUT_TIMEOUT_MS, "IMAP logout").catch(() => {});
+    client.close();
   }
 }
 
