@@ -39,6 +39,12 @@ const JOBS: { job: string; label: string; expectedMs: number }[] = [
   // closes is the one nobody saw for 13 days — a Dropbox developer that no
   // scheduled job was responsible for at all.
   { job: "kuutio-sync", label: "kuutio-sync", expectedMs: 24 * HOUR },
+  // 2026-09-08 — the MCP connector's two nightly routes (Phase 1 cleanup at
+  // 05:15, Phase 3 catalogue snapshot at 04:50). A snapshot cron that stops
+  // firing only shows up as crm_inventory_changes reporting "no history",
+  // which reads like normal pre-rollout behaviour — this is the alarm.
+  { job: "mcp-cleanup", label: "mcp-cleanup", expectedMs: 24 * HOUR },
+  { job: "inventory-snapshot", label: "inventory-snapshot", expectedMs: 24 * HOUR },
 ];
 
 // 2026-08-11 (analytics bot-traffic incident) — two exact user-agent strings
