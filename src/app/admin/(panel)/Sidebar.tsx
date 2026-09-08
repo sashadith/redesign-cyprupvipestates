@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
-import { NavIcon } from "./NavIcons";
+import { useEffect, useMemo, useState } from "react";
+import { NavIcon, PageIcon } from "./NavIcons";
 
 export type NavPage = { href: string; label: string; count?: number; countVariant?: "alert" | "neutral" };
 // A module is one application section. Single-page modules (Dashboard, Analytics)
@@ -113,6 +113,26 @@ function DevelopmentsNavPanel({ nav, totals, pathname, onNavigate }: { nav: Deve
 export default function Sidebar({ modules, developersNav, devTotals, user, logoSrc, signOut }: Props) {
   const pathname = usePathname() || "";
   const { activeModuleKey, activePage } = useMemo(() => resolveActive(pathname, modules), [pathname, modules]);
+
+  /* Collapsed secondary sidebar. Starts expanded on every render so the server
+     and the first client paint agree; the stored preference is applied in an
+     effect right after. Reading localStorage during render would hydrate one
+     width and immediately repaint another. */
+  const [railOnly, setRailOnly] = useState(false);
+  useEffect(() => {
+    try {
+      setRailOnly(window.localStorage.getItem("cve-admin-subnav") === "collapsed");
+    } catch {
+      /* private window, blocked storage — expanded is the safe default */
+    }
+  }, []);
+  const toggleRailOnly = () => {
+    setRailOnly((v) => {
+      const next = !v;
+      try { window.localStorage.setItem("cve-admin-subnav", next ? "collapsed" : "open"); } catch {}
+      return next;
+    });
+  };
   const activeModule = modules.find((m) => m.key === activeModuleKey);
   const [open, setOpen] = useState(false);
   const devNav = developersNav ?? [];
@@ -136,6 +156,33 @@ export default function Sidebar({ modules, developersNav, devTotals, user, logoS
       </Link>
     );
   };
+
+  /* Collapsed: the icon alone, with the label in the tooltip and any count as a
+     dot in the corner — a number would not fit and its absence must still be
+     visible. */
+  const pageIconItem = (p: NavPage) => (
+    <Link
+      key={p.href}
+      href={p.href}
+      title={p.count ? `${p.label} (${p.count})` : p.label}
+      aria-label={p.label}
+      aria-current={p.href === activePage ? "page" : undefined}
+      className={`relative flex items-center justify-center rounded-md py-2.5 transition-colors ${
+        p.href === activePage
+          ? "bg-[#1B4B43]/10 text-[#1B4B43]"
+          : "text-[#6B7280] hover:bg-[#1B4B43]/8 hover:text-[#1B4B43]"
+      }`}
+    >
+      <PageIcon href={p.href} label={p.label} />
+      {!!p.count && (
+        <span
+          className={`absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full ${
+            p.countVariant === "neutral" ? "bg-[#9CA3AF]" : "bg-[#DC2626]"
+          }`}
+        />
+      )}
+    </Link>
+  );
 
   const pageItem = (p: NavPage) => (
     <Link
@@ -222,13 +269,39 @@ export default function Sidebar({ modules, developersNav, devTotals, user, logoS
 
       {/* Desktop — secondary sidebar (only for multi-page modules) */}
       {activeModule && activeModule.pages.length > 1 && (
-        <aside className="hidden md:flex w-56 shrink-0 bg-white border-r border-[#E5E7EB] flex-col h-screen sticky top-0">
-          <div className="px-4 py-4 border-b border-[#E5E7EB]">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">{activeModule.label}</div>
+        <aside
+          className={`hidden md:flex shrink-0 bg-white border-r border-[#E5E7EB] flex-col h-screen sticky top-0 transition-[width] duration-200 ${
+            railOnly ? "w-14" : "w-56"
+          }`}
+        >
+          {/* Header doubles as the toggle row: expanded it shows the module name
+              with the chevron at the end, collapsed only the chevron remains,
+              pointing the other way. */}
+          <div className={`flex items-center border-b border-[#E5E7EB] py-4 ${railOnly ? "justify-center px-0" : "justify-between px-4"}`}>
+            {!railOnly && (
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-[#9CA3AF]">{activeModule.label}</div>
+            )}
+            <button
+              type="button"
+              onClick={toggleRailOnly}
+              title={railOnly ? `Expand ${activeModule.label}` : "Collapse to icons"}
+              aria-label={railOnly ? `Expand ${activeModule.label}` : "Collapse to icons"}
+              aria-expanded={!railOnly}
+              className="rounded-md p-1 text-[#9CA3AF] transition-colors hover:bg-[#F3F4F6] hover:text-[#6B7280] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B4B43]"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                className={`transition-transform ${railOnly ? "rotate-180" : ""}`}>
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
           </div>
-          {activeModuleKey === "developments"
-            ? devPanel
-            : <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">{activeModule.pages.map(pageItem)}</nav>}
+          {railOnly ? (
+            <nav className="flex-1 overflow-y-auto p-2 space-y-1">{activeModule.pages.map(pageIconItem)}</nav>
+          ) : activeModuleKey === "developments" ? (
+            devPanel
+          ) : (
+            <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">{activeModule.pages.map(pageItem)}</nav>
+          )}
         </aside>
       )}
 

@@ -18,6 +18,7 @@ import {
   isUntouchedNewLead, BAND_STYLE, computeBand, type ColorBand, type LeadRowData,
 } from "./leadListShared";
 import { STATUS_STYLES } from "@/app/admin/status-badge";
+import AutoRefresh from "./AutoRefresh";
 
 const LOST_CAP = 200;
 const CLOSED_CAP = 200;
@@ -40,7 +41,7 @@ const SECONDARY_BTN =
 
 const TABLE_COLS = (
   <colgroup>
-    <col className="w-[18%]" />{/* Name */}
+    <col className="w-[20%]" />{/* Name */}
     <col className="w-[5%]" />{/* Hot */}
     <col className="w-[11%]" />{/* Last contact */}
     <col className="w-[10%]" />{/* Max budget */}
@@ -48,11 +49,12 @@ const TABLE_COLS = (
     {/* 10%, not 8%: the two-word header needs the room or it wraps. */}
     <col className="w-[10%]" />{/* Country / Lang */}
     <col className="w-[10%]" />{/* Assigned */}
-    <col className="w-[10%]" />{/* Received */}
-    {/* Holds the move button and the delete button side by side. Since the
-        move menu shrank to a 32px square this needs 13%, not the 18% the
-        labelled dropdown used to demand. */}
-    <col className="w-[13%]" />{/* actions */}
+    <col className="w-[11%]" />{/* Received */}
+    {/* Sized to its contents, not to a comfortable share: the move square (26)
+        + gap (8) + Delete (55) + cell padding (32) is 121px, and at the table's
+        1220px minimum 10% is 122px. Anything larger just parks empty space to
+        the left of two right-aligned buttons. */}
+    <col className="w-[10%]" />{/* actions */}
   </colgroup>
 );
 
@@ -110,7 +112,7 @@ function LeadBlockSection({
           automatically. Clipping would put a control out of reach on a narrow
           window; scrolling only makes it a scroll away. */}
       <div className="bg-white rounded-lg border border-[#E5E7EB] overflow-x-auto">
-        <table className="w-full min-w-[1040px] table-fixed text-sm">
+        <table className="w-full min-w-[1220px] table-fixed text-sm">
           {TABLE_COLS}
           {TABLE_HEAD}
           <tbody className="divide-y divide-[#E5E7EB]">
@@ -241,6 +243,8 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
 
   return (
     <div>
+      {/* MCP writes and other operators land without a manual reload. */}
+      <AutoRefresh />
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-semibold">CRM / Leads <span className="text-base font-normal text-[#6B7280]">({activeTotal})</span></h1>
         {/* Buttons, not underlined links: these three sit next to a primary
@@ -261,25 +265,6 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
           meaning was previously only ever visible via hover (title attribute
           on the dot itself), this makes the scheme legible without hovering
           every row. */}
-      {/* Folded away by default. It explains a colour scheme that takes two
-          days to learn and then never needs reading again, but it sat at full
-          width above every list forever. <details> keeps it one click away
-          with no client JS. */}
-      <details className="mb-3 group">
-        <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-[11px] text-[#9CA3AF] hover:text-[#6B7280]">
-          <span className="transition-transform group-open:rotate-90">›</span>
-          What the colours mean
-        </summary>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-[11px] text-[#9CA3AF]">
-        <span className="flex items-center gap-1.5"><FaFire size={12} className="text-[#D2410A]" />Hot</span>
-        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.RED.dot}`} />Overdue</span>
-        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.YELLOW.dot}`} />Due soon / not yet scheduled</span>
-        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.GREEN.dot}`} />On track</span>
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500" />Partner lead</span>
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-500" />Keep contact</span>
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#9CA3AF]" />Lost / Closed</span>
-        </div>
-      </details>
 
       {shownActive === 0 && lostTotal === 0 && closedTotal === 0 ? (
         <div className="bg-white rounded-lg border border-[#E5E7EB] px-4 py-8 text-center text-[#6B7280] text-sm">
@@ -303,7 +288,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
 
       {lostTotal > 0 && (
         <CollapsibleLeadsPanel key={`lost-${leadQueryString(searchParams)}`} label="Lost leads" count={lostTotal} defaultOpen={lostDefaultOpen}>
-          <table className="w-full min-w-[1040px] table-fixed text-sm border-t border-[#E5E7EB]">
+          <table className="w-full min-w-[1220px] table-fixed text-sm border-t border-[#E5E7EB]">
             {TABLE_COLS}
             {TABLE_HEAD}
             <tbody className="divide-y divide-[#E5E7EB]">
@@ -322,7 +307,7 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
 
       {closedTotal > 0 && (
         <CollapsibleLeadsPanel key={`closed-${leadQueryString(searchParams)}`} label="Closed leads" count={closedTotal} defaultOpen={closedDefaultOpen}>
-          <table className="w-full min-w-[1040px] table-fixed text-sm border-t border-[#E5E7EB]">
+          <table className="w-full min-w-[1220px] table-fixed text-sm border-t border-[#E5E7EB]">
             {TABLE_COLS}
             {TABLE_HEAD}
             <tbody className="divide-y divide-[#E5E7EB]">
@@ -338,6 +323,23 @@ export default async function CrmList({ searchParams }: { searchParams: LeadSear
           )}
         </CollapsibleLeadsPanel>
       )}
+
+      {/* At the foot of the page, open. It is reference material: needed on the
+          first day and rarely after, so it belongs after the lists rather than
+          above them — and once it is out of the way it no longer needs to be
+          folded. */}
+      <div className="mt-10 border-t border-[#E5E7EB] pt-4">
+        <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.06em] text-[#9CA3AF]">What the colours mean</p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-[#9CA3AF]">
+<span className="flex items-center gap-1.5"><FaFire size={12} className="text-[#D2410A]" />Hot</span>
+        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.RED.dot}`} />Overdue</span>
+        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.YELLOW.dot}`} />Due soon / not yet scheduled</span>
+        <span className="flex items-center gap-1.5"><span className={`w-2 h-2 rounded-full ${BAND_STYLE.GREEN.dot}`} />On track</span>
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500" />Partner lead</span>
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-500" />Keep contact</span>
+        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-[#9CA3AF]" />Lost / Closed</span>
+        </div>
+      </div>
     </div>
   );
 }
