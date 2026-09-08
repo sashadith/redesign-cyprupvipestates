@@ -73,6 +73,8 @@ test("diffSnapshot: a removed unit is not reported when the development is no lo
   const ref = devRef(d());
   const prev = { capturedAt: from, publishStatus: "published", priceFrom: 1, priceTo: 2, unitsTotal: 1, unitsAvailable: 1, units: [{ key: "x", label: null, status: "available", price: 1 }] };
   assert.deepEqual(diffSnapshot(ref, prev, { ...prev, publishStatus: "ready", unitsAvailable: 0, units: [] }, now).map((e) => e.type), ["availability_changed"]); // "removed" suppressed: not published
+  const prevReady = { ...prev, publishStatus: "ready" };
+  assert.deepEqual(diffSnapshot(ref, prevReady, { ...prev, unitsAvailable: 0, units: [] }, now).map((e) => e.type), ["availability_changed"]); // "removed" suppressed: prev side wasn't published either
   assert.deepEqual(diffSnapshot(ref, prev, { ...prev }, now), []);
 });
 

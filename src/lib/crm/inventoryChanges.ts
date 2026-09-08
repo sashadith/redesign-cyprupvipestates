@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { locationMatch } from "@/lib/crm/matching";
 import { publicUrlFor } from "@/lib/crm/inventorySearch";
@@ -88,11 +89,15 @@ export function diffSnapshot(ref: DevRef, prev: SnapshotShape & { capturedAt: Da
   for (const p of prev.units) {
     const c = curByKey.get(p.key);
     if (!c) {
-      // Missing from the live listed set. For a published project that means
-      // the feed dropped it (the row was flipped to "unlisted", which
-      // listedUnits excludes) — "removed" is the honest label. For anything
-      // else the unit list is rewritten nightly and a gap says nothing.
-      if (current.publishStatus === "published") statusChanges.push({ key: p.key, label: p.label, from: p.status, to: "removed", price: p.price });
+      // Missing from the live listed set of a development that was published
+      // in BOTH states means the feed dropped it (the row was flipped to
+      // "unlisted", which listedUnits excludes) or a drive/Dropbox sync
+      // pruned it — "removed" is the honest label. If either state was not
+      // published, that side's unit list was rewritten nightly with fresh
+      // ids (see snapshotOf / unitKey) and a gap says nothing.
+      if (prev.publishStatus === "published" && current.publishStatus === "published") {
+        statusChanges.push({ key: p.key, label: p.label, from: p.status, to: "removed", price: p.price });
+      }
       continue;
     }
     if (p.status !== c.status) statusChanges.push({ key: p.key, label: c.label ?? p.label, from: p.status, to: c.status, price: c.price });
@@ -122,10 +127,42 @@ export type ChangesResult = {
   total: number; returned: number; events: ChangeEvent[];
 };
 
+// Snapshots are captured nightly, so the oldest row at/after the window start
+// is within a day or two of `from` even after a missed run or two — this
+// upper bound keeps the window query from scanning the whole retention
+// period. pickPrevSnapshots still keeps the oldest per development.
+export const SNAPSHOT_LOOKAHEAD_DAYS = 7;
+
+type SnapshotRow = { developmentId: string; capturedAt: Date; publishStatus: string; priceFrom: number | null; priceTo: number | null; unitsTotal: number; unitsAvailable: number; units: unknown };
+
+// The DevelopmentSnapshot table (migration 20260908120000_add_development_snapshots)
+// is additive but not guaranteed to be applied yet — degrade instead of
+// throwing an opaque internal error while a deploy is mid-rollout.
+async function loadSnapshots(from: Date, developmentIds?: string[]): Promise<{ rows: SnapshotRow[]; oldest: Date | null; missingTable: boolean }> {
+  try {
+    const [rows, oldest] = await Promise.all([
+      prisma.developmentSnapshot.findMany({
+        where: {
+          capturedAt: { gte: from, lt: new Date(from.getTime() + SNAPSHOT_LOOKAHEAD_DAYS * DAY) },
+          ...(developmentIds?.length ? { developmentId: { in: developmentIds } } : {}),
+        },
+        select: { developmentId: true, capturedAt: true, publishStatus: true, priceFrom: true, priceTo: true, unitsTotal: true, unitsAvailable: true, units: true },
+      }),
+      prisma.developmentSnapshot.findFirst({ orderBy: { capturedAt: "asc" }, select: { capturedAt: true } }),
+    ]);
+    return { rows, oldest: oldest?.capturedAt ?? null, missingTable: false };
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2021") {
+      return { rows: [], oldest: null, missingTable: true };
+    }
+    throw e;
+  }
+}
+
 export async function inventoryChanges(params: ChangesParams): Promise<ChangesResult> {
   const now = params.now ?? new Date();
   const from = new Date(now.getTime() - params.days * DAY);
-  const [developments, snapshotRows, oldest] = await Promise.all([
+  const [developments, snapshots] = await Promise.all([
     prisma.development.findMany({
       where: { publishStatus: "published", ...(params.developmentIds?.length ? { id: { in: params.developmentIds } } : {}) },
       select: {
@@ -135,13 +172,9 @@ export async function inventoryChanges(params: ChangesParams): Promise<ChangesRe
         override: { select: { alias: true, district: true, town: true, area: true } },
       },
     }),
-    prisma.developmentSnapshot.findMany({
-      where: { capturedAt: { gte: from }, ...(params.developmentIds?.length ? { developmentId: { in: params.developmentIds } } : {}) },
-      select: { developmentId: true, capturedAt: true, publishStatus: true, priceFrom: true, priceTo: true, unitsTotal: true, unitsAvailable: true, units: true },
-    }),
-    prisma.developmentSnapshot.findFirst({ orderBy: { capturedAt: "asc" }, select: { capturedAt: true } }),
+    loadSnapshots(from, params.developmentIds),
   ]);
-  const prevs = pickPrevSnapshots(snapshotRows);
+  const prevs = pickPrevSnapshots(snapshots.rows);
   const districts = (params.districts ?? []).map((s) => s.toLowerCase()).filter(Boolean);
 
   let events: ChangeEvent[] = [];
@@ -155,10 +188,12 @@ export async function inventoryChanges(params: ChangesParams): Promise<ChangesRe
   if (params.types?.length) events = events.filter((e) => params.types!.includes(e.type));
   events.sort((a, b) => ((b.at ?? b.since)?.getTime() ?? 0) - ((a.at ?? a.since)?.getTime() ?? 0) || a.name.localeCompare(b.name));
 
-  const oldestSnapshotAt = oldest?.capturedAt ?? null;
-  const note = oldestSnapshotAt
-    ? `Price and unit-level history starts on ${oldestSnapshotAt.toISOString().slice(0, 10)}; before that only publish, sold-out, back-on-market and new-unit dates are known.`
-    : "No catalogue snapshot has been taken yet: only publish, sold-out, back-on-market and new-unit dates are known. Price and unit-level changes appear from the first nightly snapshot on.";
+  const oldestSnapshotAt = snapshots.oldest;
+  const note = snapshots.missingTable
+    ? "The development_snapshots table is missing — migration 20260908120000_add_development_snapshots has not been applied yet; only publish, sold-out, back-on-market and new-unit dates are known."
+    : oldestSnapshotAt
+      ? `Price and unit-level history starts on ${oldestSnapshotAt.toISOString().slice(0, 10)}; before that only publish, sold-out, back-on-market and new-unit dates are known.`
+      : "No catalogue snapshot has been taken yet: only publish, sold-out, back-on-market and new-unit dates are known. Price and unit-level changes appear from the first nightly snapshot on.";
   return {
     window: { from, to: now, days: params.days },
     coverage: { snapshotBased: prevs.size > 0, oldestSnapshotAt, note },
