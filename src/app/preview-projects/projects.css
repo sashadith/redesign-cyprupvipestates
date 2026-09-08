@@ -247,6 +247,20 @@
 .px__empty { color: var(--text-soft); font-family: var(--font-body), sans-serif; }
 
 .px__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: clamp(10px, 1.1vw, 16px); }
+/* The map tile is pinned to the top-right cell — fixed there whatever the
+   result count, and whatever the fluid column count above resolves to.
+   Leaving its position to DOM order got this wrong twice: it used to consume
+   the third card entirely (a project per page rendered nowhere), and even
+   after that fix it only LOOKED like a corner while the grid happened to
+   resolve to exactly three columns — on a wider screen, four or five columns
+   put it mid-row. -2 / -1 is the last explicit column; auto-fill (unlike
+   auto-fit) keeps empty tracks, so the corner holds for a single result too,
+   with the row simply left open between. Scoped above 768px because that is
+   where the tile is rendered at all — below it the map opens from the filter
+   bar instead (see gridSlots.ts / isMobile). */
+@media (min-width: 769px) {
+  .px__grid > .prjmap { grid-row: 1; grid-column: -2 / -1; }
+}
 
 /* floating map button (always reachable) */
 .px__mapfab {

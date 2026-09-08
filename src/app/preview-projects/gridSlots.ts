@@ -13,9 +13,15 @@
  */
 export type GridSlot<T> = { kind: "card"; card: T } | { kind: "map" };
 
-/** Cards in order, with the map tile in the third slot — or appended when
-    there are fewer than three cards, so it never disappears on small result
-    sets. Mobile gets no tile: the map opens from the filter bar instead. */
+/** Cards in order, with the map tile among them; mobile gets no tile, because
+    there the map opens from the filter bar instead.
+
+    This decides DOM order — reading and tab order — NOT where the tile lands
+    on screen. Its cell is pinned to the top-right corner by CSS
+    (`.px__grid > .prjmap`, projects.css), because the column count is fluid
+    and no DOM index is the corner at every width. Slot three keeps the tab
+    order close to the visual one at the common three-column width, and is a
+    sane fallback if the placement rule ever stops applying. */
 export function gridSlots<T>(cards: T[], isMobile: boolean): GridSlot<T>[] {
   const slots: GridSlot<T>[] = cards.map((card) => ({ kind: "card", card }));
   if (isMobile || cards.length === 0) return slots;
