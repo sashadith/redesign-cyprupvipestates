@@ -106,6 +106,30 @@ const DE_LANDING_MERGES: Record<string, string> = {
      the page has been showing 16 cards for 19 pins. The three are on the target
      now, and the target's own link to this page is gone (see the note above). */
   "luxusvillen-zypern-ueber-1-mio": "/de/luxusvillen-in-zypern",
+
+  // German apartment-cluster consolidation (2026-09-08): same shape as the
+  // villa cluster above, same test. /de/apartment-zypern was confirmed the
+  // flagship — best URL, broadest GSC query footprint (18 distinct queries
+  // over the period, vs. a handful or zero for the others), most inbound
+  // links — after its own 15 pins turned out 15/15 archived and were replaced
+  // with a live filterPropertyType:"Apartment" query.
+  // wohnungen-fuer-junge-familien-zypern: zero filtering beyond
+  // propertyType:"Apartment" (no bedroom/family-amenity signal despite the
+  // slug), zero inbound links anywhere on the DE site, and its only ranking
+  // queries were Paphos apartment-buying terms it shares with (and loses to)
+  // apartment-zypern/wohnungen-in-paphos — not a distinct family-buyer
+  // audience, just an unfiltered duplicate borrowing someone else's intent.
+  // wohnungen-auf-zypern-fuer-investoren: same zero-filtering gap ("für
+  // Investoren" promises nothing an investor-specific query would match), and
+  // its own block heading even mislabeled itself "Die besten Villen" on an
+  // apartments page. Zero GSC impressions in the period — invisible in
+  // search, not just weak. relatedLandingPages entries pointing at either
+  // page were swept from every live DE singlepage first (see the writeup);
+  // no hardcoded hrefs to either page existed outside that one already-
+  // ARCHIVED reference on renditeimmobilien-zypern, left as-is since that
+  // page cannot render.
+  "wohnungen-fuer-junge-familien-zypern": "/de/apartment-zypern",
+  "wohnungen-auf-zypern-fuer-investoren": "/de/apartment-zypern",
 };
 
 // Retired DE blog articles — same shape/mechanism as DE_LANDING_MERGES above
