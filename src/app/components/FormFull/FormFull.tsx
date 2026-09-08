@@ -48,6 +48,9 @@ const FormFull: FC<ContactFormProps> = ({
 }) => {
   const uid = useId();
   const [messagePopup, setMessagePopup] = useState<string | null>(null);
+  /* The shared banner draws a tick; on a failure that contradicts the
+     words next to it. See formFeedback.css. */
+  const [messagePopupIsError, setMessagePopupIsError] = useState(false);
 
   const [filled, setFilled] = useState({
     name: false,
@@ -205,6 +208,7 @@ const FormFull: FC<ContactFormProps> = ({
 
         onFormSubmitSuccess && onFormSubmitSuccess();
 
+        setMessagePopupIsError(false);
         setMessagePopup(
           dataForm.successMessage ||
             formSuccessText(lang),
@@ -222,8 +226,10 @@ const FormFull: FC<ContactFormProps> = ({
       const okFalse = error?.response?.data?.ok === false;
 
       if (blocked || okFalse) {
+        setMessagePopupIsError(true);
         setMessagePopup(dataForm.spamBlockedMessage || dataForm.errorMessage || formErrorText(lang));
       } else {
+        setMessagePopupIsError(true);
         setMessagePopup(formErrorText(lang));
       }
 
@@ -235,7 +241,7 @@ const FormFull: FC<ContactFormProps> = ({
 
   return (
     <>
-      {messagePopup && <div className={`${styles.popup} form-feedback`} role="alert" aria-live="assertive">{messagePopup}</div>}
+      {messagePopup && <div className={`${styles.popup} form-feedback${messagePopupIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{messagePopup}</div>}
 
       <Formik
         innerRef={(inst) => {

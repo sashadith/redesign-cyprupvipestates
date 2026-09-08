@@ -72,6 +72,9 @@ const FormRoi: FC<Props> = ({
 }) => {
   const uid = useId();
   const [message, setMessage] = useState<string | null>(null);
+  /* The shared banner draws a tick; on a failure that contradicts the
+     words next to it. See formFeedback.css. */
+  const [messageIsError, setMessageIsError] = useState(false);
   const [filled, setFilled] = useState({
     name: false,
     surname: false,
@@ -470,6 +473,7 @@ const FormRoi: FC<Props> = ({
         }
 
         onFormSubmitSuccess?.();
+        setMessageIsError(false);
         setMessage(copy.successMessage);
         setTimeout(() => setMessage(null), 10000);
       } else {
@@ -484,6 +488,7 @@ const FormRoi: FC<Props> = ({
         error?.response?.data?.error ||
         copy.errorMessage;
 
+      setMessageIsError(true);
       setMessage(apiMessage);
       setTimeout(() => setMessage(null), 12000);
     } finally {
@@ -493,7 +498,7 @@ const FormRoi: FC<Props> = ({
 
   return (
     <>
-      {message && <div className={`${styles.popup} form-feedback`} role="alert" aria-live="assertive">{message}</div>}
+      {message && <div className={`${styles.popup} form-feedback${messageIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{message}</div>}
 
       <Formik
         innerRef={(inst) => {
