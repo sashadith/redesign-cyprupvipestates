@@ -23,7 +23,14 @@ function isSharePointHost(url: string | null | undefined): boolean {
 }
 
 const DAY = 86_400_000;
-const SOLD_OUT_ARCHIVE_REMINDER_DAYS = 60;
+/* 120 days, raised from 60 on 2026-09-09. A sold-out development is already
+   out of the public listing and off the map, so nothing is being mis-sold
+   while it sits there — the only question is when its search value is spent,
+   and the operator judges that over 3-6 months. The nightly dead-page sweep
+   (soldOutSweeps.ts) archives the genuinely dead ones on its own; this
+   reminder is for the ones that still get impressions but no longer earn
+   their place. */
+const SOLD_OUT_ARCHIVE_REMINDER_DAYS = 120;
 const NEW_DEV_WINDOW_DAYS = 7;
 const READY_TO_PUBLISH_MIN_AGE_DAYS = 3;
 const FEED_MISSING_GRACE_DAYS = 2; // 0-1 days is grace (transient feed hiccups happen); alert from day 2

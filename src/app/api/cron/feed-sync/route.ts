@@ -5,6 +5,7 @@ import { withCronLog, logCronRun } from "@/lib/cronLog";
 import { sweepOverlapCandidates } from "@/lib/overlapSweep";
 import { computeAvailability } from "@/lib/developmentAvailability";
 import { buildFeedDigestMessage, sendFeedNotification, type RemovedUnitLine } from "@/lib/feedNotifications";
+import { markProjectsMissingFromFeedSoldOut, archiveSoldOutPagesWithNoImpressions } from "@/lib/soldOutSweeps";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -178,8 +179,42 @@ export async function GET(req: NextRequest) {
     // type. Four developers with new units used to mean four emails, each
     // carrying only a count; this is one, itemized and linked. See
     // buildFeedDigestMessage for the section order.
+    /* The two nightly sweeps run AFTER every developer has synced, so a project
+       that arrived in this very run is never judged missing. They read syncedAt,
+       which this run has just refreshed for everything that is still in its
+       feed. Failures here must not lose the digest, so each is caught: a sweep
+       that throws leaves its section empty rather than swallowing the whole
+       notification. */
+    let soldOutLines: Awaited<ReturnType<typeof markProjectsMissingFromFeedSoldOut>> = [];
+    try {
+      soldOutLines = await markProjectsMissingFromFeedSoldOut();
+    } catch (e) {
+      console.error("feed-sync: sold-out sweep failed:", e);
+    }
+    let archivedLines: { developmentId: string; development: string; dev: string }[] = [];
+    try {
+      const res = await archiveSoldOutPagesWithNoImpressions();
+      archivedLines = res.archived;
+      if (res.skipped) console.warn(`feed-sync: dead-page sweep skipped — ${res.skipped}`);
+    } catch (e) {
+      console.error("feed-sync: dead-page sweep failed:", e);
+    }
+    const byDev = <T extends { dev: string }>(lines: T[]) => {
+      const m = new Map<string, T[]>();
+      for (const l of lines) m.set(l.dev, [...(m.get(l.dev) ?? []), l]);
+      return Array.from(m, ([dev, xs]) => ({ dev, xs }));
+    };
+
     const notifications: Promise<void>[] = [];
     const digest = buildFeedDigestMessage({
+      soldOutByAbsence: byDev(soldOutLines).map(({ dev, xs }) => ({
+        dev,
+        projects: xs.map((x) => ({ developmentId: x.developmentId, name: x.development, unitsUnlisted: x.unitsUnlisted, missingDays: x.missingDays })),
+      })),
+      archivedDeadPages: byDev(archivedLines).map(({ dev, xs }) => ({
+        dev,
+        projects: xs.map((x) => ({ developmentId: x.developmentId, name: x.development })),
+      })),
       newProjects: results
         .filter((r) => r.createdProjects.length > 0)
         .map((r) => ({ dev: r.dev, projects: r.createdProjects })),

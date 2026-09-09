@@ -55,8 +55,16 @@ const pluralUnit = (n: number) => (n === 1 ? "unit" : "units");
 export type NewUnitLine = RemovedUnitLine;
 export type NewProjectLine = { developmentId: string; name: string };
 
+/** A project the nightly sweep stopped offering because it left its feed. */
+export type SoldOutByAbsenceLine = { developmentId: string; name: string; unitsUnlisted: number; missingDays: number };
+/** A sold-out page the nightly sweep archived because Google stopped showing it. */
+export type ArchivedPageLine = { developmentId: string; name: string };
+
 export type FeedDigestInput = {
   newProjects: { dev: string; projects: NewProjectLine[] }[];
+  /** Optional so the 11 other callers of this builder need no change. */
+  soldOutByAbsence?: { dev: string; projects: SoldOutByAbsenceLine[] }[];
+  archivedDeadPages?: { dev: string; projects: ArchivedPageLine[] }[];
   newUnits: { dev: string; lines: NewUnitLine[] }[];
   removed: { dev: string; lines: RemovedUnitLine[]; nowSoldOut: string[] }[];
   blocked: { dev: string; missing: number; total: number; message?: string }[];
@@ -156,6 +164,48 @@ function buildSections(input: FeedDigestInput): DigestSection[] {
     input.removed,
   );
   if (removed) sections.push(removed);
+
+  /* Both sweeps below already happened; these sections report, they do not ask.
+     They sit after the two that DO ask (a refused feed, a draft awaiting your
+     publish) and before the pure unit noise. */
+  const soldOutTotal = (input.soldOutByAbsence ?? []).reduce((n, d) => n + d.projects.length, 0);
+  if (soldOutTotal) {
+    sections.push({
+      icon: "\u{1F6D1}",
+      title: `NO LONGER OFFERED — ${soldOutTotal} project${soldOutTotal === 1 ? "" : "s"} left its feed`,
+      note: "Marked sold out, not archived: the page keeps its search ranking and drops out of the listing and the map. It returns by itself if the developer lists it again.",
+      devs: sortByDev(input.soldOutByAbsence ?? [])
+        .filter((d) => d.projects.length)
+        .map((d) => ({
+          label: devLabel(d.dev),
+          groups: [...d.projects]
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((pr) => ({
+              title: `${pr.name} — gone ${pr.missingDays} days, ${pr.unitsUnlisted} unit${pr.unitsUnlisted === 1 ? "" : "s"} withdrawn`,
+              url: projectUrl(pr.developmentId), lines: [], more: 0,
+            })),
+          notes: [],
+        })),
+    });
+  }
+
+  const archivedTotal = (input.archivedDeadPages ?? []).reduce((n, d) => n + d.projects.length, 0);
+  if (archivedTotal) {
+    sections.push({
+      icon: "\u{1F5C3}",
+      title: `ARCHIVED — ${archivedTotal} sold-out page${archivedTotal === 1 ? "" : "s"} Google no longer shows`,
+      note: "No impression in 90 days, so there was no search value left to keep. Un-archive from the project page if you disagree.",
+      devs: sortByDev(input.archivedDeadPages ?? [])
+        .filter((d) => d.projects.length)
+        .map((d) => ({
+          label: devLabel(d.dev),
+          groups: [...d.projects]
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .map((pr) => ({ title: pr.name, url: projectUrl(pr.developmentId), lines: [], more: 0 })),
+          notes: [],
+        })),
+    });
+  }
 
   const newTotal = input.newUnits.reduce((n, d) => n + d.lines.length, 0);
   const added = unitSection(
@@ -291,6 +341,10 @@ export function buildFeedDigestMessage(
   const bits: string[] = [];
   if (input.blocked.length) bits.push(`${input.blocked.length} feed${input.blocked.length === 1 ? "" : "s"} refused`);
   if (newProjectTotal) bits.push(`${newProjectTotal} new project${newProjectTotal === 1 ? "" : "s"}`);
+  const soldOutCount = (input.soldOutByAbsence ?? []).reduce((n, d) => n + d.projects.length, 0);
+  const archivedCount = (input.archivedDeadPages ?? []).reduce((n, d) => n + d.projects.length, 0);
+  if (soldOutCount) bits.push(`${soldOutCount} sold out`);
+  if (archivedCount) bits.push(`${archivedCount} archived`);
   if (removedTotal) bits.push(`${removedTotal} removed`);
   if (newTotal) bits.push(`${newTotal} new ${pluralUnit(newTotal)}`);
 
