@@ -4,6 +4,7 @@ import {
   getAllPathsForLang,
   getBlogPostsByLang,
   getCaseStudiesByLang,
+  getPaginatedLandingPageSlugs,
 } from "@/sanity/sanity.utils";
 import { localePrefix, localizedHref } from "@/lib/locale";
 import { prisma } from "@/lib/prisma";
@@ -303,6 +304,24 @@ async function generatePagesSitemap(): Promise<SitemapPage[]> {
           alternates: altIdx.get(`${lang}|${segments[segments.length - 1]}`),
         });
       });
+
+    // ?page=2+ for pages with real server-side pagination (2026-09-09): with
+    // no pager markup, these had no discovery path at all -- see the pager
+    // fix that shipped alongside this. Keyed off the same leaf-slug map
+    // allPaths already built above, so a nested paginated page (none exist
+    // today, but nothing here assumes otherwise) still gets its full parent
+    // path. No hreflang alternates on these -- a page-2+ URL isn't a language
+    // variant of anything, and the base route above already carries them.
+    const byLeaf = new Map(allPaths.map((segments) => [segments[segments.length - 1], segments]));
+    const paginated = await getPaginatedLandingPageSlugs(lang);
+    paginated.forEach(({ slug, totalPages }) => {
+      const segments = byLeaf.get(slug);
+      if (!segments) return; // shouldn't happen -- every PUBLISHED slug is in allPaths
+      const baseRoute = localizedHref(lang, segments);
+      for (let n = 2; n <= totalPages; n++) {
+        pages.push({ route: `${baseRoute}?page=${n}`, changefreq: "weekly", priority: 0.5 });
+      }
+    });
   }
 
   return pages;

@@ -128,16 +128,34 @@ pages share the identical filter config and both still read exactly 60. Worth a 
 
 ## 4. Off-plan pagination — `/off-plan-properties-in-paphos`
 
-| request | expected | verified 2026-09-04 |
-|---|---|---|
-| bare URL | 200, with pager | 200 |
-| `?page=1` | 308 → bare URL | 308 → `/off-plan-properties-in-paphos` |
-| `?page=2` | 200 | 200 |
-| `?page=99` | 404 | 404 |
+**2026-09-09 correction**: this item's "verified 2026-09-04" column only ever re-checked HTTP
+status codes. The bare URL's "expected" column said "200, with pager" — but no check here ever
+re-read the HTML for pager markup, so when an unrelated redesign (2026-09-02) silently dropped it
+by rebuilding the rendering component without porting it over, this checklist's own 09-04 re-run
+still read "200" and moved on, six days after it was actually broken. A status code proves the
+route resolves; it says nothing about what's on the page. Every "expected" value below that
+describes markup, not just a status, must now be checked against the actual rendered HTML —
+`curl` the URL (or a headless fetch) and grep/assert on the markup itself, not just `$?`/status.
 
-(`?page=3`, `?page=4`, `?page=abc` last checked 2026-08-31, unchanged in kind — not re-run this
-pass, spot-checked `?page=2` and `?page=99` instead as the two branches that matter: a valid page
-past 1, and an out-of-range one.)
+| request | expected | how to actually check it | verified 2026-09-09 |
+|---|---|---|---|
+| bare URL | 200, **and** pager markup present with real `?page=N` hrefs (not just a 200) | fetch the HTML, assert on `<nav aria-label="Results pagination">` (or the pager's CSS-module class) containing `href="...?page=2"` — a 200 with no pager text anywhere is a fail, not a pass | 200 + pager markup confirmed present, hrefs `?page=2`/`?page=3` in the HTML — see docs/SITE-CHANGELOG.md 2026-09-09 entry for the pasted markup |
+| `?page=1` | 308 → bare URL | status/Location header check is sufficient here — no markup claim | 308 → `/off-plan-properties-in-paphos` |
+| `?page=2`, `?page=3` | 200, and the SAME pager markup present (not just the grid) | fetch each, assert on the pager the same way as the bare URL | 200 + pager present on both |
+| `?page=99` | 404 | status check is sufficient — a 404 has no markup to assert on | 404 |
+| sitemap (`/sitemaps/pages.xml`) | contains `?page=2`, `?page=3` for this page, and no `?page=` entries for pages without `pagesEnabled` | fetch the sitemap XML, grep for the page's slug + `?page=` | see 2026-09-09 SITE-CHANGELOG entry |
+
+(`?page=4`, `?page=abc` last checked in kind 2026-08-31/09-04 — still 200/404 respectively by the
+same code path exercised above, not re-run every pass.)
+
+**Audit of the rest of this file for the same shape** (an "expected" column describing rendered
+content/markup, checked against a status code instead): items 2, 3, and 5 below are fine — their
+"count" columns are already href/card counts read out of the live HTML (explicitly documented as
+such, e.g. item 2's "Deduplicated hrefs" method), not status codes standing in for content. Item 1
+is a pure redirect-hop check, where a status code (200 on the merged form, 301 on an archived one)
+*is* the actual claim being made, not a stand-in for something else — no gap there either. This
+item was the only one where the "expected" column asserted something the "verified" column never
+actually tested.
 
 ## 5. filterStage fills (off-plan landing pages)
 

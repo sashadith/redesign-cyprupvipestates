@@ -604,7 +604,24 @@ async function resolveBlocks(blocks: any[] | null | undefined, lang: string, pag
         // is unreachable for all of them, so their rendering is unaffected.
         // Only a block explicitly flipped on (direct DB write, same pattern
         // as every other field on this block type) gets real pagination.
-        if (b.pagesEnabled) {
+        //
+        // landingProjectsBlock only, deliberately: a projectsSectionBlock
+        // renders through the classic block-map switch's own case, which
+        // hands filteredProjects to ProjectsSectionBlockComponent's existing
+        // client-side pager (paginate: usingFiltered, 8/page, useState-driven,
+        // no ?page= awareness). That pager would then window inside whatever
+        // single MAX_FILTERED_PROJECTS-sized batch this branch fetched for the
+        // requested page, with nothing on the page indicating the other
+        // batches exist -- a paginated-looking grid that's silently missing
+        // most of its own matches, worse than the plain 60-item cap it would
+        // replace (see docs/SITE-CHANGELOG.md, 2026-09-09 entry). Guarding
+        // here rather than trusting no one ever sets pagesEnabled on this
+        // block type -- the field is on the same shared shape, the DB doesn't
+        // stop it, and the 2026-09-02 landing-page redesign already proved
+        // this file can't rely on every caller staying in sync by inspection.
+        // Until ProjectsSectionBlockComponent gets a real server-paginated
+        // mode of its own, this block type gets the ordinary capped query.
+        if (b.pagesEnabled && b._type === "landingProjectsBlock") {
           pageConsumed = true;
           const requestedPage = page ?? 1;
           const paged = await computeFilteredProjectsPaged(lang, b.filterCity, b.filterPropertyType, liveOpts, requestedPage, MAX_FILTERED_PROJECTS);
@@ -790,6 +807,42 @@ export async function getAllPathsForLang(lang: string): Promise<string[][]> {
     });
   }
   return Object.values(map);
+}
+
+// Which published Singlepages have real server-side pagination live, and how
+// many pages each has -- for the sitemap to list ?page=2+ alongside the bare
+// URL (2026-09-09: added together with the pager markup fix; before that,
+// pagesEnabled pages had no discovery path for page 2+ at all -- see
+// docs/SITE-CHANGELOG.md). landingProjectsBlock only, matching the same
+// pagesEnabled guard in resolveBlocks above -- a projectsSectionBlock never
+// gets real pagination, so it never belongs in this list either. Returns leaf
+// slugs, not full paths -- callers already have (or can get) the segment path
+// via getAllPathsForLang and shouldn't duplicate that resolution here.
+export async function getPaginatedLandingPageSlugs(lang: string): Promise<{ slug: string; totalPages: number }[]> {
+  if (!isLocale(lang)) return [];
+  const rows = await prisma.singlepage.findMany({
+    where: { language: lang as any, slug: { not: "" }, status: "PUBLISHED" },
+    select: { slug: true, contentBlocks: true },
+  });
+  const out: { slug: string; totalPages: number }[] = [];
+  for (const row of rows) {
+    const blocks = Array.isArray(row.contentBlocks) ? (row.contentBlocks as any[]) : [];
+    const block = blocks.find((b) => b?._type === "landingProjectsBlock" && b?.pagesEnabled);
+    if (!block) continue;
+    const liveOpts = {
+      maxBeachMinutes: block.maxBeachMinutes,
+      excludePropertyTypes: block.excludePropertyTypes,
+      filterStage: block.filterStage,
+      priceMin: block.priceMin,
+      priceMax: block.priceMax,
+    };
+    // Page size must match resolveBlocks' own call exactly (MAX_FILTERED_PROJECTS)
+    // -- a mismatch here would advertise a totalPages the live page disagrees
+    // with, either 404ing a listed URL or leaving a real page unlisted.
+    const { totalPages } = await computeFilteredProjectsPaged(lang, block.filterCity, block.filterPropertyType, liveOpts, 1, MAX_FILTERED_PROJECTS);
+    if (totalPages > 1) out.push({ slug: row.slug, totalPages });
+  }
+  return out;
 }
 
 // Child landing pages of a parent singlepage (via parentSanityId) — for the contextual
