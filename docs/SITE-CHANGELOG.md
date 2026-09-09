@@ -495,3 +495,49 @@ batch, the 2026-09-02 landing-pager drop (a real commit, at least attributable, 
 unnoticed for a week), and the render-vs-status conflation in the 09-03 merge itself. Direct DB
 writes with zero audit trail are how a page's own inventory can go stale without the page — or
 anyone maintaining it — ever finding out.
+
+## 2026-09-09 — Reversed: the 09-03 `luxusimmobilien-auf-zypern` merge
+
+**This un-merges one of the two 2026-09-03 villa-cluster mergers (commit `714ce20`) —
+`luxusvillen-zypern-ueber-1-mio` stays merged, that decision isn't revisited here.**
+
+The 09-03 merge's own reasoning was query overlap: "every term it appeared for,
+`/de/luxusvillen-in-zypern` also appeared for, and ranked better." Post-backfill data shows the
+opposite happened for the query that actually mattered. `luxusimmobilien-auf-zypern` held position
+**~5** for `"luxusimmobilien zypern"` continuously through the merge and for the six days after —
+Aug 30: 3.8, Sept 3 (merge day): 5, Sept 6 (freshest): 5, undisturbed throughout. The flagship's own
+position on that exact query, meanwhile, got *worse* after absorbing the page it was supposed to
+inherit ranking strength from: Sept 3: 25, **Sept 4: 74**, Sept 5: 55.5, Sept 6: 55 — against a
+pre-merge baseline around 26-30. Three days of post-merge data is thin and some of this could still
+be redirect-attribution lag rather than a permanent loss, but the direction is unambiguous: the
+merge cost the cluster its best German position on this term and the flagship gained nothing
+measurable in return.
+
+**Reverted:**
+- `src/middleware.ts` — the `"luxusimmobilien-auf-zypern"` entry removed from `DE_LANDING_MERGES`.
+  `luxusvillen-zypern-ueber-1-mio`'s own entry (added the same evening, different page, not part of
+  this reversal) is untouched.
+- The page's own content had the identical archived-pins problem the flagship had (see the
+  render-vs-status incident above) — its 11 pinned refs were checked, and **0 of 11 were still
+  `PUBLISHED`**, restoring it as-is would have shown a page of redirect placeholders, not real
+  inventory. Fixed in the same pass: pinned array dropped, `filterPropertyType: "Villa"` set
+  (Cyprus-wide, matching the flagship's own fix and the page's own historical pin mix, which was
+  8-of-11 shared with the flagship's villa-focused array). Judgment call, not dictated by any
+  existing config on the page — flagging it as such rather than presenting it as the only possible
+  choice.
+- Internal links checked: unlike the original 2026-09-01 four-page merge, this 09-03 merge's own
+  commit never repointed any inline blog links (confirmed — no DE blog article mentioning either
+  page's slug was edited on or after 09-03). One ambiguous data point: `meerblick-immobilien-limassol`'s
+  `relatedLandingPages` was updated 2026-09-03T18:22 (shortly after the merge commit) and currently
+  lists the flagship among 4 related pages, none of them this page — timing is suggestive but there's
+  no prior-state record to confirm this was a repoint rather than an unrelated edit. Not reverted;
+  flagged for a human to judge if it matters.
+
+**Verified before deploy:** local build, isolated worktree — bare URL 200 (was 301), 60 real
+project cards rendered (0 developer-redirect placeholders), `luxusvillen-zypern-ueber-1-mio`
+unaffected (still 301). Production verification pending this change's deploy.
+
+**For whoever reads this in a month and is tempted to re-merge on the same 08-30 traffic-overlap
+reasoning that justified it the first time:** check this page's own query position first. If it's
+still holding ~5 on `"luxusimmobilien zypern"`, the overlap argument that merged it originally
+never actually held for this specific query, whatever it looked like in the aggregate.
