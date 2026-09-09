@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import CollapsibleList from "../CollapsibleList";
 import ComposeEmailModal from "./ComposeEmailModal";
 import { isManualInteractionType } from "@/lib/crm/interactionHelpers";
 import { adminDateTime } from "@/lib/adminTime";
+import { ActionIcon } from "../ActionIcons";
 
 export type TimelineRow = {
   id: string;
@@ -72,6 +73,18 @@ export default function UnifiedTimeline({
   const [quickAdd, setQuickAdd] = useState<"note" | "call" | "whatsapp" | "email-log" | null>(null);
   const [showCompose, setShowCompose] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  /* React 18 does not reset an uncontrolled form after a server action — that
+     only became the default in 19 — so a saved note stayed in the textarea and
+     the next entry started with the previous one still in it. Wrapping the
+     action lets the form clear itself once the write has actually returned. */
+  const quickAddForm = useRef<HTMLFormElement>(null);
+  const emailLogForm = useRef<HTMLFormElement>(null);
+  const clearAfter = (action: (fd: FormData) => Promise<void> | void, ref: React.RefObject<HTMLFormElement>) =>
+    async (fd: FormData) => {
+      await action(fd);
+      ref.current?.reset();
+    };
   const [, startDeleteTransition] = useTransition();
 
   const filtered = useMemo(
@@ -110,41 +123,46 @@ export default function UnifiedTimeline({
         <button
           type="button"
           onClick={() => setQuickAdd(quickAdd === "note" ? null : "note")}
-          className="rounded-md border border-[#E5E7EB] text-xs px-2.5 py-1.5 hover:bg-[#F8F9FA]"
+          className="inline-flex items-center gap-1.5 rounded-md border border-[#E5E7EB] bg-white text-xs px-2.5 py-1.5 transition-colors hover:bg-[#F3F6F5] hover:border-[#1B4B43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B4B43] focus-visible:ring-offset-1"
         >
-          + Note
+          <ActionIcon k="note" />
+          Note
         </button>
         <button
           type="button"
           onClick={() => setQuickAdd(quickAdd === "call" ? null : "call")}
-          className="rounded-md border border-[#E5E7EB] text-xs px-2.5 py-1.5 hover:bg-[#F8F9FA]"
+          className="inline-flex items-center gap-1.5 rounded-md border border-[#E5E7EB] bg-white text-xs px-2.5 py-1.5 transition-colors hover:bg-[#F3F6F5] hover:border-[#1B4B43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B4B43] focus-visible:ring-offset-1"
         >
-          + Call log
+          <ActionIcon k="phone" />
+          Call log
         </button>
         <button
           type="button"
           disabled={!leadEmail}
           onClick={() => setShowCompose(true)}
           title={!leadEmail ? "No email on file for this lead" : undefined}
-          className="rounded-md border border-[#E5E7EB] text-xs px-2.5 py-1.5 hover:bg-[#F8F9FA] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          className="inline-flex items-center gap-1.5 rounded-md border border-[#E5E7EB] bg-white text-xs px-2.5 py-1.5 transition-colors hover:bg-[#F3F6F5] hover:border-[#1B4B43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B4B43] focus-visible:ring-offset-1 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-[#E5E7EB]"
         >
-          + Email
+          <ActionIcon k="email" />
+          Email
         </button>
         <button
           type="button"
           onClick={() => setQuickAdd(quickAdd === "email-log" ? null : "email-log")}
-          className="rounded-md border border-[#E5E7EB] text-xs px-2.5 py-1.5 hover:bg-[#F8F9FA]"
+          className="inline-flex items-center gap-1.5 rounded-md border border-[#E5E7EB] bg-white text-xs px-2.5 py-1.5 transition-colors hover:bg-[#F3F6F5] hover:border-[#1B4B43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B4B43] focus-visible:ring-offset-1"
           title="Record an email that was actually sent/received outside this system (e.g. Apple Mail) — logs it as a real contact, sends nothing"
         >
-          + Email log
+          <ActionIcon k="email-log" />
+          Email log
         </button>
         {leadPhone && (
           <button
             type="button"
             onClick={() => setQuickAdd(quickAdd === "whatsapp" ? null : "whatsapp")}
-            className="rounded-md border border-[#E5E7EB] text-xs px-2.5 py-1.5 hover:bg-[#F8F9FA]"
+            className="inline-flex items-center gap-1.5 rounded-md border border-[#E5E7EB] bg-white text-xs px-2.5 py-1.5 transition-colors hover:bg-[#F3F6F5] hover:border-[#1B4B43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B4B43] focus-visible:ring-offset-1"
           >
-            + WhatsApp
+          <ActionIcon k="whatsapp" />
+          WhatsApp
           </button>
         )}
       </div>
@@ -162,7 +180,11 @@ export default function UnifiedTimeline({
           unchanged). */}
       {(quickAdd === "note" || quickAdd === "call" || quickAdd === "whatsapp") && (
         <form
-          action={quickAdd === "note" ? addNoteAction : quickAdd === "call" ? addCallAction : logWhatsAppAction}
+          ref={quickAddForm}
+          action={clearAfter(
+            quickAdd === "note" ? addNoteAction : quickAdd === "call" ? addCallAction : logWhatsAppAction,
+            quickAddForm,
+          )}
           className="mb-4 space-y-2"
         >
           <textarea
@@ -210,7 +232,7 @@ export default function UnifiedTimeline({
           contact anywhere else in the system — no direction, so it's
           invisible to "last contact" and the urgency cadence). */}
       {quickAdd === "email-log" && (
-        <form action={addEmailLogAction} className="mb-4 space-y-2">
+        <form ref={emailLogForm} action={clearAfter(addEmailLogAction, emailLogForm)} className="mb-4 space-y-2">
           <div className="flex flex-wrap items-center gap-3">
             <label className="flex items-center gap-1.5 text-xs text-[#6B7280]">
               Direction

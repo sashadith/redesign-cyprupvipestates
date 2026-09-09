@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { createOrGetBookingRequestAction } from "./bookingActions";
+import { ActionIcon } from "../ActionIcons";
 
 // The Cockpit's "Booking link" button (Phase 3). Always goes through
 // createOrGetBookingRequestAction, which itself dedupes against any already-
@@ -42,8 +43,9 @@ export default function BookingButton({ leadId }: { leadId: string }) {
       <button
         type="button"
         onClick={() => setPhase("pick")}
-        className="flex-1 sm:flex-none text-center rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-2 hover:bg-[#1B4B43]/5"
+        className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-md border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#1B4B43] transition-colors hover:bg-[#F3F6F5] hover:border-[#1B4B43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B4B43] focus-visible:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-[#E5E7EB]"
       >
+        <ActionIcon k="calendar" />
         Booking link
       </button>
 
