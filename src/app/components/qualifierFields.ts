@@ -195,3 +195,27 @@ export function leadBudgetLabel(min: number | null | undefined, max: number | nu
   if (max == null) return `${money(min)}+`;
   return `${money(min)} – ${money(max)}`;
 }
+
+/* The bucket -> [min, max] mapping, so the public form, the lead handler and
+   the CRM's inline editor all cut the budget at the same places. It used to
+   live as a literal inside /api/leads; a second copy anywhere would let a lead
+   be filed in one bucket and read back as another. */
+export const BUDGET_RANGES: Record<string, [number | null, number | null]> = {
+  "0-200000": [null, 200000],
+  "200000-500000": [200000, 500000],
+  "500000-1000000": [500000, 1000000],
+  "1000000-2000000": [1000000, 2000000],
+  "2000000-": [2000000, null],
+};
+
+/* Which bucket a stored pair belongs to, for preselecting a dropdown. Returns
+   "" when the lead carries a hand-entered range that matches no bucket — the
+   editor then shows a "custom" option rather than silently rounding it into a
+   neighbouring bucket on the next save. */
+export function budgetValueFor(min: number | null | undefined, max: number | null | undefined): string {
+  if (min == null && max == null) return "";
+  for (const [value, [lo, hi]] of Object.entries(BUDGET_RANGES)) {
+    if ((lo ?? null) === (min ?? null) && (hi ?? null) === (max ?? null)) return value;
+  }
+  return "custom";
+}

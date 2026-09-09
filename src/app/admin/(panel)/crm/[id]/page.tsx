@@ -4,8 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import {
   addLeadNote, assignLead, mergeLeads, updateLeadFollowUp, addCallLog, addEmailLog,
-  resetLeadFollowUpCadenceAction, deleteLeadInteraction,
-} from "../../../actions";
+  resetLeadFollowUpCadenceAction, deleteLeadInteraction, updateLeadQualificationAction } from "../../../actions";
 import { ELEVATED_NO_CONTACT_STATUSES } from "@/lib/actionCenter/rules/crm";
 import { sendCrmEmailAction, logWhatsAppSentAction, discardEmailDraftAction } from "./emailActions";
 import PendingDraftCard from "./PendingDraftCard";
@@ -248,6 +247,7 @@ export default async function LeadDetail({ params }: { params: { id: string } })
             status: lead.status,
             languagePreference: lead.languagePreference,
             nationality: lead.nationality,
+            countryOfResidence: lead.countryOfResidence,
             source: lead.source,
             phone: lead.phone,
             email: lead.email,
@@ -277,15 +277,17 @@ export default async function LeadDetail({ params }: { params: { id: string } })
           presentationSummary={presentationSummary}
           assignAction={assign}
           saveFollowUpAction={saveFollowUp}
+          saveQualificationAction={updateLeadQualificationAction}
           resetFollowUpAction={resetFollowUp}
           contactImplyingStatuses={ELEVATED_NO_CONTACT_STATUSES}
         />
       </div>
 
-      <BookingPanel bookings={bookingRows} leadName={`${lead.firstName} ${lead.lastName}`.trim()} />
-
-      {pendingDraft && <PendingDraftCard draft={pendingDraft} discardAction={discardEmailDraftAction} />}
-
+      {/* Order follows the job, not the history of the code: anything that
+          changes what you are about to do comes first (is this a duplicate? is
+          a draft waiting? is a meeting proposed?), then what has happened, then
+          the deeper work of matching and presenting. The timeline used to sit
+          below three blocks that are usually empty. */}
       {duplicates.length > 0 && (
         <div className="bg-[#FFF7ED] border border-[#FED7AA] rounded-lg p-4 mb-6">
           <h2 className="text-sm font-semibold text-[#9A3412] mb-2">⚠ Possible duplicate{duplicates.length > 1 ? "s" : ""} ({duplicates.length})</h2>
@@ -306,6 +308,10 @@ export default async function LeadDetail({ params }: { params: { id: string } })
           <p className="text-[11px] text-[#9A3412]/70 mt-2">Merging moves the other lead’s activity here and deletes it.</p>
         </div>
       )}
+
+      {pendingDraft && <PendingDraftCard draft={pendingDraft} discardAction={discardEmailDraftAction} />}
+
+      <BookingPanel bookings={bookingRows} leadName={`${lead.firstName} ${lead.lastName}`.trim()} />
 
       <div className="mb-6">
         <UnifiedTimeline

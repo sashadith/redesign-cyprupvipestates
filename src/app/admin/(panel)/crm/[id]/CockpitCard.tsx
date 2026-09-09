@@ -5,6 +5,9 @@ import BookingButton from "./BookingButton";
 import StatusPopover from "../StatusPopover";
 import { adminDateTime } from "@/lib/adminTime";
 import { leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
+import { ActionIcon } from "../ActionIcons";
+import QualificationEditor from "./QualificationEditor";
+import { COUNTRY_NAME_BY_CODE, countryCodeToFlagEmoji } from "@/lib/countries";
 
 // The Lead Cockpit's hero card (Phase 1 of 4, 2026-07-23; consolidated in the
 // correction batch, 2026-07-23) — a single glance-able summary that now
@@ -15,6 +18,21 @@ import { leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/co
 const LOCALE_LABEL: Record<string, string> = { en: "EN", de: "DE", pl: "PL", ru: "RU" };
 
 const CHANNEL_LABEL: Record<string, string> = { EMAIL: "Email", WHATSAPP: "WhatsApp", PHONE: "Phone" };
+
+/* The preferred channel gets its own colour, so the one fact that decides HOW
+   you contact someone is readable at a glance instead of being a grey pill
+   among grey pills.
+   Light tints rather than the brand colours themselves: WhatsApp's #25D366
+   carries white text at 1.98:1 and is unreadable. These measure 6.5 / 6.4 /
+   5.5:1.
+   Each also carries its channel icon — the status pill beside it can be
+   yellow (Contacted) or blue (Communicating) too, so hue alone would not tell
+   the two pills apart. */
+const CHANNEL_STYLE: Record<string, { pill: string; icon: string }> = {
+  WHATSAPP: { pill: "bg-[#DCFCE7] text-[#166534]", icon: "whatsapp" },
+  EMAIL: { pill: "bg-[#FEF3C7] text-[#92400E]", icon: "email" },
+  PHONE: { pill: "bg-[#DBEAFE] text-[#1D4ED8]", icon: "phone" },
+};
 
 const MAX_AUTO_FOLLOWUPS = 3;
 
@@ -130,7 +148,46 @@ const groupLabel = (text: string) => (
   <h3 className="text-[11px] font-semibold text-[#9CA3AF] uppercase tracking-wide mt-4 mb-1 first:mt-0">{text}</h3>
 );
 
+/* Same shape as the secondary buttons on the leads list, so the two screens
+   speak one language: quiet by default, filling in on hover, with a visible
+   keyboard focus ring. */
+const ACTION_BTN =
+  "inline-flex items-center justify-center gap-1.5 rounded-md border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#1B4B43] transition-colors " +
+  "hover:bg-[#F3F6F5] hover:border-[#1B4B43] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1B4B43] focus-visible:ring-offset-2";
+const ACTION_BTN_OFF =
+  "inline-flex items-center justify-center gap-1.5 rounded-md border border-[#E5E7EB] bg-white px-3 py-2 text-sm font-medium text-[#9CA3AF] cursor-not-allowed";
+
 const groupGrid = "grid sm:grid-cols-2 lg:grid-cols-3 gap-x-4";
+
+/* Free text does not belong in a third of a row. A note runs to a paragraph or
+   more, and in a narrow column it becomes a ribbon twenty words tall that
+   pushes everything else off the screen. These span the whole grid and come
+   last, after the short facts someone actually scans for. Long ones fold, so
+   the block below them stays reachable without a page of scrolling. */
+const FOLD_AT = 320;
+const wideField = (label: string, value: any) => {
+  if (!value) return null;
+  const text = String(value);
+  return (
+    <div className="py-1 sm:col-span-2 lg:col-span-3">
+      <dt className="text-xs text-[#6B7280]">{label}</dt>
+      {text.length > FOLD_AT ? (
+        <dd className="text-sm mt-0.5">
+          <details className="group">
+            <summary className="cursor-pointer list-none">
+              <span className="block whitespace-pre-wrap break-words group-open:hidden">{text.slice(0, FOLD_AT).trimEnd()}…</span>
+              <span className="mt-1 inline-block text-xs text-[#1B4B43] group-open:hidden">Show all</span>
+              <span className="hidden text-xs text-[#1B4B43] group-open:inline">Show less</span>
+            </summary>
+            <span className="mt-1 block whitespace-pre-wrap break-words">{text}</span>
+          </details>
+        </dd>
+      ) : (
+        <dd className="text-sm mt-0.5 whitespace-pre-wrap break-words">{text}</dd>
+      )}
+    </div>
+  );
+};
 
 export default function CockpitCard({
   lead,
@@ -140,6 +197,7 @@ export default function CockpitCard({
   presentationSummary,
   assignAction,
   saveFollowUpAction,
+  saveQualificationAction,
   resetFollowUpAction,
   contactImplyingStatuses,
 }: {
@@ -151,6 +209,7 @@ export default function CockpitCard({
     status: string;
     languagePreference: string | null;
     nationality: string | null;
+    countryOfResidence: string | null;
     source: string;
     phone: string | null;
     email: string | null;
@@ -181,6 +240,9 @@ export default function CockpitCard({
   presentationSummary: PresentationSummary;
   assignAction: (formData: FormData) => void;
   saveFollowUpAction: (formData: FormData) => void;
+  /* Promise-typed, unlike its neighbours: QualificationEditor awaits it so it
+     can close the editor only once the write has actually landed. */
+  saveQualificationAction: (formData: FormData) => Promise<void>;
   resetFollowUpAction: (formData: FormData) => void;
   contactImplyingStatuses: readonly string[];
 }) {
@@ -202,8 +264,19 @@ export default function CockpitCard({
               {LOCALE_LABEL[lead.languagePreference] ?? lead.languagePreference.toUpperCase()}
             </span>
           )}
+          {(lead.countryOfResidence || lead.nationality) && (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#E5E7EB] px-2 py-0.5 text-xs font-medium text-[#374151]"
+              title={lead.countryOfResidence ? COUNTRY_NAME_BY_CODE[lead.countryOfResidence] ?? lead.countryOfResidence : undefined}
+            >
+              {lead.countryOfResidence && <span className="text-sm leading-none">{countryCodeToFlagEmoji(lead.countryOfResidence)}</span>}
+              {lead.nationality ?? (lead.countryOfResidence ? COUNTRY_NAME_BY_CODE[lead.countryOfResidence] : null)}
+            </span>
+          )}
+          {/* "0d" on its own said nothing. It is days in the current status, which
+              is not the same as the lead's age — so it says which. */}
           <span className="text-xs text-[#9CA3AF]" title={`In ${lead.status.replace(/_/g, " ")} for ${stageDays} day${stageDays === 1 ? "" : "s"}`}>
-            {stageDays}d
+            In status: {stageDays}d
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -214,9 +287,15 @@ export default function CockpitCard({
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-3 text-sm">
         {lead.phone && <a href={`tel:${lead.phone}`} className="text-[#1B4B43] hover:underline">{lead.phone}</a>}
         {lead.email && <a href={`mailto:${lead.email}`} className="text-[#1B4B43] hover:underline">{lead.email}</a>}
-        {lead.nationality && <span className="text-xs text-[#6B7280]">{lead.nationality}</span>}
         {lead.preferredChannel && (
-          <span className="inline-flex items-center rounded-full bg-[#F3F4F6] px-2 py-0.5 text-xs font-medium text-[#374151]">
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${
+              CHANNEL_STYLE[lead.preferredChannel]?.pill ?? "bg-[#F3F4F6] text-[#374151]"
+            }`}
+          >
+            {CHANNEL_STYLE[lead.preferredChannel] && (
+              <ActionIcon k={CHANNEL_STYLE[lead.preferredChannel].icon} size={12} />
+            )}
             Prefers {CHANNEL_LABEL[lead.preferredChannel] ?? lead.preferredChannel}
           </span>
         )}
@@ -240,7 +319,7 @@ export default function CockpitCard({
 
       <div className="grid sm:grid-cols-3 gap-3 mt-4">
         <div className="rounded-md bg-[#F8F9FA] p-3">
-          <div className="text-[11px] text-[#9CA3AF]">Last contact</div>
+          <div className="text-xs font-medium text-[#6B7280]">Last contact</div>
           <div className="text-sm mt-0.5">
             {lastContact
               ? `${timeAgo(lastContact.occurredAt)}${lastContact.direction ? ` · ${DIRECTION_LABEL[lastContact.direction] ?? lastContact.direction}` : ""}${lastContact.channel && lastContact.channel !== "SYSTEM" ? ` · ${CHANNEL_LABEL[lastContact.channel] ?? lastContact.channel}` : ""}`
@@ -248,7 +327,7 @@ export default function CockpitCard({
           </div>
         </div>
         <div className="rounded-md bg-[#F8F9FA] p-3">
-          <div className="text-[11px] text-[#9CA3AF]">Presentation</div>
+          <div className="text-xs font-medium text-[#6B7280]">Presentation</div>
           <div className="text-sm mt-0.5">
             {presentationSummary ? (
               <>
@@ -265,7 +344,7 @@ export default function CockpitCard({
           </div>
         </div>
         <div className="rounded-md bg-[#F8F9FA] p-3">
-          <div className="text-[11px] text-[#9CA3AF]">Next follow-up</div>
+          <div className="text-xs font-medium text-[#6B7280]">Next follow-up</div>
           <form action={saveFollowUpAction} className="flex items-center gap-1 mt-0.5">
             <input
               type="date"
@@ -276,7 +355,7 @@ export default function CockpitCard({
             <button className="rounded-md border border-[#E5E7EB] px-1.5 py-1 text-xs hover:bg-white">Save</button>
           </form>
           <div className="flex items-center gap-1.5 mt-1">
-            <span className="text-[11px] text-[#9CA3AF]">Auto follow-up {lead.autoFollowUpCount}/{MAX_AUTO_FOLLOWUPS}</span>
+            <span className="text-xs font-medium text-[#6B7280]">Auto follow-up {lead.autoFollowUpCount}/{MAX_AUTO_FOLLOWUPS}</span>
             <form action={resetFollowUpAction}>
               <button className="text-[11px] text-[#1B4B43] hover:underline" title="Start a fresh chain of 3 automatic follow-ups">Reset</button>
             </form>
@@ -288,15 +367,17 @@ export default function CockpitCard({
         {lead.email ? (
           <a
             href={`mailto:${lead.email}`}
-            className="flex-1 sm:flex-none text-center rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-2 hover:bg-[#1B4B43]/5"
+            className={`flex-1 sm:flex-none ${ACTION_BTN}`}
           >
+            <ActionIcon k="email" />
             Email
           </a>
         ) : (
           <span
-            className="flex-1 sm:flex-none text-center rounded-md border border-[#E5E7EB] text-[#9CA3AF] text-sm px-4 py-2 cursor-not-allowed"
+            className={`flex-1 sm:flex-none ${ACTION_BTN_OFF}`}
             title="No email on file for this lead"
           >
+            <ActionIcon k="email" />
             Email
           </span>
         )}
@@ -305,8 +386,9 @@ export default function CockpitCard({
             href={`https://wa.me/${formatWaPhone(lead.phone)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 sm:flex-none text-center rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-2 hover:bg-[#1B4B43]/5"
+            className={`flex-1 sm:flex-none ${ACTION_BTN}`}
           >
+            <ActionIcon k="whatsapp" />
             WhatsApp
           </a>
         )}
@@ -325,13 +407,20 @@ export default function CockpitCard({
       <dl className="mt-5 pt-4 border-t border-[#E5E7EB]">
         {groupLabel("Qualification")}
         <div className={groupGrid}>
-          {field("Budget", leadBudgetLabel(lead.budgetMin, lead.budgetMax))}
-          {field("Timeline", leadTimelineLabel(lead.timeline))}
-          {field("Financing", leadFinancingLabel(lead.financing))}
-          {field("Property interest", lead.propertyTypeInterest)}
-          {field("Internal note (intake)", lead.notes)}
+          {/* The four fields that move during a conversation are editable in
+              place; the rest of the block stays read-only. */}
+          <QualificationEditor
+            leadId={lead.id}
+            budgetMin={lead.budgetMin}
+            budgetMax={lead.budgetMax}
+            timeline={lead.timeline}
+            financing={lead.financing}
+            propertyTypeInterest={lead.propertyTypeInterest ?? []}
+            saveAction={saveQualificationAction}
+          />
           {field("Project interest", lead.projectInterestTitle)}
-          {field("Message", lead.message)}
+          {wideField("Message", lead.message)}
+          {wideField("Internal note (intake)", lead.notes)}
         </div>
 
         {groupLabel("Acquisition")}

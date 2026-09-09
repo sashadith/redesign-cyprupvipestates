@@ -10,7 +10,7 @@ import { recordInboundLead } from "@/lib/leadNotify";
 import { matchDevelopmentsForLead } from "@/lib/crm/matching";
 import { ALLOWED_HOSTS, safeUrl, escapeHtml, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
 import nodemailer from "nodemailer";
-import { PROPERTY_VALUES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
+import { PROPERTY_VALUES, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
 
 const LOCALES = new Set(["en", "de", "pl", "ru"]);
 
@@ -72,13 +72,7 @@ export async function POST(request: Request) {
     if (phoneNorm.length < 7 || phoneNorm.length > 25) return blocked("phone");
 
     // Qualification fields (all optional — backward compatible with the basic form)
-    const BUDGETS: Record<string, [number | null, number | null]> = {
-      "0-200000": [null, 200000],
-      "200000-500000": [200000, 500000],
-      "500000-1000000": [500000, 1000000],
-      "1000000-2000000": [1000000, 2000000],
-      "2000000-": [2000000, null],
-    };
+    const BUDGETS = BUDGET_RANGES;
     /* 3m/6m are no longer offered but stay mapped: a page cached in someone's
        browser can still post them, and dropping the key would silently null the
        answer instead of storing it. */

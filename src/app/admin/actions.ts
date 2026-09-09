@@ -26,7 +26,7 @@ import { findEmptyProjectsBlock } from "@/lib/projectsBlockValidation";
 import { ELEVATED_NO_CONTACT_STATUSES as CONTACT_IMPLYING_STATUSES } from "@/lib/actionCenter/rules/crm";
 import { logWhatsAppSentAction } from "./(panel)/crm/[id]/emailActions";
 import { bucketOf, sourceForBucket, isLeadBucket, BUCKET_LABEL } from "@/lib/crm/leadBucket";
-import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS } from "@/app/components/qualifierFields";
+import { PROPERTY_VALUES, LEAD_TIMELINE_OPTIONS, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
 
 // Convert every `{__html}` rich-text marker (produced by the block editor) into
 // Portable Text via the shared converter — so all blocks store consistent PT and
@@ -2240,4 +2240,94 @@ export async function reanalyzeFeed(analysisId: string, _prev: any, _formData: F
   revalidatePath(`/admin/developments/developers/${row.developerAccountId}`);
   revalidatePath("/admin/developments/developers/compare");
   return { ok: true };
+}
+
+/* Inline qualification edit from the lead cockpit.
+ *
+ * Separate from updateLead: that one owns the whole record, validates a name
+ * and an email, and redirects to a dedicated page. Budget, timeline, financing
+ * and property interest are the fields that change DURING a conversation —
+ * sending someone to a form page and back to correct one dropdown is why they
+ * were being left stale.
+ *
+ * The activity log names what actually changed rather than "Lead details
+ * edited": on a record several people work, "budget €500k – €1M → €1M – €2M"
+ * is the difference between an audit trail and a shrug.
+ */
+export async function updateLeadQualificationAction(formData: FormData) {
+  const session = await requireSession();
+  const id = String(formData.get("id") ?? "");
+  const before = await prisma.lead.findFirst({
+    where: { id, deletedAt: null },
+    select: { id: true, budgetMin: true, budgetMax: true, timeline: true, financing: true, propertyTypeInterest: true },
+  });
+  if (!before) return;
+
+  const budgetKey = String(formData.get("budget") ?? "");
+  // "manual" = amounts typed in rather than a bracket picked. Read as numbers
+  // and normalised so a reversed pair (from 2M, to 1M) stores as a sane range
+  // instead of one that can never match anything.
+  const amount = (k: string) => {
+    const raw = String(formData.get(k) ?? "").trim();
+    if (raw === "") return null;
+    const n = Math.round(Number(raw));
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  };
+  let budgetMin: number | null;
+  let budgetMax: number | null;
+  if (budgetKey === "manual") {
+    const lo = amount("budgetMin");
+    const hi = amount("budgetMax");
+    [budgetMin, budgetMax] = lo != null && hi != null && lo > hi ? [hi, lo] : [lo, hi];
+  } else if (budgetKey === "") {
+    [budgetMin, budgetMax] = [null, null];
+  } else {
+    [budgetMin, budgetMax] = BUDGET_RANGES[budgetKey] ?? [null, null];
+  }
+
+  const oneOf = (k: string, allowed: readonly string[]) => {
+    const v = String(formData.get(k) ?? "").trim();
+    return allowed.includes(v) ? v : null;
+  };
+  const timeline = oneOf("timeline", LEAD_TIMELINES);
+  const financing = oneOf("financing", LEAD_FINANCING);
+  const propertyTypeInterest = formData.getAll("propertyTypeInterest").map(String).filter((t) => LEAD_PROP_TYPES.includes(t));
+
+  const changes: string[] = [];
+  const fmt = (lo: number | null, hi: number | null) => leadBudgetLabel(lo, hi) ?? "—";
+  if (before.budgetMin !== budgetMin || before.budgetMax !== budgetMax) {
+    changes.push(`budget ${fmt(before.budgetMin, before.budgetMax)} → ${fmt(budgetMin, budgetMax)}`);
+  }
+  if ((before.timeline ?? null) !== timeline) {
+    changes.push(`timeline ${leadTimelineLabel(before.timeline) ?? "—"} → ${leadTimelineLabel(timeline) ?? "—"}`);
+  }
+  if ((before.financing ?? null) !== financing) {
+    changes.push(`financing ${leadFinancingLabel(before.financing) ?? "—"} → ${leadFinancingLabel(financing) ?? "—"}`);
+  }
+  const beforeTypes = [...(before.propertyTypeInterest ?? [])].sort().join(", ");
+  const afterTypes = [...propertyTypeInterest].sort().join(", ");
+  if (beforeTypes !== afterTypes) {
+    changes.push(`property interest ${beforeTypes || "—"} → ${afterTypes || "—"}`);
+  }
+  // Nothing moved — a click on Save with no edit should not fill the timeline
+  // with empty entries.
+  if (!changes.length) return;
+
+  await prisma.lead.update({
+    where: { id },
+    data: { budgetMin, budgetMax, timeline: timeline as any, financing: financing as any, propertyTypeInterest },
+  });
+  const summary = `Qualification updated — ${changes.join("; ")}`;
+  await prisma.leadActivity.create({
+    data: { leadId: id, type: "EDIT", content: summary, createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
+  });
+  await prisma.leadInteraction.create({
+    data: {
+      leadId: id, type: "SYSTEM", channel: "SYSTEM", body: summary,
+      createdByUserId: (session.user as any)?.id ?? null,
+      createdByName: session.user?.name ?? "admin",
+    },
+  });
+  revalidatePath(`/admin/crm/${id}`);
+  revalidatePath("/admin/crm");
 }
