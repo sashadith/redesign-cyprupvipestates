@@ -203,6 +203,90 @@ Project listings and lead forms are deliberately NOT exported (empty
 `div.cvp-embed` placeholders the consumer fills from its own inventory), so no
 `/projects` URL is duplicated anywhere.
 
+## 2026-09-01 — German villa cluster consolidated into `luxusvillen-in-zypern` (backfilled 2026-09-09)
+
+*Backfilled from the `DE_LANDING_MERGES` map in `src/middleware.ts`, where this
+was recorded at the time — this changelog entry was simply never added. No new
+change; documenting what already shipped.*
+
+Six pages collapsed into `luxusvillen-in-zypern` as the flagship, on two
+different kinds of evidence:
+
+**Confirmed duplicate by direct inventory-set comparison** — not just similar
+copy:
+- `villen-in-zypern-fuer-investoren`, `villen-auf-zypern-fuer-auswanderer`,
+  `villen-zypern-aufenthaltstitel-provisionsfrei` — all three queried nothing
+  but `filterPropertyType: "Villa"` (no city) and rendered the byte-identical
+  130-listing set as the flagship's own live query — three titles, one query.
+- `villen-in-paphos` (both its nested `luxusvillen-in-zypern/villen-in-paphos`
+  and flat leaf form) — a `projectsSectionBlock` fixed list that rendered a
+  set byte-identical to its own parent page. No independent page to preserve.
+
+**Decided by search behaviour**, not inventory overlap — these two had
+hand-pinned lists instead of a live query, so the usual duplicate-inventory
+test didn't apply:
+- `luxusimmobilien-auf-zypern`: 346 impressions in August at position 24.9,
+  and **not one query of its own** — every query it appeared for, the
+  flagship also appeared for, and ranked better on. Its three unique pins
+  (City Landmark, Infinity, Royal Bay Resort) were moved to the flagship
+  before the merge shipped, so they kept their only German placement.
+- `luxusvillen-zypern-ueber-1-mio`: 555 of 560 impressions came from queries
+  the flagship also served and ranked better for (position 45.5 vs. the
+  flagship's 18.4). Of its 11 pins, only 3 actually rendered (Küünal Villas,
+  El Pez, Zeus Villas) — the other 8 pointed at archived projects, so the
+  page had been showing 16 cards for 19 pins. The three real ones moved to
+  the flagship.
+
+**Deliberately not merged alongside these:** `strandvillen-zypern`. It looked
+like the same case on paper (44% shared pins, loses its queries to the same
+flagship), but the demand behind it is real — 803 impressions across 17
+beach/sea queries since June, 412 of those on "zypern villa am meer kaufen"
+alone. The answer there was to make the specialist page win its own term, not
+remove it — it stayed independent.
+
+## 2026-09-08 — German/Polish/Russian apartment cluster consolidated into `apartment-zypern` (backfilled 2026-09-09)
+
+*Backfilled from the same map — this changelog entry was also never added at
+the time. See PR #12.*
+
+Same shape and test as the villa cluster above, run for the apartment
+cluster. `apartment-zypern` was confirmed the flagship — best URL, broadest
+GSC query footprint (18 distinct queries over the period, versus a handful or
+zero for the others), most inbound links — after its own 15 pins turned out
+15/15 archived and were replaced with a live `filterPropertyType: "Apartment"`
+query. Its child `apartment-zypern/wohnungen-in-paphos` stayed independent
+(genuinely Paphos-scoped, already live-filtered correctly; its 12 dead pins
+were cleared for hygiene only, no behaviour change).
+
+Two pages merged into the flagship:
+- `wohnungen-fuer-junge-familien-zypern`: zero filtering beyond
+  `propertyType: "Apartment"` — no bedroom or family-amenity signal despite
+  the slug — zero inbound links anywhere on the DE site, and its only ranking
+  queries were Paphos apartment-buying terms it shared with (and lost to)
+  `apartment-zypern/wohnungen-in-paphos`. Not a distinct family-buyer
+  audience; an unfiltered duplicate borrowing someone else's intent.
+- `wohnungen-auf-zypern-fuer-investoren`: the same zero-filtering gap ("für
+  Investoren" promised nothing an investor-specific query would match), and
+  its own block heading mislabeled itself "Die besten Villen" on an
+  apartments page. Zero GSC impressions in the period — invisible in search,
+  not just weak.
+
+`relatedLandingPages` entries pointing at either retired page were swept from
+every live DE singlepage before the redirects shipped. No hardcoded hrefs
+existed to either page outside one already-`ARCHIVED` reference on
+`renditeimmobilien-zypern`, left as-is since that page cannot render.
+
+Kept independent, not merged: `wohnungen-in-limassol` (genuinely
+Limassol-scoped) and `wohnungen-zypern-auswandern` (the only one of the three
+broad duplicates with real ranking signal and its own inbound link — kept as
+the emigration-context entry point).
+
+**Known open issue, not part of this merge, and not tracked in a doc yet:**
+`MAX_FILTERED_PROJECTS = 60` still caps the flagship's render count well
+below its true match count (154 matches, only 60 render; the Paphos child
+matches 95, same 60-card cap). Raised at the time, not written down anywhere
+until this note — worth its own doc if it's not fixed soon.
+
 ## 2026-09-09 — Paphos "investment properties" pages retired, redirected to the Paphos+Villa page (DE/PL/RU)
 
 PRs #18 (DE), #19 (PL), #20 (RU), one commit each, run locale by locale. All
