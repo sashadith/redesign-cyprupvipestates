@@ -202,3 +202,46 @@ quality, check the consuming pages for a correct canonical first.
 Project listings and lead forms are deliberately NOT exported (empty
 `div.cvp-embed` placeholders the consumer fills from its own inventory), so no
 `/projects` URL is duplicated anywhere.
+
+## 2026-09-09 — Paphos "investment properties" pages retired, redirected to the Paphos+Villa page (DE/PL/RU)
+
+PRs #18 (DE), #19 (PL), #20 (RU), one commit each, run locale by locale. All
+three retiring pages shared the same defect: `filterCity: "Paphos"` with **no
+`filterPropertyType` filter at all**, despite the "investment" framing — every
+Paphos listing (198 matches, 60 rendered under the render cap), not an
+investment-scoped subset. No per-listing investment data exists anywhere on
+the site to back that framing (`investmentData` is 0/407 populated; the ROI
+calculator runs on city+type market presets, not per-listing facts), so the
+page's promise could not be fixed by better filtering — it was retired outright
+rather than repaired.
+
+Redirected to each locale's one live Paphos+Villa page — the correctly-scoped
+home for the same intent, not merely the nearest-named page (verified: block
+config, live/GSC data, and inbound-link audit per locale before writing
+anything). RU's target, `villy-v-pafose-dlya-investorov`, is itself a live
+Track 1 internal-link target; nothing about that page changed, it only gained
+one more inbound redirect.
+
+| Locale | Retired | Redirects to |
+|---|---|---|
+| DE | `investment-immobilien-paphos` | `villen-paphos-investoren-kaufen` |
+| PL | `inwestycje-w-nieruchomosci-pafos` | `wille-na-sprzedaz-pafos-dla-inwestorow` |
+| RU | `investitsii-v-nedvizhimost-pafos` | `villy-v-pafose-dlya-investorov` |
+
+Each locale: inbound `relatedLandingPages`/hardcoded links repointed first (DB
+writes, verified live), then the `middleware.ts` redirect (first entries in
+new `PL_LANDING_MERGES`/`RU_LANDING_MERGES` maps, alongside the existing
+`DE_LANDING_MERGES`), then the Singlepage archived — in that order, so there
+was never a 404 gap. All three retired pages confirmed dropped from the
+sitemap. Full redirect table (730 `legacyProjectRedirect` rows) and all 22
+`middleware.ts` landing-merge entries re-verified live at 200 after this
+change — zero broken.
+
+**Standing gap, not part of this entry:** this changelog was not updated for
+the two consolidations immediately before this one — the DE villa cluster
+(2026-09-01, `luxusvillen-in-zypern` absorbing several pages) and the DE/PL/RU
+apartment cluster (2026-09-08, `apartment-zypern` flagship). Both are real,
+live, documented in their own commit messages and PR descriptions, just never
+logged here. Any GSC series for those retired slugs before this note should
+still be read as migration, not decay — the absence of an entry here is a
+paperwork gap, not evidence the merges didn't happen.
