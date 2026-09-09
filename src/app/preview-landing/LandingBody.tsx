@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { PortableText } from "@portabletext/react";
 import { localizedHref } from "@/lib/locale";
 import { urlFor } from "@/sanity/sanity.client";
@@ -8,6 +9,30 @@ import OffPlanSnapshot from "./OffPlanSnapshot";
 import FaqAccordion, { type FaqItem } from "@/app/preview-insights/FaqAccordion";
 import { HEADINGS } from "@/app/components/SectionLinks/SectionLinks";
 import { insightsComponents } from "@/app/preview-insights/insightsBlocks";
+// Pager visual style reused as-is from ProjectsSectionBlockComponent (.pager/
+// .pagerLink/.pagerLinkActive/.pagerLinkDisabled/.pagerGap) -- same reuse the
+// deleted LandingProjectsBlockComponent made before the 2026-09-02 redesign
+// dropped it. That component's pager markup never made it into this one when
+// it replaced it (see docs/SITE-CHANGELOG.md, 2026-09-09 entry); this restores
+// it rather than reinventing it.
+import pagerStyles from "@/app/components/ProjectsSectionBlockComponent/ProjectsSectionBlockComponent.module.scss";
+
+// Windowed page numbers: 1 … current-1 current current+1 … last. Duplicated
+// from ProjectsSectionBlockComponent's identical helper (and from the deleted
+// LandingProjectsBlockComponent, which duplicated it first) rather than
+// exporting it from that untouched, out-of-scope client component.
+function pageWindow(current: number, total: number): Array<number | "…"> {
+  const keep = new Set([1, total, current - 1, current, current + 1]);
+  const out: Array<number | "…"> = [];
+  let prev = 0;
+  for (let n = 1; n <= total; n++) {
+    if (!keep.has(n)) continue;
+    if (prev && n - prev > 1) out.push("…");
+    out.push(n);
+    prev = n;
+  }
+  return out;
+}
 
 /* The landing family's body, held apart from any one route so the live
    catch-all and the preview tree render the identical thing — the same split
@@ -50,6 +75,7 @@ export default function LandingBody({
   page,
   lang,
   relatedLinks = [],
+  pagePath,
 }: {
   page: any;
   lang: string;
@@ -57,6 +83,12 @@ export default function LandingBody({
       them, so they are the family's internal linking — dropping them in the new
       body would strip internal links from almost every landing page. */
   relatedLinks?: { title: string; href: string }[];
+  /** The current page's own relative path (e.g. "/en/off-plan-properties-in-paphos"),
+      needed to build real, crawlable ?page=N hrefs. Only read when the projects
+      block actually has pagination enabled (totalPages > 1) -- every other
+      caller can omit it, same as the deleted LandingProjectsBlockComponent's
+      pagePath prop worked. */
+  pagePath?: string;
 }) {
   const blocks: any[] = Array.isArray(page.contentBlocks) ? page.contentBlocks : [];
   const intro = blocks.find((b) => b?._type === "landingIntroBlock");
@@ -94,6 +126,17 @@ export default function LandingBody({
 
   const heroImage = intro?.image ? urlFor(intro.image).url() : null;
 
+  // totalPages is only ever set by resolveBlocks when pagesEnabled is true on
+  // this block; every other landingProjectsBlock leaves it undefined, so
+  // isPaginated is false for all of them exactly as before this change.
+  const totalPages: number | undefined = projectsBlock?.totalPages;
+  const currentPage: number = projectsBlock?.currentPage ?? 1;
+  const isPaginated = !!totalPages && totalPages > 1 && !!pagePath;
+  // Page 1 always points at the bare path with no query string, so the
+  // canonical/no-query URL is never one click away from itself with a stray
+  // "?page=1".
+  const hrefFor = (n: number) => `${pagePath}${n > 1 ? `?page=${n}` : ""}`;
+
   return (
       <main className="pl" data-theme="dark">
         {/* The article hero, class for class — full-bleed cover behind a scrim
@@ -129,6 +172,34 @@ export default function LandingBody({
                 <LandingProjectsGrid projects={projects} lang={lang} />
               ) : (
                 <p className="pl-grid__empty">{s.empty}</p>
+              )}
+              {isPaginated && (
+                <nav className={pagerStyles.pager} aria-label="Results pagination">
+                  {currentPage > 1 ? (
+                    <Link href={hrefFor(currentPage - 1)} className={pagerStyles.pagerLink} aria-label="Previous">‹</Link>
+                  ) : (
+                    <span className={`${pagerStyles.pagerLink} ${pagerStyles.pagerLinkDisabled}`} aria-hidden="true">‹</span>
+                  )}
+                  {pageWindow(currentPage, totalPages!).map((it, i) =>
+                    it === "…" ? (
+                      <span key={`gap-${i}`} className={pagerStyles.pagerGap} aria-hidden="true">…</span>
+                    ) : (
+                      <Link
+                        key={it}
+                        href={hrefFor(it)}
+                        className={it === currentPage ? `${pagerStyles.pagerLink} ${pagerStyles.pagerLinkActive}` : pagerStyles.pagerLink}
+                        aria-current={it === currentPage ? "page" : undefined}
+                      >
+                        {it}
+                      </Link>
+                    ),
+                  )}
+                  {currentPage < totalPages! ? (
+                    <Link href={hrefFor(currentPage + 1)} className={pagerStyles.pagerLink} aria-label="Next">›</Link>
+                  ) : (
+                    <span className={`${pagerStyles.pagerLink} ${pagerStyles.pagerLinkDisabled}`} aria-hidden="true">›</span>
+                  )}
+                </nav>
               )}
             </div>
           </section>

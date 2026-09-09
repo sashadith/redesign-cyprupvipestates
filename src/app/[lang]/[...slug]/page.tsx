@@ -661,7 +661,7 @@ const SinglePage = async ({ params, searchParams }: Props) => {
            hero carries the title and none of these pages has a parent, so the
            trail would be a single self-link. The related-page links are kept,
            and passed through. */
-        <LandingBody page={page} lang={lang} relatedLinks={relatedPages} />
+        <LandingBody page={page} lang={lang} relatedLinks={relatedPages} pagePath={pagePath} />
       ) : isClassicPage(allBlocks) ? (
         /* The classic block set — 45 pages with 45 different block orders, so
            this body walks the blocks rather than laying out a fixed page. The

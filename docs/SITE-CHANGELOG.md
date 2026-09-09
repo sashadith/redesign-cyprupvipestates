@@ -329,3 +329,71 @@ live, documented in their own commit messages and PR descriptions, just never
 logged here. Any GSC series for those retired slugs before this note should
 still be read as migration, not decay — the absence of an entry here is a
 paperwork gap, not evidence the merges didn't happen.
+
+## 2026-09-09 — Landing-page pagination: restored the pager a redesign silently dropped, six days after it was approved
+
+The lesson here matters more than the fix. `?page=N` pagination for
+`landingProjectsBlock` (`pagesEnabled`, commit `512feeb`) was built, reviewed,
+and approved live on 2026-08-26/27 — real server-rendered pager markup, real
+`?page=N` hrefs, verified on `/off-plan-properties-in-paphos`. Six days later,
+an unrelated visual redesign (`3272bd8`/`6b5b1f2`, 2026-09-02) rebuilt the
+entire landing-page component tree from scratch (`LandingBody` +
+`LandingProjectsGrid`, replacing the old `LandingProjectsBlockComponent`) to
+give all 105+ landing pages a new look. Pagination — six days old, built in a
+separate line of work — was simply not on that redesign's parity checklist:
+its own commit message reasons carefully about what does and doesn't carry
+over (breadcrumbs dropped on purpose, related-page links deliberately kept)
+but never mentions pagination at all, and its own verification was "107x HTTP
+200, no errors" — a status-code smoke test that cannot see a missing pager. A
+cleanup commit 90 minutes later (`c333e37`) then deleted the now-unreferenced
+old component, correctly verified as dead code by that point — it didn't cause
+the regression, it just removed the evidence of what the new one was missing.
+
+Nobody caught it because nothing re-checked it. `docs/POST-DEPLOY-CHECKLIST.md`
+has had an item for this exact page since 2026-08-31, re-run on 2026-09-04 —
+*after* the redesign — and its "verified" column still read "200" and moved
+on. The checklist's own method only ever asserted on HTTP status codes; the
+"with pager" note in its "expected" column was never independently checked
+against the rendered HTML, so it sat silently stale for a week. Fixed
+alongside this entry — see that file's own 2026-09-09 correction, which also
+audits the rest of the checklist for the same status-code-standing-in-for-
+markup shape (nothing else in it has this gap: the other count-based items
+already read real hrefs out of live HTML, not a status code).
+
+**The fix, three parts, one PR:**
+
+1. **Pager restored** on `landingProjectsBlock` pages — `LandingBody.tsx` now
+   takes a `pagePath` prop (plumbed from `[lang]/[...slug]/page.tsx`, where it
+   already existed for other purposes) and renders the same pager markup the
+   deleted component had (`<nav aria-label="Results pagination">`, real
+   `<Link href="...?page=N">` tags, reusing `ProjectsSectionBlockComponent`'s
+   pager styles as before), gated on `totalPages > 1` — invisible on every
+   landing page except the one with `pagesEnabled` set today.
+2. **`projectsSectionBlock` guarded against the same flag**, defensively, in
+   `resolveBlocks` (`sanity.utils.ts`) — `pagesEnabled` now only takes effect
+   on `landingProjectsBlock`. A `projectsSectionBlock` page (the classic
+   block-map switch's own render path) has no server-rendered pager of its
+   own; its existing pager is `ProjectsSectionBlockComponent`'s client-side,
+   `useState`-driven, 8-per-page window over whatever array it's handed — with
+   `pagesEnabled` on, that array would silently become one `MAX_FILTERED_
+   PROJECTS`-sized server batch out of several, and the client pager would
+   present it as complete with no indication more exist. That's worse than the
+   plain 60-item cap it would replace, so this block type is refused outright
+   rather than given a second, differently-shaped pager built in a hurry.
+   `apartment-zypern` (`projectsSectionBlock`, 154 true matches, 60 rendered)
+   stays capped until it gets a real one.
+3. **Sitemap now lists page 2+** for any page with real pagination
+   (`getPaginatedLandingPageSlugs` in `sanity.utils.ts`, consumed by
+   `src/app/sitemaps/[type]/route.ts`) — closing the other half of the 08-27
+   baseline's reasoning, which assumed pager links alone would carry discovery
+   and treated the sitemap gap as backlog. With no pager links live for a
+   week, that reasoning had nothing under it; the sitemap addition is no
+   longer optional.
+
+Verified locally before deploy: bare URL, `?page=2`, `?page=3` all render the
+pager with real hrefs; `?page=1` → 308; `?page=99`/`?page=abc` → 404; sitemap
+gained exactly 3 new `?page=` entries (2, 3, 4) for this page and nothing
+else; three other `landingProjectsBlock` pages without `pagesEnabled`
+(`villy-v-pafose-dlya-investorov`, `investment-paphos`,
+`nieruchomosci-przy-plazy-pafos`) render unchanged, no stray pager.
+Production verification pending this PR's deploy.
