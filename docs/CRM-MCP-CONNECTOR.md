@@ -83,7 +83,7 @@ A connection can only be approved while a **pairing window** is open in the same
 
 | Tool | Effect |
 |---|---|
-| `crm_log_interaction` | CALL / NOTE / WHATSAPP_OUT / WHATSAPP_IN on the timeline, as you, tagged `via: mcp` |
+| `crm_log_interaction` | CALL / NOTE / WHATSAPP_OUT / WHATSAPP_IN / EMAIL_OUT / EMAIL_IN on the timeline, as you, tagged `via: mcp` — the same rows the admin's log buttons write (email logs may be subject-only; EMAIL_OUT is for mail you sent yourself, nothing is sent; inbound mail is filed by the poller, so a manual EMAIL_IN is only for replies that arrived elsewhere) |
 | `crm_update_lead` | status (same timeline rows as the dropdown), follow-up date, hot, channel, language, salutation, budget, timeline, financing, notes |
 | `crm_draft_email` | stores a draft + emails you a preview with the approval code |
 | `crm_send_email` | sends a draft verbatim if the code matches |
@@ -142,5 +142,5 @@ E-MAILS AN KUNDEN
 - Änderungswünsche = neuer Entwurf.
 
 INTERNE ÄNDERUNGEN
-crm_log_interaction und crm_update_lead direkt ausführen; bei unklarer Anweisung vorher ein Satz, was du änderst. Nach jedem Kundenkontakt Status, Follow-up-Datum und hot-Flag aktuell halten. WhatsApp: du formulierst, ich sende, du loggst es als WHATSAPP_OUT.
+crm_log_interaction und crm_update_lead direkt ausführen; bei unklarer Anweisung vorher ein Satz, was du änderst. Nach jedem Kundenkontakt Status, Follow-up-Datum und hot-Flag aktuell halten. WhatsApp: du formulierst, ich sende, du loggst es als WHATSAPP_OUT. Mails, die ich selbst verschickt habe, loggst du als EMAIL_OUT (Betreff reicht). Antworten in meinem Postfach landen automatisch als EMAIL_IN in der Timeline — EMAIL_IN nur von Hand loggen, wenn ich dir sage, dass eine Antwort woanders angekommen ist.
 ```

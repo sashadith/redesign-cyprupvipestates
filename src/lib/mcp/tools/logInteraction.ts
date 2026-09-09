@@ -1,4 +1,3 @@
-import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { prisma } from "@/lib/prisma";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
@@ -6,14 +5,7 @@ import { logLeadInteraction } from "@/lib/crm/logInteraction";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { fmtDate } from "../format";
-
-const Input = z.object({
-  leadId: z.string().uuid(),
-  type: z.enum(["CALL", "NOTE", "WHATSAPP_OUT", "WHATSAPP_IN"]),
-  body: z.string().trim().min(1).max(4000),
-  occurredAt: z.string().datetime({ offset: true }).optional().describe("ISO 8601, with or without a UTC offset; defaults to now"),
-  leadReacted: z.boolean().optional().describe("The lead responded — resets the auto-follow-up chain (implied for WHATSAPP_IN)"),
-});
+import { LogInteractionInput } from "./logInteractionInput";
 
 export function registerLogInteraction(server: McpServer) {
   server.registerTool(
@@ -21,8 +13,8 @@ export function registerLogInteraction(server: McpServer) {
     {
       title: "Log an interaction",
       description:
-        "Records a CALL, NOTE, WHATSAPP_OUT or WHATSAPP_IN on a lead's timeline exactly as the admin's log buttons do — attributed to the operator, marked as entered via Claude. CALL/WHATSAPP advance the follow-up cadence and promote NEW → CONTACTED; NOTE is internal and changes nothing else. WhatsApp is sent by the operator via wa.me — this only logs it.",
-      inputSchema: Input,
+        "Records a CALL, NOTE, WHATSAPP_OUT, WHATSAPP_IN, EMAIL_OUT or EMAIL_IN on a lead's timeline exactly as the admin's log buttons do — attributed to the operator, marked as entered via Claude. Every type except NOTE advances the follow-up cadence and promotes NEW → CONTACTED; WHATSAPP_IN and EMAIL_IN imply leadReacted; NOTE is internal and changes nothing else. Nothing is sent here: WhatsApp goes out via wa.me, and EMAIL_OUT is for a mail the operator sent themselves outside the crm_draft_email flow (an email log may be subject-only). Inbound mail to the operator's mailbox is filed as EMAIL_IN automatically by the inbox poller — log EMAIL_IN by hand only for a reply that arrived elsewhere, or you create a duplicate.",
+      inputSchema: LogInteractionInput,
       annotations: { readOnlyHint: false, idempotentHint: false, destructiveHint: false },
     },
     async (input, ctx) =>
@@ -31,7 +23,7 @@ export function registerLogInteraction(server: McpServer) {
         if (!lead) throw new ToolError("not_found", "Lead not found.");
         const occurredAt = input.occurredAt ? new Date(input.occurredAt) : undefined;
         const { interactionId } = await logLeadInteraction({ userId: c.userId, userName: c.userName }, input.leadId, {
-          type: input.type, body: input.body, occurredAt, leadReacted: input.leadReacted, via: "mcp",
+          type: input.type, body: input.body, subject: input.subject, occurredAt, leadReacted: input.leadReacted, via: "mcp",
         });
         return { interactionId, type: input.type, occurredAt: fmtDate(occurredAt ?? new Date()) };
       }),

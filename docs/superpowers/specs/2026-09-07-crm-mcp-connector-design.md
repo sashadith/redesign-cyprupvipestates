@@ -207,7 +207,7 @@ Common rules for every tool:
 
 | Tool | Input | Effect |
 |---|---|---|
-| `crm_log_interaction` | `{ leadId, type: CALL\|NOTE\|WHATSAPP_OUT\|WHATSAPP_IN, body, occurredAt?, leadReacted? }` | Creates the `LeadInteraction` exactly as the admin's log actions do (direction/channel derived from type, `createdByUserId` = token user, `createdByName` = user name, `metadata.via = "mcp"`); for CALL/WHATSAPP_* applies `applyFollowUpCadence(leadId, "manual_contact", { leadReacted })`. NOTE does not touch cadence (matches admin). |
+| `crm_log_interaction` | `{ leadId, type: CALL\|NOTE\|WHATSAPP_OUT\|WHATSAPP_IN\|EMAIL_OUT\|EMAIL_IN, body?, subject?, occurredAt?, leadReacted? }` (EMAIL_* added 2026-09-09 — same rows as the admin's "+ Email log", subject-only allowed; body required for every other type) | Creates the `LeadInteraction` exactly as the admin's log actions do (direction/channel derived from type, `createdByUserId` = token user, `createdByName` = user name, `metadata.via = "mcp"`); for CALL/WHATSAPP_* applies `applyFollowUpCadence(leadId, "manual_contact", { leadReacted })`. NOTE does not touch cadence (matches admin). |
 | `crm_update_lead` | `{ leadId, status?, viewingScheduledAt?, nextFollowUpAt?, hot?, preferredChannel?, languagePreference?, salutation?, budgetMin?, budgetMax?, timeline?, financing?, notes? }` | Applies the same rules as the admin edit/status actions: a status change writes the `STATUS_CHANGE` interaction with the same metadata shape as `updateLeadStatus`; `status = VIEWING_SCHEDULED` requires `viewingScheduledAt`; `hot: true` sets `hotAt = now`, `hot: false` clears it. Terminal statuses (CLOSED/LOST) are allowed. Returns the updated compact row. |
 
 `crm_update_lead` does **not** change `source`/bucket, `assignedToId`, or
