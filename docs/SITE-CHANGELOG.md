@@ -473,3 +473,25 @@ it. Now traced precisely: a hardcoded sentence in the page's own DE body
 copy, using an old slug variant of Cap St Georges Resort that predates a
 rename. Present on both page 1 and page 2 (static content, unrelated to
 pagination), which is why it inflated a naive href count on both.
+
+## 2026-09-07 — Untraced: 10 legacy Project rows archived, no record anywhere
+
+Found 2026-09-09 while auditing why `/de/luxusvillen-in-zypern`'s pinned list renders 4 live
+listings out of 31 refs. 10 `Project` translation groups moved from `PUBLISHED` to `ARCHIVED` in a
+single ~9-hour window on 2026-09-07 (03:42–12:20 UTC): Golden View Villas, Sunset View Villas,
+Riviera Residences, Hills Residences, Seaview, Hillcrest Residences, Royal Bay Resort, Küünal
+Villas, El Pez, Zeus Villas. Four of the ten (Royal Bay Resort, Küünal Villas, El Pez, Zeus Villas)
+had been deliberately pinned to this exact flagship page just four days earlier, checked live at
+the time (see `docs/DEAD-PROJECT-REFS-FRAGILITY.md`'s 2026-09-03 incident entry).
+
+Checked every record this codebase keeps for who did this and why: no `git` commit touches these
+rows, no `AdminAuditLog` entry (0 rows in the window — that log only covers actions taken through
+the admin UI, and this evidently wasn't one), no `SyncLog` entry (that model tracks feed-driven
+`Development` sync, not legacy `Project` archival). A direct DB write, untraceable by anything this
+project logs. Not investigated further — logged per instruction, no action taken.
+
+**Third time this week** something has landed in this tree with no trace of who or why: this
+batch, the 2026-09-02 landing-pager drop (a real commit, at least attributable, but its effect went
+unnoticed for a week), and the render-vs-status conflation in the 09-03 merge itself. Direct DB
+writes with zero audit trail are how a page's own inventory can go stale without the page — or
+anyone maintaining it — ever finding out.

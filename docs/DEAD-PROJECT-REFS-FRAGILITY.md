@@ -36,6 +36,36 @@ The Seaview/Gioia West pattern (a redirect row that exists but points nowhere) w
 1. **Wrong slug, developer page is live** (Gioia West, Seaview, Oasis Garden) — the redirect's own target string was stale/mistyped.
 2. **Right slug, but the target itself is archived** (Aion, Konia Aura, Noble Apartments, Olea Residences) — the redirect was created correctly at the time, then the Development it pointed to was later archived too, and nothing re-checked the redirect.
 
+## Incident: "does it render" was used as the archived-status check, 2026-09-03
+
+Direct evidence the fragility above isn't theoretical. Two DE villa-cluster pages were merged
+into `/de/luxusvillen-in-zypern` on 2026-09-03 (commits `714ce20`, `1264fcb`). Each merge checked
+its source page's pinned refs "against the catalogue" before deciding which to carry over —
+`luxusimmobilien-auf-zypern`'s commit message explicitly calls out City Landmark, Infinity, and
+Royal Bay Resort as the three pins that "render," out of its full pinned list.
+
+Checked again on 2026-09-09 (flagship ref audit, prompted by the flagship reading 4 live listings
+out of 31 pinned): **City Landmark had been `ARCHIVED` since 2026-08-30, and Infinity since
+2026-08-24 — both already archived at the moment the 09-03 merge called them "rendering."** The
+check wasn't wrong on its own terms — `resolveProjectRefs` genuinely does return a card for both,
+exactly as this document's Summary section describes — but "a card renders" and "this is live
+inventory" are different questions, and the check only answered the first one. Infinity is this
+document's own open case (no redirect target, slug collision — its card link is inert). City
+Landmark does have a working redirect (to a live Development), so its link isn't broken, but it
+isn't a distinct listing either.
+
+The other two pins pulled over the same evening (Küünal Villas, El Pez, Zeus Villas from
+`luxusvillen-zypern-ueber-1-mio`; Royal Bay Resort from `luxusimmobilien-auf-zypern`) genuinely
+were `PUBLISHED` at merge time — the check was right for those four. All four were archived four
+days later, 2026-09-07, in the untraced batch `docs/SITE-CHANGELOG.md` logs separately. That's a
+different failure (see "What's still open" below) — not the render-vs-status conflation, just
+ordinary drift arriving faster than anyone expected.
+
+**The lesson for the next person doing this kind of merge:** "does `resolveProjectRefs` return a
+card for this ref" is never the right test for whether a pin is worth carrying forward — it will
+say yes for almost any archived row with a redirect target, which is most of them. Check
+`Project.status === "PUBLISHED"` directly instead.
+
 ## Open case: Infinity — a slug collision, not a missing redirect
 
 Two **unrelated** properties both use the slug `infinity`: an archived legacy `Project` (Mito Developers, apartment, €376,000) and a live, published `Development` (an unrelated Medousa-built villa complex, priceFrom €620,000, completely different specs and developer). `/projects/infinity` already returns 200 today — not via any redirect, but because the site's own collision rule at `/projects/[slug]` resolves the live Development first, for any request, before `legacyProjectRedirect` is ever consulted. A `legacyProjectRedirect` row was created for the archived Project (→ the Mito Developers page) and then **deleted again** once this was understood: it would never fire, and leaving it in the table would tell a future reader the case was handled when it was not.
