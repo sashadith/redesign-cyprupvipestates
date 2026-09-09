@@ -396,4 +396,25 @@ gained exactly 3 new `?page=` entries (2, 3, 4) for this page and nothing
 else; three other `landingProjectsBlock` pages without `pagesEnabled`
 (`villy-v-pafose-dlya-investorov`, `investment-paphos`,
 `nieruchomosci-przy-plazy-pafos`) render unchanged, no stray pager.
-Production verification pending this PR's deploy.
+
+**Deployed** (`main @ 23c1b1d`, release `cve-20260909095744`) **and
+re-verified live**, same checklist, this time reading the actual production
+HTML rather than trusting a status code — the exact discipline that was
+missing on 2026-09-04:
+
+```html
+<nav class="ProjectsSectionBlockComponent_pager__QBUJx" aria-label="Results pagination">
+  <span class="...pagerLink ...pagerLinkDisabled" aria-hidden="true">‹</span>
+  <a class="...pagerLink ...pagerLinkActive" aria-current="page" href="/off-plan-properties-in-paphos">1</a>
+  <a class="...pagerLink" href="/off-plan-properties-in-paphos?page=2">2</a>
+  <span class="...pagerGap" aria-hidden="true">…</span>
+  <a class="...pagerLink" href="/off-plan-properties-in-paphos?page=4">4</a>
+  <a class="...pagerLink" aria-label="Next" href="/off-plan-properties-in-paphos?page=2">›</a>
+</nav>
+```
+
+— fetched live from `https://cyprusvipestates.com/off-plan-properties-in-paphos`, byte-identical to the local build. Bare/`?page=2`/`?page=3`/`?page=4` all 200,
+`?page=1` → 308, `?page=99`/`?page=abc` → 404, all against production. Live
+sitemap (`/sitemaps/pages.xml`) carries exactly the 3 `?page=` entries for
+this page and no others anywhere on the site. The three control landing
+pages checked live too: 200, no pager markup present, unchanged.
