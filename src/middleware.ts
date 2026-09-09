@@ -199,6 +199,16 @@ const PL_LANDING_MERGES: Record<string, string> = {
   "inwestycje-w-nieruchomosci-pafos": "/pl/wille-na-sprzedaz-pafos-dla-inwestorow",
 };
 
+// Paphos investment cluster, RU leg (2026-09-09) — completes the DE/PL work
+// above. investitsii-v-nedvizhimost-pafos never filtered on propertyType,
+// same defect, same fix: redirect to villy-v-pafose-dlya-investorov, RU's
+// one live Paphos+Villa page. That target is itself a live Track 1
+// internal-link target — nothing about the target page changes here, it
+// only gains one more inbound redirect.
+const RU_LANDING_MERGES: Record<string, string> = {
+  "investitsii-v-nedvizhimost-pafos": "/ru/villy-v-pafose-dlya-investorov",
+};
+
 export default async function middleware(request: NextRequest) {
   const deMergeMatch = request.nextUrl.pathname.match(/^\/de\/(.+)$/);
   if (deMergeMatch && DE_LANDING_MERGES[deMergeMatch[1]]) {
@@ -217,6 +227,13 @@ export default async function middleware(request: NextRequest) {
   if (plMergeMatch && PL_LANDING_MERGES[plMergeMatch[1]]) {
     const url = request.nextUrl.clone();
     url.pathname = PL_LANDING_MERGES[plMergeMatch[1]];
+    url.search = "";
+    return NextResponse.redirect(url, 301);
+  }
+  const ruMergeMatch = request.nextUrl.pathname.match(/^\/ru\/(.+)$/);
+  if (ruMergeMatch && RU_LANDING_MERGES[ruMergeMatch[1]]) {
+    const url = request.nextUrl.clone();
+    url.pathname = RU_LANDING_MERGES[ruMergeMatch[1]];
     url.search = "";
     return NextResponse.redirect(url, 301);
   }
