@@ -104,7 +104,10 @@ const MODEL = {
 /** The production path, with the model's one answer supplied instead of called. */
 function read(name, pages = fixture(name), projectName = name) {
   const table = GV.gvTableFromPages(pages);
-  if (!table) return { table: null };
+  // "No table at all" is a result, not a crash: a broken reader has to fail the
+  // assertion below with a readable message, not take the whole script down
+  // before the other four documents have been checked.
+  if (!table) return { table: null, mapping: null, validated: { columns: [], corrections: [] }, extraction: { units: [], dropped: [], unresolved: [{ row: name, cell: "(no table found)" }], notes: [] } };
   const model = MODEL[name];
   const validated = AT.validateMapping(table, model.columns);
   const mapping = { ...model, columns: validated.columns, corrections: validated.corrections };
@@ -146,14 +149,14 @@ const outcomes = (units) => units.map((u) => (u.status === "available" ? u.price
 {
   const { table, extraction } = read("gr2");
   check("gr2: the surcharge line is not a unit", extraction.units.length, 2);
-  check("gr2: the surcharge line is refused, with a reason", table.refused, [
+  check("gr2: the surcharge line is refused, with a reason", table?.refused, [
     { row: "SWIMMING POOL EXTRA : € 15,000", reason: "row inside the table that does not open with a unit reference" },
   ]);
-  check("gr2: the refusal reaches the dropped list", extraction.dropped[0].row, "SWIMMING POOL EXTRA : € 15,000");
+  check("gr2: the refusal reaches the dropped list", extraction.dropped[0]?.row, "SWIMMING POOL EXTRA : € 15,000");
   check("gr2: the surcharge never becomes a price", outcomes(extraction.units).includes(15000), false);
   // Refused before the columns are measured — a 3-cell row must never get a
   // vote on where a 7-column table's columns are.
-  check("gr2: the refused row did not move the columns", table.rows[0], ["1", "3", "3", "401", "147", "7", "€ 415,000"]);
+  check("gr2: the refused row did not move the columns", table?.rows?.[0], ["1", "3", "3", "401", "147", "7", "€ 415,000"]);
 }
 
 /* 3. THE REFERENCE POLICY. Tsada Superior Villa is one villa on one row with no
@@ -167,16 +170,16 @@ const outcomes = (units) => units.map((u) => (u.status === "available" ? u.price
   check("sv: the shared validator does commandeer the bedroom column", validated.columns[0], "ref");
   check("sv: ...and says so", validated.corrections.length > 0, true);
 
-  check("sv: the ref is the caller's fallback name, not the bedroom count", extraction.units[0].ref, "Tsada Panorama Superior Villa");
+  check("sv: the ref is the caller's fallback name, not the bedroom count", extraction.units[0]?.ref, "Tsada Panorama Superior Villa");
   check("sv: the override is reported", extraction.notes.length, 1);
-  check("sv: ...naming the column and the reason", /column 0 \("Bedrooms"\).*names the beds column/.test(extraction.notes[0]), true);
+  check("sv: ...naming the column and the reason", /column 0 \("Bedrooms"\).*names the beds column/.test(extraction.notes[0] ?? ""), true);
   // The rejected column is not thrown away: it goes back to the field its own
   // label names, so the villa keeps its five bedrooms.
-  check("sv: the bedroom count survives the override", extraction.units[0].beds, "5");
-  check("sv: the price is the millions shorthand, in euros", extraction.units[0].price, 1950000);
+  check("sv: the bedroom count survives the override", extraction.units[0]?.beds, "5");
+  check("sv: the price is the millions shorthand, in euros", extraction.units[0]?.price, 1950000);
   // A real reference column must not be second-guessed by the same policy.
   check("altamare: a real reference column is left alone", read("altamare").extraction.notes, []);
-  check("altamare: ...and mapping is unchanged", read("altamare").mapping.columns[0], "ref");
+  check("altamare: ...and mapping is unchanged", read("altamare").mapping?.columns[0], "ref");
 }
 
 /* 4. AN UNREADABLE PRICE IS UNKNOWN, NEVER AVAILABLE — and never invisible
@@ -190,8 +193,25 @@ const outcomes = (units) => units.map((u) => (u.status === "available" ? u.price
   const { extraction } = read("altamare", pages);
   check("unreadable price: the row is not published", outcomes(extraction.units), [580000, "reserved", "reserved", 465000, "reserved", "reserved", 450000]);
   check("unreadable price: it is reported as unresolved", extraction.unresolved.map((u) => u.cell), ["ON REQUEST"]);
-  check("unreadable price: with the whole row, for a human", extraction.unresolved[0].row.startsWith("4 | 3 | 2 | 411"), true);
+  check("unreadable price: with the whole row, for a human", (extraction.unresolved[0]?.row ?? "").startsWith("4 | 3 | 2 | 411"), true);
   check("unreadable price: and the table is not cut in two", extraction.units.length + extraction.unresolved.length, 8);
+}
+
+/* 4b. WHICH RUN OF ROWS IS THE TABLE. Alta Mare's "OPTIONAL EXTRAS" block is
+       five consecutive price-shaped lines ("LANDSCAPED GARDEN  €  6,000.00"),
+       further down the same page as the villas. Picking the LONGEST run would
+       be enough today only because there happen to be eight villas; a phase
+       with three would lose its whole table to the extras block. The rule is
+       the run with the most rows that OPEN with a unit reference, and this is
+       the case that tells the two rules apart. */
+{
+  const pages = fixture("altamare");
+  const keep = new Set(["1", "2", "3"]);
+  // Villas 4-8 removed; the five-line extras block left exactly as printed.
+  pages[0].rows = pages[0].rows.filter((r) => !/^[45678]$/.test(r.cells[0]?.t ?? "") || keep.has(r.cells[0]?.t ?? ""));
+  const { extraction } = read("altamare", pages);
+  check("a three-villa table still beats the five-line extras block", outcomes(extraction.units), [580000, "reserved", "reserved"]);
+  check("...and no extras line becomes a unit", extraction.units.map((u) => u.ref), ["1", "2", "3"]);
 }
 
 /* 5. THE ADAPTER'S FIELD MAPPING. Georgia 12 is the one G&V layout that prints
@@ -201,16 +221,17 @@ const outcomes = (units) => units.map((u) => (u.status === "available" ? u.price
       lands in exactly ONE place: a named field, or extras, never both. */
 {
   const { extraction } = read("g12");
-  const u = AD.gvUnitToExtracted(extraction.units[0]);
+  const u = extraction.units[0] ? AD.gvUnitToExtracted(extraction.units[0]) : {};
   check("g12: the total covered area is the built area", u.areaBuilt, "106");
   check("g12: the internal area survives, as an extra", u.extras, "Internal area: 85");
   check("g12: YES/NO specs land in their named fields", [u.storage, u.parking], ["YES", "YES"]);
-  check("g12: ...and are not repeated in extras", /storage|parking/i.test(u.extras), false);
+  check("g12: ...and are not repeated in extras", /storage|parking/i.test(u.extras ?? ""), false);
   check("g12: the veranda is its own field", u.areaVeranda, "21");
   check("g12: the property type is the kind of home", [u.type, u.bedrooms, u.price, u.status], ["Apartment", "2", 290000, "available"]);
 
   // Superior Villa: an attribute matching no named field must still survive.
-  const sv = AD.gvUnitToExtracted(read("sv", fixture("sv"), "Tsada Panorama Superior Villa").extraction.units[0]);
+  const svUnit = read("sv", fixture("sv"), "Tsada Panorama Superior Villa").extraction.units[0];
+  const sv = svUnit ? AD.gvUnitToExtracted(svUnit) : {};
   check("sv: the pool dimension is the pool field", sv.pool, "4*12");
   check("sv: Lift matches no named field and lands in extras", sv.extras, "Internal area: 305, Lift: YES");
   check("sv: internal and covered areas stay distinct", [sv.areaBuilt, sv.areaPlot, sv.areaVerandaOpen], ["421", "1100", "85"]);
