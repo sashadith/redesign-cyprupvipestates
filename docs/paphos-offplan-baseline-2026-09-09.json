@@ -1,0 +1,812 @@
+{
+  "purpose": "Matured, post-backfill re-take of docs/paphos-offplan-baseline-2026-08-27.json. That snapshot's absolute numbers are understated by roughly an order of magnitude -- captured before SearchMetric's one-time 90-day backfill (see docs/de-villa-cluster-baseline-2026-09-01.json's ingestCaveat for the mechanism: every historical row was originally captured once, 2 days after its date, under a too-narrow re-fetch window that caught GSC data before it had matured, and never revisited). Comparing matured data against that unrevised baseline would read as growth that did not happen. This file is the comparable 'after' point.",
+  "caveat": "Even matured GSC data keeps revising for roughly a month after each date, and ordinary day-to-day/week-to-week drift is real on this cluster independent of any site change (documented repeatedly across this investigation). This window (28 days, see below) does not calendar-overlap the original's window at all -- it is a fresh 28-day lookback from today, not a continuation -- so a direct number-for-number diff against the original is not meaningful; use this as the new reference point going forward, not as a delta calculation against the 08-27 file.",
+  "notComparableTo": {
+    "file": "docs/paphos-offplan-baseline-2026-08-27.json",
+    "reason": "pre-backfill, absolute numbers understated -- see that file's own header note (added 2026-09-09) before using it for any comparison."
+  },
+  "whatChangedSincePriorSnapshot": {
+    "summary": "Two independent things changed on this page since 2026-08-27, both directly relevant to reading any future GSC movement here: (1) server-side pagination went fully live and discoverable only as of today; (2) for most of the time since the original snapshot, the page silently had LESS effective content surface than either the pre-pagination or the fully-fixed state.",
+    "paginationTimeline": [
+      {
+        "date": "2026-08-26",
+        "event": "Server-side pagination (pagesEnabled) built and deployed, opt-in, inert by default. commit 512feeb."
+      },
+      {
+        "date": "2026-08-27",
+        "event": "pagesEnabled verified live on this exact page with a real, server-rendered pager (real <a href=\"?page=N\"> links) -- this is the day this baseline snapshot itself was captured. The page was, as of this date, both paginated AND discoverable via its own on-page pager."
+      },
+      {
+        "date": "2026-09-02",
+        "event": "An unrelated visual redesign rebuilt the landing-page component tree from scratch and did not port pagination's pager markup over -- not deliberate, simply missing from that redesign's parity checklist. From this date, ?page=2+ was still server-correct (200, right content, right canonical) but had ZERO discovery path: no pager link anywhere on the page, and the sitemap never had ?page= entries for this page at any point since pagination was introduced (a separate, then-accepted backlog decision, not a regression -- see below)."
+      },
+      {
+        "date": "2026-09-09",
+        "event": "Pager markup restored (PR #23) and page 2+ added to the sitemap for the first time ever on this page (same PR). Both landed and were deployed together."
+      }
+    ],
+    "correctedFigure": "The instruction that prompted this file described the pager as 'missing for 13 days.' The precise pager-missing window, by commit timestamps, is 2026-09-02 to 2026-09-09 -- 7 days, not 13. Thirteen days IS the correct span from this baseline's own capture date (2026-08-27) to today (2026-09-09) -- but for 6 of those 13 days (08-27 to 09-02) the pager was live and working; it was missing for the remaining 7. Separately, and worth keeping distinct from the pager question: sitemap ?page= entries did not exist for this page on ANY day across the full 13-day span -- that gap was a deliberate, documented backlog decision on 08-27 (\"pager links alone will carry discovery\"), not a bug, until today's fix. See docs/SITE-CHANGELOG.md, 2026-09-09 entries, for the full incident writeup.",
+    "readingCaution": "Any GSC position/impression movement on this page across 2026-08-27 to 2026-09-09 happened while the page had NO functioning discovery path to page 2+ content for the great majority of that window (7 of 13 days with zero pager, all 13 days with zero sitemap entries). Movement in this window should not be read as evidence pagination helped or hurt visibility -- the mechanism was not actually reachable by a crawler for nearly the entire period being measured."
+  },
+  "capturedAt": "2026-09-09T10:56:40.453Z",
+  "window": {
+    "start": "2026-08-12T10:56:40.453Z",
+    "end": null,
+    "note": "Open-ended 28-day lookback window from capture, same convention as the original file. Freshest SearchMetric data for this page as of capture: 2026-09-06 (normal ~3-day GSC reporting lag -- inherent to GSC itself, unrelated to the ingestion-window bug the backfill fixed)."
+  },
+  "pageBlockConfig": {
+    "landingProjectsBlockRaw": {
+      "_type": "landingProjectsBlock",
+      "title": "Off-Plan Properties in Paphos. Full List",
+      "filterCity": "Paphos",
+      "pagesEnabled": true
+    },
+    "note": "Unchanged from the original snapshot -- filterCity:'Paphos' only, no property-type/stage filter, pagesEnabled true throughout (the flag itself was never touched; only its render-path discoverability changed, per the timeline above)."
+  },
+  "currentRenderedListingCount": {
+    "totalMatched": 200,
+    "legacyProjectAvailable": 12,
+    "legacyProjectSold": 0,
+    "developmentMatches": 188,
+    "totalPagesAt60PerPage": 4,
+    "note": "totalMatched essentially unchanged from the original's 199 (ordinary drift). The MIX shifted heavily: legacy-Project-backed listings dropped from 69 (59 available + 10 sold, original snapshot) to 12, while Development-backed listings grew from 130 to 188 -- a direct, expected consequence of this session's own extensive legacy-Project archival work (dead-refs-fragility cleanup, apartment/villa cluster consolidations), not a data anomaly."
+  },
+  "pageLevelTotals28d": {
+    "impressions": 2211,
+    "clicks": 3,
+    "avgPosition": 30.8,
+    "note": "From SearchMetric rows where query IS NULL, same methodology as the original. Window does not calendar-overlap the original's (07-30 to 08-24) -- this is 08-12 to 09-06/09 -- so treat as a fresh reference point, not a delta."
+  },
+  "queryLevelSummary28d": {
+    "distinctQueriesWithImpressions": 67,
+    "totalQueryImpressions": 271,
+    "totalQueryClicks": 0,
+    "clicksCaveat": "Query-level clicks structurally undercount the page-level total, same known gap as the original file -- use position/impressions from the rows below, not clicks, for comparison."
+  },
+  "queries": [
+    {
+      "query": "new off plan projects in cyprus",
+      "impressions": 31,
+      "clicks": 0,
+      "avgPosition": 46.1
+    },
+    {
+      "query": "off plan property in cyprus",
+      "impressions": 26,
+      "clicks": 0,
+      "avgPosition": 59.1
+    },
+    {
+      "query": "off plan projects in paphos",
+      "impressions": 25,
+      "clicks": 0,
+      "avgPosition": 17.7
+    },
+    {
+      "query": "off plan property cyprus",
+      "impressions": 9,
+      "clicks": 0,
+      "avgPosition": 32.2
+    },
+    {
+      "query": "off-plan 2-bed maisonettes for sale pharos paphos",
+      "impressions": 7,
+      "clicks": 0,
+      "avgPosition": 20.3
+    },
+    {
+      "query": "off-plan 2-bed maisonettes for sale sea caves",
+      "impressions": 6,
+      "clicks": 0,
+      "avgPosition": 59.5
+    },
+    {
+      "query": "off-plan 5-bed bungalows for sale anavargos",
+      "impressions": 6,
+      "clicks": 0,
+      "avgPosition": 39.5
+    },
+    {
+      "query": "off-plan 5-bed houses for sale geroskipou",
+      "impressions": 6,
+      "clicks": 0,
+      "avgPosition": 30.8
+    },
+    {
+      "query": "off-plan 3-bed flats for sale anavargos",
+      "impressions": 5,
+      "clicks": 0,
+      "avgPosition": 40
+    },
+    {
+      "query": "off-plan 3-bed bungalows for sale melanos chloraka",
+      "impressions": 5,
+      "clicks": 0,
+      "avgPosition": 34.2
+    },
+    {
+      "query": "off-plan 3-bed bungalows for sale kato paphos",
+      "impressions": 5,
+      "clicks": 0,
+      "avgPosition": 29.4
+    },
+    {
+      "query": "off-plan 1-bed semi detached houses for sale faros paphos",
+      "impressions": 5,
+      "clicks": 0,
+      "avgPosition": 35.4
+    },
+    {
+      "query": "off-plan 3-bed penthouses for sale chloraka",
+      "impressions": 5,
+      "clicks": 0,
+      "avgPosition": 34.8
+    },
+    {
+      "query": "off-plan 2-bed maisonettes for sale queens gardens paphos",
+      "impressions": 5,
+      "clicks": 0,
+      "avgPosition": 44.4
+    },
+    {
+      "query": "off-plan 3-bed penthouses for sale avgorou",
+      "impressions": 5,
+      "clicks": 0,
+      "avgPosition": 35.8
+    },
+    {
+      "query": "off-plan 1-bed semi detached houses for sale konia",
+      "impressions": 5,
+      "clicks": 0,
+      "avgPosition": 27
+    },
+    {
+      "query": "off-plan 4-bed penthouses for sale geroskipou",
+      "impressions": 5,
+      "clicks": 0,
+      "avgPosition": 31.2
+    },
+    {
+      "query": "off-plan 4-bed townhouses for sale paphos",
+      "impressions": 5,
+      "clicks": 0,
+      "avgPosition": 9.6
+    },
+    {
+      "query": "off-plan 3-bed houses for sale queens gardens paphos",
+      "impressions": 4,
+      "clicks": 0,
+      "avgPosition": 31.3
+    },
+    {
+      "query": "off-plan 4-bed townhouses for sale cyprus",
+      "impressions": 4,
+      "clicks": 0,
+      "avgPosition": 47
+    },
+    {
+      "query": "off-plan 3-bed bungalows for sale paphos",
+      "impressions": 4,
+      "clicks": 0,
+      "avgPosition": 33.8
+    },
+    {
+      "query": "off-plan 3-bed bungalows for sale pharos paphos",
+      "impressions": 4,
+      "clicks": 0,
+      "avgPosition": 32.5
+    },
+    {
+      "query": "off-plan 3-bed semi detached houses for sale sea caves",
+      "impressions": 4,
+      "clicks": 0,
+      "avgPosition": 35.8
+    },
+    {
+      "query": "off-plan 3-bed semi detached houses for sale queens gardens paphos",
+      "impressions": 4,
+      "clicks": 0,
+      "avgPosition": 37
+    },
+    {
+      "query": "off-plan 1-bed semi detached houses for sale minthis hills",
+      "impressions": 4,
+      "clicks": 0,
+      "avgPosition": 27.5
+    },
+    {
+      "query": "off-plan 1-bed semi detached houses for sale melanos chloraka",
+      "impressions": 4,
+      "clicks": 0,
+      "avgPosition": 37
+    },
+    {
+      "query": "off-plan 4-bed townhouses for sale saint george peyia",
+      "impressions": 4,
+      "clicks": 0,
+      "avgPosition": 22.3
+    },
+    {
+      "query": "off-plan 1-bed ground floor apartments for sale queens gardens paphos",
+      "impressions": 4,
+      "clicks": 0,
+      "avgPosition": 44.5
+    },
+    {
+      "query": "off-plan 2-bed penthouses for sale anavargos",
+      "impressions": 3,
+      "clicks": 0,
+      "avgPosition": 46.3
+    },
+    {
+      "query": "off-plan 1-bed penthouses for sale secret valley",
+      "impressions": 3,
+      "clicks": 0,
+      "avgPosition": 29.3
+    },
+    {
+      "query": "off-plan 3-bed houses for sale saint george peyia",
+      "impressions": 3,
+      "clicks": 0,
+      "avgPosition": 24.7
+    },
+    {
+      "query": "off-plan 4-bed apartments for sale chloraka",
+      "impressions": 3,
+      "clicks": 0,
+      "avgPosition": 31
+    },
+    {
+      "query": "off-plan 3-bed townhouses for sale anavargos",
+      "impressions": 3,
+      "clicks": 0,
+      "avgPosition": 39
+    },
+    {
+      "query": "off-plan 3-bed semi detached houses for sale neapolis paphos",
+      "impressions": 3,
+      "clicks": 0,
+      "avgPosition": 36.7
+    },
+    {
+      "query": "off-plan 1-bed townhouses for sale minthis hills",
+      "impressions": 3,
+      "clicks": 0,
+      "avgPosition": 17
+    },
+    {
+      "query": "off-plan 4-bed apartments for sale mouttalos",
+      "impressions": 3,
+      "clicks": 0,
+      "avgPosition": 17.3
+    },
+    {
+      "query": "off-plan 4-bed apartments for sale neapolis paphos",
+      "impressions": 3,
+      "clicks": 0,
+      "avgPosition": 27.7
+    },
+    {
+      "query": "off-plan 4-bed flats for sale melissovounos",
+      "impressions": 2,
+      "clicks": 0,
+      "avgPosition": 19.5
+    },
+    {
+      "query": "off-plan 4-bed flats for sale minthis hills",
+      "impressions": 2,
+      "clicks": 0,
+      "avgPosition": 19
+    },
+    {
+      "query": "off-plan 3-bed houses for sale melissovounos",
+      "impressions": 2,
+      "clicks": 0,
+      "avgPosition": 15
+    },
+    {
+      "query": "off-plan 3-bed houses for sale geroskipou",
+      "impressions": 2,
+      "clicks": 0,
+      "avgPosition": 31
+    },
+    {
+      "query": "off-plan 4-bed penthouses for sale universal",
+      "impressions": 2,
+      "clicks": 0,
+      "avgPosition": 29
+    },
+    {
+      "query": "off plan projects in cyprus",
+      "impressions": 2,
+      "clicks": 0,
+      "avgPosition": 56.5
+    },
+    {
+      "query": "off-plan 2-bed penthouses for sale faros paphos",
+      "impressions": 2,
+      "clicks": 0,
+      "avgPosition": 54.5
+    },
+    {
+      "query": "off-plan 4-bed semi detached houses for sale pharos paphos",
+      "impressions": 2,
+      "clicks": 0,
+      "avgPosition": 15.5
+    },
+    {
+      "query": "off-plan 4-bed flats for sale chloraka",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 23
+    },
+    {
+      "query": "off-plan 4-bed flats for sale melanos chloraka",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 28
+    },
+    {
+      "query": "off-plan 4-bed flats for sale kato paphos",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 16
+    },
+    {
+      "query": "off-plan 4-bed flats for sale paphos",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 1
+    },
+    {
+      "query": "off-plan 4-bed apartments for sale minthis hills",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 30
+    },
+    {
+      "query": "off-plan 4-bed flats for sale faros paphos",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 23
+    },
+    {
+      "query": "off-plan 4-bed flats for sale tombs of the kings",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 35
+    },
+    {
+      "query": "off-plan 2-bed houses for sale cyprus",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 22
+    },
+    {
+      "query": "off-plan 3-bed bungalows for sale sea caves",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 37
+    },
+    {
+      "query": "off-plan 4-bed flats for sale konia",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 23
+    },
+    {
+      "query": "new build villas paphos",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 37
+    },
+    {
+      "query": "off-plan 3-bed bungalows for sale cyprus",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 81
+    },
+    {
+      "query": "off-plan 5-bed bungalows for sale cyprus",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 32
+    },
+    {
+      "query": "off-plan 2-bed maisonettes for sale tala",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 29
+    },
+    {
+      "query": "off-plan 4-bed townhouses for sale kamares tala",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 25
+    },
+    {
+      "query": "off-plan 3-bed flats for sale coral bay",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 62
+    },
+    {
+      "query": "off-plan 1-bed flats for sale cap saint george",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 18
+    },
+    {
+      "query": "half-price 3-bed penthouses for sale melanos chloraka",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 47
+    },
+    {
+      "query": "off-plan 3-bed bungalows for sale mesogi",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 41
+    },
+    {
+      "query": "off-plan 4-bed ground floor apartments for sale avgorou",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 39
+    },
+    {
+      "query": "modern 4-bed ground floor apartments for sale neapolis paphos",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 60
+    },
+    {
+      "query": "off plan houses for sale",
+      "impressions": 1,
+      "clicks": 0,
+      "avgPosition": 54
+    },
+    {
+      "query": "off-plan 4-bed flats for sale frenaros",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed flats for sale tremithousa",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "new 4-bed ground floor apartments for sale faros paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed flats for sale geroskipou",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "new 4-bed ground floor apartments for sale neapolis paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed flats for sale saint george peyia",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "new 4-bed townhouses for sale faros paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed flats for sale kamares tala",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "new 4-bed penthouses for sale faros paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 2-bed semi detached houses for sale neapolis paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed houses for sale coral bay",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed ground floor apartments for sale peyia",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed flats for sale mesogi",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 2-bed houses for sale chloraka",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed flats for sale avgorou",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed flats for sale peyia",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 2-bed semi detached houses for sale kato paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed flats for sale pharos paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed flats for sale queens gardens paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed flats for sale mouttalos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "new 4-bed bungalows for sale neapolis paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "new 4-bed flats for sale faros paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed ground floor apartments for sale saint george peyia",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed flats for sale tala",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed flats for sale vrysoules",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed ground floor apartments for sale mouttalos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed flats for sale elysia park",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed ground floor apartments for sale faros paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed ground floor apartments for sale geroskipou",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed ground floor apartments for sale neapolis paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "buy new villas in paphos with sea views",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed ground floor apartments for sale konia",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 1-bed ground floor apartments for sale secret valley",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed ground floor apartments for sale melanos chloraka",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed ground floor apartments for sale elysia park",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed penthouses for sale saint george peyia",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed houses for sale cyprus",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed flats for sale sea caves",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 1-bed maisonettes for sale minthis hills",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 1-bed penthouses for sale neapolis paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 1-bed penthouses for sale melanos chloraka",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "half-price 4-bed townhouses for sale minthis hills",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed ground floor apartments for sale emba",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed ground floor apartments for sale secret valley",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed ground floor apartments for sale mesogi",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "new developments paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "bank owned 3-bed apartments for sale faros paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed flats for sale emba",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed ground floor apartments for sale sea caves",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed flats for sale ayia napa",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "seafront 4-bed penthouses for sale minthis hills",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "half-price 3-bed maisonettes for sale faros paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "half-price 4-bed penthouses for sale queens gardens paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "half-price 4-bed penthouses for sale pharos paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 4-bed houses for sale frenaros",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "off-plan 3-bed bungalows for sale kissonerga",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    },
+    {
+      "query": "new villas for sale paphos",
+      "impressions": 0,
+      "clicks": 0,
+      "avgPosition": 0
+    }
+  ]
+}

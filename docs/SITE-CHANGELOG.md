@@ -418,3 +418,58 @@ missing on 2026-09-04:
 sitemap (`/sitemaps/pages.xml`) carries exactly the 3 `?page=` entries for
 this page and no others anywhere on the site. The three control landing
 pages checked live too: 200, no pager markup present, unchanged.
+
+## 2026-09-09 — Pagination enabled on the 3 beachfront Paphos pages
+
+`pagesEnabled` flipped live (DE `strandimmobilien-paphos`, PL
+`nieruchomosci-przy-plazy-pafos`, RU `nedvizhimost-u-morya-pafos`) — the first
+real use of the pager restored earlier today, on pages that were never the
+"proven reference" (that was always `/off-plan-properties-in-paphos`). Each
+matches `filterCity: Paphos, maxBeachMinutes: 2, excludePropertyTypes:
+[Commercial, Boutique Hotel]`, all three `landingProjectsBlock` (the guard
+added earlier today doesn't apply). 76 true matches today, 60 previously
+capped — page 2 carries the remaining ~16 on each locale.
+
+**Verified clean before flipping anything, read-only:** the count's history
+(72 → 84 → 76 across three separate readings this week) is real inventory
+movement, not the Project/Development duplicate-render defect
+(`docs/PROJECT-DEVELOPMENT-OVERLAP-DEFECT.md`) reasserting itself — both
+pairs that used to hit these three pages (Tress, The Gallery) were already
+resolved on 2026-08-30, and today's actual matched rows contain zero
+duplicate title collisions.
+
+**Verified live, each locale, same checklist as the corrected
+`POST-DEPLOY-CHECKLIST.md` item:** pager present with real `?page=N` hrefs,
+`?page=2` renders the remaining cards (17/16/16 — the 1-card difference on
+DE is a pre-existing, unrelated stale-slug prose link elsewhere on that page,
+not a duplicate card or a locale-dependent sort difference; traced and
+confirmed below), `?page=1` → 308, `?page=99`/`?page=abc` → 404, one
+unpaginated control page per locale unchanged, no stray pager.
+
+**Edge case, tested live rather than reasoned about:** temporarily narrowed
+one page's filter to push its match count to 52 (under the 60 cap) with
+`pagesEnabled` on. The pager disappeared cleanly (`totalPages` back to 1) and
+`?page=2` correctly 404'd — no stale link to a now-empty page. Reverted
+immediately after.
+
+**Known behaviour, not specific to this rollout:** the sitemap route
+(`src/app/sitemaps/[type]/route.ts`) caches its output for 1 hour
+in-process, with no invalidation hook tied to content changes. Flipping
+`pagesEnabled` (in either direction — enabling it, or a live count dropping
+back to ≤60 on an already-paginated page) can leave the public sitemap
+disagreeing with the actual page for up to an hour: missing new `?page=`
+entries just after enabling, or still listing a `?page=2` that now 404s just
+after a count drop. Confirmed both the underlying computation
+(`getPaginatedLandingPageSlugs`) and the live sitemap end-to-end for this
+rollout — the live endpoint caught up within the hour, as expected. Worth
+remembering for every future page this gets enabled on: don't read the
+sitemap as ground truth for pagination state within an hour of a change.
+
+**One artifact worth recording, not fixing here:** the DE page's stale
+`villen-cap-st-georges-resort` prose link (still redirects correctly, 308)
+is the same "61 vs 60, one extra `/de/projects/` link" anomaly
+`docs/POST-DEPLOY-CHECKLIST.md` flagged on 2026-09-04 without root-causing
+it. Now traced precisely: a hardcoded sentence in the page's own DE body
+copy, using an old slug variant of Cap St Georges Resort that predates a
+rename. Present on both page 1 and page 2 (static content, unrelated to
+pagination), which is why it inflated a naive href count on both.
