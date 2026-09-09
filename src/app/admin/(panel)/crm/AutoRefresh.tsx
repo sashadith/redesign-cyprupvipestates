@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { hasUnsavedEdit } from "@/lib/admin/unsavedEdit";
 
 /* Re-runs the page's server components on an interval, so a lead changed
  * elsewhere — the MCP connector, another operator, a form submission — appears
@@ -18,10 +19,13 @@ import { useRouter } from "next/navigation";
  *
  * - It stops entirely while the tab is hidden, and refreshes once immediately
  *   when it comes back. A background tab left open overnight costs nothing.
- * - It skips a tick while the focus is inside a field. router.refresh() keeps
- *   client state, but a server-rendered defaultValue re-arriving under a
- *   half-typed follow-up date is exactly the kind of small betrayal that makes
- *   people stop trusting a screen.
+ * - It skips a tick while a focused field holds an unsaved edit (see
+ *   hasUnsavedEdit). router.refresh() keeps client state, but a server-rendered
+ *   defaultValue re-arriving under a half-typed follow-up date is exactly the
+ *   kind of small betrayal that makes people stop trusting a screen. Merely
+ *   having the cursor in a field — the search box after a search — must not
+ *   pause the refresh: that is how a lead trashed from the MCP connector went
+ *   unnoticed until a manual reload (2026-09-09).
  */
 export default function AutoRefresh({ seconds = 10 }: { seconds?: number }) {
   const router = useRouter();
@@ -29,20 +33,9 @@ export default function AutoRefresh({ seconds = 10 }: { seconds?: number }) {
   useEffect(() => {
     let timer: ReturnType<typeof setInterval> | undefined;
 
-    const isTyping = () => {
-      const el = document.activeElement as HTMLElement | null;
-      if (!el) return false;
-      return (
-        el.tagName === "INPUT" ||
-        el.tagName === "SELECT" ||
-        el.tagName === "TEXTAREA" ||
-        el.isContentEditable
-      );
-    };
-
     const tick = () => {
       if (document.visibilityState !== "visible") return;
-      if (isTyping()) return;
+      if (hasUnsavedEdit(document.activeElement as HTMLInputElement | null)) return;
       router.refresh();
     };
 
