@@ -7,7 +7,7 @@ Status: Phase 3 (inventory tools) — Phases 1–2 live since 2026-09-07/08; Pha
 ## What it is
 
 A remote MCP server inside this app at `/api/mcp`, protected by a minimal OAuth 2.1
-server on the admin login. claude.ai connects to it as a *custom connector* and gets thirteen tools — eight read tools (`crm_worklist`, `crm_search_leads`, `crm_get_lead`, `crm_match_properties`, `crm_get_project`, `crm_get_playbook`, `crm_search_projects`, `crm_inventory_changes`) and five write tools (`crm_log_interaction`, `crm_update_lead`, `crm_draft_email`, `crm_send_email`, `crm_list_drafts`); customer email needs the operator's approval code (see below).
+server on the admin login. claude.ai connects to it as a *custom connector* and gets sixteen tools — eight read tools (`crm_worklist`, `crm_search_leads`, `crm_get_lead`, `crm_match_properties`, `crm_get_project`, `crm_get_playbook`, `crm_search_projects`, `crm_inventory_changes`) and eight write tools (`crm_log_interaction`, `crm_update_lead`, `crm_draft_email`, `crm_send_email`, `crm_list_drafts`, `crm_create_lead`, `crm_delete_lead`, `crm_restore_lead`); customer email needs the operator's approval code (see below).
 
 ## Environment
 
@@ -85,6 +85,9 @@ A connection can only be approved while a **pairing window** is open in the same
 |---|---|
 | `crm_log_interaction` | CALL / NOTE / WHATSAPP_OUT / WHATSAPP_IN / EMAIL_OUT / EMAIL_IN on the timeline, as you, tagged `via: mcp` — the same rows the admin's log buttons write (email logs may be subject-only; EMAIL_OUT is for mail you sent yourself, nothing is sent; inbound mail is filed by the poller, so a manual EMAIL_IN is only for replies that arrived elsewhere) |
 | `crm_update_lead` | status (same timeline rows as the dropdown), follow-up date, hot, channel, language, salutation, budget, timeline, financing, notes |
+| `crm_create_lead` | the admin's "New lead" form: source MANUAL, assigned to you, CREATED activity + timeline row `via: mcp`. Refuses (returns `existing`) when an active lead has the same email — Gmail dots/domain ignored — or phone, unless `allowDuplicate` |
+| `crm_delete_lead` | the admin's "Move to trash": soft delete, restorable 90 days, DELETED rows `via: mcp`; needs `confirmName` = the lead's full name and a `reason`. Permanent deletion stays ADMIN-only in `/admin/crm/trash` |
+| `crm_restore_lead` | the admin's "Restore" from the trash |
 | `crm_draft_email` | stores a draft + emails you a preview with the approval code |
 | `crm_send_email` | sends a draft verbatim if the code matches |
 | `crm_list_drafts` | what is still pending |
@@ -142,5 +145,5 @@ E-MAILS AN KUNDEN
 - Änderungswünsche = neuer Entwurf.
 
 INTERNE ÄNDERUNGEN
-crm_log_interaction und crm_update_lead direkt ausführen; bei unklarer Anweisung vorher ein Satz, was du änderst. Nach jedem Kundenkontakt Status, Follow-up-Datum und hot-Flag aktuell halten. WhatsApp: du formulierst, ich sende, du loggst es als WHATSAPP_OUT. Mails, die ich selbst verschickt habe, loggst du als EMAIL_OUT (Betreff reicht). Antworten in meinem Postfach landen automatisch als EMAIL_IN in der Timeline — EMAIL_IN nur von Hand loggen, wenn ich dir sage, dass eine Antwort woanders angekommen ist.
+crm_log_interaction und crm_update_lead direkt ausführen; bei unklarer Anweisung vorher ein Satz, was du änderst. Nach jedem Kundenkontakt Status, Follow-up-Datum und hot-Flag aktuell halten. WhatsApp: du formulierst, ich sende, du loggst es als WHATSAPP_OUT. Mails, die ich selbst verschickt habe, loggst du als EMAIL_OUT (Betreff reicht). Antworten in meinem Postfach landen automatisch als EMAIL_IN in der Timeline — EMAIL_IN nur von Hand loggen, wenn ich dir sage, dass eine Antwort woanders angekommen ist. Leads anlegen (crm_create_lead) oder in den Papierkorb legen (crm_delete_lead, mit Namensbestätigung) nur auf mein ausdrückliches Kommando — nie als Aufräumvorschlag. Meldet crm_create_lead einen bestehenden Lead, sag es mir, statt selbst allowDuplicate zu setzen.
 ```

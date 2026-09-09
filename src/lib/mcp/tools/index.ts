@@ -12,6 +12,9 @@ import { registerUpdateLead } from "./updateLead";
 import { registerDraftEmail } from "./draftEmail";
 import { registerSendEmail } from "./sendEmail";
 import { registerListDrafts } from "./listDrafts";
+import { registerCreateLead } from "./createLead";
+import { registerDeleteLead } from "./deleteLead";
+import { registerRestoreLead } from "./restoreLead";
 
 export function registerReadTools(server: McpServer): void {
   registerWorklist(server);
@@ -32,4 +35,8 @@ export function registerWriteTools(server: McpServer): void {
   registerDraftEmail(server);
   registerSendEmail(server);
   registerListDrafts(server);
+  // Lead lifecycle (2026-09-09): create + trash/restore, on explicit instruction only.
+  registerCreateLead(server);
+  registerDeleteLead(server);
+  registerRestoreLead(server);
 }

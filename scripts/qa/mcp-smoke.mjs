@@ -68,7 +68,7 @@ await client.connect(transport);
 assert(/crm_get_project/.test(client.getInstructions() || ""), "server instructions received");
 const tools = await client.listTools();
 const names = tools.tools.map((t) => t.name).sort();
-assert(JSON.stringify(names) === JSON.stringify(["crm_draft_email", "crm_get_lead", "crm_get_playbook", "crm_get_project", "crm_inventory_changes", "crm_list_drafts", "crm_log_interaction", "crm_match_properties", "crm_search_leads", "crm_search_projects", "crm_send_email", "crm_update_lead", "crm_worklist"]), `thirteen tools listed: ${names.join(", ")}`);
+assert(JSON.stringify(names) === JSON.stringify(["crm_create_lead", "crm_delete_lead", "crm_draft_email", "crm_get_lead", "crm_get_playbook", "crm_get_project", "crm_inventory_changes", "crm_list_drafts", "crm_log_interaction", "crm_match_properties", "crm_restore_lead", "crm_search_leads", "crm_search_projects", "crm_send_email", "crm_update_lead", "crm_worklist"]), `sixteen tools listed: ${names.join(", ")}`);
 
 const parse = (r) => JSON.parse(r.content[0].text);
 const worklist = parse(await client.callTool({ name: "crm_worklist", arguments: { limit: 5 } }));
@@ -107,6 +107,8 @@ assert(Array.isArray(drafts.drafts) && drafts.drafts.every((d) => !("approvalCod
 const bogusSend = await client.callTool({ name: "crm_send_email", arguments: { draftId: "00000000-0000-0000-0000-000000000000", approvalCode: "AAAAAA" } });
 assert(bogusSend.isError === true, "crm_send_email with an unknown draft → isError");
 
+const bogusDelete = await client.callTool({ name: "crm_delete_lead", arguments: { leadId: "00000000-0000-0000-0000-000000000000", confirmName: "Nobody", reason: "smoke test" } });
+assert(bogusDelete.isError === true, "crm_delete_lead with an unknown lead → isError (nothing trashed)");
 const notFound = await client.callTool({ name: "crm_get_lead", arguments: { leadId: "00000000-0000-0000-0000-000000000000" } });
 assert(notFound.isError === true, "unknown lead → isError");
 

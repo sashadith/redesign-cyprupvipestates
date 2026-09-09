@@ -20,6 +20,8 @@ import { resetFollowUpCadence } from "@/lib/crm/followUpCadence";
 import { isManualInteractionType } from "@/lib/crm/interactionHelpers";
 import { logLeadInteraction } from "@/lib/crm/logInteraction";
 import { applyLeadStatusChange, LEAD_STATUSES, type LeadStatusValue } from "@/lib/crm/updateLeadStatus";
+import { createLeadRecord } from "@/lib/crm/createLead";
+import { trashLead, restoreLead } from "@/lib/crm/trashLead";
 import { findEmptyProjectsBlock } from "@/lib/projectsBlockValidation";
 import { ELEVATED_NO_CONTACT_STATUSES as CONTACT_IMPLYING_STATUSES } from "@/lib/actionCenter/rules/crm";
 import { logWhatsAppSentAction } from "./(panel)/crm/[id]/emailActions";
@@ -1010,38 +1012,24 @@ export async function createLead(_prev: any, formData: FormData): Promise<{ erro
     if (!valid) return { error: "Invalid assignee." };
   }
 
-  const lead = await prisma.lead.create({
-    data: {
-      firstName,
-      lastName: lastName || "",
-      email: email || null,
-      phone: phone || null,
-      nationality: String(formData.get("nationality") ?? "").trim() || null,
-      languagePreference: oneOf("languagePreference", LOCALES) as any,
-      budgetMin: num("budgetMin"),
-      budgetMax: num("budgetMax"),
-      timeline: oneOf("timeline", LEAD_TIMELINES) as any,
-      financing: oneOf("financing", LEAD_FINANCING) as any,
-      propertyTypeInterest: formData.getAll("propertyTypeInterest").map(String).filter((t) => LEAD_PROP_TYPES.includes(t)),
-      message: String(formData.get("message") ?? "").trim() || null,
-      notes: String(formData.get("notes") ?? "").trim() || null,
-      source: "MANUAL",
-      status: (oneOf("status", STATUSES) ?? "NEW") as any,
-      assignedToId,
-    },
-  });
-  await prisma.leadActivity.create({
-    data: { leadId: lead.id, type: "CREATED", content: "Lead created manually", createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
-  });
-  await prisma.leadInteraction.create({
-    data: {
-      leadId: lead.id,
-      type: "SYSTEM",
-      channel: "SYSTEM",
-      body: "Lead created manually",
-      createdByUserId: (session.user as any)?.id ?? null,
-      createdByName: session.user?.name ?? "admin",
-    },
+  // Persisting moved to src/lib/crm/createLead.ts (shared with the MCP
+  // connector's crm_create_lead); the form validation above stays here.
+  const lead = await createLeadRecord(actorOf(session), {
+    firstName,
+    lastName,
+    email,
+    phone,
+    nationality: String(formData.get("nationality") ?? "").trim() || null,
+    languagePreference: oneOf("languagePreference", LOCALES) as any,
+    budgetMin: num("budgetMin"),
+    budgetMax: num("budgetMax"),
+    timeline: oneOf("timeline", LEAD_TIMELINES) as any,
+    financing: oneOf("financing", LEAD_FINANCING) as any,
+    propertyTypeInterest: formData.getAll("propertyTypeInterest").map(String).filter((t) => LEAD_PROP_TYPES.includes(t)),
+    message: String(formData.get("message") ?? "").trim() || null,
+    notes: String(formData.get("notes") ?? "").trim() || null,
+    status: (oneOf("status", STATUSES) ?? "NEW") as any,
+    assignedToId,
   });
   revalidatePath("/admin/crm");
   revalidatePath("/admin");
@@ -1191,21 +1179,8 @@ export async function mergeLeads(targetId: string, sourceId: string) {
 // permanently deletable by an ADMIN from /admin/crm/trash.
 export async function softDeleteLeadAction(id: string, redirectTo?: string) {
   const session = await requireSession();
-  const uid = (session.user as any)?.id ?? null;
-  await prisma.lead.update({ where: { id }, data: { deletedAt: new Date(), deletedById: uid } });
-  await prisma.leadActivity.create({
-    data: { leadId: id, type: "DELETED", content: "Lead moved to trash", createdBy: session.user?.name ?? "admin", createdById: uid },
-  });
-  await prisma.leadInteraction.create({
-    data: {
-      leadId: id,
-      type: "SYSTEM",
-      channel: "SYSTEM",
-      body: "Lead moved to trash",
-      createdByUserId: uid,
-      createdByName: session.user?.name ?? "admin",
-    },
-  });
+  // Rows written by src/lib/crm/trashLead.ts (shared with the MCP connector's crm_delete_lead).
+  await trashLead(actorOf(session), id);
   revalidatePath("/admin/crm");
   revalidatePath("/admin/crm/trash");
   revalidatePath("/admin");
@@ -1214,20 +1189,8 @@ export async function softDeleteLeadAction(id: string, redirectTo?: string) {
 
 export async function restoreLeadAction(id: string) {
   const session = await requireSession();
-  await prisma.lead.update({ where: { id }, data: { deletedAt: null, deletedById: null } });
-  await prisma.leadActivity.create({
-    data: { leadId: id, type: "RESTORED", content: "Lead restored from trash", createdBy: session.user?.name ?? "admin", createdById: (session.user as any)?.id ?? null },
-  });
-  await prisma.leadInteraction.create({
-    data: {
-      leadId: id,
-      type: "SYSTEM",
-      channel: "SYSTEM",
-      body: "Lead restored from trash",
-      createdByUserId: (session.user as any)?.id ?? null,
-      createdByName: session.user?.name ?? "admin",
-    },
-  });
+  // Rows written by src/lib/crm/trashLead.ts (shared with the MCP connector's crm_restore_lead).
+  await restoreLead(actorOf(session), id);
   revalidatePath("/admin/crm");
   revalidatePath("/admin/crm/trash");
   revalidatePath("/admin");

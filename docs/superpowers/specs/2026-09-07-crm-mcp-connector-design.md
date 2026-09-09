@@ -221,7 +221,9 @@ Common rules for every tool:
 | `crm_send_email` | `{ draftId, approvalCode }` | Sends the stored draft verbatim if the code is right. Returns `{ sentTo, interactionId, messageId }`. |
 | `crm_list_drafts` | `{ leadId?, status?: PENDING\|SENT\|SUPERSEDED\|EXPIRED\|LOCKED = PENDING }` | Drafts with id, leadId, lead name, subject, status, createdAt, expiresAt, failedAttempts — never the code, never the body unless `leadId` is given. |
 
-**Deliberately absent:** delete, restore, bucket move, assignment, creating or
+**Added 2026-09-09:** `crm_create_lead` (the admin's "New lead" form; source MANUAL, assigned to the operator, duplicate guard on email/phone unless `allowDuplicate`), `crm_delete_lead` (soft delete = trash, restorable 90 days; requires `confirmName` = full name + `reason`), `crm_restore_lead` — all three on explicit operator instruction only, same rows as the admin buttons, `via: mcp`.
+
+**Deliberately absent:** permanent delete, bucket move, assignment, creating or
 sending presentations, confirming bookings, anything under Account/Users,
 WhatsApp sending (no WhatsApp Business API — standing decision; Claude drafts,
 the operator sends via wa.me and logs through `crm_log_interaction`).
