@@ -81,24 +81,17 @@ const DE_LANDING_MERGES: Record<string, string> = {
   "villen-zypern-aufenthaltstitel-provisionsfrei": "/de/luxusvillen-in-zypern",
   "luxusvillen-in-zypern/villen-in-paphos": "/de/luxusvillen-in-zypern",
   "villen-in-paphos": "/de/luxusvillen-in-zypern",
-  /* Not a confirmed duplicate by this table's usual test — that test compares
-     live queries, and these two pages have hand-pinned lists instead, 8 of 11
-     shared. What decided it is search behaviour: over August the page drew 346
-     impressions at position 24.9 and NOT ONE query of its own. Every query it
-     appeared for, /de/luxusvillen-in-zypern also appeared for, and ranked
-     better. Its three unique pins — City Landmark, Infinity, Royal Bay Resort
-     — belong on the target before this goes live, or they lose their only
-     German placement.
-
-     Deliberately NOT merged alongside it: /de/strandvillen-zypern. It looks
-     like the same case (44% shared pins, loses its queries to the same page)
-     but the demand behind it is real — 803 impressions across 17 beach/sea
-     queries since June, 412 on "zypern villa am meer kaufen" alone. There the
-     answer is to make the specialist win its own term, not to remove it. */
-  "luxusimmobilien-auf-zypern": "/de/luxusvillen-in-zypern",
-  /* Same reasoning as the line above, and the same evidence: 555 of its 560
-     impressions came from queries /de/luxusvillen-in-zypern also served and
-     ranked better for — 5 were its own. Position 45.5 against the target's 18.4.
+  // luxusimmobilien-auf-zypern was merged here 2026-09-03 (commit 714ce20) on
+  // GSC query-overlap evidence -- reversed 2026-09-09: the query it actually
+  // owned, "luxusimmobilien zypern", held position ~5 on the retired page
+  // throughout, while this flagship's own position on that exact query went
+  // 25 -> 74 -> 55 after absorbing it. The merge cost the cluster its best
+  // German position on that term and gained nothing measurable in return. See
+  // docs/SITE-CHANGELOG.md, 2026-09-09, for the position data.
+  /* Same evidence as luxusimmobilien-auf-zypern's case above (see that page's
+     own history): 555 of its 560 impressions came from queries
+     /de/luxusvillen-in-zypern also served and ranked better for — 5 were its
+     own. Position 45.5 against the target's 18.4.
 
      Its list looked like the stronger argument to keep it — 11 pins the target
      did not have, all genuinely above €1M. Only 3 of those render: Küünal
