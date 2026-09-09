@@ -4,6 +4,7 @@ import { extractAvailabilityFromPricelist, buildCanonicalMatcher, type Extracted
 import { toTitleCaseName } from "@/lib/textCase";
 import { folderProjectName, matchProjectByName, scopeSheetToProject, cleanArea, MAPS_LINK_RE } from "@/lib/driveFolderNames";
 import { extractPricelistFromPdf } from "./ai/pdfPricelistExtract";
+import { extractProjectFromPdfTable } from "./ai/pdfTablePricelist";
 import { generateProjectDescription } from "./ai/projectDescription";
 import { extractTextFromDocx, extractTextFromPdf } from "./ai/projectInfoExtract";
 import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart, beginSyncWindow } from "./imageMirror";
@@ -488,8 +489,28 @@ export function resolveFolderProjects(folders: { folder: DriveFile; price: Drive
   return { usable, issues };
 }
 
-async function scanProjectFolders(developerAccountId: string, rootFiles: DriveFile[], at: string): Promise<FolderScan> {
-  const folders = await listProjectFolders(rootFiles, at);
+/* Developers whose per-project price list is a PDF whose status is TEXT in the
+   price column (SOLD / RESERVED / SHOW HOUSE) — read by pdfTablePricelist.ts.
+   Explicit rather than sniffed: Motive Point also ships PDFs, but its status is
+   text COLOUR, and reading one with the other's reader silently loses or
+   invents availability. */
+export const PDF_TABLE_PRICELIST_DEVS = new Set(["gv-drive"]);
+
+/* Root folders that are not projects, per developer, and that AUX_FOLDER_RE
+   (anchored, single-word) cannot catch without being widened for every other
+   developer too. See filterProjectFolderCandidates in googleDrive.ts.
+   Keyed on the developer slug exactly like PDF_TABLE_PRICELIST_DEVS above — one
+   concept, one keying style, so a second developer is added in the same way in
+   both places instead of one of them growing another `slug === "..."` branch. */
+const EXCLUDED_ROOT_FOLDERS = new Map<string, string[]>([
+  ["gv-drive", ["Custom Options", "Drone Videos of SOLD projects"]],
+]);
+
+async function scanProjectFolders(developerAccountId: string, devSlug: string, rootFiles: DriveFile[], at: string): Promise<FolderScan> {
+  const folders = await listProjectFolders(rootFiles, at, {
+    allowPdfPriceList: PDF_TABLE_PRICELIST_DEVS.has(devSlug),
+    excludeFolders: EXCLUDED_ROOT_FOLDERS.get(devSlug),
+  });
   if (!folders.length) return { usable: [], issues: [] };
   // Scoped to THIS developer's own rows, always — FEED-ADAPTER-GUIDE.md §4:
   // a matching function must never be able to reach across developers.
@@ -523,7 +544,7 @@ export async function previewDriveFolders(developerAccountId: string): Promise<{
 
   const at = await getAccessToken();
   const rootFiles = await listFolder(folderId, at);
-  const scan = await scanProjectFolders(developerAccountId, rootFiles, at);
+  const scan = await scanProjectFolders(developerAccountId, acct.slug, rootFiles, at);
   const master = findPriceFile(rootFiles);
 
   const rows: DriveFolderPreview[] = [
@@ -582,7 +603,7 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
      read that one master sheet. (2) is still required and not a legacy path: Alder
      Park, Pine Park and Triangle House exist ONLY in the master sheet, with no
      folder of their own at all. */
-  const scan = await scanProjectFolders(developerAccountId, rootFiles, at);
+  const scan = await scanProjectFolders(developerAccountId, acct.slug, rootFiles, at);
   const master = findPriceFile(rootFiles);
   if (!scan.usable.length && !master) {
     return { ok: false, message: "No price list found — neither in the folder root nor in any project subfolder.", folderIssues: scan.issues };
@@ -630,13 +651,30 @@ export async function syncDeveloperDrive(developerAccountId: string, opts: { for
   for (const fp of folderProjects) {
     let extracted: ExtractedPricelistProject[];
     try {
-      const text = scopeSheetToProject(await getSpreadsheetText(fp.price, at), fp.project, siblingNames);
-      // knownProject — identity is a FACT here (this file was read out of that
-      // project's own folder), so the catalog call and buildCanonicalMatcher's
-      // fuzzy word-overlap scoring are skipped entirely. Nothing can be dropped
-      // for "belonging to no known project", which is exactly the master-sheet
-      // failure mode that cost Arbeo Park 22 of its 28 flats (2026-08-23).
-      extracted = await extractAvailabilityFromPricelist(text, richness, { knownProject: fp.project });
+      if (fp.price.mimeType === "application/pdf" && PDF_TABLE_PRICELIST_DEVS.has(acct.slug)) {
+        // Per-project PDF price list whose status is TEXT (SOLD / RESERVED),
+        // read by the table engine's adapter — never by pdfPricelistExtract.ts's
+        // colour reader, which is for a developer-wide MASTER PDF (Motive Point,
+        // pass 2 below) with a completely different status signal.
+        const buf = await downloadFile(fp.price.id, at);
+        const result = await extractProjectFromPdfTable(buf, folderProjectName(fp.folder.name));
+        if (result.blocked) {
+          folderIssues.push({ folder: fp.folder.name, reason: result.message });
+          continue;
+        }
+        // result.dropped (rows the engine refused, with reasons) is carried by
+        // the adapter's result for the dry run to surface to a human — not
+        // wired into this sync's own reporting yet.
+        extracted = [result.project];
+      } else {
+        const text = scopeSheetToProject(await getSpreadsheetText(fp.price, at), fp.project, siblingNames);
+        // knownProject — identity is a FACT here (this file was read out of that
+        // project's own folder), so the catalog call and buildCanonicalMatcher's
+        // fuzzy word-overlap scoring are skipped entirely. Nothing can be dropped
+        // for "belonging to no known project", which is exactly the master-sheet
+        // failure mode that cost Arbeo Park 22 of its 28 flats (2026-08-23).
+        extracted = await extractAvailabilityFromPricelist(text, richness, { knownProject: fp.project });
+      }
     } catch (e: any) {
       // One unreadable project sheet must never fail the other fifteen.
       folderIssues.push({ folder: fp.folder.name, reason: `could not read “${fp.price.name}” (${String(e?.message ?? e).slice(0, 120)})` });
