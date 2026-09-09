@@ -22,6 +22,13 @@ const fmtSoldOutSince = (d: Date | null) => {
   const days = Math.floor((Date.now() - new Date(d).getTime()) / 86_400_000);
   return `sold out since at least ${fmtDate(d)} (${days}+ day${days === 1 ? "" : "s"})`;
 };
+/** The same fact, short enough to sit in the row. Keeps the "≥" because the
+    caveat above applies to every value, not just backfilled ones. */
+const fmtSoldOutOn = (d: Date | null) => {
+  if (!d) return null;
+  const days = Math.floor((Date.now() - new Date(d).getTime()) / 86_400_000);
+  return `sold out ≥ ${fmtDate(d)} · ${days}+ d`;
+};
 
 const STATUS_STYLE: Record<string, string> = {
   draft: "bg-[#F3F4F6] text-[#6B7280]",
@@ -59,13 +66,59 @@ export default async function DevelopmentsPage({ searchParams }: { searchParams?
     prisma.development.findMany({
       where,
       orderBy: [{ dev: "asc" }, { publicName: "asc" }],
-      include: { _count: { select: { units: true } }, override: { select: { alias: true } }, units: { select: { status: true } } },
+      include: {
+        _count: { select: { units: true } },
+        override: { select: { alias: true } },
+        units: { select: { status: true } },
+        // A superseded legacy page keeps its own slug (…-island-blue), and that
+        // is where Search Console reports the traffic — 122 of 344 developments
+        // are in that shape, so matching the Development slug alone reports a
+        // false zero. Same rule as soldOutSweeps.ts.
+        supersedesProjects: { select: { slug: true } },
+      },
     }),
     prisma.development.groupBy({ by: ["dev"], _count: { _all: true }, orderBy: { dev: "asc" } }),
     prisma.development.groupBy({ by: ["publishStatus"], _count: { _all: true } }),
     prisma.development.count(),
     prisma.development.count({ where: SOLD_OUT_WHERE }),
   ]);
+
+  /* Traffic behind the SOLD OUT badge — the numbers the archive-or-keep
+     decision is made on. Two grouped queries for the whole page rather than a
+     pair per row, matched to developments in memory. Only sold-out rows use
+     the result, but the queries are not worth narrowing: the window is short
+     and the grouping is done by the database either way. */
+  const trafficSince = new Date(Date.now() - 30 * 86_400_000);
+  const [searchRows, viewRows] = await Promise.all([
+    prisma.searchMetric.groupBy({
+      by: ["page"], where: { query: null, date: { gte: trafficSince } },
+      _sum: { clicks: true, impressions: true },
+    }),
+    prisma.pageView.groupBy({
+      by: ["path"], where: { isBot: false, isPrefetch: false, isTest: false, createdAt: { gte: trafficSince } },
+      _count: { _all: true },
+    }),
+  ]);
+  const lastSegment = (u: string) => u.replace(/[?#].*$/, "").replace(/\/+$/, "").split("/").pop() ?? "";
+  const bySlug = new Map<string, { clicks: number; impressions: number; views: number }>();
+  const bump = (slug: string, k: "clicks" | "impressions" | "views", n: number) => {
+    const cur = bySlug.get(slug) ?? { clicks: 0, impressions: 0, views: 0 };
+    cur[k] += n;
+    bySlug.set(slug, cur);
+  };
+  for (const r of searchRows) {
+    bump(lastSegment(r.page), "clicks", r._sum.clicks ?? 0);
+    bump(lastSegment(r.page), "impressions", r._sum.impressions ?? 0);
+  }
+  for (const r of viewRows) bump(lastSegment(r.path), "views", r._count._all);
+  const fmtTraffic30 = (slugs: (string | null)[]) => {
+    const t = { clicks: 0, impressions: 0, views: 0 };
+    for (const slug of Array.from(new Set(slugs.filter((x): x is string => !!x)))) {
+      const hit = bySlug.get(slug);
+      if (hit) { t.clicks += hit.clicks; t.impressions += hit.impressions; t.views += hit.views; }
+    }
+    return `30 d: ${t.clicks} clicks · ${t.impressions} impressions · ${t.views} visits`;
+  };
 
   const statusCount = Object.fromEntries(byStatus.map((s) => [s.publishStatus, s._count._all]));
   const qp = (o: Record<string, string>) => {
@@ -153,6 +206,8 @@ export default async function DevelopmentsPage({ searchParams }: { searchParams?
           status: r.publishStatus,
           soldOut: computeAvailability(r.units).soldOut,
           soldOutSince: fmtSoldOutSince(r.soldOutSince),
+          soldOutOn: fmtSoldOutOn(r.soldOutSince),
+          traffic30: fmtTraffic30([r.slug, ...r.supersedesProjects.map((x) => x.slug)]),
           noFolder: r.dev === "drive" && !r.driveFolderId,
           synced: fmtDate(r.syncedAt),
         }))}
