@@ -130,6 +130,22 @@ const DE_LANDING_MERGES: Record<string, string> = {
   // page cannot render.
   "wohnungen-fuer-junge-familien-zypern": "/de/apartment-zypern",
   "wohnungen-auf-zypern-fuer-investoren": "/de/apartment-zypern",
+
+  // Paphos investment cluster (2026-09-09): investment-immobilien-paphos
+  // never filtered on propertyType despite its "investment" framing — it
+  // was just every Paphos listing (198 matches, 60 rendered under the cap)
+  // with investment-flavored copy, no per-listing investment data behind
+  // it (investmentData is 0/407 populated site-wide, and the ROI
+  // calculator runs on city+type market presets, not per-listing facts —
+  // the promise this page made can't be backed now or later). Repointed
+  // to villen-paphos-investoren-kaufen, DE's only live Paphos+Villa page —
+  // narrower (98 matches) and the one page actually scoped to what an
+  // investor-framed page should be selling. villen-in-paphos, the more
+  // "general Paphos villas" alternative, was ruled out: already merged
+  // into luxusvillen-in-zypern above, not a live option. The one hardcoded
+  // link to the retiring page (from strandimmobilien-paphos) was
+  // repointed directly to the new target first.
+  "investment-immobilien-paphos": "/de/villen-paphos-investoren-kaufen",
 };
 
 // Retired DE blog articles — same shape/mechanism as DE_LANDING_MERGES above
