@@ -374,6 +374,35 @@ export function buildDriveSyncFailureMessage(dev: string, message: string): { su
   return { subject: `${dev}: Drive sync failed`, text };
 }
 
+/* A watched share moved (Marfields, 2026-09-09). Deliberately a plain list of
+   paths and nothing more: this exists so a human goes and looks, and the whole
+   point of watching rather than syncing was to avoid pretending we understand
+   the file's contents. */
+export function buildShareChangeMessage(
+  label: string,
+  changes: { added: string[]; changed: string[]; removed: string[]; total: number },
+): { subject: string; text: string } | null {
+  const { added, changed, removed } = changes;
+  const n = added.length + changed.length + removed.length;
+  if (!n) return null;
+  const lines = [`\u{1F440} ${label} — ${n} change${n === 1 ? "" : "s"} in the shared folder`];
+  const block = (title: string, paths: string[]) => {
+    if (!paths.length) return;
+    lines.push("", `${title} (${paths.length})`);
+    for (const p of paths.slice(0, 20)) lines.push(`  ${p}`);
+    if (paths.length > 20) lines.push(`  … and ${paths.length - 20} more`);
+  };
+  block("Changed", changed);
+  block("Added", added);
+  block("Removed", removed);
+  lines.push("", `Nothing was imported — this folder is watched, not synced. ${changes.total} files in total.`);
+  const bits: string[] = [];
+  if (changed.length) bits.push(`${changed.length} changed`);
+  if (added.length) bits.push(`${added.length} added`);
+  if (removed.length) bits.push(`${removed.length} removed`);
+  return { subject: `${label}: ${bits.join(", ")}`, text: lines.join("\n") };
+}
+
 // Generic per-cron-job failure notification (2026-08-13, GROSSER AUFTRAG
 // Teil 4) — for cron routes with a single linear pipeline or a simple
 // partial-failure summary, where a bespoke per-developer message (like
