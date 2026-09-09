@@ -186,6 +186,19 @@ const EN_LANDING_MERGES: Record<string, string> = {
   "west-coast-properties-cyprus": "/west-coast-properties-paphos",
 };
 
+// Paphos investment cluster, PL leg (2026-09-09) — same investigation and
+// same reasoning as the DE entry above: inwestycje-w-nieruchomosci-pafos
+// never filtered on propertyType despite its "investment" framing (198
+// Paphos-wide matches, 60 rendered under the cap), and no per-listing
+// investment data exists to back that promise (investmentData is 0/407
+// populated site-wide). Redirects to wille-na-sprzedaz-pafos-dla-inwestorow,
+// PL's one live Paphos+Villa page. First PL entry in this family of maps —
+// same shape/mechanism as DE_LANDING_MERGES, kept separate because that one
+// is only ever checked under the /de/ prefix.
+const PL_LANDING_MERGES: Record<string, string> = {
+  "inwestycje-w-nieruchomosci-pafos": "/pl/wille-na-sprzedaz-pafos-dla-inwestorow",
+};
+
 export default async function middleware(request: NextRequest) {
   const deMergeMatch = request.nextUrl.pathname.match(/^\/de\/(.+)$/);
   if (deMergeMatch && DE_LANDING_MERGES[deMergeMatch[1]]) {
@@ -197,6 +210,13 @@ export default async function middleware(request: NextRequest) {
   if (deMergeMatch && RETIRED_BLOG_REDIRECTS[deMergeMatch[1]]) {
     const url = request.nextUrl.clone();
     url.pathname = RETIRED_BLOG_REDIRECTS[deMergeMatch[1]];
+    url.search = "";
+    return NextResponse.redirect(url, 301);
+  }
+  const plMergeMatch = request.nextUrl.pathname.match(/^\/pl\/(.+)$/);
+  if (plMergeMatch && PL_LANDING_MERGES[plMergeMatch[1]]) {
+    const url = request.nextUrl.clone();
+    url.pathname = PL_LANDING_MERGES[plMergeMatch[1]];
     url.search = "";
     return NextResponse.redirect(url, 301);
   }
