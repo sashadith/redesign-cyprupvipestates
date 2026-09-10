@@ -142,10 +142,14 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
-              // RealEstateAgent (a LocalBusiness subtype) unlocks the brand
-              // knowledge panel Google reserves for businesses — address, phone,
-              // and hours — that a plain Organization never qualifies for.
-              "@type": "RealEstateAgent",
+              // LocalBusiness (not the RealEstateAgent subtype) still unlocks the
+              // brand knowledge panel Google reserves for businesses — address,
+              // phone, and hours — that a plain Organization never qualifies for.
+              // RealEstateAgent was dropped 2026-09-10: we are not a licensed
+              // Cyprus real-estate broker (see the Terms pages' own disclaimer,
+              // "marketing and consulting agency, not a licensed brokerage") and
+              // this structured claim contradicted that. Do not re-add it.
+              "@type": "LocalBusiness",
               name: "Cyprus VIP Estates",
               alternateName: "Cyprus VIP Estates",
               url: "https://cyprusvipestates.com",

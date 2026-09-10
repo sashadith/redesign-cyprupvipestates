@@ -32,7 +32,9 @@ const SchemaCaseStudy = ({ caseStudy, lang }: Props) => {
       name: "Cyprus VIP Estates",
     },
     about: {
-      "@type": "RealEstateAgent",
+      // Organization, not RealEstateAgent — see layout.tsx's org schema comment
+      // (2026-09-10): we're not a licensed Cyprus real-estate broker.
+      "@type": "Organization",
       name: "Cyprus VIP Estates",
       areaServed: {
         "@type": "Country",
