@@ -32,9 +32,19 @@ export default function SyncControlPanel({
     start(async () => {
       const r = await syncOneDevelopmentAction(developmentId);
       if (!r.ok) { setMessage(`Sync failed: ${r.error || "unknown error"}`); return; }
-      setMessage(r.skippedManual
+      // Images are the half of this button nobody could see. It is the only
+      // way to re-mirror a PUBLISHED project's images — the nightly cron
+      // deliberately freezes them — so the outcome has to be stated either
+      // way, or a run that found nothing looks identical to one that never
+      // looked. Reported for every project: a draft mirrors images normally,
+      // and "no new images" is still an answer.
+      const units = r.skippedManual
         ? "Project data updated. Units skipped (manually managed)."
-        : `${r.unitsWritten} unit${r.unitsWritten === 1 ? "" : "s"} pulled from the feed.`);
+        : `${r.unitsWritten} unit${r.unitsWritten === 1 ? "" : "s"} pulled from the feed.`;
+      const images = r.mirroredNewFiles
+        ? ' New images mirrored — add them under "New in feed" in the gallery below, then Save images.'
+        : " No new images in the feed.";
+      setMessage(units + images);
       router.refresh();
     });
   };
@@ -70,7 +80,7 @@ export default function SyncControlPanel({
         {canForceSync && (
           <button type="button" onClick={runForceSync} disabled={pending}
             className="rounded-md border border-[#E5E7EB] text-sm px-3 py-1.5 hover:bg-[#F8F9FA] disabled:opacity-60">
-            {pending ? "…" : "Pull units from feed"}
+            {pending ? "…" : "Reload units & images"}
           </button>
         )}
         {isFeedManaged ? (

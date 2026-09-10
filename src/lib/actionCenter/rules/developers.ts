@@ -646,7 +646,7 @@ async function developerLinkCollisions(): Promise<ActionItem[]> {
 // place that surfaces it — without it, a developer replacing bad renderings
 // with real photos would never be noticed. INFO, not ACTION/URGENT: nothing
 // is broken on the live site, this is "worth a look", and the admin decides
-// via "Reload images" + the New in feed picker whether to act on it.
+// via "Reload units & images" + the New in feed picker whether to act on it.
 // One item PER Development (own itemId namespace, image-drift-pending:), not
 // one aggregate — same reasoning as developer-link-collision: above, a
 // dismiss on one project's drift must never swallow another's.
@@ -667,7 +667,7 @@ async function imageDriftPending(): Promise<ActionItem[]> {
     return {
       id: `image-drift-pending:${d.id}`, severity: "INFO", category: "DEVELOPERS",
       title: `${d.publicName}: feed images changed since publish`,
-      description: `${parts.join(", ") || "Images"} in the feed no longer match what's mirrored — the sync skips re-downloading a published project's images automatically. "Reload images" on the project page mirrors the new ones for review.`,
+      description: `${parts.join(", ") || "Images"} in the feed no longer match what's mirrored — the sync skips re-downloading a published project's images automatically. "Reload units & images" under Sync control on the project page mirrors the new ones for review.`,
       deepLink: `/admin/developments/${d.id}`, since: d.imageDriftDetectedAt as Date,
     };
   });
