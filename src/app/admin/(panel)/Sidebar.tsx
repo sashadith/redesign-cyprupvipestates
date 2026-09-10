@@ -102,9 +102,17 @@ function DevelopmentsNavPanel({ nav, totals, pathname, onNavigate }: { nav: Deve
         className="block rounded-md border border-dashed border-[#D1D5DB] px-3 py-1.5 mt-1 text-sm text-center text-[#6B7280] hover:border-[#1B4B43] hover:text-[#1B4B43]">
         + Add new developer
       </Link>
+      {/* This block is hand-written rather than driven by the module's `pages`
+          (see buildModules in layout.tsx), because the panel above it is the
+          developer list, not a page list. The cost is that the two can diverge,
+          and they did: Publishing Queue was declared in `pages` and therefore
+          drew an icon in the collapsed rail, but never appeared here or in the
+          mobile drawer — reachable only by typing its URL. Anything added to
+          that module's `pages` has to be added here too. */}
       <div className="pt-2 mt-2 border-t border-[#E5E7EB] space-y-0.5">
         {simple("/admin/developments", "All developments", pathname === "/admin/developments")}
         {simple("/admin/developments/areas", "Area descriptions", pathname.startsWith("/admin/developments/areas"))}
+        {simple("/admin/developers/publishing-queue", "Publishing Queue", pathname.startsWith("/admin/developers/publishing-queue"))}
       </div>
     </nav>
   );
