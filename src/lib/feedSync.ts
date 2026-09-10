@@ -982,11 +982,15 @@ export async function syncAll(opts: { mirror?: boolean; forceMirror?: boolean } 
 // project-level fields refreshed, but unitsWritten stays 0 (skippedManual
 // true) — the caller renders a message that says so explicitly, never a
 // silent no-op.
-export type SyncOneDevelopmentResult = { ok: boolean; unitsWritten: number; skippedManual: boolean; error?: string };
+// mirroredNewFiles is part of the result because the admin button that calls
+// this is the ONLY way to re-mirror a published project's images (the nightly
+// cron freezes them). Dropping the flag here left that button unable to say
+// whether it had done the very thing the Action Center sends people to it for.
+export type SyncOneDevelopmentResult = { ok: boolean; unitsWritten: number; skippedManual: boolean; mirroredNewFiles: boolean; error?: string };
 export async function syncOneDevelopment(developmentId: string, opts: { mirror?: boolean; forceMirror?: boolean } = {}): Promise<SyncOneDevelopmentResult> {
   const development = await prisma.development.findUnique({ where: { id: developmentId }, select: { dev: true, feedProjectId: true, latitude: true, longitude: true } });
   if (!development?.dev || !development?.feedProjectId) {
-    return { ok: false, unitsWritten: 0, skippedManual: false, error: "no feed configured for this development" };
+    return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: "no feed configured for this development" };
   }
   try {
     const accountId = await ensureAccount(development.dev);
@@ -996,7 +1000,7 @@ export async function syncOneDevelopment(developmentId: string, opts: { mirror?:
     // development's stored coordinates, the same match syncMitoCore makes.
     if (development.dev === "mito") {
       if (development.latitude == null || development.longitude == null) {
-        return { ok: false, unitsWritten: 0, skippedManual: false, error: "This Mito project has no coordinates, so its cluster cannot be identified." };
+        return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: "This Mito project has no coordinates, so its cluster cannot be identified." };
       }
       const clusters = await mitoClusters();
       let best: { cluster: MitoCluster; m: number } | null = null;
@@ -1008,18 +1012,18 @@ export async function syncOneDevelopment(developmentId: string, opts: { mirror?:
         );
         if (m < MITO_MATCH_M && (!best || m < best.m)) best = { cluster: c, m };
       }
-      if (!best) return { ok: false, unitsWritten: 0, skippedManual: false, error: "No cluster in today's Mito feed matches this project's location." };
+      if (!best) return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: "No cluster in today's Mito feed matches this project's location." };
       const r = await syncOneProject(development.dev, development.feedProjectId, accountId, { ...opts, vm: mitoVm(best.cluster, development.feedProjectId) });
-      if (!r.ok) return { ok: false, unitsWritten: 0, skippedManual: false, error: "feed unavailable or project not found" };
+      if (!r.ok) return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: "feed unavailable or project not found" };
       if (opts.mirror && r.mirroredNewFiles) scheduleAppRestart();
-      return { ok: true, unitsWritten: r.unitsWritten, skippedManual: r.skippedManual };
+      return { ok: true, unitsWritten: r.unitsWritten, skippedManual: r.skippedManual, mirroredNewFiles: r.mirroredNewFiles };
     }
     const r = await syncOneProject(development.dev, development.feedProjectId, accountId, opts);
-    if (!r.ok) return { ok: false, unitsWritten: 0, skippedManual: false, error: "feed unavailable or project not found" };
+    if (!r.ok) return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: "feed unavailable or project not found" };
     if (opts.mirror && r.mirroredNewFiles) scheduleAppRestart();
-    return { ok: true, unitsWritten: r.unitsWritten, skippedManual: r.skippedManual };
+    return { ok: true, unitsWritten: r.unitsWritten, skippedManual: r.skippedManual, mirroredNewFiles: r.mirroredNewFiles };
   } catch (e) {
-    return { ok: false, unitsWritten: 0, skippedManual: false, error: e instanceof Error ? e.message : String(e) };
+    return { ok: false, unitsWritten: 0, skippedManual: false, mirroredNewFiles: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
 
