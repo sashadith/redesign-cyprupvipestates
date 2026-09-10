@@ -102,5 +102,37 @@ check("sitemap yields only EN top-level project slugs",
 check("sitemap excludes RU", CB.slugsFromSitemap(fx("sitemap.xml")).some((s) => s.startsWith("ru/")), false);
 check("sitemap excludes subpages", CB.slugsFromSitemap(fx("sitemap.xml")).some((s) => s.includes("/")), false);
 
+/* Two throws in cybarco.ts are safety-critical and must never regress into a
+   silent default — the brief names the status throw as a binding constraint
+   ("An unrecognised status mark must throw, not default to a value"), and the
+   slug throw exists for the same reason (a drifting derived slug re-keys a
+   project). Both hostile inputs are DERIVED from the real fixture string in
+   memory below — no new fixture files, no edits to the committed fixtures. */
+check("throws on an unrecognised status mark", (() => {
+  const hostile = fx("listing.html").replace(
+    '<span class="mark">Under construction</span>',
+    '<span class="mark">Coming Soon</span>'
+  );
+  try {
+    CB.parseListing(hostile, fx("sitemap.xml"));
+    return "no throw";
+  } catch (e) {
+    return e.message.includes("unrecognised status mark") && e.message.includes("Coming Soon");
+  }
+})(), true);
+
+check("throws when an unlinked card's name has no sitemap match", (() => {
+  const hostile = fx("listing.html").replace(
+    '<h3 class="h4">The Oval</h3>',
+    '<h3 class="h4">Nonexistent Orphan Project</h3>'
+  );
+  try {
+    CB.parseListing(hostile, fx("sitemap.xml"));
+    return "no throw";
+  } catch (e) {
+    return e.message.includes("no sitemap slug") && e.message.includes("Nonexistent Orphan Project");
+  }
+})(), true);
+
 console.log(failures ? `\n${failures} failed` : "\nall passed");
 process.exit(failures ? 1 : 0);
