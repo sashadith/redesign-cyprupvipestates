@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-/* Self-test for the two nightly sold-out sweeps (src/lib/soldOutSweeps.ts).
+/* Self-test for the two nightly sold-out sweeps (src/lib/soldOutSweeps.ts)
+   and for the sold-out/returned-to-market derived-state rule those sweeps
+   ultimately rely on (src/lib/developmentDerivedState.ts).
 
    Both sweeps share one failure shape: the signal they read goes quiet for a
    whole developer (or for the whole site) exactly as it does for one dead
@@ -15,16 +17,23 @@ import { join } from "node:path";
 
 const scratch = join(process.cwd(), "node_modules", ".sold-out-sweep-check");
 mkdirSync(scratch, { recursive: true });
-process.on("exit", () => rmSync(scratch, { recursive: true, force: true }));
-const out = await build({
-  entryPoints: ["src/lib/soldOutSweeps.ts"],
-  bundle: true, platform: "node", format: "esm", write: false,
-  external: ["@prisma/client", ".prisma/client/default"],
-  banner: { js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" },
-});
-const f = join(scratch, "s.mjs");
-writeFileSync(f, out.outputFiles[0].text);
-const { isMissingFromFeed, slugFromPage, sumImpressionsForSlug, MISSING_FROM_FEED_DAYS, PEER_FRESH_HOURS, DEAD_PAGE_IMPRESSION_DAYS } = await import(f);
+const written = [];
+process.on("exit", () => { for (const f of written) rmSync(f, { force: true }); rmSync(scratch, { recursive: true, force: true }); });
+
+async function bundle(entry, name) {
+  const out = await build({
+    entryPoints: [entry],
+    bundle: true, platform: "node", format: "esm", write: false,
+    external: ["@prisma/client", ".prisma/client/default"],
+    banner: { js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" },
+  });
+  const f = join(scratch, `${name}.mjs`);
+  writeFileSync(f, out.outputFiles[0].text);
+  written.push(f);
+  return f;
+}
+
+const { isMissingFromFeed, slugFromPage, sumImpressionsForSlug, MISSING_FROM_FEED_DAYS, PEER_FRESH_HOURS, DEAD_PAGE_IMPRESSION_DAYS } = await import(await bundle("src/lib/soldOutSweeps.ts", "s"));
 
 let failures = 0;
 const check = (name, actual, expected) => {
@@ -106,6 +115,37 @@ console.log("\na superseded legacy page's traffic counts as the project's own");
   check("and the neighbouring project is not swept in", sumImpressionsForSlug(m, ["germasogeia-view-2", "germasogeia-view-2-island-blue"]) === 16, false);
   check("an empty or null slug in the list is ignored", sumImpressionsForSlug(m, ["", "germasogeia-view"]), 1);
 }
+
+/* The derived-state contract for a Development with NO units.
+   Before 2026-09-10 a unit-less project was treated as "not sold out", which
+   made recomputeDevelopmentDerivedState clear soldOutSince and stamp
+   returnedToMarketAt — recording a return to market that never happened.
+   Six Cybarco projects are sold out with no price list and therefore no units,
+   and a hand-set sold-out state has to survive a sync. */
+console.log("\nzero units means 'no opinion', not 'returned to market'");
+const AV = await import(await bundle("src/lib/developmentAvailability.ts", "availability"));
+const DS = await import(await bundle("src/lib/developmentDerivedState.ts", "derived-state"));
+
+check("no units -> soldOut false (unchanged)", AV.computeAvailability([]).soldOut, false);
+check("no units -> total 0", AV.computeAvailability([]).total, 0);
+check("all sold -> soldOut true", AV.computeAvailability([{ status: "sold" }, { status: "sold" }]).soldOut, true);
+check("reserved is not available", AV.computeAvailability([{ status: "reserved" }]).soldOut, true);
+
+// The new rule, exported so it can be asserted without a database.
+check("clears sold-out when units exist and one is available",
+  DS.shouldClearSoldOut({ total: 3, available: 1, wasSoldOut: true }), true);
+check("keeps sold-out when units exist and none is available",
+  DS.shouldClearSoldOut({ total: 3, available: 0, wasSoldOut: true }), false);
+check("keeps sold-out when there are NO units at all",
+  DS.shouldClearSoldOut({ total: 0, available: 0, wasSoldOut: true }), false);
+check("nothing to clear when it was not sold out",
+  DS.shouldClearSoldOut({ total: 0, available: 0, wasSoldOut: false }), false);
+// The case above has total: 0 too, so it cannot tell "wasSoldOut guard" apart
+// from "total === 0 guard" — deleting the wasSoldOut check entirely still
+// passes it, because the total === 0 check alone forces false. This one has
+// units AND availability, so only the wasSoldOut guard can produce false here.
+check("units available but it was never sold out - not a clear event either",
+  DS.shouldClearSoldOut({ total: 5, available: 2, wasSoldOut: false }), false);
 
 console.log(`\n${failures ? `${failures} failed` : "all checks passed"}`);
 process.exit(failures ? 1 : 0);
