@@ -190,6 +190,34 @@ const EN_LANDING_MERGES: Record<string, string> = {
 // is only ever checked under the /de/ prefix.
 const PL_LANDING_MERGES: Record<string, string> = {
   "inwestycje-w-nieruchomosci-pafos": "/pl/wille-na-sprzedaz-pafos-dla-inwestorow",
+
+  // PL villa cluster consolidation (2026-09-10): 9 separate villa landing
+  // pages were collectively pulling ~46 impressions / 2 clicks over 60 days
+  // (GSC), vs. DE's single consolidated flagship pulling hundreds of
+  // impressions per query for the equivalent cluster. Two of these six had a
+  // worse defect than plain fragmentation: 0-of-21 pinned project refs were
+  // PUBLISHED (same render-vs-status bug documented for the DE flagship
+  // above), rendering only because an implicit fallback query happened to
+  // paper over it. The other four had a live filterPropertyType:"Villa" query
+  // but zero real differentiation beyond marketing copy (investor/large/
+  // emigration/residency angles, no actual filter behind any of them) — the
+  // same "unfiltered duplicate" pattern as DE's wohnungen-fuer-junge-
+  // rodzin-zypern precedent. wille-na-cyprze was picked as the flagship (best
+  // URL, Cyprus-wide "villas" framing) and its own dead pins were fixed to a
+  // live filterPropertyType:"Villa" query in the same pass. NOT merged here,
+  // kept as distinct pages because each has a real, live-query differentiator:
+  // luksusowe-wille-na-cyprze-powyzej-1-mln-euro (priceMin 1M),
+  // wille-na-sprzedaz-pafos-dla-inwestorow (filterCity Paphos, already the
+  // established PL Paphos+Villa target above), wille-w-limassol-na-inwestycje
+  // (filterCity Limassol). relatedLandingPages refs and the 3 known hardcoded
+  // body-text links across the PL site were repointed to the flagship in the
+  // same pass, not left to rely solely on this redirect.
+  "wille-w-pafos": "/pl/wille-na-cyprze",
+  "wille-przy-plazy-cypr": "/pl/wille-na-cyprze",
+  "wille-na-cyprze-dla-inwestorow": "/pl/wille-na-cyprze",
+  "duze-wille-na-cyprze": "/pl/wille-na-cyprze",
+  "wille-na-cyprze-dla-emigracji": "/pl/wille-na-cyprze",
+  "wille-na-cyprze-na-pobyt-staly-bez-prowizji": "/pl/wille-na-cyprze",
 };
 
 // Paphos investment cluster, RU leg (2026-09-09) — completes the DE/PL work
