@@ -23,15 +23,23 @@ export function joinColumn(row: PdfRow, x0: number, x1: number): string {
 
 /* pdf.js splits a single printed price across several cells — "5", "60", ",",
    "0", "00" for 560,000 — so the input here is already the JOINED column, and
-   the separators are whatever survived that join. Anything under four digits is
-   refused: an area of 119 m² and a plot of 1035 m² sit in neighbouring columns,
-   and reading one as a price is worse than reading nothing. */
+   the separators are whatever survived that join. Anything under SIX digits is
+   refused. That floor is measured, not guessed: across all five committed
+   fixtures (scripts/qa/fixtures/cybarco/pl-*.json), every real price, once
+   joined, is 6 or 7 digits — the smallest is "350,000" (Centro Limassol, unit
+   104), the largest "6,200,000" (Marina, unit D52). The largest numeric value
+   that turns up in a NEIGHBOURING column is only 4 digits: plot areas up to
+   1035 m² (Akamas Villas, unit K5) and bare years like 2026/2027/2028 in
+   delivery-date text. A floor of 6 clears every measured price with a
+   two-digit margin to spare while still refusing every measured impostor
+   (which tops out at 4 digits) — reading one of those as a price is worse than
+   reading nothing. */
 export function cybarcoParsePrice(raw: string): number | null {
   const s = (raw || "").replace(/[€$£]/g, "").replace(/\s/g, "").trim();
   if (!s) return null;
   if (!/^\d[\d.,]*$/.test(s)) return null;
   const digits = s.replace(/[.,]/g, "");
-  if (!/^\d{4,9}$/.test(digits)) return null;
+  if (!/^\d{6,9}$/.test(digits)) return null;
   const n = Number(digits);
   return Number.isFinite(n) && n > 0 ? n : null;
 }

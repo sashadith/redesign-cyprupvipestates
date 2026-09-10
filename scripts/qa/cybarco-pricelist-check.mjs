@@ -74,6 +74,16 @@ check("zero is not a price", CP.cybarcoParsePrice("0"), null);
 check("empty", CP.cybarcoParsePrice(""), null);
 check("status word is not a price", CP.cybarcoParsePrice("SOLD"), null);
 
+/* The digit floor is measured, not guessed (see the comment in
+   cybarcoPriceTable.ts). Real prices across all five committed fixtures run
+   350,000-6,200,000 (6-7 digits); the largest neighbouring-column impostor is
+   4 digits: a 1035 sqm plot (Akamas Villas, unit K5) and bare delivery years
+   like 2026. Both must be refused, and the smallest REAL price on record must
+   still clear the floor. */
+check("plot area (1035 sqm, Akamas Villas K5) is not a price", CP.cybarcoParsePrice("1035"), null);
+check("delivery year is not a price", CP.cybarcoParsePrice("2026"), null);
+check("smallest real price on record still parses", CP.cybarcoParsePrice("350,000"), 350000);
+
 check("SOLD", CP.cybarcoReadOutcome("SOLD"), { status: "sold", price: null });
 check("RESERVED", CP.cybarcoReadOutcome("RESERVED"), { status: "reserved", price: null });
 check("price means available", CP.cybarcoReadOutcome("990,000"), { status: "available", price: 990000 });
@@ -94,6 +104,20 @@ const row = { y: 665, cells: [
 check("column join respects x bounds", CP.joinColumn(row, 470, 540), "560,000");
 check("column join is empty outside the band", CP.joinColumn(row, 200, 300), "");
 check("column join keeps left-to-right order", CP.joinColumn(row, 50, 130), "A 1011st");
+
+/* pdf.js does not guarantee cells are emitted in x order, which is the whole
+   reason joinColumn sorts before joining. The three assertions above never
+   exercise that sort because the fixture row's cells already happen to be
+   listed in ascending-x order — removing `.sort((a, b) => a.x - b.x)` from
+   joinColumn and re-running the suite unchanged still prints all-passed. This
+   row is deliberately scrambled (array order: "00", "5", ",", "60", "0" —
+   none of that is x-ascending) so that only a reader that actually sorts by x,
+   not one that trusts array order, produces the right joined text. */
+const scrambledRow = { y: 500, cells: [
+  { x: 516.0, w: 12, t: "00" }, { x: 476.5, w: 10, t: "5" }, { x: 505.0, w: 4, t: "," },
+  { x: 489.5, w: 20, t: "60" }, { x: 510.0, w: 6, t: "0" },
+] };
+check("column join sorts cells that arrive out of x order", CP.joinColumn(scrambledRow, 470, 540), "560,000");
 
 console.log(failures ? `\n${failures} FAILED` : "\nall checks passed");
 process.exit(failures ? 1 : 0);
