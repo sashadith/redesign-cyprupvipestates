@@ -15,8 +15,16 @@ import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { isDropboxShareUrl } from "./dropbox";
 import type { ExtractedUnit } from "./ai/pricelistExtract";
 
-const MAX_IMAGES = 10;
-const MAX_PLANS = 12;
+/* No image or floor-plan cap, by the operator's standing instruction (2026-09-10):
+   "immer alle bilder bei allen projekten und bauträgern importieren, ich sortiere
+   selbst vor der veröffentlichung" — every picture a developer publishes in their
+   own folder gets imported, and the pre-publication selection is made in the admin.
+   A cap here was invisible: nothing in the UI or the sync report said that a
+   gallery had been cut off. Measured on 2026-09-10 before it was removed, the old
+   drive cap of 10 was binding on 17 of this connector's 28 projects (its largest
+   gallery was exactly 10, while feed developers reach 239), and the SharePoint cap
+   of 40 on 11 of 18. Import cost is bounded in practice because media is only
+   touched by a full import (content=1), never by the nightly cron. */
 
 /* Availability + content sync from a developer's shared Drive folder.
    - content=false (daily cron): light — only unit status/price + counts.
@@ -348,7 +356,7 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
   if (content) {
     try {
       if (subId) {
-        const { images, plans, sig } = await collectMedia(subId, at, { maxImages: MAX_IMAGES, maxPlans: MAX_PLANS });
+        const { images, plans, sig } = await collectMedia(subId, at);
         const devKey = devKeyFor(dev.feedKey);
         const update: Record<string, any> = { driveFolderId: subId };
 

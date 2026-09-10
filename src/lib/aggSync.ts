@@ -39,8 +39,8 @@ import { mirrorAll, devKeyFor, beginSyncWindow, scheduleAppRestart } from "./ima
    and a unit that drops out of the price list flips to "unlisted" (never deleted,
    never silently sold) — the same rules as FEED-ADAPTER-GUIDE.md §4. */
 
-const MAX_IMAGES = 40;
-
+/* No image or floor-plan cap — see the note in driveAvailabilitySync.ts:
+   the operator imports every picture and selects before publishing. */
 const nn = (v: string | null | undefined) => (v && String(v).trim() ? String(v).trim() : null);
 const num = (v: string) => { const n = parseFloat((v || "").replace(/,/g, "")); return Number.isFinite(n) ? String(n) : null; };
 
@@ -248,7 +248,7 @@ export async function writeAggDraft(developerAccountId: string, opts: { force?: 
       if (needsContent && rest) {
         const devKey = devKeyFor(plan.feedKey);
         const imageUrls = [rest.featuredImage, ...rest.images.map((i) => i.url)].filter((u): u is string => !!u);
-        const uniqueUrls = Array.from(new Set(imageUrls)).slice(0, MAX_IMAGES);
+        const uniqueUrls = Array.from(new Set(imageUrls));
         if (uniqueUrls.length) {
           const m = await mirrorAll(uniqueUrls, devKey);
           gallery = m.urls;

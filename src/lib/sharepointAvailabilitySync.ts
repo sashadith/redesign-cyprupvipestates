@@ -50,12 +50,8 @@ import { storeUploadedImage, devKeyFor, pdfPagesToJpegs, scheduleAppRestart, beg
    did not create is skipped untouched, and a table that yields zero units writes
    nothing at all — "no result" is not the same as "this project has no units". */
 
-// Same caps as the Kuutio sync: Korantina's picture folders are their own curated
-// marketing set (renders and photoshoots, no site-visit snapshots), and real ones
-// run well past 10 — Cap St Georges has 35 images across its phase subfolders.
-const MAX_IMAGES = 40;
-const MAX_PLANS = 20;
-
+/* No image or floor-plan cap — see the note in driveAvailabilitySync.ts:
+   the operator imports every picture and selects before publishing. */
 /* Root folders that are not projects. Both confirmed with Sascha on 2026-08-26
    rather than guessed:
    - "Resale Ready Properties" is six resale villas belonging to Cap St Georges and
@@ -507,9 +503,10 @@ export function assignMediaUnits(units: MediaUnit[], tableTitles: string[]): num
 
 /* Folders whose photos are documentation rather than marketing. They are still
    imported — an admin may well want them — but they go to the BACK of the queue,
-   because MAX_IMAGES cuts the list and these folders are big: Royal Bay's
-   "Construction Progress June 2025" alone holds 34 photos and would have consumed
-   most of that project's 40-image budget ahead of its own villa renders. */
+   so the marketing renders come first in the gallery: Royal Bay's "Construction
+   Progress June 2025" alone holds 34 photos, and ahead of that project's own villa
+   renders they would be the first thing the admin (and the page) shows. This used to
+   matter doubly, when a 40-image cap would have cut the renders off entirely. */
 const LOW_PRIORITY_MEDIA_RE = /construction|progress|site\s*visit|old\b/i;
 
 /** Marketing folders first, documentation folders last; stable within each group. */
@@ -652,8 +649,7 @@ export async function writeKorantinaDraft(
           const photoFiles = orderMediaUnits(mine)
             .filter((u) => u.kind === "pictures")
             .flatMap((u) => filesForUnit(tree!, u, units_))
-            .filter((f) => IMAGE_MIME_RE.test(f.file.mimeType))
-            .slice(0, MAX_IMAGES);
+            .filter((f) => IMAGE_MIME_RE.test(f.file.mimeType));
           for (const p of photoFiles) {
             try {
               const url = await storeUploadedImage(await downloadFile(ctx, p.file.id), devKey);
@@ -664,8 +660,7 @@ export async function writeKorantinaDraft(
           const planFiles = orderMediaUnits(mine)
             .filter((u) => u.kind === "plans")
             .flatMap((u) => filesForUnit(tree!, u, units_))
-            .filter((f) => IMAGE_MIME_RE.test(f.file.mimeType) || isPdf(f.file))
-            .slice(0, MAX_PLANS);
+            .filter((f) => IMAGE_MIME_RE.test(f.file.mimeType) || isPdf(f.file));
           for (const pf of planFiles) {
             try {
               const buf = await downloadFile(ctx, pf.file.id);

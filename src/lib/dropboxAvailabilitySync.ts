@@ -15,13 +15,8 @@ import { resolveMapsUrlToGeo } from "./mapsGeo";
 import { storeUploadedImage, storeRawFile, devKeyFor, pdfPagesToJpegs, scheduleAppRestart, beginSyncWindow } from "./imageMirror";
 import { workbookToText } from "@/lib/sheetToText";
 
-// Higher than driveAvailabilitySync.ts's MAX_IMAGES=10 — Kuutio's Dropbox
-// folders are the developer's own curated marketing set (not a mixed bag of
-// site-visit snapshots), and real folders run past 10 (Atrium: 35) with no
-// junk observed among them, confirmed 2026-08-13.
-const MAX_IMAGES = 40;
-const MAX_PLANS = 20;
-
+/* No image or floor-plan cap — see the note in driveAvailabilitySync.ts:
+   the operator imports every picture and selects before publishing. */
 // Maps a Dropbox folder's trailing "(...)" tag (e.g. "ATRIUM (UNDER
 // CONSTRUCTION)") to Development.stage's controlled vocabulary
 // (developmentCopy.ts's `stage` Record) — deterministic, no AI needed.
@@ -511,7 +506,7 @@ export async function writeKuutioDraft(developerAccountId: string, opts: { force
       amenities = [...priceListAmenities, ...brochureAmenities.filter((a) => !seen.has(a.toLowerCase()))];
 
       const devKey = devKeyFor(feedKey);
-      const photos = (await findPhotos(shareUrl, rootFiles, at)).slice(0, MAX_IMAGES);
+      const photos = await findPhotos(shareUrl, rootFiles, at);
       for (const p of photos) {
         try {
           const buf = await downloadSharedFile(shareUrl, p.id, at);
@@ -519,7 +514,7 @@ export async function writeKuutioDraft(developerAccountId: string, opts: { force
           if (url) { gallery.push(url); mediaChanged = true; }
         } catch { /* skip one photo */ }
       }
-      const planFiles = (await findPlans(shareUrl, rootFiles, at)).slice(0, MAX_PLANS);
+      const planFiles = await findPlans(shareUrl, rootFiles, at);
       for (const pf of planFiles) {
         try {
           const buf = await downloadSharedFile(shareUrl, pf.id, at);
