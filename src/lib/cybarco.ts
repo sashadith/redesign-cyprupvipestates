@@ -99,3 +99,57 @@ export function parseListing(html: string, sitemapXml: string): CybarcoCard[] {
   }
   return cards;
 }
+
+export type CybarcoDetail = {
+  images: string[];
+  priceListUrl: string | null;
+  brochureUrl: string | null;
+  description: string;
+};
+
+const UPLOAD_IMG_RE = /https:\/\/www\.cybarco\.com\/wp-content\/uploads\/[^"')\s]+?\.(?:jpe?g|png|webp)/gi;
+
+/* WordPress serves the same picture at several sizes, "…-768x511.jpg" next to
+   the original. Stripping the suffix collapses them to one URL and asks for the
+   largest file the site holds. Measured 2026-09-10, Cybarco's originals run
+   774x514 to 1550x719 — all below imageMirror's 1920 px ceiling, so nothing is
+   downscaled on our side and nothing is gained by asking for more. */
+const originalUrl = (u: string) => u.replace(/-\d{2,4}x\d{2,4}(?=\.(?:jpe?g|png|webp)$)/i, "");
+
+function imagesFrom(html: string): string[] {
+  return Array.from(new Set((html.match(UPLOAD_IMG_RE) ?? []).map(originalUrl)));
+}
+
+const pdfLinks = (html: string) =>
+  Array.from(new Set(Array.from(html.matchAll(/href="(https:\/\/www\.cybarco\.com\/wp-content\/uploads\/[^"]+?\.pdf)"/gi)).map((m) => m[1])));
+
+/* Project pages don't carry the listing card's "desktop-hover" markup — that
+   class belongs to the listing page only (see parseListing above) and is
+   absent here, so reusing it would silently yield "" on every project page.
+   The SEO meta description is present on every project page captured so far
+   and is a reliable one-line summary; og:description duplicates it. */
+export function parseProjectPage(html: string): CybarcoDetail {
+  const pdfs = pdfLinks(html);
+  const priceListUrl = pdfs.find((u) => /pricelist/i.test(u)) ?? null;
+  return {
+    images: imagesFrom(html),
+    priceListUrl,
+    brochureUrl: pdfs.find((u) => u !== priceListUrl) ?? null,
+    description: strip(html.match(/<meta name="description" content="([^"]*)"/)?.[1] ?? ""),
+  };
+}
+
+export function parseGallery(html: string): string[] {
+  return imagesFrom(html);
+}
+
+/* "…-Pricelist-ENG-280826.pdf" — DDMMYY, and the only change signal the site
+   offers: the sitemap carries no usable lastmod. A new list is a new filename. */
+export function priceListDate(url: string): string | null {
+  const m = url.match(/-(\d{2})(\d{2})(\d{2})\.pdf$/i);
+  if (!m) return null;
+  const [, dd, mm, yy] = m;
+  const month = Number(mm), day = Number(dd);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return `20${yy}-${mm}-${dd}`;
+}

@@ -134,5 +134,37 @@ check("throws when an unlinked card's name has no sitemap match", (() => {
   }
 })(), true);
 
+const detail = CB.parseProjectPage(fx("project-naftikos.html"));
+check("naftikos price list found",
+  detail.priceListUrl,
+  "https://www.cybarco.com/wp-content/uploads/2021/03/Naftikos-Residences-Pricelist-ENG-280826.pdf");
+check("naftikos brochure found",
+  detail.brochureUrl,
+  "https://www.cybarco.com/wp-content/uploads/2025/03/Naftikos-Residences-Brochure.pdf");
+check("brochure is not mistaken for the price list",
+  detail.brochureUrl.includes("Pricelist"), false);
+check("naftikos has images", detail.images.length > 0, true);
+check("images are absolute uploads URLs",
+  detail.images.every((u) => u.startsWith("https://www.cybarco.com/wp-content/uploads/")), true);
+check("images are de-duplicated", new Set(detail.images).size, detail.images.length);
+check("no WordPress size suffixes survive",
+  detail.images.some((u) => /-\d{2,4}x\d{2,4}\.(jpe?g|png|webp)$/i.test(u)), false);
+
+/* Measured 2026-09-10: the gallery page carries 187 unique images against 21
+   on the project page. For three sold-out projects whose project page is gone
+   it is the only image source there is. */
+const gallery = CB.parseGallery(fx("gallery-trilogy.html"));
+check("trilogy gallery is the rich source", gallery.length >= 150, true);
+check("gallery images de-duplicated", new Set(gallery).size, gallery.length);
+
+/* The filename stamp is the change signal — the sitemap has no usable lastmod. */
+check("price-list date parsed",
+  CB.priceListDate("https://www.cybarco.com/wp-content/uploads/2021/03/Naftikos-Residences-Pricelist-ENG-280826.pdf"),
+  "2026-08-28");
+check("price-list date, September",
+  CB.priceListDate("https://www.cybarco.com/wp-content/uploads/2021/03/Centro-Limassol-Pricelist-RU-040926.pdf"),
+  "2026-09-04");
+check("no stamp -> null", CB.priceListDate("https://www.cybarco.com/x/Brochure.pdf"), null);
+
 console.log(failures ? `\n${failures} failed` : "\nall passed");
 process.exit(failures ? 1 : 0);
