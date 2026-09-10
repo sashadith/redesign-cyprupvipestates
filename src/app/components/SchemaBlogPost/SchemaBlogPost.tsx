@@ -70,7 +70,9 @@ const SchemaBlogPost = ({ blog, lang }: SchemaBlogPostProps) => {
     articleSection: blog.category?.title,
     author: authorSchema,
     publisher: {
-      "@type": "RealEstateAgent",
+      // Organization, not RealEstateAgent — see layout.tsx's org schema comment
+      // (2026-09-10): we're not a licensed Cyprus real-estate broker.
+      "@type": "Organization",
       name: "Cyprus VIP Estates",
       url: siteUrl,
       logo: {

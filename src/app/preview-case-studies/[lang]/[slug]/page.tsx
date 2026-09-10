@@ -146,7 +146,9 @@ export default async function CaseStudyDetailPage({ params }: Props) {
     ...(cs.category ? { articleSection: labels[cs.category] } : {}),
     author: { "@type": "Organization", name: "Cyprus VIP Estates", url: SITE_URL },
     publisher: {
-      "@type": "RealEstateAgent", name: "Cyprus VIP Estates", url: SITE_URL,
+      // Organization, not RealEstateAgent — see layout.tsx's org schema comment
+      // (2026-09-10): we're not a licensed Cyprus real-estate broker.
+      "@type": "Organization", name: "Cyprus VIP Estates", url: SITE_URL,
       logo: { "@type": "ImageObject", url: `${SITE_URL}/uploads/files/a4760263e2ce6e46536dbc5ea7dcb55a7b5516c7.png` },
     },
     datePublished: cs.publishedAt,
