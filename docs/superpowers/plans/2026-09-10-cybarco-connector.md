@@ -429,7 +429,11 @@ Expected: PASS on all assertions.
 
 - [ ] **Step 5: Mutation-test**
 
-Change `resolveSlug` to fall back to slugifying the name instead of throwing, re-run, and expect the four sitemap-resolution assertions still to pass (they would — a slugified "The Oval" is "the-oval"). That is the point: revert, then instead make `normaliseStatus` return `"under_construction"` for an unknown mark and change the fixture's one "Sold out" to "Sold—out"; expect `6 sold out` to FAIL. Revert both.
+Make `resolveSlug` return `""` for an unlinked card instead of consulting the sitemap; re-run and expect `every card has a slug` and `slugs are unique` to FAIL. Revert.
+
+Then make `normaliseStatus` return `"under_construction"` for an unrecognised mark instead of throwing, and change one `Sold out` in the fixture to `Sold—out`; expect `6 sold out` to FAIL. Revert both.
+
+Note for whoever runs these: a mutation that swaps the sitemap lookup for slugifying the display name does NOT kill any assertion today, because every one of the four unlinked names happens to slugify to its real slug. That is precisely why the lookup exists rather than the shortcut — it is protection against future drift, not against today's data — and it is why the mutation above targets the slug being present at all.
 
 - [ ] **Step 6: Typecheck and commit**
 
@@ -627,7 +631,7 @@ const row = { y: 665, cells: [
   { x: 476.5, w: 10, t: "5" }, { x: 489.5, w: 20, t: "60" },
   { x: 505.0, w: 4, t: "," }, { x: 510.0, w: 6, t: "0" }, { x: 516.0, w: 12, t: "00" },
 ] };
-check("column join respects x bounds", CP.joinColumn(row, 470, 540), "560,00");
+check("column join respects x bounds", CP.joinColumn(row, 470, 540), "560,000");
 check("column join is empty outside the band", CP.joinColumn(row, 200, 300), "");
 check("column join keeps left-to-right order", CP.joinColumn(row, 50, 130), "A 1011st");
 ```
@@ -697,7 +701,7 @@ export function cybarcoReadOutcome(raw: string): { status: UnitStatus; price: nu
 }
 ```
 
-Note the deliberate asymmetry with the test: `joinColumn(row, 470, 540)` yields `"560,00"` for the fixture row above, because the cell at x=516 carries `"00"` and the band ends at 540 — the assertion records what the function does, and Task 6 supplies real column bounds from the header row rather than hand-picked ones.
+The fixture row above is the fragmented price from a real Aktea 4 line: five cells — `"5"`, `"60"`, `","`, `"0"`, `"00"` — that a text-joining reader reads as nothing and a column-joining reader reads as `"560,000"`. Task 6 supplies the real column bounds from the header row rather than the hand-picked ones used here.
 
 - [ ] **Step 4: Run the test**
 
