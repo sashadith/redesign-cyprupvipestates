@@ -541,3 +541,34 @@ unaffected (still 301). Production verification pending this change's deploy.
 reasoning that justified it the first time:** check this page's own query position first. If it's
 still holding ~5 on `"luxusimmobilien zypern"`, the overlap argument that merged it originally
 never actually held for this specific query, whatever it looked like in the aggregate.
+
+## 2026-09-10 — DataForSEO DE content plan closed: villa cluster deliberately left untouched (decision, not a changelog entry)
+
+A DataForSEO pilot (Domain Intersection + AI Optimization + Ranked Keywords, German/DACH market,
+primary-market sales only) produced a 4-item content plan, executed in full:
+
+1. New pillar `/de/blog/haus-auf-zypern-kaufen` — zero prior presence for the "Haus" phrasing cluster.
+2. `/de/blog/immobilienmarkt-zypern-prognose` reworked with real price-table data (median €/m² by
+   city, sample sizes), PwC third-party attribution removed.
+3. `/de/blog/unterschied-zwischen-zypern-und-nordzypern` reinforced — "griechischer Teil" phrasing,
+   2 new FAQ entries, broken text-only mentions in the new pillar converted to real links.
+4. Paphos cluster cross-linked — the new pillar, `ein-haus-in-paphos-zypern-kaufen-...`,
+   `strandimmobilien-paphos`, and `villen-paphos-investoren-kaufen` now link to each other; one
+   stale anchor (`beste-gegenden-um-eine-familienvilla-in-paphos-zu-kaufen`'s "Villen in Paphos
+   kaufen" link) retargeted from the generic Cyprus-wide flagship to the Paphos-specific page.
+
+A 5th item — the villa cluster (`villa zypern`, vol 480) — was scoped out of the plan from the
+start, and stays out. Domain Intersection showed this isn't a content gap like items 1-4: our own
+flagship `luxusvillen-in-zypern` already ranks **#8** for `"villa auf zypern kaufen"` (vol 70) and
+**#17** for `"villa kaufen zypern"` (vol 70). Position #1 on both is `immobilienscout24.de` — a
+listings aggregator, not a competing agency page; the gap is listing volume, not page quality, so
+no realistic content edit closes it. Direct agency competitors are effectively absent (5
+intersecting keywords total with `cy-realty.com` across the whole cluster).
+
+Asked directly whether to spend ~1-2 hours on an on-page nudge (schema/structure/internal links)
+to move #8 → top 5, the explicit call was **no**: a page already holding a decent position against
+a portal is a case where an edit's downside (see the `luxusimmobilien-auf-zypern` incident just
+above on this same page) outweighs the plausible upside. **Leave `luxusvillen-in-zypern` alone.**
+If a future session considers touching it for this reason, re-pull its current position on these
+two queries first — this note is stale the moment that page's ranking picture changes materially,
+not a permanent ban.
