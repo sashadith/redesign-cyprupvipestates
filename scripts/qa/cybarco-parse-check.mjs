@@ -150,9 +150,20 @@ check("images are de-duplicated", new Set(detail.images).size, detail.images.len
 check("no WordPress size suffixes survive",
   detail.images.some((u) => /-\d{2,4}x\d{2,4}\.(jpe?g|png|webp)$/i.test(u)), false);
 
-/* Measured 2026-09-10: the gallery page carries 187 unique images against 21
-   on the project page. For three sold-out projects whose project page is gone
-   it is the only image source there is. */
+/* Guards the meta-description fix: the brief's sample code read the listing
+   page's "desktop-hover" markup, which does not exist on project pages and
+   would silently yield "" forever. Pins detail.description to text actually
+   present in project-naftikos.html's <meta name="description"> tag, so a
+   regressed regex or a Cybarco template change that drops that tag fails
+   loudly here instead of shipping an empty description on every project. */
+check("naftikos description is non-empty", detail.description.length > 0, true);
+check("naftikos description matches the page's meta description",
+  detail.description.includes("boutique development of two and three-bedroom apartments"), true);
+
+/* Measured 2026-09-10: the gallery page (gallery-trilogy.html) carries 187
+   unique images; the naftikos project page (project-naftikos.html) carries
+   only 4. For three sold-out projects whose project page is gone the gallery
+   page is the only image source there is. */
 const gallery = CB.parseGallery(fx("gallery-trilogy.html"));
 check("trilogy gallery is the rich source", gallery.length >= 150, true);
 check("gallery images de-duplicated", new Set(gallery).size, gallery.length);
