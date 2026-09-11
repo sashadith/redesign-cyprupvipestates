@@ -615,3 +615,54 @@ concrete bugs found and fixed instead:
   who actually want an apartment. It also had `relatedLandingPages: null` — the only orphan in the
   cluster, no outbound and no inbound cross-links — fixed with 6 outbound refs, plus added an
   inbound ref to it from `luxusvillen-in-zypern`, `grosse-villen-zypern`, and `strandvillen-zypern`.
+
+## 2026-09-11 (later same day) — Häuser-cluster merge reversed; two self-inflicted bugs found and fixed same session
+
+Follow-up to the villa-cluster entry above, same day. Checking apartment-cluster/price-guide GSC
+data (per instruction to ground every DE action in keywords/competitors/AI-visibility, not
+mechanical re-audits) surfaced DataForSEO search volume: **"haus zypern kaufen" = 3600/mo, 7.5x
+the villa flagship's own "villa zypern kaufen" (480/mo)** — the single biggest DE keyword found all
+week. `/de/haeuser-auf-zypern`, the purpose-built flagship for it (real content, published June),
+had 0 GSC impressions in 60 days. `curl` showed why: 301 to `/de/luxusvillen-in-zypern` since
+2026-07-28 (`DE_LANDING_MERGES`), on the same identical-live-query-filter rationale already proven
+wrong once this week (see the `luxusimmobilien-auf-zypern` reversal, 2026-09-09, in this same
+file). Reversed: 9 `DE_LANDING_MERGES` entries removed, 5 nginx exact-match shortcuts removed and
+5+4 bare paths restored to the `cvp_de_only` map (`ops/nginx/cyprusvipestates.conf`, synced to the
+VPS by hand per `ops/nginx/README.md` — `nginx -t` before reload, `systemctl reload`, not
+`restart`). See `src/middleware.ts` for the full keyword/evidence writeup.
+
+**Two mistakes were made and caught before this was called done — both worth recording so the
+pattern doesn't repeat:**
+
+1. **Dead links introduced on a live page.** While reading the villa cluster's content earlier the
+   same day (the work in the entry above), `grosse-villen-zypern`, `luxusvillen-zypern-ueber-1-mio`,
+   and `villen-auf-zypern-fuer-auswanderer` were treated as live pages — their DB rows are
+   `PUBLISHED` and render real content when queried directly via Prisma, which is what the content
+   read used. Only when curling the actual URLs during the Häuser investigation did it surface that
+   all three **already 301 to the villa flagship** (separate, earlier merges — 2026-07-28 and
+   2026-09-01/04/09, all still correctly in force, not reversed). The DB-content read never
+   distinguishes a live page from a merged one — middleware owns that, and a `PUBLISHED` status
+   only means "not archived," not "reachable at its own URL." The new cross-link block added to
+   `luxusimmobilien-auf-zypern` that morning had 3 of its 6 links pointing through redirects.
+   Fixed: rebuilt the segment-picker with only verified-live targets (curled, not queried) —
+   `luxusvillen-in-zypern`, `strandvillen-zypern`, `haeuser-auf-zypern`, `apartment-zypern`.
+   **Lesson: verify a page is live via HTTP, not via its DB status, before linking to it or
+   trusting its GSC/SERP data as reachable.**
+2. **All 4 Häuser-cluster children were ARCHIVED, not just merged** — reading their content via
+   Prisma (same session, same oversight as #1: the read script never selected/checked `status`)
+   showed real, substantial, differentiated content and no reason not to revive them. After
+   removing the redirects, all 4 nested URLs (`haeuser-auf-zypern/{haeuser-in-zypern-fuer-
+   investoren,haus-mit-pool-auf-zypern,luxus-haeuser-zum-verkauf-in-paphos,strandhaus-auf-zypern}`)
+   came back as genuine 404s, not the intended live pages — `getSinglePageByLang` filters
+   `status: "PUBLISHED"` in production (`draftFilter()`), so an archived row is invisible to the
+   route regardless of what the redirect layer does. Only the flagship itself (`haeuser-auf-zypern`)
+   had ever stayed `PUBLISHED` through the original merge. Fixed: all 4 children set back to
+   `PUBLISHED`; confirmed 200 with correct titles on all 4 nested URLs afterward. **Lesson: a
+   cluster merge can bundle two independent actions — a redirect AND an archive — reversing only
+   the one you found first leaves the pages worse off (hard 404) than before the reversal.**
+
+Also fixed same session, smaller: `strandhaus-auf-zypern` had 11/11 pinned projects archived (same
+dead-pins bug swept elsewhere this week) — set `filterPropertyType: "Villa"`, `maxBeachMinutes: 3`,
+manual list cleared, mirroring the `strandvillen-zypern` fix. `luxus-haeuser-zum-verkauf-in-paphos`
+titled itself "Luxusvillen in Paphos" while its own body consistently says "Häuser" — retitled to
+match. The two hubs (`luxusvillen-in-zypern`, `haeuser-auf-zypern`) now cross-link each other.
