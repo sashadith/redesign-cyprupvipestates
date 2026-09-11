@@ -247,6 +247,26 @@ const PL_LANDING_MERGES: Record<string, string> = {
   "domy-na-cyprze-dla-inwestorow": "/pl/domy-na-cyprze",
   "sprzedaz-domow-na-cyprze": "/pl/domy-na-cyprze",
   "domy-z-basenem-na-cyprze": "/pl/domy-na-cyprze",
+
+  // PL apartment/mieszkanie cluster consolidation (2026-09-11): same shape as
+  // the villa and dom clusters above. apartamenty-na-cyprze had 15/15 pinned
+  // refs with 0 PUBLISHED -- fixed to a live filterPropertyType:"Apartment"
+  // query. mieszkania-w-pafos-na-sprzedaz (its own child page, filterCity
+  // Paphos) had the identical dead-pin defect on an otherwise-correct live
+  // filter -- fixed in place, not merged, kept as its own page.
+  // apartamenty-na-cyprze-dla-inwestorow, apartamenty-na-cyprze-do-
+  // przeprowadzki, and mieszkania-dla-mlodych-rodzin-cypr all ran the
+  // identical unfiltered filterPropertyType:"Apartment" query with no real
+  // criteria behind the investor/moving/young-family framing -- the second
+  // and third are near-verbatim matches of the exact DE precedent that
+  // justified merging wohnungen-auf-zypern-fuer-investoren and wohnungen-
+  // fuer-junge-familien-zypern into apartment-zypern. Kept separate:
+  // mieszkania-w-limassol (filterCity Limassol, real differentiator, and PL's
+  // 2nd-highest-impression property page at 96/60d -- weak position, not a
+  // fragmentation problem, left alone here).
+  "apartamenty-na-cyprze-dla-inwestorow": "/pl/apartamenty-na-cyprze",
+  "apartamenty-na-cyprze-do-przeprowadzki": "/pl/apartamenty-na-cyprze",
+  "mieszkania-dla-mlodych-rodzin-cypr": "/pl/apartamenty-na-cyprze",
 };
 
 // Paphos investment cluster, RU leg (2026-09-09) — completes the DE/PL work
