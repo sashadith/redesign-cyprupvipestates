@@ -21,14 +21,17 @@ const ALL_LOCALES = ["en", "de", "pl", "ru"];
 // (ops/nginx/cyprusvipestates.conf) — kept in sync so no path ever chains
 // through both hops.
 //
-// haeuser-auf-zypern's merged children also need their FLAT leaf slug
-// (in addition to the nested path): nestedPageRedirects.json already 308s
-// the flat form to the nested "canonical" one for those exact leaves, and
-// this check runs before that logic — without the flat entry, a flat hit
-// would chain through the nested-canonicalisation 308 before ever reaching
-// this 301, a two-hop redirect for anyone who reaches the page via its bare
-// leaf slug. haeuser-in-limassol-kaufen is deliberately NOT here — held out,
-// its untyped-Limassol duplication is a separate question.
+// A merged page's nested children (e.g. villen-in-paphos, still merged
+// below) also need their FLAT leaf slug in addition to the nested path:
+// nestedPageRedirects.json already 308s the flat form to the nested
+// "canonical" one for those exact leaves, and this check runs before that
+// logic — without the flat entry, a flat hit would chain through the
+// nested-canonicalisation 308 before ever reaching this 301, a two-hop
+// redirect for anyone who reaches the page via its bare leaf slug.
+// haeuser-in-limassol-kaufen is deliberately NOT here — held out, its
+// untyped-Limassol duplication is a separate question (and its former
+// sibling, the rest of the Häuser cluster, is no longer merged at all —
+// see 2026-09-11 below).
 //
 // AFTER ADDING AN ENTRY, clear the links that still point at the merged page.
 // Other singlepages keep it in relatedLandingPages, and those render as real
@@ -50,15 +53,22 @@ const ALL_LOCALES = ["en", "de", "pl", "ru"];
 // the pages and test the hrefs they actually emit.
 const DE_LANDING_MERGES: Record<string, string> = {
   "grosse-villen-zypern": "/de/luxusvillen-in-zypern",
-  "haeuser-auf-zypern": "/de/luxusvillen-in-zypern",
-  "haeuser-auf-zypern/haeuser-in-zypern-fuer-investoren": "/de/luxusvillen-in-zypern",
-  "haeuser-in-zypern-fuer-investoren": "/de/luxusvillen-in-zypern",
-  "haeuser-auf-zypern/haus-mit-pool-auf-zypern": "/de/luxusvillen-in-zypern",
-  "haus-mit-pool-auf-zypern": "/de/luxusvillen-in-zypern",
-  "haeuser-auf-zypern/luxus-haeuser-zum-verkauf-in-paphos": "/de/luxusvillen-in-zypern",
-  "luxus-haeuser-zum-verkauf-in-paphos": "/de/luxusvillen-in-zypern",
-  "haeuser-auf-zypern/strandhaus-auf-zypern": "/de/strandvillen-zypern",
-  "strandhaus-auf-zypern": "/de/strandvillen-zypern",
+
+  // 2026-09-11: the "Häuser" cluster's 2026-07-28 merge into the villa
+  // flagship (5 entries: haeuser-auf-zypern + 4 children) is REVERSED — see
+  // docs/SITE-CHANGELOG.md, 2026-09-11. DataForSEO search volume shows "haus
+  // zypern kaufen" (3600/mo) at 7.5x the flagship's own "villa zypern
+  // kaufen" (480/mo); the merge rationale (identical filterPropertyType=
+  // Villa/no-city live query, or a stale project-overlap percentage against
+  // pages later found 0% live) is the same mechanical-identity mistake the
+  // luxusimmobilien-auf-zypern reversal below already documents -- shared
+  // inventory query isn't shared search intent. All 5 pages read with real,
+  // differentiated content (general/investor/pool/Paphos-luxury/beach
+  // angles). Un-redirected here, in ops/nginx/cyprusvipestates.conf (root-
+  // level legacy twin), and nestedPageRedirects.json is unaffected (it only
+  // canonicalizes the flat leaf -> nested path for these same children, not
+  // a merge). haeuser-in-limassol-kaufen stays out of scope, as it always
+  // was -- its own untyped-Limassol duplication is a separate question.
 
   // German villa-cluster consolidation (2026-09-01): four pages collapsed
   // into the flagship, confirmed duplicate by DIRECT INVENTORY SET
@@ -71,11 +81,11 @@ const DE_LANDING_MERGES: Record<string, string> = {
   // villen-in-paphos (a projectsSectionBlock fixed list) rendered a set
   // byte-identical to its own parent page, not a Paphos-filtered subset --
   // there was no independent page to preserve. Both the nested and flat
-  // leaf forms of villen-in-paphos are included, same reasoning as
-  // haeuser-auf-zypern/luxus-haeuser-zum-verkauf-in-paphos above: without
-  // the flat entry, a flat hit chains through nestedPageRedirects.json's
-  // 308 before ever reaching this 301, a two-hop redirect for anyone who
-  // reaches the page via its bare leaf slug.
+  // leaf forms of villen-in-paphos are included: without the flat entry, a
+  // flat hit chains through nestedPageRedirects.json's 308 before ever
+  // reaching this 301, a two-hop redirect for anyone who reaches the page
+  // via its bare leaf slug (same reasoning the now-reversed Häuser-cluster
+  // entries above used to document, before 2026-09-11).
   "villen-in-zypern-fuer-investoren": "/de/luxusvillen-in-zypern",
   "villen-auf-zypern-fuer-auswanderer": "/de/luxusvillen-in-zypern",
   "villen-zypern-aufenthaltstitel-provisionsfrei": "/de/luxusvillen-in-zypern",
