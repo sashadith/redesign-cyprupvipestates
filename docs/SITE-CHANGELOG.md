@@ -572,3 +572,46 @@ above on this same page) outweighs the plausible upside. **Leave `luxusvillen-in
 If a future session considers touching it for this reason, re-pull its current position on these
 two queries first — this note is stale the moment that page's ranking picture changes materially,
 not a permanent ban.
+
+## 2026-09-11 — DE villa cluster: position re-check (note above now stale) + technical fixes, still no merge
+
+Ran the standard stats → competitors → AI-visibility cycle on DE (same method already used for
+PL/RU this week). Re-pulled `luxusvillen-in-zypern`'s position on the two queries cited in the
+2026-09-10 note above, per its own instruction to do so before touching anything: it now ranks
+**#11–18** across the four head-query variants (DataForSEO SERP, `location_name: "Germany"`,
+`language_name: "German"`, depth 100), not #8/#17 — a real but modest drop, still page-2-adjacent.
+Top 4 positions on every variant are the same portal aggregators as before
+(`immobilienscout24.de`, `jamesedition.com`, `luxuryestate.com`, `properstar.de`) — the
+domain-authority ceiling documented on 2026-09-10 still holds, so the flagship's own content/structure
+was **not touched** (same "leave it alone" call, now re-confirmed on fresh data instead of assumed).
+
+AI-visibility check (ChatGPT gpt-4o-mini + Perplexity sonar, German prompts, web search on): the
+site is cited by name with a direct URL link in all 4 checks — noticeably stronger than the organic
+picture. The "provisionsfrei, direkt vom Bauträger" USP is apparently legible to both models in a
+way it isn't to the portal-dominated SERP. Competitors named alongside us: BARNES Cyprus, John
+Taylor Cyprus, Oaklane Real Estate, Palmera Real Estate, PropertyAtlas, Insel Immobilien.
+
+Reading the full body content of all 6 cluster pages (`luxusvillen-in-zypern`,
+`luxusvillen-zypern-ueber-1-mio`, `luxusimmobilien-auf-zypern`, `grosse-villen-zypern`,
+`strandvillen-zypern`, `villen-auf-zypern-fuer-auswanderer`) before deciding anything — same
+discipline established for the RU villa cluster after the "would you redirect a page that's in the
+AI index?" correction — found each of the 5 non-generic pages has a genuinely distinct angle
+(price segment, size, beach proximity, emigration/residency), so **no merge**, same as RU. Two
+concrete bugs found and fixed instead:
+
+- `strandvillen-zypern` had **18/18 pinned projects ARCHIVED** (the same dead-pins bug already
+  swept on PL/RU/other DE clusters this week) with no live-query fields set at all — the page was
+  silently falling through to the `[lang]/[...slug]/page.tsx` manual-or-filtered fallback with
+  nothing live behind it. Fixed: `filterPropertyType: "Villa"`, `maxBeachMinutes: 3` (mirrors the
+  PL/RU "villa near the sea" pattern), manual `projects` array cleared.
+- `luxusimmobilien-auf-zypern` titled itself "Villen & Wohnungen" but its `projectsSectionBlock`
+  filter is `filterPropertyType: "Villa"` only — `projectsSectionBlock` has no multi-type or
+  `excludePropertyTypes` support (confirmed in `src/sanity/sanity.utils.ts`, same limitation noted
+  earlier this week for a different page), and removing the filter entirely would leave
+  `filteredProjects` uncomputed (empty page) per the `isNewStyleProjectsBlock`/live-query gate in
+  the same file. Rather than touch shared query infra for one page, repositioned it honestly as a
+  navigation hub: inserted a "Welche Immobilie passt zu Ihnen?" segment-picker block right after
+  its project showcase, linking to all 5 sibling villa pages plus `apartment-zypern` for visitors
+  who actually want an apartment. It also had `relatedLandingPages: null` — the only orphan in the
+  cluster, no outbound and no inbound cross-links — fixed with 6 outbound refs, plus added an
+  inbound ref to it from `luxusvillen-in-zypern`, `grosse-villen-zypern`, and `strandvillen-zypern`.
