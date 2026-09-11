@@ -45,6 +45,12 @@ const JOBS: { job: string; label: string; expectedMs: number }[] = [
   // which reads like normal pre-rollout behaviour — this is the alarm.
   { job: "mcp-cleanup", label: "mcp-cleanup", expectedMs: 24 * HOUR },
   { job: "inventory-snapshot", label: "inventory-snapshot", expectedMs: 24 * HOUR },
+  // 2026-09-11 — added the day cybarco-sync got its `0 1 * * *` crontab entry,
+  // same convention as kuutio-sync above. Watches whether the nightly Cybarco
+  // website scrape FIRED AT ALL, which matters more here than for most: Cybarco
+  // have no feed, no Drive and no developer contact, so a dead cron shows up
+  // nowhere except as Developments quietly going stale behind a published page.
+  { job: "cybarco-sync", label: "cybarco-sync", expectedMs: 24 * HOUR },
 ];
 
 // 2026-08-11 (analytics bot-traffic incident) — two exact user-agent strings

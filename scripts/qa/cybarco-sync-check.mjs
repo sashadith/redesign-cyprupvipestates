@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/* Assertions for the pure decisions inside src/lib/cybarcoSync.ts — the four
+/* Assertions for the pure decisions inside src/lib/cybarcoSync.ts — the five
    helpers the write path hangs off, each of which was a review finding:
 
    - cybarcoUnitRef / duplicateRefs : a unit's identity must survive
@@ -11,6 +11,8 @@
      plans included, so the documented pdftoppm remedy works without --force.
    - soldOutStamp                   : a sold-out date is written only when
      nothing can clear it again.
+   - runVerdict                     : a night the site rate-limited must not log
+     as an indistinguishably healthy one.
 
    No database, no network, no PDF: every helper here is pure. The real
    normalizeRef from src/lib/unitRef.ts is used (never a copy of it), because
@@ -183,6 +185,44 @@ check("already stamped: leave the first date alone",
   S.soldOutStamp({ soldOutSince: new Date("2026-01-01"), available: 0 }), { stamp: false, contradiction: false });
 check("already stamped and contradicted: still not re-stamped",
   S.soldOutStamp({ soldOutSince: new Date("2026-01-01"), available: 3 }), { stamp: false, contradiction: false });
+
+/* ── 5. Was the run healthy, or did the site refuse it? ──────────────────────
+
+   Cybarco rate-limit in practice: two of the three acceptance dry runs each lost
+   one brochure to a transient 429. Before runVerdict every such night resolved
+   ok:true and the summary dropped the notes, so a night where the site refused
+   EVERY fetch logged the same row as a quiet one — and shouldNotifyFailureStreak
+   could never fire. The line these assertions pin is WHERE the alarm sits: high
+   enough that a normal night is silent, low enough that a refused sweep is not. */
+console.log("runVerdict — a refused run must not log as a healthy one");
+const verdict = (attempted, failed) => {
+  const v = S.runVerdict({ attempted, failed });
+  return { ok: v.ok, reason: v.reason === null ? null : "said" };
+};
+/* The two measured real shapes. Run 1/2 of acceptance: ~50 fetches (15 project
+   pages + 15 gallery pages + 11 brochures + 9 price lists), one lost brochure. */
+check("one brochure lost out of 50 is a HEALTHY night", verdict(50, 1), { ok: true, reason: null });
+check("a clean run is healthy and silent", verdict(50, 0), { ok: true, reason: null });
+/* Cloudflare refusing the sweep: every project's two page fetches fail, and a
+   failed project page means its brochure and price list are never even tried. */
+check("every page fetch refused is a FAILED run, and says why", verdict(30, 30), { ok: false, reason: "said" });
+check("a mostly-refused sweep fails too", verdict(50, 41), { ok: false, reason: "said" });
+/* The threshold itself, from both sides — a majority, not "any failure". */
+check("exactly half refused is NOT a failure", verdict(50, 25), { ok: true, reason: null });
+check("one over half IS a failure", verdict(50, 26), { ok: false, reason: "said" });
+/* A third of the run lost is a bad night, not a blocked one: failing it would
+   put an URGENT item in front of the operator on nights the data is still good,
+   which is how an alarm gets ignored by the time it matters. */
+check("a third refused still reports ok — the notes carry it", verdict(48, 16), { ok: true, reason: null });
+/* No denominator worth dividing: gatherCybarco throws outright when the listing
+   parses to zero cards, so a handful of attempts is not a verdict shape at all. */
+check("too few attempts to judge: no verdict", verdict(4, 4), { ok: true, reason: null });
+check("zero attempts cannot divide", verdict(0, 0), { ok: true, reason: null });
+/* The floor is 10 attempts — the first shape that IS judged. */
+check("ten attempts all refused is judged", verdict(10, 10), { ok: false, reason: "said" });
+/* The reason has to name the numbers: it is what CronRunLog.message and the
+   failure notification quote, and "something went wrong" is not actionable. */
+check("the reason quotes both counts", /\b21 of 30 fetch\(es\)/.test(S.runVerdict({ attempted: 30, failed: 21 }).reason ?? ""), true);
 
 console.log(failures ? `\n${failures} assertion(s) failed` : "\nall checks passed");
 process.exit(failures ? 1 : 0);

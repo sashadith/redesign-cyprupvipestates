@@ -461,6 +461,54 @@ export function contentNeeds(input: {
   };
 }
 
+/* ── Was this run healthy, or did the site refuse it? ──────────────────────
+
+   Cybarco rate-limit in practice. Two of the three acceptance dry runs each lost
+   ONE brochure to a transient 429, and every such refusal lands in `notes` as a
+   per-project line — which is the right place for it, but notes alone never
+   reached the cron log: the run summary counted created/touched/written and
+   nothing else, so a night where the site refused EVERY fetch wrote the same
+   "0 created, 15 project(s) touched, 0 unit(s) written" row as a night where
+   there was genuinely nothing new. Indistinguishable, and therefore invisible.
+
+   So a run is judged on the share of its fetch attempts the site refused, and a
+   systemic refusal resolves ok:false — which is what arms the two things that
+   can actually reach a human: shouldNotifyFailureStreak() in the route, and the
+   Action Center's "cron failed its last run" URGENT item (rules/system.ts).
+
+   The threshold is a MAJORITY, deliberately, and not "any failure at all":
+
+   - One lost brochure out of ~50 fetches is the measured NORMAL state of this
+     source (runs 1 and 2 of acceptance), and those runs were healthy — 15
+     projects, 380 images, 332 units. Failing them would put an URGENT item and
+     a Telegram message in front of the operator most nights, and an alarm that
+     cries wolf nightly is one that gets ignored by the time it matters.
+   - A genuinely rate-limited night is not marginal: the two page fetches every
+     project makes are the floor of ~30 attempts per run, and Cloudflare
+     refusing the sweep refuses nearly all of them. Measured shapes sit at
+     either end, not near 50%.
+
+   `attempted` below the floor is NOT judged: a run that somehow made almost no
+   requests has no denominator worth dividing by, and gatherCybarco already
+   throws outright when the listing parses to zero cards. */
+const SYSTEMIC_REFUSAL_SHARE = 0.5;
+const MIN_FETCHES_TO_JUDGE = 10;
+
+export type RunVerdict = { ok: boolean; reason: string | null };
+
+/** Whether a run counts as FAILED, from how much of it the site refused. Pure:
+ *  `attempted` is every page/PDF fetch the run actually tried, `failed` the ones
+ *  that still errored after their retry. A reason is returned only when the
+ *  verdict is a failure — each individual refusal is already its own note. */
+export function runVerdict(input: { attempted: number; failed: number }): RunVerdict {
+  if (input.attempted < MIN_FETCHES_TO_JUDGE) return { ok: true, reason: null };
+  if (input.failed <= input.attempted * SYSTEMIC_REFUSAL_SHARE) return { ok: true, reason: null };
+  return {
+    ok: false,
+    reason: `the site refused ${input.failed} of ${input.attempted} fetch(es) this run — rate-limited or blocked, NOT a quiet night`,
+  };
+}
+
 /* ── Gathering (reads the live site; no database writes) ───────────────────── */
 
 export type CybarcoPlan = {
@@ -479,6 +527,12 @@ export type CybarcoPlan = {
   brochurePages: number;
   units: CybarcoUnit[];
   notes: string[];
+  /** Page/PDF fetches this project tried (the denominator runVerdict divides). */
+  fetchAttempts: number;
+  /** Of those, the ones that still errored after their retry. A 404 or a
+   *  redirect is NOT counted: both are the site's settled answer and expected
+   *  here (nine projects have no gallery page, four sold-out ones redirect). */
+  fetchFailures: number;
 };
 
 /* A brochure longer than this is not rasterised. NOT a curation cap — the
@@ -502,7 +556,14 @@ const MAX_BROCHURE_PAGES = 100;
 /** Fetch and parse everything for one card. Reads the site only. */
 async function gatherOne(card: CybarcoCard): Promise<CybarcoPlan> {
   const notes: string[] = [];
+  /* Counted alongside the notes, not derived from them afterwards: most notes
+     here are expected states (a redirect, a missing gallery page, a sold-out
+     project with no price list) and only the `error`/throw paths below are a
+     refusal. Counting notes would make a healthy night look like a refused one. */
+  let fetchAttempts = 0;
+  let fetchFailures = 0;
 
+  fetchAttempts++;
   const page = await fetchSlugPage(projectUrl(card.slug));
   let detail: CybarcoDetail | null = null;
   let movedTo: string | null = null;
@@ -516,15 +577,20 @@ async function gatherOne(card: CybarcoCard): Promise<CybarcoPlan> {
   } else if (page.kind === "missing") {
     notes.push(`${card.slug}: project page is gone (HTTP ${page.status}) — no brochure, no price list`);
   } else {
+    fetchFailures++;
     notes.push(`${card.slug}: project page could not be fetched (${page.detail}) — no brochure, no price list THIS RUN`);
   }
 
+  fetchAttempts++;
   const gallery = await fetchSlugPage(galleryUrl(card.slug));
   const galleryImages = gallery.kind === "ok" ? parseGallery(gallery.html) : [];
   if (gallery.kind === "moved") notes.push(`${card.slug}: gallery page redirects to ${gallery.to} — ignored`);
   /* A 404 here is deliberately NOT reported: nine of the fifteen projects have
      no gallery page at all and the project page is the designed fallback. */
-  if (gallery.kind === "error") notes.push(`${card.slug}: gallery page could not be fetched (${gallery.detail}) — its photos are missing from THIS RUN`);
+  if (gallery.kind === "error") {
+    fetchFailures++;
+    notes.push(`${card.slug}: gallery page could not be fetched (${gallery.detail}) — its photos are missing from THIS RUN`);
+  }
   if (gallery.kind === "ok" && !galleryImages.length) notes.push(`${card.slug}: gallery page exists but holds no image`);
 
   /* Gallery page first, then the project page, then the listing card's own
@@ -538,16 +604,19 @@ async function gatherOne(card: CybarcoCard): Promise<CybarcoPlan> {
 
   let brochurePages = 0;
   if (detail?.brochureUrl) {
+    fetchAttempts++;
     try {
       brochurePages = Math.min((await readPdfPages(await getBuffer(detail.brochureUrl))).length, MAX_BROCHURE_PAGES);
       if (!brochurePages) notes.push(`${card.slug}: brochure ${detail.brochureUrl} has no readable page`);
     } catch (e) {
+      fetchFailures++;
       notes.push(`${card.slug}: brochure could not be read (${(e as Error).message})`);
     }
   }
 
   let units: CybarcoUnit[] = [];
   if (detail?.priceListUrl) {
+    fetchAttempts++;
     try {
       units = cybarcoUnitsFromPages(await readPdfPages(await getBuffer(detail.priceListUrl)));
       if (!units.length) notes.push(`${card.slug}: price list ${detail.priceListUrl} yielded 0 units — its header vocabulary is not recognised`);
@@ -557,6 +626,7 @@ async function gatherOne(card: CybarcoCard): Promise<CybarcoPlan> {
       const dupes = duplicateRefs(units, card.name);
       if (dupes.length) notes.push(`${card.slug}: ${dupes.length} unit reference(s) collide after block qualification and normalizeRef (${dupes.slice(0, 5).join(", ")}) — identity is ambiguous`);
     } catch (e) {
+      fetchFailures++;
       notes.push(`${card.slug}: price list could not be read (${(e as Error).message})`);
     }
   } else if (card.status !== "sold_out") {
@@ -572,11 +642,19 @@ async function gatherOne(card: CybarcoCard): Promise<CybarcoPlan> {
     brochurePages,
     units,
     notes,
+    fetchAttempts,
+    fetchFailures,
   };
 }
 
 /** Listing + sitemap + every project's page, gallery, brochure and price list. */
-export async function gatherCybarco(): Promise<{ plans: CybarcoPlan[]; notes: string[] }> {
+export async function gatherCybarco(): Promise<{
+  plans: CybarcoPlan[];
+  notes: string[];
+  fetchAttempts: number;
+  fetchFailures: number;
+  verdict: RunVerdict;
+}> {
   const [listing, sitemap] = await Promise.all([get(LISTING_URL), get(SITEMAP_URL)]);
   const cards = parseListing(listing, sitemap);
   const notes: string[] = [];
@@ -598,7 +676,16 @@ export async function gatherCybarco(): Promise<{ plans: CybarcoPlan[]; notes: st
   if (fallback.length) {
     notes.push(`no usable gallery page: ${fallback.map((p) => `${p.card.slug} (${p.images.length} image(s) from the ${p.imageSource})`).join(", ")}`);
   }
-  return { plans, notes };
+
+  /* Judged here rather than in syncCybarco so the DRY RUN sees the same verdict
+     the nightly run does — the dry run is the gate, and "the site refused this
+     whole sweep" is the one line that invalidates every count under it. */
+  const fetchAttempts = plans.reduce((a, p) => a + p.fetchAttempts, 0);
+  const fetchFailures = plans.reduce((a, p) => a + p.fetchFailures, 0);
+  const verdict = runVerdict({ attempted: fetchAttempts, failed: fetchFailures });
+  if (verdict.reason) notes.push(verdict.reason);
+
+  return { plans, notes, fetchAttempts, fetchFailures, verdict };
 }
 
 /* ── Dry run (reads the live site AND the production DB; writes nothing) ───── */
@@ -664,6 +751,21 @@ export async function dryRunCybarcoSync(): Promise<CybarcoDryRun> {
    this, not a second gathering pass. */
 export async function dryRunCybarcoSyncDetailed(): Promise<{ rows: CybarcoDryRun; notes: string[] }> {
   const { plans, notes } = await gatherCybarco();
+
+  /* Stated in the NOTES, not only in whatever runner prints the table. The `plans`
+     column is pdf.js' page count, identical on a laptop and on the VPS — so a dry
+     run on a machine with no poppler reports "263 floor-plan pages" while a real
+     run there would produce zero, and nothing in the output said so. The real
+     sync has warned about this since it was written; the gate did not, which is
+     the asymmetry that let the Marfields import create four projects with zero
+     floor plans and report nothing wrong. Reported either way: "present" is the
+     line that makes the page counts trustworthy, and its absence is not evidence. */
+  notes.push(
+    (await pdftoppmAvailable())
+      ? "pdftoppm (poppler-utils) IS available on this machine — a real run here would rasterise each row's `plans` page count into floor plans"
+      : "pdftoppm (poppler-utils) is NOT available on this machine — each row's `plans` is the brochure's PAGE count, and a real run HERE would produce ZERO floor plans for every project",
+  );
+
   const candidates = (p: CybarcoPlan) => Array.from(new Set([p.card.slug, developmentSlug(p.card.name)]));
   const taken = await takenSlugs(Array.from(new Set(plans.flatMap(candidates))));
   const clashOf = (p: CybarcoPlan) => candidates(p).filter((s) => taken.has(s));
@@ -719,10 +821,25 @@ function freezeForPublishedRow<T extends Record<string, unknown>>(data: T, exist
   return out;
 }
 
+/* `ok` is no longer always true. It is false for exactly ONE condition — the site
+   refused a MAJORITY of this run's fetches (runVerdict above) — and for nothing
+   else. A single lost brochure, an unreadable price list, a slug clash, a
+   sold-out contradiction: all still resolve ok:true with their note, because each
+   is a normal night on this source and an alarm that fires on a normal night is
+   an alarm nobody reads. Everything that throws (the listing parsing to zero
+   cards, a dead database) already produces ok:false through withCronLog. */
 export async function syncCybarco(
   accountId: string,
   opts: { force?: boolean } = {},
-): Promise<{ ok: boolean; projects: number; units: number; created: number; notes: string[] }> {
+): Promise<{
+  ok: boolean;
+  projects: number;
+  units: number;
+  created: number;
+  notes: string[];
+  fetchAttempts: number;
+  fetchFailures: number;
+}> {
   const acct = await prisma.developerAccount.findUnique({ where: { id: accountId }, select: { id: true, name: true } });
   if (!acct) throw new Error(`Cybarco: no DeveloperAccount ${accountId}`);
 
@@ -735,7 +852,7 @@ export async function syncCybarco(
      call it. */
   const release = beginSyncWindow("cybarco-sync");
   try {
-    const { plans, notes: gatherNotes } = await gatherCybarco();
+    const { plans, notes: gatherNotes, fetchAttempts, fetchFailures, verdict } = await gatherCybarco();
     const notes = [...gatherNotes];
 
     /* Probed once per run, not per PDF, and reported loudly: without this a run
@@ -1032,7 +1149,10 @@ export async function syncCybarco(
     if (mediaChanged) scheduleAppRestart();
     await prisma.developerAccount.update({ where: { id: accountId }, data: { driveSyncedAt: new Date() } });
 
-    return { ok: true, projects: plans.length, units: unitsWritten, created, notes };
+    /* Writes still happen on a refused run: unitPlan() keeps stored units against
+       a 0-unit read and contentNeeds() keeps stored media, so the night is
+       harmless — it is the REPORTING of it as healthy that was the gap. */
+    return { ok: verdict.ok, projects: plans.length, units: unitsWritten, created, notes, fetchAttempts, fetchFailures };
   } finally {
     release();
   }

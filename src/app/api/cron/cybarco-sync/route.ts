@@ -28,14 +28,46 @@ export const dynamic = "force-dynamic";
 // but every project's own gallery still needs mirroring).
 export const maxDuration = 300;
 
-async function run(force: boolean) {
+type RunResult = {
+  ok: boolean;
+  // Set only when the route itself refuses before syncCybarco ever runs. A sync
+  // that DID run describes itself through summarize() below instead.
+  fatal: string | null;
+  projects: number;
+  units: number;
+  created: number;
+  notes: string[];
+  fetchAttempts: number;
+  fetchFailures: number;
+};
+
+const EMPTY = { projects: 0, units: 0, created: 0, notes: [] as string[], fetchAttempts: 0, fetchFailures: 0 };
+
+async function run(force: boolean): Promise<RunResult> {
   const acct = await prisma.developerAccount.findUnique({ where: { slug: "cybarco" } });
-  if (!acct) return { ok: false as const, message: "Cybarco developer account not found" };
-  const result = await syncCybarco(acct.id, { force });
-  // syncCybarco's own return type declares `ok: boolean`, not the literal `true`
-  // it always resolves to — spread first, then pin the literal, so the union
-  // below (`| { ok: false; message }`) actually discriminates for TypeScript.
-  return { ...result, ok: true as const };
+  if (!acct) return { ok: false, fatal: "Cybarco developer account not found", ...EMPTY };
+  // syncCybarco's `ok` is now a real verdict rather than a constant: it is false
+  // when the site refused a MAJORITY of the run's fetches (runVerdict in
+  // cybarcoSync.ts). One flat shape, because a union on a non-literal `ok`
+  // cannot discriminate — `fatal` is what separates the two cases.
+  return { ...(await syncCybarco(acct.id, { force })), fatal: null };
+}
+
+// What lands in CronRunLog.message, and what a failure notification quotes.
+// THE NOTE COUNT IS THE POINT: every refused fetch, unreadable price list and
+// slug clash is a note, and the old summary dropped `notes` entirely — so a
+// night where Cybarco rate-limited every gallery fetch read "0 created, 15
+// project(s) touched, 0 unit(s) written", character for character the same row a
+// healthy quiet night writes. The refusal ratio is spelled out alongside it so
+// the row says WHICH kind of run it was without anyone opening the app.
+function summarize(r: RunResult): string {
+  if (r.fatal) return r.fatal;
+  return [
+    `${r.created} created, ${r.projects} project(s) touched, ${r.units} unit(s) written`,
+    `${r.notes.length} note(s)`,
+    `${r.fetchFailures}/${r.fetchAttempts} fetch(es) refused`,
+    r.ok ? null : "SITE REFUSED MOST OF THIS RUN",
+  ].filter(Boolean).join(", ");
 }
 
 // Add &force=1 to re-gather rich content (photos/plans) for already-synced
@@ -53,14 +85,9 @@ export async function GET(req: NextRequest) {
   const force = req.nextUrl.searchParams.get("force") === "1";
 
   try {
-    const result = await withCronLog(
-      "cybarco-sync",
-      () => run(force),
-      (r) => (!r.ok ? r.message : `${r.created} created, ${r.projects} project(s) touched, ${r.units} unit(s) written`),
-      (r) => r.ok,
-    );
+    const result = await withCronLog("cybarco-sync", () => run(force), summarize, (r) => r.ok);
     if (!result.ok && (await shouldNotifyFailureStreak("cybarco-sync"))) {
-      const msg = buildCronFailureMessage("cybarco-sync", result.message);
+      const msg = buildCronFailureMessage("cybarco-sync", summarize(result));
       await sendFeedNotification(msg.text, msg.subject);
       await markFailureStreakNotified("cybarco-sync");
     }
