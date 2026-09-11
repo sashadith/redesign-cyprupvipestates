@@ -218,6 +218,35 @@ const PL_LANDING_MERGES: Record<string, string> = {
   "duze-wille-na-cyprze": "/pl/wille-na-cyprze",
   "wille-na-cyprze-dla-emigracji": "/pl/wille-na-cyprze",
   "wille-na-cyprze-na-pobyt-staly-bez-prowizji": "/pl/wille-na-cyprze",
+
+  // PL "dom" cluster consolidation (2026-09-11): domy-na-cyprze had the same
+  // 0-of-21-pinned-refs-PUBLISHED defect as the villa flagship, and was
+  // already the single highest-impression PL property page (285/60d) despite
+  // it -- position ~33, the biggest single opportunity found in the whole PL
+  // audit. Fixed to the same live filterPropertyType:"Villa" query as
+  // wille-na-cyprze. Deliberately the SAME query, not a code change to also
+  // pull Townhouse inventory (excludePropertyTypes isn't wired into this
+  // render path's live-query trigger -- would need resolveBlocks/usingFiltered/
+  // MIN_LIVE_RESULTS changes in sanity.utils.ts and [...slug]/page.tsx for
+  // one page's benefit, out of scope here). Kept as a separate page from
+  // wille-na-cyprze anyway: "dom" (260 vol) and "willa" (30-50 vol) are
+  // confirmed-distinct search vocabularies in DataForSEO data, not a
+  // duplicate audience -- same relationship as DE's Haus/Villa pillars,
+  // which also serve overlapping inventory under different query terms.
+  // domy-na-cyprze-dla-inwestorow and sprzedaz-domow-na-cyprze carried the
+  // identical unfiltered filterPropertyType:"Villa" query with no real
+  // differentiation behind the marketing angle -- same pattern as the villa
+  // cluster's own investor/emigration/residency duplicates. domy-z-basenem-
+  // na-cyprze ("houses with a pool") promised a pool filter the schema has
+  // no field for, so it was running the same unfiltered query too. Kept
+  // separate: domy-w-limassol (filterCity Limassol, real differentiator) --
+  // it's a CHILD page nested under sprzedaz-domow-na-cyprze's slug
+  // (/pl/sprzedaz-domow-na-cyprze/domy-w-limassol); this redirect only
+  // matches the exact flat parent path, so the child's own nested URL is
+  // unaffected and keeps resolving normally.
+  "domy-na-cyprze-dla-inwestorow": "/pl/domy-na-cyprze",
+  "sprzedaz-domow-na-cyprze": "/pl/domy-na-cyprze",
+  "domy-z-basenem-na-cyprze": "/pl/domy-na-cyprze",
 };
 
 // Paphos investment cluster, RU leg (2026-09-09) — completes the DE/PL work
