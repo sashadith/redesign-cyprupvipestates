@@ -666,3 +666,31 @@ dead-pins bug swept elsewhere this week) — set `filterPropertyType: "Villa"`, 
 manual list cleared, mirroring the `strandvillen-zypern` fix. `luxus-haeuser-zum-verkauf-in-paphos`
 titled itself "Luxusvillen in Paphos" while its own body consistently says "Häuser" — retitled to
 match. The two hubs (`luxusvillen-in-zypern`, `haeuser-auf-zypern`) now cross-link each other.
+
+## 2026-09-11 (same day, third entry) — New page: `/de/immobilien-auf-zypern`
+
+DataForSEO: "immobilien zypern" = 2400/mo, the single biggest DE keyword found all week (bigger
+than "haus zypern kaufen" at 3600/mo only because that one's the biggest *typed* query — this is
+the biggest *untyped/generic* one). `cyprusvipestates.com` did not rank anywhere in the top 100 for
+it, and neither ChatGPT nor Perplexity named the site when asked for a general Cyprus
+property-market overview (contrast with the villa-specific "provisionsfrei" prompts, where the site
+is cited in 4/4 checks — see the DE villa-cluster entry above). Every existing DE page carries a
+narrowing modifier (Luxus-, Villen-, Wohnungen-, Häuser-, a city) — none targets the bare umbrella
+term. Rather than broaden an existing page (risks diluting `luxusimmobilien-auf-zypern`'s own
+"luxusimmobilien zypern" position, itself hard-won back on 2026-09-09), created a new commercially-
+oriented hub page: hero + early lead form, "why invest" bullets, two live-query showcases
+(`filterPropertyType: "Villa"` and `"Apartment"`, self-healing, no manual pins to go stale), a
+property-type router linking the three flagships (`luxusvillen-in-zypern`, `haeuser-auf-zypern`,
+`apartment-zypern`) plus `luxusimmobilien-auf-zypern` for the luxury segment, a region overview
+(Limassol/Paphos/Larnaka/Nikosia — kept as on-page content only, not separate pages: standalone
+city+type search volume all came back null/negligible in the same DataForSEO pull), real Cyprus-
+wide median pricing (from this week's computed dataset: Villa/Townhouse €912,000 n=831, Apartment
+€406,000 n=1063, €4,648/m² n=1839) linking to the existing price-guide blog post, a "why us" USP
+block, commercially-relevant FAQ (cost, foreign buyers, financing, residency, remote purchase,
+timeline), and a final lead-form CTA. `relatedLandingPages` set both ways: the new page links to
+all 4 sibling flagships, and all 4 now link back to it. One build-time bug caught before calling
+this done: an early draft attached a block's markDefs to the wrong Portable Text node (the
+outer `textContent` wrapper instead of the individual block holding the link spans) for the 4
+property-type router links, which `@portabletext/react` surfaced immediately as "Unknown mark
+type" console errors on a local preview — fixed and reverified (console clean, all 4 links present
+and correctly hrefed) before this was written up.
