@@ -38,10 +38,20 @@ export default async function HomepageEditorPage({ searchParams }: { searchParam
         ))}
       </div>
 
+      {/* key={lang} on the editor below is load-bearing, not decoration. Switching
+          language changes only the ?lang= search param, so Next keeps this route
+          segment mounted and React keeps the SAME HomepageEditor instance. That
+          editor seeds its state from `data` in a useState initialiser, which runs on
+          mount and never again — so without a changing key the new language's
+          document arrives as a prop and is silently ignored, and the editor keeps
+          showing whichever language was opened first. Reported 2026-09-11: DE
+          selected, English content shown. Remounting also discards unsaved edits on a
+          language switch, which is what you want — half-typed German must never be
+          saved into the Polish document. */}
       {!doc ? (
         <p className="text-sm text-[#C0392B]">No homepage document exists for {lang.toUpperCase()}.</p>
       ) : (
-        <HomepageEditor lang={lang} schema={HOMEPAGE_SCHEMA} data={doc.data} action={saveHomepage.bind(null, lang)} options={options} />
+        <HomepageEditor key={lang} lang={lang} schema={HOMEPAGE_SCHEMA} data={doc.data} action={saveHomepage.bind(null, lang)} options={options} />
       )}
     </div>
   );

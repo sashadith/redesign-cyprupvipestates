@@ -93,6 +93,10 @@ function SaveBar() {
 export default function HomepageEditor({
   lang, schema, data, action, options,
 }: { lang: string; schema: HField[]; data: any; action: (formData: FormData) => void; options: Ctx }) {
+  /* `lang` is not read here — the caller passes it as `key` as well, which is what
+     remounts this editor per language and makes the initialiser below re-read `data`.
+     The prop is kept so the signature says out loud that this editor is scoped to one
+     language; see the comment at the call site in page.tsx. */
   void lang;
   const [doc, setDoc] = useState<any>(() => JSON.parse(JSON.stringify(data ?? {})));
   const set = (path: Path, value: any) => setDoc((d: any) => setAt(d, path, value));
