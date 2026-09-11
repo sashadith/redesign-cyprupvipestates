@@ -277,6 +277,30 @@ const PL_LANDING_MERGES: Record<string, string> = {
 // only gains one more inbound redirect.
 const RU_LANDING_MERGES: Record<string, string> = {
   "investitsii-v-nedvizhimost-pafos": "/ru/villy-v-pafose-dlya-investorov",
+
+  // RU "dom" cluster consolidation (2026-09-11): unlike the RU villa cluster
+  // audited the same day (where every candidate page turned out to carry
+  // real, distinct content -- see docs/SITE-CHANGELOG.md -- and none were
+  // merged), doma-na-kipre and prodazha-domov-na-kipre are a genuine
+  // near-duplicate pair: both target the same generic "buy a house in
+  // Cyprus" intent with no real distinct audience or angle behind either
+  // title, unlike the villa cluster's investor/emigration/VNZH/size/beach
+  // pages, which each had real differentiating content (yields, legal
+  // specifics, dimensions, proximity). doma-na-kipre-dlya-investorov's own
+  // differentiation was thin in a different way: not a real investor-
+  // specific case (no yield data, unlike the villa investment page), just a
+  // named list of 3 partner developers (AGG Luxury Homes, Korantina Homes,
+  // Mito Developers) -- content that duplicates what /developers already
+  // does. The city-by-city breakdown from prodazha-domov-na-kipre and the
+  // 3 developer links from doma-na-kipre-dlya-investorov were both merged
+  // into doma-na-kipre's own content before this redirect went in, not
+  // simply discarded. Kept separate: doma-na-kipre-s-basseinom (its own
+  // real "houses with a pool" angle, already the site's best-performing
+  // "dom" page at 326 impressions/60d) and doma-v-limassole (real filterCity
+  // Limassol differentiator) -- both children nested under doma-na-kipre,
+  // unaffected by this flat-path-only redirect.
+  "prodazha-domov-na-kipre": "/ru/doma-na-kipre",
+  "doma-na-kipre-dlya-investorov": "/ru/doma-na-kipre",
 };
 
 export default async function middleware(request: NextRequest) {
