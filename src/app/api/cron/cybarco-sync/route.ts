@@ -1,0 +1,77 @@
+// Cybarco has no data feed of any kind — only a website and one downloadable
+// PDF price list per project. See src/lib/cybarcoSync.ts for the adapter
+// itself (gatherCybarco reads the site + PDFs; syncCybarco writes DRAFT
+// Developments and their units) and src/lib/ai/cybarcoPriceTable.ts for how a
+// price-list PDF becomes units.
+//
+// Scheduled at `0 1 * * *`. The nightly chain starts at 02:00 (psi-sync) and
+// runs through 06:30, so 01:00 is the only slot with a clear hour ahead of it —
+// and a first Cybarco run mirrors several hundred images.
+//
+// Unlike korantina-sync/kuutio-sync there is no `&scheduled=1`/respectInterval
+// concept here: Cybarco has no drive and no DeveloperAccount.driveSyncInterval
+// to honour, so syncCybarco() always re-gathers every project on every call —
+// contentNeeds() inside it (not this route) is what stops an already-gathered
+// or published project from being re-downloaded needlessly. There is also no
+// `&dry=1` branch: dryRunCybarcoSync()/dryRunCybarcoSyncDetailed() exist for
+// the throwaway scripts/tmp-cybarco-*.mjs runners, not for this route — a
+// valid CRON_SECRET always runs the real sync, immediately.
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { syncCybarco } from "@/lib/cybarcoSync";
+import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
+import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
+
+export const dynamic = "force-dynamic";
+// Higher than kuutio-sync's 120: a first run mirrors several hundred images
+// and rasterises eleven brochures (price lists exist for 9 of the 15 projects,
+// but every project's own gallery still needs mirroring).
+export const maxDuration = 300;
+
+async function run(force: boolean) {
+  const acct = await prisma.developerAccount.findUnique({ where: { slug: "cybarco" } });
+  if (!acct) return { ok: false as const, message: "Cybarco developer account not found" };
+  const result = await syncCybarco(acct.id, { force });
+  // syncCybarco's own return type declares `ok: boolean`, not the literal `true`
+  // it always resolves to — spread first, then pin the literal, so the union
+  // below (`| { ok: false; message }`) actually discriminates for TypeScript.
+  return { ...result, ok: true as const };
+}
+
+// Add &force=1 to re-gather rich content (photos/plans) for already-synced
+// projects too — see contentNeeds() in src/lib/cybarcoSync.ts for exactly what
+// that widens. It REPLACES gallery/plans wholesale, so use it only for a
+// deliberate content refresh. Published projects are frozen either way
+// (FROZEN_WHEN_PUBLISHED in cybarcoSync.ts).
+//   crontab:  curl -s ".../api/cron/cybarco-sync?key=$CRON_SECRET"
+//   by hand:  curl -s "http://127.0.0.1:3000/api/cron/cybarco-sync?key=$CRON_SECRET&force=1"
+export async function GET(req: NextRequest) {
+  const key = req.nextUrl.searchParams.get("key");
+  if (!process.env.CRON_SECRET || key !== process.env.CRON_SECRET) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+  const force = req.nextUrl.searchParams.get("force") === "1";
+
+  try {
+    const result = await withCronLog(
+      "cybarco-sync",
+      () => run(force),
+      (r) => (!r.ok ? r.message : `${r.created} created, ${r.projects} project(s) touched, ${r.units} unit(s) written`),
+      (r) => r.ok,
+    );
+    if (!result.ok && (await shouldNotifyFailureStreak("cybarco-sync"))) {
+      const msg = buildCronFailureMessage("cybarco-sync", result.message);
+      await sendFeedNotification(msg.text, msg.subject);
+      await markFailureStreakNotified("cybarco-sync");
+    }
+    return NextResponse.json({ at: new Date().toISOString(), ...result });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    if (await shouldNotifyFailureStreak("cybarco-sync")) {
+      const msg = buildCronFailureMessage("cybarco-sync", message);
+      await sendFeedNotification(msg.text, msg.subject);
+      await markFailureStreakNotified("cybarco-sync");
+    }
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
+  }
+}
