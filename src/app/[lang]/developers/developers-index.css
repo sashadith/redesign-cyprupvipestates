@@ -46,6 +46,20 @@
   max-width: 52ch;
 }
 
+.devx__intro {
+  margin-top: clamp(16px, 2vw, 24px);
+  max-width: 68ch;
+  display: grid;
+  gap: 1em;
+}
+
+.devx__intro p {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--text-soft);
+  margin: 0;
+}
+
 /* ------------------------------------------------------------------ GRID */
 .devx__grid {
   display: grid;
