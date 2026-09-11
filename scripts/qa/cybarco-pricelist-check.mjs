@@ -75,14 +75,19 @@ check("empty", CP.cybarcoParsePrice(""), null);
 check("status word is not a price", CP.cybarcoParsePrice("SOLD"), null);
 
 /* The digit floor is measured, not guessed (see the comment in
-   cybarcoPriceTable.ts). Real prices across all six committed fixtures run
-   350,000-6,200,000 (6-7 digits); the largest neighbouring-column impostor is
-   4 digits: a 1035 sqm plot (Akamas Villas, villa 7, type K4) and bare delivery years
-   like 2026. Both must be refused, and the smallest REAL price on record must
-   still clear the floor. */
+   cybarcoPriceTable.ts). Real prices across all NINE committed fixtures run
+   320,000-6,200,000 (6-7 digits); the largest neighbouring-column impostor is
+   4 digits: a 1035 sqm plot (Akamas Villas, villa 7, type K4), Limassol Greens'
+   comma-grouped "1,600" plot (villa 47) and bare delivery years like 2026. All
+   must be refused, and the smallest REAL price on record must still clear the
+   floor — it dropped from 350,000 to 320,000 when the last three documents were
+   read, which is exactly the direction that erodes this margin. */
 check("plot area (1035 sqm, Akamas Villas villa 7) is not a price", CP.cybarcoParsePrice("1035"), null);
+check("a comma-grouped plot (1,600 sqm, Limassol Greens villa 47) is not a price",
+  CP.cybarcoParsePrice("1,600"), null);
 check("delivery year is not a price", CP.cybarcoParsePrice("2026"), null);
-check("smallest real price on record still parses", CP.cybarcoParsePrice("350,000"), 350000);
+check("smallest real price on record still parses", CP.cybarcoParsePrice("320,000"), 320000);
+check("the previous record holder still parses too", CP.cybarcoParsePrice("350,000"), 350000);
 
 check("SOLD", CP.cybarcoReadOutcome("SOLD"), { status: "sold", price: null });
 check("RESERVED", CP.cybarcoReadOutcome("RESERVED"), { status: "reserved", price: null });
@@ -419,6 +424,245 @@ check("trilogy: NORTH RESIDENCES (A) has three",
   TRILOGY.filter((u) => u.block === "NORTH RESIDENCES (A)").length, 3);
 check("trilogy: NORTH RESIDENCES (B) has three",
   TRILOGY.filter((u) => u.block === "NORTH RESIDENCES (B)").length, 3);
+
+/* ── The three documents that had never been read ────────────────────────────
+   Park Residences, Limassol Greens and Seaview Heights were captured on
+   2026-09-11 from the project pages listed below and are the last of Cybarco's
+   nine price lists. Between them they hold 217 of the connector's 374 units —
+   more than the six that were already committed — and until this section
+   existed not one of their rows had ever been through the reader.
+
+   Every count and every field below was read off the RENDERED pages by eye
+   (pdfjs-dist + canvas at scale 2.2, one PNG per page, counted row by row),
+   never off the extracted JSON, because that extraction is what is under test.
+   Where a number here disagrees with the reader, the READER is wrong. It was
+   wrong four times, and all four are pinned below.
+
+     park-residences  .../2017/04/Park-Residences-Pricelist-ENG-060826.pdf  (05.08.2026)
+     limassol-greens  .../2021/03/Limassol-Greens-Pricelist-ENG-040926.pdf  (03.09.2026)
+     seaview-heights  .../2021/03/Seaview-Heights-Pricelist-ENG-040926.pdf  (04.09.2026)
+   all under https://www.cybarco.com/wp-content/uploads/ */
+
+/* "UNDER OFFER" is Limassol Greens' third status word and the reader had never
+   seen it. An unknown outcome DROPS the row, so eleven units — four Block A
+   apartments, one villa and all six under-offer townhouses — were absent from a
+   115-row document whose every other count came out exact. It reads as reserved
+   for the same reason ПЕРЕГОВОРЫ does: not for sale today, not sold either.
+   The second spelling is what a column join produces if a future list ever
+   prints the two words as two cells. */
+check("UNDER OFFER is reserved, not available",
+  CP.cybarcoReadOutcome("UNDER OFFER"), { status: "reserved", price: null });
+check("UNDER OFFER survives a tight column join",
+  CP.cybarcoReadOutcome("UNDEROFFER"), { status: "reserved", price: null });
+
+/* Park Residences: one page, twelve rows, no section heading of any kind — the
+   project's name is set as vector art, not text, so nothing on the page is
+   heading-shaped and every block is null. This is the ONLY one of the three the
+   reader already read correctly, in every field, before this task.
+
+     park  p1  (no heading)  12 rows (4 available, 0 reserved, 8 sold) */
+const PARK = units("park-residences");
+check("park total", PARK.length, 12);
+check("park available", by(PARK, "available"), 4);
+check("park reserved", by(PARK, "reserved"), 0);
+check("park sold", by(PARK, "sold"), 8);
+check("park: no heading in the document, so every block is null",
+  PARK.every((u) => u.block === null), true);
+check("park: (block, ref) is unique", new Set(PARK.map(identity)).size, PARK.length);
+/* Park adds a "Common Area m²" column between the uncovered terraces and the
+   price. It has no key, so it must stay out of every produced field — in
+   particular it must not be read as the veranda or the total covered area. */
+check("park: 101, every field", unit(PARK, "101"), {
+  ref: "101", block: null, floor: "1st", beds: "2",
+  areaInternal: "89", areaVeranda: "20", areaBuilt: "109", areaPlot: null,
+  price: null, status: "sold",
+});
+check("park: 302, every field", unit(PARK, "302"), {
+  ref: "302", block: null, floor: "3rd", beds: "3",
+  areaInternal: "127", areaVeranda: "43", areaBuilt: "170", areaPlot: null,
+  price: 495000, status: "available",
+});
+/* 104 and 204 are printed "10" + "4" and "20" + "4", one gap too narrow to be a
+   space. The same join that KEEPS Naftikos' "A 501" spaced must drop this one. */
+check("park: a ref split mid-number is joined without a space",
+  PARK.filter((u) => /4$/.test(u.ref)).map((u) => u.ref), ["104", "204"]);
+
+/* Limassol Greens: SIX pages, FOUR tables, four different reference labels and
+   two tables that run over a page break without repeating either their heading
+   or their header. It broke the reader in three separate ways and accounts for
+   every one of the 42 units that were being lost.
+
+     greens  p1 Starlings Apartments Block A  37 rows (16 avail, 5 reserved, 4 under offer, 12 sold)
+             p2 same block, no heading and NO HEADER
+                                               5 rows ( 1 avail, 0 reserved, 0 under offer,  4 sold)
+             p3 Villas Pricelist              41 rows (15 avail, 0 reserved, 1 under offer, 25 sold)
+             p4 same block, no heading and NO HEADER
+                                               1 row  ( 1 avail, 0 reserved, 0 under offer,  0 sold)
+             p5 Ibis Townhouses Pricelist     18 rows ( 0 avail, 0 reserved, 6 under offer, 12 sold)
+             p6 Kinglet Villas Pricelist      13 rows (13 avail, 0 reserved, 0 under offer,  0 sold)
+
+   115 rows; 46 available, 53 sold, and 5 + 11 = 16 reserved once the under-offer
+   rows land where they belong. */
+const GREENS = units("limassol-greens");
+const G_APTS = "Starlings Apartments Block A";
+const G_VILLAS = "Villas Pricelist";
+const G_TOWN = "Ibis Townhouses Pricelist";
+const G_KING = "Kinglet Villas Pricelist";
+check("greens total", GREENS.length, 115);
+check("greens available", by(GREENS, "available"), 46);
+check("greens reserved", by(GREENS, "reserved"), 16);
+check("greens sold", by(GREENS, "sold"), 53);
+check("greens: the four sections become the four blocks",
+  Array.from(new Set(GREENS.map((u) => u.block))).sort(),
+  [G_APTS, G_TOWN, G_KING, G_VILLAS].sort());
+check("greens: Block A has 42", GREENS.filter((u) => u.block === G_APTS).length, 42);
+check("greens: the villas have 42", GREENS.filter((u) => u.block === G_VILLAS).length, 42);
+check("greens: the townhouses have 18", GREENS.filter((u) => u.block === G_TOWN).length, 18);
+check("greens: the Kinglet villas have 13", GREENS.filter((u) => u.block === G_KING).length, 13);
+check("greens: every unit has a block", GREENS.every((u) => typeof u.block === "string"), true);
+
+/* The reason the section captions HAD to become blocks. The townhouses are
+   numbered 1-18 and the Kinglet villas 1-13, so thirteen references are printed
+   twice in this one document. With every block null the pair (block, ref) — the
+   key the sync writes on — collides thirteen times and two physical houses fold
+   into one row. */
+check("greens: (block, ref) is unique", new Set(GREENS.map(identity)).size, GREENS.length);
+check("greens: ref alone collides 13 times, across the townhouse and Kinglet tables",
+  GREENS.length - new Set(GREENS.map((u) => u.ref)).size, 13);
+check("greens: townhouse 1 and Kinglet 1 are two different units",
+  [unitIn(GREENS, G_TOWN, "1").areaPlot, unitIn(GREENS, G_KING, "1").areaPlot],
+  ["402", "407"]);
+
+/* Page 2 is five more Block A apartments and page 4 is one more villa, each
+   under a heading and a header printed only on the page before. A reader that
+   starts every page from nothing loses all six and says nothing at all. */
+check("greens: a table continued over a page break keeps its header",
+  GREENS.filter((u) => ["A406", "A407", "A408", "A501", "A502"].includes(u.ref)).length, 5);
+check("greens: and keeps its heading",
+  Array.from(new Set(GREENS.filter((u) => /^A[45]0/.test(u.ref)).map((u) => u.block))), [G_APTS]);
+check("greens: the villa table's continuation page too",
+  unitIn(GREENS, G_VILLAS, "105").price, 1980000);
+
+/* The under-offer rows, one per table that prints any. */
+check("greens: A007 is under offer, so reserved", unitIn(GREENS, G_APTS, "A007").status, "reserved");
+check("greens: villa 51 is under offer", unitIn(GREENS, G_VILLAS, "51").status, "reserved");
+check("greens: six townhouses are under offer",
+  GREENS.filter((u) => u.block === G_TOWN && u.status === "reserved").map((u) => u.ref),
+  ["13", "14", "15", "16", "17", "18"]);
+
+/* One complete row per shape, read off the rendered page cell by cell. The
+   apartment table has NO floor column at all — null there is the document's
+   answer — and a "Garden Area m²" column that has no key and must stay out of
+   every field. */
+check("greens: apartment A001, every field", unitIn(GREENS, G_APTS, "A001"), {
+  ref: "A001", block: G_APTS, floor: null, beds: "2",
+  areaInternal: "89", areaVeranda: "24", areaBuilt: "127", areaPlot: null,
+  price: 620000, status: "available",
+});
+check("greens: apartment A501 (page 2), every field", unitIn(GREENS, G_APTS, "A501"), {
+  ref: "A501", block: G_APTS, floor: null, beds: "3",
+  areaInternal: "162", areaVeranda: "70", areaBuilt: "258", areaPlot: null,
+  price: 1980000, status: "available",
+});
+check("greens: villa 31, every field", unitIn(GREENS, G_VILLAS, "31"), {
+  ref: "31", block: G_VILLAS, floor: null, beds: "3",
+  areaInternal: "182", areaVeranda: "45", areaBuilt: "227", areaPlot: "609",
+  price: 1880000, status: "available",
+});
+check("greens: townhouse 1, every field", unitIn(GREENS, G_TOWN, "1"), {
+  ref: "1", block: G_TOWN, floor: null, beds: "2",
+  areaInternal: "115", areaVeranda: "26", areaBuilt: "141", areaPlot: "402",
+  price: null, status: "sold",
+});
+/* The Kinglet table is the one that sets "Kinglet" and "No." side by side on a
+   single line, 29.8 pt apart — wider than COLUMN_GAP — so "No." becomes a
+   column of its own and the reference column's right edge lands at x=71.6 with
+   the reference cells centred at x=67.7. Under four points of room: if this row
+   ever comes back empty, that is where to look. Its areas are printed in
+   fragments too ("1" + "46" for 146, "1" + "83" for 183). */
+check("greens: Kinglet villa 1, every field", unitIn(GREENS, G_KING, "1"), {
+  ref: "1", block: G_KING, floor: null, beds: "3",
+  areaInternal: "146", areaVeranda: "37", areaBuilt: "183", areaPlot: "407",
+  price: 1260000, status: "available",
+});
+/* A KNOWN loss, pinned so that it is a recorded fact rather than a surprise.
+   Villa 104's plot area is printed 5.04 pt above the rest of its row, and
+   scripts/pdf-table-extract-worker.mjs groups a row at 4.5 pt, so the value
+   never reaches this reader: it is a stray one-cell row in the extraction, not
+   something the reader dropped. The document says 750. The unit itself, its
+   price and its status are all correct, and villa 105 on the next page has the
+   same 750 to compare against. If the extractor's row tolerance is ever
+   retuned, this assertion is what will say so. */
+check("greens: villa 104's plot is lost by the EXTRACTOR, not the reader",
+  unitIn(GREENS, G_VILLAS, "104").areaPlot, null);
+check("greens: villa 104 is otherwise whole",
+  [unitIn(GREENS, G_VILLAS, "104").areaBuilt, unitIn(GREENS, G_VILLAS, "104").price],
+  ["285", 1970000]);
+
+/* Seaview Heights: four pages, seven sections, every row of it counted
+   correctly by the reader as it stood — the one thing it lost here was a field,
+   not a row.
+
+     seaview  p1 BUILDING A 12 rows (12 available, 0 reserved,  0 sold)
+              p1 BUILDING B 14 rows ( 2 available, 0 reserved, 12 sold)
+              p2 BUILDING C 16 rows ( 2 available, 1 reserved, 13 sold)
+              p2 BUILDING D 16 rows ( 8 available, 0 reserved,  8 sold)
+              p3 BUILDING E 12 rows ( 4 available, 0 reserved,  8 sold)
+              p3 BUILDING F 11 rows ( 0 available, 2 reserved,  9 sold)
+              p4 VILLAS      9 rows ( 6 available, 0 reserved,  3 sold)
+
+   Building F prints no F102 — the gap is the document's, not a dropped row. */
+const SEAVIEW = units("seaview-heights");
+check("seaview total", SEAVIEW.length, 90);
+check("seaview available", by(SEAVIEW, "available"), 34);
+check("seaview reserved", by(SEAVIEW, "reserved"), 3);
+check("seaview sold", by(SEAVIEW, "sold"), 53);
+check("seaview: seven sections become seven blocks",
+  Array.from(new Set(SEAVIEW.map((u) => u.block))).sort(),
+  ["BUILDING A", "BUILDING B", "BUILDING C", "BUILDING D", "BUILDING E", "BUILDING F", "VILLAS"]);
+check("seaview: every unit has a block", SEAVIEW.every((u) => typeof u.block === "string"), true);
+check("seaview: (block, ref) is unique", new Set(SEAVIEW.map(identity)).size, SEAVIEW.length);
+for (const [letter, n] of [["A", 12], ["B", 14], ["C", 16], ["D", 16], ["E", 12], ["F", 11]]) {
+  check(`seaview: BUILDING ${letter} has ${n}`,
+    SEAVIEW.filter((u) => u.block === `BUILDING ${letter}`).length, n);
+}
+check("seaview: VILLAS has 9", SEAVIEW.filter((u) => u.block === "VILLAS").length, 9);
+check("seaview: the document itself skips F102", SEAVIEW.some((u) => u.ref === "F102"), false);
+check("seaview: apartment A101, every field", unitIn(SEAVIEW, "BUILDING A", "A101"), {
+  ref: "A101", block: "BUILDING A", floor: "1st", beds: "3",
+  areaInternal: "118", areaVeranda: "35", areaBuilt: "153", areaPlot: null,
+  price: 650000, status: "available",
+});
+check("seaview: D104, every field", unitIn(SEAVIEW, "BUILDING D", "D104"), {
+  ref: "D104", block: "BUILDING D", floor: "1st", beds: "1",
+  areaInternal: "56", areaVeranda: "19", areaBuilt: "75", areaPlot: null,
+  price: 320000, status: "available",
+});
+check("seaview: C104 is the reserved one on its page",
+  unitIn(SEAVIEW, "BUILDING C", "C104").status, "reserved");
+/* The villa table heads its plot column "Plot Size", not "Plot Area". Every one
+   of these nine villas was read, with the right price and the right status, and
+   every one of them had a null plot area — the silent-null failure that no
+   count can ever catch. */
+check("seaview: villa 1, every field", unitIn(SEAVIEW, "VILLAS", "1"), {
+  ref: "1", block: "VILLAS", floor: null, beds: "3",
+  areaInternal: "146", areaVeranda: "65", areaBuilt: "211", areaPlot: "406",
+  price: 990000, status: "available",
+});
+check("seaview: every villa has a plot area",
+  SEAVIEW.filter((u) => u.block === "VILLAS").every((u) => !!u.areaPlot), true);
+/* An apartment list has no plot column and the villa list no floor column.
+   Both nulls are the document's answer and both must survive. */
+check("seaview: apartments have no plot area",
+  SEAVIEW.filter((u) => u.block !== "VILLAS").every((u) => u.areaPlot === null), true);
+check("seaview: villas have no floor",
+  SEAVIEW.filter((u) => u.block === "VILLAS").every((u) => u.floor === null), true);
+/* Page 4 also carries a site plan whose callouts are loose digits and letters
+   sitting below a live header. None of them is a unit — the count above is what
+   proves it, and this is what names it. */
+check("seaview: the site plan's callouts are not units",
+  SEAVIEW.filter((u) => u.block === "VILLAS").map((u) => u.ref),
+  ["1", "2", "3", "4", "5", "6", "7", "8", "9"]);
 
 console.log(failures ? `\n${failures} FAILED` : "\nall checks passed");
 process.exit(failures ? 1 : 0);
