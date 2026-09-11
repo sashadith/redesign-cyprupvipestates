@@ -14,33 +14,56 @@ import { resolveRelativeCompletion } from "@/lib/completionDate";
 
 type UnitLike = { status?: string | null; price?: number | null; beds?: string | null; type?: string | null; areaBuilt?: string | null };
 
-// Development.priceFrom/priceTo can be null even when real unit prices exist
-// (unit-driven feeds, and manually-created developments never get a
-// project-level price set by any adapter) — fall back to the available
-// units' own price range rather than showing "Price on request" when real
-// prices are one join away. A fully sold-out development has zero
-// "available" units by definition, so that fallback alone still leaves it
-// priceless (found 2026-08-06: Celestia's own sold-out hero showed "—"
-// instead of "sold from €170,000", the same gap as the alternatives funnel's
-// currentPrice derivation — see developmentAlternatives.ts). Second
-// fallback: the cheapest unit price of ANY status — the price it actually
-// sold for, which every caller already labels as a past/sold price rather
-// than a live offer (this page's own "sold from" caption, and
-// DevelopmentSchema's Offer.availability: SoldOut on the JSON-LD side), so
-// showing it here doesn't misrepresent it as current stock.
+// THE UNITS DECIDE. Development.priceFrom/priceTo are only a fallback, for a
+// development that has no priced units at all.
+//
+// It used to be the other way round, and that was wrong (2026-09-11): Georgia
+// 12 (A&B) advertised "from €180,000" above its own table of 18 available flats
+// starting at €160,000. The stored value is written by the sync adapters from
+// the SOURCE DOCUMENT's prices — not from the unit rows a visitor is shown —
+// and nothing reconciles the two: recomputeDevelopmentDerivedState refreshes
+// unit counts and the sold-out stamps but never touches prices, so hand-edited
+// units (all 18 of Georgia 12's are source:"manual") left the headline frozen
+// at whatever the last sync wrote. Measured across production that day, 8 of
+// 247 published developments advertised a price their own units contradicted:
+// five too LOW — VENARA said 305,000 against a real 365,000, so the visitor
+// clicks and finds nothing at that price — and three too HIGH, which turns
+// buyers away before they ever click.
+//
+// The fallback still matters: presentation pages carry a project-level price
+// and no unit rows at all (Marfields' three, Cybarco's six sold-out), and they
+// must keep advertising it.
+//
+// Available units decide while any exist, so a cheaper SOLD unit can never pull
+// the advertised floor below what is actually buyable. A fully sold-out
+// development has zero available units by definition, so it falls through to
+// the cheapest price of ANY status — the price it actually sold for, which
+// every caller already labels as past rather than live (this page's own "sold
+// from" caption, and DevelopmentSchema's Offer.availability: SoldOut). Without
+// that second pool a sold-out project reads "Price on request"; found
+// 2026-08-06 on Celestia, whose hero showed "—" instead of "sold from
+// €170,000", the same gap as the alternatives funnel's currentPrice derivation
+// (see developmentAlternatives.ts).
+//
+// Only prices above zero count. The stored value used to shield the page from a
+// 0 in the units; now that the units win, that shield is gone, and a
+// price-on-application row entered as 0 would otherwise advertise "from €0".
+// Production held no such row when this was written (measured: zero units at
+// price <= 0) and the Leptos adapter already nulls its zeros upstream — this is
+// the backstop that keeps it true whichever adapter feeds it next.
 export function resolveDevelopmentPrice(
   devPriceFrom: number | null,
   devPriceTo: number | null,
   units: UnitLike[],
 ): { priceFrom: number | null; priceTo: number | null } {
+  const advertisable = (n: number | null | undefined): n is number => typeof n === "number" && n > 0;
   const availablePrices = units
-    .filter((u) => u.status === "available" && u.price != null)
+    .filter((u) => u.status === "available" && advertisable(u.price))
     .map((u) => u.price as number);
-  const anyPrices = units.filter((u) => u.price != null).map((u) => u.price as number);
+  const anyPrices = units.filter((u) => advertisable(u.price)).map((u) => u.price as number);
   const pricePool = availablePrices.length ? availablePrices : anyPrices;
-  const priceFrom = devPriceFrom ?? (pricePool.length ? Math.min(...pricePool) : null);
-  const priceTo = devPriceTo ?? (pricePool.length ? Math.max(...pricePool) : priceFrom);
-  return { priceFrom, priceTo };
+  if (!pricePool.length) return { priceFrom: devPriceFrom, priceTo: devPriceTo ?? devPriceFrom };
+  return { priceFrom: Math.min(...pricePool), priceTo: Math.max(...pricePool) };
 }
 
 // Beds are stored as a free string per unit ("2", "3+1" — bedrooms + maid's
