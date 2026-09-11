@@ -664,5 +664,117 @@ check("seaview: the site plan's callouts are not units",
   SEAVIEW.filter((u) => u.block === "VILLAS").map((u) => u.ref),
   ["1", "2", "3", "4", "5", "6", "7", "8", "9"]);
 
+/* ── What the reader REFUSES, and says so ────────────────────────────────────
+   Two findings, one channel. cybarcoReadPages returns the units AND the notes;
+   cybarcoUnitsFromPages (used by every assertion above) is the units-only view
+   of it, so the counts and the diagnostics are measured off the same read.
+
+   Both failures below were found by MUTATING a committed fixture, because
+   neither can be reproduced from the nine documents as they stand — which is
+   the point: they are what happens the next time Cybarco print a word this
+   reader has not seen, and there have already been four such surprises in nine
+   documents. Fixtures are never edited on disk; each mutation is a deep copy. */
+const clone = (pages) => JSON.parse(JSON.stringify(pages));
+/** Rewrites the text of every cell matching `from` on one page. */
+function relabel(pages, pageIndex, from, to) {
+  let hits = 0;
+  for (const row of pages[pageIndex].rows) {
+    for (const cell of row.cells) if (cell.t.trim() === from) { cell.t = to; hits++; }
+  }
+  if (!hits) throw new Error(`fixture mutation found no "${from}" on page ${pageIndex + 1} — the fixture changed shape`);
+  return pages;
+}
+
+/* A clean document must be SILENT. Nine documents, 374 units, not one note —
+   otherwise the two notes below are noise a reader learns to skip past, and
+   Limassol Greens would carry one every single night: its page 4 prints a bare
+   "2026" delivery year that REF_RE accepts as a reference with an empty price
+   cell, which is why an EMPTY price cell is deliberately not reported. */
+for (const name of ["naftikos", "aktea4", "centro-ru", "akamas-villas", "marina",
+  "trilogy", "park-residences", "limassol-greens", "seaview-heights"]) {
+  check(`${name}: a document the reader can read produces no note`,
+    CP.cybarcoReadPages(plx(name)).notes, []);
+}
+
+/* ── Finding B: an unrecognised header must yield NOTHING, loudly ─────────────
+   Carrying `columns` across a page break is a real fix — two Limassol Greens
+   tables continue onto a page that repeats no header — but it also means a page
+   whose header is UNRECOGNISED stopped yielding zero rows and started yielding
+   rows read through the PREVIOUS page's columns. Seaview Heights page 4 is the
+   demonstration: relabel its villa header from "Villa No." to "Bungalow No." (a
+   fifth spelling of the reference label; there have already been four in nine
+   documents) and the page used to produce nine units carrying page 3's APARTMENT
+   columns — every one of them publishing floor "406", which is the plot size read
+   through the floor column, with areaPlot null. The count stayed 90 and nothing
+   reached the notes. */
+const BUNGALOW = CP.cybarcoReadPages(relabel(clone(plx("seaview-heights")), 3, "Villa No.", "Bungalow No."));
+check("guard: an unreadable header yields no units at all, not nine wrong ones",
+  BUNGALOW.units.length, 90 - 9);
+check("guard: and the villa section is simply absent",
+  BUNGALOW.units.filter((u) => u.block === "VILLAS").length, 0);
+/* The signature of the bug itself: a plot size published as a floor. */
+check("guard: no unit publishes a plot size as its floor",
+  BUNGALOW.units.filter((u) => u.floor === "406").length, 0);
+check("guard: the refusal names the page and the labels it could not read",
+  BUNGALOW.notes.length === 1 &&
+  /^page 4: a table header with a price column but NO recognised reference label \(.*"Bungalow No\."/.test(BUNGALOW.notes[0]),
+  true);
+/* Everything BEFORE the unreadable header is still read: the guard drops the
+   table it cannot read, not the document. */
+check("guard: the six apartment buildings are untouched",
+  ["A", "B", "C", "D", "E", "F"].map((l) => BUNGALOW.units.filter((u) => u.block === `BUILDING ${l}`).length),
+  [12, 14, 16, 16, 12, 11]);
+
+/* THE TWO PAGES THE GUARD MUST NOT BREAK. Limassol Greens p2 (five more Block A
+   apartments) and p4 (one more villa) carry no heading, no reference label and no
+   trailing price label, so neither trigger fires and both inherit as designed.
+   The counts above already pin the rows; these two name the mechanism, because a
+   guard that cleared `columns` on either of them would take 6 units with it and
+   the failure would read as a fixture problem rather than as this guard. */
+check("continuation: Greens page 2 still inherits its header (5 apartments)",
+  GREENS.filter((u) => ["A406", "A407", "A408", "A501", "A502"].includes(u.ref)).length, 5);
+check("continuation: Greens page 4 still inherits its header (villa 105)",
+  unitIn(GREENS, G_VILLAS, "105").price, 1980000);
+check("continuation: and neither page produces a refusal note",
+  CP.cybarcoReadPages(plx("limassol-greens")).notes, []);
+/* The note row those pages DO carry is why the price-label trigger is anchored
+   at the end of a line: five of the nine documents print "- Price includes a
+   parking space and a storeroom" under their table, Greens p2 among them, and an
+   unanchored test would treat each of those as a header and clear the columns of
+   a page that reads perfectly. */
+check("continuation: a '- Price includes …' note line is not a header",
+  GREENS.filter((u) => u.block === G_APTS).length, 42);
+
+/* ── Finding C: a row refused for its price cell must be counted ──────────────
+   `if (!outcome) continue` drops the row, which is the right call — a row whose
+   price cannot be read must never be published as available — but it had no
+   diagnostic channel at all. "UNDER OFFER" is the measured cost: eleven of
+   Limassol Greens' 115 rows printed it, 9.6% of the document, under the 25%
+   collapse threshold in cybarcoSync.ts, and on a first sync that guard is inert
+   anyway because nothing is stored to compare against. The next word goes the
+   same way — so here is the next word. */
+const CONTRACT = CP.cybarcoReadPages(relabel(clone(plx("naftikos")), 0, "SOLD", "UNDER CONTRACT"));
+/* Naftikos page 1 prints SOLD on 18 of its 25 rows (page 2's seven are left
+   alone, so the document still reads and only one table loses rows). */
+check("refusal: every row printing an unknown status word is still DROPPED",
+  CONTRACT.units.length, 37 - 18);
+check("refusal: and every one of them is counted, with the offending text",
+  CONTRACT.notes, ['18 row(s) with a reference but an unreadable price cell were DROPPED: "UNDER CONTRACT" x18 (first p1, ref A 103) — an unknown status word, or a number the 6-digit price floor refused']);
+/* One row, not a whole document: a single surprise must be just as visible as
+   twenty-five, because one row is how the next vocabulary change starts. */
+const ONE_ROW = clone(plx("naftikos"));
+for (const row of ONE_ROW[0].rows) {
+  if (Math.abs(row.y - 624.6) > 0.05) continue;
+  for (const cell of row.cells) if (cell.t.trim() === "SOLD") cell.t = "UNDER OFFER (STC)";
+}
+const STC = CP.cybarcoReadPages(ONE_ROW);
+check("refusal: one row out of 37 is reported too", STC.units.length, 36);
+check("refusal: the note quotes that one row's text",
+  STC.notes, ['1 row(s) with a reference but an unreadable price cell were DROPPED: "UNDER OFFER (STC)" x1 (first p1, ref A 103) — an unknown status word, or a number the 6-digit price floor refused']);
+/* And the row comes BACK the moment the vocabulary learns the word — the fix a
+   reader of that note would make. */
+check("refusal: teaching the vocabulary the word restores the row",
+  CP.cybarcoReadOutcome("UNDER OFFER"), { status: "reserved", price: null });
+
 console.log(failures ? `\n${failures} FAILED` : "\nall checks passed");
 process.exit(failures ? 1 : 0);

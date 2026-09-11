@@ -3,7 +3,7 @@ import {
   parseListing, parseProjectPage, parseGallery, priceListDate,
   type CybarcoCard, type CybarcoDetail, type CybarcoStatus,
 } from "./cybarco";
-import { cybarcoUnitsFromPages, type CybarcoUnit } from "./ai/cybarcoPriceTable";
+import { cybarcoReadPages, type CybarcoUnit } from "./ai/cybarcoPriceTable";
 import { readPdfPages } from "./ai/availabilityTable";
 import { storeUploadedImage, devKeyFor, pdfPagesToJpegs, beginSyncWindow, scheduleAppRestart } from "./imageMirror";
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
@@ -212,9 +212,10 @@ export async function pdftoppmAvailable(): Promise<boolean> {
    starting them equal means normalizeRef() gives the same key whichever of the
    two a consumer reaches for.
 
-   The qualifier is the block heading minus its "BUILDING"/"ЗДАНИЕ" word, so
-   Naftikos' "BUILDING A" contributes "A" and Centro's "ЗДАНИЕ Б" contributes
-   "Б", while a named section keeps its whole name ("Castle Residences"). It is
+   The qualifier is the block heading minus its document noise — see blockTag
+   below for exactly which words that is and why — so Naftikos' "BUILDING A"
+   contributes "A" and Centro's "ЗДАНИЕ Б" contributes "Б", while a named section
+   keeps its whole name ("Castle Residences"). It is
    only prefixed when the printed reference does not already start with it:
    Naftikos prints "A 101" under "BUILDING A" and must not become "A A 101",
    while Centro prints a bare "101" and must become "Б 101".
@@ -262,7 +263,67 @@ export async function pdftoppmAvailable(): Promise<boolean> {
    A collision is still REPORTED, never silently written: transliteration covers
    the Cyrillic and Greek letters a Cyprus price list actually uses, and
    duplicateRefs is the net under everything it does not. */
-const blockTag = (block: string) => block.replace(/^(?:BUILDING|ЗДАНИЕ)\s+/i, "").trim();
+/* ── What of a section heading belongs in a CLIENT-FACING reference ────────
+
+   `ref` is rendered to clients (src/app/preview-project/UnitsView.tsx), so a
+   heading's DOCUMENT NOISE must not ride along into it. Widening BLOCK_RE on
+   2026-09-11 made that concrete and was right to: Limassol Greens' four
+   captions had to be recognised or thirteen references collided. But three of
+   those captions end in the word "Pricelist", and stripping only
+   BUILDING/ЗДАНИЕ produced "Villas Pricelist 31", "Ibis Townhouses Pricelist 1"
+   and "Kinglet Villas Pricelist 1" — none of which is a unit reference in any
+   language — plus "Starlings Apartments Block A A001", which prints the
+   building letter twice around two words of marketing.
+
+   Two rules, and the corpus decides which words each one may touch. Measured
+   over the TWENTY headings BLOCK_RE matches across all nine fixtures:
+
+   1. A trailing price-list caption is noise, always. "Pricelist" is the spelling
+      Cybarco print; the spaced and hyphenated spellings and the Russian
+      "ПРАЙС-ЛИСТ" are covered because this is a per-document caption habit, not
+      a fixed string, and the next list to pick up the habit must not reopen
+      this. (BLOCK_RE only lets " PRICELIST" through today, so the other
+      spellings would not reach a heading until it is widened — which is exactly
+      when this would otherwise regress, silently and client-facing.)
+
+   2. A STRUCTURAL noun — BUILDING, BLOCK, ЗДАНИЕ, КОРПУС — followed by a
+      designator is noise, and the designator alone is the block's identity:
+      "BUILDING A" gives "A" (as it always did), "ЗДАНИЕ Б" gives "Б", and
+      "Starlings Apartments Block A" gives "A", which the existing
+      already-prefixed rule then collapses into the printed "A001" — the same
+      shape Seaview Heights' BUILDING A/A101 has produced from the start.
+      Anything before the noun is dropped with it: "Starlings Apartments" is the
+      marketing name of a block whose own references already carry its letter,
+      and `label` keeps the document's full spelling for every human who reads
+      it ("Starlings Apartments Block A · A001").
+
+   The nouns the rule does NOT touch are the other half of the decision. TOWER,
+   RESIDENCES, VILLAS and TOWNHOUSES name a section rather than number it, and
+   there the whole name IS the identity: "Castle Residences B22", "Island Villas
+   85", "EAST TOWER 1701", "NORTH RESIDENCES (A) 304", "VILLAS 1". Reducing
+   those to a designator would give "(A) 304" and, worse, would leave Limassol
+   Greens' villas, townhouses and Kinglet villas sharing one nameless tag —
+   thirteen collisions, which is the reason the captions were recognised at all.
+
+   Net effect on the corpus, re-derived through the real cybarcoUnitRef and
+   pinned heading by heading in scripts/qa/cybarco-sync-check.mjs: 16 of the 20
+   headings produce exactly the reference they did before, and the four Limassol
+   Greens captions produce "A001", "Villas 31", "Ibis Townhouses 1" and
+   "Kinglet Villas 1". duplicateRefs stays empty across all 374 units.
+
+   Doing this NOW is the whole point: the block comment above the delete in
+   syncCybarco is explicit that changing the reference shape after go-live is a
+   migration which silently drops units out of presentations an advisor has
+   already sent. Nothing references a Cybarco unit yet (zero Developments with
+   dev:"cybarco" on 2026-09-11), so today it is free. */
+const PRICE_LIST_CAPTION_RE = /[\s-]*(PRICE\s*-?\s*LIST|ПРАЙС\s*-?\s*ЛИСТ)$/i;
+const STRUCTURAL_BLOCK_RE = /^(?:.*\s)?(?:BUILDING|BLOCK|ЗДАНИЕ|КОРПУС)\s+\(?([A-Za-zА-Яа-я0-9]{1,3})\)?$/i;
+
+const blockTag = (block: string) => {
+  const named = block.replace(PRICE_LIST_CAPTION_RE, "").trim();
+  const structural = STRUCTURAL_BLOCK_RE.exec(named);
+  return (structural ? structural[1] : named).trim();
+};
 
 /* Cyrillic and Greek to Latin, capitals keyed (lowercase folds onto the same
    entry). Cyrillic is what Cybarco's Russian price lists print today; Greek is
@@ -450,6 +511,41 @@ const GALLERY_TIER_FACTOR = 2;
    the VPS's first honest run fetch all fifteen projects' plans even though
    PLANS_PAGE_TOLERANCE is nonzero. */
 const PLANS_PAGE_TOLERANCE = 1;
+
+/* ── And the other half of that loop: a restart only on an actual change ────
+
+   PLANS_PAGE_TOLERANCE narrows the nightly-restart loop; it does not close it.
+   `storeUploadedImage` is content-hashed, so a DETERMINISTIC per-page failure
+   reproduces the same shortfall every night: Trilogy at 49 of 51 stored is two
+   pages short, past the tolerance, so every 01:00 run re-downloads the brochure,
+   re-rasterises 51 pages and re-stores the same 49 — and because `mediaChanged`
+   was set on every successful store rather than on an actual change, each of
+   those 49 identical stores asked for scheduleAppRestart(), a hard pm2 restart
+   that cuts in-flight requests, nightly, for a gap that will never close.
+
+   The root cause was the flag, not the tolerance, so the flag is what changed:
+   a mirrored list only counts as changed when it DIFFERS from what is stored.
+   Content hashing is what makes that exact rather than a heuristic — re-storing
+   an identical page returns the identical URL, so "same list, same order" is
+   genuinely "nothing moved" and there is nothing for a restart to pick up.
+
+   NOT fixed, and deliberately: the run still re-downloads and re-rasterises that
+   brochure every night. Closing THAT needs gatherOne to know what is already
+   stored, which is a shared-gather-stage redesign (see the brochure-download
+   note in gatherOne, the same cost by the same cause) rather than a one-file
+   change — and with the restart gone it is wasted bandwidth on one project,
+   not an outage. */
+const sameMirroredList = (fresh: string[], stored: string[]) =>
+  fresh.length === stored.length && fresh.every((url, i) => url === stored[i]);
+
+/** Whether a freshly mirrored list is a real change to what is stored — i.e.
+ *  whether anything a restart would pick up actually moved. Empty means nothing
+ *  was gathered this run, which is never a change. Pure, so the nightly-restart
+ *  loop can be asserted without a disk or a database. */
+export function mediaListChanged(fresh: string[], stored: string[]): boolean {
+  if (!fresh.length) return false;
+  return !sameMirroredList(fresh, stored);
+}
 
 /* ── Whether a sold-out date may be stamped ────────────────────────────────
 
@@ -663,7 +759,15 @@ async function gatherOne(card: CybarcoCard): Promise<CybarcoPlan> {
   if (detail?.priceListUrl) {
     fetchAttempts++;
     try {
-      units = cybarcoUnitsFromPages(await readPdfPages(await getBuffer(detail.priceListUrl)));
+      /* cybarcoReadPages, not cybarcoUnitsFromPages: the reader now reports what
+         it REFUSED — a table header whose reference label it does not know, and
+         rows whose price cell it could not read — and this is the channel those
+         have to reach. Both were silent before, and both are measured losses: an
+         unrecognised reference label used to yield rows read through the PREVIOUS
+         table's columns, and eleven "UNDER OFFER" rows were simply dropped. */
+      const read = cybarcoReadPages(await readPdfPages(await getBuffer(detail.priceListUrl)));
+      units = read.units;
+      for (const note of read.notes) notes.push(`${card.slug}: price list ${note}`);
       if (!units.length) notes.push(`${card.slug}: price list ${detail.priceListUrl} yielded 0 units — its header vocabulary is not recognised`);
       /* Keyed the way the Client Presentation matcher keys it — normalizeRef,
          project name included — so this sees a collision the matcher would see
@@ -964,7 +1068,7 @@ export async function syncCybarco(
         for (const url of plan.images) {
           try {
             const stored = await storeUploadedImage(await getBuffer(url), devKey);
-            if (stored) { gallery.push(stored); mediaChanged = true; }
+            if (stored) gallery.push(stored);
           } catch { /* one photo failing must not abort the project */ }
         }
         if (plan.images.length && !gallery.length) notes.push(`${card.slug}: ${plan.images.length} image(s) offered, none could be stored`);
@@ -982,11 +1086,19 @@ export async function syncCybarco(
           }
           for (const page of pages) {
             const stored = await storeUploadedImage(page, devKey);
-            if (stored) { plansImages.push(stored); mediaChanged = true; }
+            if (stored) plansImages.push(stored);
           }
         } catch (e) {
           notes.push(`${card.slug}: brochure could not be rasterised (${(e as Error).message})`);
         }
+      }
+
+      /* A hard pm2 restart is asked for only when a mirrored list actually moved
+         — see mediaListChanged. A deterministic per-page failure re-stores the
+         identical content-hashed URLs every night, which used to set this flag
+         49 times for Trilogy and restart the app for a gap that never closes. */
+      if (mediaListChanged(gallery, storedGallery) || mediaListChanged(plansImages, storedPlans)) {
+        mediaChanged = true;
       }
 
       const units = plan.units;

@@ -182,8 +182,15 @@ const HEADER_KEYS: [RegExp, Column["key"]][] = [
    every block null the pair (block, ref) collides thirteen times and a sync
    keyed on it would fold two physical houses into one row.
    Re-checked line by line on 2026-09-11 against every row of all NINE fixtures
-   (658 flattened lines): this regex matches those THIRTEEN headings and nothing
-   else. It is also what keeps "Kinglet Villas Pricelist" from being mistaken for
+   (658 flattened lines): this regex matches TWENTY headings and nothing else —
+   the THIRTEEN named above (Naftikos 2, Centro 2, Marina 2, Trilogy 3, Limassol
+   Greens 4) plus Seaview Heights' SEVEN, which the earlier count omitted:
+   BUILDING A-F and a bare "VILLAS". The thirteen was a real measurement of the
+   six fixtures that existed when it was written and was not re-counted when
+   Seaview was added; in a file whose comments are its measurement record a
+   stale figure makes the next sweep look like a regression, so the number is
+   now the one scripts/qa/cybarco-sync-check.mjs pins heading by heading.
+   It is also what keeps "Kinglet Villas Pricelist" from being mistaken for
    a table header, since its first cell is a bare "Kinglet" — the heading test
    runs first and consumes the line. */
 const BLOCK_RE =
@@ -264,6 +271,35 @@ const COLUMN_GAP = 20;
    Villas Pricelist" caption, which BLOCK_RE consumes first. */
 const REF_LABEL_RE = /^(apt\.?|villa|townhouse|kinglet|апарт)\s*(no\.?|№)?$/i;
 
+/* The OTHER end of a header block, and the whole of the Finding-B guard below:
+   a price label at the END of a printed line. Every one of these documents puts
+   its price column last (see columnsFrom), so in a header line read left to
+   right the price label is the final word group — "… Common Price",
+   "Villa Plot No. Of Price Euro", "… Price in Euro €", Centro's "Апарт. Цена".
+
+   Anchored at the END on purpose, and that anchor is measured rather than
+   stylistic. Five of the nine documents print the note "- Price includes a
+   parking space and a storeroom" BELOW their table (Aktea 4, Naftikos p2, Park,
+   Seaview p4 and — the one that matters — Limassol Greens p2, one of the two
+   legitimate continuation pages). Those lines carry the word "Price" too, and
+   HEADER_KEYS' own /^price/i would happily key such a cluster as the price
+   column, so an unanchored test would treat each of them as a header block and
+   the guard would clear the columns of a page that is reading perfectly. With
+   the anchor, "Price" leading a sentence matches nothing and the only lines in
+   all nine fixtures this matches are the 23 real header lines — one per TABLE,
+   which is not the same count as BLOCK_RE's twenty headings: three documents
+   (Aktea 4, Akamas Villas, Park Residences) print a header with no heading
+   above it, and Trilogy and Seaview Heights print several tables under one.
+   Re-measured through the real joinPrinted on 2026-09-11 over all 658 printed
+   lines: 23 matches, every one of them a table header, no false positive. */
+const PRICE_LABEL_ROW_RE = /(^|\s)(price|цена)(\s+in)?(\s+euro)?(\s*€)?\s*$/i;
+
+/* A whole line read through joinPrinted, so the price label above is tested
+   against text that was reassembled by the SAME measured 1.5 pt rule the rest
+   of the reader uses. Aktea 4 prints its price header as "Pric" + "e", which no
+   per-cell test can match and joinFragments joins back to "Price". */
+const WHOLE_ROW: Column = { key: "ignore", x0: Number.NEGATIVE_INFINITY, x1: Number.POSITIVE_INFINITY };
+
 const centre = (c: { x: number; w: number }) => c.x + c.w / 2;
 
 /** A row's whole text, in x order, for heading detection. */
@@ -290,11 +326,36 @@ function flatten(row: PdfRow): string {
    header on their later pages — Naftikos and Centro — are unaffected: their
    page 2 prints both a heading and a header, and each overwrites what it
    inherited before a single row is read. */
-export function cybarcoUnitsFromPages(pages: PdfPage[]): CybarcoUnit[] {
+export type CybarcoRead = {
+  units: CybarcoUnit[];
+  /** What the reader REFUSED, in the sync's own note vocabulary. Empty on a
+   *  clean document; never thrown, never silent. */
+  notes: string[];
+};
+
+/** The reader's own view of cybarcoUnitsFromPages: the units AND what it
+ *  refused. Every caller that has somewhere to put a diagnostic should use
+ *  this one — cybarcoUnitsFromPages below is the units-only view of it. */
+export function cybarcoReadPages(pages: PdfPage[]): CybarcoRead {
   const out: CybarcoUnit[] = [];
+  const notes: string[] = [];
+  /* Finding C: a row whose price cell cannot be resolved is DROPPED (see the
+     `outcome` branch below), and until this existed the drop had no channel at
+     all. "UNDER OFFER" is the measured proof: eleven of Limassol Greens' 115
+     rows printed it, the reader did not know the word, and all eleven vanished —
+     9.6% of the document, under the 25% collapse threshold in cybarcoSync.ts,
+     and on a first sync the collapse guard is inert anyway because nothing is
+     stored to compare against. The next vocabulary surprise (UNDER CONTRACT,
+     ПРОДАН, "UNDER OFFER (STC)") would have gone the same way. Collected as
+     (page, ref, text) rather than counted, because the offending TEXT is the
+     one thing a human needs to add the word. */
+  const refused: { page: number; ref: string; text: string }[] = [];
   let columns: Column[] | null = null;
   let block: string | null = null;
-  for (const page of pages) {
+  for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
+    const page = pages[pageIndex];
+    /* 1-based, because every note below is read next to a rendered PDF. */
+    const pageNo = pageIndex + 1;
     /* Top to bottom, sorted rather than assumed. Everything below depends on
        reading order — a heading applies to the rows BELOW it, a header to the
        table below it — and a page whose rows arrived in any other order would
@@ -311,7 +372,16 @@ export function cybarcoUnitsFromPages(pages: PdfPage[]): CybarcoUnit[] {
         continue;
       }
 
-      if (row.cells.some((c) => REF_LABEL_RE.test(c.t.trim()))) {
+      const refLabelHere = row.cells.some((c) => REF_LABEL_RE.test(c.t.trim()));
+      /* A header line is recognised from EITHER end of it now — the reference
+         label as before, or a trailing price label (PRICE_LABEL_ROW_RE). The
+         price end is what makes Finding B's guard below possible: a band whose
+         reference label the reader does not know is invisible to the reference
+         end by definition, which is precisely the case that used to inherit the
+         previous table's columns. Both triggers grow the same band and hand it
+         to the same columnsFrom, so a header that matches both (every real one
+         in the nine fixtures) is read exactly as it was before. */
+      if (refLabelHere || PRICE_LABEL_ROW_RE.test(joinPrinted(row, WHOLE_ROW))) {
         /* The header is several printed lines ("Covered" above "Internal" above
            "Area m²"), and the line carrying the reference label is not always
            the first of them, so the block is grown in both directions from it. */
@@ -320,9 +390,52 @@ export function cybarcoUnitsFromPages(pages: PdfPage[]): CybarcoUnit[] {
         let to = i;
         while (to + 1 < rows.length && rows[to].y - rows[to + 1].y <= HEADER_LINE_GAP) to++;
         const built = columnsFrom(rows.slice(from, to + 1));
-        if (built) columns = built;
-        i = to; // never read a header line as a unit
-        continue;
+        if (built.columns) {
+          columns = built.columns;
+          i = to; // never read a header line as a unit
+          continue;
+        }
+        /* ── Finding B: a table this reader cannot read must yield NOTHING ──
+           Carrying `columns` across a page boundary is a real fix (two Limassol
+           Greens tables continue onto a page that repeats no header), but it
+           also means a page whose header is UNRECOGNISED no longer produces
+           zero rows — it produces rows read through the PREVIOUS table's
+           columns. Demonstrated by relabelling Seaview Heights' page-4 villa
+           header from "Villa No." to "Bungalow No." (a fifth reference-label
+           spelling; there have already been four in nine documents): the page
+           then yielded nine units carrying page 3's apartment columns, every
+           one publishing floor "406" — the plot size read through the floor
+           column — with areaPlot null, the unit count still 90, and nothing in
+           any note.
+
+           A band that carries a recognised PRICE label but NO recognised
+           reference label is exactly "a table I cannot read": it is a header
+           (the price label anchors that) whose identity column this reader
+           cannot find, and reading its rows through anything else is guesswork
+           about identity, which is the one field the sync keys on. So the
+           inheritance is dropped and the refusal is stated.
+
+           The two legitimate continuation pages are untouched because they have
+           no header band at all: neither Greens p2 nor p4 prints a heading, a
+           reference label or a trailing price label, so neither trigger fires
+           and both inherit as designed (pinned in
+           scripts/qa/cybarco-pricelist-check.mjs). */
+        if (built.hasPrice && !built.hasRef) {
+          columns = null;
+          notes.push(
+            `page ${pageNo}: a table header with a price column but NO recognised reference label (${built.labels.map((l) => `"${l}"`).join(", ")}) — the rows below it were NOT read, rather than read through the previous table's columns; add the printed reference label to REF_LABEL_RE`,
+          );
+          i = to;
+          continue;
+        }
+        /* Neither a usable header nor a refusable one. A reference-labelled band
+           is still consumed (Marina's notes name units, and reading a header
+           line as a unit is what that strictness exists to prevent); anything
+           else falls through to be read as an ordinary row, exactly as before. */
+        if (refLabelHere) {
+          i = to;
+          continue;
+        }
       }
 
       if (!columns) continue;
@@ -362,9 +475,26 @@ export function cybarcoUnitsFromPages(pages: PdfPage[]): CybarcoUnit[] {
       /* No outcome, no unit. A row whose price cell cannot be resolved is
          DROPPED rather than defaulted to available — the rule the Korantina
          reader had to learn the hard way. The counts in
-         scripts/qa/cybarco-pricelist-check.mjs are what makes a drop visible. */
+         scripts/qa/cybarco-pricelist-check.mjs are what makes a drop visible in
+         the FIXTURES; `refused` is what makes it visible on a live document the
+         fixtures do not contain. */
       const outcome = cybarcoReadOutcome(value("price"));
-      if (!outcome) continue;
+      if (!outcome) {
+        /* An EMPTY price cell is not the failure this reports. Measured over all
+           nine fixtures, the corpus contains exactly one refused row and it is
+           that shape: Limassol Greens prints a bare "2026" delivery year on page
+           4, which REF_RE accepts as a reference while its price column holds
+           nothing. Reporting it would put an identical note on that project
+           every night for a line that is not a unit — the definition of an alarm
+           nobody reads. A row with TEXT in the price cell is the other class
+           entirely: something is printed where a price belongs and the reader
+           does not know the word, which is exactly how eleven "UNDER OFFER" rows
+           went missing. A systemic version of the empty case cannot hide here —
+           it reads as a 0-unit document or a collapsed count, both of which
+           cybarcoSync.ts already reports. */
+        if (value("price")) refused.push({ page: pageNo, ref, text: value("price") });
+        continue;
+      }
 
       out.push({
         ref,
@@ -380,13 +510,52 @@ export function cybarcoUnitsFromPages(pages: PdfPage[]): CybarcoUnit[] {
       });
     }
   }
-  return out;
+
+  /* One line, not one per row: eleven identical "UNDER OFFER" cells are ONE
+     vocabulary gap, and eleven notes would bury the rest of the night's. The
+     distinct texts are listed most-frequent first with the first row that
+     printed each, because that is what turns the note into an action — add the
+     word to SOLD_RE/RESERVED_RE, or look at the page. */
+  if (refused.length) {
+    const byText = new Map<string, { n: number; page: number; ref: string }>();
+    for (const r of refused) {
+      const at = byText.get(r.text);
+      if (at) at.n++;
+      else byText.set(r.text, { n: 1, page: r.page, ref: r.ref });
+    }
+    const sample = Array.from(byText.entries())
+      .sort((a, b) => b[1].n - a[1].n)
+      .slice(0, 5)
+      .map(([text, at]) => `"${text}" x${at.n} (first p${at.page}, ref ${at.ref})`)
+      .join(", ");
+    notes.push(
+      `${refused.length} row(s) with a reference but an unreadable price cell were DROPPED: ${sample}${byText.size > 5 ? `, and ${byText.size - 5} more distinct text(s)` : ""} — an unknown status word, or a number the 6-digit price floor refused`,
+    );
+  }
+
+  return { units: out, notes };
 }
 
-/* Builds the columns of one table from its header lines. Returns null when the
-   block does not look like a table header at all, in which case the caller
-   keeps the columns it already had. */
-function columnsFrom(band: PdfRow[]): Column[] | null {
+/** The units only. Kept because the QA harnesses and every reader of this
+ *  module's history call it; it is cybarcoReadPages with the diagnostic
+ *  discarded, which is the one thing a caller with nowhere to put a note may
+ *  do. The sync uses cybarcoReadPages. */
+export function cybarcoUnitsFromPages(pages: PdfPage[]): CybarcoUnit[] {
+  return cybarcoReadPages(pages).units;
+}
+
+/* Builds the columns of one table from its header lines.
+
+   `columns` is null when the band does not resolve to a readable table — and
+   the caller needs to know WHY, which is Finding B: a band with a price column
+   but no reference column is a table whose identity field this reader cannot
+   find (inheriting the previous table's columns there publishes another table's
+   fields), while a band with neither is not a header at all and the caller
+   rightly keeps what it had. `labels` is every cluster's label as printed, so
+   the note can quote the vocabulary that has to be added. */
+type HeaderBand = { columns: Column[] | null; labels: string[]; hasRef: boolean; hasPrice: boolean };
+
+function columnsFrom(band: PdfRow[]): HeaderBand {
   type Frag = PdfCell & { y: number };
   const frags: Frag[] = [];
   for (const row of band) {
@@ -395,7 +564,7 @@ function columnsFrom(band: PdfRow[]): Column[] | null {
       if (t && !NOISE_FRAGMENT_RE.test(t)) frags.push({ x: cell.x, w: cell.w, t, y: row.y });
     }
   }
-  if (!frags.length) return null;
+  if (!frags.length) return { columns: null, labels: [], hasRef: false, hasPrice: false };
   frags.sort((a, b) => centre(a) - centre(b));
 
   /* Single-linkage by centre, not by left edge: header text is centred in its
@@ -409,21 +578,33 @@ function columnsFrom(band: PdfRow[]): Column[] | null {
     else clusters.push([f]);
   }
 
-  const cols = clusters.map((cluster) => ({
-    key: keyFor(labelOf(cluster)),
-    centre: cluster.reduce((sum, f) => sum + centre(f), 0) / cluster.length,
-  }));
-  if (!cols.some((c) => c.key === "ref") || !cols.some((c) => c.key === "price")) return null;
+  const cols = clusters.map((cluster) => {
+    const label = labelOf(cluster);
+    return {
+      label,
+      key: keyFor(label),
+      centre: cluster.reduce((sum, f) => sum + centre(f), 0) / cluster.length,
+    };
+  });
+  const labels = cols.map((c) => c.label);
+  const hasRef = cols.some((c) => c.key === "ref");
+  const hasPrice = cols.some((c) => c.key === "price");
+  if (!hasRef || !hasPrice) return { columns: null, labels, hasRef, hasPrice };
 
-  return cols.map((c, i) => ({
-    key: c.key,
-    /* Open at both ends. The rightmost column is the price in every list seen,
-       and closing it at the page width would be one mis-measured page away from
-       dropping prices — which is the one thing this reader must never do
-       quietly. */
-    x0: i === 0 ? 0 : (c.centre + cols[i - 1].centre) / 2,
-    x1: i === cols.length - 1 ? Number.POSITIVE_INFINITY : (c.centre + cols[i + 1].centre) / 2,
-  }));
+  return {
+    labels,
+    hasRef,
+    hasPrice,
+    columns: cols.map((c, i) => ({
+      key: c.key,
+      /* Open at both ends. The rightmost column is the price in every list seen,
+         and closing it at the page width would be one mis-measured page away from
+         dropping prices — which is the one thing this reader must never do
+         quietly. */
+      x0: i === 0 ? 0 : (c.centre + cols[i - 1].centre) / 2,
+      x1: i === cols.length - 1 ? Number.POSITIVE_INFINITY : (c.centre + cols[i + 1].centre) / 2,
+    })),
+  };
 }
 
 /* One line of fragments as it was PRINTED: fragments that touch are one word,

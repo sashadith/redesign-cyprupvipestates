@@ -106,6 +106,70 @@ check("Б and В are different keys", keyOf("ЗДАНИЕ Б", "101") !== keyOf(
    Cybarco ever correct that typo the key must not move. */
 check("Latin A and Cyrillic А key identically", keyOf("ЗДАНИЕ A", "101") === keyOf("ЗДАНИЕ А", "101"), true);
 
+/* ── EVERY heading BLOCK_RE matches, and the reference it produces ─────────
+   `ref` is rendered to clients (src/app/preview-project/UnitsView.tsx), so what
+   blockTag() strips out of a section heading is a client-facing decision and
+   not an internal one. The eight assertions above name the interesting cases;
+   these name ALL of them, because the cases that broke were the ones nobody had
+   written down: widening BLOCK_RE for Limassol Greens made "Villas Pricelist
+   31" and "Starlings Apartments Block A A001" publishable references, and every
+   assertion in this file stayed green while it did.
+
+   The twenty (heading, printed reference) pairs below were read off the nine
+   committed fixtures on 2026-09-11 — every distinct non-null `block` the reader
+   produces, with the first reference printed under it — so the list IS the
+   corpus BLOCK_RE matches, not a sample of it. Three documents (Aktea 4, Akamas
+   Villas, Park Residences) print no heading at all and are the null-block row
+   at the top of this section. Kept as literals rather than re-derived from the
+   fixtures because this file deliberately loads no PDF; the pairs are pinned in
+   scripts/qa/cybarco-pricelist-check.mjs on the reader's side.
+
+   Sixteen of the twenty must produce exactly what they produced before
+   2026-09-11 — a change there is a silent migration of live references — and
+   the four Limassol Greens captions are the fix. */
+console.log("cybarcoUnitRef — all TWENTY headings the nine fixtures print");
+const HEADINGS = [
+  // doc                heading                          printed ref  client-facing ref
+  ["naftikos",          "BUILDING A",                    "A 101",     "A 101"],
+  ["naftikos",          "BUILDING B",                    "B 101",     "B 101"],
+  ["centro-ru",         "ЗДАНИЕ A",                      "101",       "A 101"],
+  ["centro-ru",         "ЗДАНИЕ Б",                      "101",       "B 101"],
+  ["marina",            "Castle Residences",             "B22",       "Castle Residences B22"],
+  ["marina",            "Island Villas",                 "54",        "Island Villas 54"],
+  ["trilogy",           "EAST TOWER",                    "1701",      "EAST TOWER 1701"],
+  ["trilogy",           "NORTH RESIDENCES (A)",          "304",       "NORTH RESIDENCES (A) 304"],
+  ["trilogy",           "NORTH RESIDENCES (B)",          "1005",      "NORTH RESIDENCES (B) 1005"],
+  ["limassol-greens",   "Starlings Apartments Block A",  "A001",      "A001"],
+  ["limassol-greens",   "Villas Pricelist",              "31",        "Villas 31"],
+  ["limassol-greens",   "Ibis Townhouses Pricelist",     "1",         "Ibis Townhouses 1"],
+  ["limassol-greens",   "Kinglet Villas Pricelist",      "1",         "Kinglet Villas 1"],
+  ["seaview-heights",   "BUILDING A",                    "A101",      "A101"],
+  ["seaview-heights",   "BUILDING B",                    "B101",      "B101"],
+  ["seaview-heights",   "BUILDING C",                    "C101",      "C101"],
+  ["seaview-heights",   "BUILDING D",                    "D101",      "D101"],
+  ["seaview-heights",   "BUILDING E",                    "E101",      "E101"],
+  ["seaview-heights",   "BUILDING F",                    "F101",      "F101"],
+  ["seaview-heights",   "VILLAS",                        "1",         "VILLAS 1"],
+];
+check("the list is the measured twenty, not a subset", HEADINGS.length, 20);
+for (const [doc, block, ref, expected] of HEADINGS) {
+  check(`${doc}: "${block}" + "${ref}"`, S.cybarcoUnitRef(unit(block, ref)), expected);
+}
+/* The shape of the failure, stated once so a regression reads as what it is:
+   nothing a client sees may contain a caption word or a marketing name that the
+   document prints only to caption the table. `label` keeps the full spelling. */
+check("no client-facing reference carries a price-list caption",
+  HEADINGS.map(([, block, ref]) => S.cybarcoUnitRef(unit(block, ref)))
+    .filter((r) => /pricelist|price\s*-?\s*list|прайс/i.test(r)), []);
+check("no client-facing reference repeats its building letter",
+  (S.cybarcoUnitRef(unit("Starlings Apartments Block A", "A001")).match(/A/g) ?? []).length, 1);
+/* The two Limassol Greens tables that collide on a bare reference — townhouse 1
+   and Kinglet villa 1 — must stay two units after the captions are stripped.
+   Stripping too much is the failure mode this catches: both would become "1". */
+check("Greens' townhouse 1 and Kinglet villa 1 are still two keys",
+  S.duplicateRefs([unit("Ibis Townhouses Pricelist", "1"), unit("Kinglet Villas Pricelist", "1"),
+    unit("Villas Pricelist", "31")], "Limassol Greens"), []);
+
 console.log("duplicateRefs — keyed the way the matcher keys it");
 check("Centro's two buildings do not collide once qualified",
   S.duplicateRefs([unit("ЗДАНИЕ Б", "101"), unit("ЗДАНИЕ В", "101")], "Centro Limassol"), []);
@@ -197,6 +261,39 @@ check("force asks for everything",
 check("a published Development is never re-gathered, gaps and force included",
   S.contentNeeds({ published: true, force: true, offeredImages: 36, storedImages: 0, hasBrochure: true, brochurePages: 20, storedPlans: 0 }),
   { gallery: false, plans: false });
+
+/* ── 3b. And whether anything a RESTART would pick up actually moved ───────
+   contentNeeds decides what is fetched; mediaListChanged decides whether the
+   run asks for scheduleAppRestart(), a hard pm2 restart that cuts in-flight
+   requests. Those are two different questions and conflating them is what made
+   the nightly-restart loop: `mediaChanged` used to be set on every SUCCESSFUL
+   store, so Trilogy — 49 of 51 brochure pages storable, a deterministic
+   shortfall past PLANS_PAGE_TOLERANCE — re-fetched, re-rasterised and re-stored
+   the same 49 content-hashed pages every night at 01:00 and restarted the app
+   every night for a gap that will never close.
+
+   Both directions are pinned, because either one alone is a bug: a first run
+   that stores fifteen projects' plans and asks for NO restart serves them out
+   of a bundle that does not know they exist. */
+console.log("mediaListChanged — a restart only when a mirrored list actually moved");
+const P = (...n) => n.map((i) => `/uploads/cybarco-${i}.jpg`);
+check("first run: nothing stored, pages stored now — CHANGED",
+  S.mediaListChanged(P(1, 2, 3), []), true);
+check("Trilogy's nightly re-store of the identical 49 — not a change",
+  S.mediaListChanged(P(...Array.from({ length: 49 }, (_, i) => i)), P(...Array.from({ length: 49 }, (_, i) => i))), false);
+check("the shortfall closing later (49 -> 51) IS a change",
+  S.mediaListChanged(P(1, 2, 3), P(1, 2)), true);
+check("one page replaced by a different one IS a change",
+  S.mediaListChanged(P(1, 9), P(1, 2)), true);
+check("re-ordered is treated as a change, not as equality",
+  S.mediaListChanged(P(2, 1), P(1, 2)), true);
+/* Nothing gathered is never a change — a run that did not fetch (needs.gallery
+   false) or lost the brochure to a 429 leaves the stored list alone, and
+   syncCybarco only writes `gallery`/`plans` when the fresh list is non-empty. */
+check("nothing gathered this run is not a change",
+  S.mediaListChanged([], P(1, 2)), false);
+check("nothing gathered and nothing stored is not a change",
+  S.mediaListChanged([], []), false);
 
 /* ── 4. The sold-out stamp ───────────────────────────────────────────────── */
 console.log("soldOutStamp — read after the recompute, never before");
