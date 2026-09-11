@@ -8,6 +8,7 @@ import { readPdfPages } from "./ai/availabilityTable";
 import { storeUploadedImage, devKeyFor, pdfPagesToJpegs, beginSyncWindow, scheduleAppRestart } from "./imageMirror";
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { developmentSlug } from "./developmentSeo";
+import { normalizeRef } from "./unitRef";
 
 /* Cybarco's sync (2026-09-11).
 
@@ -35,11 +36,17 @@ import { developmentSlug } from "./developmentSeo";
       The reader yields nothing at all from a page whose header it cannot
       recognise (Task 6's finding, deliberate — guessing a column layout is
       worse), so a vocabulary change on Cybarco's side looks exactly like a
-      project with no inventory. `unitWriteVerdict` refuses to wipe a project's
-      units on such a collapse and reports it instead.
+      project with no inventory. `unitPlan` refuses to wipe a project's units on
+      such a collapse AND refuses to rewrite the price range that was derived
+      from the same unreadable list, and reports it instead.
 
    3. SOLD OUT IS A MARK ON THE LISTING, NOT A DISAPPEARANCE. Cybarco keep a
-      sold-out project on the listing page with a "Sold Out" mark. So this
+      sold-out project on the listing page with a "Sold Out" mark, and pull its
+      price list. That mark is therefore the only live availability evidence
+      there is, and the units a transitioning project keeps are a stale snapshot
+      — so a sold-out project's feed units are set to sold and the sold-out date
+      is stamped only against what the recompute leaves behind (the last block of
+      syncCybarco). So this
       developer is NEVER wired into markProjectsMissingFromFeedSoldOut()
       (src/lib/soldOutSweeps.ts): "missing from the source" here means Cybarco
       removed the project from their own site, which is a different event and is
@@ -214,44 +221,109 @@ export async function pdftoppmAvailable(): Promise<boolean> {
 
    Measured on 2026-09-11 over ALL NINE live price lists — 332 units, not just
    the five committed fixtures: 18 duplicate bare references, zero duplicates
-   once qualified. Two shapes came out of that measurement and are the reason
-   `duplicateRefs` keeps checking instead of the measurement being trusted:
+   once qualified.
 
-   - Trilogy's sections are "EAST TOWER", "NORTH RESIDENCES (A)" and "NORTH
-     RESIDENCES (B)", none of which cybarcoPriceTable's BLOCK_RE matches, so all
-     seven of its units carry block null. Harmless today (its references are 1701
-     and 304-1105, all distinct) but the tower is lost, and if Trilogy ever
-     repeats an apartment number between towers the qualification has nothing to
-     work with.
-   - Centro's page 1 heading spells the building letter with a LATIN "A" inside
-     the Cyrillic word ЗДАНИЕ while page 2 uses a Cyrillic "Б". The tag is taken
-     verbatim, so if Cybarco ever corrects that typo the whole building's
-     references change key — which costs nothing on the wipe-and-recreate path
-     below, and would matter to anything matching across runs.
+   THE QUALIFIER HAS TO SURVIVE normalizeRef(), AND A CYRILLIC ONE DOES NOT.
+   That is the whole reason for the transliteration below, and it is a real
+   collision class rather than a theoretical one. normalizeRef (src/lib/unitRef.ts)
+   ends in `.replace(/[^a-z0-9]+/g, "")` — an ASCII class with no `u` flag — so
+   it reduces "Б 101" to "101" and "В 101" to "101" as well. Today Centro's two
+   headings happen to be ЗДАНИЕ + a LATIN "A" (a homoglyph typo on page 1) and
+   ЗДАНИЕ + a Cyrillic "Б", giving keys "a101" and "101", so nothing collides by
+   luck. Two ordinary events break that: Cybarco adding a ЗДАНИЕ В, or Cybarco
+   CORRECTING the page-1 typo to a Cyrillic А. Either one makes two different
+   flats share one matcher key, and the consequence is not a sync detail — the
+   Client Presentation matcher resolves `unitRefs` through normalizeRef
+   (src/app/admin/(panel)/crm/[id]/presentations/[presentationId]/edit/page.tsx),
+   so an advisor who ticks Centro Б-101 would ship В-101 alongside it.
 
-   Either way a collision is REPORTED, never silently written. */
+   unitRef.ts is deliberately NOT the place to fix that: normalizeRef is shared
+   by every developer's sync and by the presentation matcher, and widening it
+   would silently re-key units across the whole system. So the fix is here, and
+   it is two-sided:
+
+   - `cybarcoUnitRef` transliterates, so the distinction is carried in
+     characters normalizeRef keeps: "Б 101" becomes "B 101" (key "b101") and a
+     "В 101" would become "V 101" (key "v101"). Folding the WHOLE reference, not
+     only the tag, is what makes it hold when the document prints the building
+     letter inside the reference itself ("Б101"): leaving that one alone would
+     drop the letter at normalisation and put the collision straight back.
+     It also makes the homoglyph harmless, because a Cyrillic А and a Latin A
+     both fold to "A" — the key no longer moves if Cybarco fix the typo.
+   - `duplicateRefs` now counts normalizeRef() keys rather than raw strings, so
+     the checker measures exactly what the matcher will do. Counting the raw
+     qualified string is what made the old check report zero while the matcher
+     saw two rows for one ref — the collision class it exists for was the one
+     case it could not see.
+
+   `label` keeps the document's own spelling (ЗДАНИЕ Б · 101), so nothing a
+   human reads is transliterated; only the machine key is.
+
+   A collision is still REPORTED, never silently written: transliteration covers
+   the Cyrillic and Greek letters a Cyprus price list actually uses, and
+   duplicateRefs is the net under everything it does not. */
 const blockTag = (block: string) => block.replace(/^(?:BUILDING|ЗДАНИЕ)\s+/i, "").trim();
 
+/* Cyrillic and Greek to Latin, capitals keyed (lowercase folds onto the same
+   entry). Cyrillic is what Cybarco's Russian price lists print today; Greek is
+   here because a Greek-language list is the next most likely vocabulary change
+   on a Cypriot developer's site, and an unmapped letter is exactly the silent
+   case this guards. Standard transliteration, not an invented scheme — the
+   point is that a human reading "B 101" in the admin can find ЗДАНИЕ Б in the
+   PDF. A few pairs are not injective (Cyrillic Е/Э both give E, Greek Η/Ι both
+   give I); duplicateRefs is what catches that, which is why it runs on the
+   transliterated key rather than being trusted away. */
+const TRANSLIT: Record<string, string> = {
+  А: "A", Б: "B", В: "V", Г: "G", Д: "D", Е: "E", Ё: "E", Ж: "Zh", З: "Z", И: "I", Й: "Y",
+  К: "K", Л: "L", М: "M", Н: "N", О: "O", П: "P", Р: "R", С: "S", Т: "T", У: "U", Ф: "F",
+  Х: "H", Ц: "Ts", Ч: "Ch", Ш: "Sh", Щ: "Sch", Ы: "Y", Э: "E", Ю: "Yu", Я: "Ya",
+  Α: "A", Β: "V", Γ: "G", Δ: "D", Ε: "E", Ζ: "Z", Η: "I", Θ: "Th", Ι: "I", Κ: "K", Λ: "L",
+  Μ: "M", Ν: "N", Ξ: "X", Ο: "O", Π: "P", Ρ: "R", Σ: "S", Τ: "T", Υ: "Y", Φ: "F", Χ: "Ch",
+  Ψ: "Ps", Ω: "O",
+};
+
+/** Cyrillic/Greek letters to Latin, everything else untouched. Exported so the
+ *  mapping can be asserted without a database or a PDF. */
+export function transliterate(s: string): string {
+  return Array.from(s)
+    .map((ch) => {
+      const upper = ch.toUpperCase();
+      const mapped = TRANSLIT[upper];
+      if (mapped === undefined) return ch;
+      return ch === upper ? mapped : mapped.toLowerCase();
+    })
+    .join("");
+}
+
 export function cybarcoUnitRef(u: CybarcoUnit): string {
-  if (!u.block) return u.ref;
-  const tag = blockTag(u.block);
-  if (!tag) return u.ref;
-  const already = u.ref.toLowerCase().startsWith(tag.toLowerCase());
-  return already ? u.ref : `${tag} ${u.ref}`;
+  const ref = transliterate(u.ref);
+  if (!u.block) return ref;
+  const tag = transliterate(blockTag(u.block));
+  if (!tag) return ref;
+  const already = ref.toLowerCase().startsWith(tag.toLowerCase());
+  return already ? ref : `${tag} ${ref}`;
 }
 
 /** Human display label: the block as the document prints it, then the reference. */
 const cybarcoUnitLabel = (u: CybarcoUnit) => (u.block ? `${u.block} · ${u.ref}` : u.ref);
 
-/** References that appear more than once after qualification — empty across all
- *  332 live units on 2026-09-11; reported, never written around. */
-export function duplicateRefs(units: CybarcoUnit[]): string[] {
-  const seen = new Map<string, number>();
+/** Qualified references that share one normalizeRef() key — i.e. units a Client
+ *  Presentation could not tell apart. Keyed the way the matcher keys them,
+ *  project name included, because that is the only question worth answering;
+ *  each entry reads "<key> (<ref> + <ref>)". Empty across all 332 live units on
+ *  2026-09-11; reported, never written around. */
+export function duplicateRefs(units: CybarcoUnit[], projectName = ""): string[] {
+  const byKey = new Map<string, string[]>();
   for (const u of units) {
-    const r = cybarcoUnitRef(u);
-    seen.set(r, (seen.get(r) ?? 0) + 1);
+    const ref = cybarcoUnitRef(u);
+    const key = normalizeRef(ref, projectName);
+    const at = byKey.get(key);
+    if (at) at.push(ref);
+    else byKey.set(key, [ref]);
   }
-  return Array.from(seen.entries()).filter(([, n]) => n > 1).map(([r]) => r);
+  return Array.from(byKey.entries())
+    .filter(([, refs]) => refs.length > 1)
+    .map(([key, refs]) => `${key} (${refs.join(" + ")})`);
 }
 
 /* ── The unit-count collapse guard ─────────────────────────────────────────
@@ -292,6 +364,101 @@ export function unitWriteVerdict(fresh: number, stored: number, force = false): 
       : { write: false, reason: `unit count fell ${stored} → ${fresh} (more than ${Math.round(UNIT_COLLAPSE_PCT * 100)}%) — units left untouched, a Cybarco list prints sold units rather than dropping them` };
   }
   return { write: true, reason: null };
+}
+
+/* ── One decision for the units AND the price range ────────────────────────
+
+   priceFrom/priceTo are derived from the very unit list the guard above may
+   refuse, so they cannot be decided separately from it. They used to be: the
+   row was written with a freshly computed range before the guard ran, so a
+   vocabulary change that made the reader return zero units left the stored
+   units intact (correct) while priceFrom had already been rewritten off the
+   listing card and priceTo set to null (wrong) — the same run both declared the
+   read untrustworthy and published a price range taken from it.
+   `keepStored` is the one flag that governs both: when it is set, neither the
+   unit rows nor the range they produced are touched. */
+export type UnitPlan = { write: boolean; keepStored: boolean; reason: string | null };
+
+/** What to do with a project's units and, with them, its price range. Pure. */
+export function unitPlan(input: { hasPriceList: boolean; fresh: number; stored: number; force?: boolean }): UnitPlan {
+  /* No price list at all: Cybarco pull it when a project sells out, so what is
+     stored is the last full statement of the inventory and the only record of
+     what was there. Kept, range included — a stored range read off 60 real
+     units must not be replaced by the listing card's single "from" figure and a
+     null "to". */
+  if (!input.hasPriceList) {
+    return {
+      write: false,
+      keepStored: input.stored > 0,
+      reason: input.stored > 0 ? `no price list any more — ${input.stored} stored unit(s) and their price range left untouched` : null,
+    };
+  }
+  const verdict = unitWriteVerdict(input.fresh, input.stored, input.force);
+  return { write: verdict.write, keepStored: !verdict.write && input.stored > 0, reason: verdict.reason };
+}
+
+/* ── What still has to be fetched for a project ────────────────────────────
+
+   Asked per asset kind, because "the gallery is not empty" was standing in for
+   "this project has everything" and the two come apart on the one machine
+   difference this connector has. pdftoppm is absent on the operator's laptop
+   and present on the VPS, so a first run from the laptop stores every photo and
+   ZERO floor plans; with an empty gallery as the only proxy, the corrective run
+   on the VPS then saw a full gallery, asked for nothing, and never fetched a
+   brochure again — the documented remedy ("run the first import on the VPS")
+   only worked with force. The same latch made the listing-card fallback
+   permanent: one transient refusal on a project page stored the card's single
+   photo, and no later run replaced it. That is the degradation the fetch layer
+   was fixed for (Aktea 2, 17 of 18 photos), surviving in the write path.
+
+   Plans are exact rather than heuristic: they come from ONE document whose page
+   count is known from the same run (`brochurePages`, capped identically), so
+   "fewer stored than the PDF has" is a fact. `brochurePages` of 0 means the PDF
+   could not be read THIS run, and asking for nothing then is right — there is
+   nothing to compare against and the unreadable brochure is already reported.
+
+   Images have no such count (a source URL can repeat or refuse), so the test is
+   a TIER jump rather than any shortfall: measured on 2026-09-11 the three
+   sources are the listing card (1 photo), the project page (4-5) and the
+   gallery page (16-187), so a richer source always offers at least three times
+   what the poorer one did, while a photo or two failing to store is a handful.
+   Doubling separates those cleanly and keeps a 187-image project from being
+   re-downloaded every night over one missing file. */
+const GALLERY_TIER_FACTOR = 2;
+
+/* ── Whether a sold-out date may be stamped ────────────────────────────────
+
+   Read AFTER recomputeDevelopmentDerivedState has run, against what it left
+   behind, which is the whole point: stamping first and recomputing second is
+   what let a stamp be cleared two lines later and a "back in stock" reminder
+   fire nightly for a project the developer lists as Sold Out. A date is written
+   only when nothing can clear it again — `available === 0` is exactly
+   shouldClearSoldOut's condition for leaving it alone, which is why this asks
+   for that number and not for the unit rows. Pure. */
+export function soldOutStamp(input: { soldOutSince: Date | null; available: number }): { stamp: boolean; contradiction: boolean } {
+  if (input.soldOutSince != null) return { stamp: false, contradiction: false };
+  /* Available units on a project the developer marks Sold Out can only be
+     manual rows by this point, i.e. an admin's own assertion. Reported for a
+     human, never resolved by stamping a date the next recompute would clear. */
+  if (input.available > 0) return { stamp: false, contradiction: true };
+  return { stamp: true, contradiction: false };
+}
+
+export function contentNeeds(input: {
+  published: boolean;
+  force?: boolean;
+  offeredImages: number;
+  storedImages: number;
+  hasBrochure: boolean;
+  brochurePages: number;
+  storedPlans: number;
+}): { gallery: boolean; plans: boolean } {
+  /* A published Development's media is the admin's, curated; never re-gathered. */
+  if (input.published) return { gallery: false, plans: false };
+  return {
+    gallery: input.offeredImages > 0 && (!!input.force || input.offeredImages > input.storedImages * GALLERY_TIER_FACTOR),
+    plans: input.hasBrochure && (!!input.force || input.storedPlans < input.brochurePages),
+  };
 }
 
 /* ── Gathering (reads the live site; no database writes) ───────────────────── */
@@ -384,8 +551,11 @@ async function gatherOne(card: CybarcoCard): Promise<CybarcoPlan> {
     try {
       units = cybarcoUnitsFromPages(await readPdfPages(await getBuffer(detail.priceListUrl)));
       if (!units.length) notes.push(`${card.slug}: price list ${detail.priceListUrl} yielded 0 units — its header vocabulary is not recognised`);
-      const dupes = duplicateRefs(units);
-      if (dupes.length) notes.push(`${card.slug}: ${dupes.length} duplicate unit reference(s) after block qualification (${dupes.slice(0, 5).join(", ")}) — identity is ambiguous`);
+      /* Keyed the way the Client Presentation matcher keys it — normalizeRef,
+         project name included — so this sees a collision the matcher would see
+         rather than only one the raw strings show. */
+      const dupes = duplicateRefs(units, card.name);
+      if (dupes.length) notes.push(`${card.slug}: ${dupes.length} unit reference(s) collide after block qualification and normalizeRef (${dupes.slice(0, 5).join(", ")}) — identity is ambiguous`);
     } catch (e) {
       notes.push(`${card.slug}: price list could not be read (${(e as Error).message})`);
     }
@@ -585,7 +755,7 @@ export async function syncCybarco(
 
       const existing = await prisma.development.findUnique({
         where: { feedKey },
-        select: { id: true, dev: true, publicName: true, publishStatus: true, gallery: true, district: true, soldOutSince: true },
+        select: { id: true, dev: true, publicName: true, publishStatus: true, gallery: true, plans: true, district: true },
       });
 
       /* Another adapter's row under our own key would be a key collision, not a
@@ -597,16 +767,33 @@ export async function syncCybarco(
       }
 
       const published = existing?.publishStatus === "published";
-      /* "Needs content gathering", not "is new": a project created by an earlier
-         run that failed before its media was stored must still get it. An empty
-         gallery is the proxy — once a project has real photos this run is done
-         with it, and a published project is never re-gathered at all. */
+      /* "What is still MISSING", asked per asset kind — see contentNeeds. A
+         project created by an earlier run that failed before its media was
+         stored must still get it, a laptop run's zero floor plans must still be
+         fetched by the next VPS run, and a project left holding the single photo
+         off its listing card must be re-gathered once its gallery page answers
+         again. A published project is never re-gathered at all. */
       const storedGallery = (existing?.gallery as string[] | null) ?? [];
-      const needsContent = !published && (!!opts.force || !existing || !storedGallery.length);
+      const storedPlans = (existing?.plans as string[] | null) ?? [];
+      const needs = contentNeeds({
+        published,
+        force: opts.force,
+        offeredImages: plan.images.length,
+        storedImages: storedGallery.length,
+        hasBrochure: !!plan.brochureUrl,
+        brochurePages: plan.brochurePages,
+        storedPlans: storedPlans.length,
+      });
+      if (needs.gallery && storedGallery.length) {
+        notes.push(`${card.slug}: ${plan.images.length} image(s) now offered from the ${plan.imageSource} against ${storedGallery.length} stored — re-gathering`);
+      }
+      if (needs.plans && storedPlans.length < plan.brochurePages && storedPlans.length) {
+        notes.push(`${card.slug}: brochure has ${plan.brochurePages} readable page(s) against ${storedPlans.length} stored plan(s) — re-rasterising`);
+      }
 
-      let gallery: string[] = [];
-      let plansImages: string[] = [];
-      if (needsContent) {
+      const gallery: string[] = [];
+      const plansImages: string[] = [];
+      if (needs.gallery) {
         /* Mirrored by downloading here and handing the buffer to
            storeUploadedImage, rather than through imageMirror.mirrorAll: that
            helper fetches with no custom headers, and this site is behind
@@ -619,27 +806,44 @@ export async function syncCybarco(
           } catch { /* one photo failing must not abort the project */ }
         }
         if (plan.images.length && !gallery.length) notes.push(`${card.slug}: ${plan.images.length} image(s) offered, none could be stored`);
+      }
 
-        if (plan.brochureUrl) {
-          try {
-            const pages = await pdfPagesToJpegs(await getBuffer(plan.brochureUrl), MAX_BROCHURE_PAGES);
-            /* Per-PDF, as the brief requires: pdfPagesToJpegs returns [] for a
-               missing binary, a corrupt file and an unreadable page alike, and
-               all three used to look like "this brochure simply has no pages". */
-            if (!pages.length) {
-              notes.push(`${card.slug}: brochure ${plan.brochureUrl} produced no page (${plan.brochurePages} readable page(s) in the PDF${canRasterise ? "" : ", and pdftoppm is missing on this machine"})`);
-            }
-            for (const page of pages) {
-              const stored = await storeUploadedImage(page, devKey);
-              if (stored) { plansImages.push(stored); mediaChanged = true; }
-            }
-          } catch (e) {
-            notes.push(`${card.slug}: brochure could not be rasterised (${(e as Error).message})`);
+      if (needs.plans && plan.brochureUrl) {
+        const brochureUrl = plan.brochureUrl;
+        try {
+          const pages = await pdfPagesToJpegs(await getBuffer(brochureUrl), MAX_BROCHURE_PAGES);
+          /* Per-PDF, as the brief requires: pdfPagesToJpegs returns [] for a
+             missing binary, a corrupt file and an unreadable page alike, and
+             all three used to look like "this brochure simply has no pages". */
+          if (!pages.length) {
+            notes.push(`${card.slug}: brochure ${brochureUrl} produced no page (${plan.brochurePages} readable page(s) in the PDF${canRasterise ? "" : ", and pdftoppm is missing on this machine"})`);
           }
+          for (const page of pages) {
+            const stored = await storeUploadedImage(page, devKey);
+            if (stored) { plansImages.push(stored); mediaChanged = true; }
+          }
+        } catch (e) {
+          notes.push(`${card.slug}: brochure could not be rasterised (${(e as Error).message})`);
         }
       }
 
       const units = plan.units;
+
+      /* The units and the price range are decided TOGETHER, and before the row
+         below is written — see unitPlan. Counting the stored feed units needs
+         the existing row's id, which is why this sits above the write rather
+         than next to the delete it governs. */
+      const storedFeedUnits = existing
+        ? await prisma.developmentUnit.count({ where: { developmentId: existing.id, source: "feed" } })
+        : 0;
+      const unitDecision = unitPlan({
+        hasPriceList: !!plan.priceListUrl,
+        fresh: units.length,
+        stored: storedFeedUnits,
+        force: opts.force,
+      });
+      if (unitDecision.reason) notes.push(`${card.slug}: ${unitDecision.reason}`);
+
       const prices = units.map((u) => u.price).filter((p): p is number => typeof p === "number");
       const priceFrom = prices.length ? Math.min(...prices) : card.priceFrom;
       const priceTo = prices.length ? Math.max(...prices) : null;
@@ -664,9 +868,12 @@ export async function syncCybarco(
            and omitting the key means a re-sync cannot erase what they set. */
         currency: "EUR",
         description,
-        priceFrom,
-        priceTo,
         syncedAt: new Date(),
+        /* The price range rides with the unit list: both keys are omitted when
+           the stored units are being kept, because this range was computed from
+           the list that decision just rejected. Omitting rather than writing
+           null is what lets the stored range survive — see unitPlan. */
+        ...(unitDecision.keepStored ? {} : { priceFrom, priceTo }),
         /* A sold-out project's stage is whatever it already said. Cybarco stop
            publishing a completion claim once a project sells out, and writing
            "Ready to move in" over it would be inventing one. */
@@ -688,77 +895,138 @@ export async function syncCybarco(
          the admin map-location save already recomputes the day someone pins
          one. */
 
-      const storedFeedUnits = await prisma.developmentUnit.count({ where: { developmentId: dev.id, source: "feed" } });
-      if (!plan.priceListUrl) {
-        /* Only projects with a price list get units. A project that HAD one and
-           no longer does keeps what is stored — it may have sold out (Cybarco
-           pull the list then), and deleting the inventory would throw away the
-           only record of what was there. Reported so it is a decision, not a
-           silence. */
-        if (storedFeedUnits) notes.push(`${card.slug}: no price list any more — ${storedFeedUnits} stored unit(s) left untouched`);
-      } else {
-        const verdict = unitWriteVerdict(units.length, storedFeedUnits, opts.force);
-        if (verdict.reason) notes.push(`${card.slug}: ${verdict.reason}`);
-        if (verdict.write) {
-          /* Wipe and recreate, source:"feed" ONLY. Three things make that safe
-             here, where feedSync deliberately diffs instead:
+      if (unitDecision.write) {
+        /* Wipe and recreate, source:"feed" ONLY. Three things make that safe
+           here, where feedSync deliberately diffs instead:
 
-             - A Cybarco price list is the COMPLETE statement of a project's
-               inventory on every run: a sold unit stays on the list, printed
-               SOLD, so a row does not disappear when it sells and there is no
-               "vanished, therefore unlisted" case to preserve. `sortIndex` then
-               reproduces the document's own order exactly.
-             - Anything a human has touched is already source:"manual" — both
-               saveUnits() and setUnitPhotos() flip the row when they write it
-               (developments/[id]/actions.ts) — so no admin edit is inside the
-               delete's scope.
-             - A Client Presentation pins its units by REF STRING, not by row id
-               (ClientPresentationItem.unitRefs; unitIds is only the fallback for
-               units with no ref, and every Cybarco unit has one). Recreating a
-               row regenerates the identical ref, so a presentation an advisor
-               already sent keeps resolving to the same units.
+           - A Cybarco price list is the COMPLETE statement of a project's
+             inventory on every run: a sold unit stays on the list, printed
+             SOLD, so a row does not disappear when it sells and there is no
+             "vanished, therefore unlisted" case to preserve. `sortIndex` then
+             reproduces the document's own order exactly.
+           - Anything a human has touched is already source:"manual" — both
+             saveUnits() and setUnitPhotos() flip the row when they write it
+             (developments/[id]/actions.ts) — so no admin edit is inside the
+             delete's scope.
+           - A Client Presentation pins its units by REF STRING, not by row id
+             (ClientPresentationItem.unitRefs; unitIds is only the fallback for
+             units with no ref, and every Cybarco unit has one). Recreating a
+             row regenerates the identical ref, so a presentation an advisor
+             already sent keeps resolving to the same units.
 
-             The guard above is what keeps this from being dangerous: the delete
-             only runs when the fresh list is credible. */
-          await prisma.developmentUnit.deleteMany({ where: { developmentId: dev.id, source: "feed" } });
-          if (units.length) {
-            await prisma.developmentUnit.createMany({
-              data: units.map((u, i) => ({
-                developmentId: dev.id,
-                ref: cybarcoUnitRef(u),
-                feedRef: cybarcoUnitRef(u),
-                label: cybarcoUnitLabel(u),
-                status: u.status,
-                /* null for every sold and reserved unit — the document prints a
-                   word where the price would be. That is "not for sale", not
-                   "price unknown". */
-                price: typeof u.price === "number" ? Math.round(u.price) : null,
-                currency: "EUR",
-                beds: u.beds,
-                floor: u.floor,
-                areaInternal: u.areaInternal,
-                areaVeranda: u.areaVeranda,
-                areaBuilt: u.areaBuilt,
-                areaPlot: u.areaPlot,
-                sortIndex: i,
-              })),
-            });
-            unitsWritten += units.length;
-          }
+           READ THE THIRD ONE AGAIN BEFORE CHANGING HOW A REF IS BUILT. It
+           holds only while the ref a unit is given is STABLE — and the ref is
+           the block heading plus the printed reference, so anything that
+           changes either changes it. Widening cybarcoPriceTable's BLOCK_RE is
+           the live example: recognising Trilogy's "EAST TOWER" /
+           "NORTH RESIDENCES (A)" headings turns its unit 1701 into
+           "EAST TOWER 1701", and every ClientPresentationItem.unitRefs entry
+           pinning that unit stops matching. Because `unitIds` is null for
+           units that have a ref, the fallback cannot catch them either: the
+           units simply DISAPPEAR from a presentation an advisor already sent,
+           silently, on the next sync. The same goes for touching
+           cybarcoUnitRef's qualification or its transliteration.
+
+           Harmless today only because Cybarco has never been synced, so no
+           presentation references any of these units yet. Once one does, a
+           change to the ref shape is a MIGRATION — re-key the stored
+           unitRefs alongside it — not an improvement to the reader.
+
+           The guard above is what keeps this from being dangerous: the delete
+           only runs when the fresh list is credible. */
+        await prisma.developmentUnit.deleteMany({ where: { developmentId: dev.id, source: "feed" } });
+        if (units.length) {
+          await prisma.developmentUnit.createMany({
+            data: units.map((u, i) => ({
+              developmentId: dev.id,
+              ref: cybarcoUnitRef(u),
+              feedRef: cybarcoUnitRef(u),
+              label: cybarcoUnitLabel(u),
+              status: u.status,
+              /* null for every sold and reserved unit — the document prints a
+                 word where the price would be. That is "not for sale", not
+                 "price unknown". */
+              price: typeof u.price === "number" ? Math.round(u.price) : null,
+              currency: "EUR",
+              beds: u.beds,
+              floor: u.floor,
+              areaInternal: u.areaInternal,
+              areaVeranda: u.areaVeranda,
+              areaBuilt: u.areaBuilt,
+              areaPlot: u.areaPlot,
+              sortIndex: i,
+            })),
+          });
+          unitsWritten += units.length;
         }
       }
 
-      /* A sold-out project has no price list and therefore no units, so nothing
-         can derive its state — the mark on Cybarco's own listing is the only
-         evidence there is. Stamped only when absent, so the date stays the
-         FIRST time we saw it sold out. Task 1's shouldClearSoldOut is what makes
-         it survive the recompute below: a Development with zero units has no
-         availability information, which is not the same as having availability. */
-      if (card.status === "sold_out" && existing?.soldOutSince == null) {
-        await prisma.development.update({ where: { id: dev.id }, data: { soldOutSince: new Date() } });
+      /* ── Sold out, as Cybarco's own listing says ───────────────────────────
+
+         Two facts, and the order of what follows comes entirely out of them.
+         Cybarco mark a sold-out project on the listing page and PULL ITS PRICE
+         LIST, so the mark is the only live evidence of availability there is.
+         And a project that transitions on-sale -> sold out KEEPS its stored
+         units (the branch above: the last list is the only record of what was
+         there) — units whose statuses are a snapshot of a list that still
+         showed rows available.
+
+         That snapshot is stale the moment the mark appears, and leaving it
+         alone is what produced a nightly oscillation: stamp soldOutSince, then
+         recomputeDevelopmentDerivedState counts 3 of 24 available, clears the
+         stamp via shouldClearSoldOut and stamps returnedToMarketAt, and
+         backInStockReminders() announces "back in stock" for a project the
+         developer lists as Sold Out — every night, because the next run finds
+         soldOutSince null again and starts over. The old comment here claimed a
+         sold-out project has no units; that is true of the six that were
+         already sold out, not of the nine that will get there.
+
+         So the stale rows are corrected rather than the sweep being fought.
+         `source: "feed"` only: a feed row is OUR reading of the developer's
+         document and the developer now says the project is sold, while a manual
+         row is an admin's own assertion and is never overwritten by a sync. */
+      if (card.status === "sold_out") {
+        const corrected = await prisma.developmentUnit.updateMany({
+          where: { developmentId: dev.id, source: "feed", status: { in: ["available", "reserved"] } },
+          data: { status: "sold" },
+        });
+        if (corrected.count) {
+          notes.push(`${card.slug}: Cybarco mark it Sold Out — ${corrected.count} stored feed unit(s) still read available/reserved and were set to sold`);
+        }
       }
 
       await recomputeDevelopmentDerivedState(dev.id);
+
+      /* Stamped AFTER the recompute, never before, and only against the state
+         the recompute actually left behind. Stamping first is what let the
+         stamp be undone two lines later; reading the row back means a date is
+         only ever written when nothing can clear it. shouldClearSoldOut is
+         deliberately untouched — it is shared by every developer and its
+         total === 0 rule is what makes the six already-sold-out projects stick.
+
+         `unitsAvailable > 0` here can only come from MANUAL rows (every feed row
+         was just set to sold), i.e. an admin asserting a unit is available on a
+         project the developer lists as Sold Out. That contradiction is reported
+         and left to the human — availabilityContradiction() already surfaces it
+         in the admin — rather than being resolved by stamping a sold-out date
+         the next recompute would clear again. */
+      if (card.status === "sold_out") {
+        const after = await prisma.development.findUnique({
+          where: { id: dev.id },
+          select: { soldOutSince: true, unitsAvailable: true, unitsTotal: true },
+        });
+        const decision = after
+          ? soldOutStamp({ soldOutSince: after.soldOutSince, available: after.unitsAvailable ?? 0 })
+          : { stamp: false, contradiction: false };
+        if (decision.contradiction) {
+          notes.push(`${card.slug}: Cybarco mark it Sold Out but ${after?.unitsAvailable} of ${after?.unitsTotal} unit(s) are available in manual rows — soldOutSince NOT stamped, the units need a human`);
+        }
+        /* Stamped only when absent, so the date stays the FIRST time we saw it
+           sold out. With zero available units nothing can clear it again. */
+        if (decision.stamp) {
+          await prisma.development.update({ where: { id: dev.id }, data: { soldOutSince: new Date() } });
+        }
+      }
     }
 
     if (mediaChanged) scheduleAppRestart();
