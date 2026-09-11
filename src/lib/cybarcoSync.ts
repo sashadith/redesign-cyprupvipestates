@@ -426,6 +426,31 @@ export function unitPlan(input: { hasPriceList: boolean; fresh: number; stored: 
    re-downloaded every night over one missing file. */
 const GALLERY_TIER_FACTOR = 2;
 
+/* Plans being "exact" cut the other way too, and this is the finding this
+   constant fixes: `storeUploadedImage` returns null on any image-processing or
+   disk error, so with a bare `storedPlans < brochurePages` a SINGLE rasterised
+   page that fails to store (one `sharp` throw, one full-disk moment) left the
+   project needing plans forever — every 01:00 run re-reads the brochure just to
+   count its pages (see gatherOne), re-rasterises up to 100 pages, restores them
+   all, sets `mediaChanged`, and that calls scheduleAppRestart(), a hard pm2
+   restart, nightly, for a gap that was never going to close.
+
+   The gap this tolerates is COUNT, not proportion, deliberately mirroring what
+   actually fails: one page out of 51 (Trilogy) and one page out of 3 are the
+   same failure (one `storeUploadedImage` call returning null), not a
+   proportional shortfall, so a flat page count is the honest measure — a
+   percentage would forgive more on a long brochure than a short one for the
+   identical failure.
+
+   Zero stored is deliberately NOT covered by the tolerance: it means the
+   brochure was never rasterised at all THIS project (a laptop run with no
+   pdftoppm, a whole-run disk failure, or simply the first run ever), which is
+   "we got nothing", not "we got nearly everything" — and that must keep being
+   retried every night until it produces something, which is also what makes
+   the VPS's first honest run fetch all fifteen projects' plans even though
+   PLANS_PAGE_TOLERANCE is nonzero. */
+const PLANS_PAGE_TOLERANCE = 1;
+
 /* ── Whether a sold-out date may be stamped ────────────────────────────────
 
    Read AFTER recomputeDevelopmentDerivedState has run, against what it left
@@ -457,7 +482,14 @@ export function contentNeeds(input: {
   if (input.published) return { gallery: false, plans: false };
   return {
     gallery: input.offeredImages > 0 && (!!input.force || input.offeredImages > input.storedImages * GALLERY_TIER_FACTOR),
-    plans: input.hasBrochure && (!!input.force || input.storedPlans < input.brochurePages),
+    /* force always wins, even against an unreadable brochure this run
+       (brochurePages 0) — see PLANS_PAGE_TOLERANCE above for everything else:
+       nothing stored yet always needs fetching, and a shortfall no bigger than
+       the tolerance is treated as already done. */
+    plans: input.hasBrochure && (
+      !!input.force ||
+      (input.brochurePages > 0 && (input.storedPlans === 0 || input.storedPlans < input.brochurePages - PLANS_PAGE_TOLERANCE))
+    ),
   };
 }
 
@@ -604,6 +636,19 @@ async function gatherOne(card: CybarcoCard): Promise<CybarcoPlan> {
 
   let brochurePages = 0;
   if (detail?.brochureUrl) {
+    /* Downloaded and page-counted every run, even for a project whose stored
+       plans are already complete — gatherOne has no DB access (this whole
+       function reads only the live site, see the section header above) and
+       so cannot know a project is already satisfied before fetching. Threading
+       "already has enough plans" in here would mean either gatherCybarco takes
+       a DB-derived skip list (and then the DRY RUN — which has no sync state
+       to compare against and must report every project's true current page
+       count, see dryRunCybarcoSyncDetailed) has to fetch anyway, or the two
+       callers diverge in what `brochurePages` means. Left as the ~11 needless
+       downloads a night the review noted — real, but a shared-gather-stage
+       redesign, not a one-file fix for a nightly-restart bug. PLANS_PAGE_TOLERANCE
+       above fixes the restart; this comment is the "not fixed, and why" for the
+       download cost that rides along with it. */
     fetchAttempts++;
     try {
       brochurePages = Math.min((await readPdfPages(await getBuffer(detail.brochureUrl))).length, MAX_BROCHURE_PAGES);

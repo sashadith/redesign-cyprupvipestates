@@ -150,6 +150,34 @@ check("laptop run stored photos but no plans: the VPS run fetches the brochure",
 check("a fully stored project asks for nothing",
   needs({ offeredImages: 36, storedImages: 36, hasBrochure: true, brochurePages: 20, storedPlans: 20 }),
   { gallery: false, plans: false });
+/* THE finding this task fixes: `storeUploadedImage` returns null on any
+   image-processing or disk error, so with no tolerance a single page that
+   failed to store left a project needing plans forever — every night
+   re-reading the brochure, re-rasterising up to 100 pages, and (once
+   mediaChanged) triggering a hard pm2 restart, for a gap that could never
+   close. One page short of a 51-page brochure (Trilogy's measured length) must
+   read as "done", not "still needs plans". */
+check("Trilogy losing exactly one page of 51 to a store failure is NOT retried forever",
+  needs({ hasBrochure: true, brochurePages: 51, storedPlans: 50 }), { gallery: false, plans: false });
+/* The tolerance is a page COUNT, not a shortfall this small brochure could
+   also exhibit from the very same one-page failure — same failure, same
+   constant, regardless of the brochure's length. */
+check("a 3-page brochure losing its last page to the same failure is NOT retried forever",
+  needs({ hasBrochure: true, brochurePages: 3, storedPlans: 2 }), { gallery: false, plans: false });
+/* Two pages short is a real gap, not the tolerated single-page failure — must
+   still be fetched, or the tolerance would silently swallow a genuine loss. */
+check("Trilogy losing two of 51 pages IS still fetched",
+  needs({ hasBrochure: true, brochurePages: 51, storedPlans: 49 }), { gallery: false, plans: true });
+/* The tolerance must never cover "nothing was ever stored" — a brochure with
+   only one page in it is the edge case that would break if the tolerance were
+   applied unconditionally (storedPlans 0 < brochurePages(1) - 1 = 0 is FALSE),
+   so zero stored is checked before the tolerance, not folded into the same
+   arithmetic. This is what keeps the VPS's first honest run fetching plans for
+   every project even though PLANS_PAGE_TOLERANCE is nonzero. */
+check("a single-page brochure with nothing stored yet is still fetched",
+  needs({ hasBrochure: true, brochurePages: 1, storedPlans: 0 }), { gallery: false, plans: true });
+check("a single-page brochure already stored asks for nothing",
+  needs({ hasBrochure: true, brochurePages: 1, storedPlans: 1 }), { gallery: false, plans: false });
 check("an unreadable brochure this run is not re-fetched blindly",
   needs({ offeredImages: 4, storedImages: 4, hasBrochure: true, brochurePages: 0, storedPlans: 0 }),
   { gallery: false, plans: false });
