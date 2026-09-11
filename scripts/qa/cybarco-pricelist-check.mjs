@@ -75,7 +75,7 @@ check("empty", CP.cybarcoParsePrice(""), null);
 check("status word is not a price", CP.cybarcoParsePrice("SOLD"), null);
 
 /* The digit floor is measured, not guessed (see the comment in
-   cybarcoPriceTable.ts). Real prices across all five committed fixtures run
+   cybarcoPriceTable.ts). Real prices across all six committed fixtures run
    350,000-6,200,000 (6-7 digits); the largest neighbouring-column impostor is
    4 digits: a 1035 sqm plot (Akamas Villas, villa 7, type K4) and bare delivery years
    like 2026. Both must be refused, and the smallest REAL price on record must
@@ -120,7 +120,7 @@ const scrambledRow = { y: 500, cells: [
 check("column join sorts cells that arrive out of x order", CP.joinColumn(scrambledRow, 470, 540), "560,000");
 
 /* ── Table level: whole documents into units ─────────────────────────────
-   The fixtures below are real pdf.js page data for the five committed price
+   The fixtures below are real pdf.js page data for the six committed price
    lists. The EXPECTED NUMBERS ARE NOT DERIVED FROM THEM: every count in this
    section was read off the rendered PDF pages by eye on 2026-09-11 (each PDF
    rasterised page by page and counted row by row), precisely so that a reader
@@ -134,6 +134,14 @@ const by = (list, s) => list.filter((u) => u.status === s).length;
    drops a row is exactly what these assertions exist to catch, and a stack
    trace hides which of them noticed. */
 const unit = (list, ref) => list.find((u) => u.ref === ref) || { ref: `NO SUCH UNIT: ${ref}` };
+/* Centro prints 101 twice, once per building, so some rows can only be named by
+   the pair that is actually their identity. */
+const unitIn = (list, block, ref) =>
+  list.find((u) => u.block === block && u.ref === ref) || { ref: `NO SUCH UNIT: ${block} / ${ref}` };
+/* The identity a database keyed on (block, ref) would use. A null block is a
+   real, distinct key here — two of these documents print no heading at all — so
+   it is spelled out rather than collapsed into the empty string. */
+const identity = (u) => JSON.stringify([u.block, u.ref]);
 
 const NAFTIKOS = units("naftikos");
 check("naftikos: every unit has a ref", NAFTIKOS.every((u) => !!u.ref), true);
@@ -142,6 +150,11 @@ check("naftikos: A 101 price", unit(NAFTIKOS, "A 101").price, 990000);
 check("naftikos: A 101 status", unit(NAFTIKOS, "A 101").status, "available");
 check("naftikos: A 101 beds", unit(NAFTIKOS, "A 101").beds, "3");
 check("naftikos: A 101 internal area", unit(NAFTIKOS, "A 101").areaInternal, "119");
+/* The floor is a produced field like any other, and until this assertion existed
+   it had none anywhere: deleting BOTH floor header keys nulled the floor of all
+   150 units and the suite still printed "all checks passed". The page prints
+   "1st", not "1" — the reader passes the cell through verbatim. */
+check("naftikos: A 101 floor", unit(NAFTIKOS, "A 101").floor, "1st");
 check("naftikos: A 101 total covered", unit(NAFTIKOS, "A 101").areaBuilt, "155");
 /* One printed reference must yield one string. Naftikos prints "A 101" as a
    single cell and "A 501" as "A" + "5" + "01"; joining the fragments tight gave
@@ -170,6 +183,8 @@ check("aktea4: 101 price survives fragmentation", unit(AKTEA, "101").price, 5600
 check("aktea4: 201 price survives fragmentation", unit(AKTEA, "201").price, 600000);
 check("aktea4: 102 is sold", unit(AKTEA, "102").status, "sold");
 check("aktea4: 103 is reserved", unit(AKTEA, "103").status, "reserved");
+check("aktea4: 101 floor", unit(AKTEA, "101").floor, "1st");
+check("aktea4: 101 bedrooms", unit(AKTEA, "101").beds, "2");
 
 /* Centro is Russian throughout. */
 const CENTRO = units("centro-ru");
@@ -193,12 +208,27 @@ check("centro: 101 exists twice, once per building",
 check("centro: internal area, not total covered",
   unit(CENTRO, "101").areaInternal, "87");
 check("centro: total covered area", unit(CENTRO, "101").areaBuilt, "103");
+/* "Спальни" and "Крытые террасы" are the only way into the bedroom and veranda
+   fields of a Russian list, and neither had an assertion: deleting both keys
+   nulled beds and areaVeranda for all sixty Centro units with every count still
+   exact. Read off page 1 of the rendered PDF: 101 is 2 bedrooms, 16 m² of
+   covered terrace. */
+check("centro: Russian bedroom header", unit(CENTRO, "101").beds, "2");
+check("centro: Russian covered-terrace header", unit(CENTRO, "101").areaVeranda, "16");
+check("centro: Russian floor header", unit(CENTRO, "101").floor, "1");
 
 /* Villas: a different shape, with Plot Area m². */
 const AKAMAS = units("akamas-villas");
 check("akamas: plot area captured", unit(AKAMAS, "7").areaPlot, "1035");
 check("akamas: villa 7 is sold", unit(AKAMAS, "7").status, "sold");
 check("akamas: every unit has a plot", AKAMAS.every((u) => !!u.areaPlot), true);
+/* Villa bedroom counts are printed as "4+1" (four bedrooms and a maid's room),
+   not as a number. The field is a string on purpose and must stay verbatim. */
+check("akamas: villa 7 bedrooms", unit(AKAMAS, "7").beds, "4+1");
+/* A villa list has no floor column at all. Null here is the document's answer,
+   not a reading failure, and the difference matters to a sync that would
+   otherwise overwrite a good value with a null. */
+check("akamas: a villa list has no floor", unit(AKAMAS, "7").floor, null);
 
 /* Limassol Marina lists ONLY available properties, has several sections in one
    document, and extra columns. Absent sold rows must not be read as an empty
@@ -226,6 +256,34 @@ check("marina: apartments have no plot area",
    reported a 1,289 m² veranda — with every count still correct. */
 check("marina: terrace and basement stay apart",
   unit(MARINA, "85").areaVeranda, "12");
+/* Two shapes in ONE document: the apartment table has a Floor No column, the
+   villa table below it does not. Villa 54's floor is null because the page has
+   no such column for it — while B22's, on the same page, is a two-storey
+   "2nd/3rd" printed with superscript ordinals that arrive as separate
+   fragments. */
+check("marina: apartment floor, superscripts joined", unit(MARINA, "B22").floor, "2nd/3rd");
+check("marina: the villa table has no floor column", unit(MARINA, "54").floor, null);
+check("marina: villa 54 bedrooms", unit(MARINA, "54").beds, "4+2");
+
+/* Trilogy Limassol Seafront: THREE sections on one page, each with its own
+   complete header, and headings the first version of this reader did not
+   recognise at all — "EAST TOWER" is not "BUILDING x", and "NORTH RESIDENCES
+   (A)" carries a parenthesised designator. Every Trilogy unit came out with
+   block null and not one count moved, because the rows themselves were read
+   fine. This fixture was captured on 2026-09-11 from
+   https://www.cybarco.com/wp-content/uploads/2017/04/Trilogy-Pricelist-ENG-060826.pdf
+   (updated 05.08.2026) and counted by eye off the rendered page. */
+const TRILOGY = units("trilogy");
+check("trilogy: towers become blocks",
+  Array.from(new Set(TRILOGY.map((u) => u.block))).sort(),
+  ["EAST TOWER", "NORTH RESIDENCES (A)", "NORTH RESIDENCES (B)"]);
+check("trilogy: EAST TOWER heading reaches its unit", unit(TRILOGY, "1701").block, "EAST TOWER");
+check("trilogy: a parenthesised designator survives", unit(TRILOGY, "304").block, "NORTH RESIDENCES (A)");
+check("trilogy: the third section is its own block", unit(TRILOGY, "1005").block, "NORTH RESIDENCES (B)");
+check("trilogy: 1701 is reserved", unit(TRILOGY, "1701").status, "reserved");
+check("trilogy: 304 price", unit(TRILOGY, "304").price, 710000);
+check("trilogy: 1006 price", unit(TRILOGY, "1006").price, 1650000);
+check("trilogy: no unit has a plot area", TRILOGY.every((u) => u.areaPlot === null), true);
 
 /* The veranda is the COVERED terrace. Three of these documents print a second
    and a third terrace column beside it — "Roof Terraces" (Naftikos A 501: 52
@@ -235,6 +293,82 @@ check("naftikos: roof terrace is not the veranda",
   unit(NAFTIKOS, "A 501").areaVeranda, "52");
 check("akamas: uncovered terrace is not the veranda",
   unit(AKAMAS, "7").areaVeranda, "36");
+
+/* ── Every produced field, once per document shape ───────────────────────────
+   A count can be exactly right while a whole column is null: relabel a header
+   in the source document ("Floor No." to "Level", "Крытые террасы" to
+   "Балконы") and the reader keeps every row, keeps every status, and quietly
+   hands the sync a null where a good value used to be. So one complete row per
+   shape is pinned here, field by field. Each of these eight rows was read off
+   the rendered page by eye on 2026-09-11, cell by cell across the row — they
+   are the document's answer, not the reader's. */
+check("naftikos: A 101, every field", unit(NAFTIKOS, "A 101"), {
+  ref: "A 101", block: "BUILDING A", floor: "1st", beds: "3",
+  areaInternal: "119", areaVeranda: "36", areaBuilt: "155", areaPlot: null,
+  price: 990000, status: "available",
+});
+check("aktea4: 101, every field", unit(AKTEA, "101"), {
+  ref: "101", block: null, floor: "1st", beds: "2",
+  areaInternal: "87", areaVeranda: "28", areaBuilt: "115", areaPlot: null,
+  price: 560000, status: "available",
+});
+check("centro: 101 of building A, every field", unitIn(CENTRO, "ЗДАНИЕ A", "101"), {
+  ref: "101", block: "ЗДАНИЕ A", floor: "1", beds: "2",
+  areaInternal: "87", areaVeranda: "16", areaBuilt: "103", areaPlot: null,
+  price: 530000, status: "available",
+});
+check("akamas: villa 7, every field", unit(AKAMAS, "7"), {
+  ref: "7", block: null, floor: null, beds: "4+1",
+  areaInternal: "292", areaVeranda: "36", areaBuilt: "328", areaPlot: "1035",
+  price: null, status: "sold",
+});
+check("marina: apartment B22, every field", unit(MARINA, "B22"), {
+  ref: "B22", block: "Castle Residences", floor: "2nd/3rd", beds: "3",
+  areaInternal: "182", areaVeranda: "31", areaBuilt: "248", areaPlot: null,
+  price: null, status: "reserved",
+});
+check("marina: villa 54, every field", unit(MARINA, "54"), {
+  ref: "54", block: "Island Villas", floor: null, beds: "4+2",
+  areaInternal: "230", areaVeranda: "72", areaBuilt: "511", areaPlot: "644",
+  price: null, status: "reserved",
+});
+check("trilogy: 1701, every field", unit(TRILOGY, "1701"), {
+  ref: "1701", block: "EAST TOWER", floor: "17", beds: "3",
+  areaInternal: "135", areaVeranda: "25", areaBuilt: "215", areaPlot: null,
+  price: null, status: "reserved",
+});
+check("trilogy: 304, every field", unit(TRILOGY, "304"), {
+  ref: "304", block: "NORTH RESIDENCES (A)", floor: "3", beds: "1",
+  areaInternal: "57", areaVeranda: "18", areaBuilt: "98", areaPlot: null,
+  price: 710000, status: "available",
+});
+
+/* ── The identity invariant ──────────────────────────────────────────────────
+   The next task writes these units to a database keyed on (block, ref). That
+   pair is unique in all six documents and `ref` alone is NOT — Centro prints
+   101-106 once per building — so the pair is asserted for every document rather
+   than left as a property nobody wrote down.
+
+   Half of that key is null twice over: Aktea 4 and Akamas print no section
+   heading at all. That is stated here too, because it is exactly the fact that
+   breaks silently. If a future Aktea list gains a "BUILDING A" heading, the same
+   physical unit's key moves from (null, "101") to ("BUILDING A", "101") and the
+   sync writes duplicates instead of updates — with every count still correct. A
+   failure here is the warning that the key changed shape. */
+for (const [name, list] of [
+  ["naftikos", NAFTIKOS], ["aktea4", AKTEA], ["centro", CENTRO],
+  ["akamas", AKAMAS], ["marina", MARINA], ["trilogy", TRILOGY],
+]) {
+  check(`${name}: (block, ref) is unique`, new Set(list.map(identity)).size, list.length);
+}
+check("centro: ref alone is NOT unique — which is why the key is the pair",
+  new Set(CENTRO.map((u) => u.ref)).size < CENTRO.length, true);
+check("aktea4: no heading in the document, so every block is null",
+  AKTEA.every((u) => u.block === null), true);
+check("akamas: no heading in the document, so every block is null",
+  AKAMAS.every((u) => u.block === null), true);
+check("every other document gives every unit a block",
+  [...NAFTIKOS, ...CENTRO, ...MARINA, ...TRILOGY].every((u) => typeof u.block === "string"), true);
 
 /* Nothing may be silently dropped: totals and per-status counts are asserted so
    a regression that loses a building, or that turns a reserved row into an
@@ -248,7 +382,13 @@ check("akamas: uncovered terrace is not the veranda",
                p2 ЗДАНИЕ Б   30 rows ( 1 available, 3 reserved, 26 sold)
      akamas    p1            24 rows (6 available, 1 reserved, 17 sold)
      marina    p1 Castle Residences 3 rows (2 available, 1 reserved, 0 sold)
-               p1 Island Villas     2 rows (1 available, 1 reserved, 0 sold) */
+               p1 Island Villas     2 rows (1 available, 1 reserved, 0 sold)
+
+   Trilogy was counted the same way on 2026-09-11, off its own rendered page:
+
+     trilogy   p1 EAST TOWER            1 row  (0 available, 1 reserved, 0 sold)
+               p1 NORTH RESIDENCES (A)  3 rows (3 available, 0 reserved, 0 sold)
+               p1 NORTH RESIDENCES (B)  3 rows (3 available, 0 reserved, 0 sold) */
 check("naftikos total", NAFTIKOS.length, 37);
 check("naftikos available", by(NAFTIKOS, "available"), 8);
 check("naftikos reserved", by(NAFTIKOS, "reserved"), 4);
@@ -269,6 +409,16 @@ check("marina total", MARINA.length, 5);
 check("marina available", by(MARINA, "available"), 3);
 check("marina reserved", by(MARINA, "reserved"), 2);
 check("marina sold", by(MARINA, "sold"), 0);
+check("trilogy total", TRILOGY.length, 7);
+check("trilogy available", by(TRILOGY, "available"), 6);
+check("trilogy reserved", by(TRILOGY, "reserved"), 1);
+check("trilogy sold", by(TRILOGY, "sold"), 0);
+check("trilogy: EAST TOWER has one unit",
+  TRILOGY.filter((u) => u.block === "EAST TOWER").length, 1);
+check("trilogy: NORTH RESIDENCES (A) has three",
+  TRILOGY.filter((u) => u.block === "NORTH RESIDENCES (A)").length, 3);
+check("trilogy: NORTH RESIDENCES (B) has three",
+  TRILOGY.filter((u) => u.block === "NORTH RESIDENCES (B)").length, 3);
 
 console.log(failures ? `\n${failures} FAILED` : "\nall checks passed");
 process.exit(failures ? 1 : 0);

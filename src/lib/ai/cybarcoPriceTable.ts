@@ -9,8 +9,11 @@ import type { PdfCell, PdfPage, PdfRow, UnitStatus } from "./availabilityTable";
    through a shifted table ordinal, Royal Bay 43 to 42. A third reader is
    cheaper than a fourth regression. Neither of the other two files is touched.
 
-   Everything here was measured against five real Cybarco price lists captured
-   on 2026-09-10 (scripts/qa/fixtures/cybarco/pl-*.json). */
+   Everything here was measured against SIX real Cybarco price lists
+   (scripts/qa/fixtures/cybarco/pl-*.json): five captured on 2026-09-10 and
+   Trilogy Limassol Seafront added on 2026-09-11, which is the one that proved
+   the section-heading vocabulary was too narrow. Every figure quoted in the
+   comments below was re-measured over all six. */
 
 /** All cells whose left edge falls in [x0, x1), joined left to right. */
 export function joinColumn(row: PdfRow, x0: number, x1: number): string {
@@ -24,7 +27,7 @@ export function joinColumn(row: PdfRow, x0: number, x1: number): string {
 /* pdf.js splits a single printed price across several cells — "5", "60", ",",
    "0", "00" for 560,000 — so the input here is already the JOINED column, and
    the separators are whatever survived that join. Anything under SIX digits is
-   refused. That floor is measured, not guessed: across all five committed
+   refused. That floor is measured, not guessed: across all six committed
    fixtures (scripts/qa/fixtures/cybarco/pl-*.json), every real price, once
    joined, is 6 or 7 digits — the smallest is "350,000" (Centro Limassol, unit
    104), the largest "6,200,000" (Marina, unit D52). The largest numeric value
@@ -76,10 +79,11 @@ export type CybarcoUnit = {
   status: UnitStatus;
 };
 
-/* Column bounds come from the header, never from fixed offsets: the five
-   committed documents differ in width, column count and order, and Limassol
-   Marina adds Sundeck, Pool/Spa, Basement and berth columns the others do not
-   have. A column is the band between its header's centre and its neighbours'. */
+/* Column bounds come from the header, never from fixed offsets: the six
+   committed documents differ in width, column count and order — Limassol Marina
+   adds Sundeck, Pool/Spa, Basement and berth columns, Trilogy adds Parking
+   Spaces, Akamas a Villa Type — and they run 8 to 11 columns wide. A column is
+   the band between its header's centre and its neighbours'. */
 type Column = { key: keyof CybarcoUnit | "ignore"; x0: number; x1: number };
 
 /* ORDER IS LOAD-BEARING, and the Russian list is why. Centro's total-covered
@@ -90,7 +94,7 @@ type Column = { key: keyof CybarcoUnit | "ignore"; x0: number; x1: number };
 
    The terrace rule below is the one entry that earns nothing today: "Roof
    Terraces" (Naftikos), "Uncovered Terraces" (Akamas, Marina) and "Covered
-   Terraces" all contain "terrace", but the covered one is leftmost in all five
+   Terraces" all contain "terrace", but the covered one is leftmost in all six
    documents and value() already takes the leftmost of a repeated key, so
    deleting the rule changes no fixture. It stays because it says WHICH terrace
    is the veranda rather than leaving that to column order. */
@@ -116,21 +120,49 @@ const HEADER_KEYS: [RegExp, Column["key"]][] = [
 /* A unit's block is printed ONCE above its run of rows, never on the row
    itself: "BUILDING A" (Naftikos), "ЗДАНИЕ Б" (Centro — note that page 1 of the
    same document writes the building letter as a LATIN "A" inside a Cyrillic
-   word), "Castle Residences" and "Island Villas" (Limassol Marina). Centro
-   reuses apartment numbers between its two buildings, so the heading is the
-   only thing separating 101-А from 101-Б. */
-const BLOCK_RE = /^(BUILDING\s+[A-ZА-Я0-9]+|ЗДАНИЕ\s+[A-ZА-Я0-9]+|[A-Z][A-Za-z ]{3,30}(Residences|Villas))$/;
+   word), "Castle Residences" and "Island Villas" (Limassol Marina), "EAST
+   TOWER" and "NORTH RESIDENCES (A)" (Trilogy). Centro reuses apartment numbers
+   between its two buildings, so the heading is the only thing separating 101-А
+   from 101-Б.
+
+   Every one of those is the same three-part shape — up to two qualifier words,
+   a building-type noun, and an optional designator that may be bare ("A") or
+   parenthesised ("(A)") — so that is what is matched, rather than a list of the
+   exact strings seen so far. The first version of this regex was a list, and it
+   silently swallowed all three of Trilogy's towers: every unit came out with
+   block null and no count moved, because the rows were still read.
+
+   The noun is what keeps this narrow. Every heading-shaped line these six
+   documents print that is NOT a section heading lacks one — "Total",
+   "Available Properties", "Notes", "Terms of Payment", "Reservation Policy",
+   "Ready for immediate delivery", "Covered Areas Uncovered Areas". The two
+   near misses are Akamas' own notes, "Villa 21" and "Villas 22 & 41": the
+   singular "Villa" is deliberately not in the vocabulary, and "22 & 41" is more
+   than one designator, so neither matches. Checked line by line against all six
+   fixtures: this regex matches those nine headings and nothing else. */
+const BLOCK_RE =
+  /^(?:[A-Za-zА-Яа-я’'-]+ ){0,2}(BUILDING|TOWER|RESIDENCES|VILLAS|ЗДАНИЕ|КОРПУС)(?: \(?[A-ZА-Я0-9]{1,3}\)?)?$/i;
 
 /* "A 101", "B22", "101", "7". Cybarco's own fragmentation means the reference
    arrives as "A 10" + "4" and is joined back together before this is applied. */
 const REF_RE = /^(?:[A-Z]{1,3}\s?)?\d{1,4}$/;
 
-/* Header text is set in tight lines and table rows are not. Measured across all
-   five fixtures: the vertical gap INSIDE a header block is 5.1-6.0 pt, and the
-   gap between the header block and the nearest thing that is not part of it is
-   12.4-17.7 pt (the one near miss is Akamas' spanning "Covered Areas" caption
-   at 11.3 pt, which is correctly left out — it labels a group of columns, not a
-   column). 9 pt sits in that gap with room on both sides. */
+/* Header text is set in tight lines and table rows are not. Re-measured across
+   all SIX fixtures: the vertical gap INSIDE a header block is 5.1-8.4 pt, and
+   the smallest gap between a header block and the nearest line that is not part
+   of it is 11.3 pt — Akamas' spanning "Covered Areas" caption, which is
+   correctly left out because it labels a group of columns, not a column.
+   (Excluding it the next-smallest is 12.4 pt.)
+
+   Trilogy is what made this tight: it sets its header on TWO lines 8.3-8.4 pt
+   apart, where the other five use five or six lines 5.1-6.0 pt apart. 9 pt
+   therefore has only 0.6 pt of room above it and 2.3 pt below — comfortably
+   decided for these six documents, but no longer a wide gap. A seventh document
+   with looser header leading is the thing to watch. The consolation is that
+   getting this wrong is loud, not quiet: moving the threshold either way was
+   mutation-tested and takes 28 or 56 assertions down with it, because a header
+   block that grows too far swallows data rows and one that stops too soon never
+   finds a price label at all. */
 const HEADER_LINE_GAP = 9;
 
 /* A bare number or a lone "m" is a unit of measure, never a column's identity:
@@ -144,11 +176,12 @@ const HEADER_LINE_GAP = 9;
 const NOISE_FRAGMENT_RE = /^([0-9²]+|[mм])$/;
 
 /* Two header fragments belong to the same column when their centres are within
-   this distance. Measured over the header blocks of all five fixtures, once the
-   noise fragments above are gone: the widest split INSIDE one column is 13.8 pt
-   (Centro sets "Апарт." and "№" on two lines, off-centre from each other), and
-   the narrowest gap BETWEEN two columns is 32.4 pt (Limassol Marina's villa
-   table, "Villa No." to "Plot Area m²"). 20 pt sits between those two.
+   this distance. Re-measured over the header blocks of all six fixtures, once
+   the noise fragments above are gone: the widest split INSIDE one column is
+   13.8 pt (Centro sets "Апарт." and "№" on two lines, off-centre from each
+   other), and the narrowest gap BETWEEN two columns is 31.8 pt (Trilogy's
+   "Apt. No." to "Floor No."; Marina's villa table is next at 32.4 pt). 20 pt
+   sits between those two.
    Only the UPPER bound bites: at 35 pt Marina's reference and plot columns
    merge and villa 85 loses its plot area. Going the other way is survivable
    here — at 10 pt the "." of "Апарт." becomes a column of its own, the label
