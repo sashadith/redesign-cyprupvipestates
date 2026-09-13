@@ -414,7 +414,7 @@
 
 /* text anchored to the bottom, over the scrim: Title · Location · "from €price" */
 .prj__info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 2px; }
-.prj__title { margin: 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he), serif; font-weight: 400; font-size: 1.45rem; line-height: 1.15; color: var(--ivory); text-shadow: 0 1px 16px rgba(0, 0, 0, 0.55); }
+.prj__title { margin: 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400; font-size: 1.45rem; line-height: 1.15; color: var(--ivory); text-shadow: 0 1px 16px rgba(0, 0, 0, 0.55); }
 .prj__loc { margin: 2px 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: rgba(239, 233, 219, 0.82); text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5); }
 /* price sits in the footer spec row, right-aligned (on sea-deep, no text-shadow) */
 .prj__price { flex: none; line-height: 1; font-family: var(--font-display), serif; font-weight: 500; font-size: 1.5rem; color: var(--champagne); letter-spacing: -0.01em; white-space: nowrap; }
@@ -477,7 +477,7 @@
 .prjmap__cap { position: relative; z-index: 1; flex: none; padding-top: 6px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .prjmap__title {
   display: inline-flex; align-items: center; gap: 10px;
-  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he), serif; font-weight: 400; font-size: 1.45rem; line-height: 1.2; color: var(--ivory);
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400; font-size: 1.45rem; line-height: 1.2; color: var(--ivory);
 }
 .prjmap__title svg { color: var(--champagne); flex: none; width: 22px; height: 22px; }
 .prjmap__sub { font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--text-soft); text-align: center; }
