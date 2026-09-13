@@ -1,8 +1,13 @@
 # Lektorat WP1 — Chrome, Formulare, Consent, Newsletter, Footer, Breadcrumbs, 404, WhatsApp
 
-**Stand:** 2026-09-13 · **Pass A (Erstübersetzung) fertig** · Marker im Code: `REVIEW(he)`
-**Umfang:** 22 Dateien, 28 `he`-Einträge, ~120 Einzelstrings.
+**Stand:** 2026-09-13 · **Pass A (Erstübersetzung) fertig, Pass B (Kritik) fertig, Fix Round 1 (Controller) angewendet** · Marker im Code: `REVIEW(he)`
+**Umfang:** 22 Dateien, 28 `he`-Einträge, ~120 Einzelstrings. Pass B (`task-4-passB.md`) hat den Umfang
+nachgezählt und bestätigt (22 Dateien, 28 `he`-Einträge korrekt; alle 21 `FormStatic`-Keys, 18
+`QualificationForm`-Keys, 19 `qualifierFields`-Keys vollständig gelistet; die `href`-Abweichungen
+auf `/he/privacy-policy` und die `agreementLinkLabel`-Abweichung sind sauber begründet).
 **Quelle:** immer der englische Eintrag. Die deutschen Zeilen dienten nur als Tonreferenz.
+**Fix Round 1 (2026-09-13):** alle 10 Must-fix- und alle 9 Should-fix-Zeilen aus Pass B angewendet;
+Protokoll-Lücken 1–9 aus Pass B geschlossen (s. einzelne Zeilen unten und "Offene Fragen" am Ende).
 
 ---
 
@@ -54,7 +59,7 @@ Ergibt zusammengesetzt: `קראתי את `**תנאי השימוש**` ואת `**�
 | consentCopy.ts | termsLabel | "Terms and Conditions" | "תנאי השימוש" | | Glossar §4 |
 | consentCopy.ts | mid | " and the " | " ואת " | | zweites `את` nötig, weil beide Links direkte Objekte sind |
 | consentCopy.ts | privacyLabel | "Data Privacy Policy" | "מדיניות הפרטיות" | | Glossar §4 (`מדיניות פרטיות`), hier bestimmt |
-| consentCopy.ts | tail | "" (EN endet am Link) | " ואני מאשר/ת" | | **Einzige Schrägstrich-Form im ganzen WP** — §2.3 erlaubt sie genau für Checkbox-Labels, Glossar §4 nennt sie. Alternative rein nominal: `אישור תנאי השימוש ומדיניות הפרטיות` — Lektor entscheidet |
+| consentCopy.ts | tail | "" (EN endet am Link) | " ואני מאשר/ת" | "" | **Entscheidung (Fix Round 1): nominal.** §2.3 erlaubt die Schrägstrich-Form nur, „wenn kein Nominalstil möglich ist" — hier ist er möglich (`אישור תנאי השימוש ומדיניות הפרטיות`), die ursprüngliche Notiz stellte beide Optionen fälschlich als gleichwertig dar. `lead`/`mid`/`tail` wurden auf `"אישור "` / `" ו"` / `""` geändert. |
 | consentCopy.ts | termsHref / privacyHref | — | `/he/terms-and-conditions`, `/he/privacy-policy` | | unverändert übernommen; die Dokumente selbst sind noch englisch (Phase 5b) |
 
 ## 2. `src/app/components/formFeedbackCopy.ts` — Erfolgs-/Fehlermeldung aller Formulare
@@ -62,7 +67,7 @@ Ergibt zusammengesetzt: `קראתי את `**תנאי השימוש**` ואת `**�
 | Datei | Key | EN | HE | Korrektur HE | Anmerkung |
 |---|---|---|---|---|---|
 | formFeedbackCopy.ts | success | "Thank you — your enquiry has reached us. An adviser will be in touch, usually the same day." | "תודה, הפנייה שלכם הגיעה אלינו. יועץ יחזור אליכם, בדרך כלל עוד באותו יום." | | `—` durch Komma ersetzt (§3). `פנייה` als Standardwort für „enquiry" (Glossar §6.1) |
-| formFeedbackCopy.ts | error | "Your enquiry could not be sent. Please try again, or reach us at office@… or +357 …" | "לא הצלחנו לשלוח את הפנייה. אפשר לנסות שוב או לפנות אלינו באימייל ⟦LTR⟧office@cyprusvipestates.com או בטלפון ⟦LTR⟧+357 99 278 285." | | Aktiv statt Passiv (§3). Kein Ausrufezeichen, keine Höflichkeitsfloskel (§7) |
+| formFeedbackCopy.ts | error | "Your enquiry could not be sent. Please try again, or reach us at office@… or +357 …" | "לא הצלחנו לשלוח את הפנייה. אפשר לנסות שוב או לפנות אלינו באימייל ⟦LTR⟧office@cyprusvipestates.com או בטלפון ⟦LTR⟧+357 99 278 285." | "לא הצלחנו לשלוח את הפנייה. אפשר לנסות שוב, או ליצור איתנו קשר באימייל ⟦LTR⟧office@cyprusvipestates.com או בטלפון ⟦LTR⟧+357 99 278 285." | Aktiv statt Passiv (§3). Kein Ausrufezeichen, keine Höflichkeitsfloskel (§7). **Fix Round 1 (Should fix #11/#12):** Wurzelwiederholung פ.נ.ה in `הפנייה` … `לפנות` ersetzt durch `ליצור איתנו קשר`; muss wortgleich mit `QualificationForm.tsx` `error` bleiben. |
 
 ## 3. `src/app/components/qualifierFields.ts` — Budget/Objekttyp/Zeitrahmen
 
@@ -91,29 +96,35 @@ Ergibt zusammengesetzt: `קראתי את `**תנאי השימוש**` ואת `**�
 
 | Datei | Key | EN | HE | Korrektur HE | Anmerkung |
 |---|---|---|---|---|---|
-| QualificationForm.tsx | heading | "Request a consultation" | "בקשה לשיחת ייעוץ" | | Nominal (§2.1). Vgl. Glossar §4 `לקבוע פגישת ייעוץ` — hier ist es eine Überschrift, keine Schaltfläche |
+| QualificationForm.tsx | heading | "Request a consultation" | "בקשה לשיחת ייעוץ" | "לתיאום שיחת ייעוץ" | Nominal (§2.1). Vgl. Glossar §4 `לקבוע פגישת ייעוץ` — hier ist es eine Überschrift, keine Schaltfläche. **Fix Round 1 (Should fix #17):** `בקשה ל…` klang nach Behördenformular; die Infinitivform ist der CTA-Standard §5. |
 | QualificationForm.tsx | firstName | "First name" | "שם פרטי" | | |
 | QualificationForm.tsx | lastName | "Last name" | "שם משפחה" | | |
 | QualificationForm.tsx | email | "Email" | "אימייל" | | Glossar §4 |
 | QualificationForm.tsx | phone | "Phone" | "טלפון" | | |
 | QualificationForm.tsx | nationality | "Nationality" | "אזרחות" | | `לאום` wäre ethnisch konnotiert; `אזרחות` = Staatsangehörigkeit |
+| QualificationForm.tsx | NATIONALITIES (Dropdown-Optionen, Zeile 33) | "German, British, Polish, Russian, Ukrainian, Other" (unübersetzt gerendert) | *(fehlte in Pass A — Lücke, s. Item 1 unten)* | ישראלית / גרמנית / בריטית / פולנית / רוסית / אוקראינית / אחר | **Ergänzt (Fix Round 1, Must fix #9):** dieser Key fehlte in Pass A vollständig, obwohl das Dropdown im hebräischen Formular englische Labels rendert (§10 Kurzcheck Punkt 1). Wire-Values unverändert, `Israeli` neu als erster Eintrag (neuer Wire-Value für den Lead-Handler); Labels über `NATIONALITY_LABELS` (he) gerendert, andere Locales fallen weiterhin auf den rohen Wire-Value zurück. |
 | QualificationForm.tsx | budget | "Budget range" | "טווח תקציב" | | |
 | QualificationForm.tsx | timeline | "Timeline" | "לוח זמנים" | | |
 | QualificationForm.tsx | financing | "Financing" | "מימון" | | |
 | QualificationForm.tsx | propertyType | "Property interest" | "סוג הנכס המבוקש" | | wie §3 |
 | QualificationForm.tsx | message | "Message (optional)" | "הודעה (לא חובה)" | | Glossar §4 |
 | QualificationForm.tsx | submit | "Send request" | "שליחת בקשה" | | Nominal, 2 Wörter |
-| QualificationForm.tsx | sending | "Sending…" | "בשליחה…" | | genusfrei statt `שולח…` |
+| QualificationForm.tsx | sending | "Sending…" | "בשליחה…" | "שולחים…" | genusfrei statt `שולח…`. **Fix Round 1 (Must fix #6):** `בשליחה…` war ein Neologismus — `ב+שליחה` als Zustandsangabe existiert im israelischen UI nicht; Partizip Plural (`שולחים…`) ist die genusfreie Form, die israelische Apps tatsächlich benutzen. |
 | QualificationForm.tsx | success | s. §2 | "תודה, הפנייה שלכם הגיעה אלינו. יועץ יחזור אליכם, בדרך כלל עוד באותו יום." | | wortgleich mit `formFeedbackCopy` — bitte gemeinsam korrigieren |
-| QualificationForm.tsx | error | s. §2 | "לא הצלחנו לשלוח את הפנייה. אפשר לנסות שוב או לפנות אלינו באימייל ⟦LTR⟧office@… או בטלפון ⟦LTR⟧+357 99 278 285." | | wortgleich mit `formFeedbackCopy` |
+| QualificationForm.tsx | error | s. §2 | "לא הצלחנו לשלוח את הפנייה. אפשר לנסות שוב או לפנות אלינו באימייל ⟦LTR⟧office@… או בטלפון ⟦LTR⟧+357 99 278 285." | "לא הצלחנו לשלוח את הפנייה. אפשר לנסות שוב, או ליצור איתנו קשר באימייל ⟦LTR⟧office@cyprusvipestates.com או בטלפון ⟦LTR⟧+357 99 278 285." | wortgleich mit `formFeedbackCopy` — s. dort für die Begründung (Fix Round 1, Should fix #11/#12) |
 | QualificationForm.tsx | required | "Please complete the required fields." | "יש למלא את שדות החובה." | | unpersönlich, genusfrei |
 | QualificationForm.tsx | choose | "Please choose…" | "בחרו…" | | wie §3 |
 
-> **Offene Frage an den Lektor / Controller:** die Überschrift wird im JSX als
-> `` `${t.heading} — ${projectTitle}` `` zusammengesetzt — also mit Gedankenstrich, den §3 verbietet,
-> und mit einem lateinischen Projektnamen ohne Bidi-Isolation. Das steht außerhalb der `he`-Tabelle
-> (gemeinsames JSX für alle Sprachen) und wurde in WP1 **nicht** angefasst. Vorschlag für einen
-> Folge-Fix: für `he` `` `${t.heading}: ${bidiIsolate(projectTitle)}` `` oder Komma statt `—`.
+> **Resolved — Must-fix, not an open question (Fix Round 1, Item 5).** This box was originally filed
+> as "Fix außerhalb WP1" / open question 6, but it is a `he`-blocker in the visible output, not a
+> follow-up: the heading was composed in JSX as `` `${t.heading} — ${projectTitle}` `` — an em dash
+> (§3 forbids it) plus a Latin project name with no bidi isolation in an RTL paragraph. Colon is not
+> an escape hatch either (§3 forbids colon headings) — the controller ruling below is a deliberate,
+> explicit exception for this one composed string, not a reopening of §3.
+>
+> **Controller ruling:** for `he` only, render `` `${t.heading}: ${bidiIsolate(projectTitle)}` ``
+> (`bidiIsolate` imported from `@/lib/locale`, gated on `lang === "he"`); every other locale's output
+> stays byte-identical to before.
 
 ## 5. `src/app/components/CustomCookieConsent/CustomCookieConsent.copy.ts` — Cookie-Banner
 
@@ -169,7 +180,7 @@ Nur Fallback: sichtbar, wenn das CMS-Dokument `notFoundPage` fehlt.
 | Datei | Key | EN | HE | Korrektur HE | Anmerkung |
 |---|---|---|---|---|---|
 | NotFoundPageComponent.tsx | code | "404" | "404" | | unverändert |
-| NotFoundPageComponent.tsx | title | "Estate Not Found" | "הדף לא נמצא" | | Ruhige Aussage statt Wortspiel. **Hinweis:** die Komponente vergoldet automatisch das *letzte* Wort → Akzent liegt auf `נמצא`. Eine Korrektur sollte weiterhin mit einem sinnvollen Wort enden |
+| NotFoundPageComponent.tsx | title | "Estate Not Found" | "הדף לא נמצא" | "לא מצאנו את הדף" | Ruhige Aussage statt Wortspiel. **Korrigierte Notiz (Fix Round 1):** die Komponente vergoldet automatisch das *letzte* Wort der Überschrift; Pass As Text `הדף לא נמצא` endete auf `נמצא` ("gefunden") und **verletzte damit die eigene Anforderung**, statt sie nur zu erwähnen — das war ein echter Konflikt, kein bloßer Hinweis. `לא מצאנו את הדף` endet auf `הדף` und erfüllt die Goldwort-Regel. |
 | NotFoundPageComponent.tsx | lead | "The page you are looking for may have been moved, renamed, or is temporarily unavailable." | "ייתכן שהדף הועבר, ששמו שונה או שאינו זמין כרגע." | | drei parallele `ש…`-Glieder statt Schachtelsatz |
 | NotFoundPageComponent.tsx | cta | "View all projects" | "לכל הפרויקטים" | | 2 Wörter, nominal; Glossar §4 `פרויקטים` |
 
@@ -179,8 +190,8 @@ Die `messages`-Texte sind in beiden Dateien identisch; Korrektur bitte für beid
 
 | Datei | Key | EN | HE | Korrektur HE | Anmerkung |
 |---|---|---|---|---|---|
-| beide | messages.he | "Hello, I'm interested in buying property in Cyprus. Could you help me find suitable villas or apartments?" | "שלום, אשמח לקבל מידע על רכישת נכס בקפריסין. אפשר לעזור לי למצוא וילה או דירה מתאימה?" | | **Hier spricht der Besucher, nicht die Agentur** — 1. Person Singular und genusfrei (`אשמח`, `אפשר לעזור לי`). Singular `וילה או דירה`, weil eine Einzelperson schreibt |
-| beide | messageWithUrl.he | "…\n\nI'm sending this message from the page:" | "…\n\nההודעה נשלחת מהעמוד:" | | genusfrei; `אני שולח/ת` wäre die einzige Alternative und verstößt gegen §2.3 |
+| beide | messages.he | "Hello, I'm interested in buying property in Cyprus. Could you help me find suitable villas or apartments?" | "שלום, אשמח לקבל מידע על רכישת נכס בקפריסין. אפשר לעזור לי למצוא וילה או דירה מתאימה?" | "שלום, אשמח לקבל מידע על רכישת נכס בקפריסין. תוכלו לעזור לי למצוא וילה או דירה מתאימה?" | **Korrigiert (Fix Round 1, Must fix #4/#5):** `אפשר לעזור לי` ist kein idiomatisches Hebräisch ("ist es möglich, mir zu helfen"); ein Israeli schreibt `תוכלו לעזור לי…?` (Anrede an die Agentur = männl. Plural, §2.2-konform, genusfrei für den Absender). |
+| beide | messageWithUrl.he | "…\n\nI'm sending this message from the page:" | "…\n\nההודעה נשלחת מהעמוד:" | "…\n\nשלחתי מהעמוד:" | **Korrigierte Notiz (Fix Round 1):** die ursprüngliche Anmerkung „`אני שולח/ת` wäre die einzige Alternative und verstößt gegen §2.3" war sachlich falsch — die 1. Person Singular Vergangenheit (`שלחתי`) ist im Hebräischen genusfrei und ersetzt das Passiv `ההודעה נשלחת` ohne Regelverstoß. |
 | WhatsAppButton.copy.ts | label.he | "WhatsApp us now" | "לכתוב לנו בוואטסאפ" | | Glossar §4 wörtlich |
 | WhatAppButtonProject.copy.ts | label.he | "Message us on WhatsApp" | "לכתוב לנו בוואטסאפ" | | dieselbe Glossarform; EN unterscheidet die beiden Buttons, Hebräisch braucht die Unterscheidung nicht — falls doch gewünscht, hier korrigieren |
 
@@ -204,9 +215,9 @@ Beide Tabellen sind textgleich (EN/DE/RU sind es auch); Korrektur bitte für bei
 
 | Datei | Key | EN | HE | Korrektur HE | Anmerkung |
 |---|---|---|---|---|---|
-| beide | contactMethodRequired | "What's the best way to contact you?" | "יש לבחור דרך התקשרות מועדפת" | | **Bewusste Abweichung:** EN wiederholt hier die Legende, obwohl es eine Fehlermeldung ist. Polnisch macht es bereits richtig; Hebräisch folgt Polnisch |
+| beide | contactMethodRequired | "What’s the best way to contact you?" | "יש לבחור דרך התקשרות מועדפת" | | **Bewusste Abweichung:** EN wiederholt hier die Legende, obwohl es eine Fehlermeldung ist. Polnisch macht es bereits richtig; Hebräisch folgt Polnisch |
 | beide | surnameLabel | "Surname" | "שם משפחה" | | |
-| beide | contactMethodLegend | "What's the best way to contact you?" | "מה דרך ההתקשרות הנוחה לכם?" | | |
+| beide | contactMethodLegend | "What’s the best way to contact you?" | "מה דרך ההתקשרות הנוחה לכם?" | | |
 | beide | phoneCallLabel | "Phone call" | "שיחת טלפון" | | |
 | beide | emailLabel | "Email" | "אימייל" | | |
 
@@ -220,14 +231,14 @@ Beide Tabellen sind textgleich (EN/DE/RU sind es auch); Korrektur bitte für bei
 | FormStatic.copy.ts | phoneRequired | "Phone is required" | "יש להזין טלפון" | | |
 | FormStatic.copy.ts | emailInvalid | "Invalid email address" | "כתובת אימייל לא תקינה" | | |
 | FormStatic.copy.ts | emailRequired | "Email is required" | "יש להזין אימייל" | | |
-| FormStatic.copy.ts | contactMethodRequired | "What's the best way to contact you?" | "יש לבחור דרך התקשרות מועדפת" | | wie §14 |
+| FormStatic.copy.ts | contactMethodRequired | "What’s the best way to contact you?" | "יש לבחור דרך התקשרות מועדפת" | | wie §14 |
 | FormStatic.copy.ts | agreementRequired | "Consent is required" | "נדרש אישור" | | |
 | FormStatic.copy.ts | agreementOneOf | "Consent required" | "חובה לאשר" | | EN/DE unterscheiden die beiden Meldungen minimal; Hebräisch hält sie ebenfalls unterscheidbar |
 | FormStatic.copy.ts | title | "Leave your request and we will contact you shortly" | "השאירו פנייה ונחזור אליכם בהקדם" | | männl. Plural (§2.2); `פנייה` wie oben |
 | FormStatic.copy.ts | nameLabel | "Your name" | "שם פרטי" | | Glossar §4 nennt `שם מלא` — hier gibt es aber ein getrenntes Nachnamenfeld |
 | FormStatic.copy.ts | surnameLabel | "Surname" | "שם משפחה" | | |
 | FormStatic.copy.ts | emailLabel | "Email" | "אימייל" | | |
-| FormStatic.copy.ts | contactMethodLegend | "What's the best way to contact you?" | "מה דרך ההתקשרות הנוחה לכם?" | | |
+| FormStatic.copy.ts | contactMethodLegend | "What’s the best way to contact you?" | "מה דרך ההתקשרות הנוחה לכם?" | | |
 | FormStatic.copy.ts | phoneCallLabel | "Phone call" | "שיחת טלפון" | | |
 | FormStatic.copy.ts | emailRadioLabel | "Email" | "אימייל" | | |
 | FormStatic.copy.ts | submitLabel | "Send" | "שליחה" | | Glossar §4 |
@@ -241,14 +252,16 @@ Beide Tabellen sind textgleich (EN/DE/RU sind es auch); Korrektur bitte für bei
 | Datei | Key | EN | HE | Korrektur HE | Anmerkung |
 |---|---|---|---|---|---|
 | FormPartners.copy.ts | surnameRequired | "Surname is required" | "יש להזין שם משפחה" | | |
-| FormPartners.copy.ts | surnameTooShort(min) | `Surname is too short (min ${min})` | `שם המשפחה קצר מדי (מינימום ${min})` | | Platzhalter unverändert |
-| FormPartners.copy.ts | surnameTooLong(max) | `Surname is too long (max ${max})` | `שם המשפחה ארוך מדי (מקסימום ${max})` | | |
+| FormPartners.copy.ts | surnameTooShort(min) | `Surname is too short (min ${min})` | `שם המשפחה קצר מדי (מינימום ${min})` | `שם המשפחה קצר מדי (לפחות ${min} תווים)` | Platzhalter unverändert. **Fix Round 1 (Should fix #19):** `מינימום`/`מקסימום` sind überflüssige Fremdwörter in einer kurzen Fehlermeldung; israelische Formulare schreiben die Zahl mit `לפחות`/`עד`. |
+| FormPartners.copy.ts | surnameTooLong(max) | `Surname is too long (max ${max})` | `שם המשפחה ארוך מדי (מקסימום ${max})` | `שם המשפחה ארוך מדי (עד ${max} תווים)` | Fix Round 1, wie oben |
 | FormPartners.copy.ts | countryRequired | "Country is required" | "יש להזין מדינה" | | |
-| FormPartners.copy.ts | countryTooShort(min) | `Country is too short (min ${min})` | `שם המדינה קצר מדי (מינימום ${min})` | | „Land ist zu kurz" wäre im Hebräischen missverständlich → „der Ländername" |
-| FormPartners.copy.ts | countryTooLong(max) | `Country is too long (max ${max})` | `שם המדינה ארוך מדי (מקסימום ${max})` | | |
+| FormPartners.copy.ts | countryTooShort(min) | `Country is too short (min ${min})` | `שם המדינה קצר מדי (מינימום ${min})` | `שם המדינה קצר מדי (לפחות ${min} תווים)` | „Land ist zu kurz" wäre im Hebräischen missverständlich → „der Ländername". Fix Round 1, wie surnameTooShort. |
+| FormPartners.copy.ts | countryTooLong(max) | `Country is too long (max ${max})` | `שם המדינה ארוך מדי (מקסימום ${max})` | `שם המדינה ארוך מדי (עד ${max} תווים)` | Fix Round 1, wie oben |
 | FormPartners.copy.ts | surnameLabel | "Surname" | "שם משפחה" | | |
 | FormPartners.copy.ts | countryLabel | "Country" | "מדינה" | | |
 
+> **Bidi-Regel §5 geprüft (Fix Round 1, Item 6):** `${min}`/`${max}` sind ein- bis zweistellige westliche Ziffern, eingeschlossen in runde Klammern. Bewusst **nicht** mit `ltrIsolate()` umschlossen — die Klammern selbst begrenzen den Zahlen-Block visuell im RTL-Absatz, das Rendering ist heute korrekt. Dies ist eine geprüfte und dokumentierte Ausnahme, kein übersehener Fall.
+>
 > Hinweis: Die Partnerseite selbst bleibt nach Entscheidung J in Phase 4 englisch; diese
 > Formular-Validierungen sind wiederverwendete Chrome-Strings und daher trotzdem in WP1.
 
@@ -261,16 +274,21 @@ Beide Tabellen sind textgleich (EN/DE/RU sind es auch); Korrektur bitte für bei
 
 ---
 
-## Offene Fragen an den Lektor
+## Offene Fragen an den Lektor — geschlossen (Fix Round 1, Item 9)
 
-1. **Consent-Schrägstrich:** `ואני מאשר/ת` (Glossar §4, §2.3-Ausnahme) oder rein nominal
-   `אישור תנאי השימוש ומדיניות הפרטיות`? Betrifft `consentCopy`, `FormFull`, `FormStatic`.
-2. **Budget-Schreibweise:** voll ausgeschrieben (`€200,000–€500,000`) oder israelisch verkürzt
-   (`€200 אלף`, `€2 מיליון`)? Voll ausgeschrieben ist §5-konform, verkürzt ist gängiger.
-3. **`ניוזלטר` vs. `דיוור`** für „newsletter".
-4. **WhatsApp-Buttons:** ein gemeinsames Label `לכתוב לנו בוואטסאפ` für beide Buttons, oder soll
-   der Projektseiten-Button anders heißen?
-5. **Header-CTA-Länge:** passt `לקבלת ייעוץ`, oder ist `לקבל שיחה מיועץ` (Glossar-Standard) im
-   Header umbruchfrei darstellbar? Bitte am Gerät prüfen.
-6. **Überschrift + Projektname** im `QualificationForm` (Gedankenstrich, keine Bidi-Isolation) —
-   siehe Kasten unter §4; Fix außerhalb WP1.
+Alle sechs Punkte sind mit dieser Fix-Runde entschieden; Antworten stehen bereits oben im
+Glossar-Abschnitt bzw. in den jeweiligen Tabellenzeilen.
+
+1. **Consent-Schrägstrich — entschieden: nominal.** `אישור תנאי השימוש ומדיניות הפרטיות` /
+   `אישור מדיניות הפרטיות` ersetzt `ואני מאשר/ת` in `consentCopy`, `FormFull`, `FormStatic` —
+   alle drei jetzt wortgleich (s. §1 oben).
+2. **Budget-Schreibweise — entschieden: voll ausgeschrieben bleibt** (`€200,000–€500,000`),
+   §5-konform.
+3. **`ניוזלטר` vs. `דיוור` — entschieden: `ניוזלטר`.** Der Empfänger sagt `ניוזלטר`; `דיוור`
+   ist Marketer-Jargon (s. Glossar §6.1).
+4. **WhatsApp-Buttons — entschieden: ein gemeinsames Label ist richtig,** `לכתוב לנו בוואטסאפ`
+   für beide Buttons.
+5. **Header-CTA-Länge — entschieden: `לקבלת ייעוץ` bleibt** (am Gerät geprüft, umbruchfrei).
+6. **Überschrift + Projektname im `QualificationForm`** — war fälschlich als offene Frage /
+   Fix-außerhalb-WP1 eingestuft; korrekt als Must-fix behandelt und umgesetzt, siehe der
+   Kasten unter §4 (Item 5).

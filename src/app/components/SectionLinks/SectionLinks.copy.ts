@@ -13,7 +13,7 @@ export const HEADINGS: Record<string, Record<Locale, string>> = {
     de: "Mehr in diesem Bereich",
     ru: "Ещё в этом разделе",
     pl: "Więcej w tej sekcji",
-    he: "עוד בנושא הזה", // REVIEW(he)
+    he: "עוד בנושא זה", // REVIEW(he)
   },
   related: {
     en: "You may also be interested in",

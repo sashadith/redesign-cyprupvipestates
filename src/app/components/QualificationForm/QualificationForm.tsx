@@ -9,7 +9,7 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import Link from "next/link";
 import { consentCopy } from "../consentCopy";
 import { PROPERTY_VALUES, TIMELINE_VALUES, qualifierCopy } from "@/app/components/qualifierFields";
-import { isLocale, ltrIsolate, type Locale } from "@/lib/locale";
+import { bidiIsolate, isLocale, ltrIsolate, type Locale } from "@/lib/locale";
 
 type Lang = Locale;
 
@@ -27,10 +27,24 @@ const T: Record<Lang, Record<string, string>> = {
   de: { heading: "Beratung anfragen", firstName: "Vorname", lastName: "Nachname", email: "E-Mail", phone: "Telefon", nationality: "Nationalität", budget: "Budget", timeline: "Zeitrahmen", financing: "Finanzierung", propertyType: "Interesse", message: "Nachricht (optional)", submit: "Anfrage senden", sending: "Senden…", success: "Vielen Dank — Ihre Anfrage ist bei uns eingegangen. Ein Berater meldet sich, meist noch am selben Tag.", error: "Ihre Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder erreichen Sie uns unter office@cyprusvipestates.com oder +357 99 278 285.", required: "Bitte füllen Sie die Pflichtfelder aus.", choose: "Bitte wählen…" },
   pl: { heading: "Zamów konsultację", firstName: "Imię", lastName: "Nazwisko", email: "E-mail", phone: "Telefon", nationality: "Narodowość", budget: "Budżet", timeline: "Termin", financing: "Finansowanie", propertyType: "Zainteresowanie", message: "Wiadomość (opcjonalnie)", submit: "Wyślij zapytanie", sending: "Wysyłanie…", success: "Dziękujemy — Twoje zapytanie do nas dotarło. Doradca odezwie się, zwykle jeszcze tego samego dnia.", error: "Nie udało się wysłać zapytania. Spróbuj ponownie lub skontaktuj się z nami: office@cyprusvipestates.com albo +357 99 278 285.", required: "Uzupełnij wymagane pola.", choose: "Wybierz…" },
   ru: { heading: "Запросить консультацию", firstName: "Имя", lastName: "Фамилия", email: "Email", phone: "Телефон", nationality: "Гражданство", budget: "Бюджет", timeline: "Сроки", financing: "Финансирование", propertyType: "Интерес", message: "Сообщение (необязательно)", submit: "Отправить", sending: "Отправка…", success: "Спасибо — ваша заявка получена. Консультант свяжется с вами, обычно в тот же день.", error: "Не удалось отправить заявку. Попробуйте ещё раз или напишите на office@cyprusvipestates.com либо позвоните: +357 99 278 285.", required: "Пожалуйста, заполните обязательные поля.", choose: "Выберите…" },
-  he: { heading: "בקשה לשיחת ייעוץ", firstName: "שם פרטי", lastName: "שם משפחה", email: "אימייל", phone: "טלפון", nationality: "אזרחות", budget: "טווח תקציב", timeline: "לוח זמנים", financing: "מימון", propertyType: "סוג הנכס המבוקש", message: "הודעה (לא חובה)", submit: "שליחת בקשה", sending: "בשליחה…", success: "תודה, הפנייה שלכם הגיעה אלינו. יועץ יחזור אליכם, בדרך כלל עוד באותו יום.", error: `לא הצלחנו לשלוח את הפנייה. אפשר לנסות שוב או לפנות אלינו באימייל ${ltrIsolate("office@cyprusvipestates.com")} או בטלפון ${ltrIsolate("+357 99 278 285")}.`, required: "יש למלא את שדות החובה.", choose: "בחרו…" }, // REVIEW(he)
+  he: { heading: "לתיאום שיחת ייעוץ", firstName: "שם פרטי", lastName: "שם משפחה", email: "אימייל", phone: "טלפון", nationality: "אזרחות", budget: "טווח תקציב", timeline: "לוח זמנים", financing: "מימון", propertyType: "סוג הנכס המבוקש", message: "הודעה (לא חובה)", submit: "שליחת בקשה", sending: "שולחים…", success: "תודה, הפנייה שלכם הגיעה אלינו. יועץ יחזור אליכם, בדרך כלל עוד באותו יום.", error: `לא הצלחנו לשלוח את הפנייה. אפשר לנסות שוב, או ליצור איתנו קשר באימייל ${ltrIsolate("office@cyprusvipestates.com")} או בטלפון ${ltrIsolate("+357 99 278 285")}.`, required: "יש למלא את שדות החובה.", choose: "בחרו…" }, // REVIEW(he)
 };
 
-const NATIONALITIES = ["German", "British", "Polish", "Russian", "Ukrainian", "Other"];
+// he: label rendering falls back to the raw wire value (the existing
+// behaviour for en/de/pl/ru) — only he gets a translated label map.
+const NATIONALITY_LABELS: Partial<Record<Lang, Record<string, string>>> = {
+  he: {
+    Israeli: "ישראלית",
+    German: "גרמנית",
+    British: "בריטית",
+    Polish: "פולנית",
+    Russian: "רוסית",
+    Ukrainian: "אוקראינית",
+    Other: "אחר",
+  },
+};
+
+const NATIONALITIES = ["Israeli", "German", "British", "Polish", "Russian", "Ukrainian", "Other"];
 const BUDGETS = [
   { v: "0-200000", l: "Under €200k" },
   { v: "200000-500000", l: "€200k – €500k" },
@@ -110,7 +124,11 @@ const QualificationForm: FC<Props> = ({ lang, projectSlug, projectTitle }) => {
   return (
     <form onSubmit={onSubmit} className="bg-white border border-[#E0DAD0] p-6 md:p-8 space-y-5">
       <h3 className="text-[#142E2D] text-2xl" style={{ fontFamily: "var(--font-display, Georgia), serif", fontWeight: 400 }}>
-        {projectTitle ? `${t.heading} — ${projectTitle}` : t.heading}
+        {projectTitle
+          ? lang === "he"
+            ? `${t.heading}: ${bidiIsolate(projectTitle)}`
+            : `${t.heading} — ${projectTitle}`
+          : t.heading}
       </h3>
 
       <div className="grid md:grid-cols-2 gap-4">
@@ -136,7 +154,9 @@ const QualificationForm: FC<Props> = ({ lang, projectSlug, projectTitle }) => {
           <label className={label} htmlFor={`${uid}-nat`}>{t.nationality}</label>
           <select id={`${uid}-nat`} name="nationality" defaultValue="" className={field}>
             <option value="">{t.choose}</option>
-            {NATIONALITIES.map((n) => <option key={n} value={n}>{n}</option>)}
+            {NATIONALITIES.map((n) => (
+              <option key={n} value={n}>{NATIONALITY_LABELS[isLocale(lang) ? lang : "en"]?.[n] ?? n}</option>
+            ))}
           </select>
         </div>
         <div>

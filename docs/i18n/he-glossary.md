@@ -169,10 +169,10 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 | Message | הודעה | |
 | Budget | תקציב | |
 | Preferred language | שפה מועדפת | |
-| I agree to the privacy policy | קראתי את מדיניות הפרטיות ואני מאשר/ת | **Ausnahme** §2: Checkbox-Label darf `מאשר/ת` — oder besser: `אישור מדיניות הפרטיות` |
+| I agree to the privacy policy | אישור מדיניות הפרטיות | **Standard (Fix Round 1, 2026-09-13).** Die Schrägstrich-Form (`קראתי את מדיניות הפרטיות ואני מאשר/ת`) ist eine Notlösung für den Fall, dass kein Nominalstil möglich ist (§2.3) — hier ist er möglich, also verbindlich nominal. |
 | Thank you, we will contact you shortly | תודה, ניצור קשר בהקדם | |
 | Something went wrong | משהו השתבש, נסו שוב | |
-| Cookie consent (Accept all / Only necessary / Settings) | אישור כל העוגיות / רק הנחוצות / הגדרות | Cookies = עוגיות |
+| Cookie consent (Accept all / Only necessary / Settings) | אישור הכל / רק הנחוצות / הגדרות | Cookies = עוגיות; Kurzform `אישור הכל` statt `אישור כל העוגיות` — ausbalanciert neben dem 10-Zeichen-Button `רק הנחוצות` im schmalen Banner (Fix Round 1). |
 | Skip to main content | דלג לתוכן הראשי | a11y, bereits im Code |
 | Language (Switcher) | שפה | Label des Hebrew-Eintrags: עברית |
 | Sold out badge | נמכר | |
@@ -213,10 +213,10 @@ wandern sie in die Tabellen §2/§4/§5.
 | Englisch (Quelle) | Hebräisch (WP1) | Hinweis |
 |---|---|---|
 | office (Objekttyp) | משרד | Objekttyp-Liste in den Qualifier-Feldern |
-| newsletter | ניוזלטר | Alternative `דיוור` — Lektor entscheidet |
+| newsletter | ניוזלטר | **Entschieden (Fix Round 1): `ניוזלטר`.** `דיוור` ist Marketer-Jargon (die Branche, die versendet); der Empfänger sagt `ניוזלטר`. |
 | cookie policy | מדיניות העוגיות | Cookies = עוגיות (§4) |
 | first name / surname | שם פרטי / שם משפחה | Formularlabels |
-| nationality | אזרחות | |
+| nationality | אזרחות | Optionsliste (Dropdown, `QualificationForm.NATIONALITIES`): `ישראלית / גרמנית / בריטית / פולנית / רוסית / אוקראינית / אחר` — `ישראלית` neu ergänzt als erste Option, neuer Wire-Value `"Israeli"` (Fix Round 1, Must fix #9). |
 | financing | מימון | |
 | timeline (Formularfeld) | לוח זמנים | |
 | budget range | טווח תקציב | |
@@ -226,10 +226,17 @@ wandern sie in die Tabellen §2/§4/§5.
 | preferred contact method | דרך התקשרות מועדפת | |
 | phone call (Kontaktweg) | שיחת טלפון | |
 | enquiry / request (Lead) | פנייה | `השאירו פנייה` |
-| Sending… (Button-Status) | בשליחה… | genusfrei statt `שולח…` |
-| Get consultation (Header-CTA) | לקבלת ייעוץ | Kurzform des CTA-Standards §5 für den schmalen Header-Button |
-| More in this section | עוד בנושא הזה | |
+| Sending… (Button-Status) | שולחים… | Partizip Plural, genusfrei; `בשליחה…` (ursprünglich) war ein Neologismus — `ב+שליחה` als Zustandsangabe existiert im israelischen UI nicht (Fix Round 1, Must fix #6). |
+| Get consultation (Header-CTA) | לקבלת ייעוץ | **Entschieden (Fix Round 1): bleibt.** Kurzform des CTA-Standards §5 für den schmalen Header-Button, am Gerät geprüft. |
+| More in this section | עוד בנושא זה | `הזה` ist gesprochene Umgangssprache; das Demonstrativum steht in einer Rubrik-Überschrift ohne Artikel (Fix Round 1, Should fix #15). |
 | You may also be interested in | אולי יעניין אתכם גם | |
 | Your email (Placeholder) | האימייל שלכם | |
-| 404-Headline | הדף לא נמצא | ruhige Aussage, kein Wortspiel (EN „Estate Not Found") |
-| WhatsApp-Vorbelegung (der Besucher spricht) | שלום, אשמח לקבל מידע על רכישת נכס בקפריסין… | 1. Person Singular, genusfrei (`אשמח`) |
+| 404-Headline | לא מצאנו את הדף | ruhige Aussage, kein Wortspiel (EN „Estate Not Found"); die Komponente vergoldet automatisch das letzte Wort der Überschrift — `הדף` trägt jetzt den Akzent, nicht mehr `נמצא` (Fix Round 1, Must fix #7). |
+| WhatsApp-Vorbelegung (der Besucher spricht) | שלום, אשמח לקבל מידע על רכישת נכס בקפריסין. תוכלו לעזור לי למצוא וילה או דירה מתאימה? | 1. Person Singular, genusfrei (`אשמח`); `אפשר לעזור לי` (ursprünglich) war kein idiomatisches Hebräisch → `תוכלו לעזור לי` (Fix Round 1, Must fix #4/#5). |
+| Send request (Button) | שליחת בקשה | `QualificationForm` — bewusste Abgrenzung zu `שליחה` (Send, §4) |
+| Country (Formularfeld) | מדינה | `FormPartners` |
+| Consent is required / Consent required | נדרש אישור / חובה לאשר | `FormStatic` — zwei unterscheidbare Validierungsmeldungen |
+| Invalid email address | כתובת אימייל לא תקינה | `FormStatic` — vs. `יש להזין כתובת אימייל תקינה.` (Newsletter, EN dort „Please enter a valid…") |
+| We could not send your enquiry (Boilerplate) | לא הצלחנו לשלוח את הפנייה. אפשר לנסות שוב, או ליצור איתנו קשר באימייל … או בטלפון … | §5-Boilerplate, steht in `formFeedbackCopy.ts` und `QualificationForm.tsx` — muss wortgleich bleiben (Fix Round 1, Should fix #11/#12) |
+| Newsletter subscription completed | ההרשמה לניוזלטר הושלמה. | §5-Boilerplate, steht in `NewsletterForm.copy.ts` und `Footer/FooterNewsletter.tsx` |
+| „at least N characters" (Validierung) | `לפחות ${n} תווים` / `עד ${n} תווים` | Muster für alle künftigen Längenvalidierungen — ersetzt `מינימום`/`מקסימום` als überflüssige Fremdwörter (Fix Round 1, Should fix #19) |

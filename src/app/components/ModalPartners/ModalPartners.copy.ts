@@ -24,7 +24,7 @@ export const MODAL_PARTNERS_COPY: Record<Locale, typeof MODAL_PARTNERS_EN> = {
   },
   he: {
     title: "השאירו פרטים ליצירת קשר",
-    text: "נחזור אליכם בהקדם האפשרי",
+    text: "נחזור אליכם בהקדם",
   }, // REVIEW(he)
 };
 

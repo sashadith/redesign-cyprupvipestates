@@ -48,12 +48,13 @@ const CONSENT: Record<Locale, ConsentCopy> = {
     mid: " и ", privacyLabel: "Политикой конфиденциальности", privacyHref: "/ru/politika-privatnosti", tail: "",
   },
   // he: the hrefs stay the EN slugs under the /he prefix (registry.ts's
-  // CORPORATE_SLUGS.terms/privacy.he). The checkbox label uses the one
-  // gendered form the style guide allows (§2.3 exception, glossary §4).
+  // CORPORATE_SLUGS.terms/privacy.he). The checkbox label is nominal
+  // ("אישור …") per style guide §2.3 — the gendered form is a fallback
+  // only, not used here (Pass B fix round 1).
   he: {
-    lead: "קראתי את ", termsLabel: "תנאי השימוש", termsHref: "/he/terms-and-conditions",
-    mid: " ואת ", privacyLabel: "מדיניות הפרטיות", privacyHref: "/he/privacy-policy",
-    tail: " ואני מאשר/ת",
+    lead: "אישור ", termsLabel: "תנאי השימוש", termsHref: "/he/terms-and-conditions",
+    mid: " ו", privacyLabel: "מדיניות הפרטיות", privacyHref: "/he/privacy-policy",
+    tail: "",
   }, // REVIEW(he)
 };
 

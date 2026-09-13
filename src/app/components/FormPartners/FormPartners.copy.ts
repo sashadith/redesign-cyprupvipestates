@@ -50,11 +50,11 @@ export const FORM_PARTNERS_COPY: Record<Locale, typeof FORM_PARTNERS_EN> = {
   },
   he: {
     surnameRequired: "יש להזין שם משפחה",
-    surnameTooShort: (min) => `שם המשפחה קצר מדי (מינימום ${min})`,
-    surnameTooLong: (max) => `שם המשפחה ארוך מדי (מקסימום ${max})`,
+    surnameTooShort: (min) => `שם המשפחה קצר מדי (לפחות ${min} תווים)`,
+    surnameTooLong: (max) => `שם המשפחה ארוך מדי (עד ${max} תווים)`,
     countryRequired: "יש להזין מדינה",
-    countryTooShort: (min) => `שם המדינה קצר מדי (מינימום ${min})`,
-    countryTooLong: (max) => `שם המדינה ארוך מדי (מקסימום ${max})`,
+    countryTooShort: (min) => `שם המדינה קצר מדי (לפחות ${min} תווים)`,
+    countryTooLong: (max) => `שם המדינה ארוך מדי (עד ${max} תווים)`,
     surnameLabel: "שם משפחה",
     countryLabel: "מדינה",
   }, // REVIEW(he)

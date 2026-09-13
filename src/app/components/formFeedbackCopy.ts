@@ -50,7 +50,7 @@ const COPY: Record<Locale, Copy> = {
   he: {
     success:
       "תודה, הפנייה שלכם הגיעה אלינו. יועץ יחזור אליכם, בדרך כלל עוד באותו יום.",
-    error: `לא הצלחנו לשלוח את הפנייה. אפשר לנסות שוב או לפנות אלינו באימייל ${ltrIsolate("office@cyprusvipestates.com")} או בטלפון ${ltrIsolate("+357 99 278 285")}.`,
+    error: `לא הצלחנו לשלוח את הפנייה. אפשר לנסות שוב, או ליצור איתנו קשר באימייל ${ltrIsolate("office@cyprusvipestates.com")} או בטלפון ${ltrIsolate("+357 99 278 285")}.`,
   }, // REVIEW(he)
 };
 

@@ -26,7 +26,7 @@ const FALLBACK: Record<Locale, { code: string; title: string; lead: string; cta:
   de: { code: "404", title: "Immobilie nicht gefunden", lead: "Die gesuchte Seite wurde möglicherweise verschoben, umbenannt oder ist vorübergehend nicht verfügbar.", cta: "Alle Projekte anzeigen" },
   pl: { code: "404", title: "Nie znaleziono nieruchomości", lead: "Szukana strona mogła zostać przeniesiona, zmieniła nazwę lub jest tymczasowo niedostępna.", cta: "Zobacz wszystkie projekty" },
   ru: { code: "404", title: "Недвижимость не найдена", lead: "Страница могла быть перемещена, переименована или временно недоступна.", cta: "Смотреть все проекты" },
-  he: { code: "404", title: "הדף לא נמצא", lead: "ייתכן שהדף הועבר, ששמו שונה או שאינו זמין כרגע.", cta: "לכל הפרויקטים" }, // REVIEW(he)
+  he: { code: "404", title: "לא מצאנו את הדף", lead: "ייתכן שהדף הועבר, ששמו שונה או שאינו זמין כרגע.", cta: "לכל הפרויקטים" }, // REVIEW(he)
 };
 
 /* Gold-animate the closing word of the headline, the way the developer index

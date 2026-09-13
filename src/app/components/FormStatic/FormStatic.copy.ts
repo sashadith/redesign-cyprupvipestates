@@ -100,6 +100,8 @@ export const FORM_STATIC_COPY: Record<Locale, typeof FORM_STATIC_EN> = {
   },
   // he: agreementHref follows the other locales and points at the localized
   // policy (/he/privacy-policy); the label is the Hebrew noun for it.
+  // agreementLead/agreementTail are nominal ("אישור …") per style guide
+  // §2.3 — must stay word-identical with consentCopy.ts and FormFull.copy.ts.
   he: {
     phoneLabel: "טלפון",
     nameRequired: "יש להזין שם פרטי",
@@ -118,10 +120,10 @@ export const FORM_STATIC_COPY: Record<Locale, typeof FORM_STATIC_EN> = {
     phoneCallLabel: "שיחת טלפון",
     emailRadioLabel: "אימייל",
     submitLabel: "שליחה",
-    agreementLead: "קראתי את ",
+    agreementLead: "אישור ",
     agreementHref: "/he/privacy-policy",
     agreementLinkLabel: "מדיניות הפרטיות",
-    agreementTail: " ואני מאשר/ת",
+    agreementTail: "",
   }, // REVIEW(he)
 };
 
