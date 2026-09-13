@@ -103,7 +103,25 @@ export const FAQ_COPY: Record<Locale, FaqCopy> = {
     formTitleItalic: "вопрос",
     formSubtitle: "Ситуация каждого покупателя немного отличается. Напишите нам, и мы ответим лично вам.",
   },
-  he: EN, // TODO(he)
+  he: {
+    metaTitle: "שאלות נפוצות על נדל\"ן בקפריסין | Cyprus VIP Estates",
+    metaDescription:
+      "תשובות לשאלות שרוכשים מחו\"ל שואלים אותנו הכי הרבה: זכאות לזרים, עלויות ומע\"מ, תושבות, מימון ורכישת דירה על הנייר בקפריסין.",
+    eyebrow: "תמיכה",
+    heroTitlePart1: "שאלות ",
+    heroTitlePart2: "",
+    heroTitlePart3Italic: "נפוצות",
+    heroLead: "תשובות ישירות לשאלות שרוכשים מחו\"ל שואלים אותנו לפני רכישת נכס בקפריסין, במהלכה ואחריה.",
+    heroMeta: (q, t) => `${q} שאלות ב-${t} נושאים`,
+    allChipLabel: "הכול",
+    questionsCount: (n) => (n === 1 ? "שאלה אחת" : `${n} שאלות`),
+    expandAll: "פתיחת הכול",
+    collapseAll: "סגירת הכול",
+    categoriesAriaLabel: "קטגוריות שאלות ותשובות",
+    formTitlePlain: "נשארה ",
+    formTitleItalic: "שאלה",
+    formSubtitle: "המצב של כל רוכש קצת שונה. שלחו לנו את השאלה שלכם ונענה עליה ישירות.",
+  }, // REVIEW(he)
 };
 
 export function faqCopy(lang: string): FaqCopy {

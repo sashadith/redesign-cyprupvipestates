@@ -9,6 +9,7 @@ import Nav from "../../preview-home/sections/Nav";
 import Footer from "../../preview-home/sections/Footer";
 import Benefits from "../../preview-home/sections/Benefits";
 import ContactChannels from "@/app/components/ContactChannels/ContactChannels";
+import Bdi from "@/app/components/Bdi";
 import AboutMotion from "./AboutMotion";
 import { aboutCopy } from "./copy";
 import { getAboutPageData, getProjectCount } from "./data";
@@ -273,7 +274,13 @@ export default async function AboutPage({ params }: Props) {
                   {m.languages.length > 0 && (
                     <p className="abt__member-langs">
                       <span className="abt__member-langs-label">{t.teamSpeaks}</span>
-                      {m.languages.join(" · ")}
+                      {/* The stored list is the members' own native spellings
+                          ("deutsch, english, русский") — Latin/Cyrillic text
+                          that has to stay one isolated run inside the Hebrew
+                          page (he-styleguide.md §11.4). No-op for the LTR
+                          locales: <bdi> around all-LTR content in an LTR
+                          paragraph changes nothing. */}
+                      <Bdi>{m.languages.join(" · ")}</Bdi>
                     </p>
                   )}
                 </li>
