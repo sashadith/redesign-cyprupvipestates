@@ -38,6 +38,13 @@
 // entries before its own link-pass entries; within one kind's two passes
 // that's already true here (planCaseStudies/planSinglepages return
 // `[...mainPlan, ...linkPlan]`).
+//
+// Slug convention (singlepages): a pack file's path and its `"slug"` field are
+// both the FULL served path (`limassol/new-projects.he.json` ⇄ `"slug":
+// "limassol/new-projects"`) — that's what the keyword map, `parentSlug`,
+// `relatedLandingPages` and he-content-check's linkCheck all reference. The DB
+// gets the LEAF segment in `Singlepage.slug` plus `parentSanityId` pointing at
+// the hub row, because that is what the public route reads back.
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -59,6 +66,49 @@ const LEGAL_REGISTRY_PATH = path.join(ROOT, "src", "app", "preview-legal", "[lan
 const PACK_METADATA_KEYS = ["review", "translationGroupSlugEn", "parentSlug"];
 
 export const KINDS = ["site-documents", "faq", "case-studies", "singlepages", "legal-check"];
+
+/**
+ * Reads `<dir>/**\/*.he.json` RECURSIVELY into `{ slug, raw, file }` rows.
+ *
+ * The pack slug is the file's path relative to `dir` with `.he.json`
+ * stripped, so `content/he/singlepages/limassol/new-projects.he.json` is the
+ * pack slug `"limassol/new-projects"` — the FULL served path, exactly as
+ * `docs/i18n/he-keyword-map.md` lists it and as `parentSlug`/
+ * `relatedLandingPages`/`linkCheck` reference it. (What lands in the DB
+ * `slug` column is the LEAF only — see planSinglepages.)
+ *
+ * The file's own `"slug"` field (part of Task 6a's file interface) MUST equal
+ * that path — a mismatch is a hard error naming both, because the two are
+ * read by different tools (this loader by path, `he-content-check.mjs` by
+ * field) and a divergence would silently make them disagree.
+ */
+function readPackDir(dir, label) {
+  if (!fs.existsSync(dir)) return [];
+  const rows = [];
+  const walk = (d) => {
+    const entries = fs.readdirSync(d, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name));
+    for (const entry of entries) {
+      const full = path.join(d, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+        continue;
+      }
+      if (!entry.name.endsWith(".he.json")) continue;
+      const file = path.relative(dir, full).split(path.sep).join("/");
+      const slug = file.replace(/\.he\.json$/, "");
+      const raw = JSON.parse(fs.readFileSync(full, "utf8"));
+      if (typeof raw.slug === "string" && raw.slug !== slug) {
+        throw new Error(
+          `seed.mjs: ${label} — file "${file}" declares "slug": "${raw.slug}", but its path (without .he.json) is "${slug}". ` +
+            `The file path and the "slug" field must be identical.`,
+        );
+      }
+      rows.push({ slug, raw, file });
+    }
+  };
+  walk(dir);
+  return rows.sort((a, b) => a.slug.localeCompare(b.slug));
+}
 
 export function stripPackMetadata(obj) {
   if (obj == null || typeof obj !== "object" || Array.isArray(obj)) return obj;
@@ -289,16 +339,7 @@ const CASE_STUDY_FIELDS = ["title", "fullTitle", "excerpt", "category", "seo", "
  *  yet — planCaseStudies needs `translationGroupSlugEn`/`relatedProjects`/
  *  `review` to resolve refs before picking the DB-column subset). */
 export function loadCaseStudiesPack(dir = path.join(CONTENT_HE_DIR, "case-studies")) {
-  if (!fs.existsSync(dir)) return [];
-  return fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith(".he.json"))
-    .sort()
-    .map((f) => {
-      const slug = f.replace(/\.he\.json$/, "");
-      const raw = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
-      return { slug, raw };
-    });
+  return readPackDir(dir, "case-studies");
 }
 
 /**
@@ -391,18 +432,35 @@ export function planCaseStudies(rows, existingRows) {
 const SINGLEPAGE_FIELDS = ["title", "excerpt", "seo", "allowIntroBlock", "previewImage", "contentBlocks"];
 
 /** Reads content/he/singlepages/<slug>.he.json off disk into `{ slug, raw }`
- *  rows (raw not stripped — see loadCaseStudiesPack's note, same reasoning). */
+ *  rows (raw not stripped — see loadCaseStudiesPack's note, same reasoning).
+ *  Recursive: a nested landing page lives at its own path
+ *  (`singlepages/limassol/new-projects.he.json` → pack slug
+ *  `"limassol/new-projects"`). */
 export function loadSinglepagesPack(dir = path.join(CONTENT_HE_DIR, "singlepages")) {
-  if (!fs.existsSync(dir)) return [];
-  return fs
-    .readdirSync(dir)
-    .filter((f) => f.endsWith(".he.json"))
-    .sort()
-    .map((f) => {
-      const slug = f.replace(/\.he\.json$/, "");
-      const raw = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8"));
-      return { slug, raw };
-    });
+  return readPackDir(dir, "singlepages");
+}
+
+/** The DB `Singlepage.slug` column for a pack slug: the LEAF segment only.
+ *  `_getSinglePageByLang(lang, slug)` (src/sanity/sanity.utils.ts) looks up
+ *  `slug[slug.length - 1]` of the URL, and getAllPathsForLang/pagePower
+ *  `inventory.ts` reconstruct the served path by walking `parentSanityId` —
+ *  so a nested row storing the full path would never be found (404). */
+export function leafSlug(packSlug) {
+  return packSlug.split("/").pop();
+}
+
+/** The pack slug of a nested page's parent (its dirname), or null for a
+ *  top-level page. */
+export function parentPackSlug(packSlug) {
+  const i = packSlug.lastIndexOf("/");
+  return i === -1 ? null : packSlug.slice(0, i);
+}
+
+/** Deterministic `sanityId` for a pack slug — slashes become dashes so the
+ *  id stays a flat, path-free identifier (`limassol/new-projects` →
+ *  `he-limassol-new-projects`). */
+export function singlepageSanityId(packSlug) {
+  return `he-${packSlug.replace(/\//g, "-")}`;
 }
 
 /**
@@ -421,33 +479,78 @@ export function loadSinglepagesPack(dir = path.join(CONTENT_HE_DIR, "singlepages
  *   cross-run parentSlug/relatedLandingPages resolution possible.
  *
  * `parentSlug`/`relatedLandingPages` resolve against the UNION of this pack's
- * own slugs (deterministic `sanityId: "he-<slug>"`, so no DB round trip is
- * needed to know a sibling's id even before it's inserted) and any existing
- * "he" rows in `existingRows.singlepages` — an unresolvable slug in either
- * throws/refuses naming that slug.
+ * own slugs (deterministic `sanityId: "he-<slug-with-dashes>"`, so no DB round
+ * trip is needed to know a sibling's id even before it's inserted) and any
+ * existing "he" rows in `existingRows.singlepages` (whose full path is
+ * reconstructed by walking `parentSanityId`, the same way the public route
+ * does) — an unresolvable slug in either throws/refuses naming that slug.
+ *
+ * SLUGS: a pack row's `slug`/`key` is the FULL served path
+ * (`limassol/new-projects`). What goes into the DB `slug` column is the LEAF
+ * (`new-projects`) plus `parentSanityId` pointing at the hub — that's the
+ * shape the route reads (see leafSlug's note). Because `Singlepage.slug` is
+ * unique per `(language, slug)`, two pack pages that would share a leaf under
+ * different parents are a hard error at plan time: the route could not tell
+ * them apart.
  */
 export function planSinglepages(rows, existingRows) {
   const existingSinglepages = existingRows?.singlepages ?? [];
   const mainPlan = [];
   const linkPlan = [];
 
+  // Existing "he" rows store the LEAF slug; rebuild each one's full path by
+  // walking parentSanityId so pack slugs (full paths) can be matched against
+  // them for parentSlug/relatedLandingPages resolution across runs.
+  const heExisting = existingSinglepages.filter((r) => r.language === "he");
+  const heBySanityId = new Map(heExisting.map((r) => [r.sanityId, r]));
+  const fullPathOfExisting = (row, seen = new Set()) => {
+    if (!row.parentSanityId || seen.has(row.sanityId)) return row.slug;
+    const parent = heBySanityId.get(row.parentSanityId);
+    if (!parent) return row.slug; // parent not among the fetched rows — best effort
+    seen.add(row.sanityId);
+    return `${fullPathOfExisting(parent, seen)}/${row.slug}`;
+  };
+
   const sanityIdBySlug = new Map();
-  for (const { slug } of rows) sanityIdBySlug.set(slug, `he-${slug}`);
-  for (const r of existingSinglepages) if (r.language === "he") sanityIdBySlug.set(r.slug, r.sanityId);
+  for (const { slug } of rows) sanityIdBySlug.set(slug, singlepageSanityId(slug));
+  for (const r of heExisting) sanityIdBySlug.set(fullPathOfExisting(r), r.sanityId);
+
+  // (language:"he", leafSlug) uniqueness — checked over the whole pack before
+  // planning any row, so both halves of a collision are named.
+  const packSlugsByLeaf = new Map();
+  for (const { slug } of rows) {
+    const leaf = leafSlug(slug);
+    packSlugsByLeaf.set(leaf, [...(packSlugsByLeaf.get(leaf) ?? []), slug]);
+  }
 
   for (const { slug, raw } of rows) {
-    const clashing = existingSinglepages.find((r) => r.slug === slug && r.language !== "he");
+    const leaf = leafSlug(slug);
+
+    const collisions = packSlugsByLeaf.get(leaf);
+    if (collisions.length > 1) {
+      mainPlan.push({
+        kind: "singlepages",
+        key: slug,
+        action: "refuse",
+        reason:
+          `duplicate leaf slug "${leaf}" across pack pages ${collisions.map((s) => `"${s}"`).join(" and ")} — ` +
+          `Singlepage.slug is unique per (language, slug) and the route resolves a page by its leaf segment, so these two cannot coexist`,
+      });
+      continue;
+    }
+
+    const clashing = existingSinglepages.find((r) => r.slug === leaf && r.language !== "he");
     if (clashing) {
       mainPlan.push({
         kind: "singlepages",
         key: slug,
         action: "refuse",
-        reason: `existing row for slug "${slug}" has language "${clashing.language}", not "he" — refusing to touch it`,
+        reason: `existing row for slug "${leaf}" has language "${clashing.language}", not "he" — refusing to touch it`,
       });
       continue;
     }
 
-    const existing = existingSinglepages.find((r) => r.slug === slug && r.language === "he");
+    const existing = existingSinglepages.find((r) => r.slug === leaf && r.language === "he");
 
     let tg;
     try {
@@ -457,43 +560,60 @@ export function planSinglepages(rows, existingRows) {
       continue;
     }
 
+    // The parent comes from the pack slug's own path (`limassol/new-projects`
+    // → `limassol`). `parentSlug`, when the file carries it, must say the same
+    // thing — it's a declaration, not a second source of truth.
+    const parentFromPath = parentPackSlug(slug);
     let parentSanityId = null;
-    if (raw.parentSlug) {
-      parentSanityId = sanityIdBySlug.get(raw.parentSlug) ?? null;
+    if (raw.parentSlug != null && raw.parentSlug !== parentFromPath) {
+      mainPlan.push({
+        kind: "singlepages",
+        key: slug,
+        action: "refuse",
+        reason:
+          `parentSlug "${raw.parentSlug}" does not match the parent segment of slug "${slug}" ` +
+          `(expected ${parentFromPath === null ? "no parentSlug (top-level page)" : `"${parentFromPath}"`})`,
+      });
+      continue;
+    }
+    if (parentFromPath) {
+      parentSanityId = sanityIdBySlug.get(parentFromPath) ?? null;
       if (!parentSanityId) {
-        mainPlan.push({ kind: "singlepages", key: slug, action: "refuse", reason: `missing parent page for parentSlug "${raw.parentSlug}"` });
+        mainPlan.push({ kind: "singlepages", key: slug, action: "refuse", reason: `missing parent page for parentSlug "${parentFromPath}"` });
         continue;
       }
     }
 
-    const sanityId = existing?.sanityId ?? `he-${slug}`;
+    const sanityId = existing?.sanityId ?? singlepageSanityId(slug);
     const data = { ...pickFields(raw, SINGLEPAGE_FIELDS), parentSanityId, translationGroupId: tg.translationGroupId };
     const existingComparable = existing
       ? { ...pickFields(existing, SINGLEPAGE_FIELDS), parentSanityId: existing.parentSanityId ?? null, translationGroupId: existing.translationGroupId ?? null }
       : null;
-    const resolved = { parentSanityId, translationGroupId: tg.translationGroupId, sourceEnRowId: tg.sourceEnRow?.id ?? null, needsEnUpdate: tg.needsEnUpdate };
+    // `key` is the pack identity (the full path); `slug` is what the DB column
+    // gets (the leaf) — applyPlan writes `slug`, never `key`.
+    const resolved = { leafSlug: leaf, parentSanityId, translationGroupId: tg.translationGroupId, sourceEnRowId: tg.sourceEnRow?.id ?? null, needsEnUpdate: tg.needsEnUpdate };
 
     if (!existing) {
-      mainPlan.push({ kind: "singlepages", key: slug, action: "insert", reason: "no existing he row", sanityId, data, resolved });
+      mainPlan.push({ kind: "singlepages", key: slug, slug: leaf, action: "insert", reason: "no existing he row", sanityId, data, resolved });
     } else if (!deepEqual(existingComparable, data)) {
-      mainPlan.push({ kind: "singlepages", key: slug, action: "update", reason: "data differs from the pack", sanityId, data, resolved, id: existing.id });
+      mainPlan.push({ kind: "singlepages", key: slug, slug: leaf, action: "update", reason: "data differs from the pack", sanityId, data, resolved, id: existing.id });
     } else {
-      mainPlan.push({ kind: "singlepages", key: slug, action: "skip", reason: "unchanged", id: existing.id, sanityId });
+      mainPlan.push({ kind: "singlepages", key: slug, slug: leaf, action: "skip", reason: "unchanged", id: existing.id, sanityId });
     }
 
     const wantSlugs = Array.isArray(raw.relatedLandingPages) ? raw.relatedLandingPages : [];
     const missingSlug = wantSlugs.find((relSlug) => !sanityIdBySlug.has(relSlug));
     if (missingSlug) {
-      linkPlan.push({ kind: "singlepages", key: slug, action: "refuse", reason: `unknown pack slug in relatedLandingPages: "${missingSlug}"` });
+      linkPlan.push({ kind: "singlepages", key: slug, slug: leaf, action: "refuse", reason: `unknown pack slug in relatedLandingPages: "${missingSlug}"` });
       continue;
     }
     const relatedRefs = wantSlugs.map((relSlug) => ({ _ref: sanityIdBySlug.get(relSlug) }));
     const existingRelSlugs = (existing?.relatedLandingPageSlugs ?? []).slice().sort();
     const wantSlugsSorted = wantSlugs.slice().sort();
     if (deepEqual(existingRelSlugs, wantSlugsSorted)) {
-      linkPlan.push({ kind: "singlepages", key: slug, action: "skip", reason: "related landing pages unchanged" });
+      linkPlan.push({ kind: "singlepages", key: slug, slug: leaf, action: "skip", reason: "related landing pages unchanged" });
     } else {
-      linkPlan.push({ kind: "singlepages", key: slug, action: "link", reason: "related landing pages differ", resolved: { relatedRefs, relatedSlugs: wantSlugs } });
+      linkPlan.push({ kind: "singlepages", key: slug, slug: leaf, action: "link", reason: "related landing pages differ", resolved: { relatedRefs, relatedSlugs: wantSlugs } });
     }
   }
 
@@ -625,6 +745,9 @@ export async function applyPlan(plan, prisma) {
     }
 
     if (entry.kind === "singlepages") {
+      // The DB `slug` column is the LEAF segment (entry.slug); entry.key is
+      // the full pack path and is only an identifier for reports/links.
+      const dbSlug = entry.slug ?? entry.key;
       if (entry.action === "skip") {
         idBySlug.singlepages.set(entry.key, entry.sanityId);
         continue;
@@ -635,16 +758,16 @@ export async function applyPlan(plan, prisma) {
         }
         const { parentSanityId, translationGroupId, ...rest } = entry.data;
         await prisma.singlepage.upsert({
-          where: { language_slug: { language: "he", slug: entry.key } },
+          where: { language_slug: { language: "he", slug: dbSlug } },
           update: { ...rest, parentSanityId, translationGroupId },
-          create: { sanityId: entry.sanityId, language: "he", slug: entry.key, parentSanityId, translationGroupId, status: "PUBLISHED", publishedAt: new Date(), ...rest },
+          create: { sanityId: entry.sanityId, language: "he", slug: dbSlug, parentSanityId, translationGroupId, status: "PUBLISHED", publishedAt: new Date(), ...rest },
         });
         idBySlug.singlepages.set(entry.key, entry.sanityId);
         continue;
       }
       if (entry.action === "link") {
         await prisma.singlepage.update({
-          where: { language_slug: { language: "he", slug: entry.key } },
+          where: { language_slug: { language: "he", slug: dbSlug } },
           data: { relatedLandingPages: entry.resolved.relatedRefs },
         });
         continue;
@@ -688,6 +811,7 @@ function printPlan(plan) {
     console.log(`${p.kind.padEnd(15)} ${String(p.key).padEnd(32)} ${p.action.padEnd(8)} ${p.reason}`);
     if (p.resolved) {
       const bits = [];
+      if (p.resolved.leafSlug && p.resolved.leafSlug !== p.key) bits.push(`slug=${p.resolved.leafSlug}`);
       if (p.resolved.parentSanityId) bits.push(`parent=${p.resolved.parentSanityId}`);
       if (p.resolved.translationGroupId) bits.push(`translationGroupId=${p.resolved.translationGroupId}`);
       if (p.resolved.relatedRefs) bits.push(`relatedRefs=[${p.resolved.relatedRefs.map((r) => r._ref).join(", ")}]`);
@@ -740,9 +864,11 @@ async function loadExistingRowsForPack(prisma, pack) {
 
   if (pack.kind === "singlepages") {
     if (!pack.rows.length) return {};
-    const slugs = pack.rows.map((r) => r.slug);
-    const parentSlugs = pack.rows.map((r) => r.raw.parentSlug).filter(Boolean);
-    const relSlugs = pack.rows.flatMap((r) => (Array.isArray(r.raw.relatedLandingPages) ? r.raw.relatedLandingPages : []));
+    // Every DB-side slug here is a LEAF segment — that's what the column
+    // holds (see leafSlug) — while the pack's own slugs are full paths.
+    const slugs = pack.rows.map((r) => leafSlug(r.slug));
+    const parentSlugs = pack.rows.map((r) => parentPackSlug(r.slug)).filter(Boolean).map(leafSlug);
+    const relSlugs = pack.rows.flatMap((r) => (Array.isArray(r.raw.relatedLandingPages) ? r.raw.relatedLandingPages : [])).map(leafSlug);
     const tgSlugs = [...new Set(pack.rows.map((r) => r.raw.translationGroupSlugEn).filter(Boolean))];
     const allSlugs = [...new Set([...slugs, ...parentSlugs, ...relSlugs])];
     const byId = new Map();

@@ -8,10 +8,26 @@
 // repo's "Local DB is production" note for why.
 //
 // Run: node --test scripts/qa/__tests__/he-seed.test.mjs
+// The pack LOADER tests at the bottom are the one exception: they write
+// throwaway fixture files into an OS temp directory (never the repo, never
+// the DB) because recursive directory walking cannot be exercised in memory.
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
 
-import { planSeed, planFaq, rebuildFaqHe, planCaseStudies, planSinglepages, planLegalCheck, applyPlan } from "../../he-content/seed.mjs";
+import {
+  planSeed,
+  planFaq,
+  rebuildFaqHe,
+  planCaseStudies,
+  planSinglepages,
+  planLegalCheck,
+  applyPlan,
+  loadSinglepagesPack,
+  loadCaseStudiesPack,
+} from "../../he-content/seed.mjs";
 
 // ─── faq ────────────────────────────────────────────────────────────────────
 
@@ -244,6 +260,97 @@ test("planSinglepages: nested parentSlug resolves to the hub's deterministic san
   assert.match(refusal.reason, /missing parent page for parentSlug "paphos"/);
 });
 
+test("planSinglepages: a nested page stores the LEAF slug in the DB column, keeps the full path as its key, and gets a dash-joined sanityId", () => {
+  const rows = [singlepageRow("limassol"), singlepageRow("limassol/new-projects", { parentSlug: "limassol" })];
+  const plan = planSinglepages(rows, { singlepages: [] });
+  const spoke = plan.find((p) => p.key === "limassol/new-projects" && p.action === "insert");
+  assert.ok(spoke);
+  // The public route looks a page up by the LAST URL segment only
+  // (_getSinglePageByLang), reconstructing the path via parentSanityId.
+  assert.equal(spoke.slug, "new-projects");
+  assert.equal(spoke.resolved.leafSlug, "new-projects");
+  assert.equal(spoke.resolved.parentSanityId, "he-limassol");
+  assert.equal(spoke.sanityId, "he-limassol-new-projects");
+
+  const hub = plan.find((p) => p.key === "limassol" && p.action === "insert");
+  assert.equal(hub.slug, "limassol");
+  assert.equal(hub.resolved.parentSanityId, null);
+});
+
+test("planSinglepages: parentSlug must match the pack slug's own parent segment", () => {
+  const mismatch = planSinglepages([singlepageRow("limassol"), singlepageRow("limassol/new-projects", { parentSlug: "paphos" })], { singlepages: [] });
+  const refusal = mismatch.find((p) => p.action === "refuse");
+  assert.ok(refusal);
+  assert.match(refusal.reason, /parentSlug "paphos" does not match the parent segment of slug "limassol\/new-projects"/);
+
+  // A top-level page must not declare a parent at all.
+  const topLevel = planSinglepages([singlepageRow("limassol", { parentSlug: "cyprus" })], { singlepages: [] });
+  assert.match(topLevel.find((p) => p.action === "refuse").reason, /no parentSlug \(top-level page\)/);
+
+  // parentSlug omitted entirely is fine — the path already says it.
+  const implied = planSinglepages([singlepageRow("limassol"), singlepageRow("limassol/new-projects")], { singlepages: [] });
+  assert.equal(implied.find((p) => p.key === "limassol/new-projects" && p.action === "insert").resolved.parentSanityId, "he-limassol");
+});
+
+test("planSinglepages: two pack pages sharing a leaf under different parents are refused (the route cannot tell them apart)", () => {
+  const rows = [
+    singlepageRow("limassol"),
+    singlepageRow("paphos"),
+    singlepageRow("limassol/apartments", { parentSlug: "limassol" }),
+    singlepageRow("paphos/apartments", { parentSlug: "paphos" }),
+  ];
+  const plan = planSinglepages(rows, { singlepages: [] });
+  const refusals = plan.filter((p) => p.action === "refuse");
+  assert.equal(refusals.length, 2);
+  for (const r of refusals) {
+    assert.match(r.reason, /duplicate leaf slug "apartments" across pack pages "limassol\/apartments" and "paphos\/apartments"/);
+  }
+  // The hubs themselves still plan normally.
+  assert.ok(plan.find((p) => p.key === "limassol" && p.action === "insert"));
+});
+
+test("planSinglepages: an already-seeded nested he row is matched by its leaf slug and re-resolved to its full path", () => {
+  const existingHub = { id: "sp-hub", sanityId: "he-limassol", slug: "limassol", language: "he", title: "כותרת" };
+  const existingSpoke = {
+    id: "sp-spoke",
+    sanityId: "he-limassol-new-projects",
+    slug: "new-projects",
+    language: "he",
+    parentSanityId: "he-limassol",
+    title: "כותרת",
+    excerpt: "תקציר",
+    allowIntroBlock: true,
+    translationGroupId: "tg-1",
+    relatedLandingPageSlugs: [],
+  };
+  // Another page links the nested one by its FULL pack path.
+  const plan = planSinglepages([singlepageRow("paphos", { relatedLandingPages: ["limassol/new-projects"] })], {
+    singlepages: [existingHub, existingSpoke],
+  });
+  const link = plan.find((p) => p.key === "paphos" && p.action === "link");
+  assert.deepEqual(link.resolved.relatedRefs, [{ _ref: "he-limassol-new-projects" }]);
+
+  // And re-planning the spoke itself finds the existing row (update/skip, not a second insert).
+  const rePlan = planSinglepages([singlepageRow("limassol/new-projects", { parentSlug: "limassol" })], { singlepages: [existingHub, existingSpoke] });
+  const entry = rePlan.find((p) => ["insert", "update", "skip"].includes(p.action));
+  assert.equal(entry.action, "skip", entry.reason);
+  assert.equal(entry.sanityId, "he-limassol-new-projects");
+});
+
+test("applyPlan: a nested singlepage is upserted under its LEAF slug with parentSanityId set", async () => {
+  const rows = [singlepageRow("limassol"), singlepageRow("limassol/new-projects", { parentSlug: "limassol", relatedLandingPages: ["limassol"] })];
+  const plan = planSinglepages(rows, { singlepages: [] });
+  const prisma = fakePrisma();
+  await applyPlan(plan, prisma);
+
+  const spokeUpsert = prisma.calls.singlepageUpsert.find((c) => c.create.sanityId === "he-limassol-new-projects");
+  assert.ok(spokeUpsert);
+  assert.deepEqual(spokeUpsert.where, { language_slug: { language: "he", slug: "new-projects" } });
+  assert.equal(spokeUpsert.create.slug, "new-projects");
+  assert.equal(spokeUpsert.create.parentSanityId, "he-limassol");
+  assert.deepEqual(prisma.calls.singlepageUpdate[0].where, { language_slug: { language: "he", slug: "new-projects" } });
+});
+
 test("planSinglepages: parentSlug also resolves against an already-seeded he row from a previous run", () => {
   const existingHub = { id: "sp-hub", sanityId: "he-limassol", slug: "limassol", language: "he", title: "כותרת" };
   const plan = planSinglepages([singlepageRow("limassol/new-projects", { parentSlug: "limassol" })], { singlepages: [existingHub] });
@@ -396,8 +503,72 @@ test("applyPlan: singlepages — inserts the row THEN links relatedLandingPages 
 });
 
 test("applyPlan: refuses (throws) rather than writing anything when the plan contains a refuse entry", async () => {
-  const plan = planSinglepages([singlepageRow("limassol", { parentSlug: "missing-hub" })], { singlepages: [] });
+  const plan = planSinglepages([singlepageRow("paphos/villas", { parentSlug: "paphos" })], { singlepages: [] });
   const prisma = fakePrisma();
   await assert.rejects(() => applyPlan(plan, prisma), /refusing to apply/);
   assert.equal(prisma.calls.singlepageUpsert.length, 0);
+});
+
+// ─── pack loaders (recursive, filename ⇄ "slug" consistency) ───────────────
+//
+// The only tests here that touch the filesystem: a throwaway fixture tree
+// under the OS temp dir (never the repo, never the DB).
+
+function withPackDir(files, fn) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "he-seed-pack-"));
+  try {
+    for (const [rel, json] of Object.entries(files)) {
+      const full = path.join(dir, rel);
+      fs.mkdirSync(path.dirname(full), { recursive: true });
+      fs.writeFileSync(full, JSON.stringify(json, null, 2));
+    }
+    return fn(dir);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+test("loadSinglepagesPack: recurses into subdirectories — a nested file's path IS its pack slug", () => {
+  const rows = withPackDir(
+    {
+      "limassol.he.json": { slug: "limassol", title: "כותרת" },
+      "limassol/new-projects.he.json": { slug: "limassol/new-projects", parentSlug: "limassol", title: "כותרת" },
+      "notes.txt": "ignored",
+    },
+    (dir) => loadSinglepagesPack(dir),
+  );
+  assert.deepEqual(
+    rows.map((r) => r.slug),
+    ["limassol", "limassol/new-projects"],
+  );
+  assert.equal(rows[1].file, "limassol/new-projects.he.json");
+  assert.equal(rows[1].raw.parentSlug, "limassol");
+});
+
+test('loadSinglepagesPack: a file whose "slug" field disagrees with its path is a hard error naming both', () => {
+  assert.throws(
+    () => withPackDir({ "limassol/new-projects.he.json": { slug: "new-projects", title: "כותרת" } }, (dir) => loadSinglepagesPack(dir)),
+    /file "limassol\/new-projects\.he\.json" declares "slug": "new-projects", but its path \(without \.he\.json\) is "limassol\/new-projects"/,
+  );
+});
+
+test('loadSinglepagesPack: a file without a "slug" field is accepted (the path is the slug); a missing directory loads nothing', () => {
+  const rows = withPackDir({ "paphos.he.json": { title: "כותרת" } }, (dir) => loadSinglepagesPack(dir));
+  assert.deepEqual(
+    rows.map((r) => r.slug),
+    ["paphos"],
+  );
+  assert.deepEqual(loadSinglepagesPack(path.join(os.tmpdir(), "he-seed-does-not-exist")), []);
+});
+
+test("loadCaseStudiesPack: same recursive loader, same filename ⇄ slug check", () => {
+  const rows = withPackDir({ "story-1.he.json": { slug: "story-1", title: "כותרת" } }, (dir) => loadCaseStudiesPack(dir));
+  assert.deepEqual(
+    rows.map((r) => r.slug),
+    ["story-1"],
+  );
+  assert.throws(
+    () => withPackDir({ "story-1.he.json": { slug: "story-2" } }, (dir) => loadCaseStudiesPack(dir)),
+    /case-studies — file "story-1\.he\.json" declares "slug": "story-2"/,
+  );
 });

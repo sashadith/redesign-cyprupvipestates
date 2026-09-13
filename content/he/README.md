@@ -29,7 +29,32 @@ content/he/
     inventory.json
   site-documents/<type>.he.json      → SiteDocument  (type_language: {type, language:"he"})
   case-studies/<slug>.he.json        → CaseStudy     (language:"he", slug) + CaseStudyProject links
-  singlepages/<slug>.he.json         → Singlepage    (language:"he", slug) + relatedLandingPages links
+  singlepages/<slug>.he.json         → Singlepage    (language:"he", LEAF of slug) + parentSanityId
+                                       + relatedLandingPages links
+  singlepages/limassol/new-projects.he.json          … a nested page lives at its own path
+```
+
+**Pack slug ⇄ file path ⇄ DB slug.** A pack file's path relative to its kind
+directory (minus `.he.json`) and the file's own `"slug"` field are both the
+FULL served path — `singlepages/limassol/new-projects.he.json` ⇄ `"slug":
+"limassol/new-projects"`. The two must be identical; the loaders read
+recursively and a divergence is a hard error naming both (the seeder resolves
+by path, `he-content-check.mjs` by field, so they must not drift). That full
+path is what `docs/i18n/he-keyword-map.md`, `parentSlug`,
+`relatedLandingPages` and the gate's `linkCheck` all reference.
+
+What lands in the database is different: `Singlepage.slug` gets only the
+**leaf** segment (`new-projects`) plus `parentSanityId` pointing at the hub
+row, because that's what the public route reads back —
+`_getSinglePageByLang(lang, slug)` looks a page up by the URL's last segment
+and `getAllPathsForLang` / `src/lib/seo/pagePower/inventory.ts` reconstruct
+the served path by walking `parentSanityId`. `sanityId` is the full path with
+slashes turned into dashes (`he-limassol-new-projects`). Two pack pages whose
+leaves would collide under different parents (`limassol/apartments` and
+`paphos/apartments`) are refused at plan time: `Singlepage.slug` is unique per
+`(language, slug)` and the route could not tell them apart.
+
+```
 
 scripts/faq-translations/he.json     → SiteDocument type="faqPage" — seeded identically by EITHER
                                         `node scripts/seed-faq-translations.mjs` (the original en/de/pl/ru
@@ -54,10 +79,15 @@ fields) before diffing/writing:
   the group).
 - `"parentSlug"` (singlepages only) — for a nested landing page (e.g.
   `limassol/new-projects`), the pack slug of its hub, resolved to
-  `parentSanityId`. Resolves against every OTHER `*.he.json` row in the same
-  seeder run (by its deterministic `sanityId: "he-<slug>"`, no DB round trip
-  needed) as well as any hub already seeded to `he` in an earlier run. A
-  parent slug that resolves to neither is a hard error naming the slug.
+  `parentSanityId`. The parent is derived from the page's own path
+  (`limassol/new-projects` → `limassol`); `parentSlug`, when present, is
+  cross-checked against it and a disagreement is a hard error naming both (a
+  top-level page must not declare one). It resolves against every OTHER
+  `*.he.json` row in the same seeder run (by its deterministic
+  `sanityId: "he-<slug-with-dashes>"`, no DB round trip needed) as well as any
+  hub already seeded to `he` in an earlier run (whose full path is
+  reconstructed from its leaf slug by walking `parentSanityId`). A parent that
+  resolves to neither is a hard error naming the slug.
 - `"relatedLandingPages"` (singlepages only) — an array of PACK slugs (not
   `_ref`s) for the editor-curated cross-links between Hebrew landing pages.
   Resolved the same way as `parentSlug` (this run's rows + already-seeded `he`
@@ -167,6 +197,15 @@ overlap-review admin flow sets. A Development with no corresponding legacy
 `Project` (the common case for anything created after the `Development`
 model existed) has nothing to link to; `applyPlan` logs a warning and skips
 just that link rather than failing the whole run.
+
+There are no `he` rows in the legacy `Project` model and nothing creates any
+(Hebrew content is seeded as `Development`/`CaseStudy`/`Singlepage` only), so
+`mapProjectRowsToLang` — which normally maps a linked project row to its
+same-language sibling — would drop every card on a `he` case-study page. It
+therefore carries a Hebrew-only fallback to the **EN** sibling
+(`src/sanity/sanity.utils.ts`): the card link is `/he/projects/<slug>` and
+project slugs are Latin and locale-agnostic, so the EN row's slug resolves
+under `/he` exactly as under `/en`. en/de/pl/ru behaviour is unchanged.
 
 Recommended operator sequence once content lands (`docs/i18n/acceptance/phase-5.md`,
 Task 9 step 4, documents the full runbook):
