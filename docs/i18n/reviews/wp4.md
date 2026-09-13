@@ -13,7 +13,7 @@
 |---|---|
 | Blog-Hero (Eyebrow, H1, Artikelzähler) | `/he/blog` — Eyebrow, gold akzentuierte H1, Zählzeile: 0 → „אין עדיין מאמרים", 1 → „מאמר אחד באנגלית", ab 2 → „N מאמרים באנגלית" |
 | Hero-Mockup (Telefonrahmen rechts) | `/he/blog` — Kicker = H1-Text, unten der Featured-CTA |
-| Kategorien-Tabs + Karten-CTA | `/he/blog` — Tab „הכול", Karten-Fußzeile „לקריאה" |
+| Kategorien-Tabs + Karten-CTA | `/he/blog` — Tab „הכל", Karten-Fußzeile „לקריאה" |
 | Pager | `/he/blog?page=2` und tiefer — `aria-label`s (nur mit Screenreader hörbar) |
 | Leerzustand | `/he/blog`, **nur** wenn die Locale insgesamt null Artikel hat (`InsightsList.tsx:272`: `!allCards.length && !featured`). Der Kategoriefilter hat **keinen** Leerzustand |
 | Content-/SEO-Block | Fuß von `/he/blog`, nur auf Seite 1 und nur wenn das CMS-Dokument Inhalt hat |
@@ -84,7 +84,7 @@ nicht mit abtippen, nur den Text.
 | eyebrow | The Journal | הבלוג | Eyebrow über der H1 | |
 | articleOne | article | מאמר אחד באנגלית | **Fix 1 (M1):** wird ohne Ziffer gerendert (`מאמר אחד באנגלית`, nicht „1 מאמר"); der 0-Fall steht im `he`-Zweig in `BlogInsights.tsx` (`אין עדיין מאמרים`) | |
 | articleMany | articles | מאמרים באנגלית | „12 מאמרים באנגלית" — trägt die Produktentscheidung; siehe offene Frage 1 | |
-| filterAll | All | הכול | Kategorien-Tab | |
+| filterAll | All | הכל | Kategorien-Tab | |
 | read | Read | לקריאה | Karten-CTA, ein Wort | |
 | readArticle | Read article | לקריאת המאמר | Featured-CTA im Hero-Mockup | |
 | categoriesAria | Categories | קטגוריות | nur `aria-label` | |
@@ -119,7 +119,7 @@ die en/de/pl/ru-Texte sind unverändert übernommen.
 | Key | EN | HE | Anmerkung | Korrektur HE |
 |---|---|---|---|---|
 | loadMore | Load {n} more posts | הצגת עוד {n} מאמרים | **Fix 1 (S3):** WP3 Pass B hat für Pagination-Controls die Nominalform entschieden (Infinitiv nur für Links/CTAs); `{n}` ist immer 9 | |
-| filterAll | All | הכול | Kategorien-Tab; wortgleich mit `blogI18n.filterAll` | |
+| filterAll | All | הכל | Kategorien-Tab; wortgleich mit `blogI18n.filterAll` | |
 
 ## 4. `src/app/[lang]/developers/page.copy.ts` — `DEVELOPERS_PAGE_COPY.he` (`/he/developers`)
 

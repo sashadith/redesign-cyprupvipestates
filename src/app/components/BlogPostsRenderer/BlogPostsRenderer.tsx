@@ -34,7 +34,7 @@ const BLOG_POSTS_COPY: Record<Locale, typeof BLOG_POSTS_EN> = {
   de: { loadMore: (n) => `Noch ${n} Beiträge laden`, filterAll: "Alle" },
   ru: { loadMore: (n) => `Загрузить ещё ${n} постов`, filterAll: "Все" },
   pl: { loadMore: (n) => `Załaduj jeszcze ${n} postów`, filterAll: "Wszystkie" },
-  he: { loadMore: (n) => `הצגת עוד ${n} מאמרים`, filterAll: "הכול" }, // REVIEW(he)
+  he: { loadMore: (n) => `הצגת עוד ${n} מאמרים`, filterAll: "הכל" }, // REVIEW(he)
 };
 
 const copy = (lang: string) => BLOG_POSTS_COPY[isLocale(lang) ? lang : "en"];

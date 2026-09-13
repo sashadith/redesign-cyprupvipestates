@@ -213,7 +213,7 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 | Projects | פרויקטים | Navigationslabel |
 | Developers | יזמים | |
 | Blog / Insights | בלוג | Eyebrow über dem Blog-H1: `הבלוג` |
-| Case studies | סיפורי לקוחות | H1 und Navigation; nicht „מקרי בוחן". Eyebrow darüber: `סיפורי הצלחה` (§4.5) |
+| Case studies | סיפורי לקוחות | H1 und Navigation; nicht „מקרי בוחן". Eyebrow darüber: `מהשטח` (§4.5) |
 | About us | עלינו | Slug bleibt `about-us` |
 | Contact | צור קשר | Menü-Label; Nominal ist hier akzeptierter Standard. CTA auf einer Personenkarte: `ליצירת קשר` |
 | FAQ | שאלות ותשובות | **nur Navigationslabel.** Als Überschrift über einem Akkordeon: `שאלות נפוצות` |
@@ -357,7 +357,7 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 
 | Englisch | Hebräisch | Hinweis |
 |---|---|---|
-| Success Stories (Eyebrow über der H1) | סיפורי הצלחה | Controller-Entscheidung; H1 darunter bleibt `סיפורי לקוחות`. Die WP6-Variante `מהשטח` wird **nicht** verwendet (§7) |
+| Success Stories (Eyebrow über der H1) | מהשטח | WP6-Pass-B-Entscheidung (Wurzelwiederholung zur H1 `סיפורי לקוחות` vermeiden); `סיפורי הצלחה` nicht als Eyebrow verwenden |
 | case study (Einzelfall) | סיפור לקוח | Plural und Nav-Label: `סיפורי לקוחות` (§4) |
 | Read the story (Mockup-CTA) | לקריאת הסיפור | |
 | Read the full story (Karten-CTA) | לסיפור המלא | bewusst ohne Wurzelwiederholung zu `לקריאת הסיפור` |
@@ -459,7 +459,7 @@ Nur die Punkte, die die Kritik-Pässe ausdrücklich dem muttersprachlichen Lekto
 | All (Filter) | WP2/WP5 `הכל` · WP4 `הכול` | `הכל` | Controller-Entscheidung; Wortgleichheit über `/he/projects`, `/he/blog`, `/he/faq`, `/he/contacts`, `/he/about` (§11.6) |
 | Open in Google Maps / OSM | WP2 `פתיחה ב-Google Maps` (ohne Isolat) · WP5 mit Bidi-Isolat | `פתיחה ב-⁨Google Maps⁩` | Nominalform aus WP2 plus Bidi-Isolation aus WP5 |
 | Show all case studies | WP3 `לכל סיפורי הלקוחות` · WP5 `לקריאת כל סיפורי הלקוחות` | `לכל סיפורי הלקוחות` | Link im Listenkopf neben einem Pfeil, zwei Wörter |
-| Success Stories (Eyebrow) | WP6 `מהשטח` | `סיפורי הצלחה` | Controller-Entscheidung. WP6s Einwand (Wurzelwiederholung zur H1 `סיפורי לקוחות`) bleibt im Audit-Trail dokumentiert |
+| Success Stories (Eyebrow) | `סיפורי הצלחה` (frühere Controller-Vorgabe) | `מהשטח` | Controller-Ruling revidiert: WP6s Einwand (Wurzelwiederholung zur H1 `סיפורי לקוחות`) gilt; Code bleibt `מהשטח` |
 | developer | WP4 Pass A `חברות בנייה` | `יזם / חברה יזמית / יזמים` | `חברות בנייה`/`קבלן` ist der ausführende Bauunternehmer; in `he-keywords.csv` null Treffer |
 | Sending… / Loading… | `בשליחה…` / `בטעינה…` | `שולחים…` / `טוענים…` | `ב` + Verbalnomen als Zustandsangabe existiert im israelischen UI nicht (Styleguide §11.2) |
 | Price from | `החל מ-` · `מחיר התחלתי` | beides, kontextgetrennt | `החל מ-` inline direkt am Betrag, `מחיר התחלתי` nur wo die Caption allein steht (§2, §6) |
@@ -484,6 +484,6 @@ Nur die Punkte, die die Kritik-Pässe ausdrücklich dem muttersprachlichen Lekto
 |---|---|---|---|
 | `src/app/[lang]/blog/blogI18n.ts` | `filterAll` (Z. 86) | `הכול` | `הכל` (§4.1) |
 | `src/app/components/BlogPostsRenderer/BlogPostsRenderer.tsx` | `he.filterAll` (Z. 37) | `הכול` | `הכל` (§4.1) |
-| `src/app/preview-case-studies/[lang]/copy.ts` | `eyebrow` (Z. 231) | `מהשטח` | `סיפורי הצלחה` (§4.5) |
+| `src/app/preview-case-studies/[lang]/copy.ts` | `eyebrow` (Z. 231) | `מהשטח` | keine Änderung — Glossar auf `מהשטח` angeglichen |
 
 Alle übrigen in §1–§5 verbindlich gesetzten Formen entsprechen dem heutigen Stand von `src/` (geprüft: `שולחים…`, `טוענים…`, `פתיחה ב-`, `השאירו פרטים`, `לכל סיפורי הלקוחות`, `מחיר התחלתי`, `המלצות`, `ניוזלטר`, `(לא חובה)`, `כל הערים`, `שאלות נפוצות`; keine Treffer für `בשליחה`, `בטעינה`, `חברות בנייה`, `חוות דעת`, `דיוור`, `נדלן`, `מקרי בוחן`).

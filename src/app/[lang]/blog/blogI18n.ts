@@ -83,7 +83,7 @@ export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
     eyebrow: "הבלוג",
     articleOne: "מאמר אחד באנגלית", // rendered WITHOUT the numeral for he (see BlogInsights.tsx)
     articleMany: "מאמרים באנגלית",
-    filterAll: "הכול",
+    filterAll: "הכל",
     read: "לקריאה",
     readArticle: "לקריאת המאמר",
     categoriesAria: "קטגוריות",
