@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { i18n } from "@/i18n.config";
-import { localizedHref, PUBLIC_LOCALES as LOCALES } from "@/lib/locale";
+import { localizedHref, PUBLIC_LOCALES as LOCALES, isLocale } from "@/lib/locale";
 import { languageAlternates } from "@/lib/seo";
 import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporateLocale, type CorporatePage } from "@/lib/corporatePageSlugs";
 import type { Translation } from "@/types/homepage";
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = getLegalDoc(doc, lang);
   if (!t) return {};
 
-  const l = (LOCALES as readonly string[]).includes(lang) ? (lang as CorporateLocale) : "en";
+  const l = isLocale(lang) ? lang : "en";
   const page: CorporatePage = doc === "privacy" ? "privacy" : "terms";
 
   const { canonical, languages } = languageAlternates({
