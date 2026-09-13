@@ -209,7 +209,9 @@ und Labels/Validierungen sind wortgleich mit `FormStatic.copy.ts` `he`, Success/
 | `vConsentOne` | `Consent required` | `חובה לאשר` | | |
 | `success` | `Thank you — your enquiry has reached us. An adviser will be in touch, usually the same day.` | `תודה, הפנייה שלכם הגיעה אלינו. יועץ יחזור אליכם, בדרך כלל עוד באותו יום.` | Wortgleich mit WP1 `formFeedbackCopy.he.success`. Gedankenstrich → Komma (§3). | |
 | `error` | `Your enquiry could not be sent. Please try again, or reach us at office@… or +357 …` | `לא הצלחנו לשלוח את הפנייה. אפשר לנסות שוב, או ליצור איתנו קשר באימייל …@… או בטלפון …` | Wortgleich mit WP1 `formFeedbackCopy.he.error`; E-Mail und Telefon laufen durch `ltrIsolate()` (§5 Bidi). | |
-| `labelQuestion` / `placeholderQuestion` / `vQuestion` | `Your question` / … | *(kein `he`)* | Das Frage-Textfeld wird nur auf der englischsprachigen FAQ-Seite eingeschaltet; wie de/pl/ru fällt `he` hier auf das Englische zurück. Sobald `showQuestionField` für `he` gebraucht wird, muss übersetzt werden. | |
+| `labelQuestion` | `Your question` | `השאלה שלכם` | Optionales Frage-Textfeld (heute nur auf der FAQ-Seite eingeschaltet); `he` ist seit Commit 4e43738 vollständig belegt, kein englischer Fallback mehr. | |
+| `placeholderQuestion` | `What would you like to know?` | `מה תרצו לדעת?` | | |
+| `vQuestion` | `Please enter your question` | `יש להזין שאלה` | Unpersönliche Form (§11.2). | |
 
 ## Phase-6-CMS-Brief — die sieben hebräischen H2 (verbindlich)
 
