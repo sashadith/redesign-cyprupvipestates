@@ -20,15 +20,14 @@ Verbindliche Sprachregeln: `docs/i18n/he-styleguide.md` (inkl. §11, Lernpunkte 
 
 ## Gate-Zahlen
 
-<!-- TASK11: endgültige Zahlen eintragen -->
 | Gate | Befehl | Ergebnis |
 |---|---|---|
-| Platzhalter | `node scripts/qa/he-placeholders.mjs` | `TODO(he)`: 2 (nur `preview-legal/registry.ts`, Phase 5b) · `REVIEW(he)`: _N_ |
-| LTR-Snapshot | `node --import tsx scripts/qa/copy-snapshot.mjs --check` | sauber — kein en/de/pl/ru-String verändert (Ausnahmen unten) |
+| Platzhalter | `node scripts/qa/he-placeholders.mjs` | `TODO(he)`: 2 (nur `preview-legal/registry.ts`, Phase 5b) · `REVIEW(he)`: 111 Tabellen/Einträge |
+| LTR-Snapshot | `node --import tsx scripts/qa/copy-snapshot.mjs --check` | sauber, 3.197 Blätter — kein en/de/pl/ru-String verändert (Ausnahmen unten) |
 | Meta-Längen | `node --import tsx scripts/qa/he-meta-length.mjs` | 0 Verstöße außer `preview-partners` metaTitle 73 Zeichen (EN, Entscheidung J, Phase 8) |
 | Typen | `npx tsc --noEmit -p tsconfig.json` | sauber |
-| Tests | `npm test` | _N_ grün (Baseline 125 + neue Tests für `hePlaces`, `heFeedVocab`, `fit()`) |
-| Physische CSS-Deklarationen | `node scripts/qa/rtl-physical-count.mjs` | unverändert gegenüber Phase 2 (107, Phase 2b) |
+| Tests | `npm test` | 169 grün (Baseline 125 + 44 neue Tests: `hePlaces`, `heFeedVocab`, `fit()`, SEO-LTR-Pins, E-Mail-RTL, Datums-Präpositionen, Escaping, Amenities) |
+| Physische CSS-Deklarationen | `node scripts/qa/rtl-physical-count.mjs` | 107, unverändert gegenüber Phase 2 (Phase 2b) |
 
 **Bewusste, sichtbare Änderungen für en/de/pl/ru** (alle im Ledger als Ruling): Nationalitäten-Dropdown im Qualifizierungsformular erhält die Option „Israeli"; `ClassicBlocks` reicht `lang` an `HowWeWorkSection` durch (Akzentwort-Hervorhebung greift nun auch auf de/pl/ru-Landingpages); ROI-Mail-Labels liegen in einer Tabelle (Text byte-identisch); `ProjectLink` zeigt für ru `м²` statt `m²` (Angleichung an `DEVELOPMENT_STRINGS.ru`).
 
