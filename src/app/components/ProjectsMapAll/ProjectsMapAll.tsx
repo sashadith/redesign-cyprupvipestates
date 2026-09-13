@@ -258,7 +258,7 @@ function t(
     he: {
       coords: "קואורדינטות",
       copy: "העתקה",
-      copied: "הועתק",
+      copied: "הועתק ללוח",
       open: "פתיחה ב-Google Maps",
       route: "מסלול (Google/Apple)",
       osm: "פתיחה ב-OSM",
@@ -309,9 +309,9 @@ const GESTURE_TEXT: Record<
     scrollMac: "\u2318 + скролл для масштабирования",
   },
   he: {
-    touch: "יש להשתמש בשתי אצבעות כדי להזיז את המפה",
-    scroll: "Ctrl + גלילה לזום",
-    scrollMac: "\u2318 + גלילה לזום",
+    touch: "השתמשו בשתי אצבעות כדי להזיז את המפה",
+    scroll: "Ctrl + גלילה כדי לקרב",
+    scrollMac: "\u2318 + גלילה כדי לקרב",
   }, // REVIEW(he)
 };
 

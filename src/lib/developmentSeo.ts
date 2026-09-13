@@ -14,10 +14,21 @@
 import { prisma } from "@/lib/prisma";
 import type { ProjectVM } from "@/app/preview-project/feeds";
 import { listedUnits, computeAvailability } from "@/lib/developmentAvailability";
-import { isLocale, bidiIsolate, localeDir, type Locale as Lang } from "@/lib/locale";
+import { isLocale, bidiIsolate, ltrIsolate, localeDir, type Locale as Lang } from "@/lib/locale";
+import { heLocative } from "@/lib/hePlaces";
+import { heBedrooms } from "@/lib/heFeedVocab";
 
 export const TITLE_MAX = 60;
 export const DESC_MAX = 160;
+
+// he-styleguide.md §6/§10 caps a Hebrew description at 155, not 160 (Pass B,
+// Must fix #8). Scoped to `he` rather than lowered globally on purpose: a
+// realistic-value sweep of the LTR templates tops out at 150 chars, but a
+// free-text `completion` value ("Ready to move in") pushes DE to 160 and PL to
+// 158 — clamping those to 155 would change live LTR snippets, which this fix
+// round must not do. DESC_MAX itself stays 160 because the admin editor and the
+// AI generator (src/lib/ai/seoMeta.ts) publish it as their hard ceiling.
+const descMax = (l: Lang) => (l === "he" ? 155 : DESC_MAX);
 
 // The "prod-only switch": the new Development pages carry the full SEO
 // machinery (per-project title/description, canonical, hreflang, structured
@@ -119,10 +130,14 @@ const LABELS: Record<Lang, { in: string; from: string; unitsAvailable: string; c
   de: { in: "in", from: "ab", unitsAvailable: "Einheiten verfügbar", completion: "Fertigstellung", cyprus: "Zypern", soldOut: "Ausverkauft", similar: "Ähnliche Projekte ansehen", cta: "Verfügbarkeit & Preise ansehen" },
   pl: { in: "w", from: "od", unitsAvailable: "dostępnych jednostek", completion: "Termin realizacji", cyprus: "Cypr", soldOut: "Wyprzedane", similar: "Zobacz podobne inwestycje", cta: "Zobacz dostępność i ceny" },
   ru: { in: "в", from: "от", unitsAvailable: "доступных объектов", completion: "Срок сдачи", cyprus: "Кипр", soldOut: "Продано", similar: "Похожие проекты", cta: "Смотреть наличие и цены" },
-  // Hebrew SEO labels (WP2). `in`/`from` carry the bound-prefix hyphen the
-  // styleguide prescribes before a Latin word or a figure (ב-Paphos,
-  // החל מ-€450,000); the space that separates "in"/"from" from what follows in
-  // the LTR locales is therefore dropped for `he` — see the glue() helper below.
+  // Hebrew SEO labels (WP2). `from` carries the bound-prefix hyphen the
+  // styleguide prescribes before a figure (החל מ-€450,000); the space the LTR
+  // locales put after "from" is therefore dropped for `he` — see glue() below.
+  // `in` is NOT used on the he path any more: the preposition's shape depends on
+  // the SCRIPT of the place, not on the locale, so heLocative() (src/lib/
+  // hePlaces.ts) builds it — "בפאפוס" bound directly to a Hebrew place,
+  // "ב-⁨Konia, Paphos⁩" with the hyphen only when the place stays Latin (Pass B,
+  // Must fix #5). The value below mirrors that Latin-fallback prefix.
   // `cta` is the glossary's standard CTA (לצפייה בזמינות ובמחירים) so the
   // snippet ends on the same action the site's buttons offer.
   he: {
@@ -145,19 +160,38 @@ const fmtPrice = (n: number) => `€${n.toLocaleString("en-US")}`;
 const TITLE_SEP: Record<Lang, string> = { en: "–", de: "–", pl: "–", ru: "–", he: "|" };
 const SOLD_OUT_SEP: Record<Lang, string> = { en: " — ", de: " — ", pl: " — ", ru: " — ", he: ". " };
 
-// "in <place>" / "from <price>": Hebrew's ב / מ are bound prefixes written with
-// a hyphen and NO space before a Latin word or a figure ("ב-Paphos",
-// "החל מ-€450,000"), so the separator that the LTR locales need must not be
-// emitted for `he`. LABELS[he].in / .from already carry that hyphen.
+// "from <price>": Hebrew's מ is a bound prefix written with a hyphen and NO
+// space before a figure ("החל מ-€450,000"), so the separator the LTR locales
+// need must not be emitted for `he`. LABELS[he].from already carries the hyphen.
+// (The "in <place>" case is script-dependent, not locale-dependent — see
+// heLocative() in src/lib/hePlaces.ts.)
 const glue = (l: Lang) => (l === "he" ? "" : " ");
 
-function fit(clauses: string[], max: number, sep = " "): string {
-  // Drop trailing clauses one at a time until it fits; hard-truncate as a last resort.
-  for (let n = clauses.length; n > 0; n--) {
-    const s = clauses.slice(0, n).join(sep);
+// A clause that carries nothing but punctuation — the separators the templates
+// below splice between clauses.
+const BARE_SEPARATOR = /^[\s|·:,–—-]+$/;
+
+export function fit(clauses: string[], max: number, sep = " "): string {
+  // Drop trailing clauses one at a time until it fits; hard-truncate as a last
+  // resort. A clause that is nothing BUT a separator is dropped together with
+  // whatever followed it: because fit() trims from the end, a separator held in
+  // its own clause outlives the clause it introduced and leaves a title ending
+  // on a bare "|" ("⁨Limassol Del Mar Residences Tower B⁩ |", Pass B Must fix
+  // #7). Both call sites below now bind the separator to its clause, so this is
+  // belt-and-braces for any future template that forgets to.
+  const list = clauses.filter((c) => c !== "" && c != null);
+  if (!list.length) return "";
+  for (let n = list.length; n > 0; n--) {
+    while (n > 1 && BARE_SEPARATOR.test(list[n - 1])) n--;
+    if (n === 1 && BARE_SEPARATOR.test(list[0])) break;
+    const s = list.slice(0, n).join(sep);
+    // `.length` counts UTF-16 code units, which is never fewer than the
+    // grapheme count for this text (Hebrew letters and the bidi isolators are
+    // all single-unit BMP code points), so passing here also passes the
+    // grapheme budget he-meta-length.mjs measures.
     if (s.length <= max) return s;
   }
-  return clauses[0].slice(0, max - 1) + "…";
+  return list[0].slice(0, max - 1) + "…";
 }
 
 // ---------- public generators ----------
@@ -167,17 +201,35 @@ export function autoMetaTitle(vm: ProjectVM, lang: string): string {
   const type = typesLabel(vm, l);
   const beds = bedsRange(vm);
   const place = [vm.area, vm.district].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(", ");
+  const name = localeDir(lang) === "rtl" ? bidiIsolate(vm.publicName) : vm.publicName;
+
+  if (l === "he") {
+    // he inverts the LTR order on purpose (Pass B, title verdict): the whole
+    // SEO value of this title is the "<type> ב<city>" phrase Israelis actually
+    // search ("וילות בפאפוס", "דירות בלימסול" — he-keyword-map.md §2), so it
+    // leads and the Latin project name becomes the brand tail behind the "|",
+    // which is the slot §6 reserves for a brand anyway.
+    //
+    // Hebrew carries the bed count fine (unlike PL/RU), but only as a single
+    // figure: bedsRange() joins a span with an EN DASH, which `he` bans (§3),
+    // and rewriting the span here would duplicate heBedrooms()'s job on a value
+    // that is already the wrong shape — so a span simply drops out of the title.
+    const heBeds = beds && !beds.includes("–") ? heBedrooms(beds) : "";
+    const typeClause = heBeds ? `${type} עם ${heBeds}` : type;
+    const loc = heLocative(place);
+    return fit([loc ? `${typeClause} ${loc}` : typeClause, `${TITLE_SEP.he} ${name}`], TITLE_MAX);
+  }
+
   // EN/DE: safe to compound the bed count onto the type ("3-bed Villa" / "3-Zimmer-Villa").
   // PL/RU: skip it — gendered adjective endings differ per type noun, no single safe form.
   const typeClause =
     beds && l === "en" ? `${beds}-bed ${type}` : beds && l === "de" ? `${beds}-Zimmer-${type}` : type;
-  const name = localeDir(lang) === "rtl" ? bidiIsolate(vm.publicName) : vm.publicName;
-  // The place string is Latin ("Kato Paphos, Paphos"); inside an RTL title its
-  // internal comma would be visually reordered, so it needs the same isolator
-  // the project name gets.
-  const placeText = localeDir(lang) === "rtl" ? bidiIsolate(place) : place;
-  const clauses = [name, TITLE_SEP[l], place ? `${typeClause} ${LABELS[l].in}${glue(l)}${placeText}` : typeClause];
-  return fit(clauses, TITLE_MAX);
+  // The separator belongs to the clause it introduces, never to a clause of its
+  // own — otherwise fit() drops the type/place clause and keeps the dangling
+  // "–" behind it (Pass B, Must fix #7). The joined output is byte-identical to
+  // the three-clause form this replaced.
+  const tail = place ? `${typeClause} ${LABELS[l].in} ${place}` : typeClause;
+  return fit([name, `${TITLE_SEP[l]} ${tail}`], TITLE_MAX);
 }
 
 export function autoMetaDescription(vm: ProjectVM, lang: string): string {
@@ -185,8 +237,12 @@ export function autoMetaDescription(vm: ProjectVM, lang: string): string {
   const type = typesLabel(vm, l);
   const place = [vm.area, vm.district].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(", ");
   const lbl = LABELS[l];
-  const placeText = localeDir(lang) === "rtl" ? bidiIsolate(place) : place;
-  const sentence1 = `${type}${place ? ` ${lbl.in}${glue(l)}${placeText}` : ""}, ${lbl.cyprus}.`;
+  const max = descMax(l);
+  // "in <place>": Hebrew binds the preposition to a Hebrew place name and only
+  // hyphenates before a Latin one (Must fix #5); the LTR locales keep the space
+  // they always had, so their output is unchanged.
+  const placeClause = !place ? "" : l === "he" ? heLocative(place) : `${lbl.in} ${place}`;
+  const sentence1 = `${type}${placeClause ? ` ${placeClause}` : ""}, ${lbl.cyprus}.`;
   // Fallback total (no available unit left) counts the LISTED units only —
   // the same population the page itself shows. Counting raw rows would put a
   // number in the search snippet that is larger than anything on the page
@@ -201,27 +257,63 @@ export function autoMetaDescription(vm: ProjectVM, lang: string): string {
   // at what this visitor can still act on.
   const { soldOut } = computeAvailability(listedUnits(vm.units));
   if (soldOut) {
-    return fit([`${lbl.soldOut}${SOLD_OUT_SEP[l]}${sentence1}`, `${lbl.similar}.`], DESC_MAX);
+    // he only: two clauses land at 67-73 visible characters, far under the
+    // 120-155 corridor §6 asks for, and Google fills the rest with scraped page
+    // text. One more clause is free and factually safe — the alternatives query
+    // runs on this page anyway — and fit() drops it again if a long place name
+    // needs the room (Pass B, sold-out verdict).
+    const bridge = l === "he" ? "באזור יש נכסים חדשים שעדיין זמינים לרכישה." : "";
+    return fit([`${lbl.soldOut}${SOLD_OUT_SEP[l]}${sentence1}`, bridge, `${lbl.similar}.`], max);
   }
   const avail = vm.units.filter((u) => u.status === "available").length || listedUnits(vm.units).length;
-  const rawPriceClause = vm.priceFrom ? ` ${lbl.from}${glue(l)}${fmtPrice(vm.priceFrom)}` : "";
-  // Same gate as `name` in autoMetaTitle above: a plain string embedded into a
-  // generated sentence, not JSX (no <Bdi> available here), so it needs the
-  // string-level isolator. bidiIsolate (not ltrIsolate) to match that pattern.
-  const priceClause = localeDir(lang) === "rtl" ? bidiIsolate(rawPriceClause) : rawPriceClause;
+  // Isolate exactly the LTR run — the price figure — and nothing else. The
+  // previous bidiIsolate() wrapped the whole clause, leading space and Hebrew
+  // "החל מ" included, which hid where the Latin run actually was and spent the
+  // isolator on the wrong slice (Pass B, systemic #4). LTR locales isolate
+  // nothing here, exactly as before.
+  const priceFigure = vm.priceFrom ? fmtPrice(vm.priceFrom) : "";
+  const priceClause = vm.priceFrom
+    ? ` ${lbl.from}${glue(l)}${localeDir(lang) === "rtl" ? ltrIsolate(priceFigure) : priceFigure}`
+    : "";
   // EN only: "unit"/"units" inflects with the count (DE/PL/RU labels below are
   // already fixed, count-invariant nouns — "Einheiten"/"jednostek"/"объектов" —
   // real-estate convention regardless of n, so no equivalent branch needed there).
   const unitsLabel = l === "en" && avail === 1 ? "unit available" : lbl.unitsAvailable;
-  const sentence2 = avail ? `${avail} ${unitsLabel}${priceClause}.` : priceClause ? `${lbl.unitsAvailable}${priceClause}.` : "";
+  // Hebrew is NOT count-invariant either: "1 יחידות זמינות" is ungrammatical,
+  // and the numeral for one is written out and postposed (Pass B, Must fix #6).
+  // Same wording as DEVELOPMENT_STRINGS.he.unitsSubAvailable on the page itself
+  // (styleguide §11.6 — a duplicated string stays word-identical).
+  const sentence2 = avail
+    ? l === "he"
+      ? `${heUnitsAvailable(avail)}${priceClause}.`
+      : `${avail} ${unitsLabel}${priceClause}.`
+    : priceClause
+      ? `${lbl.unitsAvailable}${priceClause}.`
+      : "";
   // Hebrew renders the stored "Q3 2029" as "רבעון 3 2029" (styleguide §5); the
   // LTR locales keep the raw string they already shipped in this sentence.
   const completionText = vm.completion ? (l === "he" ? localizeCompletion(vm.completion, l) : vm.completion) : "";
-  const sentence3 = completionText ? `${lbl.completion}: ${completionText}.` : "";
+  // he: a quarter binds with the preposition ("מסירה ברבעון 3 2029") instead of
+  // the colon, which reads like a database field mid-snippet. Free-text values
+  // (the field allows any string) keep the colon and get isolated — there is no
+  // Hebrew preposition that fits an arbitrary English phrase.
+  const sentence3 = !completionText
+    ? ""
+    : l === "he"
+      ? QUARTER.test(vm.completion ?? "")
+        ? `מסירה ב${completionText}.`
+        : `${lbl.completion}: ${bidiIsolate(completionText)}.`
+      : `${lbl.completion}: ${completionText}.`;
   // CTA rides last so `fit()` only keeps it when the factual clauses leave room
-  // under DESC_MAX — a snippet that ends on an action ("View availability &
-  // prices") reads as more clickable than one trailing off on a completion date.
-  return fit([sentence1, sentence2, sentence3, `${lbl.cta}.`].filter(Boolean), DESC_MAX);
+  // under the description budget — a snippet that ends on an action ("View
+  // availability & prices") reads as more clickable than one trailing off on a
+  // completion date.
+  return fit([sentence1, sentence2, sentence3, `${lbl.cta}.`].filter(Boolean), max);
+}
+
+/** "יחידה אחת זמינה" / "12 יחידות זמינות" — see the comment at its call site. */
+function heUnitsAvailable(n: number): string {
+  return n === 1 ? "יחידה אחת זמינה" : `${n} יחידות זמינות`;
 }
 
 // ---------- live placeholders in stored SEO text ----------
@@ -358,5 +450,5 @@ export function resolveMetaDescription(vm: ProjectVM, lang: string, seo?: SeoOve
   if (soldOut) return autoMetaDescription(vm, lang);
   if (!override) return autoMetaDescription(vm, lang);
   const resolved = applySeoPlaceholders(override, vm, lang);
-  return resolved ? fit([resolved], DESC_MAX) : autoMetaDescription(vm, lang);
+  return resolved ? fit([resolved], descMax(asLang(lang))) : autoMetaDescription(vm, lang);
 }

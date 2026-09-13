@@ -453,7 +453,7 @@ const RU: ProjectsStrings = {
 const HE: ProjectsStrings = {
   numLocale: "en-US",
   cityLabel: "עיר",
-  cityPlaceholder: "כל האזורים",
+  cityPlaceholder: "כל הערים",
   cities: [
     { value: "Paphos", label: "פאפוס" },
     { value: "Limassol", label: "לימסול" },
@@ -485,7 +485,7 @@ const HE: ProjectsStrings = {
   mapBtn: "מפה",
   reset: "איפוס",
   moreFilters: "עוד מסננים",
-  hideFilters: "הסתרת המסננים",
+  hideFilters: "הסתרת מסננים",
   sortAria: "מיון לפי",
   sorts: [
     { value: "recommended", label: "מומלצים" },
@@ -503,7 +503,7 @@ const HE: ProjectsStrings = {
   badgeSoldOut: "נמכר",
   bedUnit: "חדרי שינה",
   areaUnit: "מ\"ר",
-  energyPrefix: "דירוג אנרגטי",
+  energyPrefix: "אנרגיה",
   priceFrom: "החל מ-",
   priceOnRequest: "מחיר לפי פנייה",
   minShort: "דק'",
@@ -521,8 +521,8 @@ const HE: ProjectsStrings = {
   close: "סגירה",
   nearby: "החיים בסביבה",
   zoomToLoad: "יש להתקרב כדי לטעון מקומות",
-  loading: "בטעינה…",
-  loadingMap: "המפה בטעינה…",
+  loading: "טוענים…",
+  loadingMap: "טוענים את המפה…",
   mapShort: "מפה…",
   poi: {
     school_private: "בית ספר פרטי",

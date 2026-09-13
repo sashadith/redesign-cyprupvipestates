@@ -1,6 +1,8 @@
 # Pass C — Muttersprachliches Review: WP2 (Projektliste, Development-Seite, Auto-SEO-Meta)
 
-**Stand:** 2026-09-13 · **Status:** Pass A (Erstübersetzung) fertig, alle Einträge tragen `REVIEW(he)` · **Freigabe erst mit ausgefülltem Protokoll** (Styleguide §9.5)
+**Stand:** 2026-09-13 · **Status:** Pass A (Erstübersetzung) + **Pass B Fix Round 1 eingearbeitet**, alle Einträge tragen `REVIEW(he)` · **Freigabe erst mit ausgefülltem Protokoll** (Styleguide §9.5)
+
+Die HE-Spalte unten zeigt durchgehend den **ausgelieferten** Stand nach Fix Round 1. Was Pass B geändert hat und warum, steht kompakt in **§7**; die Kritik selbst liegt in `.superpowers/sdd/2026-09-13-hebrew-phase4-copy/task-5-passB.md`.
 
 **Gegenstand:** die hebräische Projektliste und die Projekt-/Development-Detailseite samt der automatisch erzeugten SEO-Meta, die auf mehreren hundert Projektseiten ausgeliefert wird. Quelle jeder Übersetzung ist die **englische** Fassung; Deutsch stand nur für den Ton daneben.
 
@@ -36,12 +38,12 @@
 ## 3. Bewusste Entscheidungen dieses Passes (bitte bestätigen oder kippen)
 
 1. **Sortier-Labels mit Doppelpunkt** (`מחיר: מהנמוך לגבוה`) statt des `·`-Trenners der LTR-Sprachen. Begründung siehe Tabelle.
-2. **`בעיר` in „Weitere Projekte in <Stadt>"** — das gebundene Präfix `ב` kann im vorhandenen JSX (`{title} {city}`) nicht direkt am Ortsnamen kleben.
-3. **`החל מ-` als eigenständiges Label** vor dem Preis. Wortlaut nach Glossar, aber zwischen Label und Zahl steht ein Leerzeichen aus dem Markup, also `החל מ- €450,000`. Falls das stört, ist die Alternative, das Trennzeichen im Markup zu entfernen (Entwicklungsaufgabe, nicht Übersetzung).
+2. **`בעיר` in „Weitere Projekte in <Stadt>"** — das gebundene Präfix `ב` kann im vorhandenen JSX (`{title} {city}`) nicht direkt am Ortsnamen kleben. **Fix Round 1:** das Präfix war nur die halbe Miete — der Ortsname selbst kam als roher DB-Freitext („Paphos") in die hebräische Überschrift, während `PropertyFeatures` auf **derselben Seite** `פאפוס` schreibt. `ProjectSameCity.tsx` transliteriert jetzt über `hePlaceList()`.
+3. **`החל מ-` bleibt nur dort, wo es an der Zahl klebt.** Auf der Projektkarte steht das Label direkt vor dem Preis (`החל מ-€450,000`) — korrekt. **Fix Round 1:** an zwei Stellen tut es das nicht, und ein Bindestrich ohne Anschluss ist im Hebräischen ein Setzfehler, keine Präposition: die Hero-Caption der Development-Seite ist eine **eigene Zeile** unter der Preisfigur (`.pp-hero__stats > div { flex-direction: column }`) und `ProjectLink` schiebt ein `&nbsp;` dazwischen. Beide tragen jetzt `מחיר התחלתי` (sold out: `נמכר במחיר התחלתי`).
 4. **Meta-Title-Trenner `|` statt `–`** (Styleguide §6). Die LTR-Sprachen behalten ihren Halbgeviertstrich; nur `he` schaltet um.
 5. **Sold-out-Description** beginnt mit `נמכר במלואו.` plus neuem Satz statt mit einem Gedankenstrich.
 6. **`רבעון 3 2029`** in der Auto-Description — nur `he` lokalisiert das gespeicherte `Q3 2029`; en/de behalten `Q3 2029`, pl/ru bleiben in diesem Satz unverändert (bestehender Zustand, kein Regress durch WP2).
-7. **Ortsnamen in der Auto-Meta bleiben lateinisch** (`ב-Paphos`, `ב-Kato Paphos`): `vm.area`/`vm.district` sind Freitextfelder aus der Datenbank und haben keine hebräische Entsprechung. Der Bindestrich vor dem lateinischen Wort ist Styleguide §3. **Offene Frage an den Lektor und an das Produkt:** lohnt sich eine Umschrifttabelle für die ~20 häufigsten Gebiete, damit die Snippets `בפאפוס` statt `ב-Paphos` lesen? Das wäre eine eigene Aufgabe.
+7. **Ortsnamen in der Auto-Meta werden umschrieben** — `בפאפוס`, nicht `ב-Paphos`. **Diese Zeile war in Pass A der größte Fehler des Pakets und ist in Fix Round 1 die zentrale Änderung.** Sie stand hier als „offene Frage … das wäre eine eigene Aufgabe"; tatsächlich hängt an ihr die gesamte SEO-Wirkung: die hebräische Nachfrage lautet `וילות בפאפוס` (170/Mon.), `דירות בלימסול` (110/Mon.), `דירות בפאפוס` (90/Mon.) — durchgehend mit umschriebenem Ort (`he-keyword-map.md` §2), und `he-glossary.md` §1 schreibt die Umschrift für Städte und Regionen ohnehin vor. Ein Snippet mit `ב-Paphos` trifft keine der 144 hebräischen Queries. Die Tabelle liegt jetzt als `src/lib/hePlaces.ts` vor (Glossar §1 plus die Schreibvarianten der Feeds); unbekannte Freitext-Orte fallen weiterhin auf `ב-⁨Konia, Paphos⁩` zurück. **Das Bindestrich-Kriterium ist der Schrifttyp des Ortes, nicht die Locale** — `ב-פאפוס` wäre falsch.
 8. **„Golf court" wird stillschweigend zu `מגרש גולף`** (golf course) — der englische Quelltext trägt seit Jahren einen Tippfehler, den Hebräisch nicht mitnimmt.
 
 ## 4. Was NICHT in diesem Paket steckt
@@ -62,7 +64,7 @@ Alle Werte sind die tatsächlichen Laufzeitwerte. Funktionswerte sind mit dem Be
 |---|---|---|---|---|
 | `numLocale` | en-US | en-US |  |  |
 | `cityLabel` | City | עיר |  |  |
-| `cityPlaceholder` | Any location | כל האזורים | „Any location" wird zu „alle Gebiete" — Hebräisch hat keinen neutralen „beliebig"-Platzhalter, der in einem Select nicht nach Fragebogen klingt. |  |
+| `cityPlaceholder` | Any location | כל הערים | Hebräisch hat keinen neutralen „beliebig"-Platzhalter, der in einem Select nicht nach Fragebogen klingt. **Fix Round 1:** `כל האזורים` versprach eine Ebene, die das Feld nicht hat (Label `עיר`, drei Städte als Optionen), und `אזור` ist bereits dreifach belegt (`tagArea`, `inThisArea`, `nearby`). |  |
 | `cities[0].value` | Paphos | Paphos |  |  |
 | `cities[0].label` | Paphos | פאפוס |  |  |
 | `cities[1].value` | Limassol | Limassol |  |  |
@@ -100,7 +102,7 @@ Alle Werte sind die tatsächlichen Laufzeitwerte. Funktionswerte sind mit dem Be
 | `mapBtn` | Map | מפה |  |  |
 | `reset` | Reset | איפוס |  |  |
 | `moreFilters` | More filters | עוד מסננים |  |  |
-| `hideFilters` | Hide filters | הסתרת המסננים |  |  |
+| `hideFilters` | Hide filters | הסתרת מסננים | **Fix Round 1:** indefinit, damit die Determination nicht zwischen den beiden Zuständen desselben Buttons springt (`עוד מסננים` ↔ `הסתרת מסננים`). |  |
 | `sortAria` | Sort by | מיון לפי |  |  |
 | `sorts[0].value` | recommended | recommended |  |  |
 | `sorts[0].label` | Recommended | מומלצים |  |  |
@@ -118,10 +120,10 @@ Alle Werte sind die tatsächlichen Laufzeitwerte. Funktionswerte sind mit dem Be
 | `badgeNew` | New | חדש |  |  |
 | `badgeFeatured` | Featured | מובחר |  |  |
 | `badgeSoldOut` | Sold out | נמכר |  |  |
-| `bedUnit` | bed | חדרי שינה | EN „bed" (Singular, Kartenchip `3 bed`) wird zum vollen `חדרי שינה` — Glossar-Pflicht: Zypern zählt Schlafzimmer, Israel Zimmer; die Kurzform wäre missverständlich. Lektor: passt die Länge in den Kartenchip? |  |
+| `bedUnit` | bed | חדרי שינה | Glossar-Pflicht: Zypern zählt Schlafzimmer, Israel Zimmer. **Fix Round 1:** dieser Key wird auf der `he`-Karte **nicht mehr gerendert**. `resolveBedRange()` liefert `""` / `"Studio"` / `"3"` / `"1-3"`, und `{wert} {bedUnit}` erzeugte daraus `1 חדרי שינה` (ungrammatisch) und `Studio חדרי שינה` (lateinischer Rest). Die Karte ruft für `he` jetzt `heBedrooms()` auf: `סטודיו` / `חדר שינה אחד` / `3 חדרי שינה` / `⁦1-3⁩ חדרי שינה`. Der Key bleibt für en/de/pl/ru unverändert in Gebrauch. |  |
 | `areaUnit` | m² | מ"ר |  |  |
-| `energyPrefix` | Energy | דירוג אנרגטי | Rendert als `דירוג אנרגטי A`. Lang für einen Kartenchip; wenn es umbricht, wäre `אנרגיה` die Ausweichform. |  |
-| `priceFrom` | from  | החל מ- | Steht als eigenes `<span>` VOR dem Preis, nicht direkt angeklebt — es erscheint also `החל מ- €450,000` mit Lücke statt `החל מ-€450,000` wie im Glossar. Wortlaut bewusst nach Glossar; die Lücke ist ein Layout-Thema. |  |
+| `energyPrefix` | Energy | אנרגיה | Rendert als `אנרגיה A`. **Fix Round 1:** 12 Zeichen für einen Chip, dessen EN-Vorlage 6 hat — und die Vorlage unterscheidet selbst `Energy` (Karte) von `Energy rating` (Faktenpanel). Die Glossarform `דירוג אנרגטי` bleibt über `factEnergyRating` erhalten. |  |
+| `priceFrom` | from  | החל מ- | Steht als eigenes `<span>` direkt vor dem Preis; JSX schluckt den Zeilenumbruch dazwischen, gerendert also `החל מ-€450,000` — glossarkonform. **Fix Round 1:** dieser Wert wird für `he` **nicht mehr** in die Hero-Caption der Development-Seite gespiegelt (siehe §3.3). |  |
 | `priceOnRequest` | Price on request | מחיר לפי פנייה |  |  |
 | `minShort` | min | דק' | Abkürzung, weil der Chip `10 דק'` schmal ist. |  |
 | `distBeach` | Beach | חוף |  |  |
@@ -138,8 +140,8 @@ Alle Werte sind die tatsächlichen Laufzeitwerte. Funktionswerte sind mit dem Be
 | `close` | Close | סגירה |  |  |
 | `nearby` | LIFE NEARBY | החיים בסביבה | EN steht in Versalien (Eyebrow-Stil). Hebräisch kennt keine Versalien; die Auszeichnung macht das CSS. |  |
 | `zoomToLoad` | Zoom in to load places | יש להתקרב כדי לטעון מקומות | Unpersönlich (`יש להתקרב`) statt Imperativ — §2.1. |  |
-| `loading` | Loading… | בטעינה… | `בטעינה…` statt `טוען…`: genusfrei, wie WP1s `בשליחה…`. |  |
-| `loadingMap` | Loading map… | המפה בטעינה… |  |  |
+| `loading` | Loading… | טוענים… | **Fix Round 1, Must fix:** `בטעינה…` war ein Neologismus, den kein Israeli schreibt, und die Begründung berief sich auf WP1s `בשליחה…` — genau den String, den `he-glossary.md` §6.1 als Fehlgriff verzeichnet und **ersetzt** hat. Das Partizip Plural ist die genusfreie Form, die Styleguide §11.2 vorschreibt. |  |
+| `loadingMap` | Loading map… | טוענים את המפה… | wie oben |  |
 | `mapShort` | Map… | מפה… |  |  |
 | `poi.school_private` | Private School | בית ספר פרטי |  |  |
 | `poi.school_public` | Public School | בית ספר ציבורי |  |  |
@@ -155,7 +157,7 @@ Alle Werte sind die tatsächlichen Laufzeitwerte. Funktionswerte sind mit dem Be
 
 | Key | EN | HE | Anmerkung | Korrektur HE |
 |---|---|---|---|---|
-| `enquireNow` | Enquire this amazing project now! | לקבלת פרטים על הפרויקט | Ausrufezeichen und „amazing" entfallen (§1 / §7 Adjektiv-Stapel). Der Button öffnet das Broschüren-Modal, daher „Details zum Projekt erhalten". |  |
+| `enquireNow` | Enquire this amazing project now! | לפרטים על הפרויקט | Ausrufezeichen und „amazing" entfallen (§1 / §7 Adjektiv-Stapel). **Fix Round 1:** von vier auf drei Wörter gekürzt (§11.7 Buttons ≤ 3 Wörter) — der Seitenkontext trägt „on this project" ohnehin. |  |
 | `developer` | Developer | יזם |  |  |
 | `calculateRoi` | Calculate ROI | חישוב תשואה | ROI = `תשואה`. Das Akronym „ROI" ist im israelischen Privatkäufer-Segment nicht selbsterklärend. |  |
 | `faq` | FAQ | שאלות ותשובות |  |  |
@@ -166,21 +168,23 @@ Alle Werte sind die tatsächlichen Laufzeitwerte. Funktionswerte sind mit dem Be
 |---|---|---|---|---|
 | `galleryLabel(3)` | View 3 photos | לצפייה ב-3 תמונות |  |  |
 | `openGallery` | Open gallery | פתיחת הגלריה |  |  |
-| `heroFrom` | from | החל מ- |  |  |
+| `heroFrom` | from | מחיר התחלתי | **Fix Round 1, Must fix:** eigene Caption-Zeile unter der Preisfigur, kein Inline-Präfix — gerendert stand dort `החל מ- · +מע"מ`, ein Bindestrich mit nichts dahinter. Siehe §3.3. |  |
 | `heroType` | type | סוג |  |  |
 | `heroAvailable` | available | זמינות | Caption unter der Stückzahl. `זמינות` (Verfügbarkeit) statt eines Adjektivs, das sich nach dem Genus des Objekttyps richten müsste. |  |
-| `vatSuffix` | +VAT | +מע"מ | `מע\"מ` mit Gershayim (§4). |  |
+| `vatSuffix` | +VAT | +&nbsp;מע"מ (`"+ מע\"מ"`) | `מע\"מ` mit Gershayim (§4); Bidi korrekt (das `+` landet rechts vom Wort). **Fix Round 1:** mit Leerzeichen — israelische Preisangaben schreiben `+ מע"מ` getrennt; ohne Leerzeichen liest es sich als ein Wort. |  |
 | `aboutHeading` | About this development | על הפרויקט |  |  |
 | `amenitiesHeading` | Features & amenities | מתקנים ושירותים |  |  |
 | `plansHeading` | Development Plans | תוכניות הפרויקט |  |  |
 | `distancesHeading` | Distances | מרחקים |  |  |
-| `unitsHeading` | Available units | יחידות זמינות |  |  |
-| `unitsSubAvailable(3)` | 3 available | 3 זמינות | Kurz gehalten, weil direkt unter der Überschrift `יחידות זמינות` — sonst stünde „Einheiten" zweimal. |  |
+| `unitsHeading` | Available units | היחידות בפרויקט | **Fix Round 1:** die Überschrift wird entwurzelt, damit die Unterzeile darunter vollständig sein kann, statt zum bezugslosen Adjektiv `3 זמינות` verkürzt zu werden. |  |
+| `unitsSubAvailable(1)` | 1 available | יחידה אחת זמינה | **Zählfall geprüft** (in Pass A fehlte er): die Eins wird ausgeschrieben und nachgestellt. |  |
+| `unitsSubAvailable(3)` | 3 available | 3 יחידות זמינות | **Fix Round 1:** `3 זמינות` war ein bezugsloses Adjektiv; mit der neuen Überschrift `היחידות בפרויקט` darf die Zeile vollständig sein. |  |
 | `unitsSubSold(3)` |  · 3 sold |  · 3 נמכרו |  |  |
 | `factLocation` | Location | מיקום |  |  |
 | `factPropertyType` | Property type | סוג נכס |  |  |
 | `factUnits` | Units | יחידות |  |  |
-| `factUnitsAvailable(3)` | (3 available) | (3 זמינות) |  |  |
+| `factUnitsAvailable(1)` | (1 available) | (יחידה אחת זמינה) | **Zählfall geprüft.** |  |
+| `factUnitsAvailable(3)` | (3 available) | (3 יחידות זמינות) | **Fix Round 1:** wie `unitsSubAvailable`. |  |
 | `factStatus` | Status | סטטוס |  |  |
 | `factConstructionStage` | Construction stage | שלב הבנייה |  |  |
 | `factPlot` | Plot | מגרש |  |  |
@@ -188,19 +192,19 @@ Alle Werte sind die tatsächlichen Laufzeitwerte. Funktionswerte sind mit dem Be
 | `factCompletion` | Completion | מסירה |  |  |
 | `factEnergyRating` | Energy rating | דירוג אנרגטי |  |  |
 | `priceOnRequest` | Price on request | מחיר לפי פנייה |  |  |
-| `heroFromSoldOut` | sold from | נמכר החל מ- |  |  |
-| `soldOutBannerHeadline.lead` | Sold out — take it as  | נמכר במלואו. אפשר לראות בזה  | Der Gedankenstrich wird zu einem Punkt und einem neuen Satz (§3). „confirmation of your taste" → `אישור לטעם הטוב שלכם` (maskuliner Plural, §2.2). |  |
-| `soldOutBannerHeadline.gold` | confirmation of your taste. | אישור לטעם הטוב שלכם. |  |  |
+| `heroFromSoldOut` | sold from | נמכר במחיר התחלתי | **Fix Round 1:** dieselbe Caption-Zeile wie `heroFrom`. |  |
+| `soldOutBannerHeadline.lead` | Sold out — take it as  | נמכר במלואו. סימן שיש לכם  | Der Gedankenstrich wird zu einem Punkt und einem neuen Satz (§3). **Fix Round 1:** `אפשר לראות בזה אישור ל…` war gehobenes Schriftregister und las sich als Übersetzung; die EN-Zeile ist ein Schulterklopfen. Das Goldwort trägt weiterhin das Satzende (§11.3). |  |
+| `soldOutBannerHeadline.gold` | confirmation of your taste. | טעם טוב. |  |  |
 | `soldOutBannerHeadline.trail` |  |  |  |  |
-| `soldOutBannerBody` | Homes like these move quickly, and fortunately Cyprus isn't done building beautiful ones. These projects come closest to what brought you here — and are still open: | נכסים כאלה נחטפים מהר, ולמזלנו קפריסין עוד לא סיימה לבנות יפים. הפרויקטים האלה הכי קרובים למה שהביא אתכם לכאן, והם עדיין פתוחים: | `נחטפים` ist der idiomatische israelische Immobilienausdruck für „move quickly"; wörtlich „werden weggeschnappt". Kein Superlativ, keine erfundene Zahl. Der Doppelpunkt am Ende ist funktional — darunter folgt die Alternativen-Liste. |  |
-| `soldOutBannerBodyNoAlternatives` | Homes like these move quickly, and fortunately Cyprus isn't done building beautiful ones. Tell us what brought you here — we'll find what comes closest. | נכסים כאלה נחטפים מהר, ולמזלנו קפריסין עוד לא סיימה לבנות יפים. ספרו לנו מה הביא אתכם לכאן, ונמצא את מה שהכי קרוב. |  |  |
+| `soldOutBannerBody` | Homes like these move quickly, and fortunately Cyprus isn't done building beautiful ones. These projects come closest to what brought you here — and are still open: | נכסים כאלה נחטפים מהר, ולמזלנו בקפריסין ממשיכים לבנות כאלה. הפרויקטים האלה הכי קרובים למה שהביא אתכם לכאן, והם עדיין זמינים: | `נחטפים` ist der idiomatische israelische Immobilienausdruck für „move quickly". Der Doppelpunkt am Ende ist funktional — darunter folgt die Alternativen-Liste. **Fix Round 1, Must fix, zwei Fehler in einem Satz:** (a) `לבנות יפים` — ein nacktes Adjektiv im maskulinen Plural ohne Bezugsnomen; Hebräisch kann „beautiful ones" nicht elliptisch nachbauen. (b) `עדיין פתוחים` ist eine Kalkierung von „still open" (§7) — ein Projekt ist im Hebräischen `זמין`, nicht `פתוח`. |  |
+| `soldOutBannerBodyNoAlternatives` | Homes like these move quickly, and fortunately Cyprus isn't done building beautiful ones. Tell us what brought you here — we'll find what comes closest. | נכסים כאלה נחטפים מהר, ולמזלנו בקפריסין ממשיכים לבנות כאלה. ספרו לנו מה הביא אתכם לכאן, ונמצא לכם את הקרוב ביותר. | Satz 1 ist mit `soldOutBannerBody` **wortgleich** und muss es nach §11.6 bleiben — beide Zeilen wurden gemeinsam korrigiert. |  |
 | `offMarketCtaHeadline.lead` | Get there  | להגיע לנכס  |  |  |
 | `offMarketCtaHeadline.gold` | before the listing | לפני המודעה | „before the listing does" → `לפני המודעה` (vor der Anzeige). Akzentwort ist wie im EN die Verzögerungsquelle, nicht das Verb. |  |
 | `offMarketCtaHeadline.trail` |  does. | . |  |  |
 | `enquiryHeadline(3).lead` | Request a consultation —  | לקבוע פגישת ייעוץ בנושא  | Glossar-CTA `לקבוע פגישת ייעוץ`; der Gedankenstrich der Quelle wird zu `בנושא` („zum Thema"). |  |
-| `enquiryHeadline(3).gold` | 3 | ⁨3⁩ | Der Projektname ist lateinisch und steckt in einem hebräischen Satz — deshalb `bidiIsolate()` (FSI…PDI). Im Beispiel oben ist der Platzhalter eine 3, daher die Isolatoren um die Ziffer. |  |
+| `enquiryHeadline("Cap St Georges").gold` | Cap St Georges | ⁨Cap St Georges⁩ | **Fix Round 1:** in Pass A stand hier das Beispielargument `3`, sodass der Lektor nie gesehen hat, wie ein lateinischer Projektname in der hebräischen Zeile aussieht. Gerendert: `לקבוע פגישת ייעוץ בנושא ⁨Cap St Georges⁩`. Der Name ist lateinisch in einem hebräischen Satz, deshalb `bidiIsolate()` (FSI…PDI). |  |
 | `enquiryHeadline(3).trail` |  |  |  |  |
-| `offMarketCtaBody` | Describe your ideal home in one message — we often know about units before they go public, and when we do, we'll think of you first. | תארו לנו בהודעה אחת את הנכס שאתם מחפשים. אנחנו יודעים על יחידות עוד לפני שהן מתפרסמות, ואז נחשוב עליכם ראשונים. | Zwei kurze Sätze statt einer Gedankenstrich-Konstruktion (§3). |  |
+| `offMarketCtaBody` | Describe your ideal home in one message — we often know about units before they go public, and when we do, we'll think of you first. | תארו לנו את הנכס שאתם מחפשים, בהודעה אחת. אנחנו שומעים על נכסים עוד לפני שהם מגיעים לשוק, וכשזה קורה נחשוב עליכם ראשונים. | Zwei kurze Sätze statt einer Gedankenstrich-Konstruktion (§3). **Fix Round 1, drei Punkte:** englische Wortfolge (Adverbial zwischen Verb und Objekt, §7); `יחידות` ist Maklerjargon, der Käufer sagt `נכסים`; und `מתפרסמות` wiederholte die Wurzel פרסם aus dem direkt darüberstehenden Goldwort `לפני המודעה` (§11.5). |  |
 | `alternativesHeading` | Similar projects | פרויקטים דומים |  |  |
 | `tagDistrict` | District | מחוז |  |  |
 | `tagLocality` | Locality | יישוב |  |  |
@@ -214,7 +218,7 @@ Alle Werte sind die tatsächlichen Laufzeitwerte. Funktionswerte sind mit dem Be
 | `stage.sold` | Sold | נמכר |  |  |
 | `unitStatus.available` | Available | זמין |  |  |
 | `unitStatus.sold` | Sold | נמכר |  |  |
-| `unitStatus.reserved` | Reserved | שמור | Glossar `שמור`. |  |
+| `unitStatus.reserved` | Reserved | שמורה | **Fix Round 1, Must fix:** der Wert wird nicht als neutrales Status-Tag gerendert, sondern in der **Preisspalte einer Einheiten-Zeile** (`UnitsView.tsx:70`) — Bezug ist also `יחידה` (fem.). Das Glossar führt `שמור`; die feminine Form gehört als Kontextregel nach §2. `unitStatus.available` bleibt maskulin `זמין`, weil dieser Eintrag ausschließlich das Hero-Badge über dem **Projekt** trägt (`ProjectPageBody.tsx:162`). |  |
 | `viewCards` | Cards | כרטיסים |  |  |
 | `viewTable` | Table | טבלה |  |  |
 | `unitDisplayAria` | Unit display | תצוגת היחידות |  |  |
@@ -233,9 +237,9 @@ Alle Werte sind die tatsächlichen Laufzeitwerte. Funktionswerte sind mit dem Be
 | `factCovered` | Covered | שטח מקורה |  |  |
 | `factFloor` | Floor | קומה |  |  |
 | `unitM2` | m² | מ"ר | `מ\"ר` mit Gershayim, wie im Glossar. |  |
-| `viewTour` | View tour ↗ | לצפייה בסיור ↗ | Pfeil ↗ unverändert; er ist ein Icon, kein Zeichen des Satzes. |  |
+| `viewTour` | View tour ↗ | לסיור וירטואלי ↗ | Pfeil ↗ unverändert; er ist ein Icon, kein Zeichen des Satzes. **Fix Round 1:** „View tour" meint den 3D-/Virtual-Tour-Link; `סיור` allein liest sich für einen israelischen Käufer wie eine Besichtigung vor Ort — ein Bedeutungsunterschied, kein Stilthema. |  |
 | `watch` | Watch ↗ | לצפייה ↗ |  |  |
-| `showLess` | Show less | הצגה מצומצמת | Nominal (`הצגה מצומצמת`), Gegenstück zum Glossar-`הצגת עוד`. |  |
+| `showLess` | Show less | הצגת פחות | **Fix Round 1:** das Paar zu `הצגת עוד` (Glossar §4, so auch im `ProjectCardSlider`) ist regelmäßig nominal gebildet; `הצגה מצומצמת` ist ein anderes Wortbildungsmuster und im israelischen UI unüblich. |  |
 | `allDetails` | All details | כל הפרטים |  |  |
 | `showMoreUnits(3)` | Show 3 more units | הצגת 3 יחידות נוספות |  |  |
 | `factsheetPdf` | Factsheet PDF | דף נתונים PDF | en/de/pl/ru lassen „Factsheet" englisch stehen; für HE unlesbar, daher `דף נתונים PDF`. |  |
@@ -254,13 +258,13 @@ Alle Werte sind die tatsächlichen Laufzeitwerte. Funktionswerte sind mit dem Be
 
 | Key | EN | HE | Anmerkung | Korrektur HE |
 |---|---|---|---|---|
-| `message` | No projects found. Please try searching with different parameters. | לא נמצאו פרויקטים. אפשר לנסות לחפש עם מסננים אחרים. |  |  |
+| `message` | No projects found. Please try searching with different parameters. | לא נמצאו פרויקטים. אפשר לנסות לחפש לפי פרמטרים אחרים. | Kein „bitte" (§7). **Fix Round 1:** `לחפש עם X` ist eine `with`-Kalkierung (§7 „englische Wortfolge") — Hebräisch sucht `לפי`; und die EN-Quelle sagt „parameters", nicht „filters" (der Unterschied zu `projectsI18n.empty` ist gewollt). |  |
 
 ### src/app/components/ProjectSameCity/ProjectSameCity.copy.ts — PROJECT_SAME_CITY_COPY
 
 | Key | EN | HE | Anmerkung | Korrektur HE |
 |---|---|---|---|---|
-| `title` | Other projects in | פרויקטים נוספים בעיר | Rendert als `{title} {city}`. Hebräisches `ב` ist ein gebundenes Präfix und kann nicht allein vor dem Leerzeichen stehen; `בעיר` („in der Stadt") nimmt das Leerzeichen natürlich auf — derselbe Kunstgriff wie pl/ru. |  |
+| `title` | Other projects in | פרויקטים נוספים בעיר | Rendert als `{title} {city}`. Hebräisches `ב` ist ein gebundenes Präfix und kann nicht allein vor dem Leerzeichen stehen; `בעיר` („in der Stadt") nimmt das Leerzeichen natürlich auf — derselbe Kunstgriff wie pl/ru. **Fix Round 1:** der String bleibt, der **Ortsname** wird jetzt transliteriert (`hePlaceList()` in `ProjectSameCity.tsx`) — gerendert `פרויקטים נוספים בעיר פאפוס` statt `… בעיר Paphos`. |  |
 
 ### src/app/components/PropertyDistances/PropertyDistances.copy.ts — PROPERTY_DISTANCES_COPY
 
@@ -301,7 +305,8 @@ Alle Werte sind die tatsächlichen Laufzeitwerte. Funktionswerte sind mit dem Be
 | Key | EN | HE | Anmerkung | Korrektur HE |
 |---|---|---|---|---|
 | `priceOnRequest` | Price on request | מחיר לפי פנייה |  |  |
-| `priceFrom` | Price from | מחיר החל מ- | Steht als eigenes `<span>` VOR dem Preis, nicht direkt angeklebt — es erscheint also `החל מ- €450,000` mit Lücke statt `החל מ-€450,000` wie im Glossar. Wortlaut bewusst nach Glossar; die Lücke ist ein Layout-Thema. |  |
+| `priceFrom` | Price from | מחיר התחלתי | **Fix Round 1:** hier steht ein festes `&nbsp;` zwischen Label und Zahl (`ProjectLink.tsx:88`), also `מחיר החל מ- €450,000` — ein Bindestrich mit Leerzeichen dahinter ist kein gebundenes Präfix, sondern ein Setzfehler. Die Formulierung mit freiem Wort braucht ihn nicht und passt zur Hero-Caption. |  |
+| `areaUnit` | m² | מ"ר | **Fix Round 1, neuer Key:** `ProjectLink.tsx` hatte `m²` für **alle** Locales hartcodiert. Neu als Copy-Key geführt: en/de/pl `m²`, ru `м²` (dieselbe kyrillische Form, die `DEVELOPMENT_STRINGS.ru.unitM2` auf der Nachbarfläche schon benutzt), he `מ"ר`. |  |
 | `bedrooms` | Bedrooms | חדרי שינה |  |  |
 | `coveredArea` | Covered area | שטח מקורה | Glossar `שטח מקורה`. **Hinweis an die Entwicklung:** direkt darunter steht ein fest verdrahtetes `m²` im JSX (nicht in dieser Tabelle) — für HE müsste dort `מ\"ר` stehen. Ausserhalb des Copy-Tables, deshalb hier nur gemeldet. |  |
 | `plotSize` | Plot size | שטח מגרש |  |  |
@@ -344,13 +349,13 @@ Alle Werte sind die tatsächlichen Laufzeitwerte. Funktionswerte sind mit dem Be
 | `CITY_I18N.Larnaca` | Larnaca | לרנקה | Glossar §1. Larnaka wird nicht beworben, taucht aber als Filterwert auf. |  |
 | `t.coords` | Coordinates | קואורדינטות | |  |
 | `t.copy` | Copy | העתקה | Nominal. |  |
-| `t.copied` | Copied! | הועתק | Ohne Ausrufezeichen (§1). |  |
+| `t.copied` | Copied! | הועתק ללוח | Ohne Ausrufezeichen (§1). **Fix Round 1:** Bezug sind `קואורדינטות` (fem. Pl.) — `הועתק` kongruiert nicht. Die im israelischen UI übliche, bezugsfreie Form nennt das Ziel. **In beiden Kartendateien wortgleich geändert** (§11.6). |  |
 | `t.open` | Open in Google Maps | פתיחה ב-Google Maps | Markenname lateinisch, Präfix mit Bindestrich. |  |
 | `t.route` | Route (Google/Apple) | מסלול (Google/Apple) | |  |
 | `t.osm` | Open in OSM | פתיחה ב-OSM | |  |
-| `GESTURE_TEXT.touch` | Use two fingers to pan | יש להשתמש בשתי אצבעות כדי להזיז את המפה | Unpersönlich statt Imperativ (§2.1). |  |
-| `GESTURE_TEXT.scroll` | Ctrl + scroll to zoom | Ctrl + גלילה לזום | `Ctrl` ist eine Tastenbeschriftung und bleibt lateinisch. |  |
-| `GESTURE_TEXT.scrollMac` | ⌘ + scroll to zoom | ⌘ + גלילה לזום | |  |
+| `GESTURE_TEXT.touch` | Use two fingers to pan | השתמשו בשתי אצבעות כדי להזיז את המפה | **Fix Round 1:** `יש ל…` ist für einen Gesten-Hinweis Behördenton; §2.2 erlaubt den maskulinen Plural, und das ist wörtlich die Zeile, die Israelis aus Google Maps kennen. |  |
+| `GESTURE_TEXT.scroll` | Ctrl + scroll to zoom | Ctrl + גלילה כדי לקרב | `Ctrl` ist eine Tastenbeschriftung und bleibt lateinisch. **Fix Round 1:** `גלילה לזום` ist telegrafisch — `לזום` liest sich als Nomen mit Zweck-ל. Der Container ist `dir="ltr"`, Bidi also unkritisch; rein eine Formulierungsfrage. |  |
+| `GESTURE_TEXT.scrollMac` | ⌘ + scroll to zoom | ⌘ + גלילה כדי לקרב | |  |
 
 ### src/app/components/PropertyMap/PropertyMap.tsx (Karte der Projektseite)
 
@@ -361,12 +366,12 @@ Alle Werte sind die tatsächlichen Laufzeitwerte. Funktionswerte sind mit dem Be
 | `CITY_I18N.Larnaca` | Larnaca | לרנקה | |  |
 | `t.coords` | Coordinates | קואורדינטות | Wortgleich mit der Listenkarte — dieselbe Bedienung, dieselbe Formulierung. |  |
 | `t.copy` | Copy | העתקה | |  |
-| `t.copied` | Copied! | הועתק | |  |
+| `t.copied` | Copied! | הועתק ללוח | Wortgleich mit `ProjectsMapAll.tsx` (§11.6) — siehe dort. |  |
 | `t.open` | Open in Google Maps | פתיחה ב-Google Maps | |  |
 | `t.route` | Route (Google/Apple) | מסלול (Google/Apple) | |  |
 | `t.osm` | Open in OSM | פתיחה ב-OSM | |  |
 | `PROJECT_LINK_LABEL` | Open project | מעבר לפרויקט | „Öffnen" wäre im Hebräischen für einen Seitenwechsel unüblich; `מעבר` = hingehen. |  |
-| `popupMessages` | This property is located here. | הנכס נמצא כאן. | |  |
+| `popupMessages` | This property is located here. | הנכס נמצא כאן | **Fix Round 1:** der Popup steht in einem `dir="ltr"`-Container (`PropertyMap.tsx:208`); der Schlusspunkt ist bidi-neutral und rutscht ans **rechte** Ende, im Hebräischen gehört er nach links. Ein Popup-Label braucht ihn ohnehin nicht. |  |
 
 ### src/app/components/DistancesStrip/DistancesStrip.tsx (Distanzleiste Development-Seite)
 
@@ -386,7 +391,7 @@ Alle Werte sind die tatsächlichen Laufzeitwerte. Funktionswerte sind mit dem Be
 
 | Key | EN | HE | Anmerkung | Korrektur HE |
 |---|---|---|---|---|
-| `last` | Last unit available | נותרה יחידה אחרונה | |  |
+| `last` | Last unit available | יחידה אחרונה | **Fix Round 1:** Badge, kein Satz — das Verb trägt nichts, und die Zweiwortform passt zur Kürze des Nachbar-Badges `נמכר`. |  |
 | `left(3)` | Only 3 units left | נותרו רק 3 יחידות | Keine Zählverzweigung nötig: der Auslöser begrenzt auf 2–5, und mit westlicher Ziffer davor ist `יחידות` durchgehend richtig. |  |
 
 ### src/app/components/PropertyFeatures/PropertyFeatures.tsx (Stadtnamen im Faktenpanel)
@@ -408,9 +413,67 @@ Alle Werte sind die tatsächlichen Laufzeitwerte. Funktionswerte sind mit dem Be
 ## 6. Offene Fragen an den Lektor
 
 1. `מ-€` / `עד €` als Preis-Placeholder — oder lieber `מחיר מ` / `מחיר עד` ohne Währungszeichen, weil das `€` im RTL-Input verrutscht?
-2. `דירוג אנרגטי` als Kartenchip-Präfix: zu lang? Ausweichform `אנרגיה`.
+2. ~~`דירוג אנרגטי` als Kartenchip-Präfix: zu lang?~~ **Von Pass B entschieden:** Chip `אנרגיה`, Faktenpanel `דירוג אנרגטי`.
 3. `נחטפים` im Sold-out-Banner: idiomatisch stark, aber grenzt an Immobilienanzeigen-Sprache (§1 „Nicht"). Bleibt es, oder lieber nüchtern `נמכרים מהר`?
-4. `הכל` als Placeholder im Schlafzimmer-Filter, während Stadt und Typ `כל האזורים` / `כל הסוגים` heissen — inkonsistent oder in der Feldbreite gerechtfertigt?
+4. `הכל` als Placeholder im Schlafzimmer-Filter, während Stadt und Typ jetzt `כל הערים` / `כל הסוגים` heissen. Pass B lässt `הכל` stehen (`כל המספרים` ist zu lang) und verlangt, die Ausnahme bewusst zu dokumentieren — sie steht in `wp2-glossary.md`. Bitte bestätigen oder kippen.
 5. `דף נתונים PDF` für „Factsheet PDF" — oder ist das englische Wort im israelischen Immobilienkontext geläufig genug?
 6. `יישוב` vs. `עיירה` für „Locality" in der Tag-Zeile.
-7. Ortsnamen in der Auto-Meta (Punkt 7 oben): Umschrifttabelle bauen oder `ב-Paphos` akzeptieren?
+7. ~~Ortsnamen in der Auto-Meta: Umschrifttabelle bauen oder `ב-Paphos` akzeptieren?~~ **Von Pass B entschieden: Tabelle gebaut** (`src/lib/hePlaces.ts`). Zu prüfen bleibt die **Schreibweise** der Orte, die `he-glossary.md` §1 noch nicht führt — sie sind in `wp2-glossary.md` einzeln aufgelistet.
+8. `מחיר מינימלי` / `מחיר מקסימלי` im Preisfilter stehen gegen §6.1, das die **Substantive** `מינימום`/`מקסימום` verworfen hat. Pass B empfiehlt, die **Adjektivform** zu behalten (Yad2-Standard) und die Ausnahme in §6.1 zu dokumentieren. Bitte bestätigen.
+9. Statusspalte der Einheitentabelle: `זמינה / שמורה / נמכרה` (feminin, Bezug `יחידה`) gegen das Hero-Badge `זמין` (maskulin, Bezug Projekt). Absichtlich unterschiedlich — bitte gegenlesen.
+
+---
+
+## 7. Auto-SEO nach Fix Round 1 — gemessene Beispiele
+
+Gemessen in **Graphemen** (`Intl.Segmenter("he")`). Die unsichtbaren Isolatoren FSI/PDI und LRI/PDI (`⁨…⁩`, `⁦…⁩`) zählen für die Kürzung mit; „sichtbar" ist die Zahl ohne sie. Grenzen: Title ≤ 60, Description ≤ 155.
+
+**Was sich strukturell geändert hat**
+
+1. **Keyword vorn, Marke hinten.** Für `he` führt jetzt die Phrase, die Israelis suchen (`דירה עם 2 חדרי שינה בלימסול`), und der lateinische Projektname steht hinter dem `|` — dem Slot, den §6 ohnehin für die Marke vorsieht. en/de/pl/ru behalten `Name – Typ in Ort` **zeichengleich**.
+2. **Kein nackter Trenner mehr.** `fit()` warf Klauseln von hinten weg; der Separator war eine eigene Klausel und überlebte die Klausel, die er einleitete (`⁨Limassol Del Mar Residences Tower B⁩ |`, 39 Zeichen). Der Trenner hängt jetzt an seiner Klausel, und `fit()` verwirft zusätzlich jede Endklausel, die nur aus Satzzeichen besteht. Ein Regressionstest hält genau diesen Fall fest (`src/lib/__tests__/developmentSeoHe.test.ts`).
+3. **Zählform.** `1 יחידות זמינות` ist ungrammatisch; die Eins wird ausgeschrieben und nachgestellt.
+4. **`מסירה ברבעון 3 2029`** statt `מסירה: רבעון 3 2029` — ein Doppelpunkt mitten im Snippet liest sich wie ein Datenbankfeld. Nur für den Quartalsfall; Freitextwerte des Feldes behalten den Doppelpunkt und werden isoliert.
+5. **Sold-out bekommt einen dritten Satz** (`באזור יש נכסים חדשים שעדיין זמינים לרכישה.`) — die bisherigen 67–73 sichtbaren Zeichen lagen weit unter dem in §6 geforderten Korridor 120–155, und Google füllte den Rest mit gescraptem Seitentext. Bei sehr langen Ortsnamen wirft `fit()` den Satz automatisch wieder heraus.
+6. **Isolatoren gezielt statt großzügig.** `bidiIsolate(rawPriceClause)` umschloss die ganze Klausel samt führendem Leerzeichen und hebräischem `החל מ`; isoliert wird jetzt genau der LTR-Ausschnitt, also die Preisfigur (`ltrIsolate`).
+7. **`DESC_MAX`.** Die Checkliste in §2 verlangt ≤ 155, der Code klemmte auf 160. **Entscheidung: 155 nur für `he`.** Belegt durch einen Sweep der LTR-Templates: mit realistischen Werten (Quartalsformat, Preise bis €5 Mio., echte Gebietsnamen) liegt das Maximum bei **150** (de), aber `completion` ist ein Freitextfeld — mit „Ready to move in" erreicht de **160** und pl **158**. Eine globale Senkung hätte also live ausgelieferte LTR-Snippets verändert; das exportierte `DESC_MAX = 160` bleibt außerdem die Obergrenze, die der Admin-Editor und `src/lib/ai/seoMeta.ts` anzeigen.
+
+**Gerenderte Beispiele (`he`)**
+
+| Fall | Title | Graphemes (sichtbar) |
+|---|---|---|
+| „Cap St Georges", Peyia/Paphos, Villa, 3 SZ | `וילה עם 3 חדרי שינה בפאפוס \| ⁨Cap St Georges⁩` | 45 (43) ✓ |
+| „Celestia Residences", Kato Paphos/Paphos, Apartment, 2 SZ, ausverkauft | `דירה עם 2 חדרי שינה בפאפוס \| ⁨Celestia Residences⁩` | 50 (48) ✓ |
+| „The Blue Residences", Germasogeia/Limassol, Apartment, 2 SZ, **1 Einheit** | `דירה עם 2 חדרי שינה בלימסול \| ⁨The Blue Residences⁩` | 51 (49) ✓ |
+| „Aurora Court", Universal/Paphos, **Studio** | `דירה בפאפוס \| ⁨Aurora Court⁩` | 28 (26) ✓ |
+| „Limassol Del Mar Residences Tower B", Neapolis/Limassol (der frühere Abbruchfall) | `דירה בלימסול \| ⁨Limassol Del Mar Residences Tower B⁩` | 52 (50) ✓ — kein nackter `\|` mehr |
+| „Hidden Grove", **unbekannter Ort** | `וילה עם 4 חדרי שינה ב-⁨Nowhere Village⁩ \| ⁨Hidden Grove⁩` | 56 (52) ✓ |
+
+| Fall | Description | Graphemes (sichtbar) |
+|---|---|---|
+| Villa, Peyia/Paphos, 12 verfügbar, ab €850,000, Q3 2029 | `וילה בפאפוס, קפריסין. 12 יחידות זמינות החל מ-⁦€850,000⁩. מסירה ברבעון 3 2029. לצפייה בזמינות ובמחירים.` | 102 (100) ✓ |
+| Apartment, Germasogeia/Limassol, **1** verfügbar, ab €420,000, Q2 2027 | `דירה בלימסול, קפריסין. יחידה אחת זמינה החל מ-⁦€420,000⁩. מסירה ברבעון 2 2027. לצפייה בזמינות ובמחירים.` | 102 (100) ✓ |
+| Apartment, Universal/Paphos, **Studio**, 5 verfügbar, ab €165,000, Q1 2028 | `דירה בפאפוס, קפריסין. 5 יחידות זמינות החל מ-⁦€165,000⁩. מסירה ברבעון 1 2028. לצפייה בזמינות ובמחירים.` | 101 (99) ✓ |
+| Apartment, Kato Paphos/Paphos, **ausverkauft** | `נמכר במלואו. דירה בפאפוס, קפריסין. באזור יש נכסים חדשים שעדיין זמינים לרכישה. לצפייה בפרויקטים דומים.` | 101 (101) ✓ |
+| Villa, **unbekannter Ort**, 3 verfügbar, ab €700,000, Q2 2030 | `וילה ב-⁨Nowhere Village⁩, קפריסין. 3 יחידות זמינות החל מ-⁦€700,000⁩. מסירה ברבעון 2 2030. לצפייה בזמינות ובמחירים.` | 114 (110) ✓ |
+
+**Bitte an mindestens drei echten Projektseiten gegenlesen** (View-Source, `<title>` und `<meta name="description">`): eines verfügbar mit Preis, eines ohne Preis, eines ausverkauft. Wenn ein Ortsname dort noch lateinisch erscheint, fehlt er in `src/lib/hePlaces.ts` — bitte mit der gewünschten Schreibweise notieren, das ist eine Ein-Zeilen-Ergänzung.
+
+## 8. Zweiter Durchgang über das rendernde JSX (§11.3) — Nachtrag
+
+Pass A hatte `&nbsp;` in `ProjectLink`, das hartcodierte `m²`, den `dir="ltr"`-Container der Karten und `{title} {city}` erkannt. Pass B hat fünf weitere Fundstellen nachgetragen; alle sind in Fix Round 1 behoben, **nur für `he`**, die LTR-Ausgabe ist überall unverändert:
+
+| Fundstelle | Befund | Behebung |
+|---|---|---|
+| `preview-project/project.css:152` + `ProjectPageBody.tsx:167` | `.pp-hero__stats > div { flex-direction: column }` — die Preis-Caption ist eine eigene Zeile, `החל מ-` stand als Bindestrich ohne Anschluss | `heroFrom`/`heroFromSoldOut` für `he` nicht mehr aus der Listen-Copy gespiegelt |
+| `UnitsView.tsx:76` (`StatusPill`) | rendert `u.statusLabel \|\| u.status`, also den **englischen** DB-Wert — die Statusspalte war die einzige lateinische Spalte einer hebräischen Seite | `heFeedLabel()` für `he`; Bezug `יחידה`, daher feminin (`זמינה / שמורה / נמכרה`) |
+| `ProjectCard.tsx:125` | `{c.bedrooms} {s.bedUnit}` über `resolveBedRange()` → `1 חדרי שינה`, `Studio חדרי שינה` | `heBedrooms()` für `he` |
+| `[lang]/projects/page.tsx:141/146` → `ProjectCard.tsx` | `city` und `type` kommen als roher Feed-Wert (`Paphos`, `Villa`) auf die Karte, während Filterleiste und Faktenpanel `פאפוס` / `וילה` zeigen | `hePlaceList()` / `heFeedLabel()` für `he` |
+| `ProjectPageBody.tsx:83/128/163` | `resolveDevelopmentType()` liefert die englische Feed-Vokabel in Hero **und** Faktenpanel; `p.location` ist roher Ortsfreitext an zwei Stellen | am Render-Ort übersetzt; `resolveDevelopmentType()` selbst bleibt englisch, weil `matchesPropertyTypeFilter` und die City+Type-Landingpages dagegen matchen |
+
+**Weiterhin offen (Dev-Aufgaben, absichtlich nicht in dieser Runde):**
+
+- `ProjectCard.tsx` — `aria-label="Distances"` hartcodiert englisch, alle Locales.
+- `UnitsView.tsx` — `title="Branded PDF factsheet (built in the backend phase)"` hartcodiert englisch, alle Locales.
+- `ProjectCard.tsx` — `Studio` als Bettenwert zeigt in **en** weiterhin `Studio bed`. Das betrifft alle LTR-Locales und wurde hier nicht angefasst, weil diese Runde die LTR-Ausgabe zeichengleich lassen muss.
+

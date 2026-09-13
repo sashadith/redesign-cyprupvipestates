@@ -35,7 +35,7 @@ export const PROJECT_PAGE_COPY: Record<Locale, typeof PROJECT_PAGE_EN> = {
   // §1: no exclamation marks in UI) and the adjective; the Hebrew is a nominal
   // CTA. FAQ / developer follow the glossary.
   he: {
-    enquireNow: "לקבלת פרטים על הפרויקט",
+    enquireNow: "לפרטים על הפרויקט",
     developer: "יזם",
     calculateRoi: "חישוב תשואה",
     faq: "שאלות ותשובות",

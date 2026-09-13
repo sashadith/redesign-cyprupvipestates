@@ -131,7 +131,7 @@ function t(
     he: {
       coords: "קואורדינטות",
       copy: "העתקה",
-      copied: "הועתק",
+      copied: "הועתק ללוח",
       open: "פתיחה ב-Google Maps",
       route: "מסלול (Google/Apple)",
       osm: "פתיחה ב-OSM",
@@ -171,7 +171,7 @@ const popupMessages: Record<SupportedLang, string> = {
   en: POPUP_MESSAGE_EN,
   ru: "Объект находится здесь.",
   pl: "Tutaj znajduje się ta nieruchomość.",
-  he: "הנכס נמצא כאן.", // REVIEW(he)
+  he: "הנכס נמצא כאן", // REVIEW(he)
 };
 
 const PropertyMap: FC<Props> = ({

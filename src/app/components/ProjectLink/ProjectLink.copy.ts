@@ -13,6 +13,11 @@ export const PROJECT_LINK_EN = {
   bedrooms: "Bedrooms",
   coveredArea: "Covered area",
   plotSize: "Plot size",
+  // Area unit — was hardcoded Latin "m²" in ProjectLink.tsx for every
+  // locale. Hebrew writes מ"ר (glossary §2) and Russian writes the Cyrillic
+  // м², the same symbol DEVELOPMENT_STRINGS.ru.unitM2 already uses on the
+  // neighbouring surface (Pass B, Should fix #26).
+  areaUnit: "m²",
 };
 
 export const PROJECT_LINK_COPY: Record<Locale, typeof PROJECT_LINK_EN> = {
@@ -23,6 +28,7 @@ export const PROJECT_LINK_COPY: Record<Locale, typeof PROJECT_LINK_EN> = {
     bedrooms: "Schlafzimmer",
     coveredArea: "Überdachte Fläche",
     plotSize: "Grundstück",
+    areaUnit: "m²",
   },
   pl: {
     priceOnRequest: "Cena na życzenie",
@@ -30,6 +36,7 @@ export const PROJECT_LINK_COPY: Record<Locale, typeof PROJECT_LINK_EN> = {
     bedrooms: "Sypialnie",
     coveredArea: "Powierzchnia zabudowy",
     plotSize: "Powierzchnia działki",
+    areaUnit: "m²",
   },
   ru: {
     priceOnRequest: "Цена по запросу",
@@ -37,17 +44,21 @@ export const PROJECT_LINK_COPY: Record<Locale, typeof PROJECT_LINK_EN> = {
     bedrooms: "Спальни",
     coveredArea: "Площадь",
     plotSize: "Площадь участка",
+    areaUnit: "м²",
   },
-  // priceFrom is followed by a non-breaking space and the <Bdi ltr> price, so
-  // the glossary's bound-prefix form "החל מ-" ends up separated from the figure
-  // ("מחיר החל מ- €450,000") rather than glued to it as in prose. Kept anyway
-  // because it is the wording the whole site uses; flagged for Pass C.
+  // priceFrom is followed by a non-breaking space and the <Bdi ltr> price
+  // (ProjectLink.tsx), so the glossary's bound-prefix form "החל מ-" would sit
+  // a space away from the figure — a hyphen with nothing against it is a
+  // typesetting error in Hebrew, not a prefix. The free-word caption needs no
+  // hyphen and matches the Development hero's own price caption (Pass B,
+  // Should fix #25 / Must fix #3).
   he: {
     priceOnRequest: "מחיר לפי פנייה",
-    priceFrom: "מחיר החל מ-",
+    priceFrom: "מחיר התחלתי",
     bedrooms: "חדרי שינה",
     coveredArea: "שטח מקורה",
     plotSize: "שטח מגרש",
+    areaUnit: 'מ"ר',
   }, // REVIEW(he)
 };
 

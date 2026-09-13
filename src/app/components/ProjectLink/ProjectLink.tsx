@@ -107,7 +107,7 @@ const ProjectLink: FC<Props> = ({
           <p>
             {c.coveredArea}
             <br />
-            {coveredArea} m²
+            {coveredArea} {c.areaUnit}
           </p>
         </div>
         <div className={styles.projectDataItemDivider}></div>
@@ -115,7 +115,7 @@ const ProjectLink: FC<Props> = ({
           <p>
             {c.plotSize}
             <br />
-            {plotSize} m²
+            {plotSize} {c.areaUnit}
           </p>
         </div>
       </div>
