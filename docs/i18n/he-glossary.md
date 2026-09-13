@@ -153,7 +153,8 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 | stamp duty | מס בולים | |
 | VAT (reduced 5%) | מע"מ (מופחת 5%) | nur mit Quelle |
 | +VAT (an einer Preisangabe) | + מע"מ | mit Leerzeichen, oder `לא כולל מע"מ`; ohne Leerzeichen liest es sich als ein Wort. **nicht verwenden: `בתוספת מע"מ`** — WP7s Einwand galt der Form *ohne* Leerzeichen (`+מע"מ`), die auch hier ausgeschlossen ist; mit Leerzeichen liegt das Pluszeichen als Neutralzeichen zwischen LTR-Betrag und RTL-Wort und landet richtig. Wortgleich in `developmentCopy.ts` und auf der Präsentationskarte; siehe §6 und §7 |
-| transfer fees | דמי העברה | |
+| transfer fees (Grundbuch-Übertragungsgebühr) | דמי העברה | die staatliche Gebühr beim Eigentumsübergang. **Nicht** `מס העברה` (das wäre eine Steuer, die Quelle sagt „fees") |
+| bank transfer fees / remittance charges | עמלות ההעברה | Bankgebühr bei Auslandsüberweisung und Währungsumtausch. **Bewusste Abgrenzung zu `דמי העברה`** — beides heißt im EN „transfer fees", meint aber zwei verschiedene Kosten; im selben Text nie vermischen (Fix-Runde 1 `c-faq`, Pass B Terminology) |
 | immovable property tax | (abgeschafft) | nicht erwähnen |
 | capital gains tax | מס רווחי הון | |
 | rental yield | תשואה משכירות | Suchbegriff: תשואה |
@@ -201,7 +202,9 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 | Israeli community | הקהילה הישראלית | |
 | expats | תושבים זרים / זרים | nicht „אקספטים" |
 | buyers | רוכשים | nicht `קונים` (Einzelhandel) |
-| international clients / buyers from abroad | רוכשים מחו"ל | |
+| foreign buyers (zyprische Rechtskategorie) | רוכשים זרים | wo das EN „foreigners"/„foreign buyers" im Rechtssinn meint: Genehmigung der `מועצת השרים`, Nicht-EU-Status, Kreditvergabe an Nicht-Ansässige. Non-EU präzise: `רוכשים שאינם אזרחי האיחוד האירופי` — `אזרחי`, nicht `תושבי`, solange das EN „citizens" sagt |
+| international clients / buyers from abroad | רוכשים מחו"ל | nur als **Marktgruppe**, wo das EN „international"/„overseas buyers" sagt (Nachfrage, Investorenprofile). Nicht dort, wo es um den Rechtsstatus geht — dann `רוכשים זרים` |
+| buyers (Leseransprache im Seiten-Chrome) | רוכשים מישראל | wo der Text den Leser direkt anspricht (H1, Meta, Intro, CTA). **Nicht** in 1:1 aus dem EN übersetzten Fließtext-Aussagen in der dritten Person — das wäre ein Zusatz gegenüber der Quelle (Entscheidung Fix-Runde 1 `c-faq`) |
 | investor | משקיע | Plural משקיעים |
 | investment | השקעה | `השקעה בנדל"ן בקפריסין` |
 | investment property | נכס להשקעה | Kategorie-Chip |
