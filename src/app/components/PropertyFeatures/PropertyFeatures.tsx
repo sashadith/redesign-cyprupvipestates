@@ -14,21 +14,21 @@ const cityTranslations: {
     de: "Paphos",
     pl: "Pafos",
     ru: "Пафос",
-    he: "Paphos", // TODO(he)
+    he: "פאפוס", // REVIEW(he)
   },
   Limassol: {
     en: "Limassol",
     de: "Limassol",
     pl: "Limassol",
     ru: "Лимассол",
-    he: "Limassol", // TODO(he)
+    he: "לימסול", // REVIEW(he)
   },
   Larnaca: {
     en: "Larnaca",
     de: "Larnaca",
     pl: "Larnaca",
     ru: "Ларнака",
-    he: "Larnaca", // TODO(he)
+    he: "לרנקה", // REVIEW(he)
   },
 };
 

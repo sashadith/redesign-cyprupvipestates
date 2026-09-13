@@ -48,7 +48,10 @@ const COPY: Record<DistancesLocale, { labels: Record<Category, string>; min: str
   de: { labels: { beach: "Strand", restaurants: "Restaurants", shops: "Supermarket", airport: "Flughafen", hospital: "Klinik", school: "Schule", cityCenter: "Zentrum", golf: "Golfplatz" }, min: "min" },
   pl: { labels: { beach: "Plaża", restaurants: "Restauracje", shops: "Sklepy", airport: "Lotnisko", hospital: "Szpital", school: "Szkoła", cityCenter: "Centrum miasta", golf: "Pole golfowe" }, min: "min" },
   ru: { labels: { beach: "Пляж", restaurants: "Рестораны", shops: "Супермаркет", airport: "Аэропорт", hospital: "Больница", school: "Школа", cityCenter: "Центр города", golf: "Поле для гольфа" }, min: "мин" },
-  he: EN, // TODO(he)
+  // The EN "Golf court" is a long-standing typo for golf COURSE; Hebrew uses
+  // the correct מגרש גולף rather than reproducing the mistake. "Shops" follows
+  // the English source (חנויות), not the de/ru drift to "Supermarket".
+  he: { labels: { beach: "חוף", restaurants: "מסעדות", shops: "חנויות", airport: "שדה תעופה", hospital: "בית חולים", school: "בית ספר", cityCenter: "מרכז העיר", golf: "מגרש גולף" }, min: "דק'" }, // REVIEW(he)
 };
 
 export default function DistancesStrip({

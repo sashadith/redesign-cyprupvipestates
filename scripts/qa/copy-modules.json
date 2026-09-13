@@ -35,6 +35,7 @@
   { "path": "src/app/components/NewsletterForm/NewsletterForm.copy.ts", "exports": ["NEWSLETTER_MESSAGES"] },
   { "path": "src/app/components/NoProjects/NoProjects.copy.ts", "exports": ["NO_PROJECTS_COPY"] },
   { "path": "src/app/components/ProjectPdfButton/ProjectPdfButton.copy.ts", "exports": ["PROJECT_PDF_BUTTON_COPY"] },
+  { "path": "src/app/components/ProjectLink/ProjectLink.copy.ts", "exports": ["PROJECT_LINK_COPY"] },
   { "path": "src/app/components/ProjectSameCity/ProjectSameCity.copy.ts", "exports": ["PROJECT_SAME_CITY_COPY"] },
   { "path": "src/app/components/ProjectsSectionSlider/ProjectsSectionSlider.copy.ts", "exports": ["PROJECTS_SECTION_SLIDER_COPY"] },
   { "path": "src/app/components/PropertyDistances/PropertyDistances.copy.ts", "exports": ["PROPERTY_DISTANCES_COPY"] },

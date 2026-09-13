@@ -27,7 +27,7 @@ const ProjectCardSlider: FC<Props> = ({ images, title, lang }) => {
     pl: "Zobacz więcej",
     ru: "Смотреть ещё",
     en: VIEW_MORE_EN,
-    he: VIEW_MORE_EN, // TODO(he)
+    he: "הצגת עוד", // REVIEW(he)
   };
   const getViewMoreLabel = (lang: string) => VIEW_MORE_LABEL[isLocale(lang) ? lang : "en"];
 

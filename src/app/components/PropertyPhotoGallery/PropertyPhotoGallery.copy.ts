@@ -12,7 +12,10 @@ export const PROPERTY_PHOTO_GALLERY_COPY: Record<Locale, typeof PROPERTY_PHOTO_G
   de: { more: " mehr" },
   pl: { more: " więcej" },
   ru: { more: " еще" },
-  he: PROPERTY_PHOTO_GALLERY_EN, // TODO(he)
+  // Rendered as `+{n}{more}`. Hebrew puts the quantifier first, so the literal
+  // " עוד" would read backwards; " נוספות" (feminine plural, agreeing with
+  // תמונות) turns "+5 נוספות" into idiomatic Hebrew.
+  he: { more: " נוספות" }, // REVIEW(he)
 };
 
 export const propertyPhotoGalleryCopy = (lang: string) =>

@@ -40,7 +40,7 @@ const CITY_I18N: Record<Lang, Record<CityKey, string>> = {
   de: { Paphos: "Paphos", Limassol: "Limassol", Larnaca: "Larnaca" },
   ru: { Paphos: "Пафос", Limassol: "Лимассол", Larnaca: "Ларнака" },
   pl: { Paphos: "Pafos", Limassol: "Limassol", Larnaca: "Larnaka" },
-  he: CITY_I18N_EN, // TODO(he)
+  he: { Paphos: "פאפוס", Limassol: "לימסול", Larnaca: "לרנקה" }, // REVIEW(he)
 };
 function translateCity(city: string | undefined, lang: Lang): string {
   if (!city) return "";
@@ -252,7 +252,17 @@ function t(
       route: "Trasa (Google/Apple)",
       osm: "Otwórz w OSM",
     },
-    he: dictEn, // TODO(he)
+    // "Copied!" drops the exclamation mark (styleguide §1). Google Maps / OSM
+    // stay Latin brand names; the Hebrew preposition takes the hyphen the
+    // styleguide prescribes before a Latin word (ב-Google Maps).
+    he: {
+      coords: "קואורדינטות",
+      copy: "העתקה",
+      copied: "הועתק",
+      open: "פתיחה ב-Google Maps",
+      route: "מסלול (Google/Apple)",
+      osm: "פתיחה ב-OSM",
+    }, // REVIEW(he)
   };
   return dict[lang][label];
 }
@@ -298,7 +308,11 @@ const GESTURE_TEXT: Record<
     scroll: "Ctrl + скролл для масштабирования",
     scrollMac: "\u2318 + скролл для масштабирования",
   },
-  he: GESTURE_TEXT_EN, // TODO(he)
+  he: {
+    touch: "יש להשתמש בשתי אצבעות כדי להזיז את המפה",
+    scroll: "Ctrl + גלילה לזום",
+    scrollMac: "\u2318 + גלילה לזום",
+  }, // REVIEW(he)
 };
 
 const ProjectsMapAll: FC<Props> = ({ lang, markers }) => {

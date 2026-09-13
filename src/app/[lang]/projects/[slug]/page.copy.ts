@@ -31,7 +31,15 @@ export const PROJECT_PAGE_COPY: Record<Locale, typeof PROJECT_PAGE_EN> = {
     calculateRoi: "Рассчитать ROI",
     faq: "Часто задаваемые вопросы",
   },
-  he: PROJECT_PAGE_EN, // TODO(he)
+  // "Enquire this amazing project now!" loses the exclamation mark (styleguide
+  // §1: no exclamation marks in UI) and the adjective; the Hebrew is a nominal
+  // CTA. FAQ / developer follow the glossary.
+  he: {
+    enquireNow: "לקבלת פרטים על הפרויקט",
+    developer: "יזם",
+    calculateRoi: "חישוב תשואה",
+    faq: "שאלות ותשובות",
+  }, // REVIEW(he)
 };
 
 export const projectPageCopy = (lang: string) =>

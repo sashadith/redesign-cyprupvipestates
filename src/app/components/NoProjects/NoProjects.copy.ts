@@ -12,7 +12,7 @@ export const NO_PROJECTS_COPY: Record<Locale, typeof NO_PROJECTS_EN> = {
   de: { message: "Keine Projekte gefunden. Versuchen Sie, nach anderen Parametern zu suchen." },
   pl: { message: "Nie znaleziono projektów. Spróbuj wyszukać według innych parametrów." },
   ru: { message: "Проекты не найдены. Попробуйте поискать по другим параметрам." },
-  he: NO_PROJECTS_EN, // TODO(he)
+  he: { message: "לא נמצאו פרויקטים. אפשר לנסות לחפש עם מסננים אחרים." }, // REVIEW(he)
 };
 
 export const noProjectsCopy = (lang: string) => NO_PROJECTS_COPY[isLocale(lang) ? lang : "en"];

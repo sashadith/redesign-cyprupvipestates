@@ -56,7 +56,7 @@ const CITY_I18N: Record<SupportedLang, Record<CityKey, string>> = {
   de: { Paphos: "Paphos", Limassol: "Limassol", Larnaca: "Larnaca" },
   ru: { Paphos: "Пафос", Limassol: "Лимассол", Larnaca: "Ларнака" },
   pl: { Paphos: "Pafos", Limassol: "Limassol", Larnaca: "Larnaka" },
-  he: CITY_I18N_EN, // TODO(he)
+  he: { Paphos: "פאפוס", Limassol: "לימסול", Larnaca: "לרנקה" }, // REVIEW(he)
 };
 
 function translateCity(city: string | undefined, lang: SupportedLang): string {
@@ -126,7 +126,16 @@ function t(
       route: "Trasa (Google/Apple)",
       osm: "Otwórz w OSM",
     },
-    he: dictEn, // TODO(he)
+    // Same wording as the listing map's popup controls (ProjectsMapAll.tsx) so
+    // the identical control reads identically on both surfaces.
+    he: {
+      coords: "קואורדינטות",
+      copy: "העתקה",
+      copied: "הועתק",
+      open: "פתיחה ב-Google Maps",
+      route: "מסלול (Google/Apple)",
+      osm: "פתיחה ב-OSM",
+    }, // REVIEW(he)
   };
 
   return dict[lang][label];
@@ -139,7 +148,7 @@ const PROJECT_LINK_LABEL: Record<SupportedLang, string> = {
   en: PROJECT_LINK_LABEL_EN,
   ru: "Открыть проект",
   pl: "Otwórz projekt",
-  he: PROJECT_LINK_LABEL_EN, // TODO(he)
+  he: "מעבר לפרויקט", // REVIEW(he)
 };
 
 function projectLinkLabel(lang: SupportedLang) {
@@ -162,7 +171,7 @@ const popupMessages: Record<SupportedLang, string> = {
   en: POPUP_MESSAGE_EN,
   ru: "Объект находится здесь.",
   pl: "Tutaj znajduje się ta nieruchomość.",
-  he: POPUP_MESSAGE_EN, // TODO(he)
+  he: "הנכס נמצא כאן.", // REVIEW(he)
 };
 
 const PropertyMap: FC<Props> = ({

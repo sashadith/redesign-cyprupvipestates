@@ -97,7 +97,30 @@ export const PROPERTY_DISTANCES_COPY: Record<Locale, typeof PROPERTY_DISTANCES_E
       label: "Поле для гольфа",
     },
   },
-  he: PROPERTY_DISTANCES_EN, // TODO(he)
+  // Alt texts are screen-reader copy, so they stay full sentences ("distance
+  // from the villa in Cyprus to …"). The EN label "Golf court" is a long-standing
+  // typo for golf COURSE — Hebrew uses the correct מגרש גולף. "Shops" follows the
+  // English source (חנויות), not the de/ru drift to "Supermarket".
+  he: {
+    minSuffix: " דק'",
+    beach: { alt: "מרחק מהוילה בקפריסין לחוף", label: "חוף" },
+    restaurants: {
+      alt: "מרחק מהוילה בקפריסין למסעדות",
+      label: "מסעדות",
+    },
+    shops: { alt: "מרחק מהוילה בקפריסין לחנויות", label: "חנויות" },
+    airport: { alt: "מרחק מהוילה בקפריסין לשדה התעופה", label: "שדה תעופה" },
+    hospital: { alt: "מרחק מהוילה בקפריסין לבית החולים", label: "בית חולים" },
+    school: { alt: "מרחק מהוילה בקפריסין לבית הספר", label: "בית ספר" },
+    cityCenter: {
+      alt: "מרחק מהוילה בקפריסין למרכז העיר",
+      label: "מרכז העיר",
+    },
+    golfCourt: {
+      alt: "מרחק מהוילה בקפריסין למגרש הגולף",
+      label: "מגרש גולף",
+    },
+  }, // REVIEW(he)
 };
 
 export const propertyDistancesCopy = (lang: string) =>

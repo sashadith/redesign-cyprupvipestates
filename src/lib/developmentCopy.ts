@@ -7,7 +7,7 @@
 //   - distance category labels come from DistancesStrip's own COPY.
 // Only strings genuinely unique to this page's own chrome live here.
 import { projectsStrings } from "@/app/[lang]/projects/projectsI18n";
-import { isLocale, type Locale as Lang } from "@/lib/locale";
+import { bidiIsolate, isLocale, type Locale as Lang } from "@/lib/locale";
 export type { Lang };
 export const asDevLang = (l: string): Lang => (isLocale(l) ? l : "en");
 
@@ -379,7 +379,76 @@ const RU: DevelopmentStrings = {
   imageN: (n) => `Изображение ${n}`,
 };
 
-export const DEVELOPMENT_STRINGS: Record<Lang, DevelopmentStrings> = { en: EN, de: DE, pl: PL, ru: RU, he: EN /* TODO(he) */ };
+// Hebrew (WP2, Pass A). Register per docs/i18n/he-styleguide.md: nominal /
+// infinitive CTAs (no gendered imperative), no exclamation marks, no em dash,
+// Western digits, `€` before the figure, `מ"ר` for m². Glossary terms:
+// חדרי שינה (Cyprus counts bedrooms), מסירה (completion), על הנייר (off-plan),
+// מוכן למגורים (key-ready), מתקנים ושירותים (amenities). The project name in
+// enquiryHeadline is Latin inside an RTL sentence, so it is FSI-isolated.
+const HE: DevelopmentStrings = {
+  galleryLabel: (n) => (n === 1 ? "לצפייה בתמונה" : `לצפייה ב-${n} תמונות`),
+  openGallery: "פתיחת הגלריה",
+  heroFrom: "החל מ-",
+  heroType: "סוג",
+  heroAvailable: "זמינות",
+  vatSuffix: '+מע"מ',
+  aboutHeading: "על הפרויקט",
+  amenitiesHeading: "מתקנים ושירותים",
+  plansHeading: "תוכניות הפרויקט",
+  distancesHeading: "מרחקים",
+  unitsHeading: "יחידות זמינות",
+  unitsSubAvailable: (n) => (n === 1 ? "יחידה אחת זמינה" : `${n} זמינות`),
+  unitsSubSold: (n) => ` · ${n} נמכרו`,
+  factLocation: "מיקום",
+  factPropertyType: "סוג נכס",
+  factUnits: "יחידות",
+  factUnitsAvailable: (n) => (n === 1 ? "(יחידה אחת זמינה)" : `(${n} זמינות)`),
+  factStatus: "סטטוס",
+  factConstructionStage: "שלב הבנייה",
+  factPlot: "מגרש",
+  factBuildArea: "שטח בנוי",
+  factCompletion: "מסירה",
+  factEnergyRating: "דירוג אנרגטי",
+  priceOnRequest: "מחיר לפי פנייה",
+  heroFromSoldOut: "נמכר החל מ-",
+  soldOutBannerHeadline: { lead: "נמכר במלואו. אפשר לראות בזה ", gold: "אישור לטעם הטוב שלכם.", trail: "" },
+  soldOutBannerBody: "נכסים כאלה נחטפים מהר, ולמזלנו קפריסין עוד לא סיימה לבנות יפים. הפרויקטים האלה הכי קרובים למה שהביא אתכם לכאן, והם עדיין פתוחים:",
+  soldOutBannerBodyNoAlternatives: "נכסים כאלה נחטפים מהר, ולמזלנו קפריסין עוד לא סיימה לבנות יפים. ספרו לנו מה הביא אתכם לכאן, ונמצא את מה שהכי קרוב.",
+  offMarketCtaHeadline: { lead: "להגיע לנכס ", gold: "לפני המודעה", trail: "." },
+  enquiryHeadline: (name) => ({ lead: "לקבוע פגישת ייעוץ בנושא ", gold: bidiIsolate(name), trail: "" }),
+  offMarketCtaBody: "תארו לנו בהודעה אחת את הנכס שאתם מחפשים. אנחנו יודעים על יחידות עוד לפני שהן מתפרסמות, ואז נחשוב עליכם ראשונים.",
+  alternativesHeading: "פרויקטים דומים",
+  tagDistrict: "מחוז",
+  tagLocality: "יישוב",
+  tagArea: "אזור",
+  soldOut: "נמכר",
+  stage: { "off-plan": "על הנייר", "under construction": "בבנייה", completed: "הושלם", available: "זמין", "key-ready": "מוכן למגורים", sold: "נמכר" },
+  unitStatus: { available: "זמין", sold: "נמכר", reserved: "שמור" },
+  viewCards: "כרטיסים",
+  viewTable: "טבלה",
+  unitDisplayAria: "תצוגת היחידות",
+  colUnit: "יחידה", colType: "סוג", colFloor: "קומה", colBeds: "חדרי שינה", colBuilt: "שטח בנוי", colPlot: "מגרש", colPrice: "מחיר", colStatus: "סטטוס",
+  factBeds: "חדרי שינה", factBaths: "חדרי רחצה", factBuilt: "שטח בנוי", factVeranda: "מרפסת", factCovered: "שטח מקורה", factFloor: "קומה",
+  unitM2: 'מ"ר',
+  viewTour: "לצפייה בסיור ↗",
+  watch: "לצפייה ↗",
+  showLess: "הצגה מצומצמת",
+  allDetails: "כל הפרטים",
+  showMoreUnits: (n) => (n === 1 ? "הצגת יחידה נוספת" : `הצגת ${n} יחידות נוספות`),
+  factsheetPdf: "דף נתונים PDF",
+  soon: "בקרוב",
+  enlargePhotos: "הגדלת התמונות",
+  enlargePhotoN: (n) => `הגדלת תמונה ${n}`,
+  showAllPhotos: (n) => `הצגת כל ${n} התמונות`,
+  enlargeImageN: (n) => `הגדלת תמונה ${n}`,
+  visualisationN: (n) => `הדמיה ${n}`,
+  close: "סגירה",
+  previous: "הקודם",
+  next: "הבא",
+  imageN: (n) => `תמונה ${n}`,
+};
+
+export const DEVELOPMENT_STRINGS: Record<Lang, DevelopmentStrings> = { en: EN, de: DE, pl: PL, ru: RU, he: HE /* REVIEW(he) */ };
 
 // priceOnRequest/soldOut/heroFrom overlay the /projects listing's own wording
 // (projectsI18n.ts) at call time rather than duplicating it in each locale

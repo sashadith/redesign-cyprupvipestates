@@ -69,11 +69,11 @@ export async function uniqueDevelopmentSlug(publicName: string, selfId?: string)
 const asLang = (l: string): Lang => (isLocale(l) ? l : "en");
 
 const TYPE_LABEL: Record<string, Record<Lang, string>> = {
-  villa: { en: "Villa", de: "Villa", pl: "Willa", ru: "Вилла", he: "Villa" /* TODO(he) */ },
-  apartment: { en: "Apartment", de: "Wohnung", pl: "Apartament", ru: "Квартира", he: "Apartment" /* TODO(he) */ },
-  house: { en: "House", de: "Haus", pl: "Dom", ru: "Дом", he: "House" /* TODO(he) */ },
-  townhouse: { en: "Townhouse", de: "Reihenhaus", pl: "Dom szeregowy", ru: "Таунхаус", he: "Townhouse" /* TODO(he) */ },
-  generic: { en: "Property", de: "Immobilie", pl: "Nieruchomość", ru: "Недвижимость", he: "Property" /* TODO(he) */ },
+  villa: { en: "Villa", de: "Villa", pl: "Willa", ru: "Вилла", he: "וילה" /* REVIEW(he) */ },
+  apartment: { en: "Apartment", de: "Wohnung", pl: "Apartament", ru: "Квартира", he: "דירה" /* REVIEW(he) */ },
+  house: { en: "House", de: "Haus", pl: "Dom", ru: "Дом", he: "בית פרטי" /* REVIEW(he) */ },
+  townhouse: { en: "Townhouse", de: "Reihenhaus", pl: "Dom szeregowy", ru: "Таунхаус", he: "בית טורי" /* REVIEW(he) */ },
+  generic: { en: "Property", de: "Immobilie", pl: "Nieruchomość", ru: "Недвижимость", he: "נכס" /* REVIEW(he) */ },
 };
 
 function typeKeyOf(raw: string): keyof typeof TYPE_LABEL {
@@ -119,10 +119,37 @@ const LABELS: Record<Lang, { in: string; from: string; unitsAvailable: string; c
   de: { in: "in", from: "ab", unitsAvailable: "Einheiten verfügbar", completion: "Fertigstellung", cyprus: "Zypern", soldOut: "Ausverkauft", similar: "Ähnliche Projekte ansehen", cta: "Verfügbarkeit & Preise ansehen" },
   pl: { in: "w", from: "od", unitsAvailable: "dostępnych jednostek", completion: "Termin realizacji", cyprus: "Cypr", soldOut: "Wyprzedane", similar: "Zobacz podobne inwestycje", cta: "Zobacz dostępność i ceny" },
   ru: { in: "в", from: "от", unitsAvailable: "доступных объектов", completion: "Срок сдачи", cyprus: "Кипр", soldOut: "Продано", similar: "Похожие проекты", cta: "Смотреть наличие и цены" },
-  he: { ...LABELS_EN }, // TODO(he)
+  // Hebrew SEO labels (WP2). `in`/`from` carry the bound-prefix hyphen the
+  // styleguide prescribes before a Latin word or a figure (ב-Paphos,
+  // החל מ-€450,000); the space that separates "in"/"from" from what follows in
+  // the LTR locales is therefore dropped for `he` — see the glue() helper below.
+  // `cta` is the glossary's standard CTA (לצפייה בזמינות ובמחירים) so the
+  // snippet ends on the same action the site's buttons offer.
+  he: {
+    in: "ב-",
+    from: "החל מ-",
+    unitsAvailable: "יחידות זמינות",
+    completion: "מסירה",
+    cyprus: "קפריסין",
+    soldOut: "נמכר במלואו",
+    similar: "לצפייה בפרויקטים דומים",
+    cta: "לצפייה בזמינות ובמחירים",
+  }, // REVIEW(he)
 };
 
 const fmtPrice = (n: number) => `€${n.toLocaleString("en-US")}`;
+
+// Hebrew bans the en/em dash as sentence punctuation (he-styleguide.md §3) and
+// prescribes `|` for meta titles (§6); every LTR locale keeps the en dash it
+// already shipped, so these two tables are output-identical for en/de/pl/ru.
+const TITLE_SEP: Record<Lang, string> = { en: "–", de: "–", pl: "–", ru: "–", he: "|" };
+const SOLD_OUT_SEP: Record<Lang, string> = { en: " — ", de: " — ", pl: " — ", ru: " — ", he: ". " };
+
+// "in <place>" / "from <price>": Hebrew's ב / מ are bound prefixes written with
+// a hyphen and NO space before a Latin word or a figure ("ב-Paphos",
+// "החל מ-€450,000"), so the separator that the LTR locales need must not be
+// emitted for `he`. LABELS[he].in / .from already carry that hyphen.
+const glue = (l: Lang) => (l === "he" ? "" : " ");
 
 function fit(clauses: string[], max: number, sep = " "): string {
   // Drop trailing clauses one at a time until it fits; hard-truncate as a last resort.
@@ -145,7 +172,11 @@ export function autoMetaTitle(vm: ProjectVM, lang: string): string {
   const typeClause =
     beds && l === "en" ? `${beds}-bed ${type}` : beds && l === "de" ? `${beds}-Zimmer-${type}` : type;
   const name = localeDir(lang) === "rtl" ? bidiIsolate(vm.publicName) : vm.publicName;
-  const clauses = [name, "–", place ? `${typeClause} ${LABELS[l].in} ${place}` : typeClause];
+  // The place string is Latin ("Kato Paphos, Paphos"); inside an RTL title its
+  // internal comma would be visually reordered, so it needs the same isolator
+  // the project name gets.
+  const placeText = localeDir(lang) === "rtl" ? bidiIsolate(place) : place;
+  const clauses = [name, TITLE_SEP[l], place ? `${typeClause} ${LABELS[l].in}${glue(l)}${placeText}` : typeClause];
   return fit(clauses, TITLE_MAX);
 }
 
@@ -154,7 +185,8 @@ export function autoMetaDescription(vm: ProjectVM, lang: string): string {
   const type = typesLabel(vm, l);
   const place = [vm.area, vm.district].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(", ");
   const lbl = LABELS[l];
-  const sentence1 = `${type}${place ? ` ${lbl.in} ${place}` : ""}, ${lbl.cyprus}.`;
+  const placeText = localeDir(lang) === "rtl" ? bidiIsolate(place) : place;
+  const sentence1 = `${type}${place ? ` ${lbl.in}${glue(l)}${placeText}` : ""}, ${lbl.cyprus}.`;
   // Fallback total (no available unit left) counts the LISTED units only —
   // the same population the page itself shows. Counting raw rows would put a
   // number in the search snippet that is larger than anything on the page
@@ -169,10 +201,10 @@ export function autoMetaDescription(vm: ProjectVM, lang: string): string {
   // at what this visitor can still act on.
   const { soldOut } = computeAvailability(listedUnits(vm.units));
   if (soldOut) {
-    return fit([`${lbl.soldOut} — ${sentence1}`, `${lbl.similar}.`], DESC_MAX);
+    return fit([`${lbl.soldOut}${SOLD_OUT_SEP[l]}${sentence1}`, `${lbl.similar}.`], DESC_MAX);
   }
   const avail = vm.units.filter((u) => u.status === "available").length || listedUnits(vm.units).length;
-  const rawPriceClause = vm.priceFrom ? ` ${lbl.from} ${fmtPrice(vm.priceFrom)}` : "";
+  const rawPriceClause = vm.priceFrom ? ` ${lbl.from}${glue(l)}${fmtPrice(vm.priceFrom)}` : "";
   // Same gate as `name` in autoMetaTitle above: a plain string embedded into a
   // generated sentence, not JSX (no <Bdi> available here), so it needs the
   // string-level isolator. bidiIsolate (not ltrIsolate) to match that pattern.
@@ -182,7 +214,10 @@ export function autoMetaDescription(vm: ProjectVM, lang: string): string {
   // real-estate convention regardless of n, so no equivalent branch needed there).
   const unitsLabel = l === "en" && avail === 1 ? "unit available" : lbl.unitsAvailable;
   const sentence2 = avail ? `${avail} ${unitsLabel}${priceClause}.` : priceClause ? `${lbl.unitsAvailable}${priceClause}.` : "";
-  const sentence3 = vm.completion ? `${lbl.completion}: ${vm.completion}.` : "";
+  // Hebrew renders the stored "Q3 2029" as "רבעון 3 2029" (styleguide §5); the
+  // LTR locales keep the raw string they already shipped in this sentence.
+  const completionText = vm.completion ? (l === "he" ? localizeCompletion(vm.completion, l) : vm.completion) : "";
+  const sentence3 = completionText ? `${lbl.completion}: ${completionText}.` : "";
   // CTA rides last so `fit()` only keeps it when the factual clauses leave room
   // under DESC_MAX — a snippet that ends on an action ("View availability &
   // prices") reads as more clickable than one trailing off on a completion date.
@@ -236,6 +271,7 @@ function localizeCompletion(raw: string, l: Lang): string {
   const year = m[2];
   if (l === "pl") return `${ROMAN[q - 1]} kw. ${year}`;
   if (l === "ru") return `${q} кв. ${year}`;
+  if (l === "he") return `רבעון ${q} ${year}`;
   return `Q${q} ${year}`; // en/de — "Q3 2029" reads natively in both
 }
 

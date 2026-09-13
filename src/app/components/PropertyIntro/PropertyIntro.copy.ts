@@ -12,7 +12,7 @@ export const PROPERTY_INTRO_COPY: Record<Locale, typeof PROPERTY_INTRO_EN> = {
   de: { requestOffer: "Persönliches Angebot anfordern" },
   pl: { requestOffer: "Poproś o indywidualną ofertę" },
   ru: { requestOffer: "Запросить персональное предложение" },
-  he: PROPERTY_INTRO_EN, // TODO(he)
+  he: { requestOffer: "לקבלת הצעה אישית" }, // REVIEW(he)
 };
 
 export const propertyIntroCopy = (lang: string) => PROPERTY_INTRO_COPY[isLocale(lang) ? lang : "en"];

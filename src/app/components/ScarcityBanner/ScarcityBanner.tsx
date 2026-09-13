@@ -27,7 +27,10 @@ const SCARCITY_COPY: Record<ScarcityLocale, { last: string; left: (n: number) =>
       return `Осталось всего ${n} ${word}`;
     },
   },
-  he: SCARCITY_EN, // TODO(he)
+  // Hebrew needs no count branch: the trigger caps `available` at 5, and with a
+  // Western digit in front the plural "יחידות" is correct for 2-5
+  // ("2 יחידות" ... "5 יחידות"). Same arity as the other locales.
+  he: { last: "נותרה יחידה אחרונה", left: (n) => `נותרו רק ${n} יחידות` }, // REVIEW(he)
 };
 
 export type ScarcityResult = { tier: "last" | "left"; count: number } | null;
