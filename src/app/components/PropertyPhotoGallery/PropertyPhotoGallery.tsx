@@ -13,6 +13,7 @@ import { ImageAlt } from "@/types/property";
 import VideoSlide from "../VideoSlide/VideoSlide";
 import { useIsRtl } from "@/app/components/useIsRtl";
 import { localeDir } from "@/lib/locale";
+import { propertyPhotoGalleryCopy } from "./PropertyPhotoGallery.copy";
 
 type Props = {
   photos: ImageAlt[]; // Только изображения
@@ -107,15 +108,7 @@ const PropertyPhotoGallery: FC<Props> = ({
             >
               <div className={styles.remainingOverlay}>
                 +{remainingPhotosCount}
-                {lang === "en"
-                  ? " more"
-                  : lang === "de"
-                    ? " mehr"
-                    : lang === "pl"
-                      ? " więcej"
-                      : lang === "ru"
-                        ? " еще"
-                        : " more"}
+                {propertyPhotoGalleryCopy(lang).more}
               </div>
             </div>
           )}

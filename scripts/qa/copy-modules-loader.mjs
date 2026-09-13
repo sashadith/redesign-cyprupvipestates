@@ -49,10 +49,14 @@ export async function importModule(entry) {
 
 /**
  * Runs `visit(exportName, value, entry)` for every export listed in each
- * copy-modules.json entry, skipping entries that carry a "skip" reason and
- * recording an import failure (for an entry without "skip") as a skip too —
- * the snapshot/meta-length gates cover what can actually be loaded, per the
- * Phase 4 plan, and report the rest.
+ * copy-modules.json entry, skipping entries that carry a "skip" reason. An
+ * import failure for an entry WITHOUT an explicit "skip" is a hard error
+ * (throws, taking down the caller with the module path and the underlying
+ * error) rather than a soft skip — a module that used to load and silently
+ * stops loading (a typo'd path, a newly-introduced non-JS import, …) must
+ * fail the gate loudly, not quietly shrink the snapshot/meta-length coverage.
+ * Use the "skip" field for a module that is known and expected not to load
+ * standalone (see SectionLinks.tsx's entry in copy-modules.json).
  */
 export async function forEachModuleExport(visit) {
   const modules = loadModulesConfig();
@@ -66,8 +70,7 @@ export async function forEachModuleExport(visit) {
     try {
       mod = await importModule(entry);
     } catch (e) {
-      skipped.push({ path: entry.path, reason: `import failed: ${e.message}` });
-      continue;
+      throw new Error(`${entry.path}: import failed: ${e.message}`);
     }
     for (const exportName of entry.exports) {
       const value = mod[exportName];

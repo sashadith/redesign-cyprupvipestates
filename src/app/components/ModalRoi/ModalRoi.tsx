@@ -12,6 +12,7 @@ import {
   RoiStrategy,
 } from "@/lib/roi";
 import FormRoi from "../FormRoi/FormRoi";
+import { modalRoiCopy } from "./ModalRoi.copy";
 
 const customStyles: ReactModal.Styles = {
   overlay: {
@@ -75,24 +76,8 @@ const ModalRoi = ({ lang, strategy, scenario, input, result }: Props) => {
             <div className={styles.popupContentWrapper}>
               <div className={styles.formContent}>
                 <div className={styles.formText}>
-                  <h3 className={styles.modalTitle}>
-                    {lang === "ru"
-                      ? "Отправить расчет на email"
-                      : lang === "de"
-                        ? "Berechnung per E-Mail senden"
-                        : lang === "pl"
-                          ? "Wyślij kalkulację na e-mail"
-                          : "Send calculation by email"}
-                  </h3>
-                  <p className={styles.modalText}>
-                    {lang === "ru"
-                      ? "Мы отправим вам копию расчета и получим ее на нашу почту."
-                      : lang === "de"
-                        ? "Wir senden Ihnen eine Kopie der Berechnung und erhalten sie auch auf unserer Seite."
-                        : lang === "pl"
-                          ? "Wyślemy Ci kopię kalkulacji i otrzymamy ją również na naszą skrzynkę."
-                          : "We will send you a copy of the calculation and receive it on our side as well."}
-                  </p>
+                  <h3 className={styles.modalTitle}>{modalRoiCopy(lang).title}</h3>
+                  <p className={styles.modalText}>{modalRoiCopy(lang).text}</p>
                 </div>
 
                 <div className={styles.formInner}>

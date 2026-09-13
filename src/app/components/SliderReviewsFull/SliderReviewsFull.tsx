@@ -16,6 +16,7 @@ import { ReviewFull } from "@/types/blog";
 import { urlFor } from "@/sanity/sanity.client";
 import FadeUpAnimate from "../FadeUpAnimate/FadeUpAnimate";
 import { localeDir } from "@/lib/locale";
+import { sliderReviewsFullCopy } from "./SliderReviewsFull.copy";
 
 type Props = {
   reviews: ReviewFull[];
@@ -182,15 +183,7 @@ const SliderReviewsFull: FC<Props> = ({ reviews, lang }) => {
                     <PortableText value={previewBlocks} components={RichText} />
                   </div>
                   <button className={styles.buttonReadMore}>
-                    {lang === "de"
-                      ? "Ganze Bewertung lesen"
-                      : lang === "en"
-                        ? "Read full review"
-                        : lang === "pl"
-                          ? "Przeczytaj całą recenzję"
-                          : lang === "ru"
-                            ? "Читать полный отзыв"
-                            : "Read full review"}
+                    {sliderReviewsFullCopy(lang).readFullReview}
                   </button>
                 </div>
               </FadeUpAnimate>

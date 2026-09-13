@@ -7,6 +7,7 @@ import { urlFor } from "@/sanity/sanity.client";
 import styles from "./ProjectSameCity.module.scss";
 import ProjectLink from "../ProjectLink/ProjectLink";
 import { localePrefix } from "@/lib/locale";
+import { projectSameCityCopy } from "./ProjectSameCity.copy";
 
 type Props = {
   lang: string;
@@ -25,16 +26,7 @@ const ProjectSameCity = async ({ lang, city, currentProjectId }: Props) => {
     return null;
   }
 
-  const title =
-    lang === "en"
-      ? "Other projects in"
-      : lang === "de"
-        ? "Andere Projekte in"
-        : lang === "pl"
-          ? "Inne projekty w mieście"
-          : lang === "ru"
-            ? "Другие проекты в городе"
-            : "Other projects";
+  const title = projectSameCityCopy(lang).title;
 
   return (
     <section className={styles.projectSameCity}>

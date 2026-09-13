@@ -5,6 +5,13 @@
 // itself must run under tsx even though this file is plain JS):
 //   node --import tsx scripts/qa/copy-snapshot.mjs --write   regenerate scripts/qa/copy-snapshot.json
 //   node --import tsx scripts/qa/copy-snapshot.mjs --check   diff against it; exit 1 on any difference
+//   node --import tsx scripts/qa/copy-snapshot.mjs --write --only <path> [--only <path> ...]
+//                                                             regenerate ONLY the given module path(s)'
+//                                                             entries, leaving every other module's
+//                                                             existing baseline keys untouched — for
+//                                                             registering newly-added copy modules
+//                                                             without racing a concurrent editor's
+//                                                             changes to other modules' tables.
 //
 // Walks every module listed in scripts/qa/copy-modules.json for the en/de/pl/ru
 // leaf strings (Hebrew is deliberately excluded — `he` entries are expected to
@@ -90,6 +97,20 @@ async function buildSnapshot() {
   return { snapshot, skipped };
 }
 
+/** Every `--only <path>` value passed on the command line. Repeatable. */
+function collectOnlyPaths(args) {
+  const only = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--only" && args[i + 1]) only.push(args[i + 1]);
+  }
+  return only;
+}
+
+/** A snapshot key's module path is everything before the first "::". */
+function keyPath(key) {
+  return key.split("::")[0];
+}
+
 function sortedJson(obj) {
   const sorted = {};
   for (const k of Object.keys(obj).sort()) sorted[k] = obj[k];
@@ -113,12 +134,33 @@ function reportSkipped(skipped) {
 
 async function main() {
   const args = process.argv.slice(2);
+  const onlyPaths = collectOnlyPaths(args);
   const { snapshot, skipped } = await buildSnapshot();
 
   if (args.includes("--write")) {
-    writeFileSync(SNAPSHOT_PATH, sortedJson(snapshot));
-    console.log(`Wrote ${Object.keys(snapshot).length} leaves to ${path.relative(ROOT, SNAPSHOT_PATH)}`);
-    for (const [locale, n] of Object.entries(countsByLocale(snapshot)).sort()) {
+    let toWrite = snapshot;
+    if (onlyPaths.length) {
+      // Merge into the existing baseline: drop only the keys belonging to
+      // the given module path(s), then add back the freshly computed keys
+      // for those same paths. Every other module's entries are left exactly
+      // as they were on disk — this is what makes --write --only safe to run
+      // while another task's edits to different modules are in flight.
+      const existing = existsSync(SNAPSHOT_PATH)
+        ? JSON.parse(readFileSync(SNAPSHOT_PATH, "utf8"))
+        : {};
+      const merged = {};
+      for (const [k, v] of Object.entries(existing)) {
+        if (!onlyPaths.includes(keyPath(k))) merged[k] = v;
+      }
+      for (const [k, v] of Object.entries(snapshot)) {
+        if (onlyPaths.includes(keyPath(k))) merged[k] = v;
+      }
+      toWrite = merged;
+    }
+    writeFileSync(SNAPSHOT_PATH, sortedJson(toWrite));
+    console.log(`Wrote ${Object.keys(toWrite).length} leaves to ${path.relative(ROOT, SNAPSHOT_PATH)}`);
+    if (onlyPaths.length) console.log(`  (--only: ${onlyPaths.join(", ")})`);
+    for (const [locale, n] of Object.entries(countsByLocale(toWrite)).sort()) {
       console.log(`  ${locale}: ${n}`);
     }
     reportSkipped(skipped);
@@ -151,7 +193,9 @@ async function main() {
     return;
   }
 
-  console.error("Usage: node --import tsx scripts/qa/copy-snapshot.mjs --write|--check");
+  console.error(
+    "Usage: node --import tsx scripts/qa/copy-snapshot.mjs --write|--check [--only <path> ...]",
+  );
   process.exit(1);
 }
 

@@ -9,6 +9,7 @@ import { File, Image as ImageType } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client";
 import { localePrefix } from "@/lib/locale";
 import BlogSlide from "../BlogSlide/BlogSlide";
+import { projectsSectionSliderCopy } from "./ProjectsSectionSlider.copy";
 
 type Props = {
   block: ProjectsSectionBlock;
@@ -40,17 +41,7 @@ const ProjectsSectionSlider: FC<Props> = ({ block, lang }) => {
                 image={proj.previewImage}
                 title={proj.title}
                 price={proj.keyFeatures.price}
-                linkLabel={
-                  lang === "en"
-                    ? "View project"
-                    : lang === "de"
-                      ? "Projekt ansehen"
-                      : lang === "pl"
-                        ? "Zobacz projekt"
-                        : lang === "ru"
-                          ? "Посмотреть проект"
-                          : "View project"
-                }
+                linkLabel={projectsSectionSliderCopy(lang).viewProject}
                 linkDestination={href}
                 lang={lang}
               />

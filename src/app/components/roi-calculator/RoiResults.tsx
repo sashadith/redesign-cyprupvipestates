@@ -4,6 +4,7 @@ import React from "react";
 import styles from "./roi-calculator.module.scss";
 import { RoiCalculationResult, RoiStrategy } from "@/lib/roi";
 import { ButtonModal } from "../ButtonModal/ButtonModal";
+import { roiResultsCopy } from "./RoiResults.copy";
 
 type Props = {
   result: RoiCalculationResult;
@@ -15,14 +16,7 @@ type Props = {
 };
 
 function formatCurrency(value: number, lang: string) {
-  const locale =
-    lang === "pl"
-      ? "pl-PL"
-      : lang === "de"
-        ? "de-DE"
-        : lang === "ru"
-          ? "ru-RU"
-          : "en-US";
+  const locale = roiResultsCopy(lang).numberLocale;
 
   return new Intl.NumberFormat(locale, {
     style: "currency",
@@ -32,14 +26,7 @@ function formatCurrency(value: number, lang: string) {
 }
 
 function formatPercent(value: number, lang: string) {
-  const locale =
-    lang === "pl"
-      ? "pl-PL"
-      : lang === "de"
-        ? "de-DE"
-        : lang === "ru"
-          ? "ru-RU"
-          : "en-US";
+  const locale = roiResultsCopy(lang).numberLocale;
 
   return new Intl.NumberFormat(locale, {
     minimumFractionDigits: 1,
@@ -61,140 +48,25 @@ const RoiResults: React.FC<Props> = ({
     ? (inputBuildPeriodYears ?? 1) + (inputRentalPeriodYears ?? 10)
     : (inputBuildPeriodYears ?? result.yearlyData.length);
 
+  const c = roiResultsCopy(lang);
+
   const t = {
-    highlightLabel: isBuyHold
-      ? lang === "pl"
-        ? "Łączny zwrot netto"
-        : lang === "de"
-          ? "Gesamte Netto-Rendite"
-          : lang === "ru"
-            ? "Общий чистый доход"
-            : "Total net return"
-      : lang === "pl"
-        ? "Zysk netto ze sprzedaży"
-        : lang === "de"
-          ? "Netto-Gewinn aus dem Wiederverkauf"
-          : lang === "ru"
-            ? "Чистая прибыль от перепродажи"
-            : "Net profit from resale",
-
-    horizon:
-      lang === "pl"
-        ? "Horyzont"
-        : lang === "de"
-          ? "Horizont"
-          : lang === "ru"
-            ? "Горизонт"
-            : "Horizon",
-
-    purchaseCostWithFees:
-      lang === "pl"
-        ? "Koszt zakupu (z opłatami)"
-        : lang === "de"
-          ? "Kaufkosten (inkl. Gebühren)"
-          : lang === "ru"
-            ? "Стоимость покупки (с расходами)"
-            : "Purchase cost (with fees)",
-
-    furnishing:
-      lang === "pl"
-        ? "Wyposażenie"
-        : lang === "de"
-          ? "Ausstattung"
-          : lang === "ru"
-            ? "Меблировка"
-            : "Furnishing",
-
-    totalEntryCost:
-      lang === "pl"
-        ? "Łączny koszt wejścia"
-        : lang === "de"
-          ? "Gesamter Einstiegspreis"
-          : lang === "ru"
-            ? "Общий входной бюджет"
-            : "Total entry cost",
-
-    offPlanGain:
-      lang === "pl"
-        ? "Zysk na budowie (off-plan)"
-        : lang === "de"
-          ? "Gewinn während der Bauphase"
-          : lang === "ru"
-            ? "Рост стоимости на этапе строительства"
-            : "Off-plan value growth",
-
-    valueAtCompletion:
-      lang === "pl"
-        ? "Wartość przy odbiorze"
-        : lang === "de"
-          ? "Wert bei Fertigstellung"
-          : lang === "ru"
-            ? "Стоимость к завершению"
-            : "Estimated value at completion",
-
-    rentalCashFlow:
-      lang === "pl"
-        ? "Cash flow z najmu"
-        : lang === "de"
-          ? "Miet-Cashflow"
-          : lang === "ru"
-            ? "Денежный поток от аренды"
-            : "Rental cash flow",
-
-    valueInFinalYear:
-      lang === "pl"
-        ? "Wartość w roku końcowym"
-        : lang === "de"
-          ? "Wert im letzten Jahr"
-          : lang === "ru"
-            ? "Стоимость в последний год"
-            : "Estimated value in final year",
-
-    capitalGain:
-      lang === "pl"
-        ? "Zysk kapitałowy"
-        : lang === "de"
-          ? "Kapitalgewinn"
-          : lang === "ru"
-            ? "Капитальный прирост"
-            : "Capital gain",
-
-    sellingCosts:
-      lang === "pl"
-        ? "Koszty sprzedaży"
-        : lang === "de"
-          ? "Verkaufskosten"
-          : lang === "ru"
-            ? "Расходы на продажу"
-            : "Selling costs",
-
-    annualized:
-      lang === "pl"
-        ? "Średni ROI rocznie"
-        : lang === "de"
-          ? "Durchschnittlicher ROI pro Jahr"
-          : lang === "ru"
-            ? "Средний ROI в год"
-            : "Average annual ROI",
-
-    disclaimer:
-      lang === "pl"
-        ? "Uwaga: Wartości mają charakter orientacyjny i mogą się różnić w zależności od konkretnej nieruchomości, dewelopera i warunków rynkowych."
-        : lang === "de"
-          ? "Hinweis: Die Werte sind indikativ und können je nach Immobilie, Bauträger und Marktbedingungen abweichen."
-          : lang === "ru"
-            ? "Важно: значения являются ориентировочными и могут отличаться в зависимости от объекта, застройщика и рыночных условий."
-            : "Important: values are indicative and may vary depending on the property, developer and market conditions.",
+    highlightLabel: isBuyHold ? c.highlightLabelBuyHold : c.highlightLabelBuySell,
+    horizon: c.horizon,
+    purchaseCostWithFees: c.purchaseCostWithFees,
+    furnishing: c.furnishing,
+    totalEntryCost: c.totalEntryCost,
+    offPlanGain: c.offPlanGain,
+    valueAtCompletion: c.valueAtCompletion,
+    rentalCashFlow: c.rentalCashFlow,
+    valueInFinalYear: c.valueInFinalYear,
+    capitalGain: c.capitalGain,
+    sellingCosts: c.sellingCosts,
+    annualized: c.annualized,
+    disclaimer: c.disclaimer,
   };
 
-  const yearsText =
-    lang === "pl"
-      ? "lat"
-      : lang === "de"
-        ? "J."
-        : lang === "ru"
-          ? "лет"
-          : "years";
+  const yearsText = c.yearsText;
 
   const yearsLabel = `${t.horizon}: ${Math.round(totalYears)} ${yearsText} · ROI: ${formatPercent(result.roiPercent, lang)}%`;
 

@@ -20,6 +20,7 @@ import styles from "./FormPartners.module.scss";
 import Link from "next/link";
 import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
+import { formPartnersCopy } from "./FormPartners.copy";
 
 function tpl(str: string | undefined, vars: Record<string, string | number>) {
   return String(str ?? "").replace(/\{(\w+)\}/g, (_, k) =>
@@ -132,41 +133,19 @@ const FormPartners: FC<ContactFormProps> = ({
 
     surname: Yup.string()
       .transform((v) => (typeof v === "string" ? v.trim() : v))
-      .required(
-        lang === "ru"
-          ? "Фамилия обязательна"
-          : lang === "de"
-            ? "Nachname ist erforderlich"
-            : lang === "pl"
-              ? "Nazwisko jest wymagane"
-              : "Surname is required",
-      )
+      .required(formPartnersCopy(lang).surnameRequired)
       .test("surname-min", function (value) {
         const current = (value ?? "").trim().length;
         if (current >= SURNAME_MIN) return true;
         return this.createError({
-          message:
-            lang === "ru"
-              ? `Слишком короткая фамилия (минимум ${SURNAME_MIN})`
-              : lang === "de"
-                ? `Nachname ist zu kurz (mindestens ${SURNAME_MIN})`
-                : lang === "pl"
-                  ? `Nazwisko jest za krótkie (min. ${SURNAME_MIN})`
-                  : `Surname is too short (min ${SURNAME_MIN})`,
+          message: formPartnersCopy(lang).surnameTooShort(SURNAME_MIN),
         });
       })
       .test("surname-max", function (value) {
         const current = (value ?? "").trim().length;
         if (current <= SURNAME_MAX) return true;
         return this.createError({
-          message:
-            lang === "ru"
-              ? `Слишком длинная фамилия (макс. ${SURNAME_MAX})`
-              : lang === "de"
-                ? `Nachname ist zu lang (max. ${SURNAME_MAX})`
-                : lang === "pl"
-                  ? `Nazwisko jest za długie (max ${SURNAME_MAX})`
-                  : `Surname is too long (max ${SURNAME_MAX})`,
+          message: formPartnersCopy(lang).surnameTooLong(SURNAME_MAX),
         });
       }),
 
@@ -211,41 +190,19 @@ const FormPartners: FC<ContactFormProps> = ({
 
     country: Yup.string()
       .transform((v) => (typeof v === "string" ? v.trim() : v))
-      .required(
-        lang === "ru"
-          ? "Страна обязательна"
-          : lang === "de"
-            ? "Land ist erforderlich"
-            : lang === "pl"
-              ? "Kraj jest wymagany"
-              : "Country is required",
-      )
+      .required(formPartnersCopy(lang).countryRequired)
       .test("country-min", function (value) {
         const current = (value ?? "").trim().length;
         if (current >= COUNTRY_MIN) return true;
         return this.createError({
-          message:
-            lang === "ru"
-              ? `Слишком короткое название страны (минимум ${COUNTRY_MIN})`
-              : lang === "de"
-                ? `Land ist zu kurz (mindestens ${COUNTRY_MIN})`
-                : lang === "pl"
-                  ? `Kraj jest za krótki (min. ${COUNTRY_MIN})`
-                  : `Country is too short (min ${COUNTRY_MIN})`,
+          message: formPartnersCopy(lang).countryTooShort(COUNTRY_MIN),
         });
       })
       .test("country-max", function (value) {
         const current = (value ?? "").trim().length;
         if (current <= COUNTRY_MAX) return true;
         return this.createError({
-          message:
-            lang === "ru"
-              ? `Слишком длинное название страны (макс. ${COUNTRY_MAX})`
-              : lang === "de"
-                ? `Land ist zu lang (max. ${COUNTRY_MAX})`
-                : lang === "pl"
-                  ? `Kraj jest za długi (max ${COUNTRY_MAX})`
-                  : `Country is too long (max ${COUNTRY_MAX})`,
+          message: formPartnersCopy(lang).countryTooLong(COUNTRY_MAX),
         });
       }),
 
@@ -399,15 +356,7 @@ const FormPartners: FC<ContactFormProps> = ({
                   htmlFor={`${uid}-surname`}
                   className={`${styles.label} ${isSurnameFilled ? styles.filled : ""}`}
                 >
-                  {lang === "en"
-                    ? "Surname"
-                    : lang === "ru"
-                      ? "Фамилия"
-                      : lang === "de"
-                        ? "Nachname"
-                        : lang === "pl"
-                          ? "Nazwisko"
-                          : "Surname"}
+                  {formPartnersCopy(lang).surnameLabel}
                 </label>
 
                 <Field name="surname">
@@ -515,15 +464,7 @@ const FormPartners: FC<ContactFormProps> = ({
                   htmlFor={`${uid}-country`}
                   className={`${styles.label} ${isCountryFilled ? styles.filled : ""}`}
                 >
-                  {lang === "en"
-                    ? "Country"
-                    : lang === "ru"
-                      ? "Страна"
-                      : lang === "de"
-                        ? "Land"
-                        : lang === "pl"
-                          ? "Kraj"
-                          : "Country"}
+                  {formPartnersCopy(lang).countryLabel}
                 </label>
 
                 <Field name="country">

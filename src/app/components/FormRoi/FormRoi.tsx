@@ -20,6 +20,7 @@ import Link from "next/link";
 import "../formFeedback.css";
 import { formErrorText } from "../formFeedbackCopy";
 import { consentCopy } from "../consentCopy";
+import { formRoiCopy } from "./FormRoi.copy";
 import {
   RoiCalculationResult,
   RoiCalculatorInput,
@@ -85,169 +86,7 @@ const FormRoi: FC<Props> = ({
   const [formStartTime, setFormStartTime] = useState(0);
   const formikRef = useRef<FormikProps<FormData> | null>(null);
 
-  const copy = {
-    inputName:
-      lang === "ru"
-        ? "Имя"
-        : lang === "de"
-          ? "Vorname"
-          : lang === "pl"
-            ? "Imię"
-            : "Name",
-    inputSurname:
-      lang === "ru"
-        ? "Фамилия"
-        : lang === "de"
-          ? "Nachname"
-          : lang === "pl"
-            ? "Nazwisko"
-            : "Surname",
-    inputPhone:
-      lang === "ru"
-        ? "Телефон"
-        : lang === "de"
-          ? "Telefon"
-          : lang === "pl"
-            ? "Telefon"
-            : "Phone",
-    inputEmail:
-      lang === "ru"
-        ? "Email"
-        : lang === "de"
-          ? "E-Mail"
-          : lang === "pl"
-            ? "E-mail"
-            : "Email",
-    buttonText:
-      lang === "ru"
-        ? "Отправить расчет"
-        : lang === "de"
-          ? "Berechnung senden"
-          : lang === "pl"
-            ? "Wyślij kalkulację"
-            : "Send calculation",
-    successMessage:
-      lang === "ru"
-        ? "Мы отправили расчет вам на email и получили его копию."
-        : lang === "de"
-          ? "Wir haben die Berechnung an Ihre E-Mail-Adresse gesendet und eine Kopie erhalten."
-          : lang === "pl"
-            ? "Wysłaliśmy kalkulację na Twój e-mail i otrzymaliśmy jej kopię."
-            : "We sent the calculation to your email and received a copy.",
-    errorMessage: formErrorText(lang),
-    validationNameRequired:
-      lang === "ru"
-        ? "Введите имя"
-        : lang === "de"
-          ? "Bitte Namen eingeben"
-          : lang === "pl"
-            ? "Wpisz imię"
-            : "Please enter your name",
-    validationNameTooShort:
-      lang === "ru"
-        ? "Минимум {min} символа(ов). Сейчас: {current}."
-        : lang === "de"
-          ? "Mindestens {min} Zeichen. Aktuell: {current}."
-          : lang === "pl"
-            ? "Minimum {min} znaków. Obecnie: {current}."
-            : "Minimum {min} characters. Current: {current}.",
-    validationNameTooLong:
-      lang === "ru"
-        ? "Максимум {max} символов. Сейчас: {current}."
-        : lang === "de"
-          ? "Maximal {max} Zeichen. Aktuell: {current}."
-          : lang === "pl"
-            ? "Maksymalnie {max} znaków. Obecnie: {current}."
-            : "Maximum {max} characters. Current: {current}.",
-    validationSurnameRequired:
-      lang === "ru"
-        ? "Введите фамилию"
-        : lang === "de"
-          ? "Bitte Nachnamen eingeben"
-          : lang === "pl"
-            ? "Wpisz nazwisko"
-            : "Please enter your surname",
-    validationSurnameTooShort:
-      lang === "ru"
-        ? "Минимум {min} символа(ов). Сейчас: {current}."
-        : lang === "de"
-          ? "Mindestens {min} Zeichen. Aktuell: {current}."
-          : lang === "pl"
-            ? "Minimum {min} znaków. Obecnie: {current}."
-            : "Minimum {min} characters. Current: {current}.",
-    validationSurnameTooLong:
-      lang === "ru"
-        ? "Максимум {max} символов. Сейчас: {current}."
-        : lang === "de"
-          ? "Maximal {max} Zeichen. Aktuell: {current}."
-          : lang === "pl"
-            ? "Maksymalnie {max} znaków. Obecnie: {current}."
-            : "Maximum {max} characters. Current: {current}.",
-    validationPhoneRequired:
-      lang === "ru"
-        ? "Введите номер телефона"
-        : lang === "de"
-          ? "Bitte Telefonnummer eingeben"
-          : lang === "pl"
-            ? "Wpisz numer telefonu"
-            : "Please enter your phone number",
-    validationPhoneTooShort:
-      lang === "ru"
-        ? "Номер слишком короткий. Минимум {min}."
-        : lang === "de"
-          ? "Telefonnummer zu kurz. Minimum {min}."
-          : lang === "pl"
-            ? "Numer jest za krótki. Minimum {min}."
-            : "Phone number is too short. Minimum {min}.",
-    validationPhoneTooLong:
-      lang === "ru"
-        ? "Номер слишком длинный. Максимум {max}."
-        : lang === "de"
-          ? "Telefonnummer zu lang. Maximum {max}."
-          : lang === "pl"
-            ? "Numer jest za długi. Maksimum {max}."
-            : "Phone number is too long. Maximum {max}.",
-    validationPhoneInvalid:
-      lang === "ru"
-        ? "Некорректный номер телефона"
-        : lang === "de"
-          ? "Ungültige Telefonnummer"
-          : lang === "pl"
-            ? "Nieprawidłowy numer telefonu"
-            : "Invalid phone number",
-    validationEmailInvalid:
-      lang === "ru"
-        ? "Некорректный email"
-        : lang === "de"
-          ? "Ungültige E-Mail-Adresse"
-          : lang === "pl"
-            ? "Nieprawidłowy adres e-mail"
-            : "Invalid email address",
-    validationEmailRequired:
-      lang === "ru"
-        ? "Введите email"
-        : lang === "de"
-          ? "Bitte E-Mail eingeben"
-          : lang === "pl"
-            ? "Wpisz e-mail"
-            : "Please enter your email",
-    validationAgreementRequired:
-      lang === "ru"
-        ? "Подтвердите согласие"
-        : lang === "de"
-          ? "Bitte Zustimmung bestätigen"
-          : lang === "pl"
-            ? "Potwierdź zgodę"
-            : "Please confirm consent",
-    validationAgreementOneOf:
-      lang === "ru"
-        ? "Необходимо принять политику"
-        : lang === "de"
-          ? "Bitte akzeptieren Sie die Richtlinie"
-          : lang === "pl"
-            ? "Musisz zaakceptować politykę"
-            : "You must accept the policy",
-  };
+  const copy = { ...formRoiCopy(lang), errorMessage: formErrorText(lang) };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -390,15 +229,7 @@ const FormRoi: FC<Props> = ({
 
     preferredContact: Yup.string()
       .oneOf(["phone", "whatsapp", "email"])
-      .required(
-        lang === "ru"
-          ? "Как с вами лучше связаться?"
-          : lang === "de"
-            ? "Wie können wir Sie am besten kontaktieren?"
-            : lang === "pl"
-              ? "Wybierz preferowaną formę kontaktu"
-              : "What’s the best way to contact you?",
-      ),
+      .required(copy.contactMethodRequired),
 
     agreedToPolicy: Yup.boolean()
       .required(copy.validationAgreementRequired)
@@ -656,26 +487,12 @@ const FormRoi: FC<Props> = ({
 
             <fieldset className={`${styles.inputWrapper} min-w-0`}>
               <legend className={styles.radioGroupLabel}>
-                {lang === "ru"
-                  ? "Как с вами лучше связаться?"
-                  : lang === "de"
-                    ? "Wie können wir Sie am besten kontaktieren?"
-                    : lang === "pl"
-                      ? "W jaki sposób najlepiej się z Tobą skontaktować?"
-                      : "What’s the best way to contact you?"}
+                {copy.contactMethodLegend}
               </legend>
               <div className={styles.radioGroupWrapper}>
                 <label className={styles.radioOption}>
                   <Field type="radio" name="preferredContact" value="phone" />
-                  <span>
-                    {lang === "ru"
-                      ? "Телефон"
-                      : lang === "de"
-                        ? "Anruf"
-                        : lang === "pl"
-                          ? "Telefonicznie"
-                          : "Phone call"}
-                  </span>
+                  <span>{copy.phoneCallLabel}</span>
                 </label>
 
                 <label className={styles.radioOption}>
@@ -689,15 +506,7 @@ const FormRoi: FC<Props> = ({
 
                 <label className={styles.radioOption}>
                   <Field type="radio" name="preferredContact" value="email" />
-                  <span>
-                    {lang === "ru"
-                      ? "Email"
-                      : lang === "de"
-                        ? "E-Mail"
-                        : lang === "pl"
-                          ? "E-mail"
-                          : "Email"}
-                  </span>
+                  <span>{copy.emailRadioLabel}</span>
                 </label>
               </div>
 
