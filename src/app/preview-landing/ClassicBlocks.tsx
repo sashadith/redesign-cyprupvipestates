@@ -96,12 +96,24 @@ export function renderClassicBlock(block: any, lang: string, ctaHref: string, ti
         </div>
       ) : null;
 
-    case "formMinimalBlock":
-      // The homepage's own contact section — its own background, heading and
-      // styling. The block's title is the editor's internal label ("Form
-      // Minimal", "Form Final"), never customer copy, so nothing from the CMS
-      // is passed through.
-      return <Form lang={lang} />;
+    case "formMinimalBlock": {
+      // The homepage's own contact section — its own background and styling.
+      // Checked against all 104 live instances (2026-09-13): 103 of them are
+      // exactly one of these internal editor labels, never shown to a
+      // visitor — the assumption this comment used to state as fact. The
+      // 104th (immobilien-auf-zypern's 3 forms) is genuine customer-facing
+      // copy ("Interesse an einer Villa oder einem Haus?" etc.), silently
+      // dropped by this case before this fix, always falling back to Form's
+      // own generic default heading. Form already accepts an optional
+      // `title` prop with that same fallback (see Form.tsx) — passing
+      // through anything outside this denylist costs nothing on the 103
+      // pages that never had real copy here, and fixes the one that does.
+      const INTERNAL_LABELS = new Set([
+        "form", "form minimal", "form final", "form bottom", "form investment", "финальная форма",
+      ]);
+      const isRealTitle = block.title && !INTERNAL_LABELS.has(String(block.title).trim().toLowerCase());
+      return <Form lang={lang} title={isRealTitle ? block.title : undefined} />;
+    }
 
     case "faqBlock":
     case "accordionBlock":
