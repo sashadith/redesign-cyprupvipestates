@@ -70,6 +70,7 @@ export const FORM_COPY: Record<Locale, FormStrings> = {
     vName: "יש להזין שם פרטי", vSurname: "יש להזין שם משפחה", vPhone: "יש להזין טלפון",
     vEmailInvalid: "כתובת אימייל לא תקינה", vEmail: "יש להזין אימייל", vContact: "יש לבחור דרך התקשרות מועדפת",
     vConsentReq: "נדרש אישור", vConsentOne: "חובה לאשר",
+    labelQuestion: "השאלה שלכם", placeholderQuestion: "מה תרצו לדעת?", vQuestion: "יש להזין שאלה",
     success: "תודה, הפנייה שלכם הגיעה אלינו. יועץ יחזור אליכם, בדרך כלל עוד באותו יום.",
     error: `לא הצלחנו לשלוח את הפנייה. אפשר לנסות שוב, או ליצור איתנו קשר באימייל ${ltrIsolate("office@cyprusvipestates.com")} או בטלפון ${ltrIsolate("+357 99 278 285")}.`,
   }, // REVIEW(he)
