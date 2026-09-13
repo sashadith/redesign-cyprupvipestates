@@ -1,12 +1,15 @@
 import { anthropic, AI_MODEL } from "./anthropic";
 import { tuningBlock } from "./tuning";
+import { LOCALES, type Locale } from "@/lib/locale";
 
-/* Generate a neighbourhood description for an AREA in four native languages at
+/* Generate a neighbourhood description for an AREA in five native languages at
    once. Anti-cannibalisation is solved at the SOURCE: sibling descriptions from
    the same region are passed in and Claude is told to differentiate — so our own
    pages don't compete for the same keywords. */
 
-export type FourLang = { en: string; de: string; pl: string; ru: string };
+export type LocaleText = Record<Locale, string>;
+/** @deprecated use LocaleText — kept so older importers compile; remove in Phase 4 cleanup. */
+export type FourLang = LocaleText;
 
 export async function generateAreaContent(opts: {
   areaName: string;
@@ -42,25 +45,20 @@ Requirements:
 - Do NOT mention specific developers, projects, prices, or our company.
 - It must read as unique, original web content for SEO.${siblingBlock}
 
-Return ONLY a JSON object with the description written NATIVELY (idiomatic, not a literal translation) in four languages, keys exactly "en", "de", "pl", "ru". No markdown, no commentary.` + tuningBlock({ emphasize: opts.emphasize, avoid: opts.avoid });
+Return ONLY a JSON object with the description written NATIVELY (idiomatic, not a literal translation) in five languages (the Hebrew text must be written natively in Hebrew script, RTL, following the Hebrew style guide in the system prompt), keys exactly ${LOCALES.map((l) => `"${l}"`).join(",")}. No markdown, no commentary.` + tuningBlock({ emphasize: opts.emphasize, avoid: opts.avoid });
 
   // Forced tool use → guaranteed structured output (no fragile text/JSON parsing).
   const msg = await client.messages.create({
     model: AI_MODEL,
-    max_tokens: 3000,
+    max_tokens: 4000,
     tools: [
       {
         name: "area_description",
-        description: "Return the neighbourhood description in four languages.",
+        description: "Return the neighbourhood description in five languages.",
         input_schema: {
           type: "object",
-          properties: {
-            en: { type: "string", description: "English description" },
-            de: { type: "string", description: "German description (native)" },
-            pl: { type: "string", description: "Polish description (native)" },
-            ru: { type: "string", description: "Russian description (native)" },
-          },
-          required: ["en", "de", "pl", "ru"],
+          properties: Object.fromEntries(LOCALES.map((l) => [l, { type: "string", description: `${l} (native)` }])),
+          required: [...LOCALES],
         },
       },
     ],
@@ -69,9 +67,9 @@ Return ONLY a JSON object with the description written NATIVELY (idiomatic, not 
   });
 
   const tool = msg.content.find((b: any) => b.type === "tool_use") as any;
-  const p = (tool?.input ?? {}) as Partial<FourLang>;
-  const out = { en: p.en ?? "", de: p.de ?? "", pl: p.pl ?? "", ru: p.ru ?? "" };
-  if (!out.en && !out.de && !out.pl && !out.ru) {
+  const p = (tool?.input ?? {}) as Partial<LocaleText>;
+  const out = Object.fromEntries(LOCALES.map((l) => [l, String(p[l] ?? "")])) as LocaleText;
+  if (LOCALES.every((l) => !out[l])) {
     throw new Error(`No content returned (stop_reason: ${msg.stop_reason ?? "unknown"})`);
   }
   return out;

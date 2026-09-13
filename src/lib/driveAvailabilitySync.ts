@@ -342,8 +342,8 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
       });
       await prisma.developmentOverride.upsert({
         where: { developmentId: dev.id },
-        create: { developmentId: dev.id, descriptionEN: texts.en, descriptionDE: texts.de, descriptionPL: texts.pl, descriptionRU: texts.ru },
-        update: { descriptionEN: texts.en, descriptionDE: texts.de, descriptionPL: texts.pl, descriptionRU: texts.ru },
+        create: { developmentId: dev.id, descriptionEN: texts.en, descriptionDE: texts.de, descriptionPL: texts.pl, descriptionRU: texts.ru, descriptionHE: texts.he },
+        update: { descriptionEN: texts.en, descriptionDE: texts.de, descriptionPL: texts.pl, descriptionRU: texts.ru, descriptionHE: texts.he },
       });
     } catch { /* description is best-effort */ }
   }
