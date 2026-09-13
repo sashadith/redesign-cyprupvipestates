@@ -16,6 +16,7 @@ import { registerListDrafts } from "./listDrafts";
 import { registerCreateLead } from "./createLead";
 import { registerDeleteLead } from "./deleteLead";
 import { registerRestoreLead } from "./restoreLead";
+import { registerWhatsappSend } from "./whatsappSend";
 
 export function registerReadTools(server: McpServer): void {
   registerWorklist(server);
@@ -41,4 +42,5 @@ export function registerWriteTools(server: McpServer): void {
   registerCreateLead(server);
   registerDeleteLead(server);
   registerRestoreLead(server);
+  registerWhatsappSend(server);
 }
