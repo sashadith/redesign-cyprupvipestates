@@ -156,7 +156,7 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 | +VAT (an einer Preisangabe) | + מע"מ | mit Leerzeichen, oder `לא כולל מע"מ`; ohne Leerzeichen liest es sich als ein Wort. **nicht verwenden: `בתוספת מע"מ`** — WP7s Einwand galt der Form *ohne* Leerzeichen (`+מע"מ`), die auch hier ausgeschlossen ist; mit Leerzeichen liegt das Pluszeichen als Neutralzeichen zwischen LTR-Betrag und RTL-Wort und landet richtig. Wortgleich in `developmentCopy.ts` und auf der Präsentationskarte; siehe §6 und §7 |
 | transfer fees (Grundbuch-Übertragungsgebühr) | דמי העברה | die staatliche Gebühr beim Eigentumsübergang. **Nicht** `מס העברה` (das wäre eine Steuer, die Quelle sagt „fees") |
 | bank transfer fees / remittance charges | עמלות ההעברה | Bankgebühr bei Auslandsüberweisung und Währungsumtausch. **Bewusste Abgrenzung zu `דמי העברה`** — beides heißt im EN „transfer fees", meint aber zwei verschiedene Kosten; im selben Text nie vermischen (Fix-Runde 1 `c-faq`, Pass B Terminology) |
-| immovable property tax | (abgeschafft) | nicht erwähnen |
+| immovable property tax | (abgeschafft, national) | laut `faq:are-annual-property-taxes-payable-in-cyprus` darf erwähnt werden, dass die nationale Grundsteuer abgeschafft ist — aber nur zusammen mit dem Hinweis, dass kommunale/lokale Abgaben je nach Standort weiterhin möglich sind; nicht als „gibt es keine Steuer mehr" ohne diese Einschränkung darstellen |
 | capital gains tax | מס רווחי הון | |
 | rental yield | תשואה משכירות | Suchbegriff: תשואה |
 | buy-to-let | להשקעה להשכרה | |

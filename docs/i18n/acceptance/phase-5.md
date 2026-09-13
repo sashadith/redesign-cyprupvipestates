@@ -69,27 +69,34 @@ Alles andere in Phase 5/6 ist entweder `he`-only (Sprachlisten-Chips auf About/K
    ```bash
    pm2 reload cve-staging --update-env
    ```
-7. **Übersetzungswarteschlange öffnen:** `/admin/content/hebrew` aufrufen → **„Enqueue 15 sample"** klicken.
-8. **Cron-Route einmal manuell auslösen** (verarbeitet die 15 Sample-Zeilen; Auth ist ein Query-Parameter, kein Header — wie bei `api/cron/psi-sync`, siehe `src/app/api/cron/he-translate/route.ts:25`):
+7. **Filter-Gate für die beiden scharfen Projektfilter** (hartes Pre-Publish-Gate, nicht nur eine Randnotiz — siehe Task-6b-Review „Minor"): auf `/he/seafront-villas-cyprus` (`maxBeachMinutes: 10`) und auf `/he/limassol/investment-apartments` (`filterStage: "off-plan"`) prüfen, dass der Projekte-Block mindestens ein paar Karten zeigt und **nicht** den leeren Zustand (`pl-grid__empty`) — `LandingBody.tsx` hat keine `MIN_LIVE_RESULTS`-Untergrenze, ein zu enger Filter liefert also lautlos null Treffer. Bei leerem Grid: den Filterwert in der jeweiligen Quelldatei lockern (`content/he/singlepages/seafront-villas-cyprus.he.json` bzw. `content/he/singlepages/limassol/investment-apartments.he.json`) und gezielt nachseeden:
+   ```bash
+   CVP_ALLOW_DB_READ=yes node scripts/he-content/seed.mjs --only singlepages --dry-run
+   CVP_ALLOW_DB_READ=yes CVP_CONFIRM_CONTENT_SEED=yes node scripts/he-content/seed.mjs --only singlepages --yes
+   pm2 reload cve-staging --update-env
+   ```
+   Erst danach mit Schritt 8 weitermachen.
+8. **Übersetzungswarteschlange öffnen:** `/admin/content/hebrew` aufrufen → **„Enqueue 15 sample"** klicken.
+9. **Cron-Route einmal manuell auslösen** (verarbeitet die 15 Sample-Zeilen; Auth ist ein Query-Parameter, kein Header — wie bei `api/cron/psi-sync`, siehe `src/app/api/cron/he-translate/route.ts:25`):
    ```bash
    curl -s "https://design.cyprusvipestates.com/api/cron/he-translate?key=$CRON_SECRET&limit=15"
    ```
-9. **Samples lesen** auf `/admin/content/hebrew` (EN/HE nebeneinander, `dir="rtl"` auf der HE-Spalte) — bei schlechten Ergebnissen **„Reject → re-enqueue with force"** pro Zeile.
-10. **Restliche Zeilen einreihen** — je Kind einzeln:
+10. **Samples lesen** auf `/admin/content/hebrew` (EN/HE nebeneinander, `dir="rtl"` auf der HE-Spalte) — bei schlechten Ergebnissen **„Reject → re-enqueue with force"** pro Zeile.
+11. **Restliche Zeilen einreihen** — je Kind einzeln:
     ```
     „Enqueue missing developments" / „Enqueue missing areas" / „Enqueue missing developers"
     ```
-11. **Staging-Crontab-Zeile** (drainiert die Warteschlange automatisch, alle 10 Minuten, 10 Zeilen pro Lauf, Log-Datei):
+12. **Staging-Crontab-Zeile** (drainiert die Warteschlange automatisch, alle 10 Minuten, 10 Zeilen pro Lauf, Log-Datei):
     ```
     */10 * * * * curl -s "https://design.cyprusvipestates.com/api/cron/he-translate?key=REPLACE_WITH_CRON_SECRET&limit=10" >> /var/log/he-translate-cron.log 2>&1
     ```
     (Crontab-Zeilen erben keine Shell-Umgebung — den tatsächlichen `CRON_SECRET`-Wert einsetzen, nicht die Variable.) Zähler auf `/admin/content/hebrew` beobachten, bis „mit HE" für Developments/Gebiete/Bauträger den „veröffentlicht"-Zähler erreicht.
-12. **Automatisierte Smoke-Checks:**
+13. **Automatisierte Smoke-Checks:**
     ```bash
     scripts/qa/he-smoke.sh https://design.cyprusvipestates.com live
     node scripts/qa/rtl-matrix.mjs https://design.cyprusvipestates.com
     ```
-13. **Manueller Seiten-Walk** (Inhalt lesen, nicht nur Statuscode):
+14. **Manueller Seiten-Walk** (Inhalt lesen, nicht nur Statuscode):
     - `/he`, `/he/projects`
     - drei Projektseiten
     - `/he/faq` (vorher 404 — muss jetzt die 9 Kategorien/60 Fragen zeigen)
@@ -97,7 +104,7 @@ Alles andere in Phase 5/6 ist entweder `he`-only (Sprachlisten-Chips auf About/K
     - `/he/case-studies` + eine Detailseite
     - `/he/blog` (EN-Artikelkarten mit Badge „באנגלית"/`englishBadge`, `noindex` im Quelltext solange < 5 eigene `he`-Artikel)
     - `/he/developers`
-    - alle 17 Landingpages: `/he/real-estate-cyprus`, `/he/apartments-for-sale-cyprus`, `/he/property-investment-cyprus`, `/he/property-prices-cyprus`, `/he/limassol`, `/he/limassol/new-projects`, `/he/paphos`, `/he/paphos/apartments`, `/he/paphos/villas`, `/he/villas-cyprus`, `/he/seafront-villas-cyprus`, `/he/houses-for-sale-cyprus`, `/he/buying-property-in-cyprus`, `/he/relocation-cyprus`, `/he/permanent-residency-cyprus`, `/he/property-tax-cyprus`, `/he/limassol/investment-apartments`
+    - alle 17 Landingpages: `/he/real-estate-cyprus`, `/he/apartments-for-sale-cyprus`, `/he/property-investment-cyprus`, `/he/property-prices-cyprus`, `/he/limassol`, `/he/limassol/new-projects`, `/he/paphos`, `/he/paphos/apartments`, `/he/paphos/villas`, `/he/villas-cyprus`, `/he/seafront-villas-cyprus`, `/he/houses-for-sale-cyprus`, `/he/buying-property-in-cyprus`, `/he/relocation-cyprus`, `/he/permanent-residency-cyprus`, `/he/property-tax-cyprus`, `/he/limassol/investment-apartments` — auf `/he/seafront-villas-cyprus` und `/he/limassol/investment-apartments` erneut bestätigen, dass der Projekte-Block Karten zeigt (Schritt 7 ist hier bereits erledigt, nicht nochmal lockern, nur gegenlesen)
     - `/he/privacy-policy`, `/he/terms-and-conditions` (Verbindlichkeits-Hinweis unter der H1 prüfen)
     - eine paginierte Seite (z. B. `/he/projects?page=2`)
 
