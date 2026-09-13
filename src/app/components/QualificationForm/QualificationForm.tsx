@@ -126,7 +126,7 @@ const QualificationForm: FC<Props> = ({ lang, projectSlug, projectTitle }) => {
       <h3 className="text-[#142E2D] text-2xl" style={{ fontFamily: "var(--font-display, Georgia), serif", fontWeight: 400 }}>
         {projectTitle
           ? lang === "he"
-            ? `${t.heading}: ${bidiIsolate(projectTitle)}`
+            ? `${t.heading}, ${bidiIsolate(projectTitle)}`
             : `${t.heading} — ${projectTitle}`
           : t.heading}
       </h3>

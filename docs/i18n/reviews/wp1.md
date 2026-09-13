@@ -119,12 +119,12 @@ Ergibt zusammengesetzt: `קראתי את `**תנאי השימוש**` ואת `**�
 > as "Fix außerhalb WP1" / open question 6, but it is a `he`-blocker in the visible output, not a
 > follow-up: the heading was composed in JSX as `` `${t.heading} — ${projectTitle}` `` — an em dash
 > (§3 forbids it) plus a Latin project name with no bidi isolation in an RTL paragraph. Colon is not
-> an escape hatch either (§3 forbids colon headings) — the controller ruling below is a deliberate,
-> explicit exception for this one composed string, not a reopening of §3.
+> an escape hatch either (§3 forbids colon headings).
 >
-> **Controller ruling:** for `he` only, render `` `${t.heading}: ${bidiIsolate(projectTitle)}` ``
-> (`bidiIsolate` imported from `@/lib/locale`, gated on `lang === "he"`); every other locale's output
-> stays byte-identical to before.
+> **Controller ruling (revised after Fix Round 1):** for `he` only, render
+> `` `${t.heading}, ${bidiIsolate(projectTitle)}` `` — the comma form Pass B proposed; the earlier
+> colon ruling was withdrawn because it contradicted §3. `bidiIsolate` is imported from
+> `@/lib/locale`, gated on `lang === "he"`; every other locale's output stays byte-identical.
 
 ## 5. `src/app/components/CustomCookieConsent/CustomCookieConsent.copy.ts` — Cookie-Banner
 
