@@ -118,6 +118,11 @@ export default async function LegalPage({ params }: Props) {
           <div className="wrap">
             <p className="lgl__eyebrow">{t.eyebrow}</p>
             <h1 className="lgl__title">{t.title}</h1>
+            {/* Prevailing-language notice. Only set on locales whose text is a
+                courtesy translation of a binding English original (`he`);
+                undefined everywhere else, so en/de/pl/ru render exactly as
+                before. */}
+            {t.bindingNote && <p className="lgl__binding">{t.bindingNote}</p>}
             <p className="lgl__intro">{t.intro}</p>
             <p className="lgl__updated">
               <span className="lgl__updated-label">{t.updatedLabel}</span>

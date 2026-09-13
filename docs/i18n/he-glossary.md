@@ -514,6 +514,7 @@ Betreffzeilen, Anreden, Grußformeln und Signatur — für Client-Mails (Auto-Re
 | Beratungssprache (Entscheidung E) — liegt als **eine** exportierte Konstante `HE_LANGUAGE_NOTE` in `src/lib/locale.ts`; die Annahme „einmal sagen reicht" gilt pro Kanal, nicht pro Firma, deshalb tragen Auto-Reply, ROI-Ergebnismail, Booking- und Präsentationsseite sie jeweils selbst | הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה. |
 | Rechtsvorbehalt | המידע אינו מהווה ייעוץ משפטי או מס. בכפוף לבדיקה פרטנית. |
 | Maßgeblichkeit (Legal) | הנוסח האנגלי הוא המחייב. |
+| English binding (Rechtstexte) — Langfassung unter der H1 von Datenschutzerklärung und AGB (`bindingNote`, `privacy.he.ts` / `terms.he.ts`); die Kurzform darüber bleibt für Fließtext und Fußzeilen | הנוסח האנגלי של מסמך זה הוא הנוסח המחייב; התרגום לעברית נועד לנוחות בלבד. |
 | Preisvorbehalt | המחירים עשויים להשתנות. הזמינות מתעדכנת מול היזם. |
 | Unternehmensbeschreibung (kurz) | Cyprus VIP Estates היא סוכנות נדל"ן בקפריסין המתמחה בפרויקטים חדשים של יזמים מובילים בלימסול ובפאפוס. |
 | Nähe zu Israel | כ-45 דקות טיסה מתל אביב, כמה טיסות ביום. |

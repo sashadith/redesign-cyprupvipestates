@@ -23,6 +23,13 @@ export type LegalDoc = {
   metaDescription: string;
   eyebrow: string;
   title: string;
+  /** Prevailing-language notice, rendered as a small line directly under the
+   *  H1. Only locales whose version is a courtesy translation of a binding
+   *  English original carry it (`he`); en/de/pl/ru leave it undefined and
+   *  their output is unchanged. DE/PL/RU say the same thing inside their
+   *  "language versions" section of the terms, which is where it lived before
+   *  a locale needed it above the fold. */
+  bindingNote?: string;
   intro: string;
   updatedLabel: string;
   /** ISO date — rendered in the visitor's locale. */
