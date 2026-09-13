@@ -18,13 +18,25 @@ Summe: **601 Strings, 229 hebräische Strings** in fünf Dateien.
 
 `translationGroupSlugEn` = jeweils der EN-Slug (`…`-Case-Study-Slug, `about-us`, `contacts`); `slug` bleibt lateinisch (Entscheidung A; `src/lib/corporatePageSlugs.ts` erwartet für `he` genau `about-us`/`contacts`). `relatedProjects` sind unverändert die EN-Development-Slugs aus der Quelle. `relatedLandingPages` bleibt in beiden Singlepages `null` wie in der Quelle (sonst meldet `mirrorCheck` eine Presence-Mismatch).
 
+## Was rendert (ergänzt nach Pass B, Task-5-Fix-Runde 1)
+
+Von den **601 Strings der fünf Dateien erreichen rund 60 eine Seite.** Der Rest ist gespeichert, aber tot — wichtig für jeden zukünftigen Lektoratsdurchgang, damit keine Zeit auf unsichtbare Felder geht.
+
+| Datei | Wird gerendert | Gespeichert, nicht gerendert |
+|---|---|---|
+| `content/he/case-studies/*.he.json` (alle drei) | Alles außer `seo` selbst rendert über `[slug]/page.tsx` (Titel, `excerpt`, `clientOverview`, `caseDetails.*`, `mainContent`, `relatedProjects`) — die Case-Study-Detailseite ist die einzige der fünf Dateien, deren Prosa vollständig lebt. `seo` rendert ebenfalls (`generateMetadata`, Fallback auf `title`/`excerpt`). | Nichts nennenswertes — nur Layout-Token, Enum-Schlüssel und Admin-Blocklabels (siehe „Kept identical" in `task-5-passB.md`). |
+| `content/he/singlepages/about-us.he.json` | `contentBlocks[5].members[*]` (Name, Bild-`alt`, `position`, `description`/Sprachen) und `contentBlocks[9].reviews[0..2]` (die ersten drei Kundenstimmen, `page.tsx:137` `reviews.slice(0, 3)`) — via `preview-about/[lang]/data.ts` → `getAboutPageData()`. Hero-Bild, Hero-`alt` und alle Fließtexte kommen stattdessen aus der Konstante `HERO_IMAGE` und aus `preview-about/[lang]/copy.ts`. | `title`, `excerpt`, `seo` (`metaTitle`/`metaDescription` — `generateMetadata` baut ausschließlich aus `copy.ts`), `contentBlocks[0]` (`imageFullBlock`), `contentBlocks[1]–[4]` (die beiden Mission-/Werte-Blöcke, `doubleTextBlock`×3, `buttonBlock`), `contentBlocks[6]–[8]` (Mission-Wiederholung, Werte-Überschrift, `imageBulletsBlock`), `contentBlocks[9].reviews[3..9]` (sieben von zehn Reviews), `contentBlocks[10]` (`benefitsBlock`). |
+| `content/he/singlepages/contacts.he.json` | `contentBlocks[1].members[*]` (dieselben Felder wie oben, über `preview-contacts/[lang]/data.ts` → `getContactsPageData()`) und `previewImage` (Hero-Bild/`alt`). | `title`, `excerpt`, `seo`, `contentBlocks[0]` (`contactFullBlock` inkl. der Entscheidung-E-Zeile, s. o.), `contentBlocks[2]` (`locationBlock`, Titel `כאן נמצא המשרד שלנו`). |
+
+Konsequenz: die „Offene Punkte"-Nummern 7 (`כאן נמצא המשרד שלנו`), 8 (zwei `title`-Werte in `contacts.he.json`) und 9 (`יתרונות` Anzeige- oder Admin-Label) sind gegenstandslos — keines der drei Felder erreicht je eine Seite. Sie sind unten aus der Liste entfernt. Umgekehrt ist die Sorge in der alten Nummer 4 (`ראש תחום אסטרטגיה דיגיטלית וטכנולוגיות ווב`) **nicht** gegenstandslos: `position` rendert auf beiden Seiten (About **und** Contacts) und ist mit sechs Wörtern die längste Rollenzeile im Grid.
+
 ## Entscheidung E (Beratungssprache)
 
 Genau **eine** Platzierung, wörtlich nach Glossar §5:
 
 - `contacts.he.json` → `contentBlocks[0]` (`contactFullBlock.description`), am Absatzende: `הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה.`
 
-Begründung: Der Absatz ist genau der Text, der die Kontaktwege aufzählt („WhatsApp, phone, or email"), also der Kanal, auf den sich die „einmal pro Kanal"-Regel bezieht. In `about-us.he.json` steht der Satz **nicht** — die About-Zeile liefert nur Team, Reviews und Hero-Bild an die gerenderte Seite, und das Seiten-Chrome trägt ihn bereits (WP5, `preview-about/[lang]/copy.ts`). Die Case Studies tragen ihn ebenfalls nicht; dort steht er schon zweimal im Chrome (`formIndexSubtitle`, `formDetailSubtitle`, WP6 M6).
+Begründung (korrigiert nach Pass B, Task-5-Fix-Runde 1): `/he/contacts` rendert von der Zeile ausschließlich `contentBlocks[1].members[*]` und `previewImage` (`preview-contacts/[lang]/data.ts`) — `contactFullBlock.description` erreicht die Seite **nicht**. Die Platzierung sichert also den **Datensatz** (Admin/Sanity, alter Block-Renderer als Fallback), nicht den gerenderten Kanal. Auf der Seite selbst steht der Satz trotzdem, weil `preview-contacts/[lang]/copy.ts` (`finderLead`) ihn trägt — pro Kanal genau einmal, wie gefordert. In `about-us.he.json` steht der Satz **nicht**; die About-Zeile liefert nur Team, Reviews und Hero-Bild an die gerenderte Seite, und das Seiten-Chrome trägt ihn bereits (`preview-about/[lang]/copy.ts`, `teamLead`). Die Case Studies tragen ihn ebenfalls nicht; dort steht er schon zweimal im Chrome (`formIndexSubtitle`, `formDetailSubtitle`, WP6 M6).
 
 ## Terminologie und Entscheidungen
 
@@ -73,44 +85,35 @@ Begründung: Der Absatz ist genau der Text, der die Kontaktwege aufzählt („Wh
 
 ## Gates
 
+Stand nach Task-5-Fix-Runde 1 (Pass B umgesetzt). Die alten Zahlen unten (85/82/32 Verstöße) waren ein veralteter Zwischenstand aus der Zeit vor dem `mirrorCheck`-Fix von Task 7 — korrigiert:
+
 | Gate | Ergebnis |
 |---|---|
-| `node scripts/qa/he-content-check.mjs --only content/he/case-studies` | **85 Verstöße** — alle aus den vier unten beschriebenen Falsch-Positiv-Klassen des Checkers |
-| `--only content/he/singlepages/about-us.he.json` | **82 Verstöße** — 71 × „no Hebrew script" auf bewusst unveränderten Werten, 11 × leere Spacer-Spans |
-| `--only content/he/singlepages/contacts.he.json` | **32 Verstöße** — alle „no Hebrew script" auf bewusst unveränderten Werten |
-| Ersatz-Gate (`mirrorCheck` mit den drei Relaxierungen unten, `styleCheck`/`linkCheck`/`metaCheck` unverändert) | **0 Verstöße**, 601 Strings, 5 Dateien |
-| `npm test` | 294/294 grün |
+| `node scripts/qa/he-content-check.mjs --only content/he/case-studies --only content/he/singlepages` | **OK — 0 Verstöße, 22 files, 1593 strings**. `styleCheck` 0, `metaCheck` 0, `mirrorCheck` 0, `linkCheck` 0. `keptIdentical` je Datei: CS1 7, CS2 7, CS3 7, `about-us.he.json` 71, `contacts.he.json` 32 — alle 124 berechtigt (siehe „Kept identical" in `task-5-passB.md`). |
+| `npm test` | 298/298 grün |
+| `npx tsc --noEmit -p tsconfig.json` | sauber |
+| `node --import tsx scripts/qa/copy-snapshot.mjs --check` | clean (3381 leaves match) |
 | `grep -c "—\|–\|!"` je Datei | 0 / 0 / 0 / 0 / 0 |
-| `node scripts/he-content/seed.mjs --dry-run --only case-studies` | druckt den `CVP_ALLOW_DB_READ=yes`-Hinweis, Exit 0 (kein DB-Zugriff, wie vorgesehen) |
-| `metaCheck` (≤ 60 / ≤ 155 Graphem) | in allen fünf Dateien eingehalten (kein einziger Meta-Verstoß in den Läufen oben) |
+| `grep -c "ברמה גבוהה"` über die drei Case Studies | 0 (Pass B Must #1 hat alle acht Vorkommen in CS1 aufgelöst) |
+| `metaCheck` (≤ 60 / ≤ 155 Graphem) | in allen fünf Dateien eingehalten |
 
-### Blocker: `mirrorCheck` meldet vier Klassen von Falsch-Positiven — **offen, gehört dem Controller**
+### Blocker `mirrorCheck` — durch Task 7 erledigt
 
-Wie bei Task 4 (`c-faq.md`, „Blocker: `mirrorCheck` behandelt `id` als Prosa") darf diese Runde `scripts/he-content/lib.mjs` nicht anfassen (Task 7 arbeitet parallel an derselben Datei, und der Pathspec dieses Commits schließt `scripts/` aus). Die Befunde, in der Reihenfolge ihrer Häufigkeit:
-
-| Klasse | Fälle | Beispiel | Warum der Inhalt richtig ist |
-|---|---:|---|---|
-| **Leerer Spacer-Span** | 66 | `caseDetails.result[1].children[0].text: he value is empty` | Der EN-Span ist selbst leer (`""`) — Portable-Text-Abstandshalter. `mirrorCheck` prüft `!heValue.trim()` **bevor** es merkt, dass die Quelle leer war. Einen leeren Span mit Text zu füllen, würde das Layout ändern. |
-| **Bewusst unveränderter Wert** | 124 | `category: … (he="relocation")`, `mainContent[0].textAlign: (he="left")`, `relatedProjects[0]: (he="palisandro-hills-inex")`, `contentBlocks[0].contacts[0].type: (he="Link")`, `…members[1].description: (he="русский, english")` | Enum-Schlüssel, Layout-Token, EN-Development-Slugs, Personennamen, Sprachlisten und Admin-Blocklabels **müssen** identisch bleiben (Entscheidungen 1, 12, 14, 16). |
-| **`href` umgeschrieben** | 7 | `caseDetails.solution[0].markDefs[0].href: must be identical (en="/villas-in-paphos-with-private-pool", he="/he/paphos/villas")` | `href` steht in `IDENTICAL_KEYS`, gleichzeitig verlangt `linkCheck` ein `/he/…`-Ziel — die beiden Regeln schließen einander für jede Seite mit internen Links aus. Task 3 (SiteDocuments) trifft denselben Widerspruch, der Plan schreibt dort „link targets rewritten to `/he/...`". |
-| **Pack-Slug fehlt noch** | 2 | `link not on the he allow-list: /he/villas-cyprus`, `/he/relocation-cyprus` | Beide Seiten entstehen in Task 6b (`he-keyword-map.md` §4, Zeilen 10 und 14). Sobald die Dateien liegen, verschwindet die Meldung von selbst — die vier Links auf bereits geschriebene Seiten (`/he/paphos/villas`, `/he/real-estate-cyprus`) sind heute schon grün. **Vor dem Gesamtlauf in Task 9 prüfen.** |
-
-Vorschlag für den Fix in `scripts/he-content/lib.mjs` (drei Zeilen in `mirrorCheck`, keine neue Datei):
-
-1. `if (enValue.trim() === "") return violations;` **vor** der Leer-Prüfung — ein leerer EN-String erlaubt einen leeren HE-String.
-2. `if (enValue === heValue) return violations;` — wörtliche Gleichheit ist eine bewusste Entscheidung (Eigenname, Enum, Slug, Layout-Token, Sprachliste), keine vergessene Übersetzung. Das ist die allgemeine Form der Task-4-Lösung („`id` in `IDENTICAL_KEYS`") und deckt alle heute bekannten Fälle ab; das Restrisiko (eine tatsächlich unübersetzte Zeile rutscht durch) trägt Pass B/C, nicht der Checker.
-3. `href` aus `IDENTICAL_KEYS` in eine eigene Behandlung: identisch **oder** ein `/he/`-Präfix-Rewrite; `linkCheck` validiert den Wert ohnehin.
-
-Das Ersatz-Gate mit genau diesen drei Relaxierungen läuft über alle fünf Dateien auf **0 Verstöße** durch. Solange der Fix fehlt, schlägt auch der Gesamtlauf in Task 9 Schritt 3 fehl — er betrifft nicht nur diese fünf Dateien, sondern jede Pack-Datei mit EN-Quelle.
+Der frühere Abschnitt „Blocker: `mirrorCheck` meldet vier Klassen von Falsch-Positiven" ist obsolet. `scripts/he-content/lib.mjs` enthält alle drei damals vorgeschlagenen Relaxierungen (leerer EN-String erlaubt leeren HE-String; wörtliche Gleichheit zählt als `stats.keptIdentical` statt als Verstoß; `href`/Link-Keys sind über `isLinkKey()` von der Identitätsprüfung ausgenommen). Kein offener Blocker mehr — der Gate-Lauf oben ist der reale, nicht ein Ersatz-Gate.
 
 ## Offene Punkte für Pass C
 
-1. **`3 Month` vs. „within six weeks"** (UK-Investor-Case): Das Faktenpanel nennt drei Monate, der Ergebnisabsatz sechs Wochen. Beides steht so in der englischen Quelle und wurde nicht angeglichen. Redaktionell klären, nicht sprachlich.
-2. **„decades of experience" vs. `10 שנות ניסיון`** auf `/he/about-us` (Entscheidung 10). Wenn die 10 Jahre stimmen, sollte auch die EN-Quelle korrigiert werden.
-3. **`מבחר נכסים איכותיים`** für „A selection of exclusive properties": `בלעדיים` behauptet Exklusivvermarktung, die die Daten nicht hergeben; `מובחרים` kollidiert mit `מבחר`. Bestätigen oder Alternative nennen.
-4. **`ראש תחום אסטרטגיה דיגיטלית וטכנולוגיות ווב`** — 6 Wörter auf einer Personenkarte, deren EN-Vorlage 5 hat. Kürzen (`ראש תחום דיגיטל וטכנולוגיה`) oder so lassen?
-5. **`יועצת נדל"ן` für eine einzelne Karte** (Entscheidung 13): Trennung pro Person bestätigen, oder auf eine Form für alle zurückgehen. Die Frage hängt an Glossar §6 („Genus der Beraterzeile").
+Punkte 7–9 der Vorrunde (`כאן נמצא המשרד שלנו`, die zwei `title`-Werte in `contacts.he.json`, `יתרונות` als Admin-/Anzeigelabel) sind nach dem „Was rendert“-Abschnitt oben **gegenstandslos** und aus der Liste entfernt — keines der drei Felder erreicht eine Seite.
+
+1. **`3 Month` vs. „within six weeks“** (UK-Investor-Case): Das Faktenpanel nennt drei Monate, der Ergebnisabsatz sechs Wochen. Beides steht so in der englischen Quelle und wurde nicht angeglichen. Redaktionell klären, nicht sprachlich (Pass B, „Source contradictions“ — bestätigt, kein Sprachfehler).
+2. **„decades of experience“ vs. `10 שנות ניסיון`** auf `/he/about-us` (Entscheidung 10). Wenn die 10 Jahre stimmen, sollte auch die EN-Quelle korrigiert werden. Pass B bestätigt: die hebräische unbestimmte Form (`ניסיון רב שנים`) ist mit 10 Jahren vereinbar und erfindet nichts — besser gelöst als die parallele Stelle in CS2. Bleibt ein EN-Quellenproblem, kein `he`-Problem.
+3. **`מבחר נכסים איכותיים`** für „A selection of exclusive properties“: `בלעדיים` behauptet Exklusivvermarktung, die die Daten nicht hergeben; `מובחרים` kollidiert mit `מבחר`. Bestätigen oder Alternative nennen.
+4. **`ראש תחום אסטרטגיה דיגיטלית וטכנולוגיות ווב`** — 6 Wörter auf einer Personenkarte, deren EN-Vorlage 5 hat. **Nicht gegenstandslos:** `position` rendert auf beiden Seiten (`/he/about-us` **und** `/he/contacts`) und ist mit sechs Wörtern die längste Rollenzeile im Grid. Kürzen (`ראש תחום דיגיטל וטכנולוגיה`) empfohlen.
+5. **`יועצת נדל"ן` für eine einzelne Karte** (Entscheidung 13): Trennung pro Person bestätigen, oder auf eine Form für alle zurückgehen. Die Frage hängt an Glossar §6 („Genus der Beraterzeile“).
 6. **`סמנכ"ל פיתוח עסקי` für `CBDO`** — Ausschreibung bestätigen; die Karte zeigt bei en/de/pl/ru weiterhin das Akronym.
-7. **`כאן נמצא המשרד שלנו`** („Our office is here") über der Karte: knapper wäre `המשרד שלנו`. Der Kontakt-Chrome (WP5) nutzt `המשרד שלנו` bereits als Rubriktitel — mögliche Doppelung auf derselben Seite.
-8. **Zwei `title`-Werte in `contacts.he.json`** (Seitentitel und `contactFullBlock.title`) tragen beide `יצירת קשר`, weil sie in der Quelle beide „Contacts" heißen. Falls der Blocktitel gerendert wird, ist eine der beiden Stellen redundant.
-9. **`יתרונות`** als `benefitsBlock.title`: unklar, ob Anzeige- oder Admin-Label. Falls Admin, gehört er nach Konvention zurück auf Englisch.
+
+**In Task-5-Fix-Runde 1 gefunden und bereits behoben** (nicht mehr offen, hier nur zur Nachvollziehbarkeit dokumentiert):
+
+- **„Offices in Paphos and Limassol“ vs. ein Büro:** `contacts.he.json` `seo.metaDescription` behauptete gespiegelt zwei Büros (`משרדים בפאפוס ובלימסול`), während das gerenderte Kontakt-Chrome (`preview-contacts/[lang]/copy.ts`, `officeTitle`) und die tatsächliche Adresse nur ein Büro in Paphos kennen. Feld ist zwar tot (siehe „Was rendert“), aber jetzt auf `המשרד שלנו נמצא בפאפוס` korrigiert — keine Behauptung mehr über das EN-Chrome hinaus.
+- **Drei §11.6-Divergenzen zum About-Chrome** (Pass B M6, S13): `about-us.he.json` `contentBlocks[10].benefits[0]` (`וילות ברמה גבוהה` / `פרויקטים בנדל"ן`) und `contentBlocks[6].content[2]`/`content[4]` (zwei Mission-/Stance-Sätze) wichen von der wortgleichen Fassung im gerenderten Chrome (`preview-about/[lang]/copy.ts`, `stats[0]`, `stanceBody[1]`/`[2]`) ab. Alle drei jetzt wortgleich mit dem Chrome übernommen.
+- **`/he/about-us` rendert die Sprachlisten ungemappt** (Pass B Systemic S-1): `preview-about/[lang]/page.tsx` zeigte `m.languages.join(" · ")` roh (`deutsch · english · русский`) statt wie `/he/contacts` durch `toLanguageKey()`/`languageLabel()` zu mappen. Für `lang === "he"` jetzt behoben (`page.tsx` importiert dieselben Helfer aus `preview-contacts/[lang]/languages.ts`); en/de/pl/ru unverändert, `copy-snapshot --check` bleibt clean.

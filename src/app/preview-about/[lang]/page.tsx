@@ -13,6 +13,7 @@ import Bdi from "@/app/components/Bdi";
 import AboutMotion from "./AboutMotion";
 import { aboutCopy } from "./copy";
 import { getAboutPageData, getProjectCount } from "./data";
+import { toLanguageKey, languageLabel } from "@/app/preview-contacts/[lang]/languages";
 
 /* Cyprus VIP Estates — About, redesigned.
 
@@ -279,8 +280,18 @@ export default async function AboutPage({ params }: Props) {
                           that has to stay one isolated run inside the Hebrew
                           page (he-styleguide.md §11.4). No-op for the LTR
                           locales: <bdi> around all-LTR content in an LTR
-                          paragraph changes nothing. */}
-                      <Bdi>{m.languages.join(" · ")}</Bdi>
+                          paragraph changes nothing.
+                          For `he` only, map each raw entry through the same
+                          toLanguageKey()/languageLabel() helpers the contacts
+                          page uses, so the chips read as Hebrew labels
+                          instead of the raw native text (Pass B systemic
+                          finding S-1). en/de/pl/ru keep the untouched
+                          native-spelling join. */}
+                      <Bdi>
+                        {lang === "he"
+                          ? m.languages.map((raw) => languageLabel(toLanguageKey(raw), lang, raw)).join(" · ")
+                          : m.languages.join(" · ")}
+                      </Bdi>
                     </p>
                   )}
                 </li>
