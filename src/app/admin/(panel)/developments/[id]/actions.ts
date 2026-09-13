@@ -16,7 +16,7 @@ import { uniqueDevelopmentSlug } from "@/lib/developmentSeo";
 import { generateSeoMeta, getSeoPromptTemplate, saveSeoPromptTemplate, type SeoMetaResult } from "@/lib/ai/seoMeta";
 import { getDbProjectByFeedKey } from "@/lib/developmentRender";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, PUBLIC_LOCALES } from "@/lib/locale";
 import { syncErrorMessage } from "@/lib/syncErrorMessage";
 
 const asArr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
@@ -470,7 +470,7 @@ export async function saveOverride(formData: FormData) {
   if (seo) {
     const dev = await prisma.development.findUnique({ where: { id }, select: { publishStatus: true, slug: true } });
     if (dev?.publishStatus === "published" && dev.slug) {
-      const urls = ["en", "de", "pl", "ru"].map((l) => absUrl(localizedHref(l, ["projects", dev.slug!])));
+      const urls = PUBLIC_LOCALES.map((l) => absUrl(localizedHref(l, ["projects", dev.slug!])));
       void pingIndexNow("development-meta-edited", urls);
     }
   }
@@ -634,7 +634,7 @@ export async function setStatus(formData: FormData) {
 
   // Fire-and-forget — never awaited, never blocks this action's response.
   if ((status === "published" || status === "archived") && updated.slug) {
-    const urls = ["en", "de", "pl", "ru"].map((l) => absUrl(localizedHref(l, ["projects", updated.slug!])));
+    const urls = PUBLIC_LOCALES.map((l) => absUrl(localizedHref(l, ["projects", updated.slug!])));
     urls.push(absUrl("/projects"));
     void pingIndexNow(`development-${status}`, urls);
   }

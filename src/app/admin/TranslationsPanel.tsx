@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { createTranslation } from "./actions";
+import { LOCALES } from "@/lib/locale";
 
 // Shows the language versions linked to the current document (via
 // translationGroupId) so editors can jump between them and see which languages
 // exist or are still missing — without restructuring the data model.
-
-const LOCALES = ["en", "de", "pl", "ru"];
 const PATHS: Record<string, string> = {
   project: "projects",
   blog: "blog",

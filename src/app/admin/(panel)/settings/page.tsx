@@ -3,15 +3,15 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { updateFooterSettings } from "../../actions";
+import { LOCALES, isLocale } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
-const LOCALES = ["en", "de", "pl", "ru"];
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
 
 export default async function SettingsPage({ searchParams }: { searchParams: { lang?: string } }) {
   const session = await auth();
   if ((session?.user as any)?.role !== "ADMIN") redirect("/admin");
-  const lang = LOCALES.includes(searchParams.lang ?? "") ? searchParams.lang! : "en";
+  const lang = isLocale(searchParams.lang ?? "") ? searchParams.lang! : "en";
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "footer", language: lang as any } } });
   const d = (row?.data as any) ?? {};
   const contacts: any[] = Array.isArray(d.contacts) ? d.contacts : [];

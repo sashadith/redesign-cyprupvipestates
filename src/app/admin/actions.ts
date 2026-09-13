@@ -11,7 +11,7 @@ import nodemailer from "nodemailer";
 import { htmlToPortableText } from "@/lib/portableText/htmlToPt.mjs";
 import { isHtmlMarker } from "@/lib/portableText/richText";
 import { zonedInputToUtc } from "@/lib/tz";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, LOCALES, isLocale } from "@/lib/locale";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
 import { deepSetString } from "@/lib/homepageFields";
 import { slugify } from "@/lib/slugify";
@@ -41,8 +41,6 @@ function convertHtmlMarkers(node: any): any {
   }
   return node;
 }
-
-const LOCALES = ["en", "de", "pl", "ru"];
 
 // Resolve the scheduledAt column from the editor form. Only meaningful when the
 // status is SCHEDULED (the naive datetime is read as Europe/Berlin → UTC); any
@@ -1005,7 +1003,7 @@ export async function createLead(_prev: any, formData: FormData): Promise<{ erro
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Please enter a valid email address." };
 
   const num = (k: string) => { const v = String(formData.get(k) ?? "").trim(); return v === "" ? null : Math.round(Number(v)); };
-  const oneOf = (k: string, allowed: string[]) => { const v = String(formData.get(k) ?? "").trim(); return allowed.includes(v) ? v : null; };
+  const oneOf = (k: string, allowed: readonly string[]) => { const v = String(formData.get(k) ?? "").trim(); return allowed.includes(v) ? v : null; };
   const assignedToId = String(formData.get("assignedToId") ?? "").trim() || null;
   if (assignedToId) {
     const valid = await prisma.user.findFirst({ where: { id: assignedToId, isActive: true }, select: { id: true } });
@@ -1053,7 +1051,7 @@ export async function updateLead(id: string, _prev: any, formData: FormData): Pr
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "Please enter a valid email address." };
 
   const num = (k: string) => { const v = String(formData.get(k) ?? "").trim(); return v === "" ? null : Math.round(Number(v)); };
-  const oneOf = (k: string, allowed: string[]) => { const v = String(formData.get(k) ?? "").trim(); return allowed.includes(v) ? v : null; };
+  const oneOf = (k: string, allowed: readonly string[]) => { const v = String(formData.get(k) ?? "").trim(); return allowed.includes(v) ? v : null; };
 
   await prisma.lead.update({
     where: { id },
@@ -1234,7 +1232,7 @@ export async function emptyTrashAction(): Promise<{ ok?: string; error?: string 
 // order-preserving). This action rewrites the ordered list from the admin editor.
 export async function updateHomepageFeatured(lang: string, formData: FormData) {
   const session = await requireSession();
-  if (!LOCALES.includes(lang)) throw new Error("Invalid language");
+  if (!isLocale(lang)) throw new Error("Invalid language");
   const ids = String(formData.get("projectIds") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "homepage", language: lang as any } } });
@@ -1259,7 +1257,7 @@ export async function updateHomepageFeatured(lang: string, formData: FormData) {
 // Homepage "Featured Case Studies" — same ref pattern as featured projects, but caseStudyRef.
 export async function updateHomepageFeaturedCaseStudies(lang: string, formData: FormData) {
   await requireSession();
-  if (!LOCALES.includes(lang)) throw new Error("Invalid language");
+  if (!isLocale(lang)) throw new Error("Invalid language");
   const ids = String(formData.get("caseStudyIds") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "homepage", language: lang as any } } });
   if (!row) throw new Error("Homepage document not found for this language");
@@ -1279,7 +1277,7 @@ export async function updateHomepageFeaturedCaseStudies(lang: string, formData: 
 // labels/slide texts). Only overwrites existing string leaves; structure/media/rich-text preserved.
 export async function updateHomepageFields(lang: string, formData: FormData) {
   await requireSession();
-  if (!LOCALES.includes(lang)) throw new Error("Invalid language");
+  if (!isLocale(lang)) throw new Error("Invalid language");
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "homepage", language: lang as any } } });
   if (!row) throw new Error("Homepage document not found for this language");
   const data = JSON.parse(JSON.stringify(row.data ?? {}));
@@ -1297,7 +1295,7 @@ export async function updateHomepageFields(lang: string, formData: FormData) {
 // to Portable Text, and writes it back. Sanity/production is never touched.
 export async function saveHomepage(lang: string, formData: FormData) {
   await requireSession();
-  if (!LOCALES.includes(lang)) throw new Error("Invalid language");
+  if (!isLocale(lang)) throw new Error("Invalid language");
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "homepage", language: lang as any } } });
   if (!row) throw new Error("Homepage document not found for this language");
   let incoming: any;
@@ -1314,7 +1312,7 @@ export async function saveHomepage(lang: string, formData: FormData) {
 // Site settings — edits only safe scalar fields on the footer doc; preserves the rest of the JSON.
 export async function updateFooterSettings(lang: string, formData: FormData) {
   await requireAdmin();
-  if (!["en", "de", "pl", "ru"].includes(lang)) throw new Error("Invalid language");
+  if (!isLocale(lang)) throw new Error("Invalid language");
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "footer", language: lang as any } } });
   if (!row) throw new Error("Footer not found");
   const prev = row.data as Record<string, any>;
@@ -1433,7 +1431,7 @@ export async function createBlogPost(_prev: any, formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const slug = slugify(String(formData.get("slug") ?? "").trim() || title);
   const excerpt = String(formData.get("excerpt") ?? "").trim();
-  if (!LOCALES.includes(language)) return { error: "Invalid language" };
+  if (!isLocale(language)) return { error: "Invalid language" };
   if (!title || !slug) return { error: "Title and slug are required." };
   if (await prisma.blog.findFirst({ where: { language: language as any, slug } })) return { error: "A post with this slug already exists in this language." };
   const created = await prisma.blog.create({
@@ -1459,7 +1457,7 @@ export async function createContent(type: string, _prev: any, formData: FormData
   const cfg = CREATE_TYPES[type];
   if (!cfg) return { error: "Unknown content type" };
   const language = String(formData.get("language") ?? "en");
-  if (!LOCALES.includes(language)) return { error: "Invalid language" };
+  if (!isLocale(language)) return { error: "Invalid language" };
   const titleVal = String(formData.get("title") ?? "").trim();
   if (!titleVal) return { error: `A ${cfg.label} title is required.` };
 
@@ -1485,7 +1483,7 @@ export async function createProject(_prev: any, formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const slug = slugify(String(formData.get("slug") ?? "").trim() || title);
   const excerpt = String(formData.get("excerpt") ?? "").trim();
-  if (!LOCALES.includes(language)) return { error: "Invalid language" };
+  if (!isLocale(language)) return { error: "Invalid language" };
   if (!title || !slug) return { error: "Title and slug are required." };
   if (await prisma.project.findFirst({ where: { language: language as any, slug } })) return { error: "A project with this slug already exists in this language." };
   const created = await prisma.project.create({
@@ -1676,10 +1674,7 @@ export async function saveFaqPage(lang: string, categoriesJson: string) {
     create: { sanityId: `faqPage-${lang}`, type: "faqPage", language: lang as any, data: { categories } },
   });
   revalidatePath("/admin/content/faq");
-  revalidatePath("/faq");
-  revalidatePath("/de/faq");
-  revalidatePath("/pl/faq");
-  revalidatePath("/ru/faq");
+  for (const l of LOCALES) revalPublic(l, ["faq"]);
   return { ok: true };
 }
 
@@ -1688,6 +1683,7 @@ export async function saveFaqPage(lang: string, categoriesJson: string) {
 // SiteDocument's type+language key rather than a translationGroupId model.
 export async function createFaqTranslation(lang: string, fromLang: string = "en") {
   await requireSession();
+  if (!isLocale(lang)) throw new Error("Invalid language");
   const existing = await prisma.siteDocument.findUnique({ where: { type_language: { type: "faqPage", language: lang as any } } });
   if (!existing) {
     const source = await prisma.siteDocument.findUnique({ where: { type_language: { type: "faqPage", language: fromLang as any } } });
@@ -1727,7 +1723,7 @@ export async function createTranslation(type: string, sourceId: string, targetLa
   await requireSession();
   const cfg = TR_TYPES[type];
   if (!cfg) throw new Error("Unknown content type");
-  if (!LOCALES.includes(targetLang)) throw new Error("Invalid language");
+  if (!isLocale(targetLang)) throw new Error("Invalid language");
 
   const source: any = await cfg.model.findUnique({ where: { id: sourceId } });
   if (!source) throw new Error("Source document not found");
@@ -1758,7 +1754,7 @@ export async function createTranslation(type: string, sourceId: string, targetLa
     data.slug = slug;
   }
   // Blog references author/category by id — remap them to the target language's sibling
-  // (author/category are fully translated 4-language groups), so the translation links the
+  // (author/category are fully translated groups), so the translation links the
   // correct-language reference instead of inheriting the source language's. null → editor picks.
   if (type === "blog") {
     data.authorId = await siblingIdInLang(prisma.author, source.authorId, targetLang);

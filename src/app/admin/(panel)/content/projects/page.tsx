@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, LOCALES, isLocale } from "@/lib/locale";
 import DeactivateControl from "./DeactivateControl";
 
 export const dynamic = "force-dynamic";
-const LOCALES = ["en", "de", "pl", "ru"];
 
 // Sortable columns. Anything not in here is ignored rather than passed to
 // Prisma, so a hand-edited ?sort= cannot reach the query.
@@ -37,7 +36,7 @@ export default async function ProjectsAdmin({
 }: {
   searchParams: { lang?: string; q?: string; status?: string; sort?: string; dir?: string };
 }) {
-  const lang = LOCALES.includes(searchParams.lang ?? "") ? searchParams.lang! : "en";
+  const lang = isLocale(searchParams.lang ?? "") ? searchParams.lang! : "en";
   const q = (searchParams.q ?? "").trim();
   const status = STATUS_FILTERS.some((s) => s.key && s.key === searchParams.status) ? searchParams.status! : "";
   const sort = searchParams.sort && SORTS[searchParams.sort] ? searchParams.sort : "";

@@ -13,6 +13,7 @@ import { buildBookingIcs } from "@/lib/booking/ics";
 import { formatInZone, CYPRUS_TZ } from "@/lib/booking/timezone";
 import { BOOKING_CONFIRMATION_EMAIL, INTL_LOCALE } from "@/lib/crm/bookingMessages";
 import type { Locale } from "@/lib/crm/presentationMessages";
+import { isLocale } from "@/lib/locale";
 import type { MeetingType } from "@prisma/client";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { getConfirmedBookings, findConflict } from "@/lib/booking/conflicts";
@@ -33,7 +34,8 @@ async function requireSession() {
 }
 
 function toLocale(pref: string | null | undefined): Locale {
-  return (["en", "de", "pl", "ru"] as const).includes(pref as any) ? (pref as Locale) : "en";
+  const p = pref ?? "";
+  return isLocale(p) ? p : "en";
 }
 
 // Same "build from the actual incoming request, never a hardcoded prod
