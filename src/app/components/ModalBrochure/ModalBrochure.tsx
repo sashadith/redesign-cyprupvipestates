@@ -6,6 +6,8 @@ import "./contactModal.css";
 import { useModal } from "@/app/context/ModalContext";
 import { FormStandardDocument } from "@/types/formStandardDocument";
 import FormStandard from "../FormStandard/FormStandard";
+import { isLocale } from "@/lib/locale";
+import { MODAL_BROCHURE_COPY } from "./ModalBrochure.copy";
 
 /* react-modal paints the overlay and content boxes itself; both are handed over
    to the stylesheet so the panel can be a single grid with its own framing. */
@@ -17,29 +19,6 @@ const customStyles: ReactModal.Styles = {
 type Props = {
   lang: string;
   formDocument: FormStandardDocument;
-};
-
-const COPY: Record<string, { title: string; accent: string; lead: string }> = {
-  en: {
-    title: "Speak to an",
-    accent: "adviser",
-    lead: "Leave your details and we will get back to you, usually the same day.",
-  },
-  de: {
-    title: "Sprechen Sie mit einem",
-    accent: "Berater",
-    lead: "Hinterlassen Sie Ihre Daten, wir melden uns — meist noch am selben Tag.",
-  },
-  pl: {
-    title: "Porozmawiaj z",
-    accent: "doradcą",
-    lead: "Zostaw swoje dane, odezwiemy się — zwykle jeszcze tego samego dnia.",
-  },
-  ru: {
-    title: "Поговорите с",
-    accent: "консультантом",
-    lead: "Оставьте свои данные, мы свяжемся с вами — обычно в тот же день.",
-  },
 };
 
 /* One phone mock-up per language, each showing an adviser who actually speaks
@@ -60,7 +39,7 @@ const ART: Record<string, string> = {
 const ModalBrochure = ({ lang, formDocument }: Props) => {
   const { isBrochureOpen, closeBrochure } = useModal();
   const [artFailed, setArtFailed] = useState(false);
-  const copy = COPY[lang] ?? COPY.en;
+  const copy = MODAL_BROCHURE_COPY[isLocale(lang) ? lang : "en"];
   const art = ART[lang] ?? ART.en;
 
   useEffect(() => {

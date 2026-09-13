@@ -98,7 +98,7 @@ bitte nicht mit abtippen, nur den Text.
 | Key | EN | HE | Anmerkung | Korrektur HE |
 |---|---|---|---|---|
 | eyebrowTag | YOUR PERSONAL SELECTION | המבחר האישי שלכם | Versalien gibt es im Hebräischen nicht | |
-| intro | Thank you for your trust. I have personally selected these properties for you - each of them matches your wishes and deserves your attention. | תודה על האמון. בחרתי עבורכם את הנכסים האלה באופן אישי. כל אחד מהם מתאים למה שביקשתם וראוי לתשומת לבכם. | EN-Bindestrich → eigener Satz (§3). `בחרתי` = 1. Sg. Vergangenheit, genusfrei (§11.2) | |
+| intro | Thank you for your trust. I have personally selected these properties for you - each of them matches your wishes and deserves your attention. | תודה על האמון. בחרתי עבורכם באופן אישי את הנכסים האלה. כל אחד מהם מתאים למה שביקשתם ושווה תשומת לב. | EN-Bindestrich → eigener Satz (§3). `בחרתי` = 1. Sg. Vergangenheit, genusfrei (§11.2) | |
 | requirementsTitle | Your preferences | ההעדפות שלכם | | |
 | budgetUpTo | up to | עד | steht vor `€500,000` | |
 | propertyTypeNames.Apartment | Apartment | דירה | Glossar §2 | |
@@ -112,20 +112,20 @@ bitte nicht mit abtippen, nur den Text.
 | timelineLabels.TWO_YEARS | Within 2 years | תוך שנתיים | Dual statt `2 שנים` | |
 | timelineLabels.JUST_LOOKING | Just looking | בשלב בדיקה | genusfrei; `רק מסתכל` wäre maskulin | |
 | bedroomLabels.0 | Studio | סטודיו | | |
-| bedroomLabels.1 | 1 bedroom | חדר שינה אחד | Zahlwort statt Ziffer, weil „1 חדר שינה" unnatürlich klingt. Wenn der Chip-Block einheitlich Ziffern tragen soll, bitte korrigieren | |
+| bedroomLabels.1 | 1 bedroom | 1 חדר שינה | Fix-Runde 1 (Pass B S3): Ziffer, damit die Chip-Reihe einheitlich bleibt. `heBedrooms()` in `heFeedVocab.ts` behält bewusst `חדר שינה אחד` — dort ist der Kontext eine Freitext-Zusammenfassung, keine Filterleiste | |
 | bedroomLabels.2–5 | 2/3/4/5+ bedrooms | 2 / 3 / 4 / 5+ חדרי שינה | Glossar §2: nie `חדרים` | |
 | viewDetails | View details | לפרטים נוספים | Karten-CTA | |
 | availableUnits | Available units | יחידות זמינות | | |
 | unitsTable.unit | Unit | יחידה | | |
 | unitsTable.type | Type | סוג | | |
-| unitsTable.beds | Beds | חדרי שינה | teilt sich eine Spalte mit `שטח` | |
+| unitsTable.beds | Beds | חד׳ שינה | teilt sich eine Spalte mit `שטח`; abgekürzt in Fix-Runde 1 (Pass B S4) auf die in israelischen Anzeigen übliche Kurzform — 11 Zeichen passten nicht in eine Spalte, deren EN 4 hat | |
 | unitsTable.area | Area | שטח | | |
 | unitsTable.price | Price | מחיר | | |
 | unitsTable.status | Status | סטטוס | | |
-| statusLabel.available | Available | זמין | Glossar §2 | |
-| statusLabel.reserved | Reserved | שמור | Glossar §2 | |
-| statusLabel.sold | Sold | נמכר | Glossar §2 | |
-| statusLabel.unlisted | No longer available | לא זמין עוד | Einheit aus dem Feed verschwunden | |
+| statusLabel.available | Available | זמינה | **feminin**, Bezug ist `יחידה` — WP2 hatte das in `heFeedVocab.ts` bereits so entschieden, WP7 hatte daneben eine maskuline Zweitfassung geführt (Pass B M12) | |
+| statusLabel.reserved | Reserved | שמורה | feminin, wie `.available` (Pass B M12) | |
+| statusLabel.sold | Sold | נמכרה | feminin, wie `.available`. Das **Karten-Badge** `soldOut` bleibt maskulin `נמכר` — dort ist der Bezug der פרויקט (Pass B M12) | |
+| statusLabel.unlisted | No longer available | לא זמינה עוד | Einheit aus dem Feed verschwunden; feminin wie die übrigen drei. Weicht bewusst von `heFeedVocab.ts`' `לא בתצוגה` ab: dort heißt „unlisted" „nicht in der Anzeige", hier „gibt es nicht mehr" (siehe Fix-Runde-1-Kasten) | |
 | advisorTitle | Your personal advisor | היועץ האישי שלכם | maskulin wie im Glossar-CTA | |
 | unitsPlural.one / .many | unit / units | יחידה / יחידות | „5 יחידות" | |
 | newForYou | New for you | חדש עבורכם | Badge | |
@@ -133,17 +133,22 @@ bitte nicht mit abtippen, nur den Text.
 | soldOut | Sold out | נמכר | Glossar §2: Badge kurz | |
 | lifeNearby | LIFE NEARBY | החיים בסביבה | | |
 | closingEyebrow | DIRECT CONTACT | קשר ישיר | | |
-| closingTrust | I personally answer every message - usually within the hour. Ask me anything about the properties in your selection, arranging a viewing, or the details of buying in Cyprus. No obligation, no rush. | אני עונה לכל הודעה באופן אישי, בדרך כלל בתוך שעה. אפשר לשאול אותי כל דבר על הנכסים שבמבחר שלכם, על תיאום ביקור ועל פרטי הרכישה בקפריסין. בלי התחייבות ובלי לחץ. | `עונה` ist unvokalisiert für beide Genera identisch. „arranging a viewing" ohne `בנכס`, um die Wurzel `נכס` nicht zu wiederholen (§11.5) | |
+| closingTrust | I personally answer every message - usually within the hour. Ask me anything about the properties in your selection, arranging a viewing, or the details of buying in Cyprus. No obligation, no rush. | אני עונה לכל הודעה בעצמי, בדרך כלל בתוך שעה. אפשר לשאול אותי כל דבר על הנכסים שבמבחר שלכם, על תיאום סיור ועל פרטי הרכישה בקפריסין. בלי התחייבות ובלי לחץ. הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה. | `עונה` ist unvokalisiert für beide Genera identisch. „arranging a viewing" ohne `בנכס`, um die Wurzel `נכס` nicht zu wiederholen (§11.5) | |
 | whatsapp | WhatsApp | וואטסאפ | Glossar §4 | |
 | call | Call | להתקשר | Button neben וואטסאפ / אימייל | |
 | email | Email | אימייל | Glossar §4 | |
-| whatsappMessage | Hello, I viewed my personal selection and would like to talk about | שלום, צפיתי במבחר האישי שלי ואשמח לדבר על | **Der Besucher spricht.** Bewusst unvollständig — WhatsApp öffnet damit den Eingabecursor. `צפיתי`/`אשמח` sind 1. Sg. und genusfrei | |
-| notAvailableTitle | This page is no longer available | הדף הזה כבר לא זמין | | |
+| whatsappMessage | Hello, I viewed my personal selection and would like to talk about | שלום, עברתי על המבחר האישי שלי ואשמח לדבר על | **Der Besucher spricht.** Bewusst unvollständig — WhatsApp öffnet damit den Eingabecursor. `צפיתי`/`אשמח` sind 1. Sg. und genusfrei | |
+| notAvailableTitle | This page is no longer available | הדף אינו זמין עוד | | |
 | notAvailableBody | The link you used has expired or is no longer active. Please get in touch and we will be glad to help. | תוקף הקישור פג או שהוא כבר אינו פעיל. אפשר לפנות אלינו ונשמח לעזור. | zweites `קישור` durch `הוא` ersetzt (§11.5) | |
 | contactUs | Contact us | ליצירת קשר | wortgleich mit Booking-Seite, `TeamBlockComponent`, `preview-about` | |
-| legal | This selection is provided for informational purposes and does not constitute an offer. | המבחר הזה נועד למידע בלבד ואינו מהווה הצעה. | keine Zusatzbehauptung („verbindlich") ergänzt | |
+| legal | This selection is provided for informational purposes and does not constitute an offer. | המבחר נועד למידע בלבד ואינו מהווה הצעה. | keine Zusatzbehauptung („verbindlich") ergänzt | |
 | privacyPolicy | Privacy policy | מדיניות פרטיות | Glossar §4 | |
-| priceFrom | from | מחיר התחלתי | siehe JSX-Kasten und Offene Frage 1 | |
+| priceFrom | from | מחיר התחלתי | **nur noch** die Preiszeile der Objektkarte (freistehende Bildunterschrift). Offene Frage 1 ist beantwortet: der Budget-Chip hat seit Fix-Runde 1 einen eigenen Key | |
+| budgetFrom *(neu)* | from | מעל | Budget-**Untergrenze** im Hero-Chip („מעל €300,000"), symmetrisch zu `budgetUpTo` = `עד`. Ein Objektpreis ist es nicht (Pass B M14) | |
+| close *(neu)* | Close | סגירה | `aria-label` des Overlay-Schließers; war in allen Sprachen hart englisch (Pass B S16) | |
+| favorite *(neu)* | Favorite | שמירה למועדפים | `aria-label` des Herz-Buttons auf Karte und Overlay (Pass B S16) | |
+| metaTitle *(neu)* | Your Property Selection - Cyprus VIP Estates | המבחר האישי שלכם \| Cyprus VIP Estates | Browser-Tab. Trägt weiterhin **keinen** Token-Inhalt — nur die Locale wird aus der Zeile gelesen (Pass B S21) | |
+| metaDescription *(neu)* | A personal property selection. | מבחר נכסים אישי בקפריסין. | dito | |
 | units | units | יחידות | derzeit von keiner Komponente gerendert | |
 | delivery | Delivery | מסירה | Glossar §2 (Handover) | |
 | viewOnSite | View on site | לצפייה באתר | Link aus dem Overlay auf die öffentliche Seite | |
@@ -158,7 +163,7 @@ bitte nicht mit abtippen, nur den Text.
 | titlePrefix | „Hello " | „שלום " | Leerzeichen am Ende ist Absicht | |
 | titleSuffix | , let's find a time | , נמצא זמן שמתאים לכם | steht hinter dem gold gesetzten Vornamen | |
 | formalGreeting | (DE/PL) | **nicht definiert** | Hebräisch hat keine neutrale „Herr/Frau"-Anrede; `מר`/`גב'` erzwingt ein Genus. Bitte bestätigen | |
-| intro | Pick 2-3 times that work for you and I'll confirm one shortly. | אפשר לבחור 2-3 מועדים שמתאימים לכם, ואחזור אליכם עם אישור בקרוב. | `אחזור … עם אישור` statt `אאשר`, das unvokalisiert schwer lesbar ist | |
+| intro | Pick 2-3 times that work for you and I'll confirm one shortly. | אפשר לבחור 2-3 מועדים שמתאימים לכם, ואחזור אליכם עם אישור בקרוב. הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה. | `אחזור … עם אישור` statt `אאשר`, das unvokalisiert schwer lesbar ist | |
 | yourTime | Your time | השעה אצלכם | im aktuellen JSX ungenutzt | |
 | cyprusTime | Cyprus time | שעון קפריסין | steht in Klammern hinter der Uhrzeit. Offene Frage 2 | |
 | detectingTimezone | Detecting your timezone… | מזהים את אזור הזמן שלכם… | Partizip Plural wie `שולחים…` (WP1) | |
@@ -176,7 +181,7 @@ bitte nicht mit abtippen, nur den Text.
 | confirmedBody | We're set for ${dt} (your time). A calendar invite has been sent to your email. | נפגשים ב-${dt} (לפי השעון שלכם). הזמנה ליומן נשלחה לאימייל שלכם. | `${dt}` kommt aus `Intl` mit `he-IL` und ist bereits hebräisch — deshalb keine LTR-Isolation | |
 | confirmedZoomNote | I'll send the Zoom link separately, shortly before our call. | את הקישור לפגישת Zoom אשלח בנפרד, זמן קצר לפני השיחה. | `לפגישת Zoom` vermeidet einen Bindestrich direkt am lateinischen Wort. Wortgleich mit `bookingMessages.ts` | |
 | confirmedPhoneNote | I'll call you at the agreed time. | אתקשר אליכם במועד שנקבע. | wortgleich mit `bookingMessages.ts` | |
-| goneTitle | This link is no longer available | הקישור הזה כבר לא זמין | Parallelbau zu `notAvailableTitle` | |
+| goneTitle | This link is no longer available | הקישור אינו זמין עוד | Parallelbau zu `notAvailableTitle` | |
 | goneBody | This booking link has expired or is no longer active. Please get in touch and I'll send you a new one. | תוקף קישור התיאום פג או שהוא כבר אינו פעיל. אפשר לפנות אלינו ואשלח לכם קישור חדש. | | |
 | contactUs | Contact us | ליצירת קשר | wortgleich | |
 
@@ -223,7 +228,7 @@ bitte nicht mit abtippen, nur den Text.
 | Key | EN | HE | Anmerkung | Korrektur HE |
 |---|---|---|---|---|
 | VALEDICTION | Best regards, | בברכה, | | |
-| ROLE_LINE | Your personal property advisor | היועץ האישי שלכם לנדל"ן | steht direkt unter „Sascha Dith"; `לנדל"ן` ergänzt, weil die Zeile sonst kontextlos ist. Vgl. `advisorTitle` der Präsentationsseite (`היועץ האישי שלכם`) — bewusst nicht identisch | |
+| ROLE_LINE | Your personal property advisor | יועץ הנדל"ן האישי שלכם | steht direkt unter „Sascha Dith"; `לנדל"ן` ergänzt, weil die Zeile sonst kontextlos ist. Vgl. `advisorTitle` der Präsentationsseite (`היועץ האישי שלכם`) — bewusst nicht identisch | |
 
 ---
 
@@ -234,22 +239,34 @@ bitte nicht mit abtippen, nur den Text.
 | SAFE_NAME | Dear Client | שלום | Fallback, wenn kein Name mitkam; gerendert als `${name},` | |
 | subject | Thank you for your enquiry — Cyprus VIP Estates | תודה על הפנייה \| Cyprus VIP Estates | 40 Zeichen | |
 | title | Thank you for your enquiry | תודה על הפנייה | H1 der Mail | |
-| intro1 | Thank you for contacting <strong>Cyprus VIP Estates</strong>. | תודה שיצרתם קשר עם <strong>Cyprus VIP Estates</strong>. | `יצרתם קשר` statt nochmals `פנייה` (steht schon im Titel) | |
-| intro2 | We've received your enquiry and will get back to you shortly with personalised property options in Cyprus and answers to your questions. | קיבלנו את הפנייה שלכם ונחזור אליכם בקרוב עם הצעות נכסים מתאימות בקפריסין ועם תשובות לשאלות. | | |
+| intro1 | Thank you for contacting <strong>Cyprus VIP Estates</strong>. | ההודעה שלכם הגיעה אל <strong>Cyprus VIP Estates</strong>. | `יצרתם קשר` statt nochmals `פנייה` (steht schon im Titel) | |
+| intro2 | We've received your enquiry and will get back to you shortly with personalised property options in Cyprus and answers to your questions. | נחזור אליכם בקרוב עם הצעות נכסים מתאימות בקפריסין ועם תשובות לשאלות שלכם. | | |
 | whatNextTitle | What happens next? | מה קורה עכשיו? | echte Frage, kein Doppelpunkt-Titel (§3) | |
-| li1 | We will review your enquiry and your property preferences. | נעבור על הבקשה ועל העדפות הנכס שלכם. | `בקשה` statt `פנייה`, weil `פנייה` zwei Zeilen darüber steht | |
+| li1 | We will review your enquiry and your property preferences. | נעבור על מה שכתבתם ועל העדפות הנכס שלכם. | `בקשה` statt `פנייה`, weil `פנייה` zwei Zeilen darüber steht | |
 | li2 | One of our consultants will contact you via your preferred channel. | אחד היועצים שלנו ייצור אתכם קשר בדרך שנוחה לכם. | | |
 | li3 | We will prepare tailored property offers directly from trusted developers in Cyprus. | נכין הצעות מותאמות אישית ישירות מיזמים אמינים בקפריסין. | „trusted" = `אמינים`; `מובילים` wäre eine andere Aussage | |
 | speedUp | If you'd like to speed up the process, you can already explore our latest projects below. | כדי לזרז את התהליך, אפשר כבר עכשיו לעיין בפרויקטים העדכניים שלנו. | „below" ist im Hebräischen überflüssig, der Button steht direkt darunter | |
 | ctaText | Browse properties in Cyprus | לצפייה בנכסים בקפריסין | | |
 | followUs | Follow us: | עקבו אחרינו: | Imperativ Plural (§2.2) | |
-| reason | You received this email because you submitted an enquiry on the Cyprus VIP Estates website. | קיבלתם את האימייל הזה כי השארתם פנייה באתר של Cyprus VIP Estates. | Fußzeile in 11 px | |
+| reason | You received this email because you submitted an enquiry on the Cyprus VIP Estates website. | קיבלתם את האימייל הזה כי השארתם פנייה באתר Cyprus VIP Estates. | Fußzeile in 11 px | |
 | link | …/projects | https://cyprusvipestates.com/he/projects | URL, nicht übersetzt | |
 
-**RTL-Umbau (kein Text):** `dir="rtl"` auf `<html>` und `<body>`, die beiden
-`align="left"`-Textzellen auf `right`, der Einzug der Aufzählung von `0 0 12px 20px`
-auf `0 20px 12px 0` gespiegelt. Für en/de/pl/ru ist das gerenderte HTML byte-identisch
-(18/18 Renderings geprüft).
+**RTL-Umbau (kein Text), Stand Fix-Runde 1:** `dir="rtl"` steht jetzt auf `<html>`,
+`<body>`, **beiden Wrapper-Tabellen**, **jeder Textzelle**, dem `<ul>` und **jedem
+`<p>`** — jeweils zusammen mit einem inline gesetzten `text-align`. Dazu die beiden
+`align="left"`-Textzellen auf `right` und der Einzug der Aufzählung von
+`0 0 12px 20px` auf `0 20px 12px 0` gespiegelt.
+
+**Warum das nötig war (Pass B M2):** `dir` auf `<html>`/`<body>` allein ist in Gmail
+(Web **und** App), Yahoo und Outlook.com wirkungslos — diese Clients entfernen
+`<html>`, `<head>` und `<body>` und hängen den Rest in ihren eigenen LTR-Container.
+Übrig blieb eine richtungslose Tabelle: hebräischer Text linksbündig, gespiegelter
+Listeneinzug **ohne** gespiegelte Bullets. Das ist die eine Zeile, die zwischen „RTL
+erledigt" und „RTL wirkungslos" entscheidet, und sie fehlte im Abgabestand.
+
+Für en/de/pl/ru ist das gerenderte HTML weiterhin byte-identisch — jetzt festgenagelt
+durch `src/lib/__tests__/emailTemplatesRtl.test.ts` gegen die eingefrorene Datei
+`src/lib/__tests__/fixtures/autoreply-en.html`, nicht nur durch einen einmaligen Lauf.
 
 ---
 
@@ -277,15 +294,26 @@ Labels künftig übersetzt haben sollen, ist das eine eigene Entscheidung — bi
 | labelProjectedResult | Projected result | תוצאה צפויה | dito | |
 | labelAnnualRoi | Average annual ROI | תשואה שנתית ממוצעת | dito; wortgleich mit `RoiResults` | |
 | subject | Your ROI calculation — Cyprus VIP Estates | חישוב התשואה שלכם \| Cyprus VIP Estates | 38 Zeichen | |
-| title | Your indicative ROI result | תוצאת התשואה המשוערת שלכם | H1 der Mail | |
+| title | Your indicative ROI result | התשואה המשוערת שלכם | H1 der Mail | |
 | intro | Thank you for using the ROI Calculator on Cyprus VIP Estates. | תודה שהשתמשתם במחשבון התשואה של Cyprus VIP Estates. | | |
 | summary | Below is a summary of your projected investment result. | לפניכם סיכום התוצאה הצפויה של ההשקעה. | | |
 | cta | View property | לצפייה בנכס | Button | |
-| footer | This calculation is indicative only. Final figures may vary depending on the property, transaction structure and market conditions. | החישוב הזה משוער בלבד. הנתונים הסופיים עשויים להשתנות בהתאם לנכס, למבנה העסקה ולתנאי השוק. | Fußzeile in 11 px | |
+| footer | This calculation is indicative only. Final figures may vary depending on the property, transaction structure and market conditions. | החישוב משוער בלבד. הנתונים הסופיים עשויים להשתנות בהתאם לנכס, למבנה העסקה ולתנאי השוק. | Fußzeile in 11 px | |
 
-**RTL-Umbau (kein Text):** `dir="rtl"` auf `<html>`/`<body>`, die eine `align="left"`-Zelle
-auf `right`, die Wertespalte der Ergebnistabelle von `text-align:right` auf `left`
-gespiegelt. 192/192 Renderings für en/de/pl/ru (inkl. Junk-`lang`) sind byte-identisch.
+**RTL-Umbau (kein Text), Stand Fix-Runde 1:** wie beim Auto-Reply liegt `dir="rtl"`
+jetzt zusätzlich auf beiden Wrapper-Tabellen, auf der **Ergebnistabelle**, auf jeder
+Textzelle und auf jedem `<p>` (Pass B M2). Unverändert: die eine `align="left"`-Zelle
+auf `right` und die Wertespalte der Ergebnistabelle von `text-align:right` auf `left`.
+
+**Zwei Sicherheits-/Zustellungspunkte aus derselben Runde:**
+- `<html lang="${lang}">` interpolierte den **rohen Request-Body-Wert**; jetzt
+  `${safeLang}`, und der Name läuft durch `escapeHtml()` + `<bdi>` (Pass B M16/M9).
+- Beide ROI-Mails haben jetzt einen `text/plain`-Teil (`stripHtmlToText(html)`) —
+  SpamAssassin bestraft HTML-only (`MIME_HTML_ONLY`), und für `he` ist ein Textteil
+  der verlässlichste RTL-Fallback, weil er in der Leserichtung des Clients rendert
+  (Pass B S22). Für en/de/pl/ru identisch, kein `he`-Sonderfall.
+
+Die 192/192 Renderings für en/de/pl/ru (inkl. Junk-`lang`) bleiben byte-identisch.
 
 ---
 
@@ -357,7 +385,7 @@ gespiegelt. 192/192 Renderings für en/de/pl/ru (inkl. Junk-`lang`) sind byte-id
 | chartTitleBuyHold | Projected property value and rental income | תחזית שווי הנכס והכנסה משכירות | | |
 | chartTitleBuySell | Projected property value and resale profit | תחזית שווי הנכס ורווח ממכירה | | |
 | xAxis | Years | שנים | | |
-| yAxis | Amount (EUR) | סכום (EUR) | Währungscode bleibt lateinisch | |
+| yAxis | Amount (EUR) | סכום ב-EUR | Währungscode bleibt lateinisch | |
 | year | Year | שנה | Tooltip | |
 | estimatedValue | Property value | שווי הנכס | Legende | |
 | cumulativeNetRent | Cumulative rental income | הכנסה מצטברת משכירות | Legende | |
@@ -402,16 +430,50 @@ gespiegelt. 192/192 Renderings für en/de/pl/ru (inkl. Junk-`lang`) sind byte-id
 
 ---
 
-## 11. `src/app/components/ModalBrochure/ModalBrochure.tsx` — Schließen-Kreuz
+## 11. `src/app/components/ModalBrochure/` — Broschüren-Modal
 
 | Key | EN | HE | Anmerkung | Korrektur HE |
 |---|---|---|---|---|
-| `aria-label` des Close-Buttons | Close | סגירה | nominal, genusfrei. Nur mit Screenreader hörbar | |
+| `aria-label` des Close-Buttons (`ModalBrochure.tsx`) | Close | סגירה | nominal, genusfrei. Nur mit Screenreader hörbar | |
+| `title` (`ModalBrochure.copy.ts`) | Speak to an | לדבר עם | Infinitiv statt Imperativ — ein Imperativ erzwänge ein Genus (§2) | |
+| `accent` | adviser | יועץ | das **gold gesetzte letzte Wort** der Überschrift (§11.3); die Aufteilung `לדבר עם` + `יועץ` hält diese Position | |
+| `lead` | Leave your details and we will get back to you, usually the same day. | אפשר להשאיר פרטים ונחזור אליכם, בדרך כלל עוד באותו יום. | unpersönliches `אפשר ל…` (§11.2); der Gedankenstrich der LTR-Sätze entfällt (§3) | |
 
-> **Hinweis an den Controller (nicht ans Lektorat):** Die Tabelle `COPY` in derselben
-> Datei (`title`/`accent`/`lead` des Broschüren-Modals) ist noch ein `Record<string, …>`
-> **ohne** `he`-Zeile und ohne Marker — sie wurde in Task 2 übersehen und fällt für `he`
-> still auf Englisch zurück. Nicht Teil von WP7; sollte in einer Fix-Runde nachgezogen werden.
+**Fix-Runde 1 (Pass B M15):** Die Tabelle war ein `Record<string, …>` **ohne** `he`-Zeile
+und ohne Marker, sodass `COPY[lang] ?? COPY.en` der hebräischen Seite eine englische
+Überschrift und einen englischen Leadsatz servierte — übersetzt war nur das `aria-label`.
+Sie liegt jetzt als `Record<Locale, …>` im Geschwistermodul `ModalBrochure.copy.ts`
+(Repo-Muster, in `copy-modules.json` registriert); die LTR-Werte sind wortgleich
+übernommen. `ART` hat weiterhin **keinen** `he`-Eintrag: die he-Variante zeigt das
+englische Berater-Artwork, was inhaltlich sogar stimmt (der Berater spricht Englisch),
+aber hier protokolliert gehört.
+
+---
+
+## 12. `src/lib/crm/emailBodyHtml.ts` + `getSignatureHtml` — der dritte Mail-Pfad
+
+**In der Abgabe nicht erfasst (Pass B M1).** Die Tabelle „E-Mails" oben listet **vier**
+Kunden-Mails; der RTL-Umbau war nur für die zwei Standalone-Templates (Abschnitte 7 und
+8) dokumentiert. Die anderen zwei — Präsentations-Mail (`renderLeadEmail.ts`) und
+Terminbestätigung (`bookingActions.ts`) — laufen über `bodyToHtml()`, und **zusätzlich**
+läuft dort jede vom Modell verfasste CRM-Antwort durch (`sendLeadEmail.ts`) sowie die
+Operator-Vorschau (`mcp/drafts/previewEmail.ts`). Dieser Helfer hatte **gar kein** `dir`:
+alles ging als `<div style="…white-space:pre-wrap;">` raus und renderte in Gmail
+linksbündig LTR, mit Satzzeichen am falschen Zeilenende.
+
+| Datei | Änderung | LTR |
+|---|---|---|
+| `emailBodyHtml.ts` | `bodyToHtml(body, locale?)`; für `he` `<div dir="rtl" … text-align:right;>`. `SIGNATURE_SPACER` unverändert | ohne `locale` **und** mit en/de/pl/ru byte-identisch (Test) |
+| `renderLeadEmail.ts` | reicht `locale` durch (3. Parameter, optional) | unverändert |
+| `sendLeadEmail.ts` · `bookingActions.ts` · `previewEmail.ts`/`createDraft.ts` | übergeben die bereits vorhandene Lead-Locale | unverändert |
+
+Kein Text, nur Textrichtung. Der Satz „E-Mail-RTL erledigt" aus dem Abgabestand war
+ohne diesen Abschnitt nicht haltbar.
+
+**Ebenfalls zu protokollieren:** `getSignatureHtml(userId, "he")` fällt auf die
+EN-Signatur zurück, solange der Operator keine hebräische Signatur gespeichert hat. Das
+ist kein Fehler dieses WPs, aber es ist der Grund, warum unter einer hebräischen Mail
+eine englische Signatur stehen kann.
 
 ---
 
@@ -419,7 +481,7 @@ gespiegelt. 192/192 Renderings für en/de/pl/ru (inkl. Junk-`lang`) sind byte-id
 
 | Stelle | Warum | Marker |
 |---|---|---|
-| `ProjectPdfButton.copy.ts` → `he` | Das PDF wird für `he` **nicht angeboten** (Spec Phase 1–4): das react-pdf-Dokument hat keine hebräische Schrift und kein RTL. Der Button wird auf `/he/projects/<slug>` nicht mehr gerendert (`page.tsx`), der Eintrag bleibt nur, damit die `Record<Locale, …>`-Typisierung hält | keiner — der Zähler soll ehrlich bleiben |
+| `ProjectPdfButton.copy.ts` → `he` | Das PDF wird für `he` **im UI nicht angeboten** (Spec Phase 1–4): das react-pdf-Dokument hat keine hebräische Schrift und kein RTL. Der Button wird auf `/he/projects/<slug>` nicht mehr gerendert (`page.tsx:322`), der Eintrag bleibt nur, damit die `Record<Locale, …>`-Typisierung hält. **Offen (Pass B S23):** die Route `/api/projects/he/<slug>/pdf` selbst ist weiterhin erreichbar und rendert mit DejaVuSans ohne hebräische Glyphen (Tofu) — der Guard gehört an den Routenanfang, liegt aber außerhalb der für Fix-Runde 1 freigegebenen Dateien | keiner — der Zähler soll ehrlich bleiben |
 | `pdf/ProjectPdfDocument.copy.ts` → `he` | dieselbe Entscheidung; das Dokument kann für `he` gar nicht erzeugt werden | keiner |
 | `getInternalEmailHtml` (ROI-Route) | interne Benachrichtigung an das Büro — Projektkonvention: admin-/internes Deutsch/Englisch bleibt Englisch | keiner |
 | ROI-Mail-Labels für de/pl/ru | Planvorgabe „LTR-Strings identisch": sie standen bisher englisch da und bleiben es, bis jemand anders entscheidet | keiner |
@@ -430,12 +492,23 @@ gespiegelt. 192/192 Renderings für en/de/pl/ru (inkl. Junk-`lang`) sind byte-id
 
 ## Offene Fragen an das Lektorat
 
+> **Stand nach Fix-Runde 1:** Pass B hat 1, 3, 4, 5 und 6 beantwortet, 2 als echten
+> Code-Fehler eingestuft. Die Antworten stehen unter der jeweiligen Frage; offen bleibt
+> allein die WP4-Frage zu `מחיר התחלתי` als Karten-Bildunterschrift.
+
 1. **`priceFrom` = `מחיר התחלתי`.** Der String steht an zwei Stellen: auf der Objektkarte
    („ab €450,000") und im Budget-Chip des Hero („Budget ab €300,000"). Das Glossar-`החל מ-`
    scheidet aus, weil die Komponenten ein Leerzeichen zwischen Label und Betrag setzen
    (`${label} €450,000`) und der Bindestrich am Betrag kleben müsste. Ist `מחיר התחלתי` in
    **beiden** Kontexten in Ordnung, oder braucht der Budget-Chip ein eigenes Wort? (Dann
    bräuchte es einen zweiten Key — bitte in der Anmerkungsspalte vermerken.)
+
+   **Beantwortet (Pass B M14, umgesetzt):** Nein. Karte ja, Budget-Chip nein. Der Chip
+   zeigt die Budget-Untergrenze des Kunden, keinen Objektpreis, und `מחיר התחלתי` liest
+   sich im Israelischen zuerst als „Eröffnungspreis einer Ausschreibung". Neuer Key
+   `budgetFrom` = `מעל`, symmetrisch zum vorhandenen `budgetUpTo` = `עד`.
+   **Weiterhin offen:** ob `מחיר התחלתי` als *Karten*-Bildunterschrift bleibt — das ist
+   WP4s offene Frage 5 und blockiert WP2, WP4 und WP7 gemeinsam.
 
 2. **Zypern-Uhrzeit auf der Booking-Seite.** `SlotPicker.tsx` rendert
    `{Uhrzeit} ({שעון קפריסין})`, wobei die Uhrzeit dort **ohne** Locale formatiert wird und
@@ -444,31 +517,99 @@ gespiegelt. 192/192 Renderings für en/de/pl/ru (inkl. Junk-`lang`) sind byte-id
    bestehender Rendering-Punkt, kein Übersetzungsfehler — bitte nur bestätigen, ob es so
    akzeptabel ist; die Änderung wäre eine Code-Korrektur außerhalb von WP7.
 
+   **Falsch eingeordnet (Pass B M19, korrigiert).** Es war ein fehlendes drittes Argument
+   in `SlotPicker.tsx:103` — in einer Komponente, deren komplette `he`-Copy WP7 liefert,
+   direkt neben Zeile 43, die dasselbe Argument korrekt übergibt. Gefixt, und zwar
+   ausschließlich für `he`: die LTR-Sprachen behalten die bisherige `en-GB`-Ausgabe,
+   damit sich für sie nichts ändert.
+
 3. **`Buy & Sell` / `Buy & Hold`.** In der Ergebnis-Mail bekommt `he` als einzige Sprache
    eine Übersetzung (`רכישה ומכירה` / `רכישה והחזקה`). Israelische Investoren kennen die
    englischen Begriffe. Übersetzen oder lateinisch stehen lassen?
+
+   **Beantwortet (Pass B):** Hebräisch behalten. Ein zweiwortiger lateinischer Einschub
+   in einer RTL-Tabellenzelle ist Bidi-Risiko ohne Nutzen; `רכישה ומכירה` /
+   `רכישה והחזקה` sind eindeutig. Keine Änderung.
 
 4. **`bedroomLabels["1"]` = `חדר שינה אחד`** neben `2 חדרי שינה`, `3 חדרי שינה` …
    Zahlwort in einer sonst zifferngetragenen Chip-Reihe — gewollt oder soll es
    `1 חדר שינה` heißen?
 
+   **Beantwortet (Pass B S3, umgesetzt):** Ziffer — hier ist es eine Filter-Chipleiste.
+   `heBedrooms()` in `heFeedVocab.ts` bleibt bewusst bei `חדר שינה אחד`; dort steht die
+   Zahl in einer Freitext-Zusammenfassung, nicht in einer Chip-Reihe. Bewusste Abweichung,
+   hier protokolliert.
+
 5. **`advisorTitle` (`היועץ האישי שלכם`) vs. Signatur-Rollenzeile
-   (`היועץ האישי שלכם לנדל"ן`).** Bewusst unterschiedlich, weil die Signaturzeile ohne
+   (`יועץ הנדל"ן האישי שלכם`).** Bewusst unterschiedlich, weil die Signaturzeile ohne
    Bildkontext steht. Soll das vereinheitlicht werden?
+
+   **Beantwortet (Pass B, teils umgesetzt):** Unterschiedlich lassen ist richtig. Nach
+   S13 lauten sie `היועץ האישי שלכם` (unter dem Foto) und `יועץ הנדל"ן האישי שלכם`
+   (Signatur) — sichtbar verwandt, nicht identisch, kein §11.6-Verstoß, weil es nicht
+   derselbe String ist. Das nachgestellte `לנדל"ן` hing hinter dem Possessiv und ist
+   nach vorn gezogen.
 
 6. **Sprachhinweis (Entscheidung E).** Er steht ausschließlich im Erstkontakt-Satz
    (`FIRST_CONTACT_INTRO`). Auto-Reply, Präsentations- und Terminmail tragen ihn **nicht** —
    Annahme: einmal sagen reicht, Wiederholung wirkt abweisend. Bitte bestätigen.
 
+   **Nicht bestätigt (Pass B M3/M4/M5, umgesetzt).** „Einmal sagen reicht" gilt für
+   aufeinanderfolgende Nachrichten **desselben Kanals**, nicht für vier voneinander
+   unabhängige automatisierte Flächen. Der Hinweis fehlte genau dort, wo der Lead ihn
+   zuerst bräuchte: der Auto-Reply ist die *erste* Mail an einen neuen he-Lead und geht
+   raus, bevor `FIRST_CONTACT_INTRO` je gerendert wird; die Booking-Seite terminiert bei
+   `meetingType = PHONE` einen Telefontermin; die Präsentationsseite bietet einen
+   `להתקשר`-Button. Der Satz steht jetzt zusätzlich im Auto-Reply (`languageNote`), in
+   der ROI-Ergebnismail, in `book/[token]`s `intro` und in `c/[token]`s `closingTrust` —
+   alle vier aus **einer** exportierten Konstante `HE_LANGUAGE_NOTE` (`src/lib/locale.ts`),
+   damit der Wortlaut nach §11.6 gar nicht auseinanderlaufen kann.
+
 ---
 
 ## Gates zum Zeitpunkt der Abgabe
 
-| Gate | Ergebnis |
+| Gate | Ergebnis (Abgabe) | Ergebnis (Fix-Runde 1) |
+|---|---|---|
+| `npx tsc --noEmit -p tsconfig.json` | sauber | sauber |
+| `npm test` | 125/125 grün | 164/164 grün (149 Bestand + 15 neu) |
+| `node --import tsx scripts/qa/copy-snapshot.mjs --check` | keine Abweichung in einer WP7-Datei | sauber, nachdem die drei geänderten Module mit `--write --only` neu eingetragen wurden |
+| ROI-Route und `emailTemplates.ts` (nicht in `copy-modules.json`) | 192/192 bzw. 18/18 Renderings byte-identisch mit HEAD | Auto-Reply zusätzlich als Test festgenagelt (`emailTemplatesRtl.test.ts` gegen `fixtures/autoreply-en.html`) |
+| `node --import tsx scripts/qa/he-meta-length.mjs` | keine neue Verletzung | keine neue Verletzung (weiterhin nur `preview-partners`, Entscheidung J) |
+| `node scripts/qa/he-placeholders.mjs` | `TODO(he): 2` · `REVIEW(he): 110` | `TODO(he): 2` (unverändert) · `REVIEW(he): 111` (+1: `ModalBrochure.copy.ts`) |
+
+---
+
+## Fix-Runde 1 — was aus Pass B umgesetzt wurde
+
+**19 Must fix:** alle umgesetzt.
+**24 Should fix:** 22 umgesetzt, 2 bewusst nicht (siehe unten).
+**Playbook:** alle 6 Korrekturen plus die fehlende Zeile zum Genus des Beraters.
+
+| Nicht umgesetzt | Warum |
 |---|---|
-| `npx tsc --noEmit -p tsconfig.json` | sauber |
-| `npm test` | 125/125 grün |
-| `node --import tsx scripts/qa/copy-snapshot.mjs --check` | keine Abweichung in einer WP7-Datei (die gemeldeten 4 Diffs liegen in `ProjectLink.copy.ts`, das ein paralleler Agent bearbeitet) |
-| ROI-Route und `emailTemplates.ts` (nicht in `copy-modules.json`) | 192/192 bzw. 18/18 Renderings für en/de/pl/ru byte-identisch mit HEAD |
-| `node --import tsx scripts/qa/he-meta-length.mjs` | keine neue Verletzung (die eine gemeldete liegt in `preview-partners`, Entscheidung J) |
-| `node scripts/qa/he-placeholders.mjs` | `TODO(he): 2` (nur `registry.ts`, Phase 5b) · `REVIEW(he): 110` |
+| **S17** — Amenity-Chips (`Swimming pool`, `Gym`, …) stehen auf der hebräischen Präsentationsseite weiter englisch | Die Korrektur verlangt einen Amenity-Block in `src/lib/heFeedVocab.ts` (Glossar §2). Diese Datei gehört WP2 und lag außerhalb der für diese Runde freigegebenen Dateien. Eine zweite Label-Tabelle unter `c/[token]/` anzulegen wäre genau der Fehler, den Pass B unter „Systemic S-A" beschreibt: `heFeedVocab.ts` ist der **eine** Ort für Feed-Vokabular. **Bleibt offen.** |
+| **S23** — `/api/projects/he/<slug>/pdf` ist ohne `he`-Guard weiter erreichbar und rendert Tofu | `src/app/api/projects/[lang]/[slug]/pdf/route.tsx` lag außerhalb der freigegebenen Dateien. Der Button ist für `he` bereits ausgeblendet, die Route selbst nicht. **Bleibt offen**, Formulierung in „Bewusst englisch belassen" entsprechend abgeschwächt. |
+
+**Bewusste Abweichungen, die protokolliert gehören:**
+
+- `bedroomLabels["1"]` = `1 חדר שינה` (Chipleiste) **≠** `heBedrooms(1)` = `חדר שינה אחד`
+  (Freitext-Zusammenfassung in `heFeedVocab.ts`). Unterschiedlicher Kontext, kein
+  §11.6-Verstoß — `heFeedVocab.ts` wurde bewusst nicht angefasst (Pass B S3).
+- `statusLabel.unlisted` = `לא זמינה עוד` **≠** `heFeedLabel("unlisted")` = `לא בתצוגה`.
+  Die Präsentationsseite meint „diese Einheit gibt es nicht mehr" (vom Sync abgeleitet,
+  wenn eine Einheit aus dem Feed verschwindet), der Feed-Begriff meint „nicht in der
+  Anzeige". Deshalb rendert das Overlay **Typ** und **Betten** über `heFeedLabel()` /
+  `heBedrooms()`, den **Status** aber weiter über die Copy-Tabelle — deren `he`-Werte
+  jetzt feminin sind und damit mit `heFeedVocab.ts` übereinstimmen, wo es dieselbe Sache
+  benennt (Pass B M12/M13).
+- Der Sprachhinweis aus Entscheidung E liegt jetzt als `HE_LANGUAGE_NOTE` in
+  `src/lib/locale.ts` und wird von allen vier automatisierten Flächen importiert
+  (Pass B Systemic S-C). Ein Test prüft, dass er en/de/pl/ru **nicht** erreicht.
+- Die Datums-Präposition ist ein Helfer `hePrefixDate(prefix, formatted)` in
+  `src/lib/locale.ts`: `ב`/`ל` klebt am hebräischen Intl-Datum (`ביום ד׳`), bekommt vor
+  einer Ziffer den Bindestrich und wird dort LRI-isoliert (Pass B M6/M7, §3).
+- `metaTitle`/`metaDescription` sind neue Keys **in beiden Copy-Tabellen** statt inline
+  in den Seiten. `generateMetadata()` liest dafür je einen zusätzlichen
+  `select`-Einzeiler (Locale, sonst nichts) — die Regel „kein Token-Inhalt in den
+  Metadaten" bleibt unangetastet (Pass B S21).

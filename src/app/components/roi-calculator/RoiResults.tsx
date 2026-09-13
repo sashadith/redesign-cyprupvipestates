@@ -4,7 +4,7 @@ import React from "react";
 import styles from "./roi-calculator.module.scss";
 import { RoiCalculationResult, RoiStrategy } from "@/lib/roi";
 import { ButtonModal } from "../ButtonModal/ButtonModal";
-import { roiResultsCopy } from "./RoiResults.copy";
+import { heYears, roiResultsCopy } from "./RoiResults.copy";
 
 type Props = {
   result: RoiCalculationResult;
@@ -67,8 +67,11 @@ const RoiResults: React.FC<Props> = ({
   };
 
   const yearsText = c.yearsText;
+  // `he` needs singular / dual / plural; every LTR locale keeps the exact
+  // `${n} ${yearsText}` string it rendered before (Pass B M11).
+  const yearsPhrase = (n: number) => (lang === "he" ? heYears(n) : `${n} ${yearsText}`);
 
-  const yearsLabel = `${t.horizon}: ${Math.round(totalYears)} ${yearsText} · ROI: ${formatPercent(result.roiPercent, lang)}%`;
+  const yearsLabel = `${t.horizon}: ${yearsPhrase(Math.round(totalYears))} · ${c.roiShort}: ${formatPercent(result.roiPercent, lang)}%`;
 
   return (
     <div className={styles.results}>
@@ -125,7 +128,7 @@ const RoiResults: React.FC<Props> = ({
 
             <div className={styles.row}>
               <span>
-                {t.rentalCashFlow} ({inputRentalPeriodYears ?? 10} {yearsText})
+                {t.rentalCashFlow} ({yearsPhrase(inputRentalPeriodYears ?? 10)})
               </span>
               <strong>{formatCurrency(result.totalNetRent ?? 0, lang)}</strong>
             </div>

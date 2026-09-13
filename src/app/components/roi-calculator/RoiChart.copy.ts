@@ -59,7 +59,7 @@ export const ROI_CHART_COPY: Record<Locale, typeof ROI_CHART_EN> = {
     chartTitleBuyHold: "תחזית שווי הנכס והכנסה משכירות",
     chartTitleBuySell: "תחזית שווי הנכס ורווח ממכירה",
     xAxis: "שנים",
-    yAxis: "סכום (EUR)",
+    yAxis: "סכום ב-EUR",
     year: "שנה",
     estimatedValue: "שווי הנכס",
     cumulativeNetRent: "הכנסה מצטברת משכירות",

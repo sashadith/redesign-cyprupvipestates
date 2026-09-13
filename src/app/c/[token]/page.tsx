@@ -12,6 +12,8 @@ import { resolveDevelopmentPrice, toDeliveryQuarter } from "@/lib/developmentCar
 import { normalizeRef } from "@/lib/unitRef";
 import type { MatchFilters } from "@/lib/crm/matching";
 import { SITE_URL } from "@/lib/seo";
+import { ltrIsolate } from "@/lib/locale";
+import { hePlaceOrIsolated } from "@/lib/hePlaces";
 import { asPLocale, COPY, timeOfDayGreeting } from "./copy";
 import HeroGreeting from "./HeroGreeting";
 import PresentationBody, { type PresentationDevelopmentVM } from "./PresentationBody";
@@ -29,14 +31,25 @@ const PRESENTATION_OG_IMAGE = `${SITE_URL}/og/presentation-1000x1000.jpg`;
 
 // No per-token content in the metadata — never leak a client's name or
 // selection into a link preview, browser history entry, or shared screenshot.
-export async function generateMetadata(): Promise<Metadata> {
+// The presentation's LOCALE is the one thing read from the row (a single
+// `select: { locale: true }`), because an English browser tab over a Hebrew
+// page was the last untranslated surface here (Pass B Should fix #21) — a
+// language is not PII, unlike everything else on the row.
+export async function generateMetadata({ params }: { params: { token: string } }): Promise<Metadata> {
+  const row = await prisma.clientPresentation.findUnique({
+    where: { token: params.token },
+    select: { locale: true },
+  });
+  const locale = asPLocale(row?.locale);
+  const title = COPY[locale].metaTitle;
+  const description = COPY[locale].metaDescription;
   return {
-    title: "Your Property Selection - Cyprus VIP Estates",
-    description: "A personal property selection.",
+    title,
+    description,
     robots: { index: false, follow: false },
     openGraph: {
-      title: "Your Property Selection - Cyprus VIP Estates",
-      description: "A personal property selection.",
+      title,
+      description,
       images: [{ url: PRESENTATION_OG_IMAGE, width: 1000, height: 1000 }],
     },
   };
@@ -212,15 +225,27 @@ export default async function ClientPresentationPage({ params }: { params: { tok
   const criteria = (presentation.criteria as MatchFilters | null) ?? {};
   const requirementChips: string[] = [];
   const locationChips = criteria.areas?.length ? criteria.areas : criteria.districts ?? [];
-  for (const l of locationChips) requirementChips.push(l);
+  // Raw Latin place names sat as the only Latin chips in an otherwise Hebrew
+  // row (Pass B Must fix #17). hePlaceOrIsolated() resolves the one approved
+  // transliteration per glossary §1 and bidi-isolates anything it doesn't
+  // know, so a Latin resort brand still renders — just without flipping.
+  for (const l of locationChips) requirementChips.push(locale === "he" ? hePlaceOrIsolated(l) : l);
   for (const t of criteria.propertyTypes ?? []) requirementChips.push(c.propertyTypeNames[t] ?? t);
   for (const n of criteria.bedrooms ?? []) requirementChips.push(c.bedroomLabels[String(n)] ?? String(n));
   const { budgetMin, budgetMax } = criteria;
   if (budgetMin != null || budgetMax != null) {
     const fmt = (n: number) => `€${n.toLocaleString("en-US")}`;
+    // `he`: the en dash is banned (styleguide §3) and a range renders without
+    // spaces inside one LRI run so the RTL paragraph can't swap its ends
+    // (Pass B Should fix #19). The lower-bound chip uses `budgetFrom`, NOT the
+    // card's `priceFrom` — it is the client's budget floor, not an asking
+    // price (Must fix #14).
+    const range = locale === "he"
+      ? ltrIsolate(`${fmt(budgetMin as number)}-${fmt(budgetMax as number)}`)
+      : `${fmt(budgetMin as number)} – ${fmt(budgetMax as number)}`;
     requirementChips.push(
-      budgetMin != null && budgetMax != null ? `${fmt(budgetMin)} – ${fmt(budgetMax)}`
-        : budgetMin != null ? `${c.priceFrom} ${fmt(budgetMin)}`
+      budgetMin != null && budgetMax != null ? range
+        : budgetMin != null ? `${c.budgetFrom} ${fmt(budgetMin)}`
         : `${c.budgetUpTo} ${fmt(budgetMax as number)}`
     );
   }
@@ -241,6 +266,7 @@ export default async function ClientPresentationPage({ params }: { params: { tok
           note={presentation.personalNote}
           advisorName={presentation.advisor?.name}
           districtImage={districtImage}
+          locale={locale}
         />
         <PresentationBody token={params.token} items={items} locale={locale} />
         <ClosingSection

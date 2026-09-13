@@ -8,8 +8,11 @@ const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replac
 
 export function buildPreviewEmail(input: {
   leadName: string; leadEmail: string; subject: string; body: string; signatureHtml: string; approvalCode: string; expiresAtLabel: string;
+  /** The lead locale — the preview must render in the same direction the
+   *  lead will see (`he` → RTL body block). Omitted = LTR, as before. */
+  locale?: string;
 }): { subject: string; html: string; text: string } {
-  const rendered = renderLeadEmail(input.body, input.signatureHtml);
+  const rendered = renderLeadEmail(input.body, input.signatureHtml, input.locale);
   const header =
     `<div style="${BODY_FONT_STYLE}background:#F3F4F6;border:1px solid #E5E7EB;border-radius:6px;padding:12px 14px;margin-bottom:20px;">` +
     `<div><strong>Draft for ${esc(input.leadName)}</strong> · To: ${esc(input.leadEmail)}</div>` +

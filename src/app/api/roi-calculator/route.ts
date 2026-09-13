@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { parseAttribution } from "@/lib/attribution";
 import { recordInboundLead } from "@/lib/leadNotify";
 import { safeUrl, allowedHost, escapeHtml, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
-import { LOCALES, type Locale } from "@/lib/locale";
+import { HE_LANGUAGE_NOTE, LOCALES, type Locale } from "@/lib/locale";
+import { stripHtmlToText } from "@/lib/emailSignature/sanitize";
 
 const LEAD_LOCALES = new Set<string>(LOCALES);
 
@@ -40,6 +41,13 @@ type RoiEmailCopy = {
   scenarioRealistic: string;
   /** Greeting fallback when the form carried no usable name. */
   safeName: string;
+  /** The complete first line, name already interpolated and HTML-escaped.
+   *  `${safeName},` alone rendered a bare Hebrew first name plus a comma,
+   *  which is not a salutation in Hebrew (Pass B Must fix #9). */
+  greetingLine: (name: string) => string;
+  /** Entscheidung E — `he` only, empty everywhere else. The ROI result mail
+   *  is automated and goes out before any human contact (Must fix #3). */
+  languageNote: string;
   labelStrategy: string;
   labelScenario: string;
   labelTotalEntryCost: string;
@@ -61,6 +69,8 @@ const ROI_EMAIL_EN: RoiEmailCopy = {
   scenarioOptimistic: "Optimistic",
   scenarioRealistic: "Realistic",
   safeName: "Dear Client",
+  greetingLine: (n) => `${escapeHtml(n || "Dear Client")},`,
+  languageNote: "",
   labelStrategy: "Strategy",
   labelScenario: "Scenario",
   labelTotalEntryCost: "Total entry cost",
@@ -86,6 +96,8 @@ const ROI_EMAIL: Record<Locale, RoiEmailCopy> = {
     scenarioOptimistic: "Оптимистичный",
     scenarioRealistic: "Реалистичный",
     safeName: "Уважаемый клиент",
+    greetingLine: (n) => `${escapeHtml(n || "Уважаемый клиент")},`,
+    languageNote: "",
     labelStrategy: "Strategy",
     labelScenario: "Scenario",
     labelTotalEntryCost: "Total entry cost",
@@ -108,6 +120,8 @@ const ROI_EMAIL: Record<Locale, RoiEmailCopy> = {
     scenarioOptimistic: "Optymistyczny",
     scenarioRealistic: "Realistyczny",
     safeName: "Szanowny Kliencie",
+    greetingLine: (n) => `${escapeHtml(n || "Szanowny Kliencie")},`,
+    languageNote: "",
     labelStrategy: "Strategy",
     labelScenario: "Scenario",
     labelTotalEntryCost: "Total entry cost",
@@ -130,6 +144,8 @@ const ROI_EMAIL: Record<Locale, RoiEmailCopy> = {
     scenarioOptimistic: "Optimistisch",
     scenarioRealistic: "Realistisch",
     safeName: "Sehr geehrte Kundin, sehr geehrter Kunde",
+    greetingLine: (n) => `${escapeHtml(n || "Sehr geehrte Kundin, sehr geehrter Kunde")},`,
+    languageNote: "",
     labelStrategy: "Strategy",
     labelScenario: "Scenario",
     labelTotalEntryCost: "Total entry cost",
@@ -157,18 +173,22 @@ const ROI_EMAIL: Record<Locale, RoiEmailCopy> = {
     scenarioOptimistic: "אופטימי",
     scenarioRealistic: "ריאלי",
     safeName: "שלום",
+    // Named form = the same greeting plus the name, matching every other
+    // Hebrew message in the CRM (§11.6); the Latin name is <bdi>-wrapped.
+    greetingLine: (n) => (n ? `שלום <bdi>${escapeHtml(n)}</bdi>,` : "שלום,"),
+    languageNote: HE_LANGUAGE_NOTE,
     labelStrategy: "אסטרטגיה",
     labelScenario: "תרחיש",
     labelTotalEntryCost: "עלות כניסה כוללת",
     labelProjectedResult: "תוצאה צפויה",
     labelAnnualRoi: "תשואה שנתית ממוצעת",
     subject: "חישוב התשואה שלכם | Cyprus VIP Estates",
-    title: "תוצאת התשואה המשוערת שלכם",
+    title: "התשואה המשוערת שלכם",
     intro: "תודה שהשתמשתם במחשבון התשואה של Cyprus VIP Estates.",
     summary: "לפניכם סיכום התוצאה הצפויה של ההשקעה.",
     cta: "לצפייה בנכס",
     footer:
-      "החישוב הזה משוער בלבד. הנתונים הסופיים עשויים להשתנות בהתאם לנכס, למבנה העסקה ולתנאי השוק.",
+      "החישוב משוער בלבד. הנתונים הסופיים עשויים להשתנות בהתאם לנכס, למבנה העסקה ולתנאי השוק.",
   }, // REVIEW(he)
 };
 
@@ -279,18 +299,23 @@ function getClientEmail(payload: any) {
   const safeLang: Locale = LOCALES.includes(lang) ? lang : "en";
   const t = ROI_EMAIL[safeLang];
 
-  const safeName = (name && String(name).trim()) || t.safeName;
+  const greetingLine = t.greetingLine(String(name ?? "").trim());
 
   const strategyLabel = getStrategyLabel(strategy, lang);
   const scenarioLabel = getScenarioLabel(scenario, lang);
 
-  // RTL support for `he` (Phase 4 / WP7): `dir="rtl"` on <html>/<body>, the
-  // one `align="left"` text cell flipped and the result table's value column
-  // mirrored. The table layout itself is unchanged, and all three helpers are
-  // no-ops for every LTR locale.
+  // RTL support for `he` (Phase 4 / WP7, corrected in fix round 1).
+  // `dir` on <html>/<body> alone does nothing in Gmail, Yahoo and
+  // Outlook.com — they discard both tags and re-host the markup in their own
+  // LTR container (Pass B Must fix #2). It therefore also sits on both
+  // wrapper tables, on the result table, on every text cell and on every <p>,
+  // each with an inline text-align that survives HTML sanitizers. All of
+  // these are the empty string for an LTR locale, so en/de/pl/ru render
+  // byte-identical HTML (locked by emailTemplatesRtl.test.ts).
   const rtl = safeLang === "he";
   const dirAttr = rtl ? ` dir="rtl"` : "";
   const textAlign = rtl ? "right" : "left";
+  const cellAlign = rtl ? " text-align:right;" : "";
   const valueAlign = rtl ? "left" : "right";
 
   const link =
@@ -298,17 +323,17 @@ function getClientEmail(payload: any) {
 
   const html = `
   <!DOCTYPE html>
-  <html lang="${lang || "en"}"${dirAttr}>
+  <html lang="${safeLang}"${dirAttr}>
   <head>
     <meta charset="UTF-8" />
     <title>${t.subject}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   </head>
   <body style="margin:0; padding:0; background-color:#f4f4f4; font-family:Arial,Helvetica,sans-serif;"${dirAttr}>
-    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f4f4f4; padding:24px 0;">
+    <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"${dirAttr} style="background-color:#f4f4f4; padding:24px 0;">
       <tr>
         <td align="center">
-          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:600px; background-color:#ffffff; overflow:hidden;">
+          <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%"${dirAttr} style="max-width:600px; background-color:#ffffff; overflow:hidden;">
             <tr>
               <td align="center" style="padding:24px 24px 8px 24px;">
                 <img
@@ -329,16 +354,17 @@ function getClientEmail(payload: any) {
             </tr>
 
             <tr>
-              <td align="${textAlign}" style="padding:16px 32px 0 32px; color:#333333; font-size:14px; line-height:1.7;">
-                <p style="margin:0 0 12px 0;">${escapeHtml(safeName)},</p>
-                <p style="margin:0 0 8px 0;">${t.intro}</p>
-                <p style="margin:0 0 12px 0;">${t.summary}</p>
+              <td align="${textAlign}"${dirAttr} style="padding:16px 32px 0 32px; color:#333333; font-size:14px; line-height:1.7;${cellAlign}">
+                <p${rtl ? ` dir="rtl" style="margin:0 0 12px 0; text-align:right;"` : ' style="margin:0 0 12px 0;"'}>${greetingLine}</p>
+                <p${rtl ? ` dir="rtl" style="margin:0 0 8px 0; text-align:right;"` : ' style="margin:0 0 8px 0;"'}>${t.intro}</p>
+                <p${rtl ? ` dir="rtl" style="margin:0 0 12px 0; text-align:right;"` : ' style="margin:0 0 12px 0;"'}>${t.summary}</p>${t.languageNote ? `
+                <p dir="rtl" style="margin:0 0 12px 0; text-align:right;">${t.languageNote}</p>` : ""}
               </td>
             </tr>
 
             <tr>
               <td style="padding:8px 32px 0 32px;">
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border:1px solid #ecefee;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0"${dirAttr} style="border-collapse:collapse; border:1px solid #ecefee;">
                   <tr>
                     <td style="padding:14px 16px; border-bottom:1px solid #ecefee; color:#526264;">${t.labelStrategy}</td>
                     <td style="padding:14px 16px; border-bottom:1px solid #ecefee; text-align:${valueAlign}; color:#0d3f43;"><strong>${escapeHtml(strategyLabel)}</strong></td>
@@ -383,8 +409,8 @@ function getClientEmail(payload: any) {
             </tr>
 
             <tr>
-              <td align="center" style="padding:0 24px 16px 24px; color:#aaaaaa; font-size:11px; line-height:1.5;">
-                <p style="margin:0;">
+              <td align="center"${dirAttr} style="padding:0 24px 16px 24px; color:#aaaaaa; font-size:11px; line-height:1.5;">
+                <p${rtl ? ` dir="rtl" style="margin:0; text-align:center;"` : ' style="margin:0;"'}>
                   ${t.footer}
                 </p>
               </td>
@@ -501,22 +527,28 @@ export async function POST(request: Request) {
 
     // Email notifications (best-effort — the lead is already persisted above).
     try {
+      const internalHtml = getInternalEmailHtml({
+        name: nameNorm,
+        email: emailNorm,
+        phone: phoneNorm,
+        lang,
+        currentPage: currentPageNorm,
+        strategy,
+        scenario,
+        inputs,
+        result,
+      });
       await transporter.sendMail({
         from: `"Cyprus VIP Estates" <${process.env.EMAIL_USER!}>`,
         to: process.env.EMAIL_TO || process.env.EMAIL_USER!,
         cc: process.env.EMAIL_COFOUNDER || undefined,
         subject: "ROI Calculator Submission — Cyprus VIP Estates",
-        html: getInternalEmailHtml({
-          name: nameNorm,
-          email: emailNorm,
-          phone: phoneNorm,
-          lang,
-          currentPage: currentPageNorm,
-          strategy,
-          scenario,
-          inputs,
-          result,
-        }),
+        // A text/plain alternative on every transactional mail: SpamAssassin
+        // penalises HTML-only (MIME_HTML_ONLY), and for `he` a text part is
+        // the most reliable RTL fallback because the client renders it in its
+        // own reading direction (Pass B Should fix #22 / Systemic S-E).
+        text: stripHtmlToText(internalHtml),
+        html: internalHtml,
         replyTo: emailNorm,
       });
       if (leadId) { try { await prisma.lead.update({ where: { id: leadId }, data: { emailNotified: true } }); } catch {} }
@@ -525,7 +557,7 @@ export async function POST(request: Request) {
     }
 
     try {
-      const { subject, html } = getClientEmail({
+      const { subject, html: clientHtml } = getClientEmail({
         name: nameNorm,
         lang,
         currentPage: currentPageNorm,
@@ -538,7 +570,8 @@ export async function POST(request: Request) {
         from: `"Cyprus VIP Estates" <${process.env.EMAIL_USER!}>`,
         to: emailNorm,
         subject,
-        html,
+        text: stripHtmlToText(clientHtml),
+        html: clientHtml,
       });
     } catch (err: any) {
       console.error("ROI client email error:", err);

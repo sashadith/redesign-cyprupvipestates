@@ -14,10 +14,19 @@ import SlotPicker, { type SlotGroup } from "./SlotPicker";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata(): Promise<Metadata> {
+// The token row is read for its LOCALE only (`select` down to the lead's
+// language) — an English browser tab over a Hebrew booking page was the last
+// untranslated surface here (Pass B Should fix #21). No lead data enters the
+// metadata; the page is noindex either way.
+export async function generateMetadata({ params }: { params: { token: string } }): Promise<Metadata> {
+  const row = await prisma.bookingRequest.findUnique({
+    where: { token: params.token },
+    select: { lead: { select: { languagePreference: true } } },
+  });
+  const locale = asBLocale(row?.lead.languagePreference);
   return {
-    title: "Book a time - Cyprus VIP Estates",
-    description: "Schedule a personal appointment.",
+    title: COPY[locale].metaTitle,
+    description: COPY[locale].metaDescription,
     robots: { index: false, follow: false },
   };
 }

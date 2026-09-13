@@ -213,7 +213,7 @@ export async function confirmBookingSlotAction(bookingRequestId: string, confirm
   const closing = buildEmailClosing(locale);
   const fullBody = `${body}\n\n${closing}`;
   const signatureHtml = await getSignatureHtml(userId, locale);
-  const html = `${bodyToHtml(fullBody)}${SIGNATURE_SPACER}${signatureHtml}`;
+  const html = `${bodyToHtml(fullBody, locale)}${SIGNATURE_SPACER}${signatureHtml}`;
   const text = stripHtmlToText(html);
 
   let messageId: string;

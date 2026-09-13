@@ -21,7 +21,7 @@ const ROLE_LINE: Record<string, string> = {
   de: "Ihr persönlicher Immobilienberater",
   ru: "Ваш персональный консультант по недвижимости",
   pl: "Twój osobisty doradca nieruchomości",
-  he: "היועץ האישי שלכם לנדל\"ן", // REVIEW(he)
+  he: "יועץ הנדל\"ן האישי שלכם", // REVIEW(he)
 };
 
 export type ClosingVariant = "role-line" | "company-name";

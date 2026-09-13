@@ -9,6 +9,7 @@ import { COPY } from "./copy";
 import { splitDescriptionParagraphs } from "@/lib/text";
 import { iconFor } from "@/app/preview-project/amenityIcons";
 import DistancesStrip from "@/app/components/DistancesStrip/DistancesStrip";
+import { heBedrooms, heFeedLabel } from "@/lib/heFeedVocab";
 
 export type OverlayUnit = {
   id: string; ref: string; label: string; type: string; beds: string; areaBuilt: string;
@@ -42,6 +43,7 @@ export default function PropertyOverlay({
   locale: PLocale;
 }) {
   const c = COPY[locale];
+  const isHe = locale === "he";
   const [lbIndex, setLbIndex] = useState<number | null>(null);
   // Always-current lbIndex for the Escape handler below, kept OUT of the lock
   // effect's own dependency array — see the comment there for why.
@@ -83,13 +85,13 @@ export default function PropertyOverlay({
           onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }}
           disabled={favoriteBusy}
           aria-pressed={favorited}
-          aria-label="Favorite"
+          aria-label={c.favorite}
         >
           <svg viewBox="0 0 24 24" width="20" height="20" fill={favorited ? "currentColor" : "none"} stroke="currentColor" strokeWidth={favorited ? "0" : "1.8"}>
             <path d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733C11.285 4.876 9.623 3.75 7.688 3.75 5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
           </svg>
         </button>
-        <button type="button" className="cp-overlay__close" onClick={onClose} aria-label="Close">✕</button>
+        <button type="button" className="cp-overlay__close" onClick={onClose} aria-label={c.close}>✕</button>
 
         <OverlayGallery gallery={gallery} alt={publicName} onOpen={setLbIndex} />
 
@@ -160,10 +162,15 @@ export default function PropertyOverlay({
                           human-facing name; ref is only a last-resort fallback
                           for a unit that genuinely has no label. */}
                       <td>{u.label || u.ref || "-"}</td>
-                      <td>{u.type || "-"}</td>
+                      {/* Feed vocabulary, not copy: the raw "Apartment"/
+                          "Villa" and the bare bed count used to render Latin
+                          in the middle of a Hebrew table. heFeedVocab.ts is
+                          the one place feed values get Hebrew (Pass B M13 /
+                          Systemic S-A); every LTR locale keeps the raw value. */}
+                      <td>{isHe ? (heFeedLabel(u.type ?? "") || "-") : (u.type || "-")}</td>
                       <td>
                         <div className="cp-overlay__stack">
-                          <span>{u.beds || "-"}</span>
+                          <span>{isHe ? (heBedrooms(String(u.beds ?? "")) || "-") : (u.beds || "-")}</span>
                           <span className="cp-overlay__stack-sub">{u.areaBuilt || "-"}</span>
                         </div>
                       </td>

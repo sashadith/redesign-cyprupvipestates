@@ -5,7 +5,7 @@
 // the lead directly) — one meeting, one consistent story about "where's the
 // link" across the calendar invite and the email.
 import type { Locale } from "./presentationMessages";
-import { BCP47, bidiIsolate } from "@/lib/locale";
+import { BCP47, bidiIsolate, hePrefixDate } from "@/lib/locale";
 
 function meetingNote(locale: Locale, meetingType: "ZOOM" | "PHONE"): string {
   if (meetingType === "PHONE") {
@@ -52,7 +52,7 @@ export const BOOKING_CONFIRMATION_EMAIL: Record<
   // `|` instead of the em dash the LTR subjects use (styleguide §3).
   he: (name, dt, mt) => ({
     subject: "הפגישה שלכם מאושרת | Cyprus VIP Estates",
-    body: `שלום ${bidiIsolate(name)},\n\nהפגישה שלכם מאושרת ל-${dt} (לפי השעון שלכם).\n\nמצורפת הזמנה ליומן (.ics) עם כל הפרטים.\n\n${meetingNote("he", mt)}`,
+    body: `שלום ${bidiIsolate(name)},\n\nהפגישה שלכם מאושרת ${hePrefixDate("ל", dt)} (לפי השעון שלכם).\n\nמצורפת הזמנה ליומן (.ics) עם כל הפרטים.\n\n${meetingNote("he", mt)}`,
   }), // REVIEW(he)
 };
 

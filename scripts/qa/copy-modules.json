@@ -31,6 +31,7 @@
   { "path": "src/app/components/FormRoi/FormRoi.copy.ts", "exports": ["FORM_ROI_COPY"] },
   { "path": "src/app/components/FormStandard/FormStandard.copy.ts", "exports": ["FORM_STANDARD_COPY"] },
   { "path": "src/app/components/FormStatic/FormStatic.copy.ts", "exports": ["FORM_STATIC_COPY"] },
+  { "path": "src/app/components/ModalBrochure/ModalBrochure.copy.ts", "exports": ["MODAL_BROCHURE_COPY"] },
   { "path": "src/app/components/ModalPartners/ModalPartners.copy.ts", "exports": ["MODAL_PARTNERS_COPY"] },
   { "path": "src/app/components/ModalRoi/ModalRoi.copy.ts", "exports": ["MODAL_ROI_COPY"] },
   { "path": "src/app/components/ModalRoiCalculator/ModalRoiCalculator.copy.ts", "exports": ["MODAL_ROI_CALCULATOR_COPY"] },

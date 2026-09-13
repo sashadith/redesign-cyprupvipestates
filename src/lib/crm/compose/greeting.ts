@@ -4,7 +4,7 @@
 // opening line (state NEW); for every other state the model is instructed to
 // mirror whatever address style the lead has already used in the timeline.
 
-import { isLocale, type Locale } from "@/lib/locale";
+import { bidiIsolate, isLocale, type Locale } from "@/lib/locale";
 
 export type SalutationTitle = "UNKNOWN" | "MR" | "MS";
 
@@ -37,7 +37,7 @@ const GREETING: Record<Locale, (args: GreetingArgs) => string> = {
   // Hebrew has no neutral "Herr/Frau [Nachname]" register in business e-mail —
   // Israeli practice is the first name, and any titled form would force a
   // gender choice (styleguide §2). `שלום` covers every time of day.
-  he: ({ first }) => (first ? `שלום ${first},` : `שלום,`), // REVIEW(he)
+  he: ({ first }) => (first ? `שלום ${bidiIsolate(first)},` : `שלום,`), // REVIEW(he)
 };
 
 export function buildFirstContactGreeting(

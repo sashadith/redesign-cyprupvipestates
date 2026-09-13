@@ -1,4 +1,4 @@
-import { LOCALES, isLocale, type Locale } from "@/lib/locale";
+import { HE_LANGUAGE_NOTE, LOCALES, isLocale, type Locale } from "@/lib/locale";
 export type PLocale = Locale;
 export const P_LOCALES = LOCALES;
 export const asPLocale = (v: string | null | undefined): PLocale => (v && isLocale(v) ? v : "en");
@@ -22,10 +22,19 @@ export function timeOfDayGreeting(locale: PLocale, hour: number): string {
 }
 
 export type PresentationCopy = {
+  /** Browser-tab title + meta description. Carries NO per-token content —
+   *  only the locale reaches it (Pass B Should fix #21). */
+  metaTitle: string;
+  metaDescription: string;
   eyebrowTag: string;
   intro: string;
   requirementsTitle: string;
   budgetUpTo: string;
+  /** Budget-chip LOWER bound ("from €300,000"). Deliberately NOT `priceFrom`:
+   *  that one is a card caption for an OBJECT's entry price, this one is the
+   *  client's own budget floor. Hebrew needs two different words for them
+   *  (`מעל` vs `מחיר התחלתי`) — Pass B Must fix #14. */
+  budgetFrom: string;
   propertyTypeNames: Record<string, string>;
   timelineLabels: Record<string, string>;
   bedroomLabels: Record<string, string>; // keyed "0".."5" — 0 = studio, 5 = "5+"
@@ -57,6 +66,10 @@ export type PresentationCopy = {
   contactUs: string;
   legal: string;
   privacyPolicy: string;
+  /** Icon-button screen-reader labels — English `aria-label`s were the last
+   *  untranslated strings on the Hebrew page (Pass B Should fix #16). */
+  close: string;
+  favorite: string;
   priceFrom: string;
   units: string;
   delivery: string;
@@ -64,10 +77,13 @@ export type PresentationCopy = {
 };
 
 const COPY_EN: PresentationCopy = {
+  metaTitle: "Your Property Selection - Cyprus VIP Estates",
+  metaDescription: "A personal property selection.",
   eyebrowTag: "YOUR PERSONAL SELECTION",
   intro: "Thank you for your trust. I have personally selected these properties for you - each of them matches your wishes and deserves your attention.",
   requirementsTitle: "Your preferences",
   budgetUpTo: "up to",
+  budgetFrom: "from",
   propertyTypeNames: { Apartment: "Apartment", Villa: "Villa", Townhouse: "Townhouse", Penthouse: "Penthouse" },
   timelineLabels: { IMMEDIATE: "Immediate", THREE_MONTHS: "Within 3 months", SIX_MONTHS: "Within 6 months", ONE_YEAR: "Within a year", TWO_YEARS: "Within 2 years", JUST_LOOKING: "Just looking" },
   bedroomLabels: { "0": "Studio", "1": "1 bedroom", "2": "2 bedrooms", "3": "3 bedrooms", "4": "4 bedrooms", "5": "5+ bedrooms" },
@@ -92,6 +108,8 @@ const COPY_EN: PresentationCopy = {
   contactUs: "Contact us",
   legal: "This selection is provided for informational purposes and does not constitute an offer.",
   privacyPolicy: "Privacy policy",
+  close: "Close",
+  favorite: "Favorite",
   priceFrom: "from",
   units: "units",
   delivery: "Delivery",
@@ -101,10 +119,13 @@ const COPY_EN: PresentationCopy = {
 export const COPY: Record<PLocale, PresentationCopy> = {
   en: COPY_EN,
   de: {
+    metaTitle: "Ihre Immobilienauswahl - Cyprus VIP Estates",
+    metaDescription: "Eine persönliche Immobilienauswahl.",
     eyebrowTag: "IHRE PERSÖNLICHE AUSWAHL",
     intro: "Ich danke Ihnen für Ihr Vertrauen. Ich habe diese Objekte persönlich für Sie ausgewählt - jedes von ihnen entspricht Ihren Wünschen und verdient Ihre Aufmerksamkeit.",
     requirementsTitle: "Ihre Wünsche",
     budgetUpTo: "bis",
+    budgetFrom: "ab",
     propertyTypeNames: { Apartment: "Apartment", Villa: "Villa", Townhouse: "Stadthaus", Penthouse: "Penthouse" },
     timelineLabels: { IMMEDIATE: "Sofort", THREE_MONTHS: "Innerhalb von 3 Monaten", SIX_MONTHS: "Innerhalb von 6 Monaten", ONE_YEAR: "Innerhalb eines Jahres", TWO_YEARS: "Innerhalb von 2 Jahren", JUST_LOOKING: "Nur interessiert" },
     bedroomLabels: { "0": "Studio", "1": "1 Schlafzimmer", "2": "2 Schlafzimmer", "3": "3 Schlafzimmer", "4": "4 Schlafzimmer", "5": "5+ Schlafzimmer" },
@@ -129,16 +150,21 @@ export const COPY: Record<PLocale, PresentationCopy> = {
     contactUs: "Kontakt aufnehmen",
     legal: "Diese Auswahl dient ausschließlich zu Informationszwecken und stellt kein Angebot dar.",
     privacyPolicy: "Datenschutzerklärung",
+    close: "Schließen",
+    favorite: "Merken",
     priceFrom: "ab",
     units: "Einheiten",
     delivery: "Fertigstellung",
     viewOnSite: "Auf der Website ansehen",
   },
   pl: {
+    metaTitle: "Twój wybór nieruchomości - Cyprus VIP Estates",
+    metaDescription: "Indywidualny wybór nieruchomości.",
     eyebrowTag: "TWÓJ INDYWIDUALNY WYBÓR",
     intro: "Dziękuję za zaufanie. Osobiście wybrałem dla Państwa te nieruchomości - każda z nich odpowiada Państwa oczekiwaniom i zasługuje na uwagę.",
     requirementsTitle: "Twoje preferencje",
     budgetUpTo: "do",
+    budgetFrom: "od",
     propertyTypeNames: { Apartment: "Apartament", Villa: "Willa", Townhouse: "Dom szeregowy", Penthouse: "Penthouse" },
     timelineLabels: { IMMEDIATE: "Natychmiast", THREE_MONTHS: "W ciągu 3 miesięcy", SIX_MONTHS: "W ciągu 6 miesięcy", ONE_YEAR: "W ciągu roku", TWO_YEARS: "W ciągu 2 lat", JUST_LOOKING: "Tylko oglądam" },
     bedroomLabels: { "0": "Kawalerka", "1": "1 sypialnia", "2": "2 sypialnie", "3": "3 sypialnie", "4": "4 sypialnie", "5": "5+ sypialni" },
@@ -163,16 +189,21 @@ export const COPY: Record<PLocale, PresentationCopy> = {
     contactUs: "Skontaktuj się z nami",
     legal: "Ta propozycja ma charakter wyłącznie informacyjny i nie stanowi oferty.",
     privacyPolicy: "Polityka prywatności",
+    close: "Zamknij",
+    favorite: "Dodaj do ulubionych",
     priceFrom: "od",
     units: "lokali",
     delivery: "Termin oddania",
     viewOnSite: "Zobacz na stronie",
   },
   ru: {
+    metaTitle: "Ваш подбор объектов - Cyprus VIP Estates",
+    metaDescription: "Персональная подборка объектов.",
     eyebrowTag: "ВАШ ИНДИВИДУАЛЬНЫЙ ПОДБОР",
     intro: "Благодарю вас за доверие. Я лично отобрал для вас эти объекты - каждый из них соответствует вашим пожеланиям и заслуживает внимания.",
     requirementsTitle: "Ваши пожелания",
     budgetUpTo: "до",
+    budgetFrom: "от",
     propertyTypeNames: { Apartment: "Квартира", Villa: "Вилла", Townhouse: "Таунхаус", Penthouse: "Пентхаус" },
     timelineLabels: { IMMEDIATE: "Срочно", THREE_MONTHS: "В течение 3 месяцев", SIX_MONTHS: "В течение 6 месяцев", ONE_YEAR: "В течение года", TWO_YEARS: "В течение 2 лет", JUST_LOOKING: "Пока присматриваюсь" },
     bedroomLabels: { "0": "Студия", "1": "1 спальня", "2": "2 спальни", "3": "3 спальни", "4": "4 спальни", "5": "5+ спален" },
@@ -197,23 +228,28 @@ export const COPY: Record<PLocale, PresentationCopy> = {
     contactUs: "Связаться с нами",
     legal: "Данная подборка носит исключительно информационный характер и не является офертой.",
     privacyPolicy: "Политика конфиденциальности",
+    close: "Закрыть",
+    favorite: "В избранное",
     priceFrom: "от",
     units: "объектов",
     delivery: "Срок сдачи",
     viewOnSite: "Смотреть на сайте",
   },
   he: {
+    metaTitle: "המבחר האישי שלכם | Cyprus VIP Estates",
+    metaDescription: "מבחר נכסים אישי בקפריסין.",
     eyebrowTag: "המבחר האישי שלכם",
-    intro: "תודה על האמון. בחרתי עבורכם את הנכסים האלה באופן אישי. כל אחד מהם מתאים למה שביקשתם וראוי לתשומת לבכם.",
+    intro: "תודה על האמון. בחרתי עבורכם באופן אישי את הנכסים האלה. כל אחד מהם מתאים למה שביקשתם ושווה תשומת לב.",
     requirementsTitle: "ההעדפות שלכם",
     budgetUpTo: "עד",
+    budgetFrom: "מעל",
     propertyTypeNames: { Apartment: "דירה", Villa: "וילה", Townhouse: "בית טורי", Penthouse: "פנטהאוז" },
     timelineLabels: { IMMEDIATE: "מיידי", THREE_MONTHS: "תוך 3 חודשים", SIX_MONTHS: "תוך 6 חודשים", ONE_YEAR: "תוך שנה", TWO_YEARS: "תוך שנתיים", JUST_LOOKING: "בשלב בדיקה" },
-    bedroomLabels: { "0": "סטודיו", "1": "חדר שינה אחד", "2": "2 חדרי שינה", "3": "3 חדרי שינה", "4": "4 חדרי שינה", "5": "5+ חדרי שינה" },
+    bedroomLabels: { "0": "סטודיו", "1": "1 חדר שינה", "2": "2 חדרי שינה", "3": "3 חדרי שינה", "4": "4 חדרי שינה", "5": "5+ חדרי שינה" },
     viewDetails: "לפרטים נוספים",
     availableUnits: "יחידות זמינות",
-    unitsTable: { unit: "יחידה", type: "סוג", beds: "חדרי שינה", area: "שטח", price: "מחיר", status: "סטטוס" },
-    statusLabel: { available: "זמין", reserved: "שמור", sold: "נמכר", unlisted: "לא זמין עוד" },
+    unitsTable: { unit: "יחידה", type: "סוג", beds: "חד׳ שינה", area: "שטח", price: "מחיר", status: "סטטוס" },
+    statusLabel: { available: "זמינה", reserved: "שמורה", sold: "נמכרה", unlisted: "לא זמינה עוד" },
     advisorTitle: "היועץ האישי שלכם",
     unitsPlural: { one: "יחידה", many: "יחידות" },
     newForYou: "חדש עבורכם",
@@ -221,16 +257,18 @@ export const COPY: Record<PLocale, PresentationCopy> = {
     soldOut: "נמכר",
     lifeNearby: "החיים בסביבה",
     closingEyebrow: "קשר ישיר",
-    closingTrust: "אני עונה לכל הודעה באופן אישי, בדרך כלל בתוך שעה. אפשר לשאול אותי כל דבר על הנכסים שבמבחר שלכם, על תיאום ביקור ועל פרטי הרכישה בקפריסין. בלי התחייבות ובלי לחץ.",
+    closingTrust: `אני עונה לכל הודעה בעצמי, בדרך כלל בתוך שעה. אפשר לשאול אותי כל דבר על הנכסים שבמבחר שלכם, על תיאום סיור ועל פרטי הרכישה בקפריסין. בלי התחייבות ובלי לחץ. ${HE_LANGUAGE_NOTE}`,
     whatsapp: "וואטסאפ",
     call: "להתקשר",
     email: "אימייל",
-    whatsappMessage: "שלום, צפיתי במבחר האישי שלי ואשמח לדבר על",
-    notAvailableTitle: "הדף הזה כבר לא זמין",
+    whatsappMessage: "שלום, עברתי על המבחר האישי שלי ואשמח לדבר על",
+    notAvailableTitle: "הדף אינו זמין עוד",
     notAvailableBody: "תוקף הקישור פג או שהוא כבר אינו פעיל. אפשר לפנות אלינו ונשמח לעזור.",
     contactUs: "ליצירת קשר",
-    legal: "המבחר הזה נועד למידע בלבד ואינו מהווה הצעה.",
+    legal: "המבחר נועד למידע בלבד ואינו מהווה הצעה.",
     privacyPolicy: "מדיניות פרטיות",
+    close: "סגירה",
+    favorite: "שמירה למועדפים",
     priceFrom: "מחיר התחלתי",
     units: "יחידות",
     delivery: "מסירה",

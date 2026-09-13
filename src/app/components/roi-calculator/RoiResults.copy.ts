@@ -23,6 +23,10 @@ export const ROI_RESULTS_EN = {
   disclaimer:
     "Important: values are indicative and may vary depending on the property, developer and market conditions.",
   yearsText: "years",
+  /** The short "ROI" that used to be hard-coded English inside the highlight
+   *  line, in the middle of an otherwise Hebrew block — the one acronym the
+   *  glossary explicitly rejected for `he` (Pass B Must fix #10). */
+  roiShort: "ROI",
 };
 
 export const ROI_RESULTS_COPY: Record<Locale, typeof ROI_RESULTS_EN> = {
@@ -45,6 +49,7 @@ export const ROI_RESULTS_COPY: Record<Locale, typeof ROI_RESULTS_EN> = {
     disclaimer:
       "Hinweis: Die Werte sind indikativ und können je nach Immobilie, Bauträger und Marktbedingungen abweichen.",
     yearsText: "J.",
+    roiShort: "ROI",
   },
   pl: {
     numberLocale: "pl-PL",
@@ -64,6 +69,7 @@ export const ROI_RESULTS_COPY: Record<Locale, typeof ROI_RESULTS_EN> = {
     disclaimer:
       "Uwaga: Wartości mają charakter orientacyjny i mogą się różnić w zależności od konkretnej nieruchomości, dewelopera i warunków rynkowych.",
     yearsText: "lat",
+    roiShort: "ROI",
   },
   ru: {
     numberLocale: "ru-RU",
@@ -83,6 +89,7 @@ export const ROI_RESULTS_COPY: Record<Locale, typeof ROI_RESULTS_EN> = {
     disclaimer:
       "Важно: значения являются ориентировочными и могут отличаться в зависимости от объекта, застройщика и рыночных условий.",
     yearsText: "лет",
+    roiShort: "ROI",
   },
   // `totalEntryCost`, `annualized` and `sellingCosts` are word-identical with
   // the ROI result e-mail and RoiInputs (styleguide §11.6). `numberLocale`
@@ -105,8 +112,23 @@ export const ROI_RESULTS_COPY: Record<Locale, typeof ROI_RESULTS_EN> = {
     disclaimer:
       "חשוב לדעת: הנתונים משוערים ועשויים להשתנות בהתאם לנכס, ליזם ולתנאי השוק.",
     yearsText: "שנים",
+    roiShort: "תשואה",
   }, // REVIEW(he)
 };
 
 export const roiResultsCopy = (lang: string) =>
   ROI_RESULTS_COPY[isLocale(lang) ? lang : "en"];
+
+/**
+ * "N years" in Hebrew, which is not count-invariant: one is `שנה אחת`, two is
+ * the dual `שנתיים` (never `2 שנים`), three and up take the plural with the
+ * numeral. `1 שנים` / `2 שנים` — what `${n} ${yearsText}` produced — are
+ * simply ungrammatical (Pass B Must fix #11). Same shape as heBedrooms() in
+ * heFeedVocab.ts. `he`-only; every LTR locale keeps `${n} ${yearsText}`.
+ */
+export function heYears(n: number): string {
+  const v = Math.round(n);
+  if (v === 1) return "שנה אחת";
+  if (v === 2) return "שנתיים";
+  return `${v} שנים`;
+}
