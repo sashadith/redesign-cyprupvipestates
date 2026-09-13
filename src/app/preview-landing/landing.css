@@ -69,7 +69,7 @@
 
 /* --------------------------------------------------------------- HEADINGS */
 .pl__h2 {
-  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he), Georgia, serif;
   font-size: var(--text-h2);
   font-weight: 400;
   line-height: 1.1;
@@ -87,7 +87,7 @@
    forking the component set. */
 .pl-prose { font-size: var(--text-body); line-height: 1.7; color: var(--text-soft); }
 .pl-prose :where(h2) {
-  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he), Georgia, serif;
   font-size: var(--text-h3);
   font-weight: 400;
   line-height: 1.15;
@@ -165,7 +165,7 @@
 }
 
 .pl-snap__h {
-  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he), Georgia, serif;
   font-size: var(--text-h3);
   font-weight: 400;
   line-height: 1.15;
@@ -213,7 +213,7 @@
 }
 
 .pl-snap__value {
-  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he), Georgia, serif;
   font-size: clamp(1.35rem, 1.1rem + 0.9vw, 1.85rem);
   font-weight: 400;
   line-height: 1.05;
@@ -334,7 +334,7 @@
    the button's gap are specific to it. */
 .nf__code {
   margin: 0 0 var(--s-3);
-  font-family: var(--font-display), var(--font-display-cyr), serif;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he), serif;
   font-size: clamp(56px, 9vw, 128px);
   line-height: 0.9;
   letter-spacing: -0.03em;

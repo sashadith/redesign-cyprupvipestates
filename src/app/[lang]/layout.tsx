@@ -21,6 +21,7 @@ import Script from "next/script";
 import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_WIDTH, DEFAULT_OG_IMAGE_HEIGHT } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import { isPublicLocale, localeDir, nonDefaultLocalePattern, type Locale } from "@/lib/locale";
+import { frankRuhlLibre, rubikHebrew } from "@/app/fonts/hebrew";
 
 // Localized label for the "skip to main content" accessibility link.
 const SKIP_LINK_LABELS: Record<Locale, string> = {
@@ -36,7 +37,7 @@ const SKIP_LINK_LABELS: Record<Locale, string> = {
 const NON_DEFAULT = nonDefaultLocalePattern();
 const PREPAINT = `(function(){try{var p=location.pathname.replace(/\\/+$/,'')||'/';if(/^\\/(${NON_DEFAULT})?$/.test(p)||/^(\\/(${NON_DEFAULT}))?\\/projects$/.test(p))document.documentElement.setAttribute('data-hero-dark','')}catch(e){}})()`;
 
-const rubik = Rubik({ subsets: ["latin", "cyrillic"] });
+const rubik = Rubik({ subsets: ["latin", "cyrillic", "hebrew"] });
 
 // Redesign chrome fonts — define the CSS vars the global header/footer use.
 // Applied as `.variable` classes on <body> (they only DEFINE the vars; the body
@@ -123,7 +124,7 @@ export default function RootLayout({
   return (
     <html lang={params.lang} dir={localeDir(params.lang)} suppressHydrationWarning>
       <LenisProvider />
-      <body className={`${rubik.className} ${fraunces.variable} ${mulish.variable} ${playfairCyr.variable}`}>
+      <body className={`${rubik.className} ${fraunces.variable} ${mulish.variable} ${playfairCyr.variable} ${frankRuhlLibre.variable} ${rubikHebrew.variable}`}>
         {/* Pre-paint: mark dark-hero routes (home, /projects) so the global nav is
             transparent there from the first frame (no bar → transparent flash).
             Client-side navigation is handled by <NavHeroFlag>. Keep the route test

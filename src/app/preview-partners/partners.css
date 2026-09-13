@@ -59,7 +59,7 @@
   font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent);
 }
 .pnr__title {
-  margin: 0; font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  margin: 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he), Georgia, serif;
   font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em;
   color: var(--text); text-wrap: balance;
 }
@@ -99,7 +99,7 @@
 @media (min-width: 780px) { .pnr__step-grid { grid-template-columns: repeat(3, 1fr); } }
 .pnr__step { position: relative; }
 .pnr__step-num {
-  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 300;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he), serif; font-weight: 300;
   font-size: clamp(2.6rem, 2rem + 2.4vw, 3.6rem); line-height: 1; color: var(--accent);
   margin: 0 0 var(--s-4);
 }

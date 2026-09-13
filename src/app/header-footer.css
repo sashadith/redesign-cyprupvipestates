@@ -15,7 +15,8 @@
 
    Design tokens (--sea-deep, --champagne, --glass-*, --s-*, --ease*, …) come
    from the already-global design-tokens.css. The font vars (--font-display,
-   --font-body, --font-display-cyr) are defined by next/font in [lang]/layout.tsx.
+   --font-body, --font-display-cyr, --font-display-he, --font-body-he) are
+   defined by next/font in [lang]/layout.tsx.
    ===================================================================== */
 
 /* ---------- buttons (approved V5) — used by the footer newsletter ---------- */
@@ -210,7 +211,7 @@ html:not([data-scrolled]):not([data-hero-dark]) .nav::before {
 .mitem__row { display: flex; align-items: stretch; }
 .mitem__link {
   flex: 1; display: flex; align-items: center; padding: 16px 0; text-decoration: none; color: var(--ivory);
-  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: 1.55rem; line-height: 1.1;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he), serif; font-weight: 400; font-size: 1.55rem; line-height: 1.1;
 }
 .mitem__link--accent { color: var(--champagne); }
 .mitem__toggle {
@@ -302,7 +303,7 @@ html:not([data-scrolled]):not([data-hero-dark]) .nav::before {
 
 .pf__col-title {
   margin: 0 0 var(--s-5);
-  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he), serif; font-weight: 400;
   font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem); color: var(--ivory); letter-spacing: -0.01em;
 }
 .pf__contacts { display: flex; flex-direction: column; gap: 10px; }
