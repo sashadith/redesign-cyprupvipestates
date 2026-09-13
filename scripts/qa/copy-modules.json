@@ -1,0 +1,19 @@
+[
+  { "path": "src/lib/developmentCopy.ts", "exports": ["DEVELOPMENT_STRINGS"] },
+  { "path": "src/app/[lang]/projects/projectsI18n.ts", "exports": ["PROJECTS_STRINGS"] },
+  { "path": "src/app/[lang]/blog/blogI18n.ts", "exports": ["BLOG_STRINGS"] },
+  { "path": "src/app/preview-home/sections/homeI18n.ts", "exports": ["HOME_STRINGS", "CASE_CATEGORY_LABELS"] },
+  { "path": "src/app/preview-case-studies/[lang]/copy.ts", "exports": ["CASE_STUDIES_COPY"] },
+  { "path": "src/app/preview-faq/[lang]/copy.ts", "exports": ["FAQ_COPY"] },
+  { "path": "src/app/preview-partners/[lang]/copy.ts", "exports": ["PARTNERS_COPY"] },
+  { "path": "src/app/c/[token]/copy.ts", "exports": ["COPY"] },
+  { "path": "src/app/book/[token]/copy.ts", "exports": ["COPY"] },
+  { "path": "src/app/preview-landing/blockCopy.ts", "exports": ["BULLETS_TEXT", "STEPS_TEXT", "FAQ_TITLE"] },
+  {
+    "path": "src/app/components/SectionLinks/SectionLinks.tsx",
+    "exports": ["HEADINGS"],
+    "skip": "imports ./SectionLinks.module.scss; tsx/esbuild can't parse the CSS-module import when the file is loaded standalone (\"Unexpected token '.'\"). HEADINGS itself is a plain exported Record<string, Record<string,string>> with no other non-JS dependency — revisit if it ever needs un-skipping (e.g. splitting HEADINGS into its own module, or an ambient *.module.scss shim)."
+  },
+  { "path": "src/lib/crm/presentationMessages.ts", "exports": ["WHATSAPP_MSG", "WHATSAPP_UPDATED_MSG", "PRESENTATION_EMAIL_TEMPLATE"] },
+  { "path": "src/lib/crm/bookingMessages.ts", "exports": ["BOOKING_CONFIRMATION_EMAIL"] }
+]
