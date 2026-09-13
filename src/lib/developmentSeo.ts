@@ -14,7 +14,7 @@
 import { prisma } from "@/lib/prisma";
 import type { ProjectVM } from "@/app/preview-project/feeds";
 import { listedUnits, computeAvailability } from "@/lib/developmentAvailability";
-import { isLocale, type Locale as Lang } from "@/lib/locale";
+import { isLocale, bidiIsolate, type Locale as Lang } from "@/lib/locale";
 
 export const TITLE_MAX = 60;
 export const DESC_MAX = 160;
@@ -144,7 +144,7 @@ export function autoMetaTitle(vm: ProjectVM, lang: string): string {
   // PL/RU: skip it — gendered adjective endings differ per type noun, no single safe form.
   const typeClause =
     beds && l === "en" ? `${beds}-bed ${type}` : beds && l === "de" ? `${beds}-Zimmer-${type}` : type;
-  const clauses = [vm.publicName, "–", place ? `${typeClause} ${LABELS[l].in} ${place}` : typeClause];
+  const clauses = [bidiIsolate(vm.publicName), "–", place ? `${typeClause} ${LABELS[l].in} ${place}` : typeClause];
   return fit(clauses, TITLE_MAX);
 }
 

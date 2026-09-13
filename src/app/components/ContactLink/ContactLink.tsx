@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Contact } from "@/types/footer";
 import styles from "../Footer/Footer.module.scss";
 import { urlFor } from "@/sanity/sanity.client";
+import Bdi from "@/app/components/Bdi";
 
 type Props = {
   contact: Contact;
@@ -87,7 +88,7 @@ export default function ContactLink({ contact }: Props) {
         height={30}
         unoptimized
       />
-      <p className={styles.contactLabel}>{contact.label}</p>
+      <p className={styles.contactLabel}><Bdi ltr>{contact.label}</Bdi></p>
     </Link>
   );
 }

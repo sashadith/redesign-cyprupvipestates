@@ -11,6 +11,8 @@
    CRM/portal tracking from benefit #4) into a clearer step-by-step flow — no
    new claims, numbers, or terms are introduced. Flagged here for review. */
 
+import { ltrIsolate } from "@/lib/locale";
+
 export type PartnersStat = { number: string; sign?: string; title: string; description: string };
 export type PartnersBenefit = { title: string; description: string };
 export type PartnersType = { title: string; description: string };
@@ -146,7 +148,7 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     formConsentPost: " read and accept them",
     formPolicyHref: "/privacy-policy",
     formSuccess: "Thank you — your enquiry has reached us. An adviser will be in touch, usually the same day.",
-    formError: "Your enquiry could not be sent. Please try again, or reach us at office@cyprusvipestates.com or +357 99 278 285.",
+    formError: `Your enquiry could not be sent. Please try again, or reach us at ${ltrIsolate("office@cyprusvipestates.com")} or ${ltrIsolate("+357 99 278 285")}.`,
     vName: "Name is required",
     vSurname: "Surname is required",
     vPhone: "Phone is required",
@@ -220,7 +222,7 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     formConsentPost: " gelesen und akzeptiere sie",
     formPolicyHref: "/de/datenschutzrichtlinie",
     formSuccess: "Vielen Dank — Ihre Anfrage ist bei uns eingegangen. Ein Berater meldet sich, meist noch am selben Tag.",
-    formError: "Ihre Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder erreichen Sie uns unter office@cyprusvipestates.com oder +357 99 278 285.",
+    formError: `Ihre Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder erreichen Sie uns unter ${ltrIsolate("office@cyprusvipestates.com")} oder ${ltrIsolate("+357 99 278 285")}.`,
     vName: "Name ist erforderlich",
     vSurname: "Nachname ist erforderlich",
     vPhone: "Telefon ist erforderlich",
@@ -294,7 +296,7 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     formConsentPost: " przeczytałem i akceptuję ją",
     formPolicyHref: "/pl/polityka-prywatnosci",
     formSuccess: "Dziękujemy — Twoje zapytanie do nas dotarło. Doradca odezwie się, zwykle jeszcze tego samego dnia.",
-    formError: "Nie udało się wysłać zapytania. Spróbuj ponownie lub skontaktuj się z nami: office@cyprusvipestates.com albo +357 99 278 285.",
+    formError: `Nie udało się wysłać zapytania. Spróbuj ponownie lub skontaktuj się z nami: ${ltrIsolate("office@cyprusvipestates.com")} albo ${ltrIsolate("+357 99 278 285")}.`,
     vName: "Imię jest wymagane",
     vSurname: "Nazwisko jest wymagane",
     vPhone: "Telefon jest wymagany",
@@ -368,7 +370,7 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     formConsentPost: ", прочитал и принимаю его",
     formPolicyHref: "/ru/politika-privatnosti",
     formSuccess: "Спасибо — ваша заявка получена. Консультант свяжется с вами, обычно в тот же день.",
-    formError: "Не удалось отправить заявку. Попробуйте ещё раз или напишите на office@cyprusvipestates.com либо позвоните: +357 99 278 285.",
+    formError: `Не удалось отправить заявку. Попробуйте ещё раз или напишите на ${ltrIsolate("office@cyprusvipestates.com")} либо позвоните: ${ltrIsolate("+357 99 278 285")}.`,
     vName: "Имя обязательно",
     vSurname: "Фамилия обязательна",
     vPhone: "Телефон обязателен",

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   LOCALES, DEFAULT_LOCALE, RTL_LOCALES, LAUNCH_GATED_LOCALES, BCP47, LOCALE_LABELS,
-  parsePublicLocales, isLocale, localeDir, nonDefaultLocalePattern, localizedHref, fmtPrice, fmtDate, ltrIsolate,
+  parsePublicLocales, isLocale, localeDir, nonDefaultLocalePattern, localizedHref, fmtPrice, fmtDate, ltrIsolate, bidiIsolate,
 } from "@/lib/locale";
 import { templateClassOf } from "@/lib/seo/templateClass";
 import { isDarkHeroPath } from "@/app/components/Header/navShared";
@@ -60,6 +60,11 @@ test("ltrIsolate wraps a string in LRI…PDI so it renders LTR inside RTL prose"
   assert.equal(ltrIsolate("+357 25 123456"), "⁦+357 25 123456⁩");
   assert.equal(ltrIsolate("€450,000"), "⁦€450,000⁩");
   assert.equal(ltrIsolate(""), "⁦⁩");
+});
+
+test("bidiIsolate wraps a string in FSI…PDI so a Latin name isolates without forcing LTR direction", () => {
+  assert.equal(bidiIsolate("John Smith"), "⁨John Smith⁩");
+  assert.equal(bidiIsolate(""), "⁨⁩");
 });
 
 test("he paths classify like the other prefixed locales", () => {

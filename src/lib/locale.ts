@@ -70,6 +70,15 @@ export function ltrIsolate(s: string): string {
   return `⁦${s}⁩`;
 }
 
+/** Wrap a plain string (a Latin name inside an otherwise-Hebrew generated
+ *  sentence) in FSI…PDI (U+2068…U+2069) so it isolates from the surrounding
+ *  bidi context without forcing a direction — the run keeps its own natural
+ *  (LTR) direction, unlike ltrIsolate's LRI which pins direction too. For
+ *  JSX values, prefer <Bdi> (src/app/components/Bdi.tsx) instead. */
+export function bidiIsolate(s: string): string {
+  return `⁨${s}⁩`;
+}
+
 export function fmtDate(value: string | Date, lang: string, opts: Intl.DateTimeFormatOptions = { year: "numeric", month: "long", day: "numeric" }): string {
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return String(value);
