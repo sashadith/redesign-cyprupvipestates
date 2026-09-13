@@ -24,6 +24,7 @@ enum Locale {
   de
   pl
   ru
+  he
 }
 
 enum ContentStatus {
@@ -698,7 +699,7 @@ model UserEmailSettings {
   // unsigned 32-bit (up to ~4.29 billion) — a signed Int32 could overflow.
   imapLastUid     BigInt?
   imapUidValidity BigInt?
-  signature       Json? // { en?, de?, pl?, ru? } plain multiline text, one per locale
+  signature       Json? // { en?, de?, pl?, ru?, he? } plain multiline text, one per locale
   lastTestSentAt  DateTime?
   lastTestOk      Boolean?
   updatedAt       DateTime  @updatedAt
@@ -1400,6 +1401,7 @@ model DevelopmentOverride {
   descriptionDE String?
   descriptionPL String?
   descriptionRU String?
+  descriptionHE String?
   amenities     Json? // admin-checked amenities merged with feed ones
   vatApplies    Boolean? // null = follow feed; true/false = admin decision (e.g. renovated no-VAT)
   completion    String?
@@ -1416,7 +1418,7 @@ model DevelopmentOverride {
   stage         String?
   latitude      Float? // admin-set map coordinates (win over feed); parsed from a Maps link or lat,lng
   longitude     Float?
-  seo           Json? // optional per-language SEO overrides: { titleEN/DE/PL/RU, descEN/DE/PL/RU } — empty/missing = auto-generated (see src/lib/developmentSeo.ts)
+  seo           Json? // optional per-language SEO overrides: { titleEN/DE/PL/RU/HE, descEN/DE/PL/RU/HE } — empty/missing = auto-generated (see src/lib/developmentSeo.ts)
   updatedAt     DateTime @updatedAt
 
   development Development @relation(fields: [developmentId], references: [id], onDelete: Cascade)
@@ -1434,6 +1436,7 @@ model AreaDescription {
   textDE    String?
   textPL    String?
   textRU    String?
+  textHE    String?
   source    String   @default("manual") // ai | manual
   status    String   @default("draft") // draft | approved
   createdAt DateTime @default(now())
