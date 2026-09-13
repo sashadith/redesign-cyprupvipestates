@@ -404,7 +404,7 @@ Diese Zeilen sind **verbindlich**, nicht Vorschlag: jeder Begriff hat genau **ei
 | Loading… / Loading map… | טוענים… / טוענים את המפה… | dieselbe Regel wie `שולחים…`; nicht verwenden: `בטעינה…` |
 | Thank you, we will contact you shortly | תודה, ניצור קשר בהקדם | |
 | Something went wrong | משהו השתבש, נסו שוב | |
-| Cookie consent (Accept all / Only necessary / Settings) | אישור הכל / רק הנחוצות / הגדרות | Cookies = עוגיות; Kurzform `אישור הכל` statt `אישור כל העוגיות`, ausbalanciert neben dem 10-Zeichen-Button `רק הנחוצות` |
+| Cookie consent (Accept all / Only necessary / Settings) | אישור הכל / רק ההכרחיות / הגדרות | Cookies = עוגיות; Kurzform `אישור הכל` statt `אישור כל העוגיות`, ausbalanciert neben dem 10-Zeichen-Button `רק הנחוצות` |
 
 ### 4.4 Blog und Artikel
 

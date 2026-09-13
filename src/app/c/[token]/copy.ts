@@ -266,7 +266,7 @@ export const COPY: Record<PLocale, PresentationCopy> = {
     notAvailableBody: "תוקף הקישור פג או שהוא כבר אינו פעיל. אפשר לפנות אלינו ונשמח לעזור.",
     contactUs: "ליצירת קשר",
     legal: "המבחר נועד למידע בלבד ואינו מהווה הצעה.",
-    privacyPolicy: "מדיניות פרטיות",
+    privacyPolicy: "מדיניות הפרטיות",
     close: "סגירה",
     favorite: "שמירה למועדפים",
     priceFrom: "מחיר התחלתי",
