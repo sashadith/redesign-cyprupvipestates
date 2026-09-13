@@ -16,7 +16,7 @@
 .whatsappButton {
   position: fixed;
   bottom: 1rem;
-  right: 1rem;
+  inset-inline-end: 1rem;
   z-index: 999;
   display: flex;
   align-items: center;

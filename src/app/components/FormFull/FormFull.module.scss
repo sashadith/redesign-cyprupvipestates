@@ -41,7 +41,7 @@
 .icon {
   position: absolute;
   top: 50%;
-  left: 20px;
+  inset-inline-start: 20px;
   transform: translateY(-50%);
   width: 20px;
   height: 20px;
@@ -50,7 +50,7 @@
 .iconMessage {
   position: absolute;
   top: 20px;
-  left: 20px;
+  inset-inline-start: 20px;
   width: 20px;
   height: 20px;
 }
@@ -63,7 +63,7 @@
   color: rgb(55 65 81 / 70%);
   position: absolute;
   top: 50%;
-  left: 50px;
+  inset-inline-start: 50px;
   transform: translateY(-50%);
   transition: all 0.3s ease;
   z-index: 1;
@@ -71,10 +71,10 @@
 }
 
 .labelPhone {
-  left: 55px;
+  inset-inline-start: 55px;
 
   @media screen and (min-width: 768px) {
-    left: 50px;
+    inset-inline-start: 50px;
   }
 }
 
@@ -192,7 +192,7 @@
   position: absolute;
   z-index: 1;
   bottom: -40px;
-  left: 50%;
+  inset-inline-start: 50%;
   transform: translateX(-50%);
   font-size: 12px;
   color: #e61212;
@@ -203,7 +203,7 @@
 .popup {
   position: fixed;
   top: 50%;
-  left: 50%;
+  inset-inline-start: 50%;
   transform: translate(-50%, -50%);
   background-color: #bd8948;
   color: #fff;
@@ -310,7 +310,7 @@
 .customCheckbox label::before {
   content: '';
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   // top: 0;
   top: 50%;
   transform: translateY(-50%);
@@ -334,7 +334,7 @@
 .customCheckbox input[type="checkbox"]:checked ~ label::after {
   content: '✔';
   position: absolute;
-  left: 4px;
+  inset-inline-start: 4px;
   top: -3px;
   color: white; /* Цвет галочки */
   font-size: 15px;

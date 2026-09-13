@@ -48,7 +48,7 @@
 .pp-hint { font-size: 0.82rem; color: var(--text-faint); margin: .8em 0 0; font-style: italic; }
 
 /* preview / alias note — small fixed chip so it never disrupts the hero/nav */
-.pp-note { position: fixed; left: 12px; bottom: 12px; z-index: 60; display: flex; flex-wrap: wrap; align-items: center; gap: 7px;
+.pp-note { position: fixed; inset-inline-start: 12px; bottom: 12px; z-index: 60; display: flex; flex-wrap: wrap; align-items: center; gap: 7px;
   max-width: min(92vw, 560px); padding: 10px 16px; font-size: 0.76rem; color: var(--text-soft); border-radius: 14px;
   background: rgba(8,21,18,0.86); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
   border: 1px solid var(--hairline-strong); box-shadow: 0 8px 30px -12px rgba(0,0,0,0.7); }
@@ -76,7 +76,7 @@
   background: linear-gradient(to top, rgba(8,21,18,1) 0%, rgba(8,21,18,0.75) 16%, rgba(8,21,18,0) 40%); }
 .pp-hero__overlay { position: relative; z-index: 2; width: 100%; padding-block: clamp(26px, 4vw, 58px); pointer-events: none; }
 .pp-hero__overlay a, .pp-hero__overlay button { pointer-events: auto; }
-.pp-hero__galbtn { position: absolute; z-index: 3; right: max(var(--gutter), calc(50% - 680px + var(--gutter))); bottom: clamp(18px, 4vw, 44px);
+.pp-hero__galbtn { position: absolute; z-index: 3; inset-inline-end: max(var(--gutter), calc(50% - 680px + var(--gutter))); bottom: clamp(18px, 4vw, 44px);
   display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px; cursor: pointer;
   color: var(--ivory); font-family: var(--font-body); font-size: 0.82rem; border: 1px solid var(--hairline-strong);
   background: rgba(8,21,18,0.55); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); transition: border-color var(--dur-sm) var(--ease); }
@@ -98,7 +98,7 @@
    label, RU "Смотреть 18 фото": ~24px clear of the badges, ~12px clear of
    the stats row). min-height keeps the tap target >=44px per WCAG. */
 @media (max-width: 640px) {
-  .pp-hero__galbtn { top: auto; bottom: 88px; right: var(--gutter); min-height: 44px; }
+  .pp-hero__galbtn { top: auto; bottom: 88px; inset-inline-end: var(--gutter); min-height: 44px; }
 }
 /* Mobile hero: swipeable strip instead of the single static image, native
    scroll-snap rather than a carousel library — swipe only, no arrows/dots/
@@ -168,7 +168,7 @@
    map tiles paint over it once they load. */
 .pp-map.px-mapwrap::before,
 .pp-map.px-mapwrap::after {
-  content: ""; position: absolute; left: 0; right: 0; height: 1px;
+  content: ""; position: absolute; inset-inline: 0; height: 1px;
   background: var(--pp-gold-contour);
   z-index: 1000; pointer-events: none;
 }
@@ -185,8 +185,8 @@
 /* nearby (POI) control: align its left edge with the main container, and keep it
    narrow enough that it wraps after "Supermarkets" (Pharmacies drops to row 2) */
 .pp-map .px-poi {
-  left: max(var(--gutter), calc(50% - 680px + var(--gutter)));
-  right: auto;
+  inset-inline-start: max(var(--gutter), calc(50% - 680px + var(--gutter)));
+  inset-inline-end: auto;
   width: fit-content;
   max-width: min(calc(100% - 32px), 620px);
 }
@@ -199,7 +199,7 @@
 /* highlights panel — facts (2×2) + amenities, refined with a gold top hairline */
 .pp-panel { position: relative; border: 1px solid var(--hairline); border-radius: var(--r-ui); overflow: hidden;
   background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.008)); }
-.pp-panel::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px; z-index: 1;
+.pp-panel::before { content: ""; position: absolute; top: 0; inset-inline: 0; height: 1px; z-index: 1;
   background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity: 0.75; }
 .pp-panel__facts { display: grid; grid-template-columns: 1fr 1fr; }
 .pp-panel__facts .pp-fact { background: none; display: flex; flex-direction: column; gap: 7px;
@@ -234,14 +234,14 @@
 .pp-loc-tag { font-family: var(--font-body), sans-serif; font-size: 0.32em; font-weight: 600; letter-spacing: 0.22em;
   text-transform: uppercase; color: var(--champagne); opacity: 0.72; margin-top: 0.7em; }
 /* cool location pin, top-right — gold, glowing, gently floating */
-.pp-hood__pin { position: absolute; top: clamp(18px, 3vw, 34px); right: clamp(22px, 3.5vw, 48px); z-index: 2;
+.pp-hood__pin { position: absolute; top: clamp(18px, 3vw, 34px); inset-inline-end: clamp(22px, 3.5vw, 48px); z-index: 2;
   width: clamp(38px, 4.4vw, 60px); color: var(--champagne); pointer-events: none;
   filter: drop-shadow(0 0 9px rgba(194,154,94,0.5)) drop-shadow(0 0 20px rgba(194,154,94,0.22));
   animation: ppPinFloat 4.5s ease-in-out infinite; }
 .pp-hood__pin svg { display: block; width: 100%; height: auto; }
 @keyframes ppPinFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 @media (prefers-reduced-motion: reduce) { .pp-hood__pin { animation: none; } }
-@media (max-width: 560px) { .pp-hood__pin { width: 40px; top: 16px; right: 16px; } }
+@media (max-width: 560px) { .pp-hood__pin { width: 40px; top: 16px; inset-inline-end: 16px; } }
 @media (max-width: 860px) {
   .pp-about { grid-template-columns: 1fr; }
   .pp-about__side { position: static; margin-top: 0; }
@@ -264,7 +264,7 @@
 @media (max-width: 860px) { .pp-gal--big .pp-gal__main { aspect-ratio: 4/3; } }
 .pp-gal__main img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.6s var(--ease); }
 .pp-gal__main:hover img { transform: scale(1.03); }
-.pp-gal__count { position: absolute; bottom: 12px; right: 12px; font-size: 0.75rem; color: var(--ivory);
+.pp-gal__count { position: absolute; bottom: 12px; inset-inline-end: 12px; font-size: 0.75rem; color: var(--ivory);
   background: rgba(8,21,18,0.7); padding: 4px 10px; border-radius: 999px; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .pp-gal__thumbs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
 .pp-gal__thumb { position: relative; padding: 0; border: 1px solid var(--hairline); border-radius: 8px; overflow: hidden;
@@ -286,12 +286,12 @@
 @keyframes ppFade { from { opacity: 0; } to { opacity: 1; } }
 .pp-lb__stage { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
 .pp-lb__img { max-width: min(1100px, 92vw); max-height: 92%; object-fit: contain; border-radius: 8px; cursor: default; }
-.pp-lb__close { position: absolute; top: 20px; right: 24px; z-index: 2; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--hairline-strong);
+.pp-lb__close { position: absolute; top: 20px; inset-inline-end: 24px; z-index: 2; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--hairline-strong);
   background: var(--glass-bg); color: var(--ivory); font-size: 1.1rem; cursor: pointer; }
 .pp-lb__nav { position: absolute; top: 50%; transform: translateY(-50%); width: 52px; height: 52px; border-radius: 50%;
   border: 1px solid var(--hairline-strong); background: var(--glass-bg); color: var(--ivory); font-size: 1.8rem; line-height: 1; cursor: pointer; }
-.pp-lb__nav--prev { left: 24px; } .pp-lb__nav--next { right: 24px; }
-.pp-lb__count { position: absolute; top: 22px; left: 24px; z-index: 2; color: var(--text-soft); font-size: 0.85rem; }
+.pp-lb__nav--prev { inset-inline-start: 24px; } .pp-lb__nav--next { inset-inline-end: 24px; }
+.pp-lb__count { position: absolute; top: 22px; inset-inline-start: 24px; z-index: 2; color: var(--text-soft); font-size: 0.85rem; }
 /* clickable thumbnail strip — normal flow now (not absolutely positioned),
    so it actually reserves its own space instead of floating over the stage. */
 .pp-lb__thumbs { position: relative; flex: 0 0 auto; margin-top: 16px; display: flex; gap: 8px; justify-content: safe center;
@@ -355,10 +355,10 @@
 .pp-uc__media img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.45s var(--ease); }
 .pp-uc__media.is-zoomable:hover img { transform: scale(1.045); }
 .pp-uc__ph { display: block; width: 100%; height: 100%; background: linear-gradient(135deg, var(--sea), var(--sea-deep)); }
-.pp-uc__count { position: absolute; bottom: 12px; right: 12px; display: inline-flex; align-items: center; gap: 5px;
+.pp-uc__count { position: absolute; bottom: 12px; inset-inline-end: 12px; display: inline-flex; align-items: center; gap: 5px;
   font-size: 0.72rem; color: var(--ivory); background: rgba(8,21,18,0.62); backdrop-filter: blur(4px);
   padding: 4px 9px; border-radius: 999px; pointer-events: none; }
-.pp-uc__type { position: absolute; top: 12px; right: 12px; font-size: 0.68rem; color: var(--ivory); background: rgba(8,21,18,0.62);
+.pp-uc__type { position: absolute; top: 12px; inset-inline-end: 12px; font-size: 0.68rem; color: var(--ivory); background: rgba(8,21,18,0.62);
   padding: 3px 9px; border-radius: 999px; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border: 1px solid var(--hairline-strong); }
 .pp-uc__body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 12px; }
 .pp-uc__row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
@@ -395,7 +395,7 @@
   color: var(--ivory); font-size: 0.8rem; font-weight: 600; }
 
 .pp-pill { display: inline-flex; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em; padding: 3px 9px; border-radius: 999px; }
-.pp-uc__media .pp-pill { position: absolute; top: 12px; left: 12px; }
+.pp-uc__media .pp-pill { position: absolute; top: 12px; inset-inline-start: 12px; }
 .pp-pill--ok { color: #0c2a20; background: #7fd0a8; }
 .pp-pill--warn { color: #2a1e08; background: #d8b268; }
 .pp-pill--sold { color: #fff; background: #b5524e; }

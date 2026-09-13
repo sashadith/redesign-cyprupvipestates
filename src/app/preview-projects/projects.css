@@ -39,6 +39,7 @@
   background-image: url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 4.5L6 8l3.5-3.5' stroke='%23C29A5E' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 14px center; padding-inline-end: 34px;
 }
+[dir="rtl"] .px__select { background-position: left 14px center; }
 .px__select:hover, .px__price input:hover { border-color: var(--accent); }
 .px__select:focus, .px__price input:focus { border-color: var(--accent); color: var(--ivory); }
 
@@ -89,7 +90,7 @@
 .pxsel__value { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pxsel__value.is-placeholder { color: var(--text-soft); }
 .pxsel__panel {
-  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 50;
+  position: absolute; top: calc(100% + 6px); inset-inline: 0; z-index: 50;
   margin: 0; padding: 6px; list-style: none; max-height: 320px; overflow-y: auto;
   background: var(--sea-deep); border: 1px solid var(--hairline-strong); border-radius: var(--r-ui);
   box-shadow: 0 24px 50px -24px rgba(0, 0, 0, 0.85);
@@ -264,7 +265,7 @@
 
 /* floating map button (always reachable) */
 .px__mapfab {
-  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 25;
+  position: fixed; bottom: 24px; inset-inline-start: 50%; transform: translateX(-50%); z-index: 25;
   display: none; align-items: center; gap: 8px; height: 48px; padding: 0 22px; border-radius: 999px; cursor: pointer;
   background: var(--accent); color: var(--accent-ink); border: 0; box-shadow: 0 14px 34px -14px rgba(0, 0, 0, 0.7);
   font-family: var(--font-body), sans-serif; font-size: var(--text-sm); font-weight: 700;
@@ -352,7 +353,7 @@
     rgba(6, 16, 14, 0.95) 0%, rgba(6, 16, 14, 0.8) 15%, rgba(6, 16, 14, 0.4) 33%, rgba(6, 16, 14, 0.1) 50%, transparent 64%);
 }
 
-.prj__badges { position: absolute; top: 14px; left: 14px; z-index: 3; display: flex; gap: 6px; }
+.prj__badges { position: absolute; top: 14px; inset-inline-start: 14px; z-index: 3; display: flex; gap: 6px; }
 .prj__badge {
   font-family: var(--font-body), sans-serif; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
   color: var(--ivory); background: rgba(8, 21, 18, 0.72); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
@@ -407,13 +408,13 @@
   .scarcity-badge::after { animation: none; background: var(--champagne); }
 }
 .prj__type {
-  position: absolute; top: 14px; right: 14px; z-index: 3; font-family: var(--font-body), sans-serif; font-size: 0.7rem;
+  position: absolute; top: 14px; inset-inline-end: 14px; z-index: 3; font-family: var(--font-body), sans-serif; font-size: 0.7rem;
   letter-spacing: 0.06em; color: var(--ivory); background: rgba(8, 21, 18, 0.62); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   padding: 4px 10px; border-radius: 999px; border: 1px solid var(--hairline-strong);
 }
 
 /* text anchored to the bottom, over the scrim: Title · Location · "from €price" */
-.prj__info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 2px; }
+.prj__info { position: absolute; inset-inline: 0; bottom: 0; z-index: 2; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 2px; }
 .prj__title { margin: 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400; font-size: 1.45rem; line-height: 1.15; color: var(--ivory); text-shadow: 0 1px 16px rgba(0, 0, 0, 0.55); }
 .prj__loc { margin: 2px 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: rgba(239, 233, 219, 0.82); text-shadow: 0 1px 12px rgba(0, 0, 0, 0.5); }
 /* price sits in the footer spec row, right-aligned (on sea-deep, no text-shadow) */
@@ -425,7 +426,7 @@
 .prj__specrow { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .prj__specs { display: flex; flex-wrap: wrap; gap: 6px 14px; min-width: 0; font-family: var(--font-body), sans-serif; font-size: 0.78rem; color: var(--text-soft); }
 .prj__specs span { position: relative; }
-.prj__specs span + span::before { content: ""; position: absolute; left: -8px; top: 50%; width: 3px; height: 3px; border-radius: 50%; background: var(--hairline-strong); transform: translateY(-50%); }
+.prj__specs span + span::before { content: ""; position: absolute; inset-inline-start: -8px; top: 50%; width: 3px; height: 3px; border-radius: 50%; background: var(--hairline-strong); transform: translateY(-50%); }
 .prj__dist { margin-top: 11px; padding-top: 11px; border-top: 1px solid var(--hairline); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 10px; font-family: var(--font-body), sans-serif; font-size: 0.78rem; color: var(--ivory); }
 .prj__dist span { display: inline-flex; align-items: baseline; gap: 4px; }
 .prj__dist i { font-style: normal; color: var(--text-soft); }
@@ -447,6 +448,7 @@
    value ahead of the leading "from" label already in the markup). */
 .prj--compact .prj__specrow { flex-direction: column-reverse; align-items: flex-start; gap: 6px; }
 .prj--compact .prj__price { display: flex; flex-direction: row-reverse; align-items: baseline; gap: 0.32em; font-size: 1.15rem; }
+[dir="rtl"] .prj--compact .prj__price { flex-direction: row; }
 
 /* ---------------- MAP TEASER TILE (in grid) ---------------- */
 /* Frameless map that dissolves into the background; decoupled from .prj.
@@ -658,7 +660,7 @@
 .px-mapwrap { position: relative; height: 100%; width: 100%; }
 
 .px-poi {
-  position: absolute; left: 12px; bottom: 14px; z-index: 500;
+  position: absolute; inset-inline-start: 12px; bottom: 14px; z-index: 500;
   display: flex; flex-wrap: wrap; align-items: center; gap: 7px;
   max-width: min(640px, calc(100% - 24px));
   padding: 9px 11px;
@@ -721,6 +723,6 @@
    tooltip primitive and a DOM title needs no styling. */
 
 @media (max-width: 640px) {
-  .px-poi { left: 8px; right: 8px; bottom: 10px; max-width: none; gap: 6px; padding: 8px; }
+  .px-poi { inset-inline: 8px; bottom: 10px; max-width: none; gap: 6px; padding: 8px; }
   .px-poi__lead { width: 100%; }
 }
