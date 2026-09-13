@@ -137,14 +137,14 @@ img { max-width: 100%; display: block; }
 }
 .btn:hover .btn__ico { transform: translateX(3px); box-shadow: 0 0 16px var(--glow); }
 .btn:hover { box-shadow: 0 6px 46px -6px var(--glow-btn); }
-.btn--primary { background: var(--text); color: var(--bg); padding-right: 15px; }
+.btn--primary { background: var(--text); color: var(--bg); padding-inline-end: 15px; }
 .btn--primary .btn__ico { background: var(--accent); color: var(--accent-ink); }
 .btn--primary:hover { box-shadow: 0 6px 46px -6px var(--glow-btn), inset 0 0 0 1px var(--accent-soft); }
 .btn--ghost { border-color: var(--hairline-strong); padding: 15px 24px; color: var(--text); }
 .btn--ghost:hover { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 6px 46px -6px var(--glow-btn); }
 /* transparent frosted-glass button */
 .btn--glass {
-  background: var(--glass-bg); border-color: var(--hairline-strong); color: var(--text); padding-right: 15px;
+  background: var(--glass-bg); border-color: var(--hairline-strong); color: var(--text); padding-inline-end: 15px;
   -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%);
 }
 .btn--glass:hover { border-color: var(--accent); box-shadow: 0 6px 46px -6px var(--glow-btn), inset 0 1px 0 var(--glass-highlight); }
@@ -194,7 +194,7 @@ img { max-width: 100%; display: block; }
 
 /* desktop bits hidden on mobile */
 .nav__links { display: none; }
-.nav__right { margin-left: auto; display: flex; align-items: center; gap: var(--s-3); }
+.nav__right { margin-inline-start: auto; display: flex; align-items: center; gap: var(--s-3); }
 
 /* ---- desktop links ---- */
 /* Option A: parent label is a plain link (always navigates); the caret is a
@@ -218,7 +218,7 @@ img { max-width: 100%; display: block; }
 .nav__item:hover .nav__link--accent, .nav__link--accent:focus-visible { color: var(--champagne); }
 .nav__item:hover .nav__link--accent::after, .nav__link--accent:focus-visible::after { background: var(--champagne); }
 .nav__caret-btn {
-  display: inline-flex; align-items: center; margin-left: 2px; padding: 8px 4px;
+  display: inline-flex; align-items: center; margin-inline-start: 2px; padding: 8px 4px;
   background: none; border: 0; cursor: pointer; color: rgba(239,233,219,0.55);
   transition: color var(--dur-sm) var(--ease);
 }
@@ -316,7 +316,7 @@ img { max-width: 100%; display: block; }
 .mitem__link--accent { color: var(--champagne); } /* accent variant (e.g. Private Collection) */
 .mitem__toggle {
   flex: 0 0 56px; align-self: stretch; display: flex; align-items: center; justify-content: center; padding: 0;
-  margin-left: 12px; background: transparent; border: 0; border-left: 1px solid var(--hairline);
+  margin-inline-start: 12px; background: transparent; border: 0; border-inline-start: 1px solid var(--hairline);
   color: var(--accent); cursor: pointer;
 }
 .mitem__toggle svg { width: 14px; height: 14px; transition: transform var(--dur-sm) var(--ease); }
@@ -362,8 +362,8 @@ img { max-width: 100%; display: block; }
   .nav__inner { gap: var(--s-6); padding-block: var(--s-4); }
   .nav__logo-full { display: block; height: 42px; width: auto; }
   .nav__logo-mark { display: none; }
-  .nav__links { display: flex; align-items: center; gap: clamp(14px, 1.6vw, 30px); margin-left: auto; }
-  .nav__right { margin-left: var(--s-5); gap: var(--s-4); }
+  .nav__links { display: flex; align-items: center; gap: clamp(14px, 1.6vw, 30px); margin-inline-start: auto; }
+  .nav__right { margin-inline-start: var(--s-5); gap: var(--s-4); }
   .mnav { display: none; }
 }
 @media (max-width: 1023px) {
@@ -568,7 +568,7 @@ img { max-width: 100%; display: block; }
 }
 .pcard__title { font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400; font-size: 1.35rem; line-height: 1.2; color: var(--ivory); margin: 0; }
 .pcard__price { margin: 0; color: var(--accent); font-family: var(--font-body), sans-serif; font-weight: 500; font-size: var(--text-lead); }
-.pcard__from { font-family: var(--font-body), sans-serif; font-size: var(--text-caption); font-weight: 400; text-transform: lowercase; letter-spacing: 0.06em; color: rgba(239,233,219,0.62); margin-right: 0.45em; }
+.pcard__from { font-family: var(--font-body), sans-serif; font-size: var(--text-caption); font-weight: 400; text-transform: lowercase; letter-spacing: 0.06em; color: rgba(239,233,219,0.62); margin-inline-end: 0.45em; }
 
 /* ===================== CITIES — "by Location" (light ivory section) ===================== */
 .cities__title {
@@ -699,7 +699,7 @@ img { max-width: 100%; display: block; }
   font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 300;
   font-size: clamp(3rem, 2.3rem + 2.9vw, 4.35rem); letter-spacing: -0.02em;
 }
-.bstat__sign { font-size: 0.62em; margin-left: 0.04em; }
+.bstat__sign { font-size: 0.62em; margin-inline-start: 0.04em; }
 .bstat__title { margin: var(--s-2) 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-lead); font-weight: 500; color: var(--text); }
 .bstat__desc { margin: 0; max-width: 30ch; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.55; color: var(--text-soft); }
 
@@ -852,7 +852,7 @@ img { max-width: 100%; display: block; }
 .faq__item:first-child { border-top: 1px solid var(--hairline); }
 .faq__q {
   width: 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--s-5);
-  padding: clamp(20px, 2.3vw, 28px) 0; background: transparent; border: 0; cursor: pointer; text-align: left;
+  padding: clamp(20px, 2.3vw, 28px) 0; background: transparent; border: 0; cursor: pointer; text-align: start;
   font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
   font-size: clamp(1.1rem, 1rem + 0.5vw, 1.4rem); line-height: 1.3; color: var(--ivory);
   transition: color var(--dur-sm) var(--ease);
@@ -1053,7 +1053,7 @@ img { max-width: 100%; display: block; }
   content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
   background: linear-gradient(90deg, transparent, #c29a5e 30%, #c29a5e 70%, transparent);
 }
-.formsec__caption { display: flex; flex-direction: column; gap: 2px; width: min(384px, 96%); align-items: flex-start; text-align: left; }
+.formsec__caption { display: flex; flex-direction: column; gap: 2px; width: min(384px, 96%); align-items: flex-start; text-align: start; }
 .formsec__caption strong { font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400; font-size: 1.25rem; color: var(--text); }
 .formsec__caption span { font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--accent); letter-spacing: 0.04em; }
 /* desktop: nudge the portrait (and its divider) 150px left and float the caption to
@@ -1094,7 +1094,7 @@ img { max-width: 100%; display: block; }
 /* brand column — same layout as the old .logoLinks (logo + social, row on desktop) */
 /* first column: logo on top (centered), social row beneath — kept inside the column */
 .pf__brand { display: flex; flex-direction: column; align-items: center; gap: var(--s-5); min-width: 0; }
-@media (min-width: 768px) { .pf__brand { margin-right: auto; } }
+@media (min-width: 768px) { .pf__brand { margin-inline-end: auto; } }
 /* fill the column width; aspect always preserved (never stretched); cap keeps it sane on mobile */
 .pf__logo { display: block; width: 100%; max-width: 235px; height: auto; }
 .pf__about { display: flex; flex-direction: column; gap: var(--s-3); max-width: 44ch; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.6; color: var(--text-soft); }
@@ -1161,7 +1161,7 @@ img { max-width: 100%; display: block; }
 .pf__policy a::after { content: "|"; margin: 0 20px; color: var(--text-faint); }
 .pf__policy a:last-child::after { content: ""; margin: 0; }
 .pf__disclaimer { margin-top: 40px; font-family: var(--font-body), sans-serif; font-size: 12px; line-height: 1.5; color: var(--text-faint); text-align: center; }
-@media (min-width: 768px) { .pf__disclaimer { text-align: left; } }
+@media (min-width: 768px) { .pf__disclaimer { text-align: start; } }
 
 /* ---------- preview chrome ---------- */
 .preview-badge {

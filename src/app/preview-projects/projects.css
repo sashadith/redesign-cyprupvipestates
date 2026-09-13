@@ -37,7 +37,7 @@
 .px__select {
   max-width: 100%; text-overflow: ellipsis;
   background-image: url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2.5 4.5L6 8l3.5-3.5' stroke='%23C29A5E' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat; background-position: right 14px center; padding-right: 34px;
+  background-repeat: no-repeat; background-position: right 14px center; padding-inline-end: 34px;
 }
 .px__select:hover, .px__price input:hover { border-color: var(--accent); }
 .px__select:focus, .px__price input:focus { border-color: var(--accent); color: var(--ivory); }
@@ -131,7 +131,7 @@
    an exact, deterministic +46px via padding on its own trigger only
    (.px__f-type .px__select — 2-class specificity beats the shared 1-class
    .px__select rule above), leaving City and Beds' padding/width untouched. */
-.px__f-type .px__select { padding-left: 39px; padding-right: 57px; } /* was 16px / 34px */
+.px__f-type .px__select { padding-inline-start: 39px; padding-inline-end: 57px; } /* was 16px / 34px */
 /* small flex-basis on purpose: search grows to fill remaining space, so its
    rendered width is unchanged, but line-wrapping is decided by basis — a large
    basis made Reset wrap onto a 2nd line in Safari (which sizes the selects/number
@@ -181,7 +181,7 @@
      can't actually grow — the padding would just eat into the visible text
      space instead, over-truncating the label. Reset to the same 16px/34px
      Beds already uses, so both controls render identically at this width. */
-  .px__filters-row.is-more-open > .px__f-type .px__select { padding-left: 16px; padding-right: 34px; }
+  .px__filters-row.is-more-open > .px__f-type .px__select { padding-inline-start: 16px; padding-inline-end: 34px; }
   .px__filters-row.is-more-open > .px__search { display: inline-flex; flex: 1 1 0; min-width: 0; order: 3; }
   .px__filters-row.is-more-open > .px__mapbtn,
   .px__filters-row.is-more-open > .px__reset { display: inline-flex; flex: 0 0 auto; order: 3; }
@@ -429,7 +429,7 @@
 .prj__dist { margin-top: 11px; padding-top: 11px; border-top: 1px solid var(--hairline); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 10px; font-family: var(--font-body), sans-serif; font-size: 0.78rem; color: var(--ivory); }
 .prj__dist span { display: inline-flex; align-items: baseline; gap: 4px; }
 .prj__dist i { font-style: normal; color: var(--text-soft); }
-.prj__dist small { font-size: 0.66rem; color: var(--text-faint); margin-left: 2px; }
+.prj__dist small { font-size: 0.66rem; color: var(--text-faint); margin-inline-start: 2px; }
 
 /* Compact variant — sized for a 4-per-row grid (the project page's
    alternatives strip, see AlternativesBlock.tsx / ProjectCard.tsx's
@@ -456,7 +456,7 @@
 .prjmap {
   position: relative; z-index: 0; display: flex; flex-direction: column; min-height: 300px;
   cursor: pointer; isolation: isolate; background: transparent; border: 0; padding: 0;
-  font: inherit; color: inherit; text-align: left; -webkit-appearance: none; appearance: none;
+  font: inherit; color: inherit; text-align: start; -webkit-appearance: none; appearance: none;
 }
 .prjmap__media { position: relative; flex: 1 1 auto; min-height: 0; --bleed: clamp(60px, 8vw, 124px); }
 .prjmap__bleed {
@@ -580,7 +580,7 @@
 .px-pop__dist { display: flex; flex-wrap: wrap; gap: 3px 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--hairline); font-family: var(--font-body), sans-serif; font-size: 0.72rem; color: var(--ivory); }
 .px-pop__dist span { display: inline-flex; align-items: baseline; gap: 3px; }
 .px-pop__dist i { font-style: normal; color: var(--text-soft); }
-.px-pop__dist small { font-size: 0.6rem; color: var(--text-faint); margin-left: 1px; }
+.px-pop__dist small { font-size: 0.6rem; color: var(--text-faint); margin-inline-start: 1px; }
 
 /* cluster bubbles → champagne/sea. Rendered by us from supercluster output
    (MapLibre's built-in clustering can only draw GPU layers, which cannot carry
@@ -670,7 +670,7 @@
 .px-poi__lead {
   font-family: var(--font-body), sans-serif; font-size: 0.62rem; font-weight: 700;
   letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-faint);
-  padding-right: 3px;
+  padding-inline-end: 3px;
 }
 .px-poi__chip {
   display: inline-flex; align-items: center; gap: 6px;
@@ -685,7 +685,7 @@
 .px-poi__dot { width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35); }
 .px-poi__hint {
   font-family: var(--font-body), sans-serif; font-size: 0.7rem; color: var(--text-faint);
-  padding-left: 2px;
+  padding-inline-start: 2px;
 }
 .px-poi__hint.is-load { color: var(--champagne); }
 

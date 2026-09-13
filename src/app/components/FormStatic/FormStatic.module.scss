@@ -353,7 +353,7 @@
 
 .customCheckbox label {
   position: relative;
-  padding-left: 38px;
+  padding-inline-start: 38px;
   cursor: pointer;
   color: #fff;
   font-size: 14px;
@@ -403,7 +403,7 @@
   font-size: 13px;
   font-weight: 600;
   width: auto;
-  text-align: left;
+  text-align: start;
 }
 
 .policyLink {
@@ -468,7 +468,7 @@
     min-height: 640px;
     align-self: stretch;
     margin-top: -30px;
-    margin-left: 70px;
+    margin-inline-start: 70px;
   }
 }
 

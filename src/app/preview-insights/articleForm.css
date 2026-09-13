@@ -153,9 +153,9 @@
    The phone row is excluded: it has no icon, its flag is a laid-out child. */
 .artform form input[type="text"],
 .artform form input[type="email"] {
-  padding-left: 50px;
+  padding-inline-start: 50px;
 }
-.artform form .PhoneInputCountry { margin-right: 12px; }
+.artform form .PhoneInputCountry { margin-inline-end: 12px; }
 .artform form .PhoneInputCountryIcon { background: transparent; box-shadow: none; }
 
 /* --------------------------------------------------------------- the copy */
@@ -210,7 +210,7 @@
 .artform form textarea + div > div,
 .artform form .PhoneInput + div > div,
 .artform form fieldset > div + div > div {
-  text-align: left;
+  text-align: start;
   font-size: 12.5px;
   line-height: 1.35;
   /* The champagne family, but the deeper end of it. True champagne (#C29A5E)
@@ -302,7 +302,7 @@
   /* The module centres it with margin-inline:auto and stretches it to 100%;
      both are taken back so it sits at the start of the column. */
   margin-inline: 0;
-  margin-right: auto;
+  margin-inline-end: auto;
   /* Same 80% as the input fields above it, so the column has one edge. */
   width: 80%;
   min-width: 0;

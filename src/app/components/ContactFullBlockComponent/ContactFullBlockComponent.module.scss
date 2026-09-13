@@ -24,8 +24,8 @@
 .contactsBlock {
 
   @media screen and (min-width: 980px) {
-    padding-right: clamp(1.25rem, -7.102rem + 13.64vw, 3.125rem);
-    border-right: 1px solid #bd8948;
+    padding-inline-end: clamp(1.25rem, -7.102rem + 13.64vw, 3.125rem);
+    border-inline-end: 1px solid #bd8948;
   }
 }
 
@@ -67,7 +67,7 @@
 // .formBlock {
 
 //   @media screen and (min-width: 980px) {
-//     padding-left: clamp(1.25rem, -7.102rem + 13.64vw, 3.125rem);
+//     padding-inline-start: clamp(1.25rem, -7.102rem + 13.64vw, 3.125rem);
 
 //     button {
 //       width: fit-content;
