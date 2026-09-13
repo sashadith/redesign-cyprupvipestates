@@ -12,7 +12,7 @@ export const PROJECTS_SECTION_SLIDER_COPY: Record<Locale, typeof PROJECTS_SECTIO
   de: { viewProject: "Projekt ansehen" },
   pl: { viewProject: "Zobacz projekt" },
   ru: { viewProject: "Посмотреть проект" },
-  he: PROJECTS_SECTION_SLIDER_EN, // TODO(he)
+  he: { viewProject: "לצפייה בפרויקט" }, // REVIEW(he)
 };
 
 export const projectsSectionSliderCopy = (lang: string) =>

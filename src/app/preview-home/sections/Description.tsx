@@ -16,7 +16,7 @@ const ACCENTS_BY_LANG: Partial<Record<Locale, string[]>> = {
   de: ["wir"],
   pl: ["nas"],
   ru: ["нас"],
-  he: [], // TODO(he)
+  he: ["בנו"], // REVIEW(he); Hebrew H2: "למה רוכשים מישראל בוחרים בנו"
 };
 
 const renderTitle = (title: string, lang: string) => {

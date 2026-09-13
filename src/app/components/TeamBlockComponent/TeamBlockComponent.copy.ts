@@ -12,7 +12,7 @@ export const TEAM_BLOCK_COPY: Record<Locale, typeof TEAM_BLOCK_EN> = {
   de: { contact: "Kontaktieren" },
   pl: { contact: "Kontakt" },
   ru: { contact: "Связаться" },
-  he: TEAM_BLOCK_EN, // TODO(he)
+  he: { contact: "ליצירת קשר" }, // REVIEW(he)
 };
 
 export const teamBlockCopy = (lang: string) => TEAM_BLOCK_COPY[isLocale(lang) ? lang : "en"];

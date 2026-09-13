@@ -19,7 +19,7 @@ const ACCENTS_BY_LANG: Partial<Record<Locale, string[]>> = {
   de: ["Fragen"],
   pl: ["pytania"],
   ru: ["вопросы"],
-  he: [], // TODO(he)
+  he: ["שאלות"], // REVIEW(he); Hebrew H2: "שאלות נפוצות על נדל\"ן בקפריסין"
 };
 
 const renderTitle = (title: string, lang: string) => {

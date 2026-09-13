@@ -24,7 +24,7 @@ const ACCENTS_BY_LANG: Partial<Record<Locale, string[]>> = {
   de: ["Zypern"],
   pl: ["Cyprze"],
   ru: ["Кипре"],
-  he: [], // TODO(he)
+  he: ["קפריסין"], // REVIEW(he); Hebrew H2: "יש רק קפריסין אחת"
 };
 
 // wrap the word "Cyprus" in the gold-italic accent

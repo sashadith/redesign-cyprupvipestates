@@ -14,7 +14,7 @@ const ACCENTS_BY_LANG: Partial<Record<Locale, string[]>> = {
   de: ["Immobilienprojekte"],
   pl: ["inwestycje"],
   ru: ["проекты недвижимости"],
-  he: [], // TODO(he)
+  he: ["פרויקטים"], // REVIEW(he); Hebrew H2: "פרויקטים נבחרים בקפריסין"
 };
 
 const renderTitle = (title: string, lang: string) => {

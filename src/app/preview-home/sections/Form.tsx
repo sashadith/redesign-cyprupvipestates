@@ -98,6 +98,8 @@ const titleNode = (lang: string) => {
   if (lang === "de") return (<>Lassen Sie sich noch heute <span className="it">von uns beraten</span>!</>);
   if (lang === "pl") return (<>Zostaw zapytanie, a my <span className="it">skontaktujemy się z Tobą</span> wkrótce</>);
   if (lang === "ru") return (<>Оставьте заявку и <span className="it">мы свяжемся с вами</span> в ближайшее время</>);
+  // REVIEW(he)
+  if (lang === "he") return (<>השאירו פרטים <span className="it">ונחזור אליכם</span> בהקדם</>);
   return (<>Leave <span className="it">your details</span> and we will contact you shortly</>);
 };
 

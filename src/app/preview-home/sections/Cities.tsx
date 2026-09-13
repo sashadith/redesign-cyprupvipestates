@@ -27,7 +27,7 @@ const ACCENTS_BY_LANG: Partial<Record<Locale, string[]>> = {
   de: ["Immobilien"],
   pl: ["nieruchomości na sprzedaż"],
   ru: ["недвижимость"],
-  he: [], // TODO(he)
+  he: ["נכסים למכירה"], // REVIEW(he); Hebrew H2: "נכסים למכירה בקפריסין"
 };
 
 /* Highlight the "Properties for Sale" phrase with the gold accent ("in Cyprus"

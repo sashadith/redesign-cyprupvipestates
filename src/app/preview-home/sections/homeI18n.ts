@@ -36,7 +36,21 @@ const EN: HomeStrings = {
 
 export const HOME_STRINGS: Record<Locale, HomeStrings> = {
   en: EN,
-  he: EN, // TODO(he)
+  he: {
+    heroLine1: "מומחי ", heroAccent: "נדל\"ן", heroLine2: " בקפריסין",
+    getConsultation: "לקבלת ייעוץ",
+    viewAllProjects: "לצפייה בכל הפרויקטים",
+    citiesLead:
+      "מהמרינה ההומה ועד לרחובות העיר העתיקה, לכל עיר בקפריסין יש דרך משלה לחיות מול הים. באנרגיה הקוסמופוליטית של לימסול או בקסם ההיסטורי של פאפוס, קפריסין מציעה תשתיות ברמה גבוהה, מסגרת משפטית יציבה ויותר מ-340 ימי שמש בשנה.",
+    newLead2: "פרויקטים ", newAccent: "חדשים",
+    showAllProjects: "הצגת כל הפרויקטים",
+    priceFrom: "החל מ-", priceOnRequest: "מחיר לפי פנייה", onRequest: "לפי פנייה", sold: "נמכר",
+    contentTitle: "המדריך שלכם לנדל\"ן בקפריסין",
+    contentLead:
+      "מה כדאי לדעת לפני הרכישה: האזורים, סוגי הנכסים, התהליך לרוכשים מחו\"ל ואיפה נמצא הערך לטווח הארוך.",
+    faqLead: "כל מה שרוכשים שואלים אותנו על נדל\"ן בקפריסין, במקום אחד.",
+    readCaseStudy: "לקריאת סיפור הלקוח", exploreAllCases: "לכל סיפורי הלקוחות",
+  }, // REVIEW(he)
   de: {
     heroLine1: "Zyperns ", heroAccent: "Immobilien", heroLine2: "experten",
     getConsultation: "Beratung anfragen",
@@ -94,5 +108,5 @@ export const CASE_CATEGORY_LABELS: Record<Locale, Record<string, string>> = {
   de: { "luxury-villa": "Kauf einer Luxusvilla", apartment: "Wohnungskauf", investment: "Investmentimmobilie", relocation: "Umzug nach Zypern", "permanent-residency": "Daueraufenthalt", "new-development": "Neubauimmobilie" },
   pl: { "luxury-villa": "Zakup luksusowej willi", apartment: "Zakup apartamentu", investment: "Nieruchomość inwestycyjna", relocation: "Przeprowadzka na Cypr", "permanent-residency": "Stały pobyt", "new-development": "Nowa inwestycja" },
   ru: { "luxury-villa": "Покупка роскошной виллы", apartment: "Покупка квартиры", investment: "Инвестиционная недвижимость", relocation: "Переезд на Кипр", "permanent-residency": "Постоянное проживание", "new-development": "Новостройка" },
-  he: CASE_CATEGORY_LABELS_EN, // TODO(he)
+  he: { "luxury-villa": "רכישת וילת יוקרה", apartment: "רכישת דירה", investment: "נכס להשקעה", relocation: "רילוקיישן לקפריסין", "permanent-residency": "תושבות קבע", "new-development": "פרויקט חדש" }, // REVIEW(he)
 };

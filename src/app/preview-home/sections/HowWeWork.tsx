@@ -29,7 +29,7 @@ const ACCENTS_BY_LANG: Partial<Record<Locale, string[]>> = {
   de: ["wir"],
   pl: ["pracujemy"],
   ru: ["мы"],
-  he: [], // TODO(he)
+  he: ["אנחנו"], // REVIEW(he); Hebrew H2: "כך אנחנו עובדים"
 };
 
 const renderTitle = (title: string, lang: string) => {

@@ -14,7 +14,7 @@ export const DEVELOPERS_LOGOS_COPY: Record<Locale, typeof DEVELOPERS_LOGOS_EN> =
   de: { trustedBy: "Die besten Entwickler Zyperns vertrauen uns" },
   pl: { trustedBy: "Współpracujemy z najlepszymi deweloperami na Cyprze" },
   ru: { trustedBy: "Мы работаем с ведущими застройщиками Кипра" },
-  he: DEVELOPERS_LOGOS_EN, // TODO(he)
+  he: { trustedBy: "אנחנו עובדים עם היזמים המובילים בקפריסין" }, // REVIEW(he)
 };
 
 export const developersLogosCopy = (lang: string) =>

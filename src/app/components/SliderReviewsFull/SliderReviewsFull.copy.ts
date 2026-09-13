@@ -12,7 +12,7 @@ export const SLIDER_REVIEWS_FULL_COPY: Record<Locale, typeof SLIDER_REVIEWS_FULL
   de: { readFullReview: "Ganze Bewertung lesen" },
   pl: { readFullReview: "Przeczytaj całą recenzję" },
   ru: { readFullReview: "Читать полный отзыв" },
-  he: SLIDER_REVIEWS_FULL_EN, // TODO(he)
+  he: { readFullReview: "לקריאת חוות הדעת המלאה" }, // REVIEW(he)
 };
 
 export const sliderReviewsFullCopy = (lang: string) =>

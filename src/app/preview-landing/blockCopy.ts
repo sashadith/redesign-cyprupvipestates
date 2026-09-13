@@ -53,7 +53,14 @@ export const BULLETS_TEXT: Record<Locale, string[]> = {
     "ВЫСОКИЕ стандарты образования",
     "СОВРЕМЕННАЯ система здравоохранения",
   ],
-  he: BULLETS_EN, // TODO(he)
+  he: [
+    "340 ימי שמש בשנה",
+    "חברה באיחוד האירופי",
+    "אחת ממערכות המס הטובות ביותר",
+    "איכות חיים גבוהה",
+    "רמת חינוך גבוהה מאוד",
+    "מערכת בריאות מודרנית",
+  ], // REVIEW(he)
 };
 
 export const STEPS_ICONS: string[] = [
@@ -100,7 +107,14 @@ export const STEPS_TEXT: Record<Locale, string[]> = {
     "Вы подписываете договор купли-продажи с подрядчиком",
     "После завершения строительства мы торжественно передадим вам ключи",
   ],
-  he: STEPS_EN, // TODO(he)
+  he: [
+    "אתם פונים אלינו דרך הטופס באתר",
+    "אנחנו חוזרים אליכם ועוברים יחד על הדרישות שלכם",
+    "אתם מתכננים איתנו את הנסיעה לקפריסין",
+    "אנחנו מבקרים יחד בכל הפרויקטים המתאימים",
+    "אתם חותמים על חוזה המכר מול היזם",
+    "עם סיום הבנייה אנחנו מוסרים לכם את המפתחות בטקס חגיגי",
+  ], // REVIEW(he)
 };
 
 /* Fallback heading for the FAQ section. Most of these pages never filled the
@@ -114,5 +128,5 @@ export const FAQ_TITLE: Record<Locale, string> = {
   de: "Häufig gestellte Fragen",
   pl: "Najczęściej zadawane pytania",
   ru: "Часто задаваемые вопросы",
-  he: FAQ_TITLE_EN, // TODO(he)
+  he: "שאלות נפוצות", // REVIEW(he)
 };
