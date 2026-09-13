@@ -14,6 +14,7 @@
 import { prisma } from "@/lib/prisma";
 import type { ProjectVM } from "@/app/preview-project/feeds";
 import { listedUnits, computeAvailability } from "@/lib/developmentAvailability";
+import { LOCALES, isLocale, type Locale as Lang } from "@/lib/locale";
 
 export const TITLE_MAX = 60;
 export const DESC_MAX = 160;
@@ -65,16 +66,14 @@ export async function uniqueDevelopmentSlug(publicName: string, selfId?: string)
 
 // ---------- type/beds helpers ----------
 
-type Lang = "en" | "de" | "pl" | "ru";
-const LANGS: Lang[] = ["en", "de", "pl", "ru"];
-const asLang = (l: string): Lang => (LANGS.includes(l as Lang) ? (l as Lang) : "en");
+const asLang = (l: string): Lang => (isLocale(l) ? l : "en");
 
 const TYPE_LABEL: Record<string, Record<Lang, string>> = {
-  villa: { en: "Villa", de: "Villa", pl: "Willa", ru: "Вилла" },
-  apartment: { en: "Apartment", de: "Wohnung", pl: "Apartament", ru: "Квартира" },
-  house: { en: "House", de: "Haus", pl: "Dom", ru: "Дом" },
-  townhouse: { en: "Townhouse", de: "Reihenhaus", pl: "Dom szeregowy", ru: "Таунхаус" },
-  generic: { en: "Property", de: "Immobilie", pl: "Nieruchomość", ru: "Недвижимость" },
+  villa: { en: "Villa", de: "Villa", pl: "Willa", ru: "Вилла", he: "Villa" /* TODO(he) */ },
+  apartment: { en: "Apartment", de: "Wohnung", pl: "Apartament", ru: "Квартира", he: "Apartment" /* TODO(he) */ },
+  house: { en: "House", de: "Haus", pl: "Dom", ru: "Дом", he: "House" /* TODO(he) */ },
+  townhouse: { en: "Townhouse", de: "Reihenhaus", pl: "Dom szeregowy", ru: "Таунхаус", he: "Townhouse" /* TODO(he) */ },
+  generic: { en: "Property", de: "Immobilie", pl: "Nieruchomość", ru: "Недвижимость", he: "Property" /* TODO(he) */ },
 };
 
 function typeKeyOf(raw: string): keyof typeof TYPE_LABEL {
@@ -113,11 +112,14 @@ function bedsRange(vm: ProjectVM): string | null {
   return lo === hi ? String(lo) : `${lo}–${hi}`;
 }
 
+const LABELS_EN = { in: "in", from: "from", unitsAvailable: "units available", completion: "Completion", cyprus: "Cyprus", soldOut: "Sold out", similar: "See similar projects", cta: "View availability & prices" };
+
 const LABELS: Record<Lang, { in: string; from: string; unitsAvailable: string; completion: string; cyprus: string; soldOut: string; similar: string; cta: string }> = {
-  en: { in: "in", from: "from", unitsAvailable: "units available", completion: "Completion", cyprus: "Cyprus", soldOut: "Sold out", similar: "See similar projects", cta: "View availability & prices" },
+  en: LABELS_EN,
   de: { in: "in", from: "ab", unitsAvailable: "Einheiten verfügbar", completion: "Fertigstellung", cyprus: "Zypern", soldOut: "Ausverkauft", similar: "Ähnliche Projekte ansehen", cta: "Verfügbarkeit & Preise ansehen" },
   pl: { in: "w", from: "od", unitsAvailable: "dostępnych jednostek", completion: "Termin realizacji", cyprus: "Cypr", soldOut: "Wyprzedane", similar: "Zobacz podobne inwestycje", cta: "Zobacz dostępność i ceny" },
   ru: { in: "в", from: "от", unitsAvailable: "доступных объектов", completion: "Срок сдачи", cyprus: "Кипр", soldOut: "Продано", similar: "Похожие проекты", cta: "Смотреть наличие и цены" },
+  he: { ...LABELS_EN }, // TODO(he)
 };
 
 const fmtPrice = (n: number) => `€${n.toLocaleString("en-US")}`;
@@ -211,6 +213,7 @@ const PRICE_FORMAT: Record<Lang, (n: number) => string> = {
   de: (n) => `${groupDigits(n, ".")} €`,
   pl: (n) => `${groupDigits(n, " ")} €`,
   ru: (n) => `${groupDigits(n, " ")} €`,
+  he: (n) => `€${groupDigits(n, ",")}`, // TODO(he)
 };
 
 // Completion is stored free-form, and in practice almost always as "Q3 2029".

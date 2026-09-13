@@ -7,10 +7,9 @@
 //   - distance category labels come from DistancesStrip's own COPY.
 // Only strings genuinely unique to this page's own chrome live here.
 import { projectsStrings } from "@/app/[lang]/projects/projectsI18n";
-
-export type Lang = "en" | "de" | "pl" | "ru";
-const LANGS: Lang[] = ["en", "de", "pl", "ru"];
-export const asDevLang = (l: string): Lang => (LANGS.includes(l as Lang) ? (l as Lang) : "en");
+import { LOCALES, isLocale, type Locale as Lang } from "@/lib/locale";
+export type { Lang };
+export const asDevLang = (l: string): Lang => (isLocale(l) ? l : "en");
 
 // A sentence with ONE accent word/phrase wrapped in the site's .it gold-shimmer
 // style (preview-home/tokens.css) — lead + gold + trail concatenate back to the
@@ -380,7 +379,7 @@ const RU: DevelopmentStrings = {
   imageN: (n) => `Изображение ${n}`,
 };
 
-export const DEVELOPMENT_STRINGS: Record<Lang, DevelopmentStrings> = { en: EN, de: DE, pl: PL, ru: RU };
+export const DEVELOPMENT_STRINGS: Record<Lang, DevelopmentStrings> = { en: EN, de: DE, pl: PL, ru: RU, he: EN /* TODO(he) */ };
 
 // priceOnRequest/soldOut/heroFrom overlay the /projects listing's own wording
 // (projectsI18n.ts) at call time rather than duplicating it in each locale

@@ -1,11 +1,12 @@
 // Locale copy for the booking page — same PLocale set as the Client
 // Presentation page's copy.ts, but a distinct file since the content has
 // nothing to do with property presentation.
-export type BLocale = "en" | "de" | "pl" | "ru";
-const B_LOCALES: BLocale[] = ["en", "de", "pl", "ru"];
-export const asBLocale = (v: string | null | undefined): BLocale => (B_LOCALES.includes(v as BLocale) ? (v as BLocale) : "en");
+import { LOCALES, isLocale, type Locale } from "@/lib/locale";
+export type BLocale = Locale;
+export const B_LOCALES = LOCALES;
+export const asBLocale = (v: string | null | undefined): BLocale => (v && isLocale(v) ? v : "en");
 
-export const COPY: Record<BLocale, {
+export type BookingCopy = {
   eyebrow: string;
   // Split around the name (rather than a single `title(name)` string) so the
   // name/formal-address segment can be wrapped in its own gold-shimmer span
@@ -39,33 +40,37 @@ export const COPY: Record<BLocale, {
   goneTitle: string;
   goneBody: string;
   contactUs: string;
-}> = {
-  en: {
-    eyebrow: "Schedule a meeting",
-    titlePrefix: "Hello ",
-    titleSuffix: ", let's find a time",
-    intro: "Pick 2-3 times that work for you and I'll confirm one shortly.",
-    yourTime: "Your time",
-    cyprusTime: "Cyprus time",
-    detectingTimezone: "Detecting your timezone…",
-    selectedTitle: "Your selected times",
-    submit: "Send my available times",
-    submitting: "Sending…",
-    hint: "Select between 1 and 3 times above.",
-    pickCountError: "Please select between 1 and 3 times.",
-    genericError: "Something went wrong. Please try again.",
-    submittedTitle: "Thank you",
-    submittedBody: "I've received your available times and will confirm one shortly by email.",
-    alreadyProposedTitle: "Thank you",
-    alreadyProposedBody: "I've already received your available times and will confirm one shortly by email.",
-    confirmedTitle: "Your appointment is confirmed",
-    confirmedBody: (dt) => `We're set for ${dt} (your time). A calendar invite has been sent to your email.`,
-    confirmedZoomNote: "I'll send the Zoom link separately, shortly before our call.",
-    confirmedPhoneNote: "I'll call you at the agreed time.",
-    goneTitle: "This link is no longer available",
-    goneBody: "This booking link has expired or is no longer active. Please get in touch and I'll send you a new one.",
-    contactUs: "Contact us",
-  },
+};
+
+const COPY_EN: BookingCopy = {
+  eyebrow: "Schedule a meeting",
+  titlePrefix: "Hello ",
+  titleSuffix: ", let's find a time",
+  intro: "Pick 2-3 times that work for you and I'll confirm one shortly.",
+  yourTime: "Your time",
+  cyprusTime: "Cyprus time",
+  detectingTimezone: "Detecting your timezone…",
+  selectedTitle: "Your selected times",
+  submit: "Send my available times",
+  submitting: "Sending…",
+  hint: "Select between 1 and 3 times above.",
+  pickCountError: "Please select between 1 and 3 times.",
+  genericError: "Something went wrong. Please try again.",
+  submittedTitle: "Thank you",
+  submittedBody: "I've received your available times and will confirm one shortly by email.",
+  alreadyProposedTitle: "Thank you",
+  alreadyProposedBody: "I've already received your available times and will confirm one shortly by email.",
+  confirmedTitle: "Your appointment is confirmed",
+  confirmedBody: (dt) => `We're set for ${dt} (your time). A calendar invite has been sent to your email.`,
+  confirmedZoomNote: "I'll send the Zoom link separately, shortly before our call.",
+  confirmedPhoneNote: "I'll call you at the agreed time.",
+  goneTitle: "This link is no longer available",
+  goneBody: "This booking link has expired or is no longer active. Please get in touch and I'll send you a new one.",
+  contactUs: "Contact us",
+};
+
+export const COPY: Record<BLocale, BookingCopy> = {
+  en: COPY_EN,
   de: {
     eyebrow: "Terminvereinbarung",
     titlePrefix: "Hallo ",
@@ -148,4 +153,5 @@ export const COPY: Record<BLocale, {
     goneBody: "Срок действия ссылки для записи истёк, либо она больше не активна. Пожалуйста, свяжитесь со мной — я пришлю новую.",
     contactUs: "Связаться с нами",
   },
+  he: COPY_EN, // TODO(he)
 };
