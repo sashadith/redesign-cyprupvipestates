@@ -1,8 +1,9 @@
 # CRM MCP connector (claude.ai "CVE LEADS")
 
 Design: `docs/superpowers/specs/2026-09-07-crm-mcp-connector-design.md`,
-`docs/superpowers/specs/2026-09-08-crm-mcp-connector-phase3-design.md`.
-Status: Phase 3 (inventory tools) — Phases 1–2 live since 2026-09-07/08; Phase 3 live once deployed.
+`docs/superpowers/specs/2026-09-08-crm-mcp-connector-phase3-design.md`,
+`docs/superpowers/specs/2026-09-13-whatsapp-tools-crm-connector-design.md`.
+Status: Phase 4 (WhatsApp tools) — Phases 1–3 live since 2026-09-07/08; Phase 4 live once deployed.
 
 ## What it is
 
