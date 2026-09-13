@@ -1,6 +1,9 @@
 import { anthropic, AI_MODEL } from "./anthropic";
 import { tuningBlock } from "./tuning";
 import { LOCALES, type Locale } from "@/lib/locale";
+import { PROJECT_BRIEF } from "./projectBrief";
+import { heSystemBlock } from "./heContext";
+import { scriptLeaks } from "./localeTextGuards";
 
 /* Generate a neighbourhood description for an AREA in five native languages at
    once. Anti-cannibalisation is solved at the SOURCE: sibling descriptions from
@@ -43,34 +46,56 @@ Requirements:
 - Approximately ${words} words in EACH language (keep each language close to this length). Evocative but factual: the setting, sea/nature, lifestyle, notable amenities, and who it suits.
 - Sophisticated, confident, understated tone. No clichés ("hidden gem", "nestled", "boasts"), no hype, no invented facts.
 - Do NOT mention specific developers, projects, prices, or our company.
-- It must read as unique, original web content for SEO.${siblingBlock}
+- It must read as unique, original web content for SEO.
+- Geography and place names: use the Hebrew place names exactly as given in the glossary in the system prompt (e.g. Limassol → לימסול, Paphos → פאפוס) — do not invent your own transliteration.${siblingBlock}
 
 Return ONLY a JSON object with the description written NATIVELY (idiomatic, not a literal translation) in five languages (the Hebrew text must be written natively in Hebrew script, RTL, following the Hebrew style guide in the system prompt), keys exactly ${LOCALES.map((l) => `"${l}"`).join(",")}. No markdown, no commentary.` + tuningBlock({ emphasize: opts.emphasize, avoid: opts.avoid });
 
   // Forced tool use → guaranteed structured output (no fragile text/JSON parsing).
-  const msg = await client.messages.create({
-    model: AI_MODEL,
-    max_tokens: 4000,
-    tools: [
-      {
-        name: "area_description",
-        description: "Return the neighbourhood description in five languages.",
-        input_schema: {
-          type: "object",
-          properties: Object.fromEntries(LOCALES.map((l) => [l, { type: "string", description: `${l} (native)` }])),
-          required: [...LOCALES],
+  // `correction` is only set on the retry — naming what went wrong beats sending
+  // the identical prompt again and hoping for a different sample. Mirrors the
+  // retry pattern in generateProjectDescription.
+  const attempt = async (correction?: string): Promise<LocaleText> => {
+    const msg = await client.messages.create({
+      model: AI_MODEL,
+      max_tokens: 4000,
+      // The shared project brief plus the Hebrew style guide/glossary ride as the
+      // system layer (see heContext.ts) — cacheable, and keeps the user prompt
+      // above free of the ~7k tokens of Hebrew writing rules.
+      system: [{ type: "text", text: PROJECT_BRIEF }, heSystemBlock("area")],
+      tools: [
+        {
+          name: "area_description",
+          description: "Return the neighbourhood description in five languages.",
+          input_schema: {
+            type: "object",
+            properties: Object.fromEntries(LOCALES.map((l) => [l, { type: "string", description: `${l} (native)` }])),
+            required: [...LOCALES],
+          },
         },
-      },
-    ],
-    tool_choice: { type: "tool", name: "area_description" },
-    messages: [{ role: "user", content: prompt }],
-  });
+      ],
+      tool_choice: { type: "tool", name: "area_description" },
+      messages: [{ role: "user", content: correction ? `${prompt}\n\n${correction}` : prompt }],
+    });
 
-  const tool = msg.content.find((b: any) => b.type === "tool_use") as any;
-  const p = (tool?.input ?? {}) as Partial<LocaleText>;
-  const out = Object.fromEntries(LOCALES.map((l) => [l, String(p[l] ?? "")])) as LocaleText;
-  if (LOCALES.every((l) => !out[l])) {
-    throw new Error(`No content returned (stop_reason: ${msg.stop_reason ?? "unknown"})`);
-  }
-  return out;
+    const tool = msg.content.find((b: any) => b.type === "tool_use") as any;
+    const p = (tool?.input ?? {}) as Partial<LocaleText>;
+    const out = Object.fromEntries(LOCALES.map((l) => [l, String(p[l] ?? "")])) as LocaleText;
+    if (LOCALES.every((l) => !out[l])) {
+      throw new Error(`No content returned (stop_reason: ${msg.stop_reason ?? "unknown"})`);
+    }
+    return out;
+  };
+
+  const first = await attempt();
+  const firstLeaks = scriptLeaks(first);
+  if (!firstLeaks.length) return first;
+  // A script/language leak — retry once, naming exactly what broke.
+  const second = await attempt(
+    `Your previous answer leaked the wrong script into one or more fields: ${firstLeaks.join("; ")}. Each field must be 100% in its own target language and script (Hebrew for he, native script elsewhere).`,
+  );
+  if (!scriptLeaks(second).length) return second;
+  throw new Error(
+    `Generated area description still has a script leak after a retry (${scriptLeaks(second).join("; ")}) — each locale field must stay in its own script. Try again, or edit by hand.`,
+  );
 }

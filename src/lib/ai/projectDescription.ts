@@ -2,6 +2,8 @@ import { anthropic, AI_MODEL } from "./anthropic";
 import { tuningBlock } from "./tuning";
 import { LOCALES } from "@/lib/locale";
 import { scriptLeaks, type LocaleText } from "./localeTextGuards";
+import { PROJECT_BRIEF } from "./projectBrief";
+import { heSystemBlock } from "./heContext";
 
 /* Generate a fresh property description from ALL available data — location, area
    character, amenities, unit mix, developer source text — WITHOUT ever naming the
@@ -67,9 +69,10 @@ Rules:
 - Sophisticated, confident, understated. No clichés ("nestled", "hidden gem", "boasts", "oasis"), no marketing hype.
 - Vary sentence length and rhythm; write like a human editor, not a template. It must read as original and NOT machine-generated.
 - Structure the copy as 2–3 short paragraphs separated by a blank line (a real double newline "\n\n"). Suggested flow: location & setting · the development, units & amenities · interiors and who it suits.
-- Write FULLY in each target language — never leave English terms untranslated (e.g. "off plan" → DE "im Vorverkauf" / PL "w przedsprzedaży" / RU "на стадии строительства"; "en-suite", "BBQ" etc. likewise).
+- Write FULLY in each target language — never leave English terms untranslated (e.g. "off plan" → DE "im Vorverkauf" / PL "w przedsprzedaży" / RU "на стадии строительства" / HE "על הנייר"; "en-suite", "BBQ" etc. likewise).
 - The source text above may itself be written in, or mixed with, a language other than English (e.g. Russian marketing copy). Translate its meaning only — never let a word or phrase from the source's own language leak into any of the five output fields. Each field must be 100% in its own target language, with zero exceptions.
-- Use proper typographic dashes ("–"), never a spaced hyphen (" - ").
+- Use proper typographic dashes ("–"), never a spaced hyphen (" - ") — in en/de/pl/ru.
+- Hebrew: Western digits, "€" before the number, no "—" dash (Hebrew uses a comma, a period, or a new sentence instead), masculine-plural or nominal register (see system rules).
 - Return the SAME description written natively (not translated word-for-word) in five languages.
 
 Return via the description tool.` + tuningBlock({ emphasize: ctx.emphasize, avoid: ctx.avoid });
@@ -86,6 +89,10 @@ Return via the description tool.` + tuningBlock({ emphasize: ctx.emphasize, avoi
     const msg = await client.messages.create({
       model: AI_MODEL,
       max_tokens: 4000,
+      // The shared project brief plus the Hebrew style guide/glossary ride as the
+      // system layer (see heContext.ts) — cacheable, and keeps the user prompt
+      // above free of the ~7k tokens of Hebrew writing rules.
+      system: [{ type: "text", text: PROJECT_BRIEF }, heSystemBlock("description")],
       tools: [
         {
           name: "description",
