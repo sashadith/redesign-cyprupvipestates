@@ -25,8 +25,8 @@ Gesamt-Pack (Stand dieser Doku, `node scripts/qa/he-content-check.mjs`): **31 Da
 
 | Gate | Befehl | Ergebnis |
 |---|---|---|
-| Content-Gate (ganzes Pack) | `node scripts/qa/he-content-check.mjs` | `he-content: OK (31 files, 2940 strings)`, 0 Verstöße |
-| Tests | `npm test` | 299 grün (Baseline 177 aus Phase 4 + 122 neue: Content-Gate, Seeder, translateHe/Queue, Blog-Cross-Locale) |
+| Content-Gate (ganzes Pack) | `node scripts/qa/he-content-check.mjs` | `he-content: OK (31 files, 2941 strings)`, 0 Verstöße |
+| Tests | `npm test` | 309 grün (Baseline 177 aus Phase 4 + 132 neue: Content-Gate, Seeder, translateHe/Queue, Blog-Cross-Locale, Final-Review-Fixes) |
 | Typen | `npx tsc --noEmit -p tsconfig.json` | sauber |
 | Platzhalter | `node scripts/qa/he-placeholders.mjs` | `TODO(he)`: 0 (Legal-Marker aus Phase 4/5b ersetzt) · `REVIEW(he)`: 114, bleibt bis Pass C |
 | LTR-Snapshot | `node --import tsx scripts/qa/copy-snapshot.mjs --check` | sauber, 3.381 Blätter — kein en/de/pl/ru-String verändert (Ausnahmen siehe unten) |
