@@ -82,7 +82,7 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
     status: d.status ?? "", category: d.category ?? undefined,
     stage: ov?.stage || d.stage || undefined, completion: resolveRelativeCompletion(ov?.completion || d.completion), energy: ov?.energy || d.energy || "",
     priceFrom, priceTo, currency: d.currency ?? "EUR",
-    description: ({ en: ov?.descriptionEN, de: ov?.descriptionDE, pl: ov?.descriptionPL, ru: ov?.descriptionRU } as Record<string, string | null | undefined>)[lang] || ov?.descriptionEN || d.description || "",
+    description: ({ en: ov?.descriptionEN, de: ov?.descriptionDE, pl: ov?.descriptionPL, ru: ov?.descriptionRU, he: ov?.descriptionHE } as Record<string, string | null | undefined>)[lang] || ov?.descriptionEN || d.description || "",
     gallery: finalGallery, plans: arr<string>(d.plans), renders: [], amenities,
     extraFacts: arr<{ label: string; value: string }>(d.extraFacts), heroVideo: ov?.heroVideo || undefined,
     vatApplies: ov?.vatApplies ?? null,

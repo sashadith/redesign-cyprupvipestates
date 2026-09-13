@@ -420,8 +420,8 @@ export async function saveOverride(formData: FormData) {
   // to the auto-generated default (src/lib/developmentSeo.ts) rather than an
   // object of empty strings that would still read as "present".
   const seoEntries = {
-    titleEN: clean(formData, "seoTitleEN"), titleDE: clean(formData, "seoTitleDE"), titlePL: clean(formData, "seoTitlePL"), titleRU: clean(formData, "seoTitleRU"),
-    descEN: clean(formData, "seoDescEN"), descDE: clean(formData, "seoDescDE"), descPL: clean(formData, "seoDescPL"), descRU: clean(formData, "seoDescRU"),
+    titleEN: clean(formData, "seoTitleEN"), titleDE: clean(formData, "seoTitleDE"), titlePL: clean(formData, "seoTitlePL"), titleRU: clean(formData, "seoTitleRU"), titleHE: clean(formData, "seoTitleHE"),
+    descEN: clean(formData, "seoDescEN"), descDE: clean(formData, "seoDescDE"), descPL: clean(formData, "seoDescPL"), descRU: clean(formData, "seoDescRU"), descHE: clean(formData, "seoDescHE"),
   };
   const seo = Object.values(seoEntries).some(Boolean) ? seoEntries : null;
   // Map location is saved independently via saveMapLocationAction (its own
@@ -437,6 +437,7 @@ export async function saveOverride(formData: FormData) {
     descriptionDE: clean(formData, "descriptionDE"),
     descriptionPL: clean(formData, "descriptionPL"),
     descriptionRU: clean(formData, "descriptionRU"),
+    descriptionHE: clean(formData, "descriptionHE"),
     completion: clean(formData, "completion"),
     energy: clean(formData, "energy"),
     // Construction-stage override (Available / Under Construction / Key-Ready /

@@ -308,6 +308,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
                 de: ov?.descriptionDE ?? "",
                 pl: ov?.descriptionPL ?? "",
                 ru: ov?.descriptionRU ?? "",
+                he: ov?.descriptionHE ?? "",
               }}
             />
           </div>

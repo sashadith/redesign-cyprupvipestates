@@ -86,7 +86,7 @@ export default async function ProjectPageBody({
   // page's language (English fallback); otherwise the static demo library.
   const slugOfArea = (a: string) => a.toLowerCase().replace(/ph/g, "f").replace(/[^a-z]/g, "");
   const areaRow = p.area ? await prisma.areaDescription.findFirst({ where: { areaSlug: slugOfArea(p.area), status: "approved" } }) : null;
-  const areaCol = ({ en: "textEN", de: "textDE", pl: "textPL", ru: "textRU" } as Record<string, string>)[params.lang] ?? "textEN";
+  const areaCol = ({ en: "textEN", de: "textDE", pl: "textPL", ru: "textRU", he: "textHE" } as Record<string, string>)[params.lang] ?? "textEN";
   const areaText = areaRow ? ((areaRow as any)[areaCol] || areaRow.textEN) : null;
   const areaInfo = areaText
     ? { name: p.area, text: areaText as string }

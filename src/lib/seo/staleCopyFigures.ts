@@ -44,7 +44,7 @@ export type StaleFigure = {
 };
 
 const SEO_FIELDS = ["titleEN", "titleDE", "titlePL", "titleRU", "descEN", "descDE", "descPL", "descRU"] as const;
-const DESC_FIELDS = ["descriptionEN", "descriptionDE", "descriptionPL", "descriptionRU"] as const;
+const DESC_FIELDS = ["descriptionEN", "descriptionDE", "descriptionPL", "descriptionRU", "descriptionHE"] as const;
 
 // Money with real thousands grouping ("€1.125.000", "262 400 €"). The grouping
 // requirement matters: a looser pattern swallows across sentence boundaries and
@@ -156,7 +156,7 @@ export async function getStaleCopyFigures(): Promise<StaleFigure[]> {
       override: {
         select: {
           seo: true, updatedAt: true,
-          descriptionEN: true, descriptionDE: true, descriptionPL: true, descriptionRU: true,
+          descriptionEN: true, descriptionDE: true, descriptionPL: true, descriptionRU: true, descriptionHE: true,
         },
       },
       units: { select: { status: true, price: true } },
