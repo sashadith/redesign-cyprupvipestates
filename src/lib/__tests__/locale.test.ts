@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   LOCALES, DEFAULT_LOCALE, RTL_LOCALES, LAUNCH_GATED_LOCALES, BCP47, LOCALE_LABELS,
-  parsePublicLocales, isLocale, localeDir, nonDefaultLocalePattern, localizedHref, fmtPrice, fmtDate,
+  parsePublicLocales, isLocale, localeDir, nonDefaultLocalePattern, localizedHref, fmtPrice, fmtDate, ltrIsolate,
 } from "@/lib/locale";
 import { templateClassOf } from "@/lib/seo/templateClass";
 import { isDarkHeroPath } from "@/app/components/Header/navShared";
@@ -54,6 +54,12 @@ test("fmtPrice and fmtDate", () => {
   assert.equal(fmtPrice(450000, "de"), "€450,000");
   assert.match(fmtDate("2026-05-01", "he", { year: "numeric", month: "long" }), /2026/);
   assert.equal(fmtDate("2026-05-01", "en", { year: "numeric", month: "long" }), "May 2026");
+});
+
+test("ltrIsolate wraps a string in LRI…PDI so it renders LTR inside RTL prose", () => {
+  assert.equal(ltrIsolate("+357 25 123456"), "⁦+357 25 123456⁩");
+  assert.equal(ltrIsolate("€450,000"), "⁦€450,000⁩");
+  assert.equal(ltrIsolate(""), "⁦⁩");
 });
 
 test("he paths classify like the other prefixed locales", () => {

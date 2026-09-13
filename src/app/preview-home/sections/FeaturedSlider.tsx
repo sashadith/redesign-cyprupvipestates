@@ -6,8 +6,9 @@ import { Autoplay } from "swiper/modules";
 import "swiper/css";
 import type { FeaturedProject } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client";
-import { localePrefix } from "@/lib/locale";
+import { localePrefix, fmtPrice } from "@/lib/locale";
 import { homeStrings } from "./homeI18n";
+import Bdi from "@/app/components/Bdi";
 
 const safeUrl = (img: unknown) => {
   try {
@@ -16,9 +17,6 @@ const safeUrl = (img: unknown) => {
     return undefined;
   }
 };
-
-const fmtPrice = (p?: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(p || 0);
 
 const Card: React.FC<{ project: FeaturedProject; lang: string }> = ({ project, lang }) => {
   const t = homeStrings(lang);
@@ -40,7 +38,7 @@ const Card: React.FC<{ project: FeaturedProject; lang: string }> = ({ project, l
           {price && price > 0 ? (
             <>
               <span className="pcard__from">{t.priceFrom}</span>
-              {fmtPrice(price)}
+              <Bdi ltr>{fmtPrice(price, lang)}</Bdi>
             </>
           ) : (
             t.priceOnRequest

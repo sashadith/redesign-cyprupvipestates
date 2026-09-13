@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { FC } from "react";
 import styles from "./ProjectLink.module.scss";
+import { fmtPrice } from "@/lib/locale";
+import Bdi from "@/app/components/Bdi";
 
 type Props = {
   url: string;
@@ -98,7 +100,7 @@ const ProjectLink: FC<Props> = ({
                           ? "Цена от"
                           : "Price from"}
                   &nbsp;
-                  {price.toLocaleString()} €
+                  <Bdi ltr>{fmtPrice(price, lang)}</Bdi>
                 </>
               )}
             </p>

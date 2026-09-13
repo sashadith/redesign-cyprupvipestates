@@ -1,0 +1,17 @@
+# RTL physical-property count exceptions (scripts/qa/rtl-physical-count.mjs).
+#
+# Format: one exception per line —
+#   path :: substring
+# A line in `path` (matched as a suffix of the scanned file's repo-relative
+# path, e.g. "tokens.css" or "src/app/preview-home/tokens.css") that contains
+# `substring` is excluded from the physical-property count.
+#
+# Intended use: decorative atmosphere elements (::before/::after "blobs")
+# that are deliberately left physical (they're visual noise, not layout, and
+# mirroring them buys nothing — see the plan's Global Constraints), plus any
+# other line a human has reviewed and decided should stay physical. Every
+# entry should be added deliberately, with a reason a reviewer can check
+# against the plan — never used to silence the gate without also fixing or
+# reviewing the underlying declaration.
+#
+# No entries yet — populated during Task 3 (hot-core manual CSS fixes).

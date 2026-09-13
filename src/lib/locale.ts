@@ -62,6 +62,14 @@ export function fmtPrice(n: number, _lang: string): string {
   return `€${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n)}`;
 }
 
+/** Wrap a plain string (phone/e-mail/price inside otherwise-Hebrew copy) in
+ *  LRI…PDI (U+2066…U+2069) so it renders left-to-right and doesn't get
+ *  visually reordered by the surrounding RTL paragraph. For JSX values,
+ *  prefer <Bdi ltr> (src/app/components/Bdi.tsx) instead. */
+export function ltrIsolate(s: string): string {
+  return `⁦${s}⁩`;
+}
+
 export function fmtDate(value: string | Date, lang: string, opts: Intl.DateTimeFormatOptions = { year: "numeric", month: "long", day: "numeric" }): string {
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return String(value);

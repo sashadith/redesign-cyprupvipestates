@@ -3,3 +3,22 @@
    Phase 2 (RTL layout pass) grows this file. */
 :lang(he) { font-family: var(--font-body-he, "Rubik"), "Rubik", Arial, sans-serif; }
 [dir="rtl"] { text-align: start; }
+
+/* Bidi isolation utilities — Bdi.tsx (JSX) and ltrIsolate() (plain strings)
+   in src/lib/locale.ts both target these classes. .ltr-isolate additionally
+   forces left-to-right direction, for prices/phones/e-mails whose own
+   internal digit/character order must never be reordered by RTL prose. */
+.bidi-isolate { unicode-bidi: isolate; }
+.ltr-isolate { direction: ltr; unicode-bidi: isolate; }
+
+/* Directional icons (arrows, chevrons) that should mirror under RTL — opt in
+   per-icon with .icon-dir rather than flipping every glyph site-wide. */
+[dir="rtl"] .icon-dir { transform: scaleX(-1); }
+
+/* Hebrew typography (spec §3.3): display headings prefer the Hebrew display
+   face; Latin-oriented letter-spacing/uppercase tracking reads as broken in
+   Hebrew script, so both are neutralised for the whole :lang(he) subtree
+   except where a component opts back in via .keep-tracking / .keep-case. */
+:lang(he) :is(h1, h2, h3, h4, .display, .h1, .h2, .h3) { font-family: var(--font-display-he, serif), var(--font-display), serif; }
+:lang(he) *:not(.keep-tracking) { letter-spacing: normal !important; }
+:lang(he) *:not(.keep-case) { text-transform: none !important; }
