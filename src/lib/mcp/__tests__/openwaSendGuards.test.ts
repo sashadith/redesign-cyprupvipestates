@@ -43,3 +43,21 @@ test("nicosiaDayStart: the window starts at local midnight, not UTC midnight", (
   // Just before that instant, we are still in the previous Nicosia day.
   assert.equal(nicosiaDayStart(new Date("2026-08-14T20:59:00Z")).toISOString(), "2026-08-13T21:00:00.000Z");
 });
+
+test("nicosiaDayStart: spring-forward day (2026-03-29, Cyprus EET->EEST) — midnight is still EET", () => {
+  // `now` (10:00Z) is already past the transition and reads as EEST (UTC+3),
+  // but local midnight at the start of the 29th happens *before* the
+  // transition, while Nicosia is still on EET (UTC+2). Deriving the offset
+  // from `now` itself (UTC+3) instead of from midnight gives a UTC instant
+  // an hour too early.
+  assert.equal(nicosiaDayStart(new Date("2026-03-29T10:00:00Z")).toISOString(), "2026-03-28T22:00:00.000Z");
+});
+
+test("nicosiaDayStart: fall-back day (2026-10-25, Cyprus EEST->EET) — midnight is still EEST", () => {
+  // `now` (20:00Z) is already past the transition and reads as EET (UTC+2),
+  // but local midnight at the start of the 25th happens *before* the
+  // transition, while Nicosia is still on EEST (UTC+3). Deriving the offset
+  // from `now` itself (UTC+2) instead of from midnight gives a UTC instant
+  // an hour too late.
+  assert.equal(nicosiaDayStart(new Date("2026-10-25T20:00:00Z")).toISOString(), "2026-10-24T21:00:00.000Z");
+});
