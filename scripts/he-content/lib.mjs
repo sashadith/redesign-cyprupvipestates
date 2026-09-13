@@ -30,7 +30,7 @@ function hasAnyLetters(s) {
 // listItem/level are block-shape, not content; marks is the list of markDef
 // keys applied to a span, not text) and literal link/asset fields (url, slug,
 // href, _ref) that must keep pointing at the same place.
-const IDENTICAL_KEYS = new Set(["_key", "_ref", "_type", "url", "slug", "href", "marks", "style", "listItem", "level"]);
+const IDENTICAL_KEYS = new Set(["_key", "_ref", "_type", "id", "url", "slug", "href", "marks", "style", "listItem", "level"]);
 
 function identicalEqual(a, b) {
   if (a === b) return true;
@@ -246,7 +246,7 @@ export function metaCheck(seo) {
 // Keys that carry structure/links rather than prose — skipped by walkStrings
 // so callers don't run styleCheck (forbidden-punctuation etc.) against a
 // _key/_ref/slug/url/href value, which is never meant to read as Hebrew text.
-const NON_TEXT_KEYS = new Set(["_key", "_ref", "_type", "url", "slug", "href", "marks"]);
+const NON_TEXT_KEYS = new Set(["_key", "_ref", "_type", "id", "url", "slug", "href", "marks"]);
 
 /**
  * Walks every string leaf reachable from `json`, calling `fn(value, path)`
