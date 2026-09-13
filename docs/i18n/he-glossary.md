@@ -90,6 +90,7 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 | second home | בית שני | nicht `דירת נופש` (klingt nach Ferienvermietung) |
 | new build / new development | פרויקט חדש | Plural פרויקטים חדשים; auch Abschnittstitel „Latest developments" (nicht `אחרונים`) |
 | off-plan | על הנייר | Standardbegriff: `רכישה על הנייר` |
+| off-market | נכסים שאינם מפורסמים | **nicht** `על הנייר` — off-market ≠ off-plan (Task-3-Pass-B M11: die beiden waren verwechselt). „Off-Market Opportunities" als Rubrik: `הזדמנויות בנכסים שאינם מפורסמים` |
 | under construction | בבנייה | |
 | construction stage | שלב הבנייה | Faktenpanel Development-Seite |
 | completed / ready | מוכן למגורים | „key-ready" |
@@ -667,3 +668,9 @@ Die drei Code-Angleichungen aus Teil 1 sind erledigt: `filterAll` steht in `blog
 Alle übrigen WP7-Formen entsprechen dem heutigen Stand von `src/` (geprüft: `מחשבון תשואה`, `roiShort` = `תשואה`, `מעל`/`עד`, `חד׳ שינה`, `לא זמינה עוד`, `היועץ האישי שלכם`, `יועץ הנדל"ן האישי שלכם`, `שמירה למועדפים`, `סגירה`, `להתקשר`, `לפרטים נוספים`, `לצפייה באתר`, `מזהים את אזור הזמן שלכם…`, `הפגישה שלכם מאושרת`, `תודה על הפנייה`, `עקבו אחרינו:`, `יזמים אמינים`, `HE_LANGUAGE_NOTE` in `src/lib/locale.ts` mit vier Trägern, `hePrefixDate()`).
 
 **Zum Abkürzungszeichen:** `חד׳ שינה`, `יום ד׳` und `באוק׳` tragen den Geresh (U+05F3) — so steht es im Code und so liefert es `Intl` für `he-IL`. Wo §1–§4 einen geraden Apostroph schreibt (`דק'`, `קונסיירז'`, `לאצ'י`), ist das eine Schreibvereinfachung dieses Dokuments und keine abweichende Vorgabe an den Code.
+
+### 2026-09-13 — Task 3 Fix-Runde 1 (Site-Dokumente)
+
+**Neu in §2:** `off-market` → `נכסים שאינם מפורסמים`. Anlass ist Pass B M11 zu `content/he/site-documents/caseStudiesPage.he.json`: dort war „Off-Market Opportunities" mit `רכישה על הנייר` (off-plan) übersetzt. Die beiden Begriffe sind nicht dasselbe; §2 trennt sie ab sofort ausdrücklich. Rubrikform: `הזדמנויות בנכסים שאינם מפורסמים`.
+
+Offen für Pass C (nicht entschieden, nur festgehalten): das Genus der Marke `Cyprus VIP Estates` — die Site trägt heute `הוא`, `פועלת`, `מציעה`, `הופכת`, `מציגה`, `תעזור` nebeneinander. Eine Form gehört nach der Lektorenrunde in §4.

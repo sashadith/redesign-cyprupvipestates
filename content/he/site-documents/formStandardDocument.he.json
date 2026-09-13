@@ -29,7 +29,7 @@
     "validationPhoneTooShort": "מספר הטלפון קצר מדי. לפחות {min} ספרות, הוזנו {current}.",
     "agreementLinkDestination": "/he/terms-and-conditions",
     "validationAgreementOneOf": "נדרש אישור לעיבוד הנתונים האישיים",
-    "validationSurnameTooLong": "שם המשפחה ארוך מדי. לפחות {min} תווים, הוזנו {current}.",
+    "validationSurnameTooLong": "שם המשפחה ארוך מדי. עד {max} תווים, הוזנו {current}.",
     "agreementLink2Destination": "/he/privacy-policy",
     "validationCountryRequired": "יש להזין מדינה",
     "validationMessageRequired": "יש להזין הודעה",
