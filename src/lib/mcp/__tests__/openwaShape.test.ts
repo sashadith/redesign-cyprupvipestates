@@ -10,7 +10,8 @@ test("shapeThread: drops the empty 'unknown' sync artefacts", () => {
     { body: "", type: "unknown", timestamp: at + 10, fromMe: false },
   ]);
   assert.equal(out.length, 1);
-  assert.equal(out[0].text?.untrusted_content, "real message");
+  assert.ok(typeof out[0].text === "object" && out[0].text !== null);
+  assert.equal((out[0].text as { untrusted_content: string }).untrusted_content, "real message");
 });
 
 test("shapeThread: keeps an 'unknown' row that actually carries text", () => {
@@ -23,7 +24,7 @@ test("shapeThread: media becomes a marker, never bytes", () => {
     { body: "", type: "image", timestamp: at, fromMe: false, metadata: { media: { mimetype: "image/jpeg", sizeBytes: 153_000 } } },
   ]);
   assert.deepEqual(out[0].media, { type: "image", mimetype: "image/jpeg", sizeBytes: 153_000 });
-  assert.equal(out[0].text, null);
+  assert.strictEqual(out[0].text, null);
 });
 
 test("shapeThread: outbound text is not wrapped as untrusted, inbound is", () => {
@@ -32,7 +33,7 @@ test("shapeThread: outbound text is not wrapped as untrusted, inbound is", () =>
     { body: "from us", type: "text", timestamp: at + 1, fromMe: true },
   ]);
   assert.equal(out[0].direction, "IN");
-  assert.ok(out[0].text && "untrusted_content" in out[0].text);
+  assert.ok(out[0].text !== null && typeof out[0].text === "object" && "untrusted_content" in out[0].text);
   assert.equal(out[1].direction, "OUT");
   assert.equal(out[1].text, "from us");
 });
