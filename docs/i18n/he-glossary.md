@@ -2,7 +2,7 @@
 
 **Stand:** 2026-09-13 · verbindlich für alle `he`-Texte und als Prompt-Kontext für jeden Übersetzungs- und Generierungslauf (Projektbeschreibungen, Meta, Area-Texte).
 
-**Konsolidiert am 2026-09-13:** Diese Datei ist die **eine verbindliche Liste**. Sie führt die Pass-A/Pass-B-Ergebnisse aus WP1–WP6 zusammen (`docs/i18n/reviews/wp2-glossary.md` … `wp6-glossary.md`; jene Dateien bleiben als Audit-Trail mit den Begründungen erhalten, sind aber **nicht** mehr die Quelle). Wo zwei Arbeitspakete unterschiedliche hebräische Formen für denselben englischen Term vorschlugen, steht hier **eine** verbindliche Form; die unterlegene Variante ist als „nicht verwenden" vermerkt. Änderungen dokumentiert §7. WP7 (CRM/E-Mail/Booking) ist noch nicht eingearbeitet und läuft weiter über `docs/i18n/reviews/wp7-glossary.md`.
+**Konsolidiert am 2026-09-13:** Diese Datei ist die **eine verbindliche Liste**. Sie führt die Pass-A/Pass-B-Ergebnisse aus **WP1–WP7** zusammen (`docs/i18n/reviews/wp2-glossary.md` … `wp7-glossary.md`; jene Dateien bleiben als Audit-Trail mit den Begründungen erhalten, sind aber **nicht** mehr die Quelle). Wo zwei Arbeitspakete unterschiedliche hebräische Formen für denselben englischen Term vorschlugen, steht hier **eine** verbindliche Form; die unterlegene Variante ist als „nicht verwenden" vermerkt. Änderungen dokumentiert §7.
 
 Ergänzungen kommen aus den Lektor-Protokollen (`docs/i18n/reviews/`) und aus `he-keyword-map.md` (die Schreibweise mit dem höheren Suchvolumen gewinnt). Die Regeln hinter den Entscheidungen stehen in `he-styleguide.md`, insbesondere §11.
 
@@ -107,6 +107,10 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 | unit | יחידה | Plural יחידות; im UI meist דירה/וילה konkret |
 | unit status (Einheitentabelle, Bezug `יחידה`) | זמינה / שמורה / נמכרה | feminine Reihe, weil der Bezug `יחידה` ist. Das Hero-Badge über dem **Projekt** bleibt maskulin (`זמין`, §2 unten). Implementiert als `heFeedLabel()`; siehe §6 |
 | last unit available / only {n} units left | יחידה אחרונה / נותרו רק {n} יחידות | Scarcity-**Badge**, kein Satz; Satzform `נותרה יחידה אחרונה` bleibt für Fließtext gültig |
+| available units (Überschrift über der Einheitentabelle) | יחידות זמינות | Overlay der Präsentationsseite; Adjektiv feminin Plural, Bezug `יחידות` |
+| unit table column heads (Unit · Type · Beds · Area · Price · Status) | יחידה · סוג · חד׳ שינה · שטח · מחיר · סטטוס | **dokumentierte Ausnahme:** im Spaltenkopf steht die israelische Anzeigenabkürzung `חד׳ שינה` (Geresh), nicht die ausgeschriebene Form — ausgeschrieben sind es 11 Zeichen in einer Spalte, deren EN-Vorlage 4 hat (WP7 Pass B S4). Überall sonst gilt weiter die ausgeschriebene Zählform der Zeile „bedrooms" unten; siehe §6 |
+| no longer available (Unit-Status, aus dem Feed verschwunden) | לא זמינה עוד | ruhige Tatsache, keine Entschuldigung; feminin wie die drei anderen Status. Weicht bewusst von `heFeedLabel("unlisted")` = `לא בתצוגה` ab („nicht in der Anzeige" ≠ „gibt es nicht mehr"); siehe §6 |
+| unit count (Zähler unter dem Preis) | יחידה / יחידות | Plural ab 2, kein Dual (`5 יחידות`). Zur Einzahl siehe §6 |
 | plot / land | מגרש / קרקע | |
 | floor plan | תוכנית קומה / תוכנית דירה | |
 | gated community | קהילה מגודרת / פרויקט מגודר | |
@@ -138,7 +142,7 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 | furnished | מרוהט | |
 | visualisation / rendering | הדמיה | Bildunterschrift Galerie, Branchenbegriff |
 | virtual tour | סיור וירטואלי | `סיור` allein liest sich als Besichtigung vor Ort |
-| viewing (Besichtigung vor Ort) | סיור בנכס | `צפייה בנכס` wäre das Anschauen von Fotos |
+| viewing (Besichtigung vor Ort) | סיור בנכס | `צפייה בנכס` wäre das Anschauen von Fotos. Im Fließtext, wo der Bezug schon steht, genügt `סיור` (`תיאום סיור`, `closingTrust` der Präsentationsseite); **nicht verwenden: `ביקור`** — ein Besuch allgemein, nicht die Objektbesichtigung (WP7 Pass B S9) |
 | title deed | טאבו / נסח טאבו | israelisches Äquivalent, in Zypern „Title Deed" — bei erster Nennung erklären: `שטר בעלות (Title Deed)` |
 | land registry | רשם המקרקעין | |
 | lawyer | עורך דין (עו"ד) | Zypern hat keinen Notar im deutschen Sinn |
@@ -148,7 +152,7 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 | reservation deposit | דמי רצינות / פיקדון הרשמה | |
 | stamp duty | מס בולים | |
 | VAT (reduced 5%) | מע"מ (מופחת 5%) | nur mit Quelle |
-| +VAT (an einer Preisangabe) | + מע"מ | mit Leerzeichen, oder `לא כולל מע"מ`; ohne Leerzeichen liest es sich als ein Wort |
+| +VAT (an einer Preisangabe) | + מע"מ | mit Leerzeichen, oder `לא כולל מע"מ`; ohne Leerzeichen liest es sich als ein Wort. **nicht verwenden: `בתוספת מע"מ`** — WP7s Einwand galt der Form *ohne* Leerzeichen (`+מע"מ`), die auch hier ausgeschlossen ist; mit Leerzeichen liegt das Pluszeichen als Neutralzeichen zwischen LTR-Betrag und RTL-Wort und landet richtig. Wortgleich in `developmentCopy.ts` und auf der Präsentationskarte; siehe §6 und §7 |
 | transfer fees | דמי העברה | |
 | immovable property tax | (abgeschafft) | nicht erwähnen |
 | capital gains tax | מס רווחי הון | |
@@ -204,6 +208,49 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 | capital appreciation | עליית ערך | |
 | secure investment | השקעה בטוחה | nur mit Vorsicht, keine Zusicherung |
 
+### 3.1 Finanzen, Rendite, Transaktion (ROI-Rechner und Ergebnis-Mail)
+
+Die Rechner-Oberfläche (`RoiInputs`, `RoiResults`, `RoiChart`, `ModalRoiCalculator`) und die Ergebnis-Mail (`/api/roi-calculator`) teilen sich diese Terme; jeder doppelt vorkommende String bleibt an beiden Fundstellen wortgleich (Styleguide §11.6).
+
+| Englisch | Hebräisch | Hinweis |
+|---|---|---|
+| ROI Calculator | מחשבון תשואה | Modal- und Rechnertitel. Das Akronym „ROI" hat in hebräischer Endkundensprache keine Verbreitung; `תשואה` ist zugleich der Suchbegriff (§2) |
+| ROI / return | תשואה | durchgehend, auch als Kurzlabel im Ergebnisblock (`ROI: 42.0%` → `תשואה: 42.0%`); en/de/pl/ru behalten `ROI` |
+| average annual ROI | תשואה שנתית ממוצעת | Ergebniszeile **und** Ergebnis-Mail |
+| total net return | תשואה נטו כוללת | Highlight bei Buy-&-Hold |
+| net profit from resale | רווח נטו ממכירה | Highlight bei Buy-&-Sell |
+| conservative · realistic · optimistic | שמרני · ריאלי · אופטימי | Szenario-Tabs **und** Ergebnis-Mail |
+| Buy & Sell / Buy & Hold | רכישה ומכירה / רכישה והחזקה | nur `he` übersetzt die beiden Fachbegriffe; en/de/pl/ru zeigen sie weiterhin englisch |
+| property price | מחיר הנכס | Eingabefeld |
+| furnishing cost / furnishing | עלות ריהוט / ריהוט | Eingabefeld / Ergebniszeile |
+| build period | תקופת בנייה | Eingabefeld |
+| annual off-plan growth | עליית ערך שנתית בשלב הבנייה | `על הנייר` (§2) ist die Kaufform; hier geht es um die Bauphase |
+| off-plan value growth | עליית ערך בשלב הבנייה | Ergebniszeile, dieselbe Wendung ohne „jährlich" |
+| selling costs | עלויות מכירה | Eingabefeld und Ergebniszeile, wortgleich |
+| rental parameters | נתוני השכרה | Abschnittsüberschrift |
+| net yield (year 1) | תשואה נטו (שנה 1) | Eingabefeld |
+| annual rent growth | עליית שכירות שנתית | Eingabefeld |
+| rental period after completion | תקופת השכרה לאחר המסירה | `מסירה` = Handover (§2) |
+| annual appreciation | עליית ערך שנתית | Eingabefeld; mit dem Zusatz `בשלב הבנייה` ist die Bauphase gemeint |
+| horizon | אופק ההשקעה | `אופק` allein steht im Hebräischen nicht als Finanzbegriff |
+| purchase cost (with fees) | עלות הרכישה (כולל עמלות) | Ergebniszeile |
+| total entry cost | עלות כניסה כוללת | Ergebniszeile **und** Ergebnis-Mail |
+| estimated value at completion | שווי משוער במסירה | Ergebniszeile |
+| estimated value in final year | שווי משוער בשנה האחרונה | Ergebniszeile |
+| rental cash flow | תזרים משכירות | `תזרים מזומנים` gekürzt, weil die Quelle „rental cash flow" ist |
+| capital gain | רווח הון | §2 kennt `מס רווחי הון`; hier ohne Steuer |
+| property value (Diagrammlegende) | שווי הנכס | |
+| cumulative rental income | הכנסה מצטברת משכירות | Diagrammlegende; im Diagrammtitel kurz `הכנסה משכירות` |
+| total profit | רווח כולל | Diagrammlegende |
+| amount (EUR) | סכום ב-EUR | y-Achse, **ohne Klammerpaar**: Recharts rendert das Achsenlabel in ein `<text>` ohne eigenes `dir`, und Klammern um einen LTR-Lauf in einer RTL-Beschriftung sind bidi-anfällig. Der Währungscode bleibt lateinisch, `ב-` davor ist nach Styleguide §3 zulässig |
+| years / yrs (Achse, Slider-Suffix) | שנים | eine Form für beide Fundstellen |
+| N years (Ergebnisblock) | שנה אחת / שנתיים / N שנים | Hebräisch ist nicht zahlinvariant: `1 שנים` und `2 שנים` sind falsch, der Dual `שנתיים` ist Pflicht. Implementiert als `heYears()` in `RoiResults.copy.ts`, analog `heBedrooms()` (§2) |
+| strategy / scenario | אסטרטגיה / תרחיש | Zeilenlabels der Ergebnis-Mail |
+| projected result | תוצאה צפויה | Zeilenlabel der Ergebnis-Mail |
+| get investment consultation (CTA) | לקבלת ייעוץ השקעות | baut auf dem Header-CTA `לקבלת ייעוץ` auf (§4) |
+| send calculation (Button) | שליחת החישוב | nominal |
+| send calculation by email (Modaltitel) | שליחת החישוב לאימייל | |
+
 ## 4. Marke, Navigation, UI-Chrome
 
 | Englisch | Hebräisch | Hinweis |
@@ -231,7 +278,12 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 | Next / Previous (Pagination) | הבא / הקודם | |
 | Read more | קריאה נוספת | |
 | Download brochure | הורדת חוברת | |
+| Speak to an adviser (Überschrift Broschüren-Modal) | לדבר עם יועץ | die Komponente vergoldet das letzte Wort, deshalb der Split `לדבר עם` + `יועץ`; `יועץ` folgt §4.6 (nicht `נציג`) |
 | Request a call | לקבל שיחה מיועץ | |
+| Call (Button auf einem `tel:`-Link) | להתקשר | Infinitiv-CTA neben `וואטסאפ` und `אימייל`; `שיחת טלפון` ist das Formularlabel (§4.3), nicht der Button |
+| View details (Karten-CTA) | לפרטים נוספים | der idiomatische israelische Karten-CTA; `קריאה נוספת` gehört zum Blog (§4.4) |
+| Close (`aria-label`) | סגירה | nominal, genusfrei; wortgleich im Broschüren-Modal, im Projekt-Overlay, in `developmentCopy` und im Präsentations-Overlay |
+| Favorite (`aria-label`) | שמירה למועדפים | Herz-Button auf Karte und Overlay; stand in allen Sprachen hart englisch und war damit ein englisches Screenreader-Label auf einer hebräischen Seite |
 | Get consultation (Header-CTA) | לקבלת ייעוץ | Kurzform des CTA-Standards §5 für den schmalen Header-Button |
 | Book a consultation | לקבוע פגישת ייעוץ | |
 | WhatsApp us | לכתוב לנו בוואטסאפ | WhatsApp = וואטסאפ |
@@ -408,11 +460,58 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 | developer page (Einzelseite) | עמוד ייעודי | |
 | Developers-Meta-Title | יזמי נדל"ן בקפריסין \| Cyprus VIP Estates | nur `<title>`; die H1 bleibt ohne Marke, damit der Goldakzent auf `בקפריסין` liegt |
 
+### 4.7 Präsentations- und Booking-Seite (Token-Seiten)
+
+`/he/c/[token]` (persönliche Auswahl) und `/he/book/[token]` (Terminvorschlag). Beide Seiten sprechen den Kunden in der 2. Pers. Plural an und den Berater in der 1. Pers. Singular.
+
+| Englisch | Hebräisch | Hinweis |
+|---|---|---|
+| YOUR PERSONAL SELECTION (Hero-Eyebrow) | המבחר האישי שלכם | `מבחר` ist die kuratierte Auswahl, `בחירה` wäre der Akt des Wählens. EN steht in Versalien, Hebräisch kennt keine |
+| Your preferences (über den Kriterien-Chips) | ההעדפות שלכם | nominal, genusfrei |
+| up to (Budget-Chip, Obergrenze) | עד | `עד €500,000`; steht mit Leerzeichen vor dem Betrag, deshalb keine `החל מ-`-Konstruktion |
+| from (Budget-Chip, Untergrenze) | מעל | `מעל €300,000`; eigener Key `budgetFrom`, symmetrisch zu `budgetUpTo`. **nicht verwenden: `מחיר התחלתי`** — der Chip zeigt die Budgetuntergrenze des Kunden, kein Objektpreis-Label (§2) |
+| Immediate | מיידי | Timeline-Chip |
+| within 3 / 6 months, a year, two years | תוך 3 חודשים · תוך 6 חודשים · תוך שנה · תוך שנתיים | `שנתיים` ist der Dual; nicht verwenden: `2 שנים` |
+| Just looking | בשלב בדיקה | `רק מסתכל` wäre genusgebunden; Nominalstil (Styleguide §2.1) |
+| New for you (Badge) | חדש עבורכם | eigener Badge neben `חדש` (§4) |
+| DIRECT CONTACT (Eyebrow des Closing-Blocks) | קשר ישיר | |
+| Your personal advisor (Zeile unter Name und Foto) | היועץ האישי שלכם | maskulin wie das CTA `לקבל שיחה מיועץ` (§4); die Signaturzeile der E-Mails lautet bewusst anders (§4.8). Siehe §6 |
+| View on site (Link aus dem Overlay) | לצפייה באתר | |
+| Good morning / afternoon / evening | בוקר טוב · צהריים טובים · ערב טוב | Begrüßungswort nach Serverzeit, Standardformeln |
+| Schedule a meeting (Eyebrow) | תיאום פגישה | nominal |
+| let's find a time (H1-Suffix hinter dem Namen) | נמצא זמן שמתאים לכם | 1. Pers. Plural als Firmenstimme, genusfrei; die H1 lautet `שלום {firstName}, נמצא זמן שמתאים לכם` |
+| Your time | השעה אצלכם | Label neben der Kundenzeitzone |
+| Cyprus time | שעון קפריסין | wortgleich mit §4.6 |
+| Detecting your timezone… | מזהים את אזור הזמן שלכם… | Partizip Plural wie `שולחים…` (§4.3); nicht verwenden: `בזיהוי…` |
+| Your selected times | המועדים שבחרתם | Überschrift der Auswahlliste |
+| Send my available times (Submit) | שליחת המועדים הפנויים | nominal; `שליחה` allein ist in §4 für „Send" belegt |
+| Select between 1 and 3 times | יש לבחור בין 1 ל-3 מועדים | unpersönliches `יש ל…` (Styleguide §11.2); der Bindestrich vor der Ziffer ist nach §3 richtig. Der Hinweis über der Liste nennt zusätzlich den Ort: `יש לבחור למעלה בין 1 ל-3 מועדים.` |
+| Your appointment is confirmed | הפגישה שלכם מאושרת | H1 des bestätigten Zustands **und** Betreff der Bestätigungsmail, wortgleich |
+| calendar invite | הזמנה ליומן | Bestätigungstext und Bestätigungsmail |
+| on/at + Datum (Terminbestätigung) | ביום ד׳, 14 באוק׳, 15:00 · ל-⁦14/10/2026⁩ | die Ein-Buchstaben-Präposition klebt ohne Bindestrich vor einem hebräischen Wort und nimmt ihn vor einer Ziffer (§3). `he-IL` liefert ein Datum, das mit `יום` beginnt, `ב-${dt}` ergäbe also das nicht existierende `ב-יום ד׳`. Implementiert als `hePrefixDate()` in `src/lib/locale.ts` |
+
+### 4.8 E-Mail und CRM
+
+Betreffzeilen, Anreden, Grußformeln und Signatur — für Client-Mails (Auto-Reply, ROI-Ergebnis, Booking-Bestätigung) und für die aus dem CRM verschickten Nachrichten. Interne Admin-Texte und Telegram-Meldungen bleiben englisch (Projektkonvention) und stehen deshalb nicht in dieser Tabelle.
+
+| Englisch | Hebräisch | Hinweis |
+|---|---|---|
+| Hi [First], (Anrede) | שלום {firstName}, | **eine** Anredeform für alle Kanäle: `compose/greeting.ts`, Auto-Reply, ROI-Mail, Booking-H1. Kein `מר`/`גב'` — das erzwingt ein Genus (Styleguide §2.3). Der lateinische Name steht in `<bdi>` |
+| Dear Client (Fallback ohne Namen) | שלום, | `לקוח יקר`/`לקוחה יקרה` erzwingt ebenfalls ein Genus. Ein nackter Vorname mit Komma (`יוסי,`) ist im Hebräischen keine Anrede, deshalb trägt auch der Normalfall das `שלום` |
+| Best regards, (Valediction) | בברכה, | Standard-Geschäftsschluss, `compose/closing.ts` |
+| Your personal property advisor (Signatur-Rollenzeile) | יועץ הנדל"ן האישי שלכם | Nomen-Kette vorangestellt, weil die Zeile ohne Bildkontext unter dem Namen steht. nicht verwenden: das nachgestellte `היועץ האישי שלכם לנדל"ן`. Bewusst verschieden von `advisorTitle` unter dem Foto (§4.7) — kein §11.6-Verstoß, es ist nicht derselbe String |
+| Thank you for your enquiry (Betreff und H1 des Auto-Reply) | תודה על הפנייה | `פנייה` als Substantiv (§4.3) |
+| Betreffmuster | {Betreff} \| Cyprus VIP Estates | senkrechter Strich, kein Gedankenstrich; gilt auch für die Browser-Tab-Titel der Token-Seiten (§5) |
+| What happens next? | מה קורה עכשיו? | echte Frage, kein Doppelpunkt-Titel |
+| trusted developers | יזמים אמינים | die EN-Quelle sagt „trusted"; `מובילים` (§5) wäre eine andere Behauptung. `יזמים` nach §2 |
+| Follow us: | עקבו אחרינו: | Imperativ Plural (Styleguide §2.2); nominal wirkt hier gestelzt |
+| Browse properties in Cyprus (CTA-Button) | לצפייה בנכסים בקפריסין | Muster wie `לצפייה בכל הפרויקטים` (§4.1) |
+
 ## 5. Standardformulierungen (Boilerplate)
 
 | Zweck | Hebräisch |
 |---|---|
-| Beratungssprache (Entscheidung E) | הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה. |
+| Beratungssprache (Entscheidung E) — liegt als **eine** exportierte Konstante `HE_LANGUAGE_NOTE` in `src/lib/locale.ts`; die Annahme „einmal sagen reicht" gilt pro Kanal, nicht pro Firma, deshalb tragen Auto-Reply, ROI-Ergebnismail, Booking- und Präsentationsseite sie jeweils selbst | הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה. |
 | Rechtsvorbehalt | המידע אינו מהווה ייעוץ משפטי או מס. בכפוף לבדיקה פרטנית. |
 | Maßgeblichkeit (Legal) | הנוסח האנגלי הוא המחייב. |
 | Preisvorbehalt | המחירים עשויים להשתנות. הזמינות מתעדכנת מול היזם. |
@@ -424,8 +523,16 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 | Newsletter-Bestätigung (wortgleich in `NewsletterForm.copy.ts` und `Footer/FooterNewsletter.tsx`) | ההרשמה לניוזלטר הושלמה. |
 | Datenschutzhinweis Case Studies (wortgleich in `privacyNote` und `CASE_STUDY_INTRO_COPY.disclaimer`) | פרטיות הלקוחות קודמת לכל, ולכן מידע עסקי רגיש ונתונים מזהים אינם נחשפים בסיפור זה. |
 | Öffnungszeiten (Muster, wortgleich in `hoursValue`, `heroLead`, `metaDescription`) | מדי יום, 9:00 עד 18:00 |
+| Zoom-Termin (wortgleich auf der Booking-Seite und in `bookingMessages.ts`) | את הקישור לפגישת Zoom אשלח בנפרד, זמן קצר לפני השיחה. |
+| Telefontermin (wortgleich in denselben zwei Dateien) | אתקשר אליכם במועד שנקבע. |
+| Vertrauenszeile im Closing-Block der Präsentationsseite (`closingTrust`) | אני עונה לכל הודעה בעצמי, בדרך כלל בתוך שעה. אפשר לשאול אותי כל דבר על הנכסים שבמבחר שלכם, על תיאום סיור ועל פרטי הרכישה בקפריסין. בלי התחייבות ובלי לחץ. |
+| Browser-Tab der Token-Seiten (`generateMetadata()`) | המבחר האישי שלכם \| Cyprus VIP Estates · תיאום פגישה \| Cyprus VIP Estates |
 
 Regeln zu diesen Zeilen: kein Bis-Strich in Zeitangaben (`עד` ausgeschrieben), `בסיפור זה` im Schriftregister statt `בסיפור הזה`, und jeder duplizierte String bleibt an allen Fundstellen wortgleich (Styleguide §11.6).
+
+Zur Vertrauenszeile: sie sagt bewusst `בעצמי` und nicht ein viertes `אישי` — `intro`, `eyebrowTag` und `advisorTitle` derselben Seite tragen das Wort bereits, zwei davon in benachbarten Absätzen (Styleguide §11.5). `intro` behält `באופן אישי`.
+
+Zum Satzpunkt: `משהו השתבש, נסו שוב` (§4.3) steht auf der Booking-Seite mit Punkt (`משהו השתבש, נסו שוב.`), weil die EN-Quelle dort zwei Sätze setzt. Der hebräische Wortlaut bleibt in beiden Fällen identisch.
 
 ## 6. Für den Lektor (Pass C) markiert
 
@@ -433,7 +540,7 @@ Nur die Punkte, die die Kritik-Pässe ausdrücklich dem muttersprachlichen Lekto
 
 | ⚠ Term / Frage | Aktuell verbindlich | Alternative(n) | Sichtbar auf |
 |---|---|---|---|
-| „Price from" als Caption | מחיר התחלתי | (a) Komponente ändern (`&nbsp;` raus) und `החל מ-` direkt am Betrag, (b) `מחירים מ-`, (c) belassen | Hero `/he/projects/<slug>`, `ProjectLink`-Karte, `BlogSlide`-Preiszeile, `/c/[token]`. Grund der Vorlage: `מחיר התחלתי` ist im Israelischen zuerst der Eröffnungspreis einer Auktion (`מחיר התחלתי במכרז`) |
+| „Price from" als Caption | מחיר התחלתי | (a) Komponente ändern (`&nbsp;` raus) und `החל מ-` direkt am Betrag, (b) `מחירים מ-`, (c) belassen | Hero `/he/projects/<slug>`, `ProjectLink`-Karte, `BlogSlide`-Preiszeile, `/c/[token]`. Grund der Vorlage: `מחיר התחלתי` ist im Israelischen zuerst der Eröffnungspreis einer Auktion (`מחיר התחלתי במכרז`). **Gemeinsamer Blocker für WP2, WP4 und WP7** — WP4 hat die Frage offengelassen, WP7 hatte sich zunächst fälschlich auf eine WP4-Entscheidung berufen. Der Budget-Chip der Präsentationsseite ist davon ausgenommen, er hat mit `מעל` einen eigenen Term (§4.7) |
 | Unit-Status Genus-Split | Einheit fem. `זמינה / שמורה / נמכרה`, Projekt-Badge mask. `זמין` | durchgehend maskulin, oder Hero-Badge ebenfalls feminisieren | Einheitentabelle und Status-Pill auf `/he/projects/<slug>`; Hero-Badge derselben Seite |
 | `נכסים למכירה` vs. `דירות למכירה` | נכסים למכירה | `דירות למכירה` (140/Mon.), `דירות ווילות למכירה` | `Cities.tsx`-H2 auf `/he`. Gegen `דירות למכירה` spricht die Kannibalisierung der geplanten Spoke-Seite `/he/apartments-for-sale-cyprus` |
 | `קווים ישירים` (Direct lines) | קווים ישירים | ישירות אלינו | Rubrik-Eyebrow `/he/contacts`; die Rubrik enthält auch WhatsApp und E-Mail, nicht nur Durchwahlen |
@@ -443,6 +550,12 @@ Nur die Punkte, die die Kritik-Pässe ausdrücklich dem muttersprachlichen Lekto
 | Umschrift kleiner Orte | §1-Formen | | `Tala`, `Kissonerga` und die WP2-Feed-Ortsnamen bestätigen |
 | `פרויקט` vs. `בניין` | פרויקט | בניין für kleine Mehrfamilienbauten | Projektkarten und Development-Seiten |
 | `וילה` vs. `בית פרטי` in Titeln | nach Objekttyp | | Volumen entscheidet (Keyword-Map) |
+| `statusLabel.unlisted` — zwei Formen für „nicht mehr gelistet" | Präsentationsseite `לא זמינה עוד`, Feed-Vokabular `לא בתצוגה` | eine Form für beide, oder die Trennung bestätigen | Einheitentabelle auf `/he/c/[token]` (`copy.ts`) gegen `heFeedLabel("unlisted")` in `src/lib/heFeedVocab.ts`. Die Trennung ist gewollt („gibt es nicht mehr" vs. „steht nicht in der Anzeige"), aber sie sind für den Leser dasselbe Feld |
+| Abkürzung `חד׳ שינה` im Spaltenkopf | חד׳ שינה (nur Spaltenkopf) | ausgeschrieben `חדרי שינה`, oder nur `חד׳` | Kopfzeile der Einheitentabelle auf `/he/c/[token]`. §2 verbietet die Abkürzung sonst ausdrücklich; hier steht sie nur, weil die Spalte 4 EN-Zeichen breit ist. Der Abkürzungsstrich ist ein Geresh (U+05F3) |
+| Genus der Beraterzeile | maskulin: `היועץ האישי שלכם`, `יועץ הנדל"ן האישי שלכם`, `לדבר עם יועץ` | eine geschlechtsneutrale Rollenzeile, oder pro Berater ein Feld im CRM | Präsentationsseite, E-Mail-Signatur, Broschüren-Modal, Playbook (`compose/playbook`). Hebräisch hat keine neutrale Form; bei einer Beraterin steht heute die maskuline Zeile unter einem weiblichen Namen und Foto |
+| `+ מע"מ` vs. `בתוספת מע"מ` | + מע"מ (§2) | die Wortform `בתוספת מע"מ` an beiden Fundstellen | Preiszeile der Development-Seite (`developmentCopy.ts`) und der Präsentationskarte. Verbindlich ist die kurze Form mit Leerzeichen; wenn Pass C die Wortform bevorzugt, müssen **beide** Dateien wechseln (§11.6) |
+| `צור קשר` als Menü-Label | צור קשר (nur Menü), `ליצירת קשר` überall sonst | durchgehend `ליצירת קשר` | Hauptnavigation. WP7 hält `צור קשר` (mask. Sg. Imperativ) für einen §2-Verstoß und empfiehlt, das Menü nachzuziehen. Im Code ist der String derzeit **nicht** belegt, die Entscheidung kostet also nichts |
+| Einzahl beim Einheitenzähler | 1 יחידה (aus `formatUnitsCount`) | `יחידה אחת` — die ausgeschriebene, nachgestellte Eins wie bei `חדר שינה אחד` (§2) und `שנה אחת` (§3.1) | Zähler unter dem Preis auf `/he/c/[token]`. Die Zählregel ist für Schlafzimmer und Jahre bereits entschieden; für „unit" hat WP7 nur den Plural geregelt |
 
 ## 7. Änderungsprotokoll
 
@@ -487,3 +600,39 @@ Nur die Punkte, die die Kritik-Pässe ausdrücklich dem muttersprachlichen Lekto
 | `src/app/preview-case-studies/[lang]/copy.ts` | `eyebrow` (Z. 231) | `מהשטח` | keine Änderung — Glossar auf `מהשטח` angeglichen |
 
 Alle übrigen in §1–§5 verbindlich gesetzten Formen entsprechen dem heutigen Stand von `src/` (geprüft: `שולחים…`, `טוענים…`, `פתיחה ב-`, `השאירו פרטים`, `לכל סיפורי הלקוחות`, `מחיר התחלתי`, `המלצות`, `ניוזלטר`, `(לא חובה)`, `כל הערים`, `שאלות נפוצות`; keine Treffer für `בשליחה`, `בטעינה`, `חברות בנייה`, `חוות דעת`, `דיוור`, `נדלן`, `מקרי בוחן`).
+
+### 2026-09-13 — Konsolidierung WP7 (Task 11, Teil 2)
+
+**Zusammengeführt:** `docs/i18n/reviews/wp7-glossary.md` (Präsentationsseite `/c/[token]`, Booking-Seite `/book/[token]`, CRM-Nachrichten und Signatur, Client-E-Mails, ROI-Rechner, Broschüren-Modal). Übernommen sind alle Zeilen mit Pass-B-Verdikt „bestätigt" oder „geändert"; die Datei bleibt als Audit-Trail mit den vollständigen Begründungen erhalten und ist ab jetzt **nicht** mehr die Quelle. Damit ist §1–§5 die verbindliche Liste für WP1–WP7.
+
+**Strukturänderung:** neu sind **§3.1 „Finanzen, Rendite, Transaktion (ROI-Rechner und Ergebnis-Mail)"**, **§4.7 „Präsentations- und Booking-Seite (Token-Seiten)"** und **§4.8 „E-Mail und CRM"**. Die Nummerierung von §1–§7 bleibt unverändert, damit die bestehenden Querverweise (§4.1 … §6) gültig bleiben; die Finanzterme hängen deshalb als Untertabelle an §3 („Aufenthalt, **Steuern**, Relocation, Zielgruppe") statt als eigener Abschnitt.
+
+**Aufgelöste Divergenzen (eine verbindliche Form je EN-Term):**
+
+| EN-Term | Konkurrierende Formen | Verbindlich | Grund |
+|---|---|---|---|
+| Unit-Status (Einheitentabelle) | WP2 `זמינה / שמורה / נמכרה` · WP7 Abgabe `זמין / שמור / נמכר` | `זמינה / שמורה / נמכרה` | WP2 hat es entschieden **und** in `heFeedVocab.ts` gebaut; der Bezug `יחידה` ist feminin. Das Projekt-Badge bleibt maskulin `נמכר`, weil es dort den `פרויקט` benennt. Von WP7 in der Fix-Runde bereits übernommen |
+| +VAT | §2 `+ מע"מ` · WP7 `בתוספת מע"מ` | `+ מע"מ` | WP7s Einwand galt der Form ohne Leerzeichen (`+מע"מ`), die §2 ebenfalls ausschließt; mit Leerzeichen fällt das Pluszeichen als Neutralzeichen zwischen LTR-Betrag und RTL-Wort richtig. Code-Angleichung unten |
+| „from" am Preis vs. am Budget | beides zuvor `מחיר התחלתי` | `מחיר התחלתי` (Objektpreis-Caption) · `מעל` (Budgetuntergrenze im Chip) | zwei verschiedene Aussagen: ein Objektpreis „ab" gegen die Untergrenze des Kundenbudgets. Eigener Key `budgetFrom`, symmetrisch zu `budgetUpTo` = `עד` |
+| bedrooms (Abkürzung) | §2 „nicht verwenden: `חד' שינה`" · WP7 Spaltenkopf `חד׳ שינה` | kontextgetrennt | ausgeschrieben überall, `חד׳ שינה` **nur** im Spaltenkopf der Einheitentabelle (EN-Vorlage 4 Zeichen breit). Als Ausnahme in §2 dokumentiert und in §6 dem Lektor vorgelegt |
+| Contact us | §4 `צור קשר` (Menü) · `ליצירת קשר` (CTA) · WP7 durchgehend `ליצירת קשר` | unverändert kontextgetrennt | WP7 hat es nur **empfohlen**, nicht per Pass-B-Verdikt geändert; die Frage steht jetzt in §6. `צור קשר` ist im Code ohnehin nicht belegt |
+| viewing | §2 `סיור בנכס` · WP7 Fließtext `סיור`, Abgabe zuvor `ביקור` | `סיור בנכס`, im Fließtext `סיור` | `ביקור` ist ein Besuch allgemein; `צפייה בנכס` wäre das Anschauen von Fotos |
+| advisor role line | `היועץ האישי שלכם` (Foto) · `יועץ הנדל"ן האישי שלכם` (Signatur) | beides, kontextgetrennt | kein §11.6-Verstoß: zwei verschiedene Strings an zwei Trägern. Die Signaturzeile trägt das Fach, weil sie ohne Bildkontext steht |
+| ROI | Akronym `ROI` · `תשואה` | `תשואה` | das Akronym hat in hebräischer Endkundensprache keine Verbreitung und ist zugleich der Suchbegriff (§2); en/de/pl/ru behalten `ROI` |
+| „N Jahre" / „N Schlafzimmer" | `1 שנים`, `2 שנים`, `1 חדר שינה` | `שנה אחת` / `שנתיים` / `N שנים`, `חדר שינה אחד` | Hebräisch ist nicht zahlinvariant; Dual und nachgestellte, ausgeschriebene Eins sind Pflicht. Helfer `heYears()` bzw. `heBedrooms()` |
+| Zustandsmeldung „Detecting…" | `בזיהוי…` | `מזהים את אזור הזמן שלכם…` | dieselbe Regel wie `שולחים…` / `טוענים…`: kein `ב` + Verbalnomen (Styleguide §11.2) |
+| Anrede | `יוסי,` (nackter Vorname) · `מר`/`גב'` · `לקוח יקר` | `שלום {firstName},` bzw. `שלום,` | ein nackter Vorname mit Komma ist im Hebräischen keine Anrede; `מר`/`גב'` und `לקוח יקר`/`לקוחה יקרה` erzwingen ein Genus |
+
+**Code-Angleichung erforderlich** (Folgeaufgabe; in diesem Commit wurde **kein** `src/`-File angefasst — die drei Zeilen sind per `grep` am heutigen Stand bestätigt):
+
+| Datei | Key / Zeile | Aktuell im Code | Verbindlich laut Glossar |
+|---|---|---|---|
+| `src/app/c/[token]/copy.ts` | `vatLabel` (Z. 256) | `בתוספת מע"מ` | `+ מע"מ` (§2), wortgleich mit `src/lib/developmentCopy.ts:394` |
+| `src/app/c/[token]/copy.ts` | `bedroomLabels["1"]` (Z. 248) | `1 חדר שינה` | `חדר שינה אחד` (§2), wie `heBedrooms()` in `src/lib/heFeedVocab.ts:267` |
+| `src/app/c/[token]/copy.ts` | `unitsPlural.one` über `formatUnitsCount` (Z. 254) | `1 יחידה` | `יחידה אחת` — erst nach der §6-Bestätigung; `formatUnitsCount` setzt `${n} ${wort}` für alle Locales und braucht dafür einen he-Sonderweg |
+
+Die drei Code-Angleichungen aus Teil 1 sind erledigt: `filterAll` steht in `blogI18n.ts` und in `BlogPostsRenderer.tsx` inzwischen auf `הכל`, `eyebrow` in `preview-case-studies/[lang]/copy.ts` auf `מהשטח`; `הכול` kommt in `src/` nicht mehr vor.
+
+Alle übrigen WP7-Formen entsprechen dem heutigen Stand von `src/` (geprüft: `מחשבון תשואה`, `roiShort` = `תשואה`, `מעל`/`עד`, `חד׳ שינה`, `לא זמינה עוד`, `היועץ האישי שלכם`, `יועץ הנדל"ן האישי שלכם`, `שמירה למועדפים`, `סגירה`, `להתקשר`, `לפרטים נוספים`, `לצפייה באתר`, `מזהים את אזור הזמן שלכם…`, `הפגישה שלכם מאושרת`, `תודה על הפנייה`, `עקבו אחרינו:`, `יזמים אמינים`, `HE_LANGUAGE_NOTE` in `src/lib/locale.ts` mit vier Trägern, `hePrefixDate()`).
+
+**Zum Abkürzungszeichen:** `חד׳ שינה`, `יום ד׳` und `באוק׳` tragen den Geresh (U+05F3) — so steht es im Code und so liefert es `Intl` für `he-IL`. Wo §1–§4 einen geraden Apostroph schreibt (`דק'`, `קונסיירז'`, `לאצ'י`), ist das eine Schreibvereinfachung dieses Dokuments und keine abweichende Vorgabe an den Code.

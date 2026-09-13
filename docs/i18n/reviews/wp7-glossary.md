@@ -2,9 +2,20 @@
 
 **Stand:** 2026-09-13 · Begleitdokument zu `docs/i18n/reviews/wp7.md`.
 
+> **⚠ Konsolidiert am 2026-09-13 (Task 11, Teil 2) — diese Datei ist ab jetzt Audit-Trail,
+> nicht mehr die Quelle.** Alle Zeilen mit Pass-B-Verdikt „bestätigt" oder „geändert" stehen
+> jetzt in `docs/i18n/he-glossary.md` (§2, §3.1, §4, §4.7, §4.8, §5); die verbindliche Form
+> und die Konfliktentscheidungen sind dort nachzulesen, das Änderungsprotokoll in §7. Die
+> Tabellen unten bleiben unverändert erhalten, weil sie die vollständigen Begründungen und
+> den Pass-B-Verlauf tragen. Wo sie vom Glossar abweichen, gilt das Glossar. Abweichungen
+> nach der Konsolidierung: **+VAT** = `+ מע"מ` (nicht `בתוספת מע"מ`, §2), **Contact us**
+> bleibt kontextgetrennt (`צור קשר` im Menü, `ליצירת קשר` als CTA — WP7s Empfehlung steht
+> als Frage in §6), **`חד׳ שינה`** gilt nur als Spaltenkopf-Ausnahme.
+
 Begriffe, die WP7 gebraucht hat und die in `docs/i18n/he-glossary.md` §1–5 (und in §6.1
-aus WP1) fehlten. **`he-glossary.md` wurde bewusst nicht angefasst** — nach dem Lektorat
-(Pass C) wandern die bestätigten Zeilen dort in §2/§4/§5.
+aus WP1) fehlten. **`he-glossary.md` wurde bei der Abgabe bewusst nicht angefasst** — nach
+dem Lektorat (Pass C) wandern die bestätigten Zeilen dort in §2/§4/§5. *(Überholt: die
+Einarbeitung ist am 2026-09-13 vorgezogen worden, siehe Kopfnotiz.)*
 
 > **Stand Fix-Runde 1 (Pass B).** 84 Begriffe bestätigt, 6 geändert, 2 cross-WP-Konflikte
 > entschieden, 1 falsch dargestellte Quelle korrigiert. Die geänderten Zeilen tragen den
