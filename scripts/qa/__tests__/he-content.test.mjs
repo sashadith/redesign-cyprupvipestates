@@ -284,9 +284,14 @@ test("planSeed: dispatches to planSiteDocuments for kind site-documents", () => 
   assert.equal(plan[0].action, "insert");
 });
 
-test("planSeed: throws not implemented (Task 9) for every other kind", () => {
+// Task 9 completed every other kind (faq, case-studies, singlepages,
+// legal-check) — see scripts/qa/__tests__/he-seed.test.mjs for their
+// planner/applier coverage. This file keeps only the Task 1 site-documents
+// coverage plus the pure validators (mirrorCheck/styleCheck/linkCheck/
+// metaCheck/walkStrings) it was written for.
+test("planSeed: an empty pack for every kind produces an empty plan", () => {
   for (const kind of ["faq", "case-studies", "singlepages", "legal-check"]) {
-    assert.throws(() => planSeed({ kind, rows: [] }, []), /not implemented \(Task 9\)/);
+    assert.deepEqual(planSeed({ kind, rows: [] }, {}), []);
   }
 });
 

@@ -28,22 +28,48 @@ content/he/
     developers.en.json
     inventory.json
   site-documents/<type>.he.json      → SiteDocument  (type_language: {type, language:"he"})
-  case-studies/<slug>.he.json        → CaseStudy     (language:"he", slug)
-  singlepages/<slug>.he.json         → Singlepage    (language:"he", slug)
+  case-studies/<slug>.he.json        → CaseStudy     (language:"he", slug) + CaseStudyProject links
+  singlepages/<slug>.he.json         → Singlepage    (language:"he", slug) + relatedLandingPages links
 
-scripts/faq-translations/he.json     → SiteDocument type="faqPage" (seeded by
-                                        scripts/seed-faq-translations.mjs, not seed.mjs)
+scripts/faq-translations/he.json     → SiteDocument type="faqPage" — seeded identically by EITHER
+                                        `node scripts/seed-faq-translations.mjs` (the original en/de/pl/ru
+                                        script, extended to `he`) or `node scripts/he-content/seed.mjs
+                                        --only faq` (rebuilds the same way, for a one-tool operator flow)
 ```
 
-Every `*.he.json` file carries three pack-only metadata keys that have no
-database counterpart and are stripped before diffing/writing:
+Every `*.he.json` file carries pack-only metadata keys that have no database
+counterpart and are stripped (or split off into a relation, for the two link
+fields) before diffing/writing:
 
 - `"review": "pending"` — Pass C (native review) status; Phase 5 ships with
   this deferred, so every file starts `"pending"`.
-- `"translationGroupSlugEn"` — the EN row this Hebrew row's `translationGroupId`
-  should join, resolved by the seeder (Task 9).
-- `"parentSlug"` — for a nested landing page (e.g. `limassol/new-projects`),
-  the pack slug of its hub, resolved to `parentSanityId` by the seeder.
+- `"translationGroupSlugEn"` — the EN row (same kind, `language:"en"`) whose
+  slug names the translation group this Hebrew row's `translationGroupId`
+  should join. Resolved by the seeder: if given, that EN row's
+  `translationGroupId` is reused (minting and persisting one onto the EN row
+  first if it doesn't have one yet — the same "generate + persist if missing"
+  convention `createTranslation` in `src/app/admin/actions.ts` uses); if
+  omitted, a fresh group id is minted for the Hebrew row alone (and reused on
+  every later re-seed of that same row, so re-running the seeder never forks
+  the group).
+- `"parentSlug"` (singlepages only) — for a nested landing page (e.g.
+  `limassol/new-projects`), the pack slug of its hub, resolved to
+  `parentSanityId`. Resolves against every OTHER `*.he.json` row in the same
+  seeder run (by its deterministic `sanityId: "he-<slug>"`, no DB round trip
+  needed) as well as any hub already seeded to `he` in an earlier run. A
+  parent slug that resolves to neither is a hard error naming the slug.
+- `"relatedLandingPages"` (singlepages only) — an array of PACK slugs (not
+  `_ref`s) for the editor-curated cross-links between Hebrew landing pages.
+  Resolved the same way as `parentSlug` (this run's rows + already-seeded `he`
+  rows) into `[{_ref: sanityId}]` and written in a SECOND pass, after every
+  row in the run has been inserted/updated — a hub and a spoke seeded in the
+  same run can link to each other in either direction. An unresolvable slug
+  is a hard error naming it.
+- `"relatedProjects"` (case-studies only) — an array of EN **Development**
+  slugs (not the legacy `Project` model `CaseStudyProject` actually joins to
+  — see the "case-studies" section below). Resolved against
+  `Development.slug` at plan time (unknown slug → hard error naming it) and
+  linked in a second pass, same idea as `relatedLandingPages`.
 
 A file under `content/he/source/**` is an English **snapshot**, not a live
 read — it is written once by `export-en.mjs` and committed, so translation
@@ -112,18 +138,38 @@ below exists because the local `DATABASE_URL` in this repo is production:
 3. **Reading existing rows requires `CVP_ALLOW_DB_READ=yes`**, even for a dry
    run — planning insert/update/skip means querying the database, and that is
    itself a production read. The controller decides when that's appropriate.
-   For an **empty** pack, no `PrismaClient` is ever constructed and no env
-   var is needed — the empty plan is printed and the process exits 0.
-4. **Row guard:** if an existing row this would touch has `language` other
-   than `"he"`, the whole run refuses with a clear message rather than
-   silently upserting past it.
-5. `--only <kind>` restricts to one kind. Kinds: `site-documents` (fully
-   implemented), `faq` | `case-studies` | `singlepages` | `legal-check`
-   (Task 9 — calling any of these, explicitly or because their content
-   already exists on disk, throws `not implemented (Task 9)`).
+   For an **empty** pack (no DB-backed rows across every selected kind —
+   `legal-check` never counts, since it never touches the DB), no
+   `PrismaClient` is ever constructed and no env var is needed. Without the
+   env var and a non-empty pack, the script prints a `set
+   CVP_ALLOW_DB_READ=yes to read existing rows` hint and exits **0** — that's
+   an expected stopping point for an operator running this from the wrong
+   place, not a failure of the pack.
+4. **Row guard:** if an existing row with the SAME slug (or `type`, for
+   site-documents/faq) this would touch has `language` other than `"he"`,
+   the whole run refuses with a clear message rather than silently upserting
+   past it.
+5. `--only <kind>` restricts to one kind. Kinds: `site-documents`, `faq`,
+   `case-studies`, `singlepages`, `legal-check` — all implemented.
 
-Recommended operator sequence once content lands (Task 9 documents the full
-runbook in `docs/i18n/acceptance/phase-5.md`):
+### Case studies: how `relatedProjects` actually links
+
+`CaseStudy.relatedProjects` is a many-to-many through `CaseStudyProject`,
+which joins to the **legacy `Project` model** (per-language, pre-`Development`),
+not to `Development` directly — confirmed against `prisma/schema.prisma` and
+`_getCaseStudyByLang`/`mapProjectRowsToLang` in `src/sanity/sanity.utils.ts`,
+what the public `/case-studies/<slug>` page actually reads. A content file's
+`relatedProjects` (EN Development slugs) is resolved at PLAN time to
+`Development.id` (unknown slug → hard error), then at APPLY time (real DB
+access) to whichever legacy `Project` row(s) have `supersededByDevelopmentId`
+pointing at that Development — the field the Phase 5 legacy/Development
+overlap-review admin flow sets. A Development with no corresponding legacy
+`Project` (the common case for anything created after the `Development`
+model existed) has nothing to link to; `applyPlan` logs a warning and skips
+just that link rather than failing the whole run.
+
+Recommended operator sequence once content lands (`docs/i18n/acceptance/phase-5.md`,
+Task 9 step 4, documents the full runbook):
 
 ```
 # on staging, in the repo checkout
@@ -132,5 +178,10 @@ CVP_ALLOW_DB_READ=yes CVP_CONFIRM_CONTENT_SEED=yes node scripts/he-content/seed.
 CVP_CONFIRM_CONTENT_SEED=yes node scripts/seed-faq-translations.mjs
 ```
 
-The seeder is idempotent: running it again with unchanged files produces a
-plan of all `skip (unchanged)` entries and writes nothing.
+(`seed.mjs`'s own `faq` kind produces the same `he` row and can be used
+instead of the last line — the two are kept in parallel deliberately; see the
+"faq" section above.)
+
+The seeder is idempotent: running it again with unchanged files (and
+unchanged related-page/related-project links) produces a plan of all
+`skip (unchanged)` entries and writes nothing.
