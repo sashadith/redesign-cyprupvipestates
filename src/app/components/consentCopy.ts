@@ -47,13 +47,14 @@ const CONSENT: Record<Locale, ConsentCopy> = {
     lead: "Согласен с ", termsLabel: "Условиями", termsHref: "/ru/uslovija-i-polozhenija",
     mid: " и ", privacyLabel: "Политикой конфиденциальности", privacyHref: "/ru/politika-privatnosti", tail: "",
   },
-  // he (Phase 4): TODO(he) text, but the hrefs are real now (registry.ts's
-  // CORPORATE_SLUGS.terms/privacy.he are the EN slugs under the /he prefix).
+  // he: the hrefs stay the EN slugs under the /he prefix (registry.ts's
+  // CORPORATE_SLUGS.terms/privacy.he). The checkbox label uses the one
+  // gendered form the style guide allows (§2.3 exception, glossary §4).
   he: {
-    ...EN,
-    termsHref: "/he/terms-and-conditions",
-    privacyHref: "/he/privacy-policy",
-  }, // TODO(he)
+    lead: "קראתי את ", termsLabel: "תנאי השימוש", termsHref: "/he/terms-and-conditions",
+    mid: " ואת ", privacyLabel: "מדיניות הפרטיות", privacyHref: "/he/privacy-policy",
+    tail: " ואני מאשר/ת",
+  }, // REVIEW(he)
 };
 
 export function consentCopy(lang: string): ConsentCopy {

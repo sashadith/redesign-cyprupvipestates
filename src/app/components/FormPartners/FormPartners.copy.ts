@@ -48,7 +48,16 @@ export const FORM_PARTNERS_COPY: Record<Locale, typeof FORM_PARTNERS_EN> = {
     surnameLabel: "Фамилия",
     countryLabel: "Страна",
   },
-  he: FORM_PARTNERS_EN, // TODO(he)
+  he: {
+    surnameRequired: "יש להזין שם משפחה",
+    surnameTooShort: (min) => `שם המשפחה קצר מדי (מינימום ${min})`,
+    surnameTooLong: (max) => `שם המשפחה ארוך מדי (מקסימום ${max})`,
+    countryRequired: "יש להזין מדינה",
+    countryTooShort: (min) => `שם המדינה קצר מדי (מינימום ${min})`,
+    countryTooLong: (max) => `שם המדינה ארוך מדי (מקסימום ${max})`,
+    surnameLabel: "שם משפחה",
+    countryLabel: "מדינה",
+  }, // REVIEW(he)
 };
 
 export const formPartnersCopy = (lang: string) =>

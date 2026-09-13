@@ -98,7 +98,31 @@ export const FORM_STATIC_COPY: Record<Locale, typeof FORM_STATIC_EN> = {
     agreementLinkLabel: "Пользовательским соглашением",
     agreementTail: " прочитал и принимаю их",
   },
-  he: FORM_STATIC_EN, // TODO(he)
+  // he: agreementHref follows the other locales and points at the localized
+  // policy (/he/privacy-policy); the label is the Hebrew noun for it.
+  he: {
+    phoneLabel: "טלפון",
+    nameRequired: "יש להזין שם פרטי",
+    surnameRequired: "יש להזין שם משפחה",
+    phoneRequired: "יש להזין טלפון",
+    emailInvalid: "כתובת אימייל לא תקינה",
+    emailRequired: "יש להזין אימייל",
+    contactMethodRequired: "יש לבחור דרך התקשרות מועדפת",
+    agreementRequired: "נדרש אישור",
+    agreementOneOf: "חובה לאשר",
+    title: "השאירו פנייה ונחזור אליכם בהקדם",
+    nameLabel: "שם פרטי",
+    surnameLabel: "שם משפחה",
+    emailLabel: "אימייל",
+    contactMethodLegend: "מה דרך ההתקשרות הנוחה לכם?",
+    phoneCallLabel: "שיחת טלפון",
+    emailRadioLabel: "אימייל",
+    submitLabel: "שליחה",
+    agreementLead: "קראתי את ",
+    agreementHref: "/he/privacy-policy",
+    agreementLinkLabel: "מדיניות הפרטיות",
+    agreementTail: " ואני מאשר/ת",
+  }, // REVIEW(he)
 };
 
 export const formStaticCopy = (lang: string) =>

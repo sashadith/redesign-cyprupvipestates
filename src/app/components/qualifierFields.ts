@@ -21,7 +21,7 @@
  * All three fields are optional everywhere, and the labels say so, because in
  * the forms that show them every other field is required. */
 
-import type { Locale } from "@/lib/locale";
+import { ltrIsolate, type Locale } from "@/lib/locale";
 
 /* Order is display order. "Under €200k" sits last on purpose: the list should
    open on the ranges that matter most, not on the smallest one. */
@@ -135,7 +135,26 @@ const COPY: Record<Locale, Copy> = {
       exploring: "Присматриваюсь",
     },
   },
-  he: EN, // TODO(he)
+  he: {
+    budgetLabel: "טווח תקציב (לא חובה)",
+    propertyLabel: "סוג הנכס המבוקש (לא חובה)",
+    timelineLabel: "לוח זמנים (לא חובה)",
+    choose: "בחרו…",
+    budgets: {
+      "200000-500000": ltrIsolate("€200,000–€500,000"),
+      "500000-1000000": ltrIsolate("€500,000–€1,000,000"),
+      "1000000-2000000": ltrIsolate("€1,000,000–€2,000,000"),
+      "2000000-": `מעל ${ltrIsolate("€2,000,000")}`,
+      "0-200000": `עד ${ltrIsolate("€200,000")}`,
+    },
+    properties: { Villa: "וילה", Townhouse: "בית טורי", Apartment: "דירה", Penthouse: "פנטהאוז", Office: "משרד" },
+    timelines: {
+      now: "מוכנים לרכישה עכשיו",
+      "1y": "בתוך שנה",
+      "2y": "בתוך שנתיים",
+      exploring: "בודקים אפשרויות",
+    },
+  }, // REVIEW(he)
 };
 
 export function qualifierCopy(lang: string): Copy {

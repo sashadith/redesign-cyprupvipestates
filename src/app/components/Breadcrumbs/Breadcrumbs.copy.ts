@@ -12,7 +12,7 @@ export const BREADCRUMBS_COPY: Record<Locale, typeof BREADCRUMBS_EN> = {
   de: { home: "Startseite" },
   pl: { home: "Strona główna" },
   ru: { home: "Главная" },
-  he: BREADCRUMBS_EN, // TODO(he)
+  he: { home: "דף הבית" }, // REVIEW(he)
 };
 
 export const breadcrumbsCopy = (lang: string) => BREADCRUMBS_COPY[isLocale(lang) ? lang : "en"];

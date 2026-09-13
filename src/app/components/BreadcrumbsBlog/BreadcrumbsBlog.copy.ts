@@ -9,7 +9,7 @@ export const BLOG_LABEL_BY_LANG: Record<Locale, string> = {
   de: "Blog",
   pl: "Blog",
   ru: "Блог",
-  he: "Blog", // TODO(he)
+  he: "בלוג", // REVIEW(he)
 };
 
 export const HOME_LABEL_BY_LANG: Record<Locale, string> = {
@@ -17,5 +17,5 @@ export const HOME_LABEL_BY_LANG: Record<Locale, string> = {
   de: "Startseite",
   pl: "Strona główna",
   ru: "Главная",
-  he: "Home", // TODO(he)
+  he: "דף הבית", // REVIEW(he)
 };

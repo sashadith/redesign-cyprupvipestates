@@ -36,7 +36,11 @@ const MESSAGES: Record<SupportedLang, Record<"success" | "error" | "invalid", st
     error: "Не удалось подписаться. Попробуйте еще раз.",
     invalid: "Пожалуйста, введите корректный адрес электронной почты.",
   },
-  he: MESSAGES_EN, // TODO(he)
+  he: {
+    success: "ההרשמה לניוזלטר הושלמה.",
+    error: "ההרשמה נכשלה. אפשר לנסות שוב.",
+    invalid: "יש להזין כתובת אימייל תקינה.",
+  }, // REVIEW(he)
 };
 
 const msg = (type: "success" | "error" | "invalid", lang: string) =>

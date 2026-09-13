@@ -50,7 +50,19 @@ export const FORM_FULL_COPY: Record<Locale, typeof FORM_FULL_EN> = {
     agreementHref: "/ru/politika-privatnosti",
     agreementTail: " прочитал и принимаю их",
   },
-  he: FORM_FULL_EN, // TODO(he)
+  // he: the link points at the privacy policy, so the label is the Hebrew
+  // noun for that document rather than a literal "User agreement" (glossary §4).
+  he: {
+    contactMethodRequired: "יש לבחור דרך התקשרות מועדפת",
+    surnameLabel: "שם משפחה",
+    contactMethodLegend: "מה דרך ההתקשרות הנוחה לכם?",
+    phoneCallLabel: "שיחת טלפון",
+    emailLabel: "אימייל",
+    agreementLead: "קראתי את ",
+    agreementLinkLabel: "מדיניות הפרטיות",
+    agreementHref: "/he/privacy-policy",
+    agreementTail: " ואני מאשר/ת",
+  }, // REVIEW(he)
 };
 
 export const formFullCopy = (lang: string) => FORM_FULL_COPY[isLocale(lang) ? lang : "en"];

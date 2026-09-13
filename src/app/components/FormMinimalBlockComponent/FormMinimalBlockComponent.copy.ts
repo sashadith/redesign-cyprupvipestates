@@ -37,7 +37,13 @@ export const FORM_MINIMAL_COPY: Record<Locale, typeof FORM_MINIMAL_EN> = {
     phoneCallLabel: "Телефон",
     emailLabel: "Email",
   },
-  he: FORM_MINIMAL_EN, // TODO(he)
+  he: {
+    contactMethodRequired: "יש לבחור דרך התקשרות מועדפת",
+    surnameLabel: "שם משפחה",
+    contactMethodLegend: "מה דרך ההתקשרות הנוחה לכם?",
+    phoneCallLabel: "שיחת טלפון",
+    emailLabel: "אימייל",
+  }, // REVIEW(he)
 };
 
 export const formMinimalCopy = (lang: string) =>

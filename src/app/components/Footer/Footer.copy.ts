@@ -12,7 +12,7 @@ export const FOOTER_COPY: Record<Locale, typeof FOOTER_EN> = {
   de: { emailPlaceholder: "Ihre E-Mail Adresse" },
   pl: { emailPlaceholder: "Twój adres e-mail" },
   ru: { emailPlaceholder: "Ваш email" },
-  he: FOOTER_EN, // TODO(he)
+  he: { emailPlaceholder: "האימייל שלכם" }, // REVIEW(he)
 };
 
 export const footerCopy = (lang: string) => FOOTER_COPY[isLocale(lang) ? lang : "en"];

@@ -14,7 +14,7 @@ export const messages: Record<Locale, string> = {
   de: "Hallo, ich interessiere mich für den Kauf einer Immobilie auf Zypern. Bitte kontaktieren Sie mich.",
   pl: "Dzień dobry, interesuję się zakupem nieruchomości na Cyprze. Czy mogą mi Państwo doradzić odpowiednie wille lub apartamenty?",
   ru: "Здравствуйте! Я интересуюсь покупкой недвижимости на Кипре. Подскажите, пожалуйста, какие виллы или апартаменты доступны сейчас?",
-  he: MESSAGE_EN, // TODO(he)
+  he: "שלום, אשמח לקבל מידע על רכישת נכס בקפריסין. אפשר לעזור לי למצוא וילה או דירה מתאימה?", // REVIEW(he)
 };
 
 export const messageWithUrl: Record<Locale, string> = {
@@ -22,7 +22,7 @@ export const messageWithUrl: Record<Locale, string> = {
   de: `${messages.de}\n\nIch sende diese Nachricht von der Seite:`,
   pl: `${messages.pl}\n\nWiadomość wysyłam ze strony:`,
   ru: `${messages.ru}\n\nЯ отправляю это сообщение со страницы:`,
-  he: `${messages.he}\n\nI'm sending this message from the page:`, // TODO(he)
+  he: `${messages.he}\n\nההודעה נשלחת מהעמוד:`, // REVIEW(he)
 };
 
 export const label: Record<Locale, string> = {
@@ -30,5 +30,5 @@ export const label: Record<Locale, string> = {
   de: "WhatsApp senden",
   pl: "Napisz do nas teraz",
   ru: "Напишите нам сейчас",
-  he: "WhatsApp us now", // TODO(he)
+  he: "לכתוב לנו בוואטסאפ", // REVIEW(he)
 };

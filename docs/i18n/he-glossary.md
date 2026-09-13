@@ -204,3 +204,32 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 - `פרויקט` vs. `בניין` für kleine Mehrfamilienbauten.
 - `וילה` vs. `בית פרטי` in Titeln — Volumen entscheidet.
 - Umschrift kleiner Orte (Tala, Kissonerga) — Lektor bestätigt.
+
+### 6.1 Neu aus WP1 (Chrome, Formulare, Consent, Newsletter, Footer, 404, WhatsApp) — 2026-09-13
+
+Begriffe, die WP1 gebraucht hat und die in §1–5 fehlten. Nach dem Lektorat (Pass C)
+wandern sie in die Tabellen §2/§4/§5.
+
+| Englisch (Quelle) | Hebräisch (WP1) | Hinweis |
+|---|---|---|
+| office (Objekttyp) | משרד | Objekttyp-Liste in den Qualifier-Feldern |
+| newsletter | ניוזלטר | Alternative `דיוור` — Lektor entscheidet |
+| cookie policy | מדיניות העוגיות | Cookies = עוגיות (§4) |
+| first name / surname | שם פרטי / שם משפחה | Formularlabels |
+| nationality | אזרחות | |
+| financing | מימון | |
+| timeline (Formularfeld) | לוח זמנים | |
+| budget range | טווח תקציב | |
+| (optional) | (לא חובה) | Suffix am Formularlabel |
+| Please choose… | בחרו… | Select-Placeholder; §2.2 (männl. Plural), Nominalform wirkt hier unnatürlich |
+| required fields | שדות חובה | `יש למלא את שדות החובה.` |
+| preferred contact method | דרך התקשרות מועדפת | |
+| phone call (Kontaktweg) | שיחת טלפון | |
+| enquiry / request (Lead) | פנייה | `השאירו פנייה` |
+| Sending… (Button-Status) | בשליחה… | genusfrei statt `שולח…` |
+| Get consultation (Header-CTA) | לקבלת ייעוץ | Kurzform des CTA-Standards §5 für den schmalen Header-Button |
+| More in this section | עוד בנושא הזה | |
+| You may also be interested in | אולי יעניין אתכם גם | |
+| Your email (Placeholder) | האימייל שלכם | |
+| 404-Headline | הדף לא נמצא | ruhige Aussage, kein Wortspiel (EN „Estate Not Found") |
+| WhatsApp-Vorbelegung (der Besucher spricht) | שלום, אשמח לקבל מידע על רכישת נכס בקפריסין… | 1. Person Singular, genusfrei (`אשמח`) |

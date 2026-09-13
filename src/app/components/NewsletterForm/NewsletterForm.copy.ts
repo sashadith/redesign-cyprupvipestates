@@ -28,5 +28,9 @@ export const NEWSLETTER_MESSAGES: Record<Locale, typeof NEWSLETTER_MESSAGES_EN> 
     error: "Не удалось подписаться. Попробуйте еще раз.",
     invalid: "Пожалуйста, введите корректный адрес электронной почты.",
   },
-  he: NEWSLETTER_MESSAGES_EN, // TODO(he)
+  he: {
+    success: "ההרשמה לניוזלטר הושלמה.",
+    error: "ההרשמה נכשלה. אפשר לנסות שוב.",
+    invalid: "יש להזין כתובת אימייל תקינה.",
+  }, // REVIEW(he)
 };

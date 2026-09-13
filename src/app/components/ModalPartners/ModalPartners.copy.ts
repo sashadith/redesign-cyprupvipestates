@@ -22,7 +22,10 @@ export const MODAL_PARTNERS_COPY: Record<Locale, typeof MODAL_PARTNERS_EN> = {
     title: "Укажите контакты для связи",
     text: "Свяжемся с вами как можно скорее",
   },
-  he: MODAL_PARTNERS_EN, // TODO(he)
+  he: {
+    title: "השאירו פרטים ליצירת קשר",
+    text: "נחזור אליכם בהקדם האפשרי",
+  }, // REVIEW(he)
 };
 
 export const modalPartnersCopy = (lang: string) =>

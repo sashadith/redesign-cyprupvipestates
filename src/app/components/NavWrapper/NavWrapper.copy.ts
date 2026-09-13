@@ -12,7 +12,7 @@ export const NAV_WRAPPER_COPY: Record<Locale, typeof NAV_WRAPPER_EN> = {
   de: { consultation: "Beratung anfragen" },
   pl: { consultation: "Umów konsultację" },
   ru: { consultation: "Получить консультацию" },
-  he: NAV_WRAPPER_EN, // TODO(he)
+  he: { consultation: "לקבלת ייעוץ" }, // REVIEW(he)
 };
 
 export const navWrapperCopy = (lang: string) => NAV_WRAPPER_COPY[isLocale(lang) ? lang : "en"];
