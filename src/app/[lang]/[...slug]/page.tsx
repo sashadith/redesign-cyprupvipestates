@@ -5,7 +5,7 @@ import AccordionContainer from "@/app/components/AccordionContainer/AccordionCon
 import Footer from "@/app/components/Footer/Footer";
 import Header from "@/app/components/Header/Header";
 import { i18n } from "@/i18n.config";
-import { PUBLIC_LOCALES } from "@/lib/locale";
+import { PUBLIC_LOCALES, bidiIsolate, isLocale, type Locale } from "@/lib/locale";
 import {
   getFormStandardDocumentByLang,
   getSinglePageByLang,
@@ -95,11 +95,15 @@ type Props = {
 // paginated URLs don't carry an identical title to page 1 despite
 // self-canonicalizing to their own ?page=N URL (a soft duplicate-content
 // signal otherwise). H1 is deliberately left unchanged.
-const PAGE_TITLE_SUFFIX: Record<string, (n: number) => string> = {
+// `he` uses a pipe instead of the em dash the LTR locales take: Hebrew
+// punctuation has no `—` (style guide §3), and the pipe is the separator
+// Hebrew SEO titles already use before the brand.
+const PAGE_TITLE_SUFFIX: Record<Locale, (n: number) => string> = {
   en: (n) => ` — Page ${n}`,
   de: (n) => ` — Seite ${n}`,
   pl: (n) => ` — Strona ${n}`,
   ru: (n) => ` — Страница ${n}`,
+  he: (n) => ` | עמוד ${n}`, // REVIEW(he)
 };
 
 // No ?page= at all -> "default" (render as page 1, no redirect: the bare URL
@@ -224,20 +228,23 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
   // Page-specific OG/Twitter image (was inheriting the generic site-logo default). Use the
   // landing page's own previewImage; fall back to the logo only when the page has none.
-  const pageSuffix = requestedPage > 1 ? (PAGE_TITLE_SUFFIX[lang] ?? PAGE_TITLE_SUFFIX.en)(requestedPage) : "";
+  const pageSuffix = requestedPage > 1 ? (isLocale(lang) ? PAGE_TITLE_SUFFIX[lang] : PAGE_TITLE_SUFFIX.en)(requestedPage) : "";
   const ogTitle = (page?.seo?.metaTitle || page?.title) + pageSuffix;
   // Never emit an empty (or literal "undefined") description: when both the CMS
   // metaDescription and the excerpt are blank, `x || y` collapsed to undefined
   // and `undefined + ""` shipped the string "undefined" — or an empty string,
   // which let Google fall back to the footer disclaimer text in sitelink
   // snippets. Fall through to a per-language brand default instead.
-  const FALLBACK_DESC: Record<string, string> = {
+  // REVIEW(he) — the brand is FSI/PDI isolated because `pageSuffix` can append
+  // Hebrew after it on page 2+, which would otherwise reorder the Latin run.
+  const FALLBACK_DESC: Record<Locale, string> = {
     en: "Explore luxury properties, new developments and investment homes for sale across Cyprus with Cyprus VIP Estates.",
     de: "Entdecken Sie Luxusimmobilien, Neubauprojekte und Anlageobjekte in ganz Zypern mit Cyprus VIP Estates.",
     pl: "Odkryj luksusowe nieruchomości, nowe inwestycje i apartamenty inwestycyjne na Cyprze z Cyprus VIP Estates.",
     ru: "Элитная недвижимость, новостройки и инвестиционные объекты на Кипре с Cyprus VIP Estates.",
+    he: `נדל"ן בקפריסין לרוכשים מישראל. פרויקטים חדשים, דירות ווילות למכירה ונכסים להשקעה בלימסול ובפאפוס עם ${bidiIsolate("Cyprus VIP Estates")}.`,
   };
-  const ogDesc = (page?.seo?.metaDescription || page?.excerpt || FALLBACK_DESC[lang] || FALLBACK_DESC.en) + pageSuffix;
+  const ogDesc = (page?.seo?.metaDescription || page?.excerpt || (isLocale(lang) ? FALLBACK_DESC[lang] : undefined) || FALLBACK_DESC.en) + pageSuffix;
   const ogImage = (page as any)?.previewImage
     ? urlFor((page as any).previewImage).width(1200).height(630).url()
     : DEFAULT_OG_IMAGE;

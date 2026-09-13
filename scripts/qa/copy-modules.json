@@ -16,6 +16,7 @@
   { "path": "src/app/[lang]/case-studies/[slug]/page.copy.ts", "exports": ["CASE_STUDY_PAGE_COPY"] },
   { "path": "src/app/[lang]/projects/[slug]/page.copy.ts", "exports": ["PROJECT_PAGE_COPY"] },
   { "path": "src/app/components/BlogSlide/BlogSlide.copy.ts", "exports": ["BLOG_SLIDE_COPY"] },
+  { "path": "src/app/[lang]/developers/page.copy.ts", "exports": ["DEVELOPERS_PAGE_COPY"] },
   { "path": "src/app/components/Breadcrumbs/Breadcrumbs.copy.ts", "exports": ["BREADCRUMBS_COPY"] },
   { "path": "src/app/components/BreadcrumbsBlog/BreadcrumbsBlog.copy.ts", "exports": ["BLOG_LABEL_BY_LANG", "HOME_LABEL_BY_LANG"] },
   { "path": "src/app/components/CaseStudyIntro/CaseStudyIntro.copy.ts", "exports": ["CASE_STUDY_INTRO_COPY"] },

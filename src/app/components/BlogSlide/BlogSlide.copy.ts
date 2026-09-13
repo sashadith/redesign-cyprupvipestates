@@ -13,7 +13,7 @@ export const BLOG_SLIDE_COPY: Record<Locale, typeof BLOG_SLIDE_EN> = {
   de: { priceOnRequest: "Preis auf Anfrage", priceFrom: "Preis ab" },
   pl: { priceOnRequest: "Cena na życzenie", priceFrom: "Cena od" },
   ru: { priceOnRequest: "Цена по запросу", priceFrom: "Цена от" },
-  he: BLOG_SLIDE_EN, // TODO(he)
+  he: { priceOnRequest: "מחיר לפי פנייה", priceFrom: "מחיר התחלתי" }, // REVIEW(he)
 };
 
 export const blogSlideCopy = (lang: string) => BLOG_SLIDE_COPY[isLocale(lang) ? lang : "en"];

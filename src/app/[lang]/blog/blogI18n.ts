@@ -67,7 +67,39 @@ const EN: BlogStrings = {
 
 export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
   en: EN,
-  he: EN, // TODO(he)
+  // REVIEW(he)
+  // /he/blog lists the ENGLISH articles (they are not translated) and is
+  // noindex; `articleOne`/`articleMany` carry that fact in the hero count line
+  // ("12 מאמרים באנגלית") so the Hebrew chrome states it calmly instead of
+  // letting a reader click into an unexpected language. See docs/i18n/reviews/wp4.md.
+  he: {
+    heroTitle: "תובנות מקפריסין",
+    eyebrow: "הבלוג",
+    articleOne: "מאמר באנגלית",
+    articleMany: "מאמרים באנגלית",
+    filterAll: "הכול",
+    read: "לקריאה",
+    readArticle: "לקריאת המאמר",
+    categoriesAria: "קטגוריות",
+    pagerAria: "ניווט בין עמודי הבלוג",
+    firstPage: "העמוד הראשון",
+    lastPage: "העמוד האחרון",
+    pageWord: "עמוד",
+    empty: "אין עדיין מאמרים.",
+    guideEyebrow: "המדריך",
+    guideTitle: "על הבלוג",
+    dateLocale: "he-IL",
+    minRead: "דקות קריאה",
+    tocLabel: "בעמוד הזה",
+    writtenBy: "נכתב על ידי",
+    relatedLead: "עוד",
+    relatedAccent: "מאמרים",
+    fallbackProperties: "נכסים מומלצים",
+    // {city} is substituted with the LATIN city name (Paphos/Limassol/Larnaca)
+    // by the blog route, so it is FSI/PDI isolated here (bidiIsolate) and the
+    // preposition takes the hyphen form the style guide §3 prescribes.
+    fallbackPropertiesInCity: "נכסים מומלצים ב-\u2068{city}\u2069",
+  },
   de: {
     heroTitle: "Zypern Insights",
     eyebrow: "Das Journal",
