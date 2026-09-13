@@ -69,7 +69,7 @@ const priceCell = (u: UnitVM, t: DevelopmentStrings, lang: string) =>
   u.status === "sold" ? <span className="pp-price-na">—</span>
   : u.status === "reserved" ? <span className="pp-price-na">{t.unitStatus.reserved}</span>
   : u.price == null ? <>{t.priceOnRequest}</>
-  : <><Bdi ltr>{fmtPrice(u.price, lang)}</Bdi><span className="pp-vat"><Bdi>{t.vatSuffix}</Bdi></span></>;
+  : <><Bdi ltr>{fmtPrice(u.price, lang, u.currency)}</Bdi><span className="pp-vat"><Bdi>{t.vatSuffix}</Bdi></span></>;
 
 function StatusPill({ u }: { u: UnitVM }) {
   return <span className={`pp-pill pp-pill--${statusClass(u.status)}`}>{u.statusLabel || u.status}</span>;

@@ -56,6 +56,15 @@ test("fmtPrice and fmtDate", () => {
   assert.equal(fmtDate("2026-05-01", "en", { year: "numeric", month: "long" }), "May 2026");
 });
 
+test("fmtPrice: non-EUR currency renders as ISO code + space + grouped number", () => {
+  // no currency arg / explicit "EUR" both render the € symbol
+  assert.equal(fmtPrice(450000, "en", "EUR"), "€450,000");
+  // a non-EUR currency renders as "CODE 1,234" — no symbol table, just the
+  // ISO code + space + grouped number
+  assert.equal(fmtPrice(450000, "en", "USD"), "USD 450,000");
+  assert.equal(fmtPrice(450000, "he", "GBP"), "GBP 450,000");
+});
+
 test("ltrIsolate wraps a string in LRI…PDI so it renders LTR inside RTL prose", () => {
   assert.equal(ltrIsolate("+357 25 123456"), "⁦+357 25 123456⁩");
   assert.equal(ltrIsolate("€450,000"), "⁦€450,000⁩");

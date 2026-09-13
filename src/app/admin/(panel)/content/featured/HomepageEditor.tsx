@@ -110,7 +110,7 @@ export default function HomepageEditor({
       case "text":
         return <textarea className={inputCls} dir={dir} rows={field.rows ?? 3} value={value ?? ""} onChange={(e) => set(path, e.target.value)} />;
       case "number":
-        return <input type="number" className={inputCls} value={value ?? ""} onChange={(e) => set(path, e.target.value === "" ? null : Number(e.target.value))} />;
+        return <input type="number" className={inputCls} dir="ltr" value={value ?? ""} onChange={(e) => set(path, e.target.value === "" ? null : Number(e.target.value))} />;
       case "boolean":
         return <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!value} onChange={(e) => set(path, e.target.checked)} /> {field.title}</label>;
       case "enum":

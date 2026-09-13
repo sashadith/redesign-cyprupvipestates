@@ -81,7 +81,7 @@
   height: 100%;
   position: absolute;
   top: 50%;
-  inset-inline-start: 50%;
+  left: 50%;
   transform: translate(-50%, -50%);
   border-radius: 10px;
   padding: clamp(1.875rem, -0.313rem + 8.75vw, 6.25rem);
@@ -184,7 +184,7 @@
 
   @media screen and (max-width: 620px){
     bottom: 50%;
-    inset-inline-start: 50%;
+    left: 50%;
     transform: translate(-50%, 50%);
   }
 

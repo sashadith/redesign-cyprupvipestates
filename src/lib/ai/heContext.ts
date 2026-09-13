@@ -13,7 +13,20 @@ import type Anthropic from "@anthropic-ai/sdk";
    cache-eligibility floor) and stable enough (same file bytes on every call, no
    per-project interpolation) to actually earn cache_control. */
 
-const read = (f: string) => readFileSync(path.join(process.cwd(), "docs", "i18n", f), "utf8");
+// Fallback used if either doc file is missing (e.g. an incomplete deploy) —
+// short, but enough to keep the generators producing usable Hebrew instead of
+// hard-crashing at module load.
+const FALLBACK_TEXT =
+  "# Hebrew rules (fallback): write native Hebrew, RTL, Western digits, € before the number, no em dash, masculine-plural/nominal register.";
+
+const read = (f: string): string => {
+  try {
+    return readFileSync(path.join(process.cwd(), "docs", "i18n", f), "utf8");
+  } catch (err) {
+    console.warn(`[heContext] failed to read docs/i18n/${f}, using fallback text:`, err);
+    return FALLBACK_TEXT;
+  }
+};
 
 const STYLEGUIDE = read("he-styleguide.md");
 const GLOSSARY = read("he-glossary.md");

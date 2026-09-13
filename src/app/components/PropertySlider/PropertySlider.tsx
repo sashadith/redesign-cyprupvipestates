@@ -28,7 +28,8 @@ const PropertySlider: FC<Props> = ({ images, videoId, videoPreview }) => {
   return (
     <>
       {/* Основной слайдер */}
-      <Swiper dir={isRtl ? "rtl" : "ltr"}
+      <Swiper
+        dir={isRtl ? "rtl" : undefined}
         navigation={{
           nextEl: ".next-button",
           prevEl: ".prev-button",
@@ -55,7 +56,8 @@ const PropertySlider: FC<Props> = ({ images, videoId, videoPreview }) => {
 
       {/* Галерея миниатюр */}
       <div className="container">
-        <Swiper dir={isRtl ? "rtl" : "ltr"}
+        <Swiper
+          dir={isRtl ? "rtl" : undefined}
           onSwiper={setThumbsSwiper}
           spaceBetween={10}
           slidesPerView={3}

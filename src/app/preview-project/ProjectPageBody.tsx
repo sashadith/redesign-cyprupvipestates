@@ -164,7 +164,7 @@ export default async function ProjectPageBody({
               </div>
               <h1 className="pp-title">{p.publicName}</h1>
               <div className="pp-hero__stats">
-                <div className="pp-hero__price"><b>{priceFrom != null ? <Bdi ltr>{fmtPrice(priceFrom, lang)}</Bdi> : "—"}</b><span>{priceFrom != null ? (isSold ? t.heroFromSoldOut : `${t.heroFrom}${p.vatApplies !== false ? ` · ${localeDir(lang) === "rtl" ? bidiIsolate(t.vatSuffix) : t.vatSuffix}` : ""}`) : t.heroFrom}</span></div>
+                <div className="pp-hero__price"><b>{priceFrom != null ? <Bdi ltr>{fmtPrice(priceFrom, lang, p.currency)}</Bdi> : "—"}</b><span>{priceFrom != null ? (isSold ? t.heroFromSoldOut : `${t.heroFrom}${p.vatApplies !== false ? ` · ${localeDir(lang) === "rtl" ? bidiIsolate(t.vatSuffix) : t.vatSuffix}` : ""}`) : t.heroFrom}</span></div>
                 <div><b>{types.join(" · ") || "—"}</b><span>{t.heroType}</span></div>
                 {listed.length > 0 && <div><b>{avail.length}{avail.length !== listed.length && <small>/{listed.length}</small>}</b><span>{t.heroAvailable}</span></div>}
               </div>

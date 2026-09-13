@@ -38,8 +38,11 @@ export default function SeoMetaFields({
     setBusy(true); setErr(""); setJustGen(false);
     const r = await generateSeoMetaAction(developmentId, { emphasize, avoid });
     if (r.ok && r.result) {
-      // generateSeoMetaAction only writes EN/DE/PL/RU (AI Hebrew SEO generation
-      // is out of scope here) — merge so an existing titleHE/descHE survives.
+      // generateSeoMetaAction writes all five locales (LANG_KEYS in
+      // src/lib/ai/seoMeta.ts includes titleHE/descHE — AI Hebrew SEO
+      // generation is in scope). The merge below still matters: it keeps
+      // whatever the editor already typed into fields the AI result doesn't
+      // touch, rather than clobbering user-entered values.
       setValues((s) => ({ ...s, ...r.result }));
       setJustGen(true);
       rootRef.current?.dispatchEvent(new Event("cve:dirty", { bubbles: true }));

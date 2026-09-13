@@ -53,7 +53,8 @@ const ProjectSlider: FC<Props> = ({ images }) => {
 
   return (
     <>
-      <Swiper dir={isRtl ? "rtl" : "ltr"}
+      <Swiper
+        dir={isRtl ? "rtl" : undefined}
         onSwiper={setMainSwiper}
         controller={{ control: modalSwiper }}
         navigation={{
@@ -119,7 +120,8 @@ const ProjectSlider: FC<Props> = ({ images }) => {
           &times;
         </button>
 
-        <Swiper dir={isRtl ? "rtl" : "ltr"}
+        <Swiper
+          dir={isRtl ? "rtl" : undefined}
           initialSlide={activeIndex}
           onSwiper={setModalSwiper}
           controller={{ control: mainSwiper }}

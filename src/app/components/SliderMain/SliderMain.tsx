@@ -21,7 +21,8 @@ const SliderMain = ({ children }: any) => {
   return (
     <div className={styles.sliderMain}>
       <div className={styles.sliderSlides}>
-        <Swiper dir={isRtl ? "rtl" : "ltr"}
+        <Swiper
+          dir={isRtl ? "rtl" : undefined}
           modules={[Autoplay, Pagination]}
           autoplay={{ delay: 6000, disableOnInteraction: true }}
           slidesPerView={1}

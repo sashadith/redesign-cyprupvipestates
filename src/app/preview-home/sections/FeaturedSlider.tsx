@@ -6,10 +6,9 @@ import { Autoplay } from "swiper/modules";
 import "swiper/css";
 import type { FeaturedProject } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client";
-import { localePrefix, fmtPrice } from "@/lib/locale";
+import { localePrefix, fmtPrice, localeDir } from "@/lib/locale";
 import { homeStrings } from "./homeI18n";
 import Bdi from "@/app/components/Bdi";
-import { useIsRtl } from "@/app/components/useIsRtl";
 
 const safeUrl = (img: unknown) => {
   try {
@@ -19,7 +18,10 @@ const safeUrl = (img: unknown) => {
   }
 };
 
-const Card: React.FC<{ project: FeaturedProject; lang: string }> = ({ project, lang }) => {
+const Card: React.FC<{ project: FeaturedProject; lang: string }> = ({
+  project,
+  lang,
+}) => {
   const t = homeStrings(lang);
   const img = safeUrl(project.previewImage);
   // hrefPath: legacy project folded into a developer overview.
@@ -57,11 +59,15 @@ export default function FeaturedSlider({
   projects: FeaturedProject[];
   lang: string;
 }) {
-  const isRtl = useIsRtl();
   return (
-    <Swiper dir={isRtl ? "rtl" : "ltr"}
+    <Swiper
+      dir={localeDir(lang)}
       modules={[Autoplay]}
-      autoplay={{ delay: 2800, disableOnInteraction: false, pauseOnMouseEnter: true }}
+      autoplay={{
+        delay: 2800,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true,
+      }}
       loop
       spaceBetween={20}
       slidesPerView={1.15}

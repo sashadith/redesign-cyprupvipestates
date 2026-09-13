@@ -23,14 +23,24 @@
 #       literal "translateX(" regardless of context. A CSS transform's pixel
 #       math is unaffected by `direction`/logical properties, so there is no
 #       "logical" form of translateX to convert to. Each site was reviewed:
-#       centering transforms (paired with a now-`inset-inline-start: 50%`
-#       anchor) are symmetric and direction-agnostic, kept physical; decorative
-#       sheens/nudges are cosmetic flourishes with no reading-direction
-#       meaning, kept physical; a few genuine hover "nudge toward next"
-#       affordances (icon slides right on hover) got a `[dir="rtl"]` mirror
-#       override placed right next to them — that override is ALSO a
-#       translateX() literal and so is ALSO flagged and ALSO listed here,
-#       even though it IS the RTL fix.
+#       centering transforms are paired with a PHYSICAL `left: 50%` anchor —
+#       never `inset-inline-start: 50%`. That distinction matters: under
+#       `dir="rtl"`, `inset-inline-start` resolves to `right`, so
+#       `inset-inline-start: 50%` + `translateX(-50%)` mis-centres the box
+#       (it anchors 50% from the wrong edge and slides it the wrong way).
+#       Physical `left: 50%` is direction-agnostic by construction — the box
+#       stays centred regardless of `dir` — so this is the one case where the
+#       physical form is correct BY DESIGN and the "logical" conversion an
+#       earlier automated pass applied was itself the bug (see C1 in the
+#       phase-2 final-review fix wave: 17 such anchors were reverted from
+#       `inset-inline-start: 50%` back to `left: 50%`; each has its own
+#       "centring anchor for translateX(-50%)" entry further below). Aside
+#       from that anchor point, decorative sheens/nudges elsewhere are
+#       cosmetic flourishes with no reading-direction meaning, kept physical;
+#       a few genuine hover "nudge toward next" affordances (icon slides
+#       right on hover) got a `[dir="rtl"]` mirror override placed right next
+#       to them — that override is ALSO a translateX() literal and so is
+#       ALSO flagged and ALSO listed here, even though it IS the RTL fix.
 
 # ---- src/app/header-footer.css ----
 src/app/header-footer.css :: translateX(-220%) skewX(-18deg)
@@ -110,7 +120,10 @@ src/app/preview-insights/insights.css :: top: -28%; right: -10%;
 # .px__select chevron — same pattern as tokens.css's .formsec__select above;
 # RTL handled by the `[dir="rtl"] .px__select` override a few lines below
 src/app/preview-projects/projects.css :: background-position: right 14px center
-# .px__mapfab — horizontal-centering transform (paired with inset-inline-start: 50%), symmetric, not direction-dependent
+# .px__mapfab — horizontal-centering transform anchored on physical
+# `left: 50%` (NOT inset-inline-start — that would resolve to `right: 50%`
+# under dir="rtl" and mis-centre the box; see C1 fix), symmetric, not
+# direction-dependent
 src/app/preview-projects/projects.css :: transform: translateX(-50%)
 # comment prose mentioning "row-reverse" (not a declaration) — see the real
 # declaration exception below for the actual rule
@@ -127,10 +140,57 @@ src/app/globals.css :: left: -25px;
 
 # ---- Form*.module.scss (FormFull, FormStandard, FormPartners,
 #      FormMinimalBlockComponent, FormStatic) ----
-# .errorCheckbox — horizontal-centering transform (paired with
-# inset-inline-start: 50%), symmetric, not direction-dependent
+# .errorCheckbox — horizontal-centering transform anchored on physical
+# `left: 50%` (NOT inset-inline-start — that would resolve to `right: 50%`
+# under dir="rtl" and mis-centre the box; see C1 fix), symmetric, not
+# direction-dependent
 src/app/components/FormFull/FormFull.module.scss :: transform: translateX(-50%)
 src/app/components/FormStandard/FormStandard.module.scss :: transform: translateX(-50%)
 src/app/components/FormPartners/FormPartners.module.scss :: transform: translateX(-50%)
 src/app/components/FormMinimalBlockComponent/FormMinimalBlockComponent.module.scss :: transform: translateX(-50%)
 src/app/components/FormStatic/FormStatic.module.scss :: transform: translateX(-50%)
+
+# ---- C1 fix (phase-2 final-review): centring anchors reverted from the
+#      incorrectly-"logicalized" `inset-inline-start: 50%` back to physical
+#      `left: 50%`. These pair with `translateX(-50%)` or
+#      `translate(-50%, ...)` to centre a box; under `dir="rtl"`,
+#      `inset-inline-start: 50%` resolves to `right: 50%`, which mis-centres
+#      the box (anchored from the wrong edge). `left: 50%` is
+#      direction-agnostic by construction, so it is the physically-correct,
+#      by-design form here — logical would be the bug, not the fix. One
+#      entry per reverted declaration (17 total); see C1 in the phase-2
+#      final-review fix wave.
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/globals.css :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/StyledProjectFilters/StyledProjectFilters.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormStatic/FormStatic.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormStatic/FormStatic.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormStatic/FormStatic.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormFull/FormFull.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormFull/FormFull.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormStandard/FormStandard.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormStandard/FormStandard.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormPartners/FormPartners.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormPartners/FormPartners.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormMinimalBlockComponent/FormMinimalBlockComponent.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormMinimalBlockComponent/FormMinimalBlockComponent.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/SliderReviewsFull/SliderReviewsFull.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/SliderReviewsFull/SliderReviewsFull.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/preview-projects/projects.css :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/preview-insights/insights.css :: left: 50%

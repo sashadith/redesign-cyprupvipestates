@@ -57,9 +57,15 @@ export function nonDefaultLocalePattern(locales: readonly string[] = LOCALES): s
   return locales.filter((l) => l !== DEFAULT_LOCALE).join("|");
 }
 
-/** Prices are EUR with Western digits in every locale (Israeli convention too). */
-export function fmtPrice(n: number, _lang: string): string {
-  return `€${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n)}`;
+/** Prices use Western digits in every locale (Israeli convention too).
+ *  EUR renders as "€1,234"; any other currency as "USD 1,234" (ISO code +
+ *  space + grouped number) — there's no per-currency symbol table here, just
+ *  the one non-EUR case the feeds actually carry. `_lang` is unused today
+ *  (digits/grouping don't vary by locale) but kept so call sites don't need
+ *  to change if that ever does. */
+export function fmtPrice(n: number, _lang: string, currency: string = "EUR"): string {
+  const grouped = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n);
+  return currency === "EUR" ? `€${grouped}` : `${currency} ${grouped}`;
 }
 
 /** Wrap a plain string (phone/e-mail/price inside otherwise-Hebrew copy) in

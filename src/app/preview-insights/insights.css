@@ -60,7 +60,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
   .ins__hero-art { display: flex; justify-content: center; align-items: flex-end; position: relative; z-index: 2; perspective: 1800px; }
 }
 .ins__hero-art::before {
-  content: ""; position: absolute; z-index: -1; inset-inline-start: 50%; top: 46%; transform: translate(-50%, -50%);
+  content: ""; position: absolute; z-index: -1; left: 50%; top: 46%; transform: translate(-50%, -50%);
   width: 78%; aspect-ratio: 1; border-radius: 50%;
   background: radial-gradient(circle, rgba(142,107,61,0.20), rgba(142,107,61,0) 64%); filter: blur(6px);
 }

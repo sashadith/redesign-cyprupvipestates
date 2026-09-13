@@ -157,6 +157,34 @@ function countFile(absPath, relPath, exceptions) {
   return total;
 }
 
+/* ---------------- centring invariant ---------------- */
+// C1 (phase-2 final-review): a box centred with `transform: translateX(-50%)`
+// must be anchored on physical `left: 50%` — never `inset-inline-start: 50%`,
+// which resolves to `right: 50%` under `dir="rtl"` and mis-centres the box
+// (the RTL bug that C1 fixed). This is a mechanical trip-wire so a future
+// "logicalize everything" pass can't reintroduce the same bug: it scans every
+// in-scope file's CSS rule bodies (a simple regex over `{...}` blocks — good
+// enough for the leaf declaration blocks this pattern lives in; it does not
+// need to understand nesting) for a block containing BOTH
+// `inset-inline-start: 50%` AND `translateX(-50%)`, which is exactly the
+// broken combination.
+const BLOCK_RE = /\{([^{}]*)\}/g;
+
+function scanCentringInvariant(src) {
+  const violations = [];
+  BLOCK_RE.lastIndex = 0;
+  let m;
+  while ((m = BLOCK_RE.exec(src))) {
+    const body = m[1];
+    if (body.includes("inset-inline-start: 50%") && body.includes("translateX(-50%)")) {
+      const anchorOffset = m.index + 1 + body.indexOf("inset-inline-start: 50%");
+      const line = src.slice(0, anchorOffset).split("\n").length;
+      violations.push(line);
+    }
+  }
+  return violations;
+}
+
 /* ---------------- CLI ---------------- */
 function main() {
   const args = process.argv.slice(2);
@@ -174,11 +202,18 @@ function main() {
 
   let grandTotal = 0;
   const rows = [];
+  let hasCentringViolation = false;
   for (const rel of files) {
     const abs = join(REPO_ROOT, rel);
+    const src = readFileSync(abs, "utf8");
     const count = countFile(abs, rel, exceptions);
     if (count > 0) rows.push({ rel, count });
     grandTotal += count;
+
+    for (const line of scanCentringInvariant(src)) {
+      hasCentringViolation = true;
+      console.log(`CENTRING-INVARIANT VIOLATION ${rel}:${line}`);
+    }
   }
 
   rows.sort((a, b) => b.count - a.count);
@@ -189,7 +224,7 @@ function main() {
   console.log(`${"-".repeat(width)}`);
   console.log(`${String(grandTotal).padStart(width)}  TOTAL (${files.length} files scanned, ${exceptions.length} exception rule(s))`);
 
-  if (strict && grandTotal > 0) {
+  if (strict && (grandTotal > 0 || hasCentringViolation)) {
     process.exit(1);
   }
 }

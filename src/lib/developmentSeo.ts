@@ -172,7 +172,11 @@ export function autoMetaDescription(vm: ProjectVM, lang: string): string {
     return fit([`${lbl.soldOut} — ${sentence1}`, `${lbl.similar}.`], DESC_MAX);
   }
   const avail = vm.units.filter((u) => u.status === "available").length || listedUnits(vm.units).length;
-  const priceClause = vm.priceFrom ? ` ${lbl.from} ${fmtPrice(vm.priceFrom)}` : "";
+  const rawPriceClause = vm.priceFrom ? ` ${lbl.from} ${fmtPrice(vm.priceFrom)}` : "";
+  // Same gate as `name` in autoMetaTitle above: a plain string embedded into a
+  // generated sentence, not JSX (no <Bdi> available here), so it needs the
+  // string-level isolator. bidiIsolate (not ltrIsolate) to match that pattern.
+  const priceClause = localeDir(lang) === "rtl" ? bidiIsolate(rawPriceClause) : rawPriceClause;
   // EN only: "unit"/"units" inflects with the count (DE/PL/RU labels below are
   // already fixed, count-invariant nouns — "Einheiten"/"jednostek"/"объектов" —
   // real-estate convention regardless of n, so no equivalent branch needed there).

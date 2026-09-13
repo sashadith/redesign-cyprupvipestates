@@ -12,6 +12,7 @@ import { blurProps } from "@/lib/imageBlur";
 import { ImageAlt } from "@/types/property";
 import VideoSlide from "../VideoSlide/VideoSlide";
 import { useIsRtl } from "@/app/components/useIsRtl";
+import { localeDir } from "@/lib/locale";
 
 type Props = {
   photos: ImageAlt[]; // Только изображения
@@ -122,7 +123,8 @@ const PropertyPhotoGallery: FC<Props> = ({
         {showModal && (
           <div className="fixed top-0 start-0 w-full h-full flex justify-center items-center bg-black bg-opacity-90 z-[55]">
             <div className="h-[75vh] w-[320px] md:w-[720px] relative overflow-hidden">
-              <Swiper dir={isRtl ? "rtl" : "ltr"}
+              <Swiper
+                dir={localeDir(lang)}
                 modules={[Navigation]}
                 navigation={{
                   nextEl: ".nextBtnNews",

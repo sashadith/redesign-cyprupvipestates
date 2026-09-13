@@ -265,7 +265,7 @@
 
 /* floating map button (always reachable) */
 .px__mapfab {
-  position: fixed; bottom: 24px; inset-inline-start: 50%; transform: translateX(-50%); z-index: 25;
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 25;
   display: none; align-items: center; gap: 8px; height: 48px; padding: 0 22px; border-radius: 999px; cursor: pointer;
   background: var(--accent); color: var(--accent-ink); border: 0; box-shadow: 0 14px 34px -14px rgba(0, 0, 0, 0.7);
   font-family: var(--font-body), sans-serif; font-size: var(--text-sm); font-weight: 700;

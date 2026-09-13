@@ -237,7 +237,7 @@
   position: absolute;
   z-index: 1;
   bottom: -40px;
-  inset-inline-start: 50%;
+  left: 50%;
   transform: translateX(-50%);
   font-size: 12px;
   color: #e61212;
@@ -248,7 +248,7 @@
 .popup {
   position: fixed;
   top: 50%;
-  inset-inline-start: 50%;
+  left: 50%;
   transform: translate(-50%, -50%);
   background-color: #bd8948;
   color: #fff;
@@ -321,7 +321,7 @@
   content: "✔";
   position: absolute;
   top: 50%;
-  inset-inline-start: 50%;
+  left: 50%;
   transform: translate(-50%, -52%);
   color: #fff;
   font-size: 14px;

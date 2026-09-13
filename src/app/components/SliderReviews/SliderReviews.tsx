@@ -21,7 +21,8 @@ const SliderReviews: FC<Props> = ({ reviews }) => {
 
   return (
     <div className={styles.sliderReviews}>
-      <Swiper dir={isRtl ? "rtl" : "ltr"}
+      <Swiper
+        dir={isRtl ? "rtl" : undefined}
         modules={[Pagination]}
         pagination={{ clickable: true }}
         spaceBetween={20}
