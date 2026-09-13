@@ -20,10 +20,9 @@ export function parsePublicLocales(raw: string | undefined): Locale[] {
   const listed = raw
     ? raw.split(",").map((s) => s.trim()).filter((s): s is Locale => known.includes(s))
     : LOCALES.filter((l) => !LAUNCH_GATED_LOCALES.includes(l));
-  // only prepend the default locale if input is a single value (no comma) or if explicitly included
-  const isSingleValue = raw && !raw.includes(",");
-  const out = listed.includes(DEFAULT_LOCALE) || !isSingleValue ? listed : [DEFAULT_LOCALE as Locale, ...listed];
-  // keep canonical LOCALES order, dedupe
+  // The default locale is never gated away, whatever the env var says.
+  const out = listed.includes(DEFAULT_LOCALE as Locale) ? listed : [DEFAULT_LOCALE as Locale, ...listed];
+  // canonical LOCALES order, deduplicated
   return LOCALES.filter((l) => out.includes(l));
 }
 

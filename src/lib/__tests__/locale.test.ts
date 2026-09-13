@@ -19,7 +19,8 @@ test("parsePublicLocales: unset → everything except launch-gated; set → exac
   assert.deepEqual([...LAUNCH_GATED_LOCALES], ["he"]);
   assert.deepEqual(parsePublicLocales("en,de,pl,ru,he"), ["en", "de", "pl", "ru", "he"]);
   assert.deepEqual(parsePublicLocales(" en , he "), ["en", "he"]);
-  assert.deepEqual(parsePublicLocales("xx,de"), ["de"]);
+  assert.deepEqual(parsePublicLocales("xx,de"), ["en", "de"]);
+  assert.deepEqual(parsePublicLocales("de,pl,ru"), ["en", "de", "pl", "ru"]);
   // the default locale can never be gated away
   assert.deepEqual(parsePublicLocales("de"), ["en", "de"]);
 });
