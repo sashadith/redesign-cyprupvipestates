@@ -8,7 +8,7 @@ import Link from "next/link";
 import { urlFor } from "@/sanity/sanity.client";
 import Image from "next/image";
 import ButtonPrimary from "../ButtonPrimary/ButtonPrimary";
-import { localePrefix } from "@/lib/locale";
+import { localePrefix, isLocale, type Locale } from "@/lib/locale";
 import { blurProps } from "@/lib/imageBlur";
 
 type Props = {
@@ -39,19 +39,15 @@ const BlogPostsRenderer: FC<Props> = ({ blogPosts, lang }) => {
       ? `${localePrefix(language)}/blog/${slug[language].current}`
       : "#";
 
-  const getLoadMoreText = () => {
-    switch (lang) {
-      case "de":
-        return `Noch ${LIMIT} Beiträge laden`;
-      case "ru":
-        return `Загрузить ещё ${LIMIT} постов`;
-      case "pl":
-        return `Załaduj jeszcze ${LIMIT} postów`;
-      case "en":
-      default:
-        return `Load ${LIMIT} more posts`;
-    }
+  const LOAD_MORE_EN = (n: number) => `Load ${n} more posts`;
+  const LOAD_MORE: Record<Locale, (n: number) => string> = {
+    en: LOAD_MORE_EN,
+    de: (n) => `Noch ${n} Beiträge laden`,
+    ru: (n) => `Загрузить ещё ${n} постов`,
+    pl: (n) => `Załaduj jeszcze ${n} postów`,
+    he: LOAD_MORE_EN, // TODO(he)
   };
+  const getLoadMoreText = () => LOAD_MORE[isLocale(lang) ? lang : "en"](LIMIT);
 
   const loadMorePosts = () => setVisibleCount((c) => c + LIMIT);
 

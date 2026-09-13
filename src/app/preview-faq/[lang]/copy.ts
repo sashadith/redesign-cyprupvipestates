@@ -7,6 +7,8 @@
    translator) — flagged when this went live, same as the Case Studies copy
    and the FAQ Q&A content itself; happy to swap in reviewed copy later. */
 
+import type { Locale } from "@/lib/locale";
+
 export type FaqCopy = {
   metaTitle: string;
   metaDescription: string;
@@ -26,8 +28,7 @@ export type FaqCopy = {
   formSubtitle: string;
 };
 
-export const FAQ_COPY: Record<string, FaqCopy> = {
-  en: {
+const EN: FaqCopy = {
     metaTitle: "Cyprus Property FAQ for Foreign Buyers",
     metaDescription: "Answers to the questions we hear most from international buyers — foreigner eligibility, costs & VAT, residency, financing, and buying off-plan in Cyprus.",
     eyebrow: "Support",
@@ -44,7 +45,10 @@ export const FAQ_COPY: Record<string, FaqCopy> = {
     formTitlePlain: "Still ",
     formTitleItalic: "have a question",
     formSubtitle: "Every buyer's situation is a little different. Send us yours and we'll answer it directly.",
-  },
+};
+
+export const FAQ_COPY: Record<Locale, FaqCopy> = {
+  en: EN,
   de: {
     metaTitle: "Häufig gestellte Fragen",
     metaDescription: "Antworten auf die häufigsten Fragen internationaler Käufer: Kaufrecht für Ausländer, Kosten und MwSt., Aufenthalt, Finanzierung und Off-Plan-Kauf auf Zypern.",
@@ -99,8 +103,9 @@ export const FAQ_COPY: Record<string, FaqCopy> = {
     formTitleItalic: "вопрос",
     formSubtitle: "Ситуация каждого покупателя немного отличается. Напишите нам, и мы ответим лично вам.",
   },
+  he: EN, // TODO(he)
 };
 
 export function faqCopy(lang: string): FaqCopy {
-  return FAQ_COPY[lang] ?? FAQ_COPY.en;
+  return FAQ_COPY[lang as Locale] ?? FAQ_COPY.en;
 }

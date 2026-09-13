@@ -4,6 +4,8 @@
 // English (eyebrow, "articles", filter "All", "Read", pager a11y labels, the
 // guide header) now localized for en/de/pl/ru.
 
+import type { Locale } from "@/lib/locale";
+
 export type BlogStrings = {
   // compact hero heading (visual H1, like the preview's "Cyprus Insights").
   // Last word is gold-accented. The SEO <title> still comes from the blogPage doc.
@@ -63,8 +65,9 @@ const EN: BlogStrings = {
   fallbackPropertiesInCity: "Recommended properties in {city}",
 };
 
-export const BLOG_STRINGS: Record<string, BlogStrings> = {
+export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
   en: EN,
+  he: EN, // TODO(he)
   de: {
     heroTitle: "Zypern Insights",
     eyebrow: "Das Journal",
@@ -142,4 +145,4 @@ export const BLOG_STRINGS: Record<string, BlogStrings> = {
   },
 };
 
-export const blogStrings = (lang: string): BlogStrings => BLOG_STRINGS[lang] ?? EN;
+export const blogStrings = (lang: string): BlogStrings => BLOG_STRINGS[lang as Locale] ?? EN;

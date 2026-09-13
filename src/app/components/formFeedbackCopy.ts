@@ -13,18 +13,22 @@
  * So the four locales live here once and every form reads them, with the CMS
  * value still winning wherever a form has one. */
 
+import type { Locale } from "@/lib/locale";
+
 export type FormLang = string;
 
 type Copy = { success: string; error: string };
 
+const EN: Copy = {
+  success:
+    "Thank you — your enquiry has reached us. An adviser will be in touch, usually the same day.",
+  error:
+    "Your enquiry could not be sent. Please try again, or reach us at office@cyprusvipestates.com or +357 99 278 285.",
+};
+
 // he (Phase 4): wrap phone/e-mail tokens with ltrIsolate() — RTL only.
-const COPY: Record<"en" | "de" | "pl" | "ru", Copy> = {
-  en: {
-    success:
-      "Thank you — your enquiry has reached us. An adviser will be in touch, usually the same day.",
-    error:
-      "Your enquiry could not be sent. Please try again, or reach us at office@cyprusvipestates.com or +357 99 278 285.",
-  },
+const COPY: Record<Locale, Copy> = {
+  en: EN,
   de: {
     success:
       "Vielen Dank — Ihre Anfrage ist bei uns eingegangen. Ein Berater meldet sich, meist noch am selben Tag.",
@@ -43,10 +47,11 @@ const COPY: Record<"en" | "de" | "pl" | "ru", Copy> = {
     error:
       "Не удалось отправить заявку. Попробуйте ещё раз или напишите на office@cyprusvipestates.com либо позвоните: +357 99 278 285.",
   },
+  he: EN, // TODO(he)
 };
 
 function pick(lang: FormLang): Copy {
-  return COPY[lang as keyof typeof COPY] ?? COPY.en;
+  return COPY[lang as Locale] ?? COPY.en;
 }
 
 export const formSuccessText = (lang: FormLang) => pick(lang).success;

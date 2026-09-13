@@ -3,34 +3,32 @@ import styles from "./PropertyFeatures.module.scss";
 import { PropertyType } from "@/types/homepage";
 import { KeyFeatures } from "@/types/project";
 import { formatMonthYear } from "@/lib/formatMonthYear";
-import { fmtPrice } from "@/lib/locale";
+import { fmtPrice, type Locale } from "@/lib/locale";
 import Bdi from "@/app/components/Bdi";
 
 const cityTranslations: {
-  [city in "Paphos" | "Limassol" | "Larnaca"]: {
-    en: string;
-    de: string;
-    pl: string;
-    ru: string;
-  };
+  [city in "Paphos" | "Limassol" | "Larnaca"]: Record<Locale, string>;
 } = {
   Paphos: {
     en: "Paphos",
     de: "Paphos",
     pl: "Pafos",
     ru: "Пафос",
+    he: "Paphos", // TODO(he)
   },
   Limassol: {
     en: "Limassol",
     de: "Limassol",
     pl: "Limassol",
     ru: "Лимассол",
+    he: "Limassol", // TODO(he)
   },
   Larnaca: {
     en: "Larnaca",
     de: "Larnaca",
     pl: "Larnaca",
     ru: "Ларнака",
+    he: "Larnaca", // TODO(he)
   },
 };
 
@@ -77,13 +75,8 @@ const PropertyFeatures: FC<Props> = ({ keyFeatures, lang }) => {
               {keyFeatures.city ? (
                 <div className={styles.featureValue}>
                   {(
-                    cityTranslations[keyFeatures.city] as {
-                      en: string;
-                      de: string;
-                      pl: string;
-                      ru: string;
-                    }
-                  )[lang as "en" | "de" | "pl" | "ru"] || keyFeatures.city}
+                    cityTranslations[keyFeatures.city] as Record<Locale, string>
+                  )[lang as Locale] || keyFeatures.city}
                 </div>
               ) : (
                 <div className={styles.featureNoValue}>

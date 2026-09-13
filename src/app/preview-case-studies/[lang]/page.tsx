@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { LuEuro, LuMapPin, LuHouse, LuClock } from "react-icons/lu";
 import { i18n } from "@/i18n.config";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, type Locale } from "@/lib/locale";
 import { staticAlternates, DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_WIDTH, DEFAULT_OG_IMAGE_HEIGHT } from "@/lib/seo";
 import type { Translation } from "@/types/homepage";
 import Nav from "../../preview-home/sections/Nav";
@@ -81,7 +81,7 @@ export default async function CaseStudiesPage({ params }: Props) {
   const total = await getTotalCaseStudiesByLang(lang);
   const stories = await getCaseStudiesByLangWithDetails(lang);
   const pageDoc = await getCaseStudiesPageByLang(lang);
-  const labels = CASE_CATEGORY_LABELS[lang] ?? CASE_CATEGORY_LABELS.en;
+  const labels = CASE_CATEGORY_LABELS[lang as Locale] ?? CASE_CATEGORY_LABELS.en;
 
   const featured = stories[0];
   const featuredImg = featured ? safeUrl(featured.previewImage) || PLACEHOLDER : PLACEHOLDER;

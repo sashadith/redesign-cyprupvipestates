@@ -304,7 +304,10 @@ const PagePost = async ({ params }: Props) => {
                   positioned, it has no height until it loads, so it can fail to
                   intersect and never load at all (the aspect-ratio in
                   articleForm.css guards that, but eager is simply certain). */}
-              <img src={`/img/contact/iphone-${["en", "de", "pl", "ru"].includes(lang) ? lang : "en"}.webp`} alt="" />
+              {/* Asset SET, not a locale set: only en/de/pl/ru artwork exists on
+                  disk, so `he` explicitly falls back to the English image
+                  rather than 404ing on a non-existent iphone-he.webp. */}
+              <img src={`/img/contact/iphone-${(["en", "de", "pl", "ru"] as const).includes(lang as any) ? lang : "en"}.webp`} alt="" />
             </div>
           </div>
         );

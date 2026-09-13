@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { i18n } from "@/i18n.config";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, isLocale } from "@/lib/locale";
 import { languageAlternates } from "@/lib/seo";
 import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporateLocale } from "@/lib/corporatePageSlugs";
 import type { Translation } from "@/types/homepage";
@@ -35,7 +35,7 @@ type Props = { params: { lang: string } };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const lang = params.lang;
   const t = contactsCopy(lang);
-  const l = (["en", "de", "pl", "ru"].includes(lang) ? lang : "en") as CorporateLocale;
+  const l: CorporateLocale = isLocale(lang) ? lang : "en";
 
   const { canonical, languages } = languageAlternates({
     lang: l,

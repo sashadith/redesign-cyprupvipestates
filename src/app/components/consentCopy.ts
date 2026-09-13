@@ -16,6 +16,8 @@
  * differently per language: German closes with " zu" after the second link,
  * the other three end at the link itself. */
 
+import type { Locale } from "@/lib/locale";
+
 export type ConsentCopy = {
   lead: string;
   termsLabel: string;
@@ -26,11 +28,13 @@ export type ConsentCopy = {
   tail: string;
 };
 
-const CONSENT: Record<string, ConsentCopy> = {
-  en: {
-    lead: "I agree to the ", termsLabel: "Terms and Conditions", termsHref: "/terms-and-conditions",
-    mid: " and the ", privacyLabel: "Data Privacy Policy", privacyHref: "/privacy-policy", tail: "",
-  },
+const EN: ConsentCopy = {
+  lead: "I agree to the ", termsLabel: "Terms and Conditions", termsHref: "/terms-and-conditions",
+  mid: " and the ", privacyLabel: "Data Privacy Policy", privacyHref: "/privacy-policy", tail: "",
+};
+
+const CONSENT: Record<Locale, ConsentCopy> = {
+  en: EN,
   de: {
     lead: "Ich stimme den ", termsLabel: "AGB", termsHref: "/de/geschaftsbedingungen",
     mid: " und der ", privacyLabel: "Datenschutzrichtlinie", privacyHref: "/de/datenschutzrichtlinie", tail: " zu",
@@ -43,8 +47,15 @@ const CONSENT: Record<string, ConsentCopy> = {
     lead: "Согласен с ", termsLabel: "Условиями", termsHref: "/ru/uslovija-i-polozhenija",
     mid: " и ", privacyLabel: "Политикой конфиденциальности", privacyHref: "/ru/politika-privatnosti", tail: "",
   },
+  // he (Phase 4): TODO(he) text, but the hrefs are real now (registry.ts's
+  // CORPORATE_SLUGS.terms/privacy.he are the EN slugs under the /he prefix).
+  he: {
+    ...EN,
+    termsHref: "/he/terms-and-conditions",
+    privacyHref: "/he/privacy-policy",
+  }, // TODO(he)
 };
 
 export function consentCopy(lang: string): ConsentCopy {
-  return CONSENT[lang] ?? CONSENT.en;
+  return CONSENT[lang as Locale] ?? CONSENT.en;
 }

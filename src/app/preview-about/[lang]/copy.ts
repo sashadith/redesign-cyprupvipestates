@@ -19,6 +19,8 @@
      - pl: "…w historię sukces" (truncated noun)
    Each of those is fixed below; the stored rows still contain the originals. */
 
+import type { Locale } from "@/lib/locale";
+
 export type AboutStrings = {
   metaTitle: string;
   metaDescription: string;
@@ -394,6 +396,6 @@ const RU: AboutStrings = {
   },
 };
 
-const ALL: Record<string, AboutStrings> = { en: EN, de: DE, pl: PL, ru: RU };
+const ALL: Record<Locale, AboutStrings> = { en: EN, de: DE, pl: PL, ru: RU, he: EN /* TODO(he) */ };
 
-export const aboutCopy = (lang: string): AboutStrings => ALL[lang] ?? EN;
+export const aboutCopy = (lang: string): AboutStrings => ALL[lang as Locale] ?? EN;

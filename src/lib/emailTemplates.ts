@@ -1,108 +1,110 @@
 // src/lib/emailTemplates.ts
 
-type Lang = "en" | "ru" | "pl" | "de" | string;
+import { isLocale, type Locale } from "@/lib/locale";
+
+type Lang = Locale;
 
 type AutoReplyOptions = {
   name?: string;
-  lang?: Lang;
+  lang?: string;
 };
 
-export function getAutoReplyEmail({ name, lang = "en" }: AutoReplyOptions) {
-  const safeName =
-    (name && name.trim()) ||
-    (lang === "ru"
-      ? "Уважаемый клиент"
-      : lang === "pl"
-        ? "Szanowny Kliencie"
-        : lang === "de"
-          ? "Sehr geehrte Kundin, sehr geehrter Kunde"
-          : "Dear Client");
+const SAFE_NAME_EN = "Dear Client";
 
-  // Тексты по языкам
-  const t = (() => {
-    switch (lang) {
-      case "ru":
-        return {
-          subject: "Спасибо за вашу заявку — Cyprus VIP Estates",
-          title: "Спасибо за вашу заявку",
-          intro1:
-            "Спасибо, что обратились в <strong>Cyprus VIP Estates</strong>.",
-          intro2:
-            "Мы получили вашу заявку и в ближайшее время свяжемся с вами с персональными вариантами недвижимости на Кипре и ответами на ваши вопросы.",
-          whatNextTitle: "Что будет дальше?",
-          li1: "Мы внимательно изучим вашу заявку и предпочтения по недвижимости.",
-          li2: "Наш консультант свяжется с вами удобным для вас способом.",
-          li3: "Мы подготовим подборку объектов напрямую от проверенных застройщиков на Кипре.",
-          speedUp:
-            "Если хотите ускорить процесс, вы уже сейчас можете посмотреть актуальные проекты на нашем сайте.",
-          ctaText: "Смотреть проекты недвижимости",
-          followUs: "Мы в соцсетях:",
-          reason:
-            "Вы получили это письмо, потому что оставили заявку на сайте Cyprus VIP Estates.",
-          link: "https://cyprusvipestates.com/ru/projects",
-        };
-      case "pl":
-        return {
-          subject: "Dziękujemy za zgłoszenie — Cyprus VIP Estates",
-          title: "Dziękujemy za Twoje zgłoszenie",
-          intro1:
-            "Dziękujemy za kontakt z <strong>Cyprus VIP Estates</strong>.",
-          intro2:
-            "Otrzymaliśmy Twoje zapytanie i wkrótce skontaktujemy się z Tobą z dopasowanymi ofertami nieruchomości na Cyprze oraz odpowiedziami na Twoje pytania.",
-          whatNextTitle: "Co będzie dalej?",
-          li1: "Przeanalizujemy Twoje potrzeby i preferencje dotyczące nieruchomości.",
-          li2: "Nasz konsultant skontaktuje się z Tobą wybraną formą kontaktu.",
-          li3: "Przygotujemy propozycje nieruchomości bezpośrednio od sprawdzonych deweloperów na Cyprze.",
-          speedUp:
-            "Jeśli chcesz przyspieszyć proces, już teraz możesz zobaczyć aktualne projekty na naszej stronie.",
-          ctaText: "Zobacz oferty nieruchomości",
-          followUs: "Znajdź nas w mediach społecznościowych:",
-          reason:
-            "Otrzymujesz tę wiadomość, ponieważ wysłałeś formularz na stronie Cyprus VIP Estates.",
-          link: "https://cyprusvipestates.com/pl/projects",
-        };
-      case "de":
-        return {
-          subject: "Vielen Dank für Ihre Anfrage — Cyprus VIP Estates",
-          title: "Vielen Dank für Ihre Anfrage",
-          intro1:
-            "Vielen Dank für Ihre Kontaktanfrage bei <strong>Cyprus VIP Estates</strong>.",
-          intro2:
-            "Wir haben Ihre Anfrage erhalten und melden uns in Kürze mit individuellen Immobilienvorschlägen auf Zypern und Antworten auf Ihre Fragen.",
-          whatNextTitle: "Wie geht es weiter?",
-          li1: "Wir analysieren Ihre Anfrage und Ihre Immobilienpräferenzen.",
-          li2: "Eine unserer Beraterinnen / einer unserer Berater kontaktiert Sie über Ihren bevorzugten Kanal.",
-          li3: "Wir bereiten ein maßgeschneidertes Immobilienangebot direkt von geprüften Entwicklern auf Zypern vor.",
-          speedUp:
-            "Wenn Sie den Prozess beschleunigen möchten, können Sie sich bereits jetzt unsere aktuellen Projekte ansehen.",
-          ctaText: "Immobilien auf Zypern ansehen",
-          followUs: "Folgen Sie uns:",
-          reason:
-            "Sie erhalten diese E-Mail, weil Sie eine Anfrage auf der Website von Cyprus VIP Estates gesendet haben.",
-          link: "https://cyprusvipestates.com/de/projects",
-        };
-      default:
-        return {
-          subject: "Thank you for your enquiry — Cyprus VIP Estates",
-          title: "Thank you for your enquiry",
-          intro1:
-            "Thank you for contacting <strong>Cyprus VIP Estates</strong>.",
-          intro2:
-            "We’ve received your enquiry and will get back to you shortly with personalised property options in Cyprus and answers to your questions.",
-          whatNextTitle: "What happens next?",
-          li1: "We will review your enquiry and your property preferences.",
-          li2: "One of our consultants will contact you via your preferred channel.",
-          li3: "We will prepare tailored property offers directly from trusted developers in Cyprus.",
-          speedUp:
-            "If you’d like to speed up the process, you can already explore our latest projects below.",
-          ctaText: "Browse properties in Cyprus",
-          followUs: "Follow us:",
-          reason:
-            "You received this email because you submitted an enquiry on the Cyprus VIP Estates website.",
-          link: "https://cyprusvipestates.com/projects",
-        };
-    }
-  })();
+const SAFE_NAME: Record<Locale, string> = {
+  en: SAFE_NAME_EN,
+  ru: "Уважаемый клиент",
+  pl: "Szanowny Kliencie",
+  de: "Sehr geehrte Kundin, sehr geehrter Kunde",
+  he: SAFE_NAME_EN, // TODO(he)
+};
+
+const AUTO_REPLY_EN = {
+  subject: "Thank you for your enquiry — Cyprus VIP Estates",
+  title: "Thank you for your enquiry",
+  intro1:
+    "Thank you for contacting <strong>Cyprus VIP Estates</strong>.",
+  intro2:
+    "We’ve received your enquiry and will get back to you shortly with personalised property options in Cyprus and answers to your questions.",
+  whatNextTitle: "What happens next?",
+  li1: "We will review your enquiry and your property preferences.",
+  li2: "One of our consultants will contact you via your preferred channel.",
+  li3: "We will prepare tailored property offers directly from trusted developers in Cyprus.",
+  speedUp:
+    "If you’d like to speed up the process, you can already explore our latest projects below.",
+  ctaText: "Browse properties in Cyprus",
+  followUs: "Follow us:",
+  reason:
+    "You received this email because you submitted an enquiry on the Cyprus VIP Estates website.",
+  link: "https://cyprusvipestates.com/projects",
+};
+
+const AUTO_REPLY: Record<Locale, typeof AUTO_REPLY_EN> = {
+  en: AUTO_REPLY_EN,
+  ru: {
+    subject: "Спасибо за вашу заявку — Cyprus VIP Estates",
+    title: "Спасибо за вашу заявку",
+    intro1:
+      "Спасибо, что обратились в <strong>Cyprus VIP Estates</strong>.",
+    intro2:
+      "Мы получили вашу заявку и в ближайшее время свяжемся с вами с персональными вариантами недвижимости на Кипре и ответами на ваши вопросы.",
+    whatNextTitle: "Что будет дальше?",
+    li1: "Мы внимательно изучим вашу заявку и предпочтения по недвижимости.",
+    li2: "Наш консультант свяжется с вами удобным для вас способом.",
+    li3: "Мы подготовим подборку объектов напрямую от проверенных застройщиков на Кипре.",
+    speedUp:
+      "Если хотите ускорить процесс, вы уже сейчас можете посмотреть актуальные проекты на нашем сайте.",
+    ctaText: "Смотреть проекты недвижимости",
+    followUs: "Мы в соцсетях:",
+    reason:
+      "Вы получили это письмо, потому что оставили заявку на сайте Cyprus VIP Estates.",
+    link: "https://cyprusvipestates.com/ru/projects",
+  },
+  pl: {
+    subject: "Dziękujemy za zgłoszenie — Cyprus VIP Estates",
+    title: "Dziękujemy za Twoje zgłoszenie",
+    intro1:
+      "Dziękujemy za kontakt z <strong>Cyprus VIP Estates</strong>.",
+    intro2:
+      "Otrzymaliśmy Twoje zapytanie i wkrótce skontaktujemy się z Tobą z dopasowanymi ofertami nieruchomości na Cyprze oraz odpowiedziami na Twoje pytania.",
+    whatNextTitle: "Co będzie dalej?",
+    li1: "Przeanalizujemy Twoje potrzeby i preferencje dotyczące nieruchomości.",
+    li2: "Nasz konsultant skontaktuje się z Tobą wybraną formą kontaktu.",
+    li3: "Przygotujemy propozycje nieruchomości bezpośrednio od sprawdzonych deweloperów na Cyprze.",
+    speedUp:
+      "Jeśli chcesz przyspieszyć proces, już teraz możesz zobaczyć aktualne projekty na naszej stronie.",
+    ctaText: "Zobacz oferty nieruchomości",
+    followUs: "Znajdź nas w mediach społecznościowych:",
+    reason:
+      "Otrzymujesz tę wiadomość, ponieważ wysłałeś formularz na stronie Cyprus VIP Estates.",
+    link: "https://cyprusvipestates.com/pl/projects",
+  },
+  de: {
+    subject: "Vielen Dank für Ihre Anfrage — Cyprus VIP Estates",
+    title: "Vielen Dank für Ihre Anfrage",
+    intro1:
+      "Vielen Dank für Ihre Kontaktanfrage bei <strong>Cyprus VIP Estates</strong>.",
+    intro2:
+      "Wir haben Ihre Anfrage erhalten und melden uns in Kürze mit individuellen Immobilienvorschlägen auf Zypern und Antworten auf Ihre Fragen.",
+    whatNextTitle: "Wie geht es weiter?",
+    li1: "Wir analysieren Ihre Anfrage und Ihre Immobilienpräferenzen.",
+    li2: "Eine unserer Beraterinnen / einer unserer Berater kontaktiert Sie über Ihren bevorzugten Kanal.",
+    li3: "Wir bereiten ein maßgeschneidertes Immobilienangebot direkt von geprüften Entwicklern auf Zypern vor.",
+    speedUp:
+      "Wenn Sie den Prozess beschleunigen möchten, können Sie sich bereits jetzt unsere aktuellen Projekte ansehen.",
+    ctaText: "Immobilien auf Zypern ansehen",
+    followUs: "Folgen Sie uns:",
+    reason:
+      "Sie erhalten diese E-Mail, weil Sie eine Anfrage auf der Website von Cyprus VIP Estates gesendet haben.",
+    link: "https://cyprusvipestates.com/de/projects",
+  },
+  he: AUTO_REPLY_EN, // TODO(he)
+};
+
+export function getAutoReplyEmail({ name, lang: langInput = "en" }: AutoReplyOptions) {
+  const lang: Lang = isLocale(langInput) ? langInput : "en";
+  const safeName = (name && name.trim()) || SAFE_NAME[lang];
+  const t = AUTO_REPLY[lang];
 
   const html = `
 <!DOCTYPE html>

@@ -14,7 +14,7 @@ import { urlFor } from "@/sanity/sanity.client";
 import { getCaseStudyByLang } from "@/sanity/sanity.utils";
 import { CASE_CATEGORY_LABELS } from "../../../preview-home/sections/homeI18n";
 import { abs, languageAlternates, pathBuilders, SITE_URL, DEFAULT_OG_IMAGE } from "@/lib/seo";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, type Locale } from "@/lib/locale";
 import type { Translation } from "@/types/homepage";
 import { caseStudiesCopy } from "../copy";
 
@@ -101,7 +101,7 @@ export default async function CaseStudyDetailPage({ params }: Props) {
   if (!cs) notFound();
 
   const t = caseStudiesCopy(lang);
-  const labels = CASE_CATEGORY_LABELS[lang] ?? CASE_CATEGORY_LABELS.en;
+  const labels = CASE_CATEGORY_LABELS[lang as Locale] ?? CASE_CATEGORY_LABELS.en;
   const PROPERTY_TYPE_LABELS: Record<string, string> = {
     villa: t.propertyTypeVilla, apartment: t.propertyTypeApartment, penthouse: t.propertyTypePenthouse,
     townhouse: t.propertyTypeTownhouse, plot: t.propertyTypePlot,

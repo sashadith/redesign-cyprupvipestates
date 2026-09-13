@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { PortableText } from "@portabletext/react";
-import { localizedHref, localeDir } from "@/lib/locale";
+import { localizedHref, localeDir, type Locale } from "@/lib/locale";
 import { urlFor } from "@/sanity/sanity.client";
 import { projectsStrings } from "@/app/[lang]/projects/projectsI18n";
 import LandingProjectsGrid from "./LandingProjectsGrid";
@@ -248,7 +248,7 @@ export default function LandingBody({
                 so the wording stays in one place. */}
             {relatedLinks.length > 0 && (
               <div className="pl__wrap pl-links">
-                <h2 className="pl__h2">{HEADINGS.related?.[lang] ?? HEADINGS.related.en}</h2>
+                <h2 className="pl__h2">{HEADINGS.related?.[lang as Locale] ?? HEADINGS.related.en}</h2>
                 <ul className="pl-links__list">
                   {relatedLinks.map((l) => (
                     <li key={l.href}>

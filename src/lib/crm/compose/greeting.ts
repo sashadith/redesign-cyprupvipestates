@@ -4,6 +4,8 @@
 // opening line (state NEW); for every other state the model is instructed to
 // mirror whatever address style the lead has already used in the timeline.
 
+import { isLocale, type Locale } from "@/lib/locale";
+
 export type SalutationTitle = "UNKNOWN" | "MR" | "MS";
 
 function clean(name: string | null | undefined): string {
@@ -11,42 +13,52 @@ function clean(name: string | null | undefined): string {
   return /^unknown$/i.test(s) ? "" : s;
 }
 
+type GreetingArgs = { first: string; last: string; salutation: SalutationTitle };
+
+const GREETING_EN = ({ first }: GreetingArgs): string => (first ? `Hi ${first},` : `Hi,`);
+
+const GREETING: Record<Locale, (args: GreetingArgs) => string> = {
+  en: GREETING_EN,
+  de: ({ first, last, salutation }) => {
+    if (salutation === "MR" && last) return `Sehr geehrter Herr ${last},`;
+    if (salutation === "MS" && last) return `Sehr geehrte Frau ${last},`;
+    if (first && last) return `Guten Tag ${first} ${last},`;
+    if (first) return `Guten Tag ${first},`;
+    return `Guten Tag,`;
+  },
+  pl: ({ first, last, salutation }) => {
+    if (salutation === "MR" && last) return `Szanowny Panie ${last},`;
+    if (salutation === "MS" && last) return `Szanowna Pani ${last},`;
+    if (first && last) return `Dzień dobry, ${first} ${last},`;
+    if (first) return `Dzień dobry, ${first},`;
+    return `Dzień dobry,`;
+  },
+  ru: ({ first }) => (first ? `Здравствуйте, ${first},` : `Здравствуйте,`),
+  he: GREETING_EN, // TODO(he)
+};
+
 export function buildFirstContactGreeting(
   lead: { firstName: string | null; lastName: string | null; salutation: SalutationTitle },
   language: string,
 ): string {
   const first = clean(lead.firstName);
   const last = clean(lead.lastName);
-
-  switch (language) {
-    case "de":
-      if (lead.salutation === "MR" && last) return `Sehr geehrter Herr ${last},`;
-      if (lead.salutation === "MS" && last) return `Sehr geehrte Frau ${last},`;
-      if (first && last) return `Guten Tag ${first} ${last},`;
-      if (first) return `Guten Tag ${first},`;
-      return `Guten Tag,`;
-    case "pl":
-      if (lead.salutation === "MR" && last) return `Szanowny Panie ${last},`;
-      if (lead.salutation === "MS" && last) return `Szanowna Pani ${last},`;
-      if (first && last) return `Dzień dobry, ${first} ${last},`;
-      if (first) return `Dzień dobry, ${first},`;
-      return `Dzień dobry,`;
-    case "ru":
-      return first ? `Здравствуйте, ${first},` : `Здравствуйте,`;
-    default: // en
-      return first ? `Hi ${first},` : `Hi,`;
-  }
+  const lang: Locale = isLocale(language) ? language : "en";
+  return GREETING[lang]({ first, last, salutation: lead.salutation });
 }
 
 // The "thank you! my name is Sascha Dith from Cyprus VIP Estates" sentence
 // that always follows the greeting on first contact (see examples.md) —
 // deterministic so the company name and the one permitted exclamation mark
 // never drift or get mangled by the model.
-const FIRST_CONTACT_INTRO: Record<string, string> = {
-  en: "thank you for your message! My name is Sascha Dith from Cyprus VIP Estates.",
+const FIRST_CONTACT_INTRO_EN = "thank you for your message! My name is Sascha Dith from Cyprus VIP Estates.";
+
+const FIRST_CONTACT_INTRO: Record<Locale, string> = {
+  en: FIRST_CONTACT_INTRO_EN,
   de: "vielen Dank für Ihre Anfrage! Mein Name ist Sascha Dith von Cyprus VIP Estates.",
   ru: "спасибо за ваше обращение! Меня зовут Саша Дит, я из Cyprus VIP Estates.",
   pl: "dziękuję za wiadomość! Nazywam się Sascha Dith z Cyprus VIP Estates.",
+  he: FIRST_CONTACT_INTRO_EN, // TODO(he)
 };
 
 export function buildFirstContactOpening(
@@ -54,6 +66,6 @@ export function buildFirstContactOpening(
   language: string,
 ): string {
   const greeting = buildFirstContactGreeting(lead, language);
-  const intro = FIRST_CONTACT_INTRO[language] ?? FIRST_CONTACT_INTRO.en;
+  const intro = FIRST_CONTACT_INTRO[isLocale(language) ? language : "en"];
   return `${greeting}\n\n${intro}`;
 }

@@ -7,6 +7,7 @@
 // this redesign's thin-line SVG icon language (src/app/preview-project/amenityIcons.tsx)
 // instead of the legacy's PNG image files, and to the dark/champagne token system.
 import React from "react";
+import { isLocale, type Locale } from "@/lib/locale";
 
 export type DistancesValue = Partial<{
   beach: number; restaurants: number; shops: number; airport: number;
@@ -34,17 +35,20 @@ const ICONS: Record<Category, React.ReactNode> = {
   golf: <Svg><path d="M6 21V4M6 4l8 3-8 3" /><ellipse cx="6" cy="21" rx="4" ry="1.2" /></Svg>,
 };
 
-type DistancesLocale = "en" | "de" | "pl" | "ru";
+type DistancesLocale = Locale;
 
 // Wording matches the legacy PropertyDistances component's own inline
 // translations exactly (including its "Golf court" — not "course" — and its
 // DE "Supermarket" for the Shops label) so the same categories read
 // identically to a visitor who's seen a legacy project page.
+const EN = { labels: { beach: "Beach", restaurants: "Restaurants", shops: "Shops", airport: "Airport", hospital: "Hospital", school: "School", cityCenter: "City center", golf: "Golf court" }, min: "min" };
+
 const COPY: Record<DistancesLocale, { labels: Record<Category, string>; min: string }> = {
-  en: { labels: { beach: "Beach", restaurants: "Restaurants", shops: "Shops", airport: "Airport", hospital: "Hospital", school: "School", cityCenter: "City center", golf: "Golf court" }, min: "min" },
+  en: EN,
   de: { labels: { beach: "Strand", restaurants: "Restaurants", shops: "Supermarket", airport: "Flughafen", hospital: "Klinik", school: "Schule", cityCenter: "Zentrum", golf: "Golfplatz" }, min: "min" },
   pl: { labels: { beach: "Plaża", restaurants: "Restauracje", shops: "Sklepy", airport: "Lotnisko", hospital: "Szpital", school: "Szkoła", cityCenter: "Centrum miasta", golf: "Pole golfowe" }, min: "min" },
   ru: { labels: { beach: "Пляж", restaurants: "Рестораны", shops: "Супермаркет", airport: "Аэропорт", hospital: "Больница", school: "Школа", cityCenter: "Центр города", golf: "Поле для гольфа" }, min: "мин" },
+  he: EN, // TODO(he)
 };
 
 export default function DistancesStrip({
@@ -59,7 +63,7 @@ export default function DistancesStrip({
   if (!distances) return null;
   const present = ORDER.filter((k) => distances[k] != null);
   if (!present.length) return null;
-  const loc: DistancesLocale = lang === "de" || lang === "pl" || lang === "ru" ? lang : "en";
+  const loc: DistancesLocale = isLocale(lang) ? lang : "en";
   const c = COPY[loc];
 
   return (

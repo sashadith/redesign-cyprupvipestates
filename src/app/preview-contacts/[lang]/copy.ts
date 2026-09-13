@@ -8,6 +8,8 @@
    genuinely supports and an international buyer genuinely cares about:
    the languages each consultant speaks. */
 
+import type { Locale } from "@/lib/locale";
+
 export type ContactsStrings = {
   metaTitle: string;
   metaDescription: string;
@@ -256,9 +258,9 @@ const RU: ContactsStrings = {
   officeDirections: "Открыть в Google Картах",
 };
 
-const ALL: Record<string, ContactsStrings> = { en: EN, de: DE, pl: PL, ru: RU };
+const ALL: Record<Locale, ContactsStrings> = { en: EN, de: DE, pl: PL, ru: RU, he: EN /* TODO(he) */ };
 
-export const contactsCopy = (lang: string): ContactsStrings => ALL[lang] ?? EN;
+export const contactsCopy = (lang: string): ContactsStrings => ALL[lang as Locale] ?? EN;
 
 /* The three channels are identical in every locale (same number, same
    address) — stored once here rather than four times above. */

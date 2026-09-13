@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { parseAttribution } from "@/lib/attribution";
 import { recordInboundLead } from "@/lib/leadNotify";
 import { safeUrl, allowedHost, escapeHtml, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
-import { LOCALES } from "@/lib/locale";
+import { LOCALES, type Locale } from "@/lib/locale";
 
 const LEAD_LOCALES = new Set<string>(LOCALES);
 
@@ -21,7 +21,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-type Lang = "en" | "ru" | "pl" | "de" | string;
+type Lang = Locale;
 
 function formatCurrency(value: number, lang: Lang) {
   const locale =
@@ -172,55 +172,55 @@ function getClientEmail(payload: any) {
   const strategyLabel = getStrategyLabel(strategy, lang);
   const scenarioLabel = getScenarioLabel(scenario, lang);
 
-  const t = (() => {
-    switch (lang) {
-      case "ru":
-        return {
-          subject: "Ваш расчет ROI — Cyprus VIP Estates",
-          title: "Ваш ориентировочный расчет ROI",
-          intro:
-            "Спасибо за использование ROI Calculator на сайте Cyprus VIP Estates.",
-          summary: "Мы сохранили основные результаты вашего расчета ниже.",
-          cta: "Перейти к объекту",
-          footer:
-            "Расчет носит ориентировочный характер. Финальные показатели могут отличаться в зависимости от объекта, структуры сделки и рыночных условий.",
-        };
-      case "pl":
-        return {
-          subject: "Twój wynik ROI — Cyprus VIP Estates",
-          title: "Twój orientacyjny wynik ROI",
-          intro:
-            "Dziękujemy za skorzystanie z kalkulatora ROI na stronie Cyprus VIP Estates.",
-          summary: "Poniżej znajdziesz główne wyniki swojej kalkulacji.",
-          cta: "Przejdź do oferty",
-          footer:
-            "Kalkulacja ma charakter orientacyjny. Ostateczne wyniki mogą się różnić w zależności od nieruchomości, struktury transakcji i warunków rynkowych.",
-        };
-      case "de":
-        return {
-          subject: "Ihre ROI-Berechnung — Cyprus VIP Estates",
-          title: "Ihr unverbindliches ROI-Ergebnis",
-          intro:
-            "Vielen Dank, dass Sie den ROI-Rechner von Cyprus VIP Estates genutzt haben.",
-          summary:
-            "Nachfolgend finden Sie die wichtigsten Ergebnisse Ihrer Berechnung.",
-          cta: "Zum Objekt",
-          footer:
-            "Diese Berechnung ist indikativ. Die endgültigen Ergebnisse können je nach Immobilie, Transaktionsstruktur und Marktbedingungen abweichen.",
-        };
-      default:
-        return {
-          subject: "Your ROI calculation — Cyprus VIP Estates",
-          title: "Your indicative ROI result",
-          intro:
-            "Thank you for using the ROI Calculator on Cyprus VIP Estates.",
-          summary: "Below is a summary of your projected investment result.",
-          cta: "View property",
-          footer:
-            "This calculation is indicative only. Final figures may vary depending on the property, transaction structure and market conditions.",
-        };
-    }
-  })();
+  const CLIENT_EMAIL_EN = {
+    subject: "Your ROI calculation — Cyprus VIP Estates",
+    title: "Your indicative ROI result",
+    intro:
+      "Thank you for using the ROI Calculator on Cyprus VIP Estates.",
+    summary: "Below is a summary of your projected investment result.",
+    cta: "View property",
+    footer:
+      "This calculation is indicative only. Final figures may vary depending on the property, transaction structure and market conditions.",
+  };
+
+  const CLIENT_EMAIL: Record<Locale, typeof CLIENT_EMAIL_EN> = {
+    en: CLIENT_EMAIL_EN,
+    ru: {
+      subject: "Ваш расчет ROI — Cyprus VIP Estates",
+      title: "Ваш ориентировочный расчет ROI",
+      intro:
+        "Спасибо за использование ROI Calculator на сайте Cyprus VIP Estates.",
+      summary: "Мы сохранили основные результаты вашего расчета ниже.",
+      cta: "Перейти к объекту",
+      footer:
+        "Расчет носит ориентировочный характер. Финальные показатели могут отличаться в зависимости от объекта, структуры сделки и рыночных условий.",
+    },
+    pl: {
+      subject: "Twój wynik ROI — Cyprus VIP Estates",
+      title: "Twój orientacyjny wynik ROI",
+      intro:
+        "Dziękujemy za skorzystanie z kalkulatora ROI na stronie Cyprus VIP Estates.",
+      summary: "Poniżej znajdziesz główne wyniki swojej kalkulacji.",
+      cta: "Przejdź do oferty",
+      footer:
+        "Kalkulacja ma charakter orientacyjny. Ostateczne wyniki mogą się różnić w zależności od nieruchomości, struktury transakcji i warunków rynkowych.",
+    },
+    de: {
+      subject: "Ihre ROI-Berechnung — Cyprus VIP Estates",
+      title: "Ihr unverbindliches ROI-Ergebnis",
+      intro:
+        "Vielen Dank, dass Sie den ROI-Rechner von Cyprus VIP Estates genutzt haben.",
+      summary:
+        "Nachfolgend finden Sie die wichtigsten Ergebnisse Ihrer Berechnung.",
+      cta: "Zum Objekt",
+      footer:
+        "Diese Berechnung ist indikativ. Die endgültigen Ergebnisse können je nach Immobilie, Transaktionsstruktur und Marktbedingungen abweichen.",
+    },
+    he: CLIENT_EMAIL_EN, // TODO(he)
+  };
+
+  const safeLang: Locale = LOCALES.includes(lang) ? lang : "en";
+  const t = CLIENT_EMAIL[safeLang];
 
   const link =
     safeUrl(currentPage)?.toString() || "https://cyprusvipestates.com";

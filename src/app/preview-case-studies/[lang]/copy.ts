@@ -9,6 +9,8 @@
    translator) — flagged when this went live; happy to swap in reviewed
    copy if/when that's available, same file/shape either way. */
 
+import type { Locale } from "@/lib/locale";
+
 export type CaseStudiesCopy = {
   metaTitle: string;
   metaDescription: string;
@@ -52,8 +54,7 @@ export type CaseStudiesCopy = {
   guideTitle: string;
 };
 
-export const CASE_STUDIES_COPY: Record<string, CaseStudiesCopy> = {
-  en: {
+const EN: CaseStudiesCopy = {
     metaTitle: "Cyprus Property Success Stories",
     metaDescription: "Real Cyprus property purchases — relocation, investment and lifestyle buyers, and how we helped them find the right home.",
     eyebrow: "Success Stories",
@@ -94,7 +95,10 @@ export const CASE_STUDIES_COPY: Record<string, CaseStudiesCopy> = {
     propertyTypePlot: "Plot",
     guideEyebrow: "The Guide",
     guideTitle: "Understanding Case Studies",
-  },
+};
+
+export const CASE_STUDIES_COPY: Record<Locale, CaseStudiesCopy> = {
+  en: EN,
   de: {
     metaTitle: "Erfolgsgeschichten",
     metaDescription: "Echte Immobilienkäufe in Zypern — Umzug, Investition und Lifestyle-Käufer, und wie wir ihnen geholfen haben, das richtige Zuhause zu finden.",
@@ -221,8 +225,9 @@ export const CASE_STUDIES_COPY: Record<string, CaseStudiesCopy> = {
     guideEyebrow: "Гид",
     guideTitle: "Понимание кейсов",
   },
+  he: EN, // TODO(he)
 };
 
 export function caseStudiesCopy(lang: string): CaseStudiesCopy {
-  return CASE_STUDIES_COPY[lang] ?? CASE_STUDIES_COPY.en;
+  return CASE_STUDIES_COPY[lang as Locale] ?? CASE_STUDIES_COPY.en;
 }

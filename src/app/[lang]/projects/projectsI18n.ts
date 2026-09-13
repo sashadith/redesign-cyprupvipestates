@@ -6,6 +6,8 @@
 // (Paphos, Apartment, priceAsc, …) are unchanged — they still drive the same
 // production query/search/sort logic.
 
+import type { Locale } from "@/lib/locale";
+
 export type Opt = { value: string; label: string };
 
 export type ProjectsStrings = {
@@ -443,6 +445,6 @@ const RU: ProjectsStrings = {
   },
 };
 
-export const PROJECTS_STRINGS: Record<string, ProjectsStrings> = { en: EN, de: DE, pl: PL, ru: RU };
+export const PROJECTS_STRINGS: Record<Locale, ProjectsStrings> = { en: EN, de: DE, pl: PL, ru: RU, he: EN /* TODO(he) */ };
 
-export const projectsStrings = (lang: string): ProjectsStrings => PROJECTS_STRINGS[lang] ?? EN;
+export const projectsStrings = (lang: string): ProjectsStrings => PROJECTS_STRINGS[lang as Locale] ?? EN;

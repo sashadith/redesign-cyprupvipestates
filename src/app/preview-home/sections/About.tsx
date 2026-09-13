@@ -2,6 +2,7 @@ import React, { FC } from "react";
 import type { AboutBlock as AboutBlockType } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client";
 import { highlightAccents } from "./highlightAccents";
+import type { Locale } from "@/lib/locale";
 
 /* "This is Cyprus" — light ivory section. The brand icons sit inside gold
    medallions; "Cyprus" in the title gets the gold-italic ("quietly") accent. */
@@ -19,16 +20,17 @@ const safeUrl = (img: unknown) => {
 // their titles are still the plain "This is Cyprus" translation, so there's
 // no "only one"-equivalent phrase to highlight. Highlighting the country
 // name instead, matching what's actually in the title today.
-const ACCENTS_BY_LANG: Record<string, string[]> = {
+const ACCENTS_BY_LANG: Partial<Record<Locale, string[]>> = {
   de: ["Zypern"],
   pl: ["Cyprze"],
   ru: ["Кипре"],
+  he: [], // TODO(he)
 };
 
 // wrap the word "Cyprus" in the gold-italic accent
 const renderTitle = (title: string, lang: string) => {
-  if (lang !== "en" && ACCENTS_BY_LANG[lang]) {
-    return highlightAccents(title, ACCENTS_BY_LANG[lang]);
+  if (lang !== "en" && ACCENTS_BY_LANG[lang as Locale]) {
+    return highlightAccents(title, ACCENTS_BY_LANG[lang as Locale]!);
   }
   return title.split(/(Only One)/i).map((part, i) =>
     part.toLowerCase() === "only one" ? (

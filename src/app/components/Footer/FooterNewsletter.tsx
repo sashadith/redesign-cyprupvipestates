@@ -1,24 +1,26 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { isLocale, type Locale } from "@/lib/locale";
 
 /* Footer newsletter (redesign look) — keeps the previous live NewsletterForm
    behaviour verbatim: POST /api/monday-newsletter, honeypot + formStartTime
    anti-spam, GTM "newsletter_subscribe", and the localized success/error/invalid
-   messages (en/de/pl/ru). Only the markup/classes changed for the new design. */
+   messages (en/de/pl/ru/he). Only the markup/classes changed for the new design. */
 
-const supportedLanguages = ["en", "de", "pl", "ru"] as const;
-type SupportedLang = (typeof supportedLanguages)[number];
+type SupportedLang = Locale;
 
 const getValidatedLang = (lang: string): SupportedLang =>
-  supportedLanguages.includes(lang as SupportedLang) ? (lang as SupportedLang) : "en";
+  isLocale(lang) ? lang : "en";
+
+const MESSAGES_EN = {
+  success: "You have successfully subscribed to our newsletter!",
+  error: "Failed to subscribe. Please try again.",
+  invalid: "Please enter a valid email address.",
+};
 
 const MESSAGES: Record<SupportedLang, Record<"success" | "error" | "invalid", string>> = {
-  en: {
-    success: "You have successfully subscribed to our newsletter!",
-    error: "Failed to subscribe. Please try again.",
-    invalid: "Please enter a valid email address.",
-  },
+  en: MESSAGES_EN,
   de: {
     success: "Sie haben sich erfolgreich für unseren Newsletter angemeldet!",
     error: "Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
@@ -34,6 +36,7 @@ const MESSAGES: Record<SupportedLang, Record<"success" | "error" | "invalid", st
     error: "Не удалось подписаться. Попробуйте еще раз.",
     invalid: "Пожалуйста, введите корректный адрес электронной почты.",
   },
+  he: MESSAGES_EN, // TODO(he)
 };
 
 const msg = (type: "success" | "error" | "invalid", lang: string) =>

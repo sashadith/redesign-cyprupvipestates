@@ -4,6 +4,8 @@
 // bullets, project/case data) still comes from the content DB — these are only
 // the small marketing labels the preview baked in.
 
+import type { Locale } from "@/lib/locale";
+
 export type HomeStrings = {
   heroLine1: string; heroAccent: string; heroLine2: string; // "Cyprus [Property] Experts"
   getConsultation: string;
@@ -32,8 +34,9 @@ const EN: HomeStrings = {
   readCaseStudy: "Read case study", exploreAllCases: "Explore all cases",
 };
 
-export const HOME_STRINGS: Record<string, HomeStrings> = {
+export const HOME_STRINGS: Record<Locale, HomeStrings> = {
   en: EN,
+  he: EN, // TODO(he)
   de: {
     heroLine1: "Zyperns ", heroAccent: "Immobilien", heroLine2: "experten",
     getConsultation: "Beratung anfragen",
@@ -81,12 +84,15 @@ export const HOME_STRINGS: Record<string, HomeStrings> = {
   },
 };
 
-export const homeStrings = (lang: string): HomeStrings => HOME_STRINGS[lang] ?? EN;
+export const homeStrings = (lang: string): HomeStrings => HOME_STRINGS[lang as Locale] ?? EN;
 
 // Case-study category labels (reused from the production FeaturedCaseStudies).
-export const CASE_CATEGORY_LABELS: Record<string, Record<string, string>> = {
-  en: { "luxury-villa": "Luxury Villa Purchase", apartment: "Apartment Purchase", investment: "Investment Property", relocation: "Relocation to Cyprus", "permanent-residency": "Permanent Residency", "new-development": "New Development" },
+const CASE_CATEGORY_LABELS_EN: Record<string, string> = { "luxury-villa": "Luxury Villa Purchase", apartment: "Apartment Purchase", investment: "Investment Property", relocation: "Relocation to Cyprus", "permanent-residency": "Permanent Residency", "new-development": "New Development" };
+
+export const CASE_CATEGORY_LABELS: Record<Locale, Record<string, string>> = {
+  en: CASE_CATEGORY_LABELS_EN,
   de: { "luxury-villa": "Kauf einer Luxusvilla", apartment: "Wohnungskauf", investment: "Investmentimmobilie", relocation: "Umzug nach Zypern", "permanent-residency": "Daueraufenthalt", "new-development": "Neubauimmobilie" },
   pl: { "luxury-villa": "Zakup luksusowej willi", apartment: "Zakup apartamentu", investment: "Nieruchomość inwestycyjna", relocation: "Przeprowadzka na Cypr", "permanent-residency": "Stały pobyt", "new-development": "Nowa inwestycja" },
   ru: { "luxury-villa": "Покупка роскошной виллы", apartment: "Покупка квартиры", investment: "Инвестиционная недвижимость", relocation: "Переезд на Кипр", "permanent-residency": "Постоянное проживание", "new-development": "Новостройка" },
+  he: CASE_CATEGORY_LABELS_EN, // TODO(he)
 };

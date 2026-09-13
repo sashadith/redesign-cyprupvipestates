@@ -3,6 +3,7 @@ import { PortableText } from "@portabletext/react";
 import type { DescriptionBlock } from "@/types/homepage";
 import { RichText } from "@/app/components/RichText/RichText";
 import { highlightAccents } from "./highlightAccents";
+import type { Locale } from "@/lib/locale";
 
 /* Description block — dark editorial section for the long-form SEO copy.
    Reuses the shared RichText PortableText renderer + the original data logic;
@@ -11,15 +12,16 @@ import { highlightAccents } from "./highlightAccents";
 // DE/PL/RU (2026-09-07 fix): see highlightAccents.tsx — the split() below
 // only ever matched the literal English word "We", so translated titles
 // rendered with no highlight at all.
-const ACCENTS_BY_LANG: Record<string, string[]> = {
+const ACCENTS_BY_LANG: Partial<Record<Locale, string[]>> = {
   de: ["wir"],
   pl: ["nas"],
   ru: ["нас"],
+  he: [], // TODO(he)
 };
 
 const renderTitle = (title: string, lang: string) => {
-  if (lang !== "en" && ACCENTS_BY_LANG[lang]) {
-    return highlightAccents(title, ACCENTS_BY_LANG[lang]);
+  if (lang !== "en" && ACCENTS_BY_LANG[lang as Locale]) {
+    return highlightAccents(title, ACCENTS_BY_LANG[lang as Locale]!);
   }
   return title.split(/(\bWe\b)/i).map((part, i) =>
     /^we$/i.test(part) ? (

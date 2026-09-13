@@ -12,7 +12,7 @@ import { blurProps } from "@/lib/imageBlur";
 import { ImageAlt } from "@/types/project";
 import styles from "./ProjectCardSlider.module.scss";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
-import { localeDir } from "@/lib/locale";
+import { localeDir, isLocale, type Locale } from "@/lib/locale";
 
 type Props = {
   images: ImageAlt[];
@@ -21,18 +21,15 @@ type Props = {
 };
 
 const ProjectCardSlider: FC<Props> = ({ images, title, lang }) => {
-  const getViewMoreLabel = (lang: string) => {
-    switch (lang) {
-      case "de":
-        return "Mehr anzeigen";
-      case "pl":
-        return "Zobacz więcej";
-      case "ru":
-        return "Смотреть ещё";
-      default:
-        return "View more";
-    }
+  const VIEW_MORE_EN = "View more";
+  const VIEW_MORE_LABEL: Record<Locale, string> = {
+    de: "Mehr anzeigen",
+    pl: "Zobacz więcej",
+    ru: "Смотреть ещё",
+    en: VIEW_MORE_EN,
+    he: VIEW_MORE_EN, // TODO(he)
   };
+  const getViewMoreLabel = (lang: string) => VIEW_MORE_LABEL[isLocale(lang) ? lang : "en"];
 
   const prevRef = useRef<HTMLButtonElement | null>(null);
   const nextRef = useRef<HTMLButtonElement | null>(null);

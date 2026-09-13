@@ -3,6 +3,7 @@ import type { CitiesBlock } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client";
 import { homeStrings } from "./homeI18n";
 import { highlightAccents } from "./highlightAccents";
+import type { Locale } from "@/lib/locale";
 
 /* "Properties by Location" — light ivory section: a grid of city tiles
    (image + name), each linking to that location. */
@@ -22,18 +23,19 @@ const ACCENT_PHRASE = "Properties for Sale";
 // highlight at all. These are the words that carry the meaning in each
 // language, not a positional copy of the English phrase — see the words
 // against each locale's actual title.
-const ACCENTS_BY_LANG: Record<string, string[]> = {
+const ACCENTS_BY_LANG: Partial<Record<Locale, string[]>> = {
   de: ["Immobilien"],
   pl: ["nieruchomości na sprzedaż"],
   ru: ["недвижимость"],
+  he: [], // TODO(he)
 };
 
 /* Highlight the "Properties for Sale" phrase with the gold accent ("in Cyprus"
    stays in the normal text colour). Falls back to highlighting just "Cyprus"
    if the phrase isn't present (e.g. translated headings). */
 const renderTitle = (title: string, lang: string) => {
-  if (lang !== "en" && ACCENTS_BY_LANG[lang]) {
-    return highlightAccents(title, ACCENTS_BY_LANG[lang]);
+  if (lang !== "en" && ACCENTS_BY_LANG[lang as Locale]) {
+    return highlightAccents(title, ACCENTS_BY_LANG[lang as Locale]!);
   }
   const idx = title.toLowerCase().indexOf(ACCENT_PHRASE.toLowerCase());
   if (idx === -1) {
