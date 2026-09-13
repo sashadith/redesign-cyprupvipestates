@@ -161,7 +161,10 @@ async function exportInventory(prisma, outDir) {
   console.log("Exporting inventory…");
   const developments = await prisma.development.findMany({
     where: { publishStatus: "published" },
-    include: { override: true, units: true },
+    // Explicit selects: the local Prisma client already knows Phase-1 columns
+    // (descriptionHE) that the shared DB only gains once the operator applies the
+    // migration — a bare `override: true` would select them and fail (P2022).
+    include: { override: { select: { town: true, district: true } }, units: { select: { status: true, price: true } } },
   });
 
   const buckets = new Map(); // `${town}||${district}` -> accumulator

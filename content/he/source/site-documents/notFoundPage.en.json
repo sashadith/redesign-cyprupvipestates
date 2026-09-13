@@ -1,0 +1,18 @@
+{
+  "seo": {
+    "metaTitle": "Page Not Found",
+    "metaDescription": "There is no content on this page"
+  },
+  "slug": {
+    "en": {
+      "_type": "slug",
+      "current": "404"
+    },
+    "_type": "localizedSlug"
+  },
+  "title": "404 Page EN",
+  "textEnd": "Estate Not Found",
+  "textStart": "404",
+  "buttonText": "View All Projects",
+  "description": "The page you are looking for might have been removed, had its name changed, or is temporarily unavailable."
+}
