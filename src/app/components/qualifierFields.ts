@@ -73,7 +73,9 @@ const EN: Copy = {
   },
 };
 
-const COPY: Record<Locale, Copy> = {
+// Exported so scripts/qa/copy-snapshot.mjs can pin the en/de/pl/ru rows
+// (final review I3) — `qualifierCopy()` stays the accessor callers use.
+export const COPY: Record<Locale, Copy> = {
   en: EN,
   de: {
     budgetLabel: "Budget (optional)",

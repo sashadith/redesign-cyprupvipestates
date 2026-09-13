@@ -12,9 +12,9 @@ import { resolveDevelopmentPrice, toDeliveryQuarter } from "@/lib/developmentCar
 import { normalizeRef } from "@/lib/unitRef";
 import type { MatchFilters } from "@/lib/crm/matching";
 import { SITE_URL } from "@/lib/seo";
-import { ltrIsolate } from "@/lib/locale";
 import { hePlaceOrIsolated } from "@/lib/hePlaces";
 import { asPLocale, COPY, timeOfDayGreeting } from "./copy";
+import { budgetChip } from "./budgetChip";
 import HeroGreeting from "./HeroGreeting";
 import PresentationBody, { type PresentationDevelopmentVM } from "./PresentationBody";
 import ClosingSection from "./ClosingSection";
@@ -233,22 +233,11 @@ export default async function ClientPresentationPage({ params }: { params: { tok
   for (const t of criteria.propertyTypes ?? []) requirementChips.push(c.propertyTypeNames[t] ?? t);
   for (const n of criteria.bedrooms ?? []) requirementChips.push(c.bedroomLabels[String(n)] ?? String(n));
   const { budgetMin, budgetMax } = criteria;
-  if (budgetMin != null || budgetMax != null) {
-    const fmt = (n: number) => `€${n.toLocaleString("en-US")}`;
-    // `he`: the en dash is banned (styleguide §3) and a range renders without
-    // spaces inside one LRI run so the RTL paragraph can't swap its ends
-    // (Pass B Should fix #19). The lower-bound chip uses `budgetFrom`, NOT the
-    // card's `priceFrom` — it is the client's budget floor, not an asking
-    // price (Must fix #14).
-    const range = locale === "he"
-      ? ltrIsolate(`${fmt(budgetMin as number)}-${fmt(budgetMax as number)}`)
-      : `${fmt(budgetMin as number)} – ${fmt(budgetMax as number)}`;
-    requirementChips.push(
-      budgetMin != null && budgetMax != null ? range
-        : budgetMin != null ? `${c.budgetFrom} ${fmt(budgetMin)}`
-        : `${c.budgetUpTo} ${fmt(budgetMax as number)}`
-    );
-  }
+  // One-sided budgets are first-class (matching.ts, qualifierFields.ts), so
+  // the range must never be built before we know both bounds exist — see
+  // budgetChip.ts.
+  const budgetText = budgetChip(locale, budgetMin, budgetMax, c);
+  if (budgetText) requirementChips.push(budgetText);
   const { timeline } = presentation.lead;
   if (timeline) requirementChips.push(c.timelineLabels[timeline] ?? timeline);
 

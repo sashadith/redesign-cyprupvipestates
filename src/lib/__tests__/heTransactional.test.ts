@@ -7,7 +7,9 @@
 // the CRM or a mail transport.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { HE_LANGUAGE_NOTE, hePrefixDate, ltrIsolate } from "@/lib/locale";
+import { HE_LANGUAGE_NOTE, bidiIsolate, hePrefixDate, ltrIsolate } from "@/lib/locale";
+import { buildFirstContactGreeting, buildFirstContactOpening } from "@/lib/crm/compose/greeting";
+import { buildEmailClosing } from "@/lib/crm/compose/closing";
 import { heYears } from "@/app/components/roi-calculator/RoiResults.copy";
 import { COPY as PRESENTATION_COPY } from "@/app/c/[token]/copy";
 import { COPY as BOOKING_COPY } from "@/app/book/[token]/copy";
@@ -96,7 +98,59 @@ test("no `he` transactional string carries a dash or an exclamation mark", () =>
   walk(BOOKING_COPY.he);
   walk(MODAL_BROCHURE_COPY.he);
   strings.push(BOOKING_COPY.he.confirmedBody(HE_SLOT));
+  strings.push(...heComposeStrings());
   for (const s of strings) {
     assert.doesNotMatch(s, /[—–!]/, `banned punctuation in: ${s}`);
   }
+});
+
+// Final-review I4 — the deterministic CRM opening/closing lines were the one
+// corner the walk above never reached, which is how the only `!` in any
+// shipped `he` string survived. They are built by functions, not a copy
+// table, so we render them through their public builders.
+function heComposeStrings(): string[] {
+  const leads = [
+    { firstName: "Yossi", lastName: "Cohen", salutation: "MR" as const },
+    { firstName: null, lastName: null, salutation: "UNKNOWN" as const },
+  ];
+  return [
+    ...leads.map((l) => buildFirstContactGreeting(l, "he")),
+    ...leads.map((l) => buildFirstContactOpening(l, "he")),
+    buildEmailClosing("he"),
+    buildEmailClosing("he", "company-name"),
+  ];
+}
+
+// A Latin run is only a bidi hazard when Hebrew follows it on the same line:
+// a line-terminal brand tail (and a Latin-only signature line) renders fine.
+// `bidiIsolate`/`ltrIsolate` wrap their argument in FSI/LRI…PDI, so isolated
+// runs are stripped before the scan.
+const ISOLATED = /[⁦⁧⁨][^⁩]*⁩/g;
+const HEBREW = /[֐-׿]/;
+
+test("the he CRM opening and closing isolate every mid-sentence Latin run", () => {
+  for (const s of heComposeStrings()) {
+    for (const line of s.replace(ISOLATED, "").split("\n")) {
+      if (!HEBREW.test(line)) continue; // Latin-only line: no bidi context
+      const re = /[A-Za-z]{4,}/g;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(line)) !== null) {
+        const rest = line.slice(m.index + m[0].length);
+        assert.ok(
+          !HEBREW.test(rest),
+          `un-isolated Latin run "${m[0]}" before Hebrew in: ${line}`,
+        );
+      }
+    }
+  }
+});
+
+test("the he first-contact intro keeps its meaning after the I4 rewrite", () => {
+  const opening = buildFirstContactOpening(
+    { firstName: "Yossi", lastName: "Cohen", salutation: "MR" }, "he",
+  );
+  assert.match(opening, /^שלום ⁨Yossi⁩,\n\nתודה על ההודעה\. /);
+  assert.ok(opening.includes(bidiIsolate("Sascha Dith")));
+  assert.ok(opening.includes(bidiIsolate("Cyprus VIP Estates")));
+  assert.ok(opening.endsWith(HE_LANGUAGE_NOTE));
 });

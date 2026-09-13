@@ -74,7 +74,9 @@ const AUTO_REPLY_EN = {
   link: "https://cyprusvipestates.com/projects",
 };
 
-const AUTO_REPLY: Record<Locale, typeof AUTO_REPLY_EN> = {
+// Exported so scripts/qa/copy-snapshot.mjs can pin the en/de/pl/ru rows
+// (final review I3) — `getAutoReplyEmail()` stays the accessor callers use.
+export const AUTO_REPLY: Record<Locale, typeof AUTO_REPLY_EN> = {
   en: AUTO_REPLY_EN,
   ru: {
     subject: "Спасибо за вашу заявку — Cyprus VIP Estates",

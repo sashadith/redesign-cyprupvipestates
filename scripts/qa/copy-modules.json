@@ -15,6 +15,14 @@
   { "path": "src/lib/crm/presentationMessages.ts", "exports": ["WHATSAPP_MSG", "WHATSAPP_UPDATED_MSG", "PRESENTATION_EMAIL_TEMPLATE"] },
   { "path": "src/lib/crm/bookingMessages.ts", "exports": ["BOOKING_CONFIRMATION_EMAIL"] },
 
+  { "path": "src/app/components/consentCopy.ts", "exports": ["CONSENT"] },
+  { "path": "src/app/components/formFeedbackCopy.ts", "exports": ["COPY"] },
+  { "path": "src/app/components/qualifierFields.ts", "exports": ["COPY"] },
+  { "path": "src/lib/crm/compose/greeting.ts", "exports": ["GREETING", "FIRST_CONTACT_INTRO"] },
+  { "path": "src/lib/crm/compose/closing.ts", "exports": ["VALEDICTION", "ROLE_LINE"] },
+  { "path": "src/lib/emailTemplates.ts", "exports": ["AUTO_REPLY"] },
+  { "path": "src/app/api/roi-calculator/route.ts", "exports": ["ROI_EMAIL"], "skip": "Next route module: importing it pulls in next/server, nodemailer and the Prisma client at module scope, so a QA gate cannot load it without those side effects. ROI_EMAIL's LTR invariance is recorded in docs/i18n/acceptance/phase-4.md by removed-line audit instead." },
+
   { "path": "src/app/[lang]/case-studies/[slug]/page.copy.ts", "exports": ["CASE_STUDY_PAGE_COPY"] },
   { "path": "src/app/[lang]/projects/[slug]/page.copy.ts", "exports": ["PROJECT_PAGE_COPY"] },
   { "path": "src/app/components/BlogSlide/BlogSlide.copy.ts", "exports": ["BLOG_SLIDE_COPY"] },

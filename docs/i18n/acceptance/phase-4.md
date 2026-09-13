@@ -23,10 +23,10 @@ Verbindliche Sprachregeln: `docs/i18n/he-styleguide.md` (inkl. §11, Lernpunkte 
 | Gate | Befehl | Ergebnis |
 |---|---|---|
 | Platzhalter | `node scripts/qa/he-placeholders.mjs` | `TODO(he)`: 2 (nur `preview-legal/registry.ts`, Phase 5b) · `REVIEW(he)`: 111 Tabellen/Einträge |
-| LTR-Snapshot | `node --import tsx scripts/qa/copy-snapshot.mjs --check` | sauber, 3.197 Blätter — kein en/de/pl/ru-String verändert (Ausnahmen unten) |
-| Meta-Längen | `node --import tsx scripts/qa/he-meta-length.mjs` | 0 Verstöße außer `preview-partners` metaTitle 73 Zeichen (EN, Entscheidung J, Phase 8) |
+| LTR-Snapshot | `node --import tsx scripts/qa/copy-snapshot.mjs --check` | sauber, 3.377 Blätter — kein en/de/pl/ru-String verändert (Ausnahmen unten). Seit dem Final-Review-Fix sind auch `consentCopy.ts`, `formFeedbackCopy.ts`, `qualifierFields.ts`, `crm/compose/greeting.ts`, `crm/compose/closing.ts` und `emailTemplates.ts` registriert. **Nicht abgedeckt:** `src/app/api/roi-calculator/route.ts` (`ROI_EMAIL`) — die Next-Route zieht `next/server`, nodemailer und den Prisma-Client beim Import; sie steht als `skip` mit Begründung in `scripts/qa/copy-modules.json`, ihre LTR-Invarianz ist nur per Removed-Line-Audit belegt |
+| Meta-Längen | `node --import tsx scripts/qa/he-meta-length.mjs` | 56 Prüfungen, 0 Verstöße außer `preview-partners` metaTitle 73 Zeichen (EN, Entscheidung J, Phase 8) |
 | Typen | `npx tsc --noEmit -p tsconfig.json` | sauber |
-| Tests | `npm test` | 169 grün (Baseline 125 + 44 neue Tests: `hePlaces`, `heFeedVocab`, `fit()`, SEO-LTR-Pins, E-Mail-RTL, Datums-Präpositionen, Escaping, Amenities) |
+| Tests | `npm test` | 177 grün (Baseline 125 + 44 Phase-4-Tests + 8 aus dem Final-Review-Fix: Budget-Chip in allen vier Formen × fünf Locales, CRM-Opening/Closing auf `!`/Gedankenstrich/nicht isolierte Latein-Läufe) |
 | Physische CSS-Deklarationen | `node scripts/qa/rtl-physical-count.mjs` | 107, unverändert gegenüber Phase 2 (Phase 2b) |
 
 **Bewusste, sichtbare Änderungen für en/de/pl/ru** (alle im Ledger als Ruling): Nationalitäten-Dropdown im Qualifizierungsformular erhält die Option „Israeli"; `ClassicBlocks` reicht `lang` an `HowWeWorkSection` durch (Akzentwort-Hervorhebung greift nun auch auf de/pl/ru-Landingpages); ROI-Mail-Labels liegen in einer Tabelle (Text byte-identisch); `ProjectLink` zeigt für ru `м²` statt `m²` (Angleichung an `DEVELOPMENT_STRINGS.ru`).

@@ -17,7 +17,7 @@ type GreetingArgs = { first: string; last: string; salutation: SalutationTitle }
 
 const GREETING_EN = ({ first }: GreetingArgs): string => (first ? `Hi ${first},` : `Hi,`);
 
-const GREETING: Record<Locale, (args: GreetingArgs) => string> = {
+export const GREETING: Record<Locale, (args: GreetingArgs) => string> = {
   en: GREETING_EN,
   de: ({ first, last, salutation }) => {
     if (salutation === "MR" && last) return `Sehr geehrter Herr ${last},`;
@@ -56,7 +56,7 @@ export function buildFirstContactGreeting(
 // never drift or get mangled by the model.
 const FIRST_CONTACT_INTRO_EN = "thank you for your message! My name is Sascha Dith from Cyprus VIP Estates.";
 
-const FIRST_CONTACT_INTRO: Record<Locale, string> = {
+export const FIRST_CONTACT_INTRO: Record<Locale, string> = {
   en: FIRST_CONTACT_INTRO_EN,
   de: "vielen Dank für Ihre Anfrage! Mein Name ist Sascha Dith von Cyprus VIP Estates.",
   ru: "спасибо за ваше обращение! Меня зовут Саша Дит, я из Cyprus VIP Estates.",
@@ -64,7 +64,10 @@ const FIRST_CONTACT_INTRO: Record<Locale, string> = {
   // Carries the consulting-language note (glossary §5, Entscheidung E) — this
   // is the one first-contact line every Hebrew lead sees, and the playbook
   // (compose/playbook/by-language.md) tells the model not to repeat it later.
-  he: "תודה על ההודעה! שמי Sascha Dith, מסוכנות Cyprus VIP Estates. הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה.", // REVIEW(he)
+  // No exclamation mark (styleguide §3/§11.7) and both Latin runs are
+  // bidi-isolated (§11.4) — without the isolate the full stop after
+  // "Estates" resolves to the RTL paragraph and renders on the wrong side.
+  he: `תודה על ההודעה. שמי ${bidiIsolate("Sascha Dith")}, מסוכנות ${bidiIsolate("Cyprus VIP Estates")}. הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה.`, // REVIEW(he)
 };
 
 export function buildFirstContactOpening(

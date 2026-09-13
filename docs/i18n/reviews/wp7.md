@@ -73,7 +73,7 @@ bitte nicht mit abtippen, nur den Text.
 | `HeroGreeting.tsx` | `{greetingWord}, <span class="it">{name}!</span>` | Das Ausrufezeichen steht **im JSX**, nicht im String — `בוקר טוב` bleibt ohne Satzzeichen |
 | `PropertyCard.tsx` `fmtPrice` | `${priceFrom} ${"€"}${betrag}` — **mit Leerzeichen** | deshalb `מחיר התחלתי` statt Glossar-`החל מ-` (dessen Bindestrich muss am Betrag kleben). Offene Frage 1 |
 | `page.tsx` Budget-Chip | derselbe `priceFrom`-String, aber im Sinn von „Budget ab X" | ein String, zwei Bedeutungen. Offene Frage 1 |
-| `PropertyCard.tsx` Meta-Zeile | `{vatLabel} · {zähler} · {delivery}: {quartal}` | `בתוספת מע"מ` statt `+מע"מ`, damit kein führendes Pluszeichen im RTL-Fluss kippt |
+| `PropertyCard.tsx` Meta-Zeile | `{vatLabel} · {zähler} · {delivery}: {quartal}` | `+ מע"מ` **mit** Leerzeichen (Glossar §2/§7): ohne Leerzeichen (`+מע"מ`) läse es sich als ein Wort; mit Leerzeichen liegt das Pluszeichen als Neutralzeichen zwischen LTR-Betrag und RTL-Wort und landet richtig |
 | `PropertyOverlay.tsx` Tabellenkopf | `{beds} / {area}` und `{price} / {status}` | zwei Labels teilen sich eine Spalte — beide kurz halten |
 | `book/page.tsx` H1 | `{titlePrefix}<span class="it">{name}</span>{titleSuffix}` | `titlePrefix` endet mit Leerzeichen, `titleSuffix` beginnt mit Komma — Reihenfolge wie EN/RU |
 | `book/page.tsx` `formalGreeting` | nur DE/PL definieren die Funktion | `he` definiert sie **nicht** → immer Vorname (siehe Anmerkung in der Tabelle) |
@@ -112,7 +112,7 @@ bitte nicht mit abtippen, nur den Text.
 | timelineLabels.TWO_YEARS | Within 2 years | תוך שנתיים | Dual statt `2 שנים` | |
 | timelineLabels.JUST_LOOKING | Just looking | בשלב בדיקה | genusfrei; `רק מסתכל` wäre maskulin | |
 | bedroomLabels.0 | Studio | סטודיו | | |
-| bedroomLabels.1 | 1 bedroom | 1 חדר שינה | Fix-Runde 1 (Pass B S3): Ziffer, damit die Chip-Reihe einheitlich bleibt. `heBedrooms()` in `heFeedVocab.ts` behält bewusst `חדר שינה אחד` — dort ist der Kontext eine Freitext-Zusammenfassung, keine Filterleiste | |
+| bedroomLabels.1 | 1 bedroom | חדר שינה אחד | Fix-Runde 1 hatte hier die Ziffer `1 חדר שינה` gesetzt; Glossar §2/§7 hat das zurückgedreht — Hebräisch schreibt die Eins aus und stellt sie nach, und `heBedrooms()` in `heFeedVocab.ts` sagt dasselbe (§11.6). **HE-Spalte nach Fix-Runde 2 aktualisiert** (zeigt den ausgelieferten String). | |
 | bedroomLabels.2–5 | 2/3/4/5+ bedrooms | 2 / 3 / 4 / 5+ חדרי שינה | Glossar §2: nie `חדרים` | |
 | viewDetails | View details | לפרטים נוספים | Karten-CTA | |
 | availableUnits | Available units | יחידות זמינות | | |
@@ -129,7 +129,7 @@ bitte nicht mit abtippen, nur den Text.
 | advisorTitle | Your personal advisor | היועץ האישי שלכם | maskulin wie im Glossar-CTA | |
 | unitsPlural.one / .many | unit / units | יחידה / יחידות | „5 יחידות" | |
 | newForYou | New for you | חדש עבורכם | Badge | |
-| vatLabel | +VAT | בתוספת מע"מ | siehe JSX-Kasten | |
+| vatLabel | +VAT | + מע"מ | Glossar §2/§7: die kurze Form **mit** Leerzeichen, nicht die Wortform `בתוספת מע"מ`; siehe JSX-Kasten. **HE-Spalte nach Fix-Runde 2 aktualisiert** (zeigt den ausgelieferten String). | |
 | soldOut | Sold out | נמכר | Glossar §2: Badge kurz | |
 | lifeNearby | LIFE NEARBY | החיים בסביבה | | |
 | closingEyebrow | DIRECT CONTACT | קשר ישיר | | |
@@ -535,10 +535,10 @@ eine englische Signatur stehen kann.
    Zahlwort in einer sonst zifferngetragenen Chip-Reihe — gewollt oder soll es
    `1 חדר שינה` heißen?
 
-   **Beantwortet (Pass B S3, umgesetzt):** Ziffer — hier ist es eine Filter-Chipleiste.
-   `heBedrooms()` in `heFeedVocab.ts` bleibt bewusst bei `חדר שינה אחד`; dort steht die
-   Zahl in einer Freitext-Zusammenfassung, nicht in einer Chip-Reihe. Bewusste Abweichung,
-   hier protokolliert.
+   **Beantwortet (Pass B S3) — später zurückgedreht:** Pass B entschied die Ziffer für die
+   Chipleiste; Glossar §2/§7 hat danach `חדר שינה אחד` für **beide** Fundstellen verbindlich
+   gemacht (Controller-Commit `e02f318`). Code und `heBedrooms()` sind jetzt wortgleich;
+   die Frage ist damit erledigt.
 
 5. **`advisorTitle` (`היועץ האישי שלכם`) vs. Signatur-Rollenzeile
    (`יועץ הנדל"ן האישי שלכם`).** Bewusst unterschiedlich, weil die Signaturzeile ohne
@@ -593,9 +593,9 @@ eine englische Signatur stehen kann.
 
 **Bewusste Abweichungen, die protokolliert gehören:**
 
-- `bedroomLabels["1"]` = `1 חדר שינה` (Chipleiste) **≠** `heBedrooms(1)` = `חדר שינה אחד`
-  (Freitext-Zusammenfassung in `heFeedVocab.ts`). Unterschiedlicher Kontext, kein
-  §11.6-Verstoß — `heFeedVocab.ts` wurde bewusst nicht angefasst (Pass B S3).
+- `bedroomLabels["1"]` = `חדר שינה אחד` = `heBedrooms(1)`. Die in Fix-Runde 1 protokollierte
+  Abweichung (`1 חדר שינה` auf der Chipleiste) besteht **nicht mehr**: Glossar §2/§7 hat beide
+  Fundstellen auf die ausgeschriebene, nachgestellte Eins vereinheitlicht (`e02f318`).
 - `statusLabel.unlisted` = `לא זמינה עוד` **≠** `heFeedLabel("unlisted")` = `לא בתצוגה`.
   Die Präsentationsseite meint „diese Einheit gibt es nicht mehr" (vom Sync abgeleitet,
   wenn eine Einheit aus dem Feed verschwindet), der Feed-Begriff meint „nicht in der

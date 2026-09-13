@@ -33,7 +33,9 @@ const EN: ConsentCopy = {
   mid: " and the ", privacyLabel: "Data Privacy Policy", privacyHref: "/privacy-policy", tail: "",
 };
 
-const CONSENT: Record<Locale, ConsentCopy> = {
+// Exported so scripts/qa/copy-snapshot.mjs can pin the en/de/pl/ru rows
+// (final review I3) — `consentCopy()` stays the accessor callers use.
+export const CONSENT: Record<Locale, ConsentCopy> = {
   en: EN,
   de: {
     lead: "Ich stimme den ", termsLabel: "AGB", termsHref: "/de/geschaftsbedingungen",
