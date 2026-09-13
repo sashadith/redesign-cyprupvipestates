@@ -134,7 +134,7 @@ function t(
       copied: "הועתק ללוח",
       open: `פתיחה ב-${bidiIsolate("Google Maps")}`,
       route: `מסלול (${bidiIsolate("Google/Apple")})`,
-      osm: "פתיחה ב-OSM",
+      osm: `פתיחה ב-${bidiIsolate("OSM")}`,
     }, // REVIEW(he)
   };
 
