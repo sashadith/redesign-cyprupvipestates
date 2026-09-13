@@ -1013,7 +1013,11 @@ export async function getBlogPostsByLangWithPagination(lang: string, limit: numb
 
 export async function getTotalBlogPostsByLang(lang: string): Promise<number> {
   if (!isLocale(lang)) return 0;
-  return prisma.blog.count({ where: { language: lang as any } });
+  // PUBLISHED only — matches the PUBLISHED-only rows the grid actually
+  // renders (getBlogPostsByLang/getBlogPostsByLangWithPagination), so the
+  // hero counter can never claim more articles than the list shows. Also the
+  // basis for the Phase 6 he-article-count gate (blogIndexMode).
+  return prisma.blog.count({ where: { language: lang as any, status: "PUBLISHED" } });
 }
 
 // === Case Study ===

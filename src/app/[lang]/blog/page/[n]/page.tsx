@@ -9,7 +9,8 @@ import {
   DEFAULT_OG_IMAGE_WIDTH,
   DEFAULT_OG_IMAGE_HEIGHT,
 } from "@/lib/seo";
-import { getBlogPageByLang } from "@/sanity/sanity.utils";
+import { getBlogPageByLang, getTotalBlogPostsByLang } from "@/sanity/sanity.utils";
+import { blogIndexMode } from "@/lib/blogIndexMode";
 import BlogInsights from "../../BlogInsights";
 
 export const dynamic = "force-dynamic";
@@ -27,10 +28,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   // self-canonical + hreflang for THIS paginated page, in every language
   const { canonical, languages } = staticAlternates(params.lang, `blog/page/${page}`);
   const title = data?.metaTitle ? `${data.metaTitle} — ${page}` : undefined;
+  // Phase 6: see page.tsx (page 1) — the same borrowed-EN-content window
+  // stays noindex on every paginated page while `he` has under 5 own articles.
+  const heCount = params.lang === "he" ? await getTotalBlogPostsByLang("he") : 0;
+  const { noindex } = blogIndexMode(params.lang, heCount);
   return {
     title,
     description: data?.metaDescription,
     alternates: { canonical, languages },
+    ...(noindex ? { robots: { index: false, follow: true } } : {}),
     openGraph: {
       title,
       description: data?.metaDescription,
