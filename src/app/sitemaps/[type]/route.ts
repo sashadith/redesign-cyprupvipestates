@@ -22,7 +22,6 @@ const sitemapTypes = [
   "developments",
 ] as const;
 
-type Lang = (typeof langs)[number];
 type SitemapType = (typeof sitemapTypes)[number];
 
 type Alt = { hreflang: string; href: string };

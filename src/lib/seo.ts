@@ -58,9 +58,10 @@ export function languageAlternates(opts: {
     }
   }
 
+  const canonical = languages[lang];
+
   for (const l of Object.keys(languages)) if (!(PUBLIC_LOCALES as readonly string[]).includes(l)) delete languages[l];
 
-  const canonical = languages[lang];
   return {
     canonical,
     languages: { ...languages, "x-default": languages["en"] ?? canonical },

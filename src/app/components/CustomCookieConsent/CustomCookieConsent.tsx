@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import styles from "./CustomCookieConsent.module.scss";
 import { localePrefix, type Locale } from "@/lib/locale";
+import { CORPORATE_SLUGS } from "@/lib/corporatePageSlugs";
 
 const COOKIE_NAME = "cookieConsent";
 
@@ -109,15 +110,7 @@ export default function CustomCookieConsent({ lang }: Props) {
       <p>
         {t.description}{" "}
         <a
-          href={getNormalizedHref(
-            lang,
-            {
-              en: "privacy-policy",
-              de: "datenschutzrichtlinie",
-              pl: "polityka-prywatnosci",
-              ru: "politika-privatnosti",
-            }[lang as keyof typeof dictionary] ?? "privacy-policy"
-          )}
+          href={getNormalizedHref(lang, CORPORATE_SLUGS.privacy[lang])}
           target="_blank"
           className={styles.policyLink}
         >

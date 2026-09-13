@@ -7,7 +7,7 @@
 //   - distance category labels come from DistancesStrip's own COPY.
 // Only strings genuinely unique to this page's own chrome live here.
 import { projectsStrings } from "@/app/[lang]/projects/projectsI18n";
-import { LOCALES, isLocale, type Locale as Lang } from "@/lib/locale";
+import { isLocale, type Locale as Lang } from "@/lib/locale";
 export type { Lang };
 export const asDevLang = (l: string): Lang => (isLocale(l) ? l : "en");
 

@@ -14,7 +14,7 @@
 import { prisma } from "@/lib/prisma";
 import type { ProjectVM } from "@/app/preview-project/feeds";
 import { listedUnits, computeAvailability } from "@/lib/developmentAvailability";
-import { LOCALES, isLocale, type Locale as Lang } from "@/lib/locale";
+import { isLocale, type Locale as Lang } from "@/lib/locale";
 
 export const TITLE_MAX = 60;
 export const DESC_MAX = 160;
@@ -213,7 +213,7 @@ const PRICE_FORMAT: Record<Lang, (n: number) => string> = {
   de: (n) => `${groupDigits(n, ".")} €`,
   pl: (n) => `${groupDigits(n, " ")} €`,
   ru: (n) => `${groupDigits(n, " ")} €`,
-  he: (n) => `€${groupDigits(n, ",")}`, // TODO(he)
+  he: (n) => `€${groupDigits(n, ",")}`, // he: same convention as en (EUR, Western digits) — intentional
 };
 
 // Completion is stored free-form, and in practice almost always as "Q3 2029".
