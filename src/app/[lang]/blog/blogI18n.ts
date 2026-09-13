@@ -13,6 +13,9 @@ export type BlogStrings = {
   eyebrow: string;
   articleOne: string; // singular noun, shown after the count
   articleMany: string; // plural noun
+  /** Cross-locale mode only (he showing EN articles): noun phrases that name the language. Optional — LTR locales never render cross-locale. */
+  articleOneCross?: string;
+  articleManyCross?: string;
   filterAll: string;
   read: string; // card CTA
   readArticle: string; // featured CTA
@@ -85,8 +88,10 @@ export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
   he: {
     heroTitle: "תובנות מקפריסין",
     eyebrow: "הבלוג",
-    articleOne: "מאמר אחד באנגלית", // rendered WITHOUT the numeral for he (see BlogInsights.tsx)
-    articleMany: "מאמרים באנגלית",
+    articleOne: "מאמר אחד", // rendered WITHOUT the numeral for he (see BlogInsights.tsx)
+    articleMany: "מאמרים",
+    articleOneCross: "מאמר אחד באנגלית", // cross-locale mode: EN articles under /he/blog
+    articleManyCross: "מאמרים באנגלית",
     filterAll: "הכל",
     read: "לקריאה",
     readArticle: "לקריאת המאמר",

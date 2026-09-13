@@ -85,6 +85,10 @@ export default async function BlogInsights({ lang, page }: { lang: string; page:
   const heCount = lang === "he" ? await getTotalBlogPostsByLang("he") : 0;
   const mode = blogIndexMode(lang, heCount);
   const crossLocale = mode.sourceLang !== lang;
+  // In cross-locale mode the count names the language ("articles in English");
+  // once `he` has its own articles the plain nouns apply. LTR never crosses.
+  const articleOne = crossLocale ? (t.articleOneCross ?? t.articleOne) : t.articleOne;
+  const articleMany = crossLocale ? (t.articleManyCross ?? t.articleMany) : t.articleMany;
   const total = mode.sourceLang === "he" ? heCount : await getTotalBlogPostsByLang(mode.sourceLang);
   const pages = totalPagesFor(total);
   if (!Number.isInteger(page) || page < 1 || (total > 0 && page > pages)) notFound();
@@ -163,9 +167,9 @@ export default async function BlogInsights({ lang, page }: { lang: string; page:
                     is the same "{n} {plural}" shape the LTR locales use, which
                     stay byte-identical. See docs/i18n/reviews/wp4.md. */}
                 {lang === "he" && total <= 1 ? (
-                  total === 0 ? "אין עדיין מאמרים" : t.articleOne
+                  total === 0 ? "אין עדיין מאמרים" : articleOne
                 ) : (
-                  <>{total} {total === 1 ? t.articleOne : t.articleMany}</>
+                  <>{total} {total === 1 ? articleOne : articleMany}</>
                 )}
               </p>
             </div>
