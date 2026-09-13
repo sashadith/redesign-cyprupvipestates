@@ -12,7 +12,9 @@ export const CASE_STUDY_PAGE_COPY: Record<Locale, typeof CASE_STUDY_PAGE_EN> = {
   de: { relatedProperties: "Verwandte Immobilien" },
   pl: { relatedProperties: "Powiązane nieruchomości" },
   ru: { relatedProperties: "Похожие объекты" },
-  he: CASE_STUDY_PAGE_EN, // TODO(he)
+  // Word-identical to CASE_STUDIES_COPY.he.relatedTitlePlain + …Italic
+  // ("נכסים " + "דומים") on the live redesigned detail page (styleguide §11.6).
+  he: { relatedProperties: "נכסים דומים" }, // REVIEW(he)
 };
 
 export const caseStudyPageCopy = (lang: string) =>

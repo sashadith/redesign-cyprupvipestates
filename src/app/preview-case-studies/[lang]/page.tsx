@@ -183,9 +183,22 @@ export default async function CaseStudiesPage({ params }: Props) {
         )}
       </main>
 
+      {/* The trailing " move?" is hard-coded English and has never been part
+          of the copy table, so de/pl/ru render it too ("Rozważasz swój własny
+          move?"). That pre-existing bug is deliberately left untouched here so
+          the LTR output stays byte-identical; only Hebrew is branched out of
+          it, because an English tail after an RTL question mark is unreadable.
+          The `he` entry therefore carries its complete question in the table
+          (Hebrew Localization Phase 4, WP6 — see docs/i18n/reviews/wp6.md). */}
       <Form
         lang={lang}
-        title={<>{t.formIndexTitlePlain}<span className="it">{t.formIndexTitleItalic}</span> move?</>}
+        title={
+          lang === "he" ? (
+            <>{t.formIndexTitlePlain}<span className="it">{t.formIndexTitleItalic}</span></>
+          ) : (
+            <>{t.formIndexTitlePlain}<span className="it">{t.formIndexTitleItalic}</span> move?</>
+          )
+        }
         subtitle={t.formIndexSubtitle}
       />
       <Footer lang={lang} />

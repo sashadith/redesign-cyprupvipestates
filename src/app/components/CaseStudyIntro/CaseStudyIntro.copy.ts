@@ -26,7 +26,13 @@ export const CASE_STUDY_INTRO_COPY: Record<Locale, typeof CASE_STUDY_INTRO_EN> =
     disclaimer:
       "Конфиденциальность клиентов для нас на первом месте, поэтому в данном кейсе не раскрываются чувствительные бизнес-данные и сведения, позволяющие идентифицировать клиента.",
   },
-  he: CASE_STUDY_INTRO_EN, // TODO(he)
+  he: { // REVIEW(he)
+    requestOffer: "לקבלת הצעה אישית",
+    // Word-identical to CASE_STUDIES_COPY.he.privacyNote (styleguide §11.6) —
+    // the two English sources differ only in punctuation.
+    disclaimer:
+      "פרטיות הלקוחות קודמת לכל, ולכן מידע עסקי רגיש ופרטים מזהים אינם נחשפים בסיפור זה.",
+  },
 };
 
 export const caseStudyIntroCopy = (lang: string) =>
