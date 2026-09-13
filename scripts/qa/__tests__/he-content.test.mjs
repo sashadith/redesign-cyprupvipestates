@@ -328,6 +328,12 @@ test("stripPackMetadata: removes review/translationGroupSlugEn/parentSlug, keeps
 });
 
 
+test("linkCheck: query strings are ignored and the EN partners page is allowed", () => {
+  assert.equal(linkCheck("/he/projects?city=Paphos", []), null);
+  assert.equal(linkCheck("/partners", []), null);
+  assert.ok(linkCheck("/he/partners", []));
+});
+
 test("mirrorCheck: empty EN string allows empty HE (spacer spans)", () => {
   assert.deepEqual(mirrorCheck({ t: "" }, { t: "" }), []);
 });

@@ -228,6 +228,12 @@ export function linkCheck(href, packSlugs = []) {
 
   if (href.startsWith("mailto:") || href.startsWith("tel:")) return null;
   if (href.startsWith("https://wa.me/")) return null;
+  // Filter links carry a query (`/he/projects?city=Paphos`); the allow-list
+  // judges the path only.
+  href = href.replace(/[?#].*$/, "");
+  // Partners stays English (decision J) and must not surface as an EN-fallback
+  // page under /he — the Hebrew chrome links the EN page explicitly.
+  if (href === "/partners") return null;
   if (href === "https://cyprusvipestates.com/he" || href.startsWith("https://cyprusvipestates.com/he/")) return null;
   if (/^\/blog\/[^/]+\/?$/.test(href)) return null; // EN blog article, no /he prefix (decision C)
 
