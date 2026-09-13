@@ -1,14 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 
-import { defaultLocale, locales } from "@/i18n.config";
+import { DEFAULT_LOCALE, PUBLIC_LOCALES, nonDefaultLocalePattern } from "@/lib/locale";
 import nestedPageRedirects from "@/lib/nestedPageRedirects.json";
 import { CORPORATE_SLUGS } from "@/lib/corporatePageSlugs";
 import { EN_REDIRECT_TITLE_SWEEP_EXCLUDE } from "@/lib/seo/enRedirectTitleSweepExclude";
 
 // Reserved first segments that are their own route, not singlepages — never canonicalised here.
 const RESERVED = new Set(["projects", "blog", "developers", "case-studies", "files", "partners"]);
-const ALL_LOCALES = ["en", "de", "pl", "ru"];
+// Locales that are LIVE. A gated locale (see LAUNCH_GATED_LOCALES) is not in
+// this set, so /he/... on production falls through next-intl as an unknown
+// prefix and 404s in the singlepage catch-all — no hreflang, no sitemap.
+const ALL_LOCALES: readonly string[] = PUBLIC_LOCALES;
+const NON_DEFAULT = nonDefaultLocalePattern(PUBLIC_LOCALES); // "de|pl|ru" on prod, "de|pl|ru|he" on staging
+const PREFIXED = new RegExp(`^/(?:(${NON_DEFAULT})/)?`);
+
+// Hoisted to module scope so these are compiled once, not on every request.
+const PROPERTIES_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?properties(?:/.*)?$`);
+const FAQ_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?faq$`);
+const CASE_STUDIES_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?case-studies(?:/([^/]+))?$`);
+const PARTNERS_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?partners$`);
 
 // German landing-page cluster consolidation (2026-07-28): thin-wrapper
 // landing pages merged into their canonical target, confirmed by identical
@@ -352,7 +363,7 @@ export default async function middleware(request: NextRequest) {
   // The "Properties" section is hidden pre-launch — the live inventory is under
   // "Projects" (audit H3). Redirect any /properties[/...] to the localized projects
   // listing with a real HTTP redirect (page-level redirect() is swallowed by the i18n rewrite).
-  const propMatch = request.nextUrl.pathname.match(/^\/(?:(de|pl|ru)\/)?properties(?:\/.*)?$/);
+  const propMatch = request.nextUrl.pathname.match(PROPERTIES_RE);
   if (propMatch) {
     const url = request.nextUrl.clone();
     url.pathname = propMatch[1] ? `/${propMatch[1]}/projects` : "/projects";
@@ -360,15 +371,15 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
-  // FAQ redesign — now locale-aware for all 4 languages, same shape as the
+  // FAQ redesign — locale-aware for every live locale, same shape as the
   // Case Studies block below (both were English/prefixless-only until their
-  // respective translation work). /faq, /de/faq, /pl/faq, /ru/faq all rewrite
-  // to preview-faq/[lang] — the visible URL never changes. Content per
-  // language lives in the faqPage SiteDocument; a language with no row yet
-  // would 404 via the page's own notFound() rather than silently falling
-  // back, so this only ships once every language actually has content (see
-  // scripts/seed-faq-translations.mjs).
-  const faqMatch = request.nextUrl.pathname.match(/^\/(?:(de|pl|ru)\/)?faq$/);
+  // respective translation work). /faq, /de/faq, /pl/faq, /ru/faq (and /he/faq
+  // once live) all rewrite to preview-faq/[lang] — the visible URL never
+  // changes. Content per language lives in the faqPage SiteDocument; a
+  // language with no row yet would 404 via the page's own notFound() rather
+  // than silently falling back, so this only ships once every language
+  // actually has content (see scripts/seed-faq-translations.mjs).
+  const faqMatch = request.nextUrl.pathname.match(FAQ_RE);
   if (faqMatch) {
     const lang = faqMatch[1] || "en";
     const url = request.nextUrl.clone();
@@ -380,7 +391,7 @@ export default async function middleware(request: NextRequest) {
   // /de/case-studies, /pl/case-studies, /ru/case-studies (and their /slug
   // children) all rewrite to preview-case-studies/[lang]/... — the visible
   // URL never changes, only what's rendered behind it.
-  const caseStudiesMatch = request.nextUrl.pathname.match(/^\/(?:(de|pl|ru)\/)?case-studies(?:\/([^/]+))?$/);
+  const caseStudiesMatch = request.nextUrl.pathname.match(CASE_STUDIES_RE);
   if (caseStudiesMatch) {
     const [, localeSeg, slug] = caseStudiesMatch;
     const lang = localeSeg || "en";
@@ -397,7 +408,7 @@ export default async function middleware(request: NextRequest) {
   // exact /partners path. The old hardcoded /[lang]/partners/page.tsx this
   // used to sit alongside has been deleted — this rewrite is no longer
   // provisional, it's the only implementation left.
-  const partnersMatch = request.nextUrl.pathname.match(/^\/(?:(de|pl|ru)\/)?partners$/);
+  const partnersMatch = request.nextUrl.pathname.match(PARTNERS_RE);
   if (partnersMatch) {
     const lang = partnersMatch[1] || "en";
     const url = request.nextUrl.clone();
@@ -418,8 +429,8 @@ export default async function middleware(request: NextRequest) {
   {
     const segs = request.nextUrl.pathname.split("/").filter(Boolean);
     const maybeLocale = segs[0];
-    const hasLocalePrefix = maybeLocale === "de" || maybeLocale === "pl" || maybeLocale === "ru";
-    const lang = hasLocalePrefix ? maybeLocale : "en";
+    const hasLocalePrefix = maybeLocale !== DEFAULT_LOCALE && ALL_LOCALES.includes(maybeLocale);
+    const lang = hasLocalePrefix ? maybeLocale : DEFAULT_LOCALE;
     const rest = hasLocalePrefix ? segs.slice(1) : segs;
     if (rest.length === 1) {
       const slug = rest[0];
@@ -502,8 +513,8 @@ export default async function middleware(request: NextRequest) {
   }
 
   const handleI18nRouting = createIntlMiddleware({
-    locales,
-    defaultLocale,
+    locales: [...PUBLIC_LOCALES],
+    defaultLocale: DEFAULT_LOCALE,
     // Default locale (English) is served without a URL prefix; de/pl/ru keep
     // their prefix. next-intl also redirects `/en/...` → `/...` automatically
     // (307) — the block above intercepts most cases with a 301 first; this
