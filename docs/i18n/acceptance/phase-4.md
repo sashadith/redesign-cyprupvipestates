@@ -30,7 +30,7 @@ Verbindliche Sprachregeln: `docs/i18n/he-styleguide.md` (inkl. §11, Lernpunkte 
 | Tests | `npm test` | _N_ grün (Baseline 125 + neue Tests für `hePlaces`, `heFeedVocab`, `fit()`) |
 | Physische CSS-Deklarationen | `node scripts/qa/rtl-physical-count.mjs` | unverändert gegenüber Phase 2 (107, Phase 2b) |
 
-**Bewusste, sichtbare Änderungen für en/de/pl/ru** (alle im Ledger als Ruling): Nationalitäten-Dropdown im Qualifizierungsformular erhält die Option „Israeli"; `ClassicBlocks` reicht `lang` an `HowWeWorkSection` durch (Akzentwort-Hervorhebung greift nun auch auf de/pl/ru-Landingpages); ROI-Mail-Labels liegen in einer Tabelle (Text byte-identisch).
+**Bewusste, sichtbare Änderungen für en/de/pl/ru** (alle im Ledger als Ruling): Nationalitäten-Dropdown im Qualifizierungsformular erhält die Option „Israeli"; `ClassicBlocks` reicht `lang` an `HowWeWorkSection` durch (Akzentwort-Hervorhebung greift nun auch auf de/pl/ru-Landingpages); ROI-Mail-Labels liegen in einer Tabelle (Text byte-identisch); `ProjectLink` zeigt für ru `м²` statt `m²` (Angleichung an `DEVELOPMENT_STRINGS.ru`).
 
 **Was der Zähler nicht sieht:** `he`-Literale an Render-Stellen (Pluralverzweigungen, `lang === "he"`-Zweige in JSX) tragen keinen Marker; sie sind in den `wpN.md`-Protokollen gelistet und werden dort lektoriert.
 
