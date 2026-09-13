@@ -316,7 +316,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
           <div className="grid grid-cols-3 gap-3">
             <div><label className={label}>Completion</label><input name="completion" defaultValue={ov?.completion ?? ""} placeholder={d.completion ?? ""} className={field} /></div>
             <div><label className={label}>Energy</label><input name="energy" defaultValue={ov?.energy ?? ""} placeholder={d.energy ?? ""} className={field} /></div>
-            <div><label className={label}>Hero video URL</label><input name="heroVideo" defaultValue={ov?.heroVideo ?? ""} placeholder="upload later" className={field} /></div>
+            <div><label className={label}>Hero video URL</label><input name="heroVideo" dir="ltr" defaultValue={ov?.heroVideo ?? ""} placeholder="upload later" className={field} /></div>
           </div>
 
           <div>

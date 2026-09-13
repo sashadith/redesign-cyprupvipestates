@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { updateFooterSettings } from "../../actions";
-import { LOCALES, isLocale } from "@/lib/locale";
+import { LOCALES, isLocale, localeDir } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
@@ -33,7 +33,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { l
         ))}
       </div>
 
-      <form action={save} className="bg-white rounded-lg border border-[#E5E7EB] p-6 space-y-4">
+      <form action={save} dir={localeDir(lang)} className="bg-white rounded-lg border border-[#E5E7EB] p-6 space-y-4">
         <div>
           <label className="block text-sm mb-1">Copyright</label>
           <input name="copyright" defaultValue={d.copyright ?? ""} className={input} />
@@ -61,7 +61,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { l
               {policyLinks.map((l, i) => (
                 <div key={l._key ?? i} className="flex gap-2">
                   <input name={`policy_${i}_label`} defaultValue={l.label ?? ""} className={`${input} w-40 shrink-0`} placeholder="Label" />
-                  <input name={`policy_${i}_link`} defaultValue={l.link ?? ""} className={input} placeholder="https://…" />
+                  <input name={`policy_${i}_link`} dir="ltr" defaultValue={l.link ?? ""} className={input} placeholder="https://…" />
                 </div>
               ))}
             </div>
@@ -93,7 +93,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: { l
               {socialLinks.map((s, i) => (
                 <div key={s._key ?? i} className="flex gap-2 items-center">
                   <span className="w-24 shrink-0 text-sm text-[#6B7280]">{s.label ?? `Link ${i + 1}`}</span>
-                  <input name={`social_${i}_link`} defaultValue={s.link ?? ""}
+                  <input name={`social_${i}_link`} dir="ltr" defaultValue={s.link ?? ""}
                     className={input} placeholder="https://…" />
                 </div>
               ))}

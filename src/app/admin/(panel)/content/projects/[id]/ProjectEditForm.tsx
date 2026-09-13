@@ -11,7 +11,7 @@ const STATUSES = ["DRAFT", "PUBLISHED", "SCHEDULED", "ARCHIVED"];
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
 
 export default function ProjectEditForm({
-  project: p,
+  project: p, dir = "ltr", language,
 }: {
   project: {
     id: string; title: string; slug: string; excerpt: string | null; status: string;
@@ -20,17 +20,19 @@ export default function ProjectEditForm({
     previewImage: any; images: any; latitude: number | null; longitude: number | null;
     seoTitle: string; seoDescription: string; description: any; fullDescription: any;
   };
+  dir?: "ltr" | "rtl";
+  language?: string;
 }) {
   const [state, formAction] = useFormState(saveProjectAll.bind(null, p.id), null);
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} dir={dir} className="space-y-5">
       <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-4">
         <div>
           <label className="block text-sm mb-1">Title</label>
           <input name="title" defaultValue={p.title} className={input} />
         </div>
-        <SlugField initialValue={p.slug} />
+        <SlugField initialValue={p.slug} language={language} />
         <div>
           <label className="block text-sm mb-1">Excerpt</label>
           <textarea name="excerpt" rows={2} defaultValue={p.excerpt ?? ""} className={input} />
@@ -44,7 +46,7 @@ export default function ProjectEditForm({
           </div>
           <div>
             <label className="block text-sm mb-1">Publish at <span className="text-[#9CA3AF]">(DE, if Scheduled)</span></label>
-            <input type="datetime-local" name="scheduledAt" defaultValue={p.scheduledAtInput} className={input} />
+            <input type="datetime-local" dir="ltr" name="scheduledAt" defaultValue={p.scheduledAtInput} className={input} />
           </div>
           <div>
             <label className="block text-sm mb-1">City</label>
@@ -58,11 +60,11 @@ export default function ProjectEditForm({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-sm mb-1">Price (€)</label>
-            <input name="price" type="number" defaultValue={p.price ?? ""} className={input} />
+            <input name="price" type="number" dir="ltr" defaultValue={p.price ?? ""} className={input} />
           </div>
           <div>
             <label className="block text-sm mb-1">Listing priority (0–100)</label>
-            <input name="listingPriority" type="number" defaultValue={p.listingPriority} className={input} />
+            <input name="listingPriority" type="number" dir="ltr" defaultValue={p.listingPriority} className={input} />
           </div>
         </div>
         <div className="flex gap-6">
@@ -79,11 +81,11 @@ export default function ProjectEditForm({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-sm mb-1">Latitude</label>
-            <input name="latitude" type="number" step="any" defaultValue={p.latitude ?? ""} className={input} placeholder="34.77" />
+            <input name="latitude" type="number" step="any" dir="ltr" defaultValue={p.latitude ?? ""} className={input} placeholder="34.77" />
           </div>
           <div>
             <label className="block text-sm mb-1">Longitude</label>
-            <input name="longitude" type="number" step="any" defaultValue={p.longitude ?? ""} className={input} placeholder="32.42" />
+            <input name="longitude" type="number" step="any" dir="ltr" defaultValue={p.longitude ?? ""} className={input} placeholder="32.42" />
           </div>
         </div>
       </div>
@@ -101,8 +103,8 @@ export default function ProjectEditForm({
       </div>
 
       <div className="space-y-6">
-        <PtEditor name="description" label="Description (rich text)" initial={p.description} />
-        <PtEditor name="fullDescription" label="Full description (rich text)" initial={p.fullDescription} />
+        <PtEditor name="description" label="Description (rich text)" initial={p.description} dir={dir} />
+        <PtEditor name="fullDescription" label="Full description (rich text)" initial={p.fullDescription} dir={dir} />
       </div>
 
       <SaveButton result={state} />

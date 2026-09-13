@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import LandingPageEditForm from "./LandingPageEditForm";
+import { localeDir } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 const TYPES = ["blogPage", "caseStudiesPage", "projectsPage", "notFoundPage"];
@@ -26,6 +27,7 @@ export default async function EditLandingPage({ params }: { params: { id: string
         seoTitle={seo.metaTitle ?? ""}
         seoDescription={seo.metaDescription ?? ""}
         content={d.content}
+        dir={localeDir(doc.language)}
       />
     </div>
   );

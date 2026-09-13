@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { saveFaqPage } from "../../../../actions";
 import FaqPageEditor from "../FaqPageEditor";
-import { isLocale } from "@/lib/locale";
+import { isLocale, localeDir } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,7 @@ export default async function EditFaqPage({ params }: { params: { lang: string }
     <div className="max-w-3xl">
       <Link href="/admin/content/faq" className="text-sm text-[#1B4B43] hover:underline">← Back to FAQ</Link>
       <h1 className="text-2xl font-semibold mt-2 mb-6">FAQ · {params.lang.toUpperCase()}</h1>
-      <FaqPageEditor lang={params.lang} initial={categories} save={saveFaqPage.bind(null, params.lang)} />
+      <FaqPageEditor lang={params.lang} initial={categories} save={saveFaqPage.bind(null, params.lang)} dir={localeDir(params.lang)} />
     </div>
   );
 }

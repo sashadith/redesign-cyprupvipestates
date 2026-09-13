@@ -20,7 +20,7 @@ function summarize(b: any): string {
 // gets content-block persistence "for free", no per-page wiring needed).
 export const CONTENT_BLOCKS_FIELD = "contentBlocksJson";
 
-export default function BlockEditor({ kind, initialBlocks }: { kind: "blog" | "singlepage" | "caseStudy"; initialBlocks: any[] }) {
+export default function BlockEditor({ kind, initialBlocks, dir = "ltr" }: { kind: "blog" | "singlepage" | "caseStudy"; initialBlocks: any[]; dir?: "ltr" | "rtl" }) {
   const [items, setItems] = useState<Item[]>(() =>
     (Array.isArray(initialBlocks) ? initialBlocks : []).map((b, i) => ({
       key: b?._key || `b${i}`,
@@ -149,8 +149,8 @@ export default function BlockEditor({ kind, initialBlocks }: { kind: "blog" | "s
             </div>
             <div className="p-3">
               {it.type === "textContent"
-                ? <RichTextField initialHtml={it.html ?? ""} onChange={(html) => setHtml(it.key, html)} />
-                : <BlockFieldEditor block={it.block} onChange={(b) => setBlock(it.key, b)} />}
+                ? <RichTextField initialHtml={it.html ?? ""} onChange={(html) => setHtml(it.key, html)} dir={dir} />
+                : <BlockFieldEditor block={it.block} onChange={(b) => setBlock(it.key, b)} dir={dir} />}
             </div>
           </div>
         ))}

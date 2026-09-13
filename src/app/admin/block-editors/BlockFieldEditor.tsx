@@ -71,16 +71,16 @@ function ListEditor({ items, onChange, render, makeNew, addLabel }: {
   );
 }
 
-function RichField({ label, value, onChange }: { label: string; value: any; onChange: (html: string) => void }) {
+function RichField({ label, value, onChange, dir = "ltr" }: { label: string; value: any; onChange: (html: string) => void; dir?: "ltr" | "rtl" }) {
   return (
     <div>
       <div className="text-xs font-medium text-[#6B7280] mb-1">{label}</div>
-      <RichTextField initialHtml={richInitialHtml(value)} onChange={onChange} />
+      <RichTextField initialHtml={richInitialHtml(value)} onChange={onChange} dir={dir} />
     </div>
   );
 }
 
-export default function BlockFieldEditor({ block, onChange }: { block: any; onChange: (b: any) => void }) {
+export default function BlockFieldEditor({ block, onChange, dir = "ltr" }: { block: any; onChange: (b: any) => void; dir?: "ltr" | "rtl" }) {
   const type = block?._type;
   const set = (patch: any) => onChange({ ...block, ...patch });
   // Replace a rich field (by path) with an {__html} marker, immutably.
@@ -204,7 +204,7 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
                 onChange={(e) => writeItems(items.map((x, j) => (j === i ? { ...x, question: e.target.value } : x)))} />
               <button type="button" onClick={() => writeItems(items.filter((_, j) => j !== i))} className="text-xs text-[#C0392B] px-2">✕</button>
             </div>
-            <RichField label="Answer" value={it.answer} onChange={(html) => setRich(`${itemsPath}.${i}.answer`, html)} />
+            <RichField label="Answer" value={it.answer} onChange={(html) => setRich(`${itemsPath}.${i}.answer`, html)} dir={dir} />
           </div>
         ))}
         <button type="button" onClick={() => writeItems([...items, { _key: k(), question: "", answer: [] }])}
@@ -380,7 +380,7 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
             return (<>
               <input className={input} placeholder="Name" value={it.name ?? ""} onChange={(e) => patch({ name: e.target.value })} />
               <ImageField refValue={ri.asset?._ref} alt={ri.alt} onChange={(v) => patch({ image: { ...ri, _type: "image", alt: v.alt, asset: v.ref ? { _type: "reference", _ref: v.ref } : ri.asset } })} />
-              <RichField label="Review text" value={it.text} onChange={(html) => patch({ text: { __html: html } })} />
+              <RichField label="Review text" value={it.text} onChange={(html) => patch({ text: { __html: html } })} dir={dir} />
             </>);
           }} />
       </div>
@@ -393,7 +393,7 @@ export default function BlockFieldEditor({ block, onChange }: { block: any; onCh
   return (
     <div className="space-y-3">
       {rich.map((f) => (
-        <RichField key={f.path} label={f.label} value={getAtPath(block, f.path)} onChange={(html) => setRich(f.path, html)} />
+        <RichField key={f.path} label={f.label} value={getAtPath(block, f.path)} onChange={(html) => setRich(f.path, html)} dir={dir} />
       ))}
       <JsonFallback block={block} onChange={onChange} hasRich={rich.length > 0} />
     </div>

@@ -158,7 +158,7 @@ function SeoPromptEditor({
                 <span className="text-xs font-medium text-[#111827]">Base prompt</span>
                 <span className="text-[11px] text-[#9CA3AF]">Shared by every project — editing here changes it everywhere</span>
               </div>
-              <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={12} className={ta} />
+              <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={12} dir="ltr" className={ta} />
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
               <label className="block">
