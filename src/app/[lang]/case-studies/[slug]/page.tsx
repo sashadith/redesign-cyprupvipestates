@@ -46,6 +46,7 @@ import CaseStudyIntro from "@/app/components/CaseStudyIntro/CaseStudyIntro";
 import FormStatic from "@/app/components/FormStatic/FormStatic";
 import { languageAlternates, pathBuilders, DEFAULT_OG_IMAGE } from "@/lib/seo";
 import { urlFor } from "@/sanity/sanity.client";
+import { caseStudyPageCopy } from "./page.copy";
 
 type Props = {
   params: {
@@ -128,14 +129,7 @@ const CaseStudyPage = async ({ params }: Props) => {
     });
   }
 
-  const relatedPropertiesTitle =
-    lang === "de"
-      ? "Verwandte Immobilien"
-      : lang === "ru"
-        ? "Похожие объекты"
-        : lang === "pl"
-          ? "Powiązane nieruchomości"
-          : "Related Properties";
+  const relatedPropertiesTitle = caseStudyPageCopy(lang).relatedProperties;
 
   const renderContentBlock = (block: any) => {
     switch (block._type) {

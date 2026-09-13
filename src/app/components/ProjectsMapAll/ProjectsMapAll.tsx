@@ -5,13 +5,13 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { useRouter, useSearchParams } from "next/navigation";
 import L from "leaflet";
 import Link from "next/link";
-import { BCP47, isLocale } from "@/lib/locale";
+import { BCP47, isLocale, bidiIsolate, type Locale } from "@/lib/locale";
 import styles from "./ProjectsMapAll.module.scss";
 import "leaflet/dist/leaflet.css";
 import "leaflet-gesture-handling/dist/leaflet-gesture-handling.css";
 import "leaflet-gesture-handling";
 
-type Lang = "en" | "de" | "ru" | "pl";
+type Lang = Locale;
 
 type MarkerItem = {
   _id: string;
@@ -33,11 +33,14 @@ const CITY_CANONICAL: Record<string, CityKey> = {
   larnaca: "Larnaca",
   larnaka: "Larnaca",
 };
+const CITY_I18N_EN = { Paphos: "Paphos", Limassol: "Limassol", Larnaca: "Larnaca" };
+
 const CITY_I18N: Record<Lang, Record<CityKey, string>> = {
-  en: { Paphos: "Paphos", Limassol: "Limassol", Larnaca: "Larnaca" },
+  en: CITY_I18N_EN,
   de: { Paphos: "Paphos", Limassol: "Limassol", Larnaca: "Larnaca" },
   ru: { Paphos: "Пафос", Limassol: "Лимассол", Larnaca: "Ларнака" },
   pl: { Paphos: "Pafos", Limassol: "Limassol", Larnaca: "Larnaka" },
+  he: { Paphos: "פאפוס", Limassol: "לימסול", Larnaca: "לרנקה" }, // REVIEW(he)
 };
 function translateCity(city: string | undefined, lang: Lang): string {
   if (!city) return "";
@@ -215,15 +218,16 @@ function t(
   label: "coords" | "copy" | "copied" | "open" | "route" | "osm",
   lang: Lang,
 ) {
+  const dictEn = {
+    coords: "Coordinates",
+    copy: "Copy",
+    copied: "Copied!",
+    open: "Open in Google Maps",
+    route: "Route (Google/Apple)",
+    osm: "Open in OSM",
+  };
   const dict: Record<Lang, any> = {
-    en: {
-      coords: "Coordinates",
-      copy: "Copy",
-      copied: "Copied!",
-      open: "Open in Google Maps",
-      route: "Route (Google/Apple)",
-      osm: "Open in OSM",
-    },
+    en: dictEn,
     de: {
       coords: "Koordinaten",
       copy: "Kopieren",
@@ -248,6 +252,17 @@ function t(
       route: "Trasa (Google/Apple)",
       osm: "Otwórz w OSM",
     },
+    // "Copied!" drops the exclamation mark (styleguide §1). Google Maps / OSM
+    // stay Latin brand names; the Hebrew preposition takes the hyphen the
+    // styleguide prescribes before a Latin word (ב-Google Maps).
+    he: {
+      coords: "קואורדינטות",
+      copy: "העתקה",
+      copied: "הועתק ללוח",
+      open: `פתיחה ב-${bidiIsolate("Google Maps")}`,
+      route: `מסלול (${bidiIsolate("Google/Apple")})`,
+      osm: `פתיחה ב-${bidiIsolate("OSM")}`,
+    }, // REVIEW(he)
   };
   return dict[lang][label];
 }
@@ -267,6 +282,12 @@ type Props = {
   markers: MarkerItem[];
 };
 
+const GESTURE_TEXT_EN = {
+  touch: "Use two fingers to pan",
+  scroll: "Ctrl + scroll to zoom",
+  scrollMac: "\u2318 + scroll to zoom",
+};
+
 const GESTURE_TEXT: Record<
   Lang,
   { touch: string; scroll: string; scrollMac: string }
@@ -276,11 +297,7 @@ const GESTURE_TEXT: Record<
     scroll: "Strg + Scrollen zum Zoomen",
     scrollMac: "\u2318 + Scrollen zum Zoomen",
   },
-  en: {
-    touch: "Use two fingers to pan",
-    scroll: "Ctrl + scroll to zoom",
-    scrollMac: "\u2318 + scroll to zoom",
-  },
+  en: GESTURE_TEXT_EN,
   pl: {
     touch: "Użyj dwóch palców, aby przesuwać mapę",
     scroll: "Ctrl + scroll, aby przybliżyć",
@@ -291,12 +308,17 @@ const GESTURE_TEXT: Record<
     scroll: "Ctrl + скролл для масштабирования",
     scrollMac: "\u2318 + скролл для масштабирования",
   },
+  he: {
+    touch: "השתמשו בשתי אצבעות כדי להזיז את המפה",
+    scroll: "Ctrl + גלילה כדי לקרב",
+    scrollMac: "\u2318 + גלילה כדי לקרב",
+  }, // REVIEW(he)
 };
 
 const ProjectsMapAll: FC<Props> = ({ lang, markers }) => {
   const valid = useValidMarkers(markers);
   const center: [number, number] = [35.1264, 33.4299];
-  const LANG = (lang as Lang) || "en";
+  const LANG: Lang = isLocale(lang) ? lang : "en";
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const handleCopy = async (id: string, lat: number, lng: number) => {

@@ -20,6 +20,7 @@ import styles from "./FormStatic.module.scss";
 import Link from "next/link";
 import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
+import { formStaticCopy } from "./FormStatic.copy";
 
 export type FormData = {
   name: string;
@@ -49,14 +50,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
   const [formStartTime] = useState(() => Date.now());
   const formikRef = useRef<FormikProps<FormData> | null>(null);
 
-  const inputPhoneLabel =
-    lang === "ru"
-      ? "Телефон"
-      : lang === "de"
-        ? "Telefon"
-        : lang === "pl"
-          ? "Telefon"
-          : "Phone";
+  const inputPhoneLabel = formStaticCopy(lang).phoneLabel;
 
   const initialValues: FormData = {
     name: "",
@@ -70,88 +64,23 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
   };
 
   const validationSchema = Yup.object({
-    name: Yup.string().required(
-      lang === "ru"
-        ? "Имя обязательно"
-        : lang === "de"
-          ? "Name ist erforderlich"
-          : lang === "pl"
-            ? "Imię jest wymagane"
-            : "Name is required",
-    ),
+    name: Yup.string().required(formStaticCopy(lang).nameRequired),
 
-    surname: Yup.string().required(
-      lang === "ru"
-        ? "Фамилия обязательна"
-        : lang === "de"
-          ? "Nachname ist erforderlich"
-          : lang === "pl"
-            ? "Nazwisko jest wymagane"
-            : "Surname is required",
-    ),
+    surname: Yup.string().required(formStaticCopy(lang).surnameRequired),
 
-    phone: Yup.string().required(
-      lang === "ru"
-        ? "Телефон обязателен"
-        : lang === "de"
-          ? "Telefon ist erforderlich"
-          : lang === "pl"
-            ? "Telefon jest wymagany"
-            : "Phone is required",
-    ),
+    phone: Yup.string().required(formStaticCopy(lang).phoneRequired),
 
     email: Yup.string()
-      .email(
-        lang === "ru"
-          ? "Неверный формат email"
-          : lang === "de"
-            ? "Ungültige E-Mail Adresse"
-            : lang === "pl"
-              ? "Nieprawidłowy format email"
-              : "Invalid email address",
-      )
-      .required(
-        lang === "ru"
-          ? "Email обязателен"
-          : lang === "de"
-            ? "E-Mail ist erforderlich"
-            : lang === "pl"
-              ? "Email jest wymagany"
-              : "Email is required",
-      ),
+      .email(formStaticCopy(lang).emailInvalid)
+      .required(formStaticCopy(lang).emailRequired),
 
     preferredContact: Yup.string()
       .oneOf(["phone", "whatsapp", "email"])
-      .required(
-        lang === "ru"
-          ? "Как с вами лучше связаться?"
-          : lang === "de"
-            ? "Wie können wir Sie am besten kontaktieren?"
-            : lang === "pl"
-              ? "Wybierz preferowaną formę kontaktu"
-              : "What’s the best way to contact you?",
-      ),
+      .required(formStaticCopy(lang).contactMethodRequired),
 
     agreedToPolicy: Yup.boolean()
-      .required(
-        lang === "ru"
-          ? "Согласие обязательно"
-          : lang === "de"
-            ? "Zustimmung erforderlich"
-            : lang === "pl"
-              ? "Zgoda jest wymagana"
-              : "Consent is required",
-      )
-      .oneOf(
-        [true],
-        lang === "ru"
-          ? "Требуется согласие"
-          : lang === "de"
-            ? "Einverständnis erforderlich"
-            : lang === "pl"
-              ? "Wymagane wyrażenie zgody"
-              : "Consent required",
-      ),
+      .required(formStaticCopy(lang).agreementRequired)
+      .oneOf([true], formStaticCopy(lang).agreementOneOf),
   });
 
   const onSubmit = async (
@@ -253,15 +182,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                 <div className="container">
                   <div className={styles.formWrapper}>
                     <div className={styles.formContent}>
-                      <h2 className={styles.title}>
-                        {lang === "ru"
-                          ? "Оставьте заявку и мы свяжемся с вами в ближайшее время"
-                          : lang === "de"
-                            ? "Lassen Sie sich noch heute von uns beraten!"
-                            : lang === "pl"
-                              ? "Zostaw zapytanie, a my skontaktujemy się z Tobą wkrótce"
-                              : "Leave your request and we will contact you shortly"}
-                      </h2>
+                      <h2 className={styles.title}>{formStaticCopy(lang).title}</h2>
 
                       <div className={styles.inputs}>
                         <div className={styles.inputWrapper}>
@@ -281,13 +202,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                               isNameFilled ? styles.filled : ""
                             }`}
                           >
-                            {lang === "ru"
-                              ? "Ваше имя"
-                              : lang === "de"
-                                ? "Ihr Vorname"
-                                : lang === "pl"
-                                  ? "Imię"
-                                  : "Your name"}
+                            {formStaticCopy(lang).nameLabel}
                           </label>
 
                           <Field name="name">
@@ -327,13 +242,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                               isSurnameFilled ? styles.filled : ""
                             }`}
                           >
-                            {lang === "ru"
-                              ? "Фамилия"
-                              : lang === "de"
-                                ? "Ihr Nachname"
-                                : lang === "pl"
-                                  ? "Nazwisko"
-                                  : "Surname"}
+                            {formStaticCopy(lang).surnameLabel}
                           </label>
 
                           <Field name="surname">
@@ -407,13 +316,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                               isEmailFilled ? styles.filled : ""
                             }`}
                           >
-                            {lang === "ru"
-                              ? "Ваш email"
-                              : lang === "de"
-                                ? "E-Mail Adresse"
-                                : lang === "pl"
-                                  ? "E-mail"
-                                  : "Email"}
+                            {formStaticCopy(lang).emailLabel}
                           </label>
 
                           <Field name="email">
@@ -439,13 +342,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
 
                       <fieldset className={`${styles.radioGroupWrapper} min-w-0`}>
                         <legend className={styles.radioGroupLabel}>
-                          {lang === "ru"
-                            ? "Как с вами лучше связаться?"
-                            : lang === "de"
-                              ? "Wie möchten Sie am besten kontaktiert werden?"
-                              : lang === "pl"
-                                ? "W jaki sposób najlepiej się z Tobą skontaktować?"
-                                : "What’s the best way to contact you?"}
+                          {formStaticCopy(lang).contactMethodLegend}
                         </legend>
 
                         <div className={styles.radioOptions}>
@@ -455,15 +352,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                               name="preferredContact"
                               value="phone"
                             />
-                            <span>
-                              {lang === "ru"
-                                ? "Телефон"
-                                : lang === "de"
-                                  ? "Telefon"
-                                  : lang === "pl"
-                                    ? "Telefonicznie"
-                                    : "Phone call"}
-                            </span>
+                            <span>{formStaticCopy(lang).phoneCallLabel}</span>
                           </label>
 
                           <label className={styles.radioOption}>
@@ -481,13 +370,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                               name="preferredContact"
                               value="email"
                             />
-                            <span>
-                              {lang === "de"
-                                ? "E-Mail"
-                                : lang === "pl"
-                                  ? "E-mail"
-                                  : "Email"}
-                            </span>
+                            <span>{formStaticCopy(lang).emailRadioLabel}</span>
                           </label>
                         </div>
                       </fieldset>
@@ -506,14 +389,8 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                       >
                         {isSubmitting ? (
                           <div className={`${styles.loader} form-spinner`}></div>
-                        ) : lang === "ru" ? (
-                          "Отправить"
-                        ) : lang === "de" ? (
-                          "Absenden"
-                        ) : lang === "pl" ? (
-                          "Wyślij"
                         ) : (
-                          "Send"
+                          formStaticCopy(lang).submitLabel
                         )}
                       </button>
 
@@ -539,43 +416,17 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                         />
 
                         <label htmlFor={`${uid}-agreedToPolicy`}>
-                          {lang === "ru"
-                            ? "Я согласен с "
-                            : lang === "de"
-                              ? "Ich habe die Bedingungen der "
-                              : lang === "pl"
-                                ? "Zgadzam się z "
-                                : "I agree with the terms of the "}
+                          {formStaticCopy(lang).agreementLead}
 
                           <Link
                             className={styles.policyLink}
-                            href={
-                              lang === "ru"
-                                ? "/ru/politika-privatnosti"
-                                : lang === "de"
-                                  ? "/de/datenschutzrichtlinie"
-                                  : lang === "pl"
-                                    ? "/pl/polityka-prywatnosci"
-                                    : "/privacy-policy"
-                            }
+                            href={formStaticCopy(lang).agreementHref}
                             target="_blank"
                           >
-                            {lang === "ru"
-                              ? "Пользовательским соглашением"
-                              : lang === "de"
-                                ? "Benutzervereinbarung"
-                                : lang === "pl"
-                                  ? "Umowa użytkownika"
-                                  : "User agreement"}
+                            {formStaticCopy(lang).agreementLinkLabel}
                           </Link>
 
-                          {lang === "ru"
-                            ? " прочитал и принимаю их"
-                            : lang === "de"
-                              ? " gelesen und akzeptiere sie"
-                              : lang === "pl"
-                                ? " przeczytałem i akceptuję je"
-                                : " read and accept them"}
+                          {formStaticCopy(lang).agreementTail}
                         </label>
 
                         <ErrorMessage

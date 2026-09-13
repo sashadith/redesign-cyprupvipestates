@@ -47,7 +47,7 @@ export type SearchRow = {
   completion: string | null; completionUnparsed?: true; priceFrom: number | null; priceTo: number | null; currency: string;
   availability: { total: number; available: number; soldOut: boolean };
   matchingUnits: { count: number; minPrice: number | null; maxPrice: number | null; types: string[]; priceFallback?: true };
-  publicUrl: { en: string; de: string; pl: string; ru: string } | null;
+  publicUrl: { en: string; de: string; pl: string; ru: string; he: string } | null;
   lastSyncedAt: Date | null;
 };
 
@@ -77,7 +77,7 @@ export function parseCompletionBefore(v: string | undefined): number | null | "i
 
 export function publicUrlFor(slug: string | null, publishStatus: string) {
   return slug && publishStatus === "published"
-    ? { en: `/en/projects/${slug}`, de: `/de/projects/${slug}`, pl: `/pl/projects/${slug}`, ru: `/ru/projects/${slug}` }
+    ? { en: `/en/projects/${slug}`, de: `/de/projects/${slug}`, pl: `/pl/projects/${slug}`, ru: `/ru/projects/${slug}`, he: `/he/projects/${slug}` }
     : null;
 }
 

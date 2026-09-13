@@ -6,6 +6,8 @@
 // (Paphos, Apartment, priceAsc, …) are unchanged — they still drive the same
 // production query/search/sort logic.
 
+import { bidiIsolate, type Locale } from "@/lib/locale";
+
 export type Opt = { value: string; label: string };
 
 export type ProjectsStrings = {
@@ -443,6 +445,98 @@ const RU: ProjectsStrings = {
   },
 };
 
-export const PROJECTS_STRINGS: Record<string, ProjectsStrings> = { en: EN, de: DE, pl: PL, ru: RU };
+// Hebrew (WP2, Pass A). Israeli buyers read a listing like Yad2/Green Acres:
+// short noun labels, Western digits, "חדרי שינה" (Cyprus counts bedrooms, Israel
+// counts rooms — the glossary forces the explicit form). Latin figures inside an
+// otherwise-RTL sentence are FSI-isolated so the thousands separator can't be
+// visually reordered.
+const HE: ProjectsStrings = {
+  numLocale: "en-US",
+  cityLabel: "עיר",
+  cityPlaceholder: "כל הערים",
+  cities: [
+    { value: "Paphos", label: "פאפוס" },
+    { value: "Limassol", label: "לימסול" },
+    { value: "Larnaca", label: "לרנקה" },
+  ],
+  typeLabel: "סוג נכס",
+  typePlaceholder: "כל הסוגים",
+  types: [
+    { value: "Apartment", label: "דירה" },
+    { value: "Villa", label: "וילה" },
+    { value: "Townhouse", label: "בית טורי" },
+    { value: "Commercial", label: "נכס מסחרי" },
+  ],
+  bedsLabel: "חדרי שינה",
+  bedsPlaceholder: "הכל",
+  beds: [
+    { value: "1", label: "1+" },
+    { value: "2", label: "2+" },
+    { value: "3", label: "3+" },
+    { value: "4", label: "4+" },
+    { value: "5", label: "5+" },
+  ],
+  priceMin: "מ-€",
+  priceMax: "עד €",
+  priceMinAria: "מחיר מינימלי",
+  priceMaxAria: "מחיר מקסימלי",
+  searchPlaceholder: "חיפוש פרויקטים…",
+  searchAria: "חיפוש פרויקטים",
+  mapBtn: "מפה",
+  reset: "איפוס",
+  moreFilters: "עוד מסננים",
+  hideFilters: "הסתרת מסננים",
+  sortAria: "מיון לפי",
+  sorts: [
+    { value: "recommended", label: "מומלצים" },
+    { value: "priceAsc", label: "מחיר: מהנמוך לגבוה" },
+    { value: "priceDesc", label: "מחיר: מהגבוה לנמוך" },
+    { value: "completionSoon", label: "מסירה: הקרובה ביותר" },
+  ],
+  projectOne: "פרויקט",
+  projectMany: "פרויקטים",
+  inThisMapArea: "באזור הזה במפה",
+  inThisArea: "באזור הזה",
+  empty: "לא נמצאו פרויקטים שמתאימים לחיפוש. כדאי להרחיב את הסינון.",
+  badgeNew: "חדש",
+  badgeFeatured: "מובחר",
+  badgeSoldOut: "נמכר",
+  bedUnit: "חדרי שינה",
+  areaUnit: "מ\"ר",
+  energyPrefix: "אנרגיה",
+  priceFrom: "החל מ-",
+  priceOnRequest: "מחיר לפי פנייה",
+  minShort: "דק'",
+  distBeach: "חוף",
+  distSchool: "בית ספר",
+  distGolf: "גולף",
+  distAirport: "שדה תעופה",
+  distCenter: "מרכז",
+  distHospital: "בית חולים",
+  distShops: "חנויות",
+  distDining: "מסעדות",
+  exploreOnMap: "לצפייה במפה",
+  mapTileSub: (n) => `${bidiIsolate(n)} פרויקטים · סינון בזמן אמת ומקומות בסביבה`,
+  mapFab: "מפה",
+  close: "סגירה",
+  nearby: "החיים בסביבה",
+  zoomToLoad: "יש להתקרב כדי לטעון מקומות",
+  loading: "טוענים…",
+  loadingMap: "טוענים את המפה…",
+  mapShort: "מפה…",
+  poi: {
+    school_private: "בית ספר פרטי",
+    school_public: "בית ספר ציבורי",
+    clinic: "מרפאות",
+    supermarket: "סופרמרקטים",
+    pharmacy: "בתי מרקחת",
+    beach: "חופים",
+    restaurant: "מסעדות",
+    golf: "גולף",
+    airport: "שדה תעופה",
+  },
+};
 
-export const projectsStrings = (lang: string): ProjectsStrings => PROJECTS_STRINGS[lang] ?? EN;
+export const PROJECTS_STRINGS: Record<Locale, ProjectsStrings> = { en: EN, de: DE, pl: PL, ru: RU, he: HE /* REVIEW(he) */ };
+
+export const projectsStrings = (lang: string): ProjectsStrings => PROJECTS_STRINGS[lang as Locale] ?? EN;

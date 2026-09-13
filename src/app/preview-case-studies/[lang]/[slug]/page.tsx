@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { PortableText } from "@portabletext/react";
 import { LuEuro, LuMapPin, LuHouse, LuClock } from "react-icons/lu";
@@ -14,9 +15,10 @@ import { urlFor } from "@/sanity/sanity.client";
 import { getCaseStudyByLang } from "@/sanity/sanity.utils";
 import { CASE_CATEGORY_LABELS } from "../../../preview-home/sections/homeI18n";
 import { abs, languageAlternates, pathBuilders, SITE_URL, DEFAULT_OG_IMAGE } from "@/lib/seo";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, type Locale } from "@/lib/locale";
 import type { Translation } from "@/types/homepage";
 import { caseStudiesCopy } from "../copy";
+import Bdi from "@/app/components/Bdi";
 
 /* Cyprus VIP Estates — Case Study detail, redesigned. See ../layout.tsx for
    why this lives outside src/app/[lang] despite having its own [lang]
@@ -101,7 +103,18 @@ export default async function CaseStudyDetailPage({ params }: Props) {
   if (!cs) notFound();
 
   const t = caseStudiesCopy(lang);
-  const labels = CASE_CATEGORY_LABELS[lang] ?? CASE_CATEGORY_LABELS.en;
+  const labels = CASE_CATEGORY_LABELS[lang as Locale] ?? CASE_CATEGORY_LABELS.en;
+  const isHe = lang === "he";
+
+  /* Bidi isolation (styleguide §5/§11.4) — only for `he`, so the LTR DOM stays
+     byte-identical. `budget` is a free-text price RANGE ("€250,000 – €350,000"):
+     without an LTR isolator the neutral separator inherits RTL and the two
+     amounts swap places on screen. `location` and `purchaseTimeline` can carry
+     Latin names ("Limassol") and get a plain isolator that keeps their own
+     direction. Same treatment on the index page. */
+  const isoPrice = (v: ReactNode) => (isHe ? <Bdi ltr>{v}</Bdi> : v);
+  const iso = (v: ReactNode) => (isHe ? <Bdi>{v}</Bdi> : v);
+
   const PROPERTY_TYPE_LABELS: Record<string, string> = {
     villa: t.propertyTypeVilla, apartment: t.propertyTypeApartment, penthouse: t.propertyTypePenthouse,
     townhouse: t.propertyTypeTownhouse, plot: t.propertyTypePlot,
@@ -188,11 +201,11 @@ export default async function CaseStudyDetailPage({ params }: Props) {
               <div className="wrap csd__stats-row">
                 <div className="csstory__stat">
                   <LuEuro size={16} />
-                  <div><dt>{t.statBudget}</dt><dd>{overview.budget}</dd></div>
+                  <div><dt>{t.statBudget}</dt><dd>{isoPrice(overview.budget)}</dd></div>
                 </div>
                 <div className="csstory__stat">
                   <LuMapPin size={16} />
-                  <div><dt>{t.statLocation}</dt><dd>{overview.location}</dd></div>
+                  <div><dt>{t.statLocation}</dt><dd>{iso(overview.location)}</dd></div>
                 </div>
                 <div className="csstory__stat">
                   <LuHouse size={16} />
@@ -200,7 +213,7 @@ export default async function CaseStudyDetailPage({ params }: Props) {
                 </div>
                 <div className="csstory__stat">
                   <LuClock size={16} />
-                  <div><dt>{t.statTimeline}</dt><dd>{overview.purchaseTimeline}</dd></div>
+                  <div><dt>{t.statTimeline}</dt><dd>{iso(overview.purchaseTimeline)}</dd></div>
                 </div>
               </div>
               <p className="wrap csd__privacy">{t.privacyNote}</p>

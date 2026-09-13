@@ -1,5 +1,5 @@
 import React from "react";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, type Locale } from "@/lib/locale";
 import { HEADINGS } from "@/app/components/SectionLinks/SectionLinks";
 import { renderClassicBlock, isSelfContained, isFlow, isClassicPage, headingOnlyText } from "./ClassicBlocks";
 import { urlFor } from "@/sanity/sanity.client";
@@ -142,7 +142,7 @@ export default async function ClassicBody({
       {relatedLinks.length > 0 && (
         <div className="section is-light">
           <div className="pl__wrap pl-links">
-            <h2 className="pl__h2">{HEADINGS.related?.[lang] ?? HEADINGS.related.en}</h2>
+            <h2 className="pl__h2">{HEADINGS.related?.[lang as Locale] ?? HEADINGS.related.en}</h2>
             <ul className="pl-links__list">
               {relatedLinks.map((l) => (
                 <li key={l.href}>

@@ -14,6 +14,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { Metadata } from "next";
 import { localizedHref } from "@/lib/locale";
+import { projectPageCopy } from "./page.copy";
 import {
   getFormStandardDocumentByLang,
   getNotFoundPageByLang,
@@ -295,15 +296,7 @@ const ProjectPage = async ({ params }: Props) => {
               <PropertyDescription description={project.description} />
               <div className="property-button">
                 <ButtonModal modalType="brochure">
-                  {lang === "en"
-                    ? "Enquire this amazing project now!"
-                    : lang === "de"
-                      ? "Fragen Sie dieses erstaunliche Projekt jetzt an!"
-                      : lang === "pl"
-                        ? "Zapytaj o ten niesamowity projekt teraz!"
-                        : lang === "ru"
-                          ? "Узнайте об этом проекте!"
-                          : "Enquire this amazing project now!"}
+                  {projectPageCopy(lang).enquireNow}
                 </ButtonModal>
                 <WhatAppButtonProject lang={params.lang} />
               </div>
@@ -312,7 +305,7 @@ const ProjectPage = async ({ params }: Props) => {
                 if (!dev?.slug || !dev?.name) return null;
                 return (
                   <p className="project-developer" style={{ marginTop: 12, fontSize: 14 }}>
-                    {lang === "de" ? "Bauträger" : lang === "ru" ? "Застройщик" : lang === "pl" ? "Deweloper" : "Developer"}:{" "}
+                    {projectPageCopy(lang).developer}:{" "}
                     <Link href={localizedHref(lang, ["developers", dev.slug])} style={{ color: "#bd8948", fontWeight: 500 }}>
                       {dev.name}
                     </Link>
@@ -323,15 +316,12 @@ const ProjectPage = async ({ params }: Props) => {
             <div className="property-features">
               <PropertyFeatures keyFeatures={project.keyFeatures} lang={lang} />
               <div className="property-features-roi-button">
-                <ProjectPdfButton lang={lang} slug={slug} />
+                {/* No PDF brochure for `he` — the react-pdf document has no
+                    Hebrew font and no RTL support (spec Phase 1–4: PDF is not
+                    offered for Hebrew). The ROI button below stays. */}
+                {lang !== "he" && <ProjectPdfButton lang={lang} slug={slug} />}
                 <ButtonModal modalType="roiCalculator">
-                  {lang === "ru"
-                    ? "Рассчитать ROI"
-                    : lang === "de"
-                      ? "ROI berechnen"
-                      : lang === "pl"
-                        ? "Oblicz ROI"
-                        : "Calculate ROI"}
+                  {projectPageCopy(lang).calculateRoi}
                 </ButtonModal>
               </div>
             </div>
@@ -363,15 +353,7 @@ const ProjectPage = async ({ params }: Props) => {
         {project.faq && (
           <div className="container">
             <div className="property-faq">
-              <h2 className="h2-white">
-                {lang === "en"
-                  ? "FAQ"
-                  : lang === "pl"
-                    ? "Najczęściej zadawane pytania"
-                    : lang === "ru"
-                      ? "Часто задаваемые вопросы"
-                      : "Häufig gestellte Fragen"}
-              </h2>
+              <h2 className="h2-white">{projectPageCopy(lang).faq}</h2>
               <AccordionContainer block={project.faq} />
             </div>
           </div>

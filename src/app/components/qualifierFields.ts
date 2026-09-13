@@ -21,6 +21,8 @@
  * All three fields are optional everywhere, and the labels say so, because in
  * the forms that show them every other field is required. */
 
+import { ltrIsolate, type Locale } from "@/lib/locale";
+
 /* Order is display order. "Under €200k" sits last on purpose: the list should
    open on the ranges that matter most, not on the smallest one. */
 export const BUDGET_VALUES = [
@@ -50,27 +52,31 @@ type Copy = {
   timelines: Record<(typeof TIMELINE_VALUES)[number], string>;
 };
 
-const COPY: Record<"en" | "de" | "pl" | "ru", Copy> = {
-  en: {
-    budgetLabel: "Budget range (optional)",
-    propertyLabel: "Property interest (optional)",
-    timelineLabel: "Timeline (optional)",
-    choose: "Please choose…",
-    budgets: {
-      "200000-500000": "€200k – €500k",
-      "500000-1000000": "€500k – €1M",
-      "1000000-2000000": "€1M – €2M",
-      "2000000-": "€2M+",
-      "0-200000": "Under €200k",
-    },
-    properties: { Villa: "Villa", Townhouse: "Townhouse", Apartment: "Apartment", Penthouse: "Penthouse", Office: "Office" },
-    timelines: {
-      now: "Ready to buy now",
-      "1y": "Within a year",
-      "2y": "Within 2 years",
-      exploring: "Just exploring",
-    },
+const EN: Copy = {
+  budgetLabel: "Budget range (optional)",
+  propertyLabel: "Property interest (optional)",
+  timelineLabel: "Timeline (optional)",
+  choose: "Please choose…",
+  budgets: {
+    "200000-500000": "€200k – €500k",
+    "500000-1000000": "€500k – €1M",
+    "1000000-2000000": "€1M – €2M",
+    "2000000-": "€2M+",
+    "0-200000": "Under €200k",
   },
+  properties: { Villa: "Villa", Townhouse: "Townhouse", Apartment: "Apartment", Penthouse: "Penthouse", Office: "Office" },
+  timelines: {
+    now: "Ready to buy now",
+    "1y": "Within a year",
+    "2y": "Within 2 years",
+    exploring: "Just exploring",
+  },
+};
+
+// Exported so scripts/qa/copy-snapshot.mjs can pin the en/de/pl/ru rows
+// (final review I3) — `qualifierCopy()` stays the accessor callers use.
+export const COPY: Record<Locale, Copy> = {
+  en: EN,
   de: {
     budgetLabel: "Budget (optional)",
     propertyLabel: "Objekt-Interesse (optional)",
@@ -131,10 +137,30 @@ const COPY: Record<"en" | "de" | "pl" | "ru", Copy> = {
       exploring: "Присматриваюсь",
     },
   },
+  he: {
+    budgetLabel: "טווח תקציב (לא חובה)",
+    propertyLabel: "סוג הנכס המבוקש (לא חובה)",
+    timelineLabel: "לוח זמנים (לא חובה)",
+    choose: "בחרו…",
+    budgets: {
+      "200000-500000": ltrIsolate("€200,000–€500,000"),
+      "500000-1000000": ltrIsolate("€500,000–€1,000,000"),
+      "1000000-2000000": ltrIsolate("€1,000,000–€2,000,000"),
+      "2000000-": `מעל ${ltrIsolate("€2,000,000")}`,
+      "0-200000": `עד ${ltrIsolate("€200,000")}`,
+    },
+    properties: { Villa: "וילה", Townhouse: "בית טורי", Apartment: "דירה", Penthouse: "פנטהאוז", Office: "משרד" },
+    timelines: {
+      now: "מוכנים לרכישה עכשיו",
+      "1y": "בתוך שנה",
+      "2y": "בתוך שנתיים",
+      exploring: "בודקים אפשרויות",
+    },
+  }, // REVIEW(he)
 };
 
 export function qualifierCopy(lang: string): Copy {
-  return COPY[lang as keyof typeof COPY] ?? COPY.en;
+  return COPY[lang as Locale] ?? COPY.en;
 }
 
 /* The stored enum values, in the order the admin should offer them.

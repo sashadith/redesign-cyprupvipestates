@@ -5,6 +5,7 @@ import { FormStandardDocument } from "@/types/formStandardDocument";
 import { Oswald } from "next/font/google";
 import Image from "next/image";
 import FadeUpAnimate from "../../FadeUpAnimate/FadeUpAnimate";
+import type { Locale } from "@/lib/locale";
 
 const oswald = Oswald({
   subsets: ["latin", "cyrillic"],
@@ -22,17 +23,19 @@ type PartnersContactTranslation = {
   titleEnd: string;
 };
 
-const translations: Record<string, PartnersContactTranslation> = {
+const EN: PartnersContactTranslation = {
+  titleStart: "Register ",
+  titleHighlight: "now",
+  titleEnd: " as a partner!",
+};
+
+const translations: Record<Locale, PartnersContactTranslation> = {
   de: {
     titleStart: "Registriere ",
     titleHighlight: "dich",
     titleEnd: " als partner!",
   },
-  en: {
-    titleStart: "Register ",
-    titleHighlight: "now",
-    titleEnd: " as a partner!",
-  },
+  en: EN,
   pl: {
     titleStart: "Zarejestruj ",
     titleHighlight: "się",
@@ -43,10 +46,11 @@ const translations: Record<string, PartnersContactTranslation> = {
     titleHighlight: "сейчас",
     titleEnd: " как партнёр!",
   },
+  he: EN, // decision J: Partners page stays English for he
 };
 
 const PartnersContact: FC<Props> = ({ lang, form }) => {
-  const t = translations[lang] ?? translations["de"];
+  const t = translations[lang as Locale] ?? translations.en;
 
   return (
     <section className={styles.contacts}>

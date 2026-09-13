@@ -85,6 +85,38 @@ export function bidiIsolate(s: string): string {
   return `⁨${s}⁩`;
 }
 
+/** The one sentence Entscheidung E prescribes (he-glossary.md §5): nobody on
+ *  the team speaks Hebrew, and every automated Hebrew surface that offers a
+ *  call, a meeting or a reply has to say so before the lead finds out on the
+ *  phone. Exported as a constant so the four independent carriers (auto-reply
+ *  mail, ROI mail, booking page, presentation page) can never drift apart
+ *  (styleguide §11.6) — Pass B "Systemic" S-C. */
+export const HE_LANGUAGE_NOTE =
+  "הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה.";
+
+/**
+ * Attaches a one-letter Hebrew preposition (`ב` "on/in", `ל` "for/to") to an
+ * already-formatted date or time string.
+ *
+ * Hebrew writes the prefix **glued, without a hyphen** before a Hebrew word,
+ * and **with a hyphen** before a numeral or a Latin word (styleguide §3). An
+ * `he-IL` Intl date starts with a Hebrew weekday (`יום ד׳, 14 באוק׳, 15:00`),
+ * so the naive `ב-${dt}` produced `ב-יום ד׳` — a hyphen before a Hebrew word,
+ * which does not exist in Hebrew (Pass B, Must fix #6/#7).
+ *
+ *   hePrefixDate("ב", "יום ד׳, 14 באוק׳, 15:00")  → "ביום ד׳, 14 באוק׳, 15:00"
+ *   hePrefixDate("ל", "14/10/2026, 15:00")        → "ל-⁦14/10/2026, 15:00⁩"
+ *
+ * The non-Hebrew branch is LRI-isolated so the digits cannot be visually
+ * reordered by the surrounding RTL sentence (same treatment as heBedrooms()).
+ * `he`-only — every LTR locale keeps its own plain interpolation.
+ */
+export function hePrefixDate(prefix: string, formatted: string): string {
+  const value = String(formatted ?? "");
+  const first = value.trimStart().charAt(0);
+  return /[\u0590-\u05FF]/.test(first) ? `${prefix}${value}` : `${prefix}-${ltrIsolate(value)}`;
+}
+
 export function fmtDate(value: string | Date, lang: string, opts: Intl.DateTimeFormatOptions = { year: "numeric", month: "long", day: "numeric" }): string {
   const d = value instanceof Date ? value : new Date(value);
   if (Number.isNaN(d.getTime())) return String(value);

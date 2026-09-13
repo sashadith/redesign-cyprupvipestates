@@ -33,3 +33,5 @@
 :lang(he) :is(h1, h2, h3, h4, .display, .h1, .h2, .h3) { font-family: var(--font-display-he, serif), var(--font-display), serif; }
 :lang(he) *:not(.keep-tracking) { letter-spacing: normal !important; }
 :lang(he) *:not(.keep-case) { text-transform: none !important; }
+/* Hebrew has no italic: Frank Ruhl Libre / Rubik ship no italic face, so the browser fakes a slant that reads as broken rendering — the gold .it accent stays upright. */
+:lang(he) .it { font-style: normal; }

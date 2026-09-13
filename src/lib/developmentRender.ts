@@ -14,7 +14,10 @@ import { developmentCopy } from "@/lib/developmentCopy";
    fallback for anything not yet synced. */
 
 const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
-const statusLabel = (s: string, lang: string) => developmentCopy(lang).unitStatus[(s === "sold" ? "sold" : s === "reserved" ? "reserved" : "available") as "available" | "sold" | "reserved"];
+// For `he` the VM keeps the English label: UnitsView's StatusPill / status column
+// localize it at render time via heFeedLabel() (feminine forms for a יחידה), so a
+// pre-resolved Hebrew label here would bypass that mapping (Task 5 review).
+const statusLabel = (s: string, lang: string) => developmentCopy(lang === "he" ? "en" : lang).unitStatus[(s === "sold" ? "sold" : s === "reserved" ? "reserved" : "available") as "available" | "sold" | "reserved"];
 
 type Row = Development & { units: DevelopmentUnit[]; override: DevelopmentOverride | null };
 

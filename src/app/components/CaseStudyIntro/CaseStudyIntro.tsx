@@ -18,6 +18,7 @@ import PropertyPhotoGallery from "../PropertyPhotoGallery/PropertyPhotoGallery";
 import { ButtonModal } from "../ButtonModal/ButtonModal";
 import ResponsiveMedia from "../ResponsiveMedia/ResponsiveMedia";
 import { urlFor } from "@/sanity/sanity.client";
+import { caseStudyIntroCopy } from "./CaseStudyIntro.copy";
 
 type Props = {
   title: string;
@@ -38,16 +39,7 @@ const CaseStudyIntro: FC<Props> = ({
   lang,
   isSold,
 }) => {
-  const disclaimer =
-    lang === "en"
-      ? "Client privacy comes first, which is why sensitive business information and identifying details are not disclosed in this case study."
-      : lang === "de"
-        ? "Der Schutz der Privatsphäre unserer Kunden hat höchste Priorität. Daher werden in dieser Fallstudie keine vertraulichen Geschäftsinformationen oder identifizierenden Angaben offengelegt."
-        : lang === "pl"
-          ? "Prywatność klientów jest dla nas priorytetem, dlatego w tym studium przypadku nie ujawniamy poufnych informacji biznesowych ani danych umożliwiających identyfikację klienta."
-          : lang === "ru"
-            ? "Конфиденциальность клиентов для нас на первом месте, поэтому в данном кейсе не раскрываются чувствительные бизнес-данные и сведения, позволяющие идентифицировать клиента."
-            : "Client privacy comes first, which is why sensitive business information and identifying details are not disclosed in this case study.";
+  const disclaimer = caseStudyIntroCopy(lang).disclaimer;
 
   return (
     <section className={styles.popertyIntro}>
@@ -64,17 +56,7 @@ const CaseStudyIntro: FC<Props> = ({
             <h1 className={styles.title}>{title}</h1>
             <p className={styles.description}>{excerpt}</p>
             <div className={styles.button}>
-              <ButtonModal>
-                {lang === "en"
-                  ? "Request Personal Offer"
-                  : lang === "de"
-                    ? "Persönliches Angebot anfordern"
-                    : lang === "pl"
-                      ? "Poproś o indywidualną ofertę"
-                      : lang === "ru"
-                        ? "Запросить персональное предложение"
-                        : "Request Personal Offer"}
-              </ButtonModal>
+              <ButtonModal>{caseStudyIntroCopy(lang).requestOffer}</ButtonModal>
             </div>
           </div>
           <p className={styles.disclaimer}>{disclaimer}</p>

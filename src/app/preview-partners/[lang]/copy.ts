@@ -11,6 +11,8 @@
    CRM/portal tracking from benefit #4) into a clearer step-by-step flow — no
    new claims, numbers, or terms are introduced. Flagged here for review. */
 
+import type { Locale } from "@/lib/locale";
+
 export type PartnersStat = { number: string; sign?: string; title: string; description: string };
 export type PartnersBenefit = { title: string; description: string };
 export type PartnersType = { title: string; description: string };
@@ -80,9 +82,7 @@ export type PartnersCopy = {
   vConsent: string;
 };
 
-// he (Phase 4): wrap phone/e-mail tokens with ltrIsolate() — RTL only.
-export const PARTNERS_COPY: Record<string, PartnersCopy> = {
-  en: {
+const EN: PartnersCopy = {
     metaTitle: "Partner Program for Property Consultants & Marketers – Cyprus VIP Estates",
     metaDescription: "Earn up to 40% of our marketing success fee. Join the Cyprus VIP Estates partner program — fast payouts, exclusive properties, expert support.",
     heroEyebrow: "Become a partner of Cyprus VIP Estates",
@@ -155,7 +155,12 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     vEmailInvalid: "Invalid email address",
     vCountry: "Country is required",
     vConsent: "Consent is required",
-  },
+};
+
+// he (Phase 4): decision J: Partners stays English for he — no translation task,
+// no ltrIsolate() needed since the whole page renders in English/LTR for he.
+export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
+  en: EN,
   de: {
     metaTitle: "Partnerprogramm für Immobilienberater & Vermarkter – Cyprus VIP Estates",
     metaDescription: "Verdiene bis zu 40 % unserer Marketing-Erfolgsgebühr. Werde Teil des Cyprus VIP Estates Partnerprogramms — schnelle Auszahlungen, exklusive Immobilien, Expertenunterstützung.",
@@ -378,8 +383,9 @@ export const PARTNERS_COPY: Record<string, PartnersCopy> = {
     vCountry: "Страна обязательна",
     vConsent: "Требуется согласие",
   },
+  he: EN, // decision J: Partners page stays English for he
 };
 
 export function partnersCopy(lang: string): PartnersCopy {
-  return PARTNERS_COPY[lang] ?? PARTNERS_COPY.en;
+  return PARTNERS_COPY[lang as Locale] ?? PARTNERS_COPY.en;
 }

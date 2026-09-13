@@ -23,6 +23,8 @@ import { getAlternativeDevelopments } from "@/lib/developmentAlternatives";
 import AlternativesBlock from "@/app/preview-project/AlternativesBlock";
 import type { GoldPhrase } from "@/lib/developmentCopy";
 import { fmtPrice, bidiIsolate, localeDir } from "@/lib/locale";
+import { hePlaceList } from "@/lib/hePlaces";
+import { heFeedLabel } from "@/lib/heFeedVocab";
 import Bdi from "@/app/components/Bdi";
 
 // Shared render body for both the SEO-facing slug route (the Development
@@ -80,7 +82,19 @@ export default async function ProjectPageBody({
   // src/lib/developmentCard.ts, the single source of truth every surface
   // (this page, DevelopmentSchema, the merged /projects listing card) must use.
   const priceFrom = p.priceFrom;
-  const types = resolveDevelopmentType(p.category, p.units).split(" · ").filter(Boolean);
+  // resolveDevelopmentType() returns the FEED's English vocabulary ("Villa ·
+  // Apartment") and must keep doing so — matchesPropertyTypeFilter and every
+  // city+type landing page match against it. Localize at the render site only,
+  // and only for `he`, where a Latin "Villa" in the hero sits right above the
+  // Hebrew type filter that says "וילה" (Pass B, systemic #1).
+  const types = resolveDevelopmentType(p.category, p.units)
+    .split(" · ")
+    .filter(Boolean)
+    .map((x) => (lang === "he" ? heFeedLabel(x) : x));
+  // Same story for the place string ("Peyia, Paphos"): raw feed text, shown
+  // twice (hero eyebrow + facts panel). Transliterated per he-glossary.md §1
+  // for `he`, unknown parts kept Latin and bidi-isolated.
+  const locationLabel = lang === "he" ? hePlaceList(p.location) : p.location;
   const benefits = (p.amenities?.length ? p.amenities : Array.from(new Set(p.units.flatMap((u) => u.features)))).filter(Boolean);
   // Neighbourhood text: prefer the APPROVED area description from the DB in the
   // page's language (English fallback); otherwise the static demo library.
@@ -125,7 +139,7 @@ export default async function ProjectPageBody({
 
   // facts panel — only rows that actually have data
   const facts = [
-    { label: t.factLocation, value: p.location },
+    { label: t.factLocation, value: locationLabel },
     types.length ? { label: t.factPropertyType, value: types.join(", ") } : null,
     listed.length ? { label: t.factUnits, value: `${listed.length}${avail.length !== listed.length ? ` ${t.factUnitsAvailable(avail.length)}` : ""}` } : null,
     { label: t.factStatus, value: availabilityLabel },
@@ -160,7 +174,7 @@ export default async function ProjectPageBody({
             <div className="pp-wrap">
               <div className="pp-eyebrow">
                 <span className={`pp-badge pp-badge--${isSold ? "sold" : "ok"}`}>{isSold ? t.soldOut : (stageLabel ?? t.unitStatus.available)}</span>
-                <span className="pp-loc">{p.location}</span>
+                <span className="pp-loc">{locationLabel}</span>
               </div>
               <h1 className="pp-title">{p.publicName}</h1>
               <div className="pp-hero__stats">

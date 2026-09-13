@@ -20,6 +20,7 @@ import styles from "./FormFull.module.scss";
 import Link from "next/link";
 import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
+import { formFullCopy } from "./FormFull.copy";
 
 export type FormData = {
   name: string;
@@ -133,15 +134,7 @@ const FormFull: FC<ContactFormProps> = ({
 
     preferredContact: Yup.string()
       .oneOf(["phone", "whatsapp", "email"])
-      .required(
-        lang === "ru"
-          ? "Выберите удобный способ связи"
-          : lang === "de"
-            ? "Bitte bevorzugten Kontaktweg auswählen"
-            : lang === "pl"
-              ? "Wybierz preferowaną formę kontaktu"
-              : "Please choose your preferred contact method",
-      ),
+      .required(formFullCopy(lang).contactMethodRequired),
 
     agreedToPolicy: Yup.boolean()
       .required(`${dataForm.validationAgreementRequired}`)
@@ -314,14 +307,7 @@ const FormFull: FC<ContactFormProps> = ({
                   htmlFor={`${uid}-surname`}
                   className={`${styles.label} ${isSurnameFilled ? styles.filled : ""}`}
                 >
-                  {(dataForm as any).inputSurname ??
-                    (lang === "ru"
-                      ? "Фамилия"
-                      : lang === "de"
-                        ? "Nachname"
-                        : lang === "pl"
-                          ? "Nazwisko"
-                          : "Surname")}
+                  {(dataForm as any).inputSurname ?? formFullCopy(lang).surnameLabel}
                 </label>
 
                 <Field name="surname">
@@ -415,27 +401,13 @@ const FormFull: FC<ContactFormProps> = ({
 
               <fieldset className={`${styles.inputWrapper} min-w-0`}>
                 <legend className={styles.radioGroupLabel}>
-                  {lang === "ru"
-                    ? "Как с вами лучше связаться?"
-                    : lang === "de"
-                      ? "Wie können wir Sie am besten kontaktieren?"
-                      : lang === "pl"
-                        ? "W jaki sposób najlepiej się z Tobą skontaktować?"
-                        : "What’s the best way to contact you?"}
+                  {formFullCopy(lang).contactMethodLegend}
                 </legend>
 
                 <div className={styles.radioGroupWrapper}>
                   <label className={styles.radioOption}>
                     <Field type="radio" name="preferredContact" value="phone" />
-                    <span>
-                      {lang === "ru"
-                        ? "Телефон"
-                        : lang === "de"
-                          ? "Anruf"
-                          : lang === "pl"
-                            ? "Telefonicznie"
-                            : "Phone call"}
-                    </span>
+                    <span>{formFullCopy(lang).phoneCallLabel}</span>
                   </label>
 
                   <label className={styles.radioOption}>
@@ -449,13 +421,7 @@ const FormFull: FC<ContactFormProps> = ({
 
                   <label className={styles.radioOption}>
                     <Field type="radio" name="preferredContact" value="email" />
-                    <span>
-                      {lang === "de"
-                        ? "E-Mail"
-                        : lang === "pl"
-                          ? "E-mail"
-                          : "Email"}
-                    </span>
+                    <span>{formFullCopy(lang).emailLabel}</span>
                   </label>
                 </div>
 
@@ -521,41 +487,15 @@ const FormFull: FC<ContactFormProps> = ({
                 />
 
                 <label htmlFor={`${uid}-agreedToPolicy`}>
-                  {lang === "ru"
-                    ? "Я согласен с "
-                    : lang === "de"
-                      ? "Ich habe die Bedingungen der "
-                      : lang === "pl"
-                        ? "Zgadzam się z "
-                        : "I agree with the terms of the "}
+                  {formFullCopy(lang).agreementLead}
                   <Link
                     className={styles.policyLink}
-                    href={
-                      lang === "ru"
-                        ? "/ru/politika-privatnosti"
-                        : lang === "de"
-                          ? "/de/datenschutzrichtlinie"
-                          : lang === "pl"
-                            ? "/pl/polityka-prywatnosci"
-                            : "/privacy-policy"
-                    }
+                    href={formFullCopy(lang).agreementHref}
                     target="_blank"
                   >
-                    {lang === "ru"
-                      ? "Пользовательским соглашением"
-                      : lang === "de"
-                        ? "Benutzervereinbarung"
-                        : lang === "pl"
-                          ? "Umowa użytkownika"
-                          : "User agreement"}
+                    {formFullCopy(lang).agreementLinkLabel}
                   </Link>
-                  {lang === "ru"
-                    ? " прочитал и принимаю их"
-                    : lang === "de"
-                      ? " gelesen und akzeptiere sie"
-                      : lang === "pl"
-                        ? " przeczytałem i akceptuję je"
-                        : " read and accept them"}
+                  {formFullCopy(lang).agreementTail}
                 </label>
               </div>
 

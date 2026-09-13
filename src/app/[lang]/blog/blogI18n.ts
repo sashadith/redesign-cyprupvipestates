@@ -4,6 +4,8 @@
 // English (eyebrow, "articles", filter "All", "Read", pager a11y labels, the
 // guide header) now localized for en/de/pl/ru.
 
+import type { Locale } from "@/lib/locale";
+
 export type BlogStrings = {
   // compact hero heading (visual H1, like the preview's "Cyprus Insights").
   // Last word is gold-accented. The SEO <title> still comes from the blogPage doc.
@@ -63,8 +65,47 @@ const EN: BlogStrings = {
   fallbackPropertiesInCity: "Recommended properties in {city}",
 };
 
-export const BLOG_STRINGS: Record<string, BlogStrings> = {
+export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
   en: EN,
+  // REVIEW(he)
+  // /he/blog lists the ENGLISH articles (product decision: they are not
+  // translated); `articleOne`/`articleMany` carry that fact in the hero count
+  // line so the Hebrew chrome states it calmly instead of letting a reader
+  // click into an unexpected language. `he` is excluded from the sitemap and
+  // from hreflang (LAUNCH_GATED_LOCALES) but carries NO noindex meta today,
+  // and the route still queries `language: "he"` rows — which posts /he/blog
+  // lists, and whether it should be noindexed, is a Phase 6 route question,
+  // not a copy one. The hero count line therefore has to read correctly at 0
+  // articles too; BlogInsights.tsx carries the Hebrew-only branch for that.
+  // See docs/i18n/reviews/wp4.md.
+  he: {
+    heroTitle: "תובנות מקפריסין",
+    eyebrow: "הבלוג",
+    articleOne: "מאמר אחד באנגלית", // rendered WITHOUT the numeral for he (see BlogInsights.tsx)
+    articleMany: "מאמרים באנגלית",
+    filterAll: "הכל",
+    read: "לקריאה",
+    readArticle: "לקריאת המאמר",
+    categoriesAria: "קטגוריות",
+    pagerAria: "ניווט בין עמודי הבלוג",
+    firstPage: "מעבר לעמוד הראשון",
+    lastPage: "מעבר לעמוד האחרון",
+    pageWord: "עמוד",
+    empty: "אין עדיין מאמרים.",
+    guideEyebrow: "המדריך",
+    guideTitle: "נדל\"ן בקפריסין, בקצרה",
+    dateLocale: "he-IL",
+    minRead: "דקות קריאה", // n >= 2 only — blog/[slug]/page.tsx renders the n = 1 form
+    tocLabel: "תוכן העניינים",
+    writtenBy: "מאת",
+    relatedLead: "עוד",
+    relatedAccent: "מאמרים",
+    fallbackProperties: "נכסים מומלצים",
+    // {city} is substituted with the LATIN city name (Paphos/Limassol/Larnaca)
+    // by the blog route, so it is FSI/PDI isolated here (bidiIsolate) and the
+    // preposition takes the hyphen form the style guide §3 prescribes.
+    fallbackPropertiesInCity: "נכסים מומלצים ב-\u2068{city}\u2069",
+  },
   de: {
     heroTitle: "Zypern Insights",
     eyebrow: "Das Journal",
@@ -142,4 +183,4 @@ export const BLOG_STRINGS: Record<string, BlogStrings> = {
   },
 };
 
-export const blogStrings = (lang: string): BlogStrings => BLOG_STRINGS[lang] ?? EN;
+export const blogStrings = (lang: string): BlogStrings => BLOG_STRINGS[lang as Locale] ?? EN;

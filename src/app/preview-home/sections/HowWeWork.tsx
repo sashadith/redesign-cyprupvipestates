@@ -2,6 +2,7 @@ import React from "react";
 import type { HowWeWorkBlock } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client";
 import { highlightAccents } from "./highlightAccents";
+import type { Locale } from "@/lib/locale";
 
 /* How We Work — reuses the About layout (title + stripe + description + a row
    of gold medallions with text). Reuses the original data. */
@@ -24,15 +25,16 @@ const safeUrl = (img: unknown) => {
 // here (it's folded into the verb ending, "pracujemy" = "we work"), so the
 // verb itself is the accent — flagged to the user as a judgment call, not a
 // straightforward word-for-word swap.
-const ACCENTS_BY_LANG: Record<string, string[]> = {
+const ACCENTS_BY_LANG: Partial<Record<Locale, string[]>> = {
   de: ["wir"],
   pl: ["pracujemy"],
   ru: ["мы"],
+  he: ["אנחנו"], // REVIEW(he); Hebrew H2: "כך אנחנו עובדים"
 };
 
 const renderTitle = (title: string, lang: string) => {
-  if (lang !== "en" && ACCENTS_BY_LANG[lang]) {
-    return highlightAccents(title, ACCENTS_BY_LANG[lang]);
+  if (lang !== "en" && ACCENTS_BY_LANG[lang as Locale]) {
+    return highlightAccents(title, ACCENTS_BY_LANG[lang as Locale]!);
   }
   return title.split(/(\bWe\b)/i).map((part, i) =>
     /^we$/i.test(part) ? (

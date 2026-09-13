@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { i18n } from "@/i18n.config";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, isLocale } from "@/lib/locale";
 import { abs, languageAlternates } from "@/lib/seo";
 import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporateLocale } from "@/lib/corporatePageSlugs";
 import type { BenefitsBlock } from "@/types/homepage";
@@ -9,6 +9,7 @@ import Nav from "../../preview-home/sections/Nav";
 import Footer from "../../preview-home/sections/Footer";
 import Benefits from "../../preview-home/sections/Benefits";
 import ContactChannels from "@/app/components/ContactChannels/ContactChannels";
+import Bdi from "@/app/components/Bdi";
 import AboutMotion from "./AboutMotion";
 import { aboutCopy } from "./copy";
 import { getAboutPageData, getProjectCount } from "./data";
@@ -36,7 +37,7 @@ type Props = { params: { lang: string } };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const lang = params.lang;
   const t = aboutCopy(lang);
-  const l = (["en", "de", "pl", "ru"].includes(lang) ? lang : "en") as CorporateLocale;
+  const l: CorporateLocale = isLocale(lang) ? lang : "en";
 
   const { canonical, languages } = languageAlternates({
     lang: l,
@@ -273,7 +274,13 @@ export default async function AboutPage({ params }: Props) {
                   {m.languages.length > 0 && (
                     <p className="abt__member-langs">
                       <span className="abt__member-langs-label">{t.teamSpeaks}</span>
-                      {m.languages.join(" · ")}
+                      {/* The stored list is the members' own native spellings
+                          ("deutsch, english, русский") — Latin/Cyrillic text
+                          that has to stay one isolated run inside the Hebrew
+                          page (he-styleguide.md §11.4). No-op for the LTR
+                          locales: <bdi> around all-LTR content in an LTR
+                          paragraph changes nothing. */}
+                      <Bdi>{m.languages.join(" · ")}</Bdi>
                     </p>
                   )}
                 </li>

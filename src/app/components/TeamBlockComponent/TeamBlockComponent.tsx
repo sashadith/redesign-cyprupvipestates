@@ -6,6 +6,7 @@ import { urlFor } from "@/sanity/sanity.client";
 import { blurProps } from "@/lib/imageBlur";
 import { ButtonModal } from "../ButtonModal/ButtonModal";
 import FadeUpAnimate from "../FadeUpAnimate/FadeUpAnimate";
+import { teamBlockCopy } from "./TeamBlockComponent.copy";
 
 type Props = {
   block: TeamBlock;
@@ -40,17 +41,7 @@ const TeamBlockComponent: FC<Props> = ({ block, lang }) => {
                   </div>
                   <div className={styles.memberInfoEnd}>
                     <div className={styles.button}>
-                      <ButtonModal>
-                        {lang === "en"
-                          ? "Contact"
-                          : lang === "de"
-                            ? "Kontaktieren"
-                            : lang === "pl"
-                              ? "Kontakt"
-                              : lang === "ru"
-                                ? "Связаться"
-                                : "Contact"}
-                      </ButtonModal>
+                      <ButtonModal>{teamBlockCopy(lang).contact}</ButtonModal>
                     </div>
                   </div>
                 </div>

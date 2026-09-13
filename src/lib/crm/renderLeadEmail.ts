@@ -4,7 +4,7 @@
 import { bodyToHtml, SIGNATURE_SPACER } from "./emailBodyHtml";
 import { stripHtmlToText } from "@/lib/emailSignature/sanitize";
 
-export function renderLeadEmail(body: string, signatureHtml: string): { html: string; text: string } {
-  const html = `${bodyToHtml(body)}${SIGNATURE_SPACER}${signatureHtml}`;
+export function renderLeadEmail(body: string, signatureHtml: string, locale?: string): { html: string; text: string } {
+  const html = `${bodyToHtml(body, locale)}${SIGNATURE_SPACER}${signatureHtml}`;
   return { html, text: stripHtmlToText(html) };
 }

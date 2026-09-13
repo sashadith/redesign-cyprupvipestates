@@ -8,6 +8,8 @@
    genuinely supports and an international buyer genuinely cares about:
    the languages each consultant speaks. */
 
+import { bidiIsolate, ltrIsolate, type Locale } from "@/lib/locale";
+
 export type ContactsStrings = {
   metaTitle: string;
   metaDescription: string;
@@ -256,9 +258,70 @@ const RU: ContactsStrings = {
   officeDirections: "Открыть в Google Картах",
 };
 
-const ALL: Record<string, ContactsStrings> = { en: EN, de: DE, pl: PL, ru: RU };
+/* Hebrew. Two things are load-bearing here and must survive any edit:
+   1. Decision E (he-glossary.md §5, he-styleguide.md §8): the team does NOT
+      speak Hebrew. The honesty line stands verbatim in `finderLead` and in
+      `metaDescription` — never replace it with a claim of Hebrew service.
+      In `finderLead` it comes FIRST, before the finder invitation: stated up
+      front it reads as a fact, stated after it reads as a retraction (Pass B
+      Must #2). `finderTitle` must stay nominal for the same reason — it may
+      not promise a consultant who speaks the reader's language.
+   2. Latin brand names inside Hebrew sentences are bidi-isolated
+      (he-styleguide.md §11.4); the street address is LTR-isolated so the
+      house number keeps its place. */
+const HE: ContactsStrings = {
+  metaTitle: "יצירת קשר עם הצוות שלנו בפאפוס | Cyprus VIP Estates",
+  metaDescription:
+    "Cyprus VIP Estates בוואטסאפ, בטלפון ובאימייל, מדי יום 9:00 עד 18:00 שעון קפריסין. הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה.",
+  heroEyebrow: "יצירת קשר",
+  heroTitle: ["מדברים עם מי שגר ", "כאן", ""],
+  heroLead: `${bidiIsolate("Cyprus VIP Estates")} הוא מותג של ${bidiIsolate("SecretBrand Solutions LTD")}. בכל דרך שתפנו אלינו יענה אדם אמיתי, מדי יום, 9:00 עד 18:00 שעון קפריסין.`,
 
-export const contactsCopy = (lang: string): ContactsStrings => ALL[lang] ?? EN;
+  channelsEyebrow: "קווים ישירים",
+  channelsTitle: "הדרך שנוחה לכם",
+  channelWhatsapp: "וואטסאפ",
+  channelPhone: "טלפון",
+  channelEmail: "אימייל",
+  channelHint: {
+    whatsapp: "התשובה המהירה ביותר, בדרך כלל תוך דקות",
+    phone: "אפשר להתקשר אלינו ישירות בשעות הפעילות",
+    email: "לפניות מפורטות ולמסמכים",
+  },
+
+  hoursLabel: "שעות פעילות",
+  hoursValue: "מדי יום, 9:00 עד 18:00",
+  hoursOpen: "פתוח עכשיו",
+  hoursClosed: "סגור כרגע",
+  hoursOpensAt: "נפתח ב-9:00",
+  hoursTimezone: "שעון קפריסין",
+
+  finderEyebrow: "אנשי הקשר שלכם",
+  finderTitle: "בחירת יועץ לפי שפה",
+  finderLead:
+    "הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה. בצוות שלנו שש שפות, וכאן אפשר לראות בדיוק עם מי תדברו.",
+  finderAll: "הכל",
+  finderLanguageLabel: "שפה",
+  finderEmpty: "עדיין אין יועץ לשפה הזו. כתבו לנו ונחזור אליכם.",
+  finderCountOne: "יועץ אחד",
+  finderCountMany: "{n} יועצים",
+  speaks: "שפות",
+
+  formEyebrow: "כתבו לנו",
+  formTitle: ["השאירו פרטים ", "ונחזור אליכם", " בהקדם"],
+  formLead: "השאירו פרטים וספרו לנו איך נוח לכם שניצור קשר. אחד היועצים שלנו יענה לכם אישית, בדרך כלל עוד באותו יום.",
+
+  officeEyebrow: "לבקר אצלנו",
+  officeTitle: "המשרד שלנו בפאפוס",
+  officeCompany: "SecretBrand Solutions LTD",
+  officeAddress: `${ltrIsolate("Palaion Patron Germanou 11, 8011")} פאפוס, קפריסין`,
+  officeDirections: `פתיחה ב-${bidiIsolate("Google Maps")}`,
+};
+
+/* Exported (not a file-local `const ALL`) so scripts/qa/copy-modules.json can
+   register this table with the copy-snapshot and he-meta-length gates. */
+export const CONTACTS_COPY: Record<Locale, ContactsStrings> = { en: EN, de: DE, pl: PL, ru: RU, he: HE /* REVIEW(he) */ };
+
+export const contactsCopy = (lang: string): ContactsStrings => CONTACTS_COPY[lang as Locale] ?? EN;
 
 /* The three channels are identical in every locale (same number, same
    address) — stored once here rather than four times above. */

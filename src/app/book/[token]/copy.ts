@@ -1,12 +1,16 @@
 // Locale copy for the booking page — same PLocale set as the Client
 // Presentation page's copy.ts, but a distinct file since the content has
 // nothing to do with property presentation.
-import { LOCALES, isLocale, type Locale } from "@/lib/locale";
+import { HE_LANGUAGE_NOTE, LOCALES, hePrefixDate, isLocale, type Locale } from "@/lib/locale";
 export type BLocale = Locale;
 export const B_LOCALES = LOCALES;
 export const asBLocale = (v: string | null | undefined): BLocale => (v && isLocale(v) ? v : "en");
 
 export type BookingCopy = {
+  /** Browser-tab title + meta description. The page is noindex, but the tab
+   *  is visible — and it was English over a Hebrew page (Pass B S21). */
+  metaTitle: string;
+  metaDescription: string;
   eyebrow: string;
   // Split around the name (rather than a single `title(name)` string) so the
   // name/formal-address segment can be wrapped in its own gold-shimmer span
@@ -43,6 +47,8 @@ export type BookingCopy = {
 };
 
 const COPY_EN: BookingCopy = {
+  metaTitle: "Book a time - Cyprus VIP Estates",
+  metaDescription: "Schedule a personal appointment.",
   eyebrow: "Schedule a meeting",
   titlePrefix: "Hello ",
   titleSuffix: ", let's find a time",
@@ -72,6 +78,8 @@ const COPY_EN: BookingCopy = {
 export const COPY: Record<BLocale, BookingCopy> = {
   en: COPY_EN,
   de: {
+    metaTitle: "Termin buchen - Cyprus VIP Estates",
+    metaDescription: "Vereinbaren Sie einen persönlichen Termin.",
     eyebrow: "Terminvereinbarung",
     titlePrefix: "Hallo ",
     titleSuffix: ", lassen Sie uns einen Termin finden",
@@ -99,6 +107,8 @@ export const COPY: Record<BLocale, BookingCopy> = {
     contactUs: "Kontakt aufnehmen",
   },
   pl: {
+    metaTitle: "Umów termin - Cyprus VIP Estates",
+    metaDescription: "Umów osobiste spotkanie.",
     eyebrow: "Umów spotkanie",
     titlePrefix: "Dzień dobry ",
     titleSuffix: ", znajdźmy dogodny termin",
@@ -128,6 +138,8 @@ export const COPY: Record<BLocale, BookingCopy> = {
     contactUs: "Skontaktuj się z nami",
   },
   ru: {
+    metaTitle: "Запись на встречу - Cyprus VIP Estates",
+    metaDescription: "Запишитесь на личную встречу.",
     eyebrow: "Запись на встречу",
     titlePrefix: "Здравствуйте, ",
     titleSuffix: ", давайте подберём время",
@@ -153,5 +165,34 @@ export const COPY: Record<BLocale, BookingCopy> = {
     goneBody: "Срок действия ссылки для записи истёк, либо она больше не активна. Пожалуйста, свяжитесь со мной — я пришлю новую.",
     contactUs: "Связаться с нами",
   },
-  he: COPY_EN, // TODO(he)
+  he: {
+    metaTitle: "תיאום פגישה | Cyprus VIP Estates",
+    metaDescription: "תיאום פגישה אישית עם היועץ שלכם.",
+    eyebrow: "תיאום פגישה",
+    titlePrefix: "שלום ",
+    titleSuffix: ", נמצא זמן שמתאים לכם",
+    // No `formalGreeting` for he: Israeli business practice addresses a client
+    // by first name, and "מר/גב'" would read as stiff or as a slash form (§2.3).
+    intro: `אפשר לבחור 2-3 מועדים שמתאימים לכם, ואחזור אליכם עם אישור בקרוב. ${HE_LANGUAGE_NOTE}`,
+    yourTime: "השעה אצלכם",
+    cyprusTime: "שעון קפריסין",
+    detectingTimezone: "מזהים את אזור הזמן שלכם…",
+    selectedTitle: "המועדים שבחרתם",
+    submit: "שליחת המועדים הפנויים",
+    submitting: "שולחים…",
+    hint: "יש לבחור למעלה בין 1 ל-3 מועדים.",
+    pickCountError: "יש לבחור בין 1 ל-3 מועדים.",
+    genericError: "משהו השתבש, נסו שוב.",
+    submittedTitle: "תודה",
+    submittedBody: "קיבלתי את המועדים הפנויים שלכם ואשלח אישור בקרוב באימייל.",
+    alreadyProposedTitle: "תודה",
+    alreadyProposedBody: "כבר קיבלתי את המועדים הפנויים שלכם ואשלח אישור בקרוב באימייל.",
+    confirmedTitle: "הפגישה שלכם מאושרת",
+    confirmedBody: (dt) => `נפגשים ${hePrefixDate("ב", dt)} (לפי השעון שלכם). הזמנה ליומן נשלחה לאימייל שלכם.`,
+    confirmedZoomNote: "את הקישור לפגישת Zoom אשלח בנפרד, זמן קצר לפני השיחה.",
+    confirmedPhoneNote: "אתקשר אליכם במועד שנקבע.",
+    goneTitle: "הקישור אינו זמין עוד",
+    goneBody: "תוקף קישור התיאום פג או שהוא כבר אינו פעיל. אפשר לפנות אלינו ואשלח לכם קישור חדש.",
+    contactUs: "ליצירת קשר",
+  }, // REVIEW(he)
 };

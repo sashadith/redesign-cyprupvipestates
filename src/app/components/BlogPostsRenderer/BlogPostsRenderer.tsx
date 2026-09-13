@@ -8,7 +8,7 @@ import Link from "next/link";
 import { urlFor } from "@/sanity/sanity.client";
 import Image from "next/image";
 import ButtonPrimary from "../ButtonPrimary/ButtonPrimary";
-import { localePrefix } from "@/lib/locale";
+import { localePrefix, isLocale, type Locale } from "@/lib/locale";
 import { blurProps } from "@/lib/imageBlur";
 
 type Props = {
@@ -19,6 +19,25 @@ type Props = {
 
 const INITIAL = 12;
 const LIMIT = 9;
+
+// Copy table for this renderer. `filterAll` was a `lang === "de" ? … : …`
+// ternary inline in the category tab below (Hebrew Localization Phase 4, WP4)
+// and is lifted here so every locale — `he` included — is enumerated in one
+// place instead of falling through to English.
+const BLOG_POSTS_EN = {
+  loadMore: (n: number) => `Load ${n} more posts`,
+  filterAll: "All",
+};
+
+const BLOG_POSTS_COPY: Record<Locale, typeof BLOG_POSTS_EN> = {
+  en: BLOG_POSTS_EN,
+  de: { loadMore: (n) => `Noch ${n} Beiträge laden`, filterAll: "Alle" },
+  ru: { loadMore: (n) => `Загрузить ещё ${n} постов`, filterAll: "Все" },
+  pl: { loadMore: (n) => `Załaduj jeszcze ${n} postów`, filterAll: "Wszystkie" },
+  he: { loadMore: (n) => `הצגת עוד ${n} מאמרים`, filterAll: "הכל" }, // REVIEW(he)
+};
+
+const copy = (lang: string) => BLOG_POSTS_COPY[isLocale(lang) ? lang : "en"];
 
 // All posts are rendered server-side (every link is crawlable); the client only reveals more of
 // the already-rendered cards. Cards beyond `visibleCount` carry the `hidden` attribute, so they
@@ -39,19 +58,7 @@ const BlogPostsRenderer: FC<Props> = ({ blogPosts, lang }) => {
       ? `${localePrefix(language)}/blog/${slug[language].current}`
       : "#";
 
-  const getLoadMoreText = () => {
-    switch (lang) {
-      case "de":
-        return `Noch ${LIMIT} Beiträge laden`;
-      case "ru":
-        return `Загрузить ещё ${LIMIT} постов`;
-      case "pl":
-        return `Załaduj jeszcze ${LIMIT} postów`;
-      case "en":
-      default:
-        return `Load ${LIMIT} more posts`;
-    }
-  };
+  const getLoadMoreText = () => copy(lang).loadMore(LIMIT);
 
   const loadMorePosts = () => setVisibleCount((c) => c + LIMIT);
 
@@ -82,13 +89,7 @@ const BlogPostsRenderer: FC<Props> = ({ blogPosts, lang }) => {
               className={`${!selectedCategory ? styles.active : ""} ${styles.tab}`}
               onClick={() => selectCategory(null)}
             >
-              {lang === "de"
-                ? "Alle"
-                : lang === "ru"
-                  ? "Все"
-                  : lang === "pl"
-                    ? "Wszystkie"
-                    : "All"}
+              {copy(lang).filterAll}
             </button>
             {categories.map((cat) => (
               <button

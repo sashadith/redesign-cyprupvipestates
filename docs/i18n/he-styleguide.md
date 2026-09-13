@@ -104,3 +104,13 @@ Hebräisch zwingt zur Genuswahl. Verbindlich:
 - [ ] Keine Zeile aus §7
 - [ ] Faktencheck: jede Zahl hat eine Quelle
 - [ ] Review-Protokoll abgelegt
+
+## 11. Lernpunkte aus Pass B (WP1) — verbindlich ab WP2
+
+1. **Schrägstrich-Form (`מאשר/ת`) ist Notlösung, keine Option.** Erst Nominalstil (`אישור …`) oder Infinitiv versuchen; Schrägstrich nur mit schriftlicher Begründung im Protokoll, warum nominal scheitert.
+2. **Genusfreiheit mit vorhandenen Mitteln, nicht durch Erfindung.** Drei natürliche genusfreie Register, in dieser Reihenfolge probieren: 1. Person Singular Vergangenheit (`שלחתי`, `קראתי`), Partizip Plural (`שולחים…`, `בודקים…`), unpersönliches `יש ל…` / `ניתן ל…` (`יש להזין`). Konstruktionen wie `בשליחה…`, `ההודעה נשלחת`, `אפשר לעזור לי` sind Umgehungen, die kein Israeli schreibt.
+3. **Zweiter Durchgang über das rendernde JSX.** Nach der Tabelle jede Komponente prüfen, die den String weiterverarbeitet: hartcodierte Optionslisten, Konkatenationen mit `—`/`:`/Klammern, Split-/Kürzungs-/Hervorhebungslogik (z. B. „letztes Wort vergolden": der hebräische Satz muss dann mit dem sinntragenden Wort enden, nie mit der Negation).
+4. **`bidiIsolate()` ist bei Projekt-, Bauträger- und Markennamen der Regelfall.** Jede Interpolation eines lateinischen Namens in einem hebräischen Satz wird isoliert; `ltrIsolate()` für Telefon, E-Mail, Preise, URLs.
+5. **Wurzel- und Wortwiederholung im selben String vermeiden** (`אנחנו משתמשים … אנחנו משתמשים`, `הפנייה … לפנות`). Jeden mehrsätzigen String vor Abgabe darauf absuchen.
+6. **Duplizierte Strings wortgleich halten.** Bekannte Paare: `formFeedbackCopy` ↔ `QualificationForm`, `NewsletterForm` ↔ `FooterNewsletter`, beide WhatsApp-Dateien, beide Footer-Dateien. Jede Korrektur nennt beide Fundstellen.
+7. **Beibehalten:** Buttons ≤ 3 Wörter, Labels auf EN-Länge, keine Ausrufezeichen, kein `—`, keine §7-Floskel, Funktionssignaturen und Platzhalter unverändert, kein Hebräisch in `en/de/pl/ru`, keine erfundenen Fakten.
