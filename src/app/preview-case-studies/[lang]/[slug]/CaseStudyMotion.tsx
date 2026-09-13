@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "../../../preview-home/anim/gsap";
+import { isRtlDoc } from "@/app/components/useIsRtl";
 
 /* Load + scroll motion for a Case Study detail page — adapted from
    preview-insights/ArticleMotion.tsx (same hero/TOC/content-block choreography,
@@ -12,6 +13,8 @@ import { gsap, ScrollTrigger, prefersReducedMotion } from "../../../preview-home
 export default function CaseStudyMotion() {
   useEffect(() => {
     if (prefersReducedMotion()) return;
+
+    const isRtl = isRtlDoc(document);
 
     const ctx = gsap.context(() => {
       /* ---------- HERO (on load) ---------- */
@@ -31,7 +34,7 @@ export default function CaseStudyMotion() {
       }
 
       /* ---------- TOC aside ---------- */
-      gsap.from(".iart__aside", { autoAlpha: 0, x: -18, duration: 0.8, delay: 0.4, ease: "power2.out" });
+      gsap.from(".iart__aside", { autoAlpha: 0, x: isRtl ? 18 : -18, duration: 0.8, delay: 0.4, ease: "power2.out" });
 
       /* ---------- CONTENT — block-by-block fade up on scroll (journey stages + lessons) ---------- */
       const blocks = gsap.utils.toArray<HTMLElement>(".iart__content > *");

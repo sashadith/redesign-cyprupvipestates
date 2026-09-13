@@ -13,6 +13,7 @@ import PropertySlide from "../PropertySlide/PropertySlide";
 import PropertySlideThumb from "../PropertySlideThumb/PropertySlideThumb";
 
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { useIsRtl } from "@/app/components/useIsRtl";
 
 type Props = {
   images: ImageAlt[];
@@ -22,11 +23,12 @@ type Props = {
 
 const PropertySlider: FC<Props> = ({ images, videoId, videoPreview }) => {
   const [thumbsSwiper, setThumbsSwiper] = useState<any>(null);
+  const isRtl = useIsRtl();
 
   return (
     <>
       {/* Основной слайдер */}
-      <Swiper
+      <Swiper dir={isRtl ? "rtl" : "ltr"}
         navigation={{
           nextEl: ".next-button",
           prevEl: ".prev-button",
@@ -53,7 +55,7 @@ const PropertySlider: FC<Props> = ({ images, videoId, videoPreview }) => {
 
       {/* Галерея миниатюр */}
       <div className="container">
-        <Swiper
+        <Swiper dir={isRtl ? "rtl" : "ltr"}
           onSwiper={setThumbsSwiper}
           spaceBetween={10}
           slidesPerView={3}

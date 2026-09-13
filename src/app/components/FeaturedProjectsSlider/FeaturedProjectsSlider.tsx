@@ -5,6 +5,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import ProjectLink from "../ProjectLink/ProjectLink";
 import { localePrefix } from "@/lib/locale";
+import { useIsRtl } from "@/app/components/useIsRtl";
 
 type Props = {
   featuredProjects: FeaturedProjectsBlock["projects"];
@@ -15,8 +16,9 @@ const FeaturedProjectsSlider: React.FC<Props> = ({
   featuredProjects,
   lang,
 }) => {
+  const isRtl = useIsRtl();
   return (
-    <Swiper
+    <Swiper dir={isRtl ? "rtl" : "ltr"}
       modules={[Autoplay]}
       autoplay={{
         delay: 2500,

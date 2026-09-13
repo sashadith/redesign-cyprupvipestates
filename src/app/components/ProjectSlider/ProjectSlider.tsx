@@ -17,6 +17,7 @@ import Image from "next/image";
 import { urlFor } from "@/sanity/sanity.client";
 import { blurProps } from "@/lib/imageBlur";
 import { ImageModal } from "@/types/project";
+import { useIsRtl } from "@/app/components/useIsRtl";
 
 const setModalAppElement = () => {
   if (typeof document !== "undefined") {
@@ -35,6 +36,7 @@ const ProjectSlider: FC<Props> = ({ images }) => {
 
   const [mainSwiper, setMainSwiper] = useState<any>(null);
   const [modalSwiper, setModalSwiper] = useState<any>(null);
+  const isRtl = useIsRtl();
 
   useEffect(() => {
     setModalAppElement();
@@ -51,7 +53,7 @@ const ProjectSlider: FC<Props> = ({ images }) => {
 
   return (
     <>
-      <Swiper
+      <Swiper dir={isRtl ? "rtl" : "ltr"}
         onSwiper={setMainSwiper}
         controller={{ control: modalSwiper }}
         navigation={{
@@ -117,7 +119,7 @@ const ProjectSlider: FC<Props> = ({ images }) => {
           &times;
         </button>
 
-        <Swiper
+        <Swiper dir={isRtl ? "rtl" : "ltr"}
           initialSlide={activeIndex}
           onSwiper={setModalSwiper}
           controller={{ control: mainSwiper }}

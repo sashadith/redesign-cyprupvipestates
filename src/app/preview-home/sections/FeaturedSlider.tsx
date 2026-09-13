@@ -9,6 +9,7 @@ import { urlFor } from "@/sanity/sanity.client";
 import { localePrefix, fmtPrice } from "@/lib/locale";
 import { homeStrings } from "./homeI18n";
 import Bdi from "@/app/components/Bdi";
+import { useIsRtl } from "@/app/components/useIsRtl";
 
 const safeUrl = (img: unknown) => {
   try {
@@ -56,8 +57,9 @@ export default function FeaturedSlider({
   projects: FeaturedProject[];
   lang: string;
 }) {
+  const isRtl = useIsRtl();
   return (
-    <Swiper
+    <Swiper dir={isRtl ? "rtl" : "ltr"}
       modules={[Autoplay]}
       autoplay={{ delay: 2800, disableOnInteraction: false, pauseOnMouseEnter: true }}
       loop

@@ -12,6 +12,7 @@ import { blurProps } from "@/lib/imageBlur";
 import { ImageAlt } from "@/types/project";
 import styles from "./ProjectCardSlider.module.scss";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { useIsRtl } from "@/app/components/useIsRtl";
 
 type Props = {
   images: ImageAlt[];
@@ -38,6 +39,7 @@ const ProjectCardSlider: FC<Props> = ({ images, title, lang }) => {
 
   const [isBeginning, setIsBeginning] = useState(true);
   const [isEnd, setIsEnd] = useState(false);
+  const isRtl = useIsRtl();
 
   return (
     <div className={styles.sliderWrapper}>
@@ -62,7 +64,7 @@ const ProjectCardSlider: FC<Props> = ({ images, title, lang }) => {
         <IoIosArrowForward size={22} />
       </button>
 
-      <Swiper
+      <Swiper dir={isRtl ? "rtl" : "ltr"}
         slidesPerView={1}
         spaceBetween={0}
         modules={[Navigation]}

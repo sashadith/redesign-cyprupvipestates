@@ -7,11 +7,13 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { FaArrowLeftLong, FaArrowRightLong } from "react-icons/fa6";
+import { useIsRtl } from "@/app/components/useIsRtl";
 
 const SliderMain = ({ children }: any) => {
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const prevRef = useRef<HTMLButtonElement>(null);
   const nextRef = useRef<HTMLButtonElement>(null);
+  const isRtl = useIsRtl();
 
   const uniqueId = useId().replace(/[^a-zA-Z0-9_-]/g, ""); // безопасный класс
   const wrapperClass = `pagination-wrapper-${uniqueId}`;
@@ -19,7 +21,7 @@ const SliderMain = ({ children }: any) => {
   return (
     <div className={styles.sliderMain}>
       <div className={styles.sliderSlides}>
-        <Swiper
+        <Swiper dir={isRtl ? "rtl" : "ltr"}
           modules={[Autoplay, Pagination]}
           autoplay={{ delay: 6000, disableOnInteraction: true }}
           slidesPerView={1}

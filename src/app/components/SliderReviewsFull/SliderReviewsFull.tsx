@@ -15,6 +15,7 @@ import { RichText } from "../RichText/RichText";
 import { ReviewFull } from "@/types/blog";
 import { urlFor } from "@/sanity/sanity.client";
 import FadeUpAnimate from "../FadeUpAnimate/FadeUpAnimate";
+import { useIsRtl } from "@/app/components/useIsRtl";
 
 type Props = {
   reviews: ReviewFull[];
@@ -74,6 +75,7 @@ const SliderReviewsFull: FC<Props> = ({ reviews, lang }) => {
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const isRtl = useIsRtl();
 
   const openModal = (index: number, event: any) => {
     event.stopPropagation(); // Prevent any parent handlers from being executed
@@ -114,7 +116,7 @@ const SliderReviewsFull: FC<Props> = ({ reviews, lang }) => {
 
   return (
     <div className={styles.sliderDiplomas}>
-      <Swiper
+      <Swiper dir={isRtl ? "rtl" : "ltr"}
         modules={[Pagination]}
         pagination={{ clickable: true }}
         spaceBetween={20}
@@ -202,7 +204,7 @@ const SliderReviewsFull: FC<Props> = ({ reviews, lang }) => {
           <button onClick={closeModal} className={styles.closeButton}>
             <TfiClose color="#fff" fontSize="2.5em" />
           </button>
-          <Swiper
+          <Swiper dir={isRtl ? "rtl" : "ltr"}
             modules={[Navigation, Pagination]}
             navigation={{
               prevEl: modalPrevRef.current,
