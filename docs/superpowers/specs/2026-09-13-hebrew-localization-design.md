@@ -83,7 +83,7 @@ Jede Entscheidung hat eine Empfehlung. Ohne Rückmeldung setze ich die Empfehlun
 
 ```ts
 export const LOCALES = ["en", "de", "pl", "ru", "he"] as const;          // existiert (Code + DB-Enum)
-export const PUBLIC_LOCALES = parsePublicLocales(process.env.NEXT_PUBLIC_PUBLIC_LOCALES) // Default: alle
+export const PUBLIC_LOCALES = parsePublicLocales(process.env.NEXT_PUBLIC_LIVE_LOCALES) // Default: alle
 export const RTL_LOCALES = ["he"] as const;
 export const localeDir = (l: string) => RTL_LOCALES.includes(l) ? "rtl" : "ltr";
 export const BCP47: Record<Locale, string> = { en: "en-GB", de: "de-DE", pl: "pl-PL", ru: "ru-RU", he: "he-IL" };
@@ -94,7 +94,7 @@ export const LOCALE_LABELS: Record<Locale, {code,name}> = { …, he: { code: "HE
 **Trennung Existenz vs. Veröffentlichung:**
 - `LOCALES` → Prisma-Validierung (`isLocale`), Admin-Tabs, Übersetzungs-Panel, KI-Generatoren, Lead-API-Akzeptanz.
 - `PUBLIC_LOCALES` → Middleware-Locale-Set, `generateStaticParams`, `staticAlternates`/`languageAlternates`, Sitemaps, `XDEFAULT_ORDER`, Sprachumschalter, IndexNow-Fan-out.
-- Env: Staging `NEXT_PUBLIC_PUBLIC_LOCALES=en,de,pl,ru,he`; Produktion unverändert (Default ohne Variable = alle **außer** Locales in `LAUNCH_GATED_LOCALES=he`, damit ein vergessenes Env nicht versehentlich freischaltet). Die Freischaltung in Produktion ist dann eine Env-Änderung plus nginx-Zeile, kein Code-Deploy.
+- Env: Staging `NEXT_PUBLIC_LIVE_LOCALES=en,de,pl,ru,he`; Produktion unverändert (Default ohne Variable = alle **außer** Locales in `LAUNCH_GATED_LOCALES=he`, damit ein vergessenes Env nicht versehentlich freischaltet). Die Freischaltung in Produktion ist dann eine Env-Änderung plus nginx-Zeile, kein Code-Deploy.
 
 ### 3.2 RTL-Strategie
 1. `<html lang={lang} dir={localeDir(lang)}>` in **allen 13 Root-Layouts**; Admin bleibt `ltr`, aber Editor-Inhalte mit `language === "he"` bekommen `dir="rtl"`.
@@ -251,7 +251,7 @@ Jede Phase endet mit einem Staging-Deploy und einer Abnahme-Checkliste. Reihenfo
 - **Abnahme:** alle Skripte grün gegen Staging.
 
 ### Phase 9 — Launch-Vorbereitung (S; Ausführung nur auf Anweisung)
-Checkliste für den Operator, **nicht** von mir ausgeführt: nginx-Zeile einspielen + reload; Produktions-Env `NEXT_PUBLIC_PUBLIC_LOCALES` erweitern; Deploy; GSC-Property prüfen; Sitemap neu einreichen; IndexNow-Ping für alle `he`-URLs; erste 6 URLs manuell in GSC (Quota-Erfahrung beachten); Monitoring der ersten 14 Tage im SEO-Advisor (bekannte Fehlalarm-Klassen im Kopf behalten).
+Checkliste für den Operator, **nicht** von mir ausgeführt: nginx-Zeile einspielen + reload; Produktions-Env `NEXT_PUBLIC_LIVE_LOCALES` erweitern; Deploy; GSC-Property prüfen; Sitemap neu einreichen; IndexNow-Ping für alle `he`-URLs; erste 6 URLs manuell in GSC (Quota-Erfahrung beachten); Monitoring der ersten 14 Tage im SEO-Advisor (bekannte Fehlalarm-Klassen im Kopf behalten).
 
 ---
 
