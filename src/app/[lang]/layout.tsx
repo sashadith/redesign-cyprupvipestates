@@ -20,7 +20,7 @@ import { MotionConfig } from "framer-motion";
 import Script from "next/script";
 import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_WIDTH, DEFAULT_OG_IMAGE_HEIGHT } from "@/lib/seo";
 import { notFound } from "next/navigation";
-import { isLocale } from "@/lib/locale";
+import { isLocale, nonDefaultLocalePattern } from "@/lib/locale";
 
 // Localized label for the "skip to main content" accessibility link.
 const SKIP_LINK_LABELS: Record<string, string> = {
@@ -29,6 +29,11 @@ const SKIP_LINK_LABELS: Record<string, string> = {
   pl: "Przejdź do treści głównej",
   ru: "Перейти к основному содержанию",
 };
+
+// Built from the same helper as isDarkHeroPath() in navShared.tsx so the two
+// route tests cannot drift apart.
+const NON_DEFAULT = nonDefaultLocalePattern();
+const PREPAINT = `(function(){try{var p=location.pathname.replace(/\\/+$/,'')||'/';if(/^\\/(${NON_DEFAULT})?$/.test(p)||/^(\\/(${NON_DEFAULT}))?\\/projects$/.test(p))document.documentElement.setAttribute('data-hero-dark','')}catch(e){}})()`;
 
 const rubik = Rubik({ subsets: ["latin", "cyrillic"] });
 
@@ -123,10 +128,7 @@ export default function RootLayout({
             Client-side navigation is handled by <NavHeroFlag>. Keep the route test
             in sync with isDarkHeroPath() in navShared.tsx. */}
         <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "(function(){try{var p=location.pathname.replace(/\\/+$/,'')||'/';if(/^\\/(de|pl|ru)?$/.test(p)||/^(\\/(de|pl|ru))?\\/projects$/.test(p))document.documentElement.setAttribute('data-hero-dark','')}catch(e){}})()",
-          }}
+          dangerouslySetInnerHTML={{ __html: PREPAINT }}
         />
         <NavHeroFlag />
         <SkipLink label={SKIP_LINK_LABELS[params.lang] ?? SKIP_LINK_LABELS.en} />

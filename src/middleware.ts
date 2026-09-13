@@ -1,19 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 
-import { DEFAULT_LOCALE, PUBLIC_LOCALES, nonDefaultLocalePattern } from "@/lib/locale";
+import { DEFAULT_LOCALE, PUBLIC_LOCALES, nonDefaultLocalePattern, isLocale, isPublicLocale } from "@/lib/locale";
 import nestedPageRedirects from "@/lib/nestedPageRedirects.json";
 import { CORPORATE_SLUGS } from "@/lib/corporatePageSlugs";
 import { EN_REDIRECT_TITLE_SWEEP_EXCLUDE } from "@/lib/seo/enRedirectTitleSweepExclude";
 
 // Reserved first segments that are their own route, not singlepages — never canonicalised here.
 const RESERVED = new Set(["projects", "blog", "developers", "case-studies", "files", "partners"]);
-// Locales that are LIVE. A gated locale (see LAUNCH_GATED_LOCALES) is not in
-// this set, so /he/... on production falls through next-intl as an unknown
-// prefix and 404s in the singlepage catch-all — no hreflang, no sitemap.
+// Locales that are LIVE. A gated locale (see LAUNCH_GATED_LOCALES) is NOT in
+// this set — it is answered with a guaranteed 404 by the gated-locale guard
+// at the top of middleware() below, not by falling through unmatched (that
+// was the assumption before the Task 3 runtime finding: /he/faq actually
+// fell through to the singlepage catch-all and served English content at a
+// duplicate URL instead of 404ing).
 const ALL_LOCALES: readonly string[] = PUBLIC_LOCALES;
+// PUBLIC_LOCALES always holds at least one non-default locale in practice
+// (today: de/pl/ru on prod, +he on staging), so NON_DEFAULT is never empty.
 const NON_DEFAULT = nonDefaultLocalePattern(PUBLIC_LOCALES); // "de|pl|ru" on prod, "de|pl|ru|he" on staging
-const PREFIXED = new RegExp(`^/(?:(${NON_DEFAULT})/)?`);
 
 // Hoisted to module scope so these are compiled once, not on every request.
 const PROPERTIES_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?properties(?:/.*)?$`);
@@ -325,6 +329,18 @@ const RU_LANDING_MERGES: Record<string, string> = {
 };
 
 export default async function middleware(request: NextRequest) {
+  // Gated locale (known in LOCALES, not in PUBLIC_LOCALES, e.g. /he/* before
+  // launch): answer 404 instead of letting next-intl treat "he" as a plain
+  // path segment and the singlepage catch-all serve English content at a
+  // duplicate URL. The rewrite target is not a route; [lang]/layout.tsx
+  // rejects it via isPublicLocale() → notFound().
+  const firstSeg = request.nextUrl.pathname.split("/")[1] ?? "";
+  if (firstSeg && isLocale(firstSeg) && !isPublicLocale(firstSeg)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/_gated-locale-404";
+    return NextResponse.rewrite(url);
+  }
+
   const deMergeMatch = request.nextUrl.pathname.match(/^\/de\/(.+)$/);
   if (deMergeMatch && DE_LANDING_MERGES[deMergeMatch[1]]) {
     const url = request.nextUrl.clone();

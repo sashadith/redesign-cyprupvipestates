@@ -4,6 +4,8 @@ import {
   LOCALES, DEFAULT_LOCALE, RTL_LOCALES, LAUNCH_GATED_LOCALES, BCP47, LOCALE_LABELS,
   parsePublicLocales, isLocale, localeDir, nonDefaultLocalePattern, localizedHref, fmtPrice, fmtDate,
 } from "@/lib/locale";
+import { templateClassOf } from "@/lib/seo/templateClass";
+import { isDarkHeroPath } from "@/app/components/Header/navShared";
 
 test("he is a known locale, en stays default and prefix-less", () => {
   assert.deepEqual([...LOCALES], ["en", "de", "pl", "ru", "he"]);
@@ -52,4 +54,13 @@ test("fmtPrice and fmtDate", () => {
   assert.equal(fmtPrice(450000, "de"), "€450,000");
   assert.match(fmtDate("2026-05-01", "he", { year: "numeric", month: "long" }), /2026/);
   assert.equal(fmtDate("2026-05-01", "en", { year: "numeric", month: "long" }), "May 2026");
+});
+
+test("he paths classify like the other prefixed locales", () => {
+  assert.equal(templateClassOf("/he"), "homepage");
+  assert.equal(templateClassOf("/he/projects"), "projects-listing");
+  assert.equal(templateClassOf("/he/blog/x"), "blog-post");
+  assert.ok(isDarkHeroPath("/he"));
+  assert.ok(isDarkHeroPath("/he/projects"));
+  assert.ok(!isDarkHeroPath("/he/blog"));
 });

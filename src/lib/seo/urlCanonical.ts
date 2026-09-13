@@ -3,6 +3,9 @@ import path from "path";
 import type { Locale } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { deriveLocale } from "@/lib/gsc/client";
+import { nonDefaultLocalePattern } from "@/lib/locale";
+
+const L = nonDefaultLocalePattern();
 
 // Redirect-aware URL canonicalization for the SEO Advisor's data layer.
 //
@@ -95,12 +98,12 @@ async function loadLegacyProjectRedirects(): Promise<Array<[string, string]>> {
 }
 
 function previewProjectPattern(oldPath: string): string | null {
-  const m = oldPath.match(/^((?:\/(?:de|pl|ru))?)\/preview-project\/([^/?]+)$/);
+  const m = oldPath.match(new RegExp(`^((?:/(?:${L}))?)/preview-project/([^/?]+)$`));
   return m ? `${m[1]}/projects/${m[2]}` : null;
 }
 
 function propertiesPattern(oldPath: string): string | null {
-  const m = oldPath.match(/^((?:\/(?:de|pl|ru))?)\/properties(?:\/.*)?$/);
+  const m = oldPath.match(new RegExp(`^((?:/(?:${L}))?)/properties(?:/.*)?$`));
   return m ? `${m[1]}/projects` : null;
 }
 

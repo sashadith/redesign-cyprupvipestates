@@ -7,7 +7,7 @@ import { cache } from "react";
 import { draftMode } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
-import { localizedHref, isLocale, PUBLIC_LOCALES } from "@/lib/locale";
+import { localizedHref, isLocale, PUBLIC_LOCALES, nonDefaultLocalePattern } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
 import { completionSortKey } from "@/lib/completionDate";
 import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances, districtWithParent, resolveRelativeCompletion } from "@/lib/developmentCard";
@@ -30,6 +30,7 @@ import { FaqPage } from "@/types/faq";
 
 type AnyRow = Record<string, any>;
 const D = <T>(v: T): T => dereferenceAssets(v);
+const L = nonDefaultLocalePattern();
 
 // Draft Preview: when an admin has enabled Next.js Draft Mode (preview cookie), detail
 // getters include unpublished content; otherwise only PUBLISHED. Safe at build time
@@ -197,7 +198,7 @@ async function resolveProjectRefs(refs: any[], lang: string) {
       .filter((r) => !/\/projects\/[^/?#]+/.test(r.targetPath))
       .map((r) => {
         const path = r.targetPath.replace(/^https?:\/\/[^/]+/, "");
-        return [r.projectId, path.replace(/^\/(?:en|de|pl|ru)(?=\/)/, "")] as const;
+        return [r.projectId, path.replace(new RegExp(`^/(?:en|${L})(?=/)`), "")] as const;
       })
       .filter((entry): entry is [string, string] => entry[1].startsWith("/"))
   );
