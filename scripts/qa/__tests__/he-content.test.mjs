@@ -12,6 +12,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { mirrorCheck, isHeLinkRewrite, styleCheck, linkCheck, metaCheck, walkStrings, STYLE_RULES, orphanMarkDefs } from "../../he-content/lib.mjs";
+import { collectLinks, valueAtPath } from "../he-content-check.mjs";
 import { planSiteDocuments, planSeed, applyPlan, stripPackMetadata } from "../../he-content/seed.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -271,12 +272,44 @@ test("planSiteDocuments: skips (unchanged) when existing he data matches", () =>
   assert.match(plan[0].reason, /unchanged/);
 });
 
-test("planSiteDocuments: refuses a row whose existing type is occupied by a non-he language", () => {
+test("planSiteDocuments: a non-he row for the same type is an expected sibling, never a refusal", () => {
+  // SiteDocument is @@unique([type, language]) — one row per language per
+  // type — so the de sibling of "homepage" is normal, not a clash.
   const rows = [{ type: "homepage", data: { title: "בית" } }];
   const existing = [{ type: "homepage", language: "de", sanityId: "homepage-de", data: { title: "Startseite" } }];
   const plan = planSiteDocuments(rows, existing);
-  assert.equal(plan[0].action, "refuse");
-  assert.match(plan[0].reason, /language "de"/);
+  assert.equal(plan[0].action, "insert", plan[0].reason);
+  assert.equal(plan[0].sanityId, "homepage-he");
+});
+
+test("planSiteDocuments: all four LTR siblings present — every row plans an insert, zero refusals", () => {
+  const types = ["homepage", "header", "footer", "blogPage"];
+  const rows = types.map((type) => ({ type, data: { title: `כותרת ${type}` } }));
+  const existing = types.flatMap((type) =>
+    ["en", "de", "pl", "ru"].map((language) => ({ type, language, sanityId: `${type}-${language}`, data: { title: `${type} ${language}` } })),
+  );
+  const plan = planSiteDocuments(rows, existing);
+  assert.equal(plan.length, 4);
+  assert.equal(plan.filter((p) => p.action === "refuse").length, 0);
+  assert.deepEqual(
+    plan.map((p) => p.action),
+    ["insert", "insert", "insert", "insert"],
+  );
+  assert.deepEqual(
+    plan.map((p) => p.sanityId),
+    types.map((t) => `${t}-he`),
+  );
+
+  // …and with the he rows also present, the plan targets those, not the siblings.
+  const withHe = [...existing, ...types.map((type) => ({ type, language: "he", sanityId: `${type}-he`, data: { title: "ישן" } }))];
+  const updatePlan = planSiteDocuments(rows, withHe);
+  assert.equal(updatePlan.filter((p) => p.action === "update").length, 4);
+});
+
+test("planSiteDocuments: accepts the { siteDocuments } envelope the real loader returns", () => {
+  const rows = [{ type: "homepage", data: { title: "בית" } }];
+  const plan = planSiteDocuments(rows, { siteDocuments: [{ type: "homepage", language: "he", sanityId: "homepage-he", data: { title: "בית" } }] });
+  assert.equal(plan[0].action, "skip");
 });
 
 test("planSeed: dispatches to planSiteDocuments for kind site-documents", () => {
@@ -339,6 +372,50 @@ test("linkCheck: query strings are ignored and the EN partners page is allowed",
   assert.equal(linkCheck("/he/projects?city=Paphos", []), null);
   assert.equal(linkCheck("/partners", []), null);
   assert.ok(linkCheck("/he/partners", []));
+});
+
+// ─── collectLinks: absolute URLs in suffix-detected link keys ───────────────
+// Regression for the operator-precedence hole: `isLinkKey(k) && … &&
+// v.startsWith("/") || (k === "href" || k === "url") && …` collected a
+// *Destination/link key ONLY when its value was relative, and mirrorCheck
+// skips link keys too — so an absolute URL there was validated by nothing.
+
+test("collectLinks: a planted absolute /de/ URL in a *Destination key is collected and rejected", () => {
+  const json = { form: { agreementLinkDestination: "https://cyprusvipestates.com/de/agb" } };
+  const links = collectLinks(json);
+  assert.deepEqual(links, [{ href: "https://cyprusvipestates.com/de/agb", path: "form.agreementLinkDestination" }]);
+  const v = linkCheck(links[0].href, []);
+  assert.ok(v, "an absolute /de/ URL must be a violation");
+  assert.match(v, /must be a \/he route/);
+  // Not even an identical EN source value excuses the site's own host.
+  assert.ok(linkCheck(links[0].href, [], links[0].href));
+});
+
+test("collectLinks: absolute URLs in every link-key shape are collected", () => {
+  const json = {
+    socialLinks: [{ link: "https://www.instagram.com/x/" }],
+    nested: { imageUrl: "https://cdn.example.com/a.png", href: "/he/faq", buttonLinkDestination: "https://example.com/x" },
+  };
+  assert.deepEqual(
+    collectLinks(json).map((l) => l.path),
+    ["socialLinks[0].link", "nested.imageUrl", "nested.href", "nested.buttonLinkDestination"],
+  );
+});
+
+test("linkCheck: an off-site absolute URL passes only when byte-identical to the EN source", () => {
+  const social = "https://www.instagram.com/cyprusvipestates/";
+  assert.equal(linkCheck(social, [], social), null);
+  assert.ok(linkCheck(social, [], null), "no EN source value ⇒ violation");
+  assert.ok(linkCheck(social, [], "https://www.instagram.com/someone-else/"), "differing EN value ⇒ violation");
+  assert.equal(linkCheck("https://private.cyprusvipestates.com/en", [], "https://private.cyprusvipestates.com/en"), null);
+});
+
+test("valueAtPath: resolves the dotted/indexed paths collectLinks produces", () => {
+  const en = { socialLinks: [{ link: "a" }, { link: "b" }], deep: { rows: [[{ url: "c" }]] } };
+  assert.equal(valueAtPath(en, "socialLinks[1].link"), "b");
+  assert.equal(valueAtPath(en, "deep.rows[0][0].url"), "c");
+  assert.equal(valueAtPath(en, "socialLinks[9].link"), undefined);
+  assert.equal(valueAtPath(en, "nope.nope"), undefined);
 });
 
 test("mirrorCheck: empty EN string allows empty HE (spacer spans)", () => {

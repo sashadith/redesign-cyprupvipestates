@@ -70,7 +70,13 @@ export type ProcessSummary = {
   skipped: number;
 };
 
-type Outcome = { skipped?: string; result?: HeTranslateResult };
+/** The one write a handler can make to a row that is NOT the Hebrew one: the
+ *  EN source row gains the `translationGroupId` it never had (same convention
+ *  as `createTranslation`). Reported back so `processQueue` records it in the
+ *  queue row's `result` instead of leaving it invisible. */
+type EnGroupLink = { entity: string; enRowId: string; translationGroupId: string };
+
+type Outcome = { skipped?: string; result?: HeTranslateResult; enGroupLink?: EnGroupLink };
 
 const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
 
@@ -195,9 +201,12 @@ async function handleDeveloperProfile(row: QueueRow, deps: ProcessDeps, force: b
   // Same contract as createTranslation() in src/app/admin/actions.ts: the source
   // row owns the translation group, and gets one generated if it has none yet.
   let groupId: string = str(en.translationGroupId);
+  let enGroupLink: EnGroupLink | undefined;
   if (!groupId) {
     groupId = randomUUID();
     await deps.prisma.developer.update({ where: { id: en.id }, data: { translationGroupId: groupId } });
+    // Disclosed in the queue row's `result` — this is a write to the EN row.
+    enGroupLink = { entity: "developer", enRowId: en.id, translationGroupId: groupId };
   }
 
   // Prefer the group-linked sibling; fall back to the one an earlier
@@ -209,7 +218,7 @@ async function handleDeveloperProfile(row: QueueRow, deps: ProcessDeps, force: b
     heRow = await deps.prisma.developer.findUnique({ where: { id: row.prompt.slice(HE_SIBLING_PREFIX.length) } });
   }
   if (heRow && hasHebrewDeveloperProfile(heRow) && !force) {
-    return { skipped: "Hebrew developer row already filled" };
+    return { skipped: "Hebrew developer row already filled", enGroupLink };
   }
 
   const enSeo = (en.seo && typeof en.seo === "object" ? en.seo : {}) as Record<string, unknown>;
@@ -254,7 +263,7 @@ async function handleDeveloperProfile(row: QueueRow, deps: ProcessDeps, force: b
       update: data,
     });
   }
-  return { result };
+  return { result, enGroupLink };
 }
 
 const HANDLERS: Record<string, (row: QueueRow, deps: ProcessDeps, force: boolean) => Promise<Outcome>> = {
@@ -289,7 +298,15 @@ export async function processQueue(rows: QueueRow[], deps: ProcessDeps): Promise
         summary.done++;
         await deps.prisma.aiGenerationQueue.update({
           where: { id: row.id },
-          data: { status: "DONE", result: { skipped: true, reason: outcome.skipped }, processedAt: at() },
+          data: {
+            status: "DONE",
+            result: {
+              skipped: true,
+              reason: outcome.skipped,
+              ...(outcome.enGroupLink ? { enGroupLink: outcome.enGroupLink } : {}),
+            },
+            processedAt: at(),
+          },
         });
         continue;
       }
@@ -302,6 +319,9 @@ export async function processQueue(rows: QueueRow[], deps: ProcessDeps): Promise
             he: (outcome.result?.he ?? {}) as Record<string, unknown>,
             critique: outcome.result?.critique ?? [],
             attempts: outcome.result?.attempts ?? 1,
+            // Disclosed rather than silent: the EN source row was given the
+            // translationGroupId it lacked (see EnGroupLink).
+            ...(outcome.enGroupLink ? { enGroupLink: outcome.enGroupLink } : {}),
           },
           processedAt: at(),
         },

@@ -77,10 +77,18 @@ function sourceFor(file) {
   return fs.existsSync(srcFile) ? srcFile : null;
 }
 
-/** Every string-valued `href`/`url` field in `json`, with its dotted/indexed
- *  path — walked separately from walkStrings, which deliberately skips these
- *  keys (they're links, not prose) so styleCheck never runs on a URL. */
-function collectLinks(json, path_ = "", out = []) {
+/** Every string-valued link field in `json` (`href`/`url`/`link`/`*Destination`
+ *  — whatever `isLinkKey` recognises), with its dotted/indexed path — walked
+ *  separately from walkStrings, which deliberately skips these keys (they're
+ *  links, not prose) so styleCheck never runs on a URL.
+ *
+ *  Every link-like key with a string value is collected, relative or
+ *  ABSOLUTE. The earlier form of this condition read
+ *  `isLinkKey(k) && … && v.startsWith("/") || (k === "href" || k === "url") && …`,
+ *  and because `&&` binds tighter than `||` an absolute URL in a
+ *  `*Destination`/`link` key was collected by neither branch — and mirrorCheck
+ *  skips link keys too, so nothing validated it at all. */
+export function collectLinks(json, path_ = "", out = []) {
   if (json == null || typeof json !== "object") return out;
   if (Array.isArray(json)) {
     json.forEach((v, i) => collectLinks(v, path_ ? `${path_}[${i}]` : `[${i}]`, out));
@@ -89,16 +97,35 @@ function collectLinks(json, path_ = "", out = []) {
   for (const k of Object.keys(json)) {
     const childPath = path_ ? `${path_}.${k}` : k;
     const v = json[k];
-    // Every link-carrying field (href/url/link/*Destination…) goes through
-    // linkCheck — mirrorCheck deliberately skips these keys, so this walk is
-    // the only place the he allow-list is enforced for them.
-    if (isLinkKey(k) && typeof v === "string" && v.startsWith("/") || (k === "href" || k === "url") && typeof v === "string") {
+    if (isLinkKey(k) && typeof v === "string") {
       out.push({ href: v, path: childPath });
     } else if (v != null && typeof v === "object") {
       collectLinks(v, childPath, out);
     }
   }
   return out;
+}
+
+/** Reads the value a `collectLinks` path points at out of another (EN) JSON
+ *  tree, or undefined when the path doesn't resolve there. Used to grant the
+ *  one linkCheck exception: an off-site absolute URL kept byte-identical to
+ *  the EN source. */
+export function valueAtPath(json, dottedPath) {
+  let node = json;
+  for (const raw of dottedPath.split(".")) {
+    // one segment may carry trailing indices: `links[2]`, `[0]`, `a[1][2]`
+    const [, name, indices] = /^([^[\]]*)((?:\[\d+\])*)$/.exec(raw) ?? [];
+    if (name === undefined) return undefined;
+    if (name !== "") {
+      if (node == null || typeof node !== "object" || Array.isArray(node)) return undefined;
+      node = node[name];
+    }
+    for (const m of indices.matchAll(/\[(\d+)\]/g)) {
+      if (!Array.isArray(node)) return undefined;
+      node = node[Number(m[1])];
+    }
+  }
+  return node;
 }
 
 function collectPackSlugs(files) {
@@ -142,8 +169,8 @@ function main() {
     }
 
     const srcFile = sourceFor(file);
+    let enJson;
     if (srcFile) {
-      let enJson;
       try {
         enJson = JSON.parse(fs.readFileSync(srcFile, "utf8"));
       } catch (e) {
@@ -169,7 +196,10 @@ function main() {
     });
 
     for (const { href, path: p } of collectLinks(json)) {
-      const v = linkCheck(href, packSlugs);
+      // The EN value at the same path (when there is an EN source) is the only
+      // thing that can excuse an off-site absolute URL — see linkCheck.
+      const enHref = enJson === undefined ? null : valueAtPath(enJson, p);
+      const v = linkCheck(href, packSlugs, typeof enHref === "string" ? enHref : null);
       if (v) violations.push(`${rel}: ${p}: ${v}`);
     }
     for (const v of orphanMarkDefs(json)) violations.push(`${rel}: ${v}`);
@@ -192,4 +222,8 @@ function main() {
   console.log(`he-content: OK (${files.length} files, ${totalStrings} strings)`);
 }
 
-main();
+// Only run the gate when invoked as a script — the tests import collectLinks/
+// valueAtPath from here and must not trigger a full pack scan on import.
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main();
+}

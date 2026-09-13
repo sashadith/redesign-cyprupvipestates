@@ -226,6 +226,23 @@ test("processQueue gives an ungrouped English developer a translation group befo
   assert.ok(he);
   assert.ok(en.translationGroupId, "the English row gets a group id");
   assert.equal(he.translationGroupId, en.translationGroupId);
+
+  // …and that write to a NON-Hebrew row is disclosed in the queue row's result.
+  const done = f.queue.find((q) => q.id === "q1");
+  const link = (done?.result as { enGroupLink?: { entity: string; enRowId: string; translationGroupId: string } })?.enGroupLink;
+  assert.deepEqual(link, { entity: "developer", enRowId: "dev1", translationGroupId: en.translationGroupId });
+});
+
+test("processQueue reports no enGroupLink when the English developer already has a translation group", async () => {
+  const f = fakePrisma({
+    developers: [{ id: "dev1", language: "en", slug: "cyfield", title: "Cyfield", excerpt: "A Cypriot developer.", translationGroupId: "grp-1" }],
+    queue: [{ id: "q1", entityType: HE_ENTITY_TYPE.developerProfile, entityId: "dev1", status: "PENDING" }],
+  });
+  const t = fakeTranslate({ slug: "cyfield", title: "Cyfield", excerpt: HE });
+  await processQueue([row({ entityType: HE_ENTITY_TYPE.developerProfile, entityId: "dev1" })], { prisma: f.prisma, translate: t.translate, now });
+
+  const done = f.queue.find((q) => q.id === "q1");
+  assert.equal((done?.result as Record<string, unknown>)?.enGroupLink, undefined);
 });
 
 // ── the no-overwrite rule ───────────────────────────────────────────────────

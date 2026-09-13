@@ -9,12 +9,20 @@
 // Same two-key guard as scripts/he-content/seed.mjs:
 //
 //   node scripts/seed-faq-translations.mjs                 dry run (default):
-//                                                          prints the plan,
+//                                                          prints the plan for
+//                                                          every language,
 //                                                          touches no DB, exit 0
-//   CVP_CONFIRM_CONTENT_SEED=yes node … --yes              real run
+//   CVP_CONFIRM_CONTENT_SEED=yes node … --lang he --yes    real run, he only
 //
 // Missing either the env var or --yes means no write happens; --yes without
 // the env var is an error (exit 1) rather than a silent downgrade.
+//
+// A REAL run additionally requires `--lang <code>` and writes ONLY that
+// language's row. Without it the script cannot write at all: it prints the
+// all-language plan and exits 0. The reason is that the four LTR rows are
+// live content an editor can change in /admin/content/faq — re-upserting
+// them from the repo files would silently discard those edits, so seeding
+// Hebrew must never be a five-language write.
 //
 // EN_CATEGORIES below is a verbatim, hand-copied mirror of FAQ_CATEGORIES in
 // faqData.ts (that file is TypeScript with a type annotation this plain
@@ -69,8 +77,19 @@ function buildForLang(lang) {
   });
 }
 
+function parseArgs(argv) {
+  let yes = false;
+  let lang = null;
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === "--yes") yes = true;
+    else if (argv[i] === "--lang" && argv[i + 1]) lang = argv[++i];
+    else if (argv[i].startsWith("--lang=")) lang = argv[i].slice("--lang=".length);
+  }
+  return { yes, lang };
+}
+
 async function main() {
-  const yes = process.argv.slice(2).includes("--yes");
+  const { yes, lang } = parseArgs(process.argv.slice(2));
   const confirmed = process.env.CVP_CONFIRM_CONTENT_SEED === "yes";
 
   if (yes && !confirmed) {
@@ -80,23 +99,42 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  const isDryRun = !yes; // yes ⇒ confirmed, checked above
+  if (lang !== null && !LANGUAGES.includes(lang)) {
+    console.error(`seed-faq-translations.mjs: unknown --lang "${lang}". Known languages: ${LANGUAGES.join(", ")}.`);
+    process.exitCode = 1;
+    return;
+  }
+  // A real run needs --lang: without it there is nothing this script is
+  // allowed to write (see the banner), so it degrades to the all-language dry
+  // run and exits 0 rather than touching four live rows.
+  const isDryRun = !yes || lang === null;
+  const langs = lang === null ? LANGUAGES : [lang];
 
-  // Building every language first also validates every translation file
+  // Building every selected language also validates its translation file
   // against EN_CATEGORIES (buildForLang throws on a missing category/item or
-  // a paragraph-count drift) — a dry run is therefore a full structural check.
-  const built = LANGUAGES.map((lang) => {
-    const categories = buildForLang(lang);
-    return { lang, categories, totalItems: categories.reduce((n, c) => n + c.items.length, 0) };
+  // a paragraph-count drift) — a dry run over all five is therefore a full
+  // structural check.
+  const built = langs.map((l) => {
+    const categories = buildForLang(l);
+    return { lang: l, categories, totalItems: categories.reduce((n, c) => n + c.items.length, 0) };
   });
 
-  console.log(`seed-faq-translations: ${isDryRun ? "DRY RUN" : "REAL RUN"} — languages: ${LANGUAGES.join(", ")}`);
-  for (const { lang, categories, totalItems } of built) {
-    console.log(`  faqPage-${lang}: upsert — ${categories.length} categories, ${totalItems} questions`);
+  console.log(`seed-faq-translations: ${isDryRun ? "DRY RUN" : "REAL RUN"} — languages: ${langs.join(", ")}`);
+  for (const { lang: l, categories, totalItems } of built) {
+    console.log(`  faqPage-${l}: upsert — ${categories.length} categories, ${totalItems} questions`);
   }
 
   if (isDryRun) {
-    console.log("\nseed-faq-translations.mjs: dry run — nothing written. Re-run with --yes and CVP_CONFIRM_CONTENT_SEED=yes to apply.");
+    if (yes && lang === null) {
+      console.log(
+        "\nseed-faq-translations.mjs: --yes was given without --lang <code> — nothing written. " +
+          "A real run must name exactly one language (e.g. --lang he), so the en/de/pl/ru rows editors maintain in /admin/content/faq are never overwritten.",
+      );
+    } else {
+      console.log(
+        "\nseed-faq-translations.mjs: dry run — nothing written. Re-run with --lang <code>, --yes and CVP_CONFIRM_CONTENT_SEED=yes to apply that one language.",
+      );
+    }
     return; // no PrismaClient constructed — see the banner at the top
   }
 

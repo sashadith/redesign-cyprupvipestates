@@ -133,7 +133,7 @@ Alle H1 sind kolonfrei (§3): die Doppelpunkt-Vorschläge der Map (Zeilen 1, 3, 
 | Unterschrift beim Anwalt, Eintragung beim `רשם המקרקעין`, `שטר בעלות (Title Deed)` | Glossar §2, Styleguide §7 (kein Notar) |
 | Genehmigung der `מועצת השרים` in bestimmten Fällen für Nicht-EU-Käufer | Glossar §3 |
 | Finanzierung auch für Nicht-Ansässige, Konditionen individuell | Glossar §3 (Kreditvergabe an Nicht-Ansässige) — qualitativ, ohne Quoten |
-| Doppelbesteuerungsabkommen Israel–Zypern besteht | Glossar §3 `אמנת מס` — ohne Artikel, ohne Sätze |
+| Steuerabkommen Israel–Zypern: **keine Existenzaussage in beide Richtungen** — Status und Wirkung sind eine Frage an den Steuerberater vor dem Kauf | Glossar §3 `אמנת מס` ist eine **Begriffs**-Zeile („ohne Artikel, ohne Sätze") und **keine** Faktenquelle. Keine Quelle in `content/he/source/**` oder `scripts/faq-translations/en.json` behauptet, dass ein Abkommen besteht. Seite 3 hatte es als Tatsache gesetzt („לישראל ולקפריסין יש אמנת מס") — in der Final-Review-Fix-Runde (I1) auf die Formulierung von Seite 16 gebracht: `הסטטוס העדכני של אמנת מס בין ישראל לקפריסין … טעונים בדיקה מול יועץ מס לפני הרכישה` |
 | ROI-Rechner mit Szenarien שמרני / ריאלי / אופטימי — **auf der Projektseite**, nicht auf der Landingpage | Glossar §3.1 für die Terminologie; `ModalRoiCalculator` existiert nur in `src/app/[lang]/projects/[slug]/page.tsx:371`. `LandingBody` kennt sieben Blocktypen und keinen Rechner. Seite 3 hatte ihn mit `כאן` angekündigt — korrigiert in Fix-Runde 1 (M12) |
 | Israelische Community in Limassol | Keyword-Map §4 Zeile 14 |
 | `כ-45 דקות טיסה מתל אביב` | Glossar §5 (Boilerplate) — nur auf Seite 1 und 3, dort unterschiedlich formuliert |

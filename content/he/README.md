@@ -57,8 +57,9 @@ leaves would collide under different parents (`limassol/apartments` and
 ```
 
 scripts/faq-translations/he.json     → SiteDocument type="faqPage" — seeded identically by EITHER
-                                        `node scripts/seed-faq-translations.mjs` (the original en/de/pl/ru
-                                        script, extended to `he`) or `node scripts/he-content/seed.mjs
+                                        `node scripts/seed-faq-translations.mjs --lang he` (the original
+                                        en/de/pl/ru script, extended to `he`; a real run writes exactly the
+                                        one language named by --lang) or `node scripts/he-content/seed.mjs
                                         --only faq` (rebuilds the same way, for a one-tool operator flow)
 ```
 
@@ -176,9 +177,13 @@ below exists because the local `DATABASE_URL` in this repo is production:
    an expected stopping point for an operator running this from the wrong
    place, not a failure of the pack.
 4. **Row guard:**
-   - **site-documents/faq** (keyed by `type`): if an existing row for the
-     SAME `type` has `language` other than `"he"`, the whole run refuses
-     rather than silently upserting past it.
+   - **site-documents/faq** (keyed by `type`): existing-row matching is
+     `(type, language: "he")` ONLY. `SiteDocument` is unique per
+     `(type, language)` — one row per language per type — so the
+     `en/de/pl/ru` siblings of every seeded `type` (`homepage`, `header`,
+     `footer`, …, `faqPage`) are **expected, not a hazard**, exactly like the
+     same-slug siblings below. The loaders fetch `language: "he"` rows only,
+     and the row actually written is asserted to be `"he"`.
    - **case-studies/singlepages** (keyed by `slug`, LEAF for singlepages):
      existing-row matching is `(language: "he", slug)` ONLY. A same-slug row
      of another language is **expected, not a hazard** — under decision A
@@ -191,6 +196,18 @@ below exists because the local `DATABASE_URL` in this repo is production:
      not a plan-time "refuse" a run can hit — is update a row that turns out
      not to be `"he"`, or insert where a `"he"` row already exists; either
      would indicate a corrupted read from the database, not a normal pack.
+   - **The one documented exception to "only `he` rows are written":** a pack
+     row with `translationGroupSlugEn` whose **EN** sibling has no
+     `translationGroupId` yet gets one minted and **persisted onto that EN
+     row** — the same "generate + persist if missing" convention
+     `createTranslation` (`src/app/admin/actions.ts`) uses, and the only way
+     the two rows can end up in the same translation group.
+     `src/lib/ai/heTranslateQueue.ts` does the same for the EN `Developer`
+     row. Both disclose it rather than doing it silently: the seeder's dry run
+     prints a separate **`link-group`** line (`will set translationGroupId
+     <id> on the EN row <id>`), and the queue writes an `enGroupLink` object
+     into the `AiGenerationQueue` row's `result`. No other column of an EN row
+     is ever touched.
 5. `--only <kind>` restricts to one kind. Kinds: `site-documents`, `faq`,
    `case-studies`, `singlepages`, `legal-check` — all implemented.
 
@@ -226,12 +243,18 @@ Task 9 step 4, documents the full runbook):
 # on staging, in the repo checkout
 CVP_ALLOW_DB_READ=yes node scripts/he-content/seed.mjs --dry-run   # read the plan
 CVP_ALLOW_DB_READ=yes CVP_CONFIRM_CONTENT_SEED=yes node scripts/he-content/seed.mjs --yes
-CVP_CONFIRM_CONTENT_SEED=yes node scripts/seed-faq-translations.mjs
+CVP_CONFIRM_CONTENT_SEED=yes node scripts/seed-faq-translations.mjs --lang he --yes
 ```
 
 (`seed.mjs`'s own `faq` kind produces the same `he` row and can be used
 instead of the last line — the two are kept in parallel deliberately; see the
 "faq" section above.)
+
+`--lang <code>` is **mandatory for a real** `seed-faq-translations.mjs` run and
+it writes only that one language. Without it the script cannot write at all: it
+prints the plan for all five languages and exits 0. The `en/de/pl/ru` `faqPage`
+rows are live content editors maintain in `/admin/content/faq`; a five-language
+upsert from the repo files would silently discard those edits.
 
 The seeder is idempotent: running it again with unchanged files (and
 unchanged related-page/related-project links) produces a plan of all

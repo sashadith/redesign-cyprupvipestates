@@ -19,9 +19,13 @@
 //     production DB read, so it is gated behind CVP_ALLOW_DB_READ=yes. For an
 //     EMPTY pack, no PrismaClient is constructed at all; the empty plan is
 //     printed and the process exits 0 without ever touching the network.
-//   * site-documents/faq: an existing row for the same `type` whose
-//     `language` is not "he" makes the whole run refuse (those types are not
-//     expected to collide across locales the way slugs are).
+//   * site-documents/faq: existing-row matching is (type, language: "he")
+//     only. `SiteDocument` is @@unique([type, language]) — one row PER
+//     LANGUAGE per type — so the `en/de/pl/ru` siblings of every `type` this
+//     pack seeds are EXPECTED and are ignored, never a reason to refuse
+//     (same principle as the case-studies/singlepages guard below). The
+//     loaders only fetch `language: "he"` rows for that reason, and the row
+//     actually written is asserted to be "he" — see assertUpdateTargetIsHe.
 //   * case-studies/singlepages: existing-row matching is (language: "he",
 //     slug) only — a same-slug row of another language is EXPECTED (decision
 //     A: a "he" page deliberately shares its Latin slug with its EN sibling)
@@ -234,30 +238,24 @@ export function loadSiteDocumentsPack(dir = path.join(CONTENT_HE_DIR, "site-docu
  * Pure planner for the "site-documents" kind.
  *
  * `rows`: pack rows as `loadSiteDocumentsPack()` returns, `{ type, data }`.
- * `existingRows`: DB rows for the SAME `type`s, any language — e.g.
- *   `prisma.siteDocument.findMany({ where: { type: { in: rows.map(r=>r.type) } } })`
- *   shaped as `{ type, language, sanityId, data }`.
+ * `existingRows`: the "he" DB rows for the SAME `type`s — e.g.
+ *   `prisma.siteDocument.findMany({ where: { type: { in: rows.map(r=>r.type) }, language: "he" } })`
+ *   shaped as `{ type, language, sanityId, data }`. Accepts either a bare
+ *   array or the `{ siteDocuments }` envelope the real loader returns.
+ *   `en/de/pl/ru` siblings of the same `type` are EXPECTED (SiteDocument is
+ *   unique per `(type, language)`) and are ignored if present.
  *
  * Returns one Plan entry per pack row:
- *   - `refuse`  — an existing row for this `type` has `language !== "he"`.
  *   - `insert`  — no existing `he` row for this `type`.
  *   - `update`  — an existing `he` row's `data` differs from the pack's.
  *   - `skip`    — an existing `he` row's `data` already matches (unchanged).
  */
 export function planSiteDocuments(rows, existingRows) {
+  const existingSiteDocuments = Array.isArray(existingRows) ? existingRows : (existingRows?.siteDocuments ?? []);
   const plan = [];
   for (const row of rows) {
-    const clashing = existingRows.find((r) => r.type === row.type && r.language !== "he");
-    if (clashing) {
-      plan.push({
-        kind: "site-documents",
-        key: row.type,
-        action: "refuse",
-        reason: `existing row for type "${row.type}" has language "${clashing.language}", not "he" — refusing to touch it`,
-      });
-      continue;
-    }
-    const existing = existingRows.find((r) => r.type === row.type && r.language === "he");
+    const existing = existingSiteDocuments.find((r) => r.type === row.type && r.language === "he");
+    assertUpdateTargetIsHe(existing, `site-documents "${row.type}"`);
     if (!existing) {
       plan.push({
         kind: "site-documents",
@@ -335,24 +333,17 @@ export function loadFaqPack({ enPath = path.join(FAQ_DIR, "en.json"), hePath = p
 /**
  * Pure planner for the "faq" kind — same shape/semantics as
  * planSiteDocuments, scoped to `type: "faqPage"`. `existingRows.siteDocuments`
- * is the same DB rows the "site-documents" kind reads (shared table), so a
- * combined run only queries it once.
+ * is the same DB rows the "site-documents" kind reads (shared table, "he"
+ * only), so a combined run only queries it once. The `en/de/pl/ru` `faqPage`
+ * rows scripts/seed-faq-translations.mjs owns are expected siblings and are
+ * neither read nor written here.
  */
 export function planFaq(rows, existingRows) {
-  const existingSiteDocuments = existingRows?.siteDocuments ?? [];
+  const existingSiteDocuments = Array.isArray(existingRows) ? existingRows : (existingRows?.siteDocuments ?? []);
   const plan = [];
   for (const row of rows) {
-    const clashing = existingSiteDocuments.find((r) => r.type === "faqPage" && r.language !== "he");
-    if (clashing) {
-      plan.push({
-        kind: "faq",
-        key: row.key,
-        action: "refuse",
-        reason: `existing row for type "faqPage" has language "${clashing.language}", not "he" — refusing to touch it`,
-      });
-      continue;
-    }
     const existing = existingSiteDocuments.find((r) => r.type === "faqPage" && r.language === "he");
+    assertUpdateTargetIsHe(existing, 'faq "faqPage"');
     if (!existing) {
       plan.push({ kind: "faq", key: row.key, action: "insert", reason: "no existing he row", sanityId: "faqPage-he", data: row.data });
     } else if (!deepEqual(existing.data, row.data)) {
@@ -845,14 +836,23 @@ export function loadPack(kind) {
   throw new Error(`seed.mjs: unknown kind "${kind}"`);
 }
 
-function printPlan(plan) {
-  if (!plan.length) {
-    console.log("he-content seed: empty plan (0 rows) — nothing to do.");
-    return;
-  }
-  console.log("kind            key                              action   reason");
+/**
+ * Renders a plan as the lines printPlan writes, so what the operator reads is
+ * testable without capturing stdout. Exported for the tests.
+ *
+ * Every entry whose `resolved.needsEnUpdate` is set gets an extra
+ * **`link-group`** line: that is the one case where applying this plan writes
+ * to a row that is NOT "he" — the EN `CaseStudy`/`Singlepage` named by
+ * `translationGroupSlugEn` gains the `translationGroupId` it never had (the
+ * same "generate + persist if missing" convention `createTranslation` uses).
+ * It must be visible in the dry run, not just in the code.
+ */
+export function formatPlanLines(plan) {
+  if (!plan.length) return ["he-content seed: empty plan (0 rows) — nothing to do."];
+  const lines = ["kind            key                              action   reason"];
+  const pad = `                ${" ".repeat(32)} `;
   for (const p of plan) {
-    console.log(`${p.kind.padEnd(15)} ${String(p.key).padEnd(32)} ${p.action.padEnd(8)} ${p.reason}`);
+    lines.push(`${p.kind.padEnd(15)} ${String(p.key).padEnd(32)} ${p.action.padEnd(8)} ${p.reason}`);
     if (p.resolved) {
       const bits = [];
       if (p.resolved.leafSlug && p.resolved.leafSlug !== p.key) bits.push(`slug=${p.resolved.leafSlug}`);
@@ -860,9 +860,21 @@ function printPlan(plan) {
       if (p.resolved.translationGroupId) bits.push(`translationGroupId=${p.resolved.translationGroupId}`);
       if (p.resolved.relatedRefs) bits.push(`relatedRefs=[${p.resolved.relatedRefs.map((r) => r._ref).join(", ")}]`);
       if (p.resolved.relatedDevelopmentSlugs) bits.push(`relatedDevelopmentSlugs=[${p.resolved.relatedDevelopmentSlugs.join(", ")}]`);
-      if (bits.length) console.log(`                ${" ".repeat(32)} ${" ".repeat(8)} → ${bits.join(", ")}`);
+      if (bits.length) lines.push(`${pad}${" ".repeat(8)} → ${bits.join(", ")}`);
+      if (p.resolved.needsEnUpdate && p.resolved.sourceEnRowId) {
+        lines.push(
+          `${p.kind.padEnd(15)} ${String(p.key).padEnd(32)} ${"link-group".padEnd(8)} ` +
+            `will set translationGroupId ${p.resolved.translationGroupId} on the EN row ${p.resolved.sourceEnRowId} ` +
+            `(the only non-"he" row this plan writes)`,
+        );
+      }
     }
   }
+  return lines;
+}
+
+function printPlan(plan) {
+  for (const line of formatPlanLines(plan)) console.log(line);
 }
 
 // Real (non-test) existingRows loaders — one per kind, each a thin
@@ -872,15 +884,18 @@ function printPlan(plan) {
 // exercised by a real `node scripts/he-content/seed.mjs` run (gated behind
 // CVP_ALLOW_DB_READ=yes) — tests call the pure planners directly with fakes.
 async function loadExistingRowsForPack(prisma, pack) {
+  // SiteDocument is @@unique([type, language]): the en/de/pl/ru rows for
+  // these same types are expected siblings the pack never touches, so both
+  // loaders fetch "he" only.
   if (pack.kind === "site-documents") {
     if (!pack.rows.length) return {};
-    const siteDocuments = await prisma.siteDocument.findMany({ where: { type: { in: pack.rows.map((r) => r.type) } } });
+    const siteDocuments = await prisma.siteDocument.findMany({ where: { type: { in: pack.rows.map((r) => r.type) }, language: "he" } });
     return { siteDocuments };
   }
 
   if (pack.kind === "faq") {
     if (!pack.rows.length) return {};
-    const siteDocuments = await prisma.siteDocument.findMany({ where: { type: "faqPage" } });
+    const siteDocuments = await prisma.siteDocument.findMany({ where: { type: "faqPage", language: "he" } });
     return { siteDocuments };
   }
 

@@ -56,10 +56,17 @@ Alles andere in Phase 5/6 ist entweder `he`-only (Sprachlisten-Chips auf About/K
    # → Plan lesen: jede Zeile insert/update/skip, alle relatedLandingPages/parentSlug/relatedProjects aufgelöst
    CVP_ALLOW_DB_READ=yes CVP_CONFIRM_CONTENT_SEED=yes node scripts/he-content/seed.mjs --yes
    ```
-4. **FAQ seeden** (gleiche Zwei-Flag-Regel wie oben):
+   **Ausnahme zur „nur `he`-Zeilen"-Regel, im Plan sichtbar:** Zeilen mit
+   `translationGroupSlugEn` (`about-us`, `contacts`, die drei Case Studies)
+   können der **EN**-Zeile die `translationGroupId` schreiben, die ihr bisher
+   fehlt — dieselbe Konvention wie `createTranslation`. Der Dry-Run listet das
+   als eigene `link-group`-Zeile („will set translationGroupId … on the EN row
+   …"); erscheint keine solche Zeile, wird keine Nicht-`he`-Zeile angefasst.
+4. **FAQ seeden** (gleiche Zwei-Flag-Regel wie oben, **plus `--lang he`**): ein echter Lauf schreibt genau die eine benannte Sprache. Ohne `--lang` schreibt das Skript gar nichts, sondern druckt nur den Plan aller fünf Sprachen (Exit 0) — so können die von Redakteur:innen in `/admin/content/faq` gepflegten `en/de/pl/ru`-Zeilen nicht überschrieben werden:
    ```bash
-   CVP_CONFIRM_CONTENT_SEED=yes node scripts/seed-faq-translations.mjs --yes
+   CVP_CONFIRM_CONTENT_SEED=yes node scripts/seed-faq-translations.mjs --lang he --yes
    ```
+   (Alternativ erzeugt `CVP_ALLOW_DB_READ=yes CVP_CONFIRM_CONTENT_SEED=yes node scripts/he-content/seed.mjs --only faq --yes` dieselbe `he`-Zeile.)
 5. **Idempotenz-Probe:** den Dry-Run beider Seeder ein zweites Mal laufen lassen — erwartet **0 Schreibvorgänge** (alle Zeilen `skip (unchanged)`):
    ```bash
    CVP_ALLOW_DB_READ=yes node scripts/he-content/seed.mjs --dry-run

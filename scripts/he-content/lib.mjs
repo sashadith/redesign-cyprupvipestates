@@ -216,25 +216,53 @@ const CODE_ROUTES = [
   /^\/he\/terms-and-conditions$/,
 ];
 
+const SITE_HOST = "cyprusvipestates.com";
+
 /**
  * Validates one href/url against the Hebrew content-pack link allow-list.
  * `packSlugs` is the list of Latin landing-page slugs this pack defines
  * (e.g. "limassol", "limassol/new-projects") — any `/he/<packSlug>` or
  * `/he/<packSlug>/...` is allowed in addition to the fixed code routes.
+ *
+ * `enHref` is the EN source's value at the SAME path, when the file has an EN
+ * source. It only ever unlocks one case: an absolute URL on a host that is
+ * NOT the site's own, carried over byte-identical from EN (the social
+ * profiles, the client portal — locale-agnostic destinations that mirrorCheck
+ * deliberately skips because link keys are retargetable). An absolute URL on
+ * the site's own host still has to be a `/he/...` one, EN or no EN.
+ *
  * Returns null when the link is fine, or a violation string otherwise.
  */
-export function linkCheck(href, packSlugs = []) {
+export function linkCheck(href, packSlugs = [], enHref = null) {
   if (typeof href !== "string" || !href.trim()) return "empty or non-string href";
 
   if (href.startsWith("mailto:") || href.startsWith("tel:")) return null;
   if (href.startsWith("https://wa.me/")) return null;
+
+  // Absolute URLs (any scheme). Everything below this block is a site-relative
+  // path, so they have to be judged here rather than falling through to the
+  // route allow-list, which would never match them.
+  if (/^[a-z][a-z0-9+.-]*:/i.test(href)) {
+    const bare = href.replace(/[?#].*$/, "");
+    if (bare === `https://${SITE_HOST}/he` || bare.startsWith(`https://${SITE_HOST}/he/`)) return null;
+    let host = null;
+    try {
+      host = new URL(href).host.replace(/^www\./, "");
+    } catch {
+      host = null;
+    }
+    if (host && host !== SITE_HOST && enHref === href) return null;
+    return host === SITE_HOST
+      ? `absolute link to the site's own host must be a /he route: ${href}`
+      : `absolute link not on the he allow-list (and not carried over identically from the EN source): ${href}`;
+  }
+
   // Filter links carry a query (`/he/projects?city=Paphos`); the allow-list
   // judges the path only.
   href = href.replace(/[?#].*$/, "");
   // Partners stays English (decision J) and must not surface as an EN-fallback
   // page under /he — the Hebrew chrome links the EN page explicitly.
   if (href === "/partners") return null;
-  if (href === "https://cyprusvipestates.com/he" || href.startsWith("https://cyprusvipestates.com/he/")) return null;
   if (/^\/blog\/[^/]+\/?$/.test(href)) return null; // EN blog article, no /he prefix (decision C)
 
   if (/^\/(de|pl|ru)\//.test(href)) return `forbidden non-Hebrew locale link: ${href}`;

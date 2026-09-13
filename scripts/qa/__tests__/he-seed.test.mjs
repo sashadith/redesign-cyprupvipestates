@@ -29,6 +29,7 @@ import {
   loadCaseStudiesPack,
   assertUpdateTargetIsHe,
   assertNoExistingHeRow,
+  formatPlanLines,
 } from "../../he-content/seed.mjs";
 
 // ─── faq ────────────────────────────────────────────────────────────────────
@@ -102,12 +103,17 @@ test("planFaq: update when existing he data differs, skip when unchanged", () =>
   assert.match(skipPlan[0].reason, /unchanged/);
 });
 
-test("planFaq: refuses when the existing faqPage row is not he", () => {
-  const plan = planFaq([{ key: "faqPage", data: { categories: [] } }], {
-    siteDocuments: [{ type: "faqPage", language: "de", sanityId: "faqPage-de", data: {} }],
-  });
-  assert.equal(plan[0].action, "refuse");
-  assert.match(plan[0].reason, /language "de"/);
+test("planFaq: the en/de/pl/ru faqPage rows are expected siblings, never a refusal", () => {
+  // seed-faq-translations.mjs owns those four rows; SiteDocument is unique
+  // per (type, language), so their presence must not block the he row.
+  const siteDocuments = ["en", "de", "pl", "ru"].map((language) => ({ type: "faqPage", language, sanityId: `faqPage-${language}`, data: {} }));
+  const plan = planFaq([{ key: "faqPage", data: { categories: [] } }], { siteDocuments });
+  assert.equal(plan.length, 1);
+  assert.equal(plan[0].action, "insert", plan[0].reason);
+  assert.equal(plan[0].sanityId, "faqPage-he");
+
+  const withHe = [...siteDocuments, { type: "faqPage", language: "he", sanityId: "faqPage-he", data: { categories: [] } }];
+  assert.equal(planFaq([{ key: "faqPage", data: { categories: [] } }], { siteDocuments: withHe })[0].action, "skip");
 });
 
 // ─── case-studies ───────────────────────────────────────────────────────────
@@ -197,6 +203,46 @@ test("planCaseStudies: translationGroupSlugEn absent mints a fresh group id; pre
   const refusal = unknownGroup.find((p) => p.action === "refuse");
   assert.ok(refusal);
   assert.match(refusal.reason, /unknown translationGroupSlugEn "does-not-exist"/);
+});
+
+test("formatPlanLines: a link-group line discloses the translationGroupId written onto the EN row", () => {
+  // EN row with NO translationGroupId → the plan will backfill it there.
+  const enRow = { id: "en-1", sanityId: "story-en", slug: "story-original", language: "en" };
+  const plan = planCaseStudies([caseStudyRow("story-1", { translationGroupSlugEn: "story-original" })], {
+    caseStudies: [enRow],
+    developments: [],
+  });
+  const insert = plan.find((p) => p.action === "insert");
+  assert.equal(insert.resolved.needsEnUpdate, true);
+
+  const lines = formatPlanLines(plan);
+  const linkGroup = lines.filter((l) => l.includes("link-group"));
+  assert.equal(linkGroup.length, 1, `expected exactly one link-group line, got:\n${lines.join("\n")}`);
+  assert.match(linkGroup[0], /will set translationGroupId /);
+  assert.ok(linkGroup[0].includes(insert.resolved.translationGroupId));
+  assert.ok(linkGroup[0].includes("on the EN row en-1"));
+});
+
+test("formatPlanLines: no link-group line when the EN row already has a translationGroupId", () => {
+  const enRow = { id: "en-1", sanityId: "story-en", slug: "story-original", language: "en", translationGroupId: "tg-existing" };
+  const plan = planCaseStudies([caseStudyRow("story-1", { translationGroupSlugEn: "story-original" })], {
+    caseStudies: [enRow],
+    developments: [],
+  });
+  assert.equal(
+    formatPlanLines(plan).filter((l) => l.includes("link-group")).length,
+    0,
+  );
+});
+
+test("formatPlanLines: singlepages also disclose the EN-row write", () => {
+  const enRow = { id: "en-sp-1", sanityId: "about-en", slug: "about-us", language: "en" };
+  const plan = planSinglepages([{ slug: "about-us", raw: { title: "עלינו", translationGroupSlugEn: "about-us" } }], {
+    singlepages: [enRow],
+  });
+  const linkGroup = formatPlanLines(plan).filter((l) => l.includes("link-group"));
+  assert.equal(linkGroup.length, 1);
+  assert.ok(linkGroup[0].includes("on the EN row en-sp-1"));
 });
 
 test("planCaseStudies: related projects resolved by development slug; unknown slug errors", () => {
