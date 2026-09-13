@@ -12,7 +12,7 @@
 - Eine `BCP47`-Map für alle Intl-Aufrufe; Lead-APIs und MCP-Tools akzeptieren `languagePreference = he`.
 - Exhaustive Copy-Tabellen tragen 19 `TODO(he)`-Platzhalter (englischer Text), gezählt von `node scripts/qa/he-placeholders.mjs` (Phase-4-Backlog).
 - nginx-Regel `^/(de|pl|ru|he)(/|$)` im Repo vorbereitet; `DEPLOYMENT.md` und `.env.example` dokumentieren die Variable.
-- Smoke-Skript `scripts/qa/he-smoke.sh [host]`.
+- Smoke-Skript `scripts/qa/he-smoke.sh [host] [live|gated]`: `live` (Staging, `he` geroutet) verlangt RTL und keine 500er; `gated` (Produktion) verlangt 404 für jeden `/he*`-Pfad und 0 `hreflang="he"`.
 
 ## Operator-Schritte für Staging (in dieser Reihenfolge)
 
@@ -38,7 +38,7 @@
 
 ## Produktions-Gate (nichts zu tun, nur wissen)
 
-- Produktion bleibt unverändert, solange `NEXT_PUBLIC_LIVE_LOCALES` dort nicht gesetzt ist: `/he/*` → 404, kein `hreflang="he"`, keine `/he/`-Sitemap-Einträge.
+- Produktion bleibt unverändert, solange `NEXT_PUBLIC_LIVE_LOCALES` dort nicht gesetzt ist: `/he/*` → 404, kein `hreflang="he"`, keine `/he/`-Sitemap-Einträge. Nach dem nächsten Produktions-Deploy prüfbar mit `scripts/qa/he-smoke.sh https://cyprusvipestates.com gated`.
 - **Vor dem nächsten Produktions-Deploy dieses Codes** muss die Migration angewendet sein (Schritt 3 erledigt das bereits, weil die DB geteilt ist).
 - Die hebräische Freischaltung in Produktion ist Phase 9 (Variable setzen, nginx-Zeile einspielen, deployen) und passiert nur auf ausdrückliche Anweisung.
 
