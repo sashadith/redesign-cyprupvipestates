@@ -6,6 +6,7 @@ import "../../preview-home/tokens.css";
 import "../../preview-projects/projects.css";
 import "../../preview-insights/insights.css";
 import "../landing.css";
+import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import LenisProvider from "../../preview-home/anim/LenisProvider";
 
 /* The redesigned landing family, served under a "preview" prefix while the

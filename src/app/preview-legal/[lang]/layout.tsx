@@ -6,6 +6,7 @@ import { SITE_URL } from "@/lib/seo";
 import "../../preview-home/tokens.css";
 import "../../preview-insights/insights.css";
 import "../legal.css";
+import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import LenisProvider from "../../preview-home/anim/LenisProvider";
 
 /* Legal documents (Privacy & Terms) — redesigned. Isolated route tree, same as preview-partners /

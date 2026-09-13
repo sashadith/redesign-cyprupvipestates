@@ -14,16 +14,6 @@ body {
   color: #fff;
 }
 
-/* Hebrew body copy falls through to Rubik's Hebrew-subset instance (the
-   default `rubik` in [lang]/layout.tsx only loads latin/cyrillic/hebrew as
-   one font object via .className, but --font-body-he backs any CSS that
-   explicitly opts into the Hebrew-specific body font stack). RTL directional
-   default: LTR-authored components use `text-align: left`, which reads as
-   "away from the reading direction" once `dir="rtl"` flips the page — swap
-   to the logical `start` so paragraphs/headings align correctly in Hebrew. */
-:lang(he) { font-family: var(--font-body-he), "Rubik", Arial, sans-serif; }
-[dir="rtl"] { text-align: start; }
-
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;

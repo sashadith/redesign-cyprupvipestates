@@ -1,0 +1,5 @@
+/* Direction- and script-aware base rules shared by every localized root
+   layout; imported by [lang]/layout.tsx and the seven preview-*/[lang]/layout.tsx
+   trees. Phase 2 (RTL layout pass) grows this file. */
+:lang(he) { font-family: var(--font-body-he), "Rubik", Arial, sans-serif; }
+[dir="rtl"] { text-align: start; }

@@ -6,6 +6,7 @@ import { SITE_URL } from "@/lib/seo";
 import "../../preview-home/tokens.css";
 import "../../preview-insights/insights.css";
 import "../contacts.css";
+import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import LenisProvider from "../../preview-home/anim/LenisProvider";
 
 /* Contacts — redesigned. Isolated route tree, same as preview-partners /

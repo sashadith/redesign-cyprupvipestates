@@ -10,6 +10,7 @@ import "../../preview-insights/insights.css";
    same arrangement as Partners importing preview-insights/insights.css. */
 import "../../preview-contacts/contacts.css";
 import "../about.css";
+import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import LenisProvider from "../../preview-home/anim/LenisProvider";
 
 /* About — redesigned. Isolated route tree, same as preview-partners /

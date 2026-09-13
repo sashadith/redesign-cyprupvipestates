@@ -2,6 +2,7 @@
 import "@/app/globals.css";
 import "@/app/design-tokens.css"; // shared design tokens (definitions only — see file header)
 import "@/app/header-footer.css"; // global header + footer chrome (redesign) — see file header
+import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import type { Metadata } from "next";
 import { Rubik, Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import { cookies, draftMode } from "next/headers";
