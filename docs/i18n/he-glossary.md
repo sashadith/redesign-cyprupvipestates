@@ -251,6 +251,33 @@ Die Rechner-Oberfläche (`RoiInputs`, `RoiResults`, `RoiChart`, `ModalRoiCalcula
 | send calculation (Button) | שליחת החישוב | nominal |
 | send calculation by email (Modaltitel) | שליחת החישוב לאימייל | |
 
+### 3.2 Rechtstexte: GDPR, Vertrag, Gerichtsstand (verbindlich)
+
+Diese Zeilen sind **verbindlich**, nicht Vorschlag: jeder Begriff hat genau **eine** hebräische Form in `privacy.he.ts` und `terms.he.ts` (Pass B, Task 2, Fix-Runde 1). Wer eine Zeile ändert, ändert beide Dateien zusammen (Styleguide §11.6). Artikelzitate bleiben lateinisch und bidi-isoliert (`Art. 6 (1) (f) GDPR`).
+
+| Englisch | Hebräisch (verbindlich) | Hinweis |
+|---|---|---|
+| controller | בעל השליטה בנתונים | bei Erstnennung glossiert: `בעל השליטה בנתונים (⁨controller⁩)`. Flexionen derselben Form: `בעלי שליטה נפרדים בנתונים`, `בעל שליטה אחר`. **Nicht** `הגורם האחראי` — das ist die Person im Haus, nicht die Rechtsrolle |
+| processor | מעבד נתונים | `הם פועלים כמעבדי נתונים לפי Art. 28 GDPR` |
+| personal data | נתונים אישיים | nie `מידע אישי` |
+| processing | עיבוד | Verb `מעבדים`; die Rechtsgrundlage heißt immer `הבסיס המשפטי:` |
+| consent | הסכמה | Bannerklick: `לאחר אישורכם` / `בכפוף להסכמתכם` — beides zulässig, weil es den Klick meint, nicht den Rechtsbegriff |
+| legitimate interest | אינטרס לגיטימי שלנו | das Possessiv ist Pflicht: die EN sagt durchgehend „our legitimate interest" |
+| data subject / betroffene Person | *kein Substantiv* — 2. Pl. `אתם` / `-כם` | Hebräisch hat keine etablierte Entsprechung; die Anrede trägt die Rolle |
+| profiling | יצירת פרופיל | Verbform `בונה פרופיל`. Nie `פרופיילינג` (Anglizismus, Styleguide §7) |
+| cookies | עוגיות | Kategorien `הכרחיות / אנליטיקה / שיווק`, wortgleich mit dem Bannertext |
+| third parties | צדדים שלישיים | |
+| binding / prevailing (Sprachfassung) | מחייב | `הנוסח האנגלי הוא המחייב.` (§5). Nie `הקובע` für die Sprachfassung; `הגרסה הנוכחית היא הקובעת` (aktuelle Fassung) ist ein anderer Sachverhalt und bleibt |
+| governing law | הדין החל | |
+| jurisdiction | סמכות שיפוט | `סמכות השיפוט הבלעדית` |
+| licensor | מי שהעניק לנו רישיון | `בעלי הרישיון שלנו` heißt Lizenz**nehmer** und dreht die Eigentumslage um |
+| conclude (a contract) | כריתה — `נכרת` / `כורתים` | nie `חותמים על` in derselben Aufzählung |
+| right to have X done (Art. 16/17) | הזכות לדרוש ש… | `לדרוש שנתקן` / `לדרוש שנמחק` — der Anspruch richtet sich gegen uns, nicht an euch selbst |
+| obtain confirmation (Art. 15) | לקבל מאיתנו אישור | nicht `לברר` (nachfragen) |
+| have it sent to another controller (Art. 20) | לבקש שנעביר … ישירות | nicht `להעביר אותם` (ihr übertragt) |
+| email | אימייל | nie `דואר אלקטרוני` |
+| Dokumentnamen | מדיניות הפרטיות / תנאי השימוש | **definit**, weil jedes Link-Label auf der Seite definit ist (`consentCopy.ts`, beide Formular-Copys, `terms.he.ts` §10) |
+
 ## 4. Marke, Navigation, UI-Chrome
 
 | Englisch | Hebräisch | Hinweis |

@@ -5,10 +5,13 @@ import { bidiIsolate, ltrIsolate } from "@/lib/locale";
 
    Source is terms.en.ts, section for section: the same thirteen section ids,
    the same block kinds in the same order, the same number of paragraphs and
-   list items. The one substantive difference is section 12, which lists the
-   published language versions and therefore names Hebrew as well - a fact
-   about this file, not a new legal assertion. It is recorded in
-   docs/i18n/reviews/c-legal.md.
+   list items. Section 12 mirrors the English list of published language
+   versions exactly (four); Hebrew is added to all five files together at
+   launch, never here first - a translation must not be the first place a
+   fact about the product changes (Pass B M4, docs/i18n/reviews/c-legal.md).
+
+   The document title is definite (תנאי השימוש) because every link label on
+   the site that points here is definite (Pass B M10).
 
    Register: formal, impersonal, no marketing vocabulary. The callout in
    section 2 (not a licensed brokerage) is the single most important sentence
@@ -25,14 +28,14 @@ import { bidiIsolate, ltrIsolate } from "@/lib/locale";
 
 // REVIEW(he)
 export const TERMS_HE: LegalDoc = {
-  metaTitle: `תנאי שימוש | ${bidiIsolate("Cyprus VIP Estates")}`,
+  metaTitle: `תנאי השימוש | ${bidiIsolate("Cyprus VIP Estates")}`,
   metaDescription:
     `התנאים החלים על השימוש באתר ובשירותים של ${bidiIsolate("Cyprus VIP Estates")}, המופעלים בידי ${bidiIsolate("SecretBrand Solutions LTD")}, פאפוס, קפריסין.`,
   eyebrow: "מידע משפטי",
-  title: "תנאי שימוש",
+  title: "תנאי השימוש",
   bindingNote: "הנוסח האנגלי של מסמך זה הוא הנוסח המחייב; התרגום לעברית נועד לנוחות בלבד.",
   intro:
-    "תנאים אלה חלים על השימוש באתר ועל השירותים שאנחנו מספקים. חשוב לקרוא במיוחד את סעיף 2, שמסביר בדיוק מה אנחנו עושים, ולא פחות חשוב מכך, מה איננו עושים.",
+    "תנאים אלה חלים על השימוש באתר ועל השירותים שאנחנו מספקים. חשוב לקרוא בעיון דווקא את סעיף 2, שמסביר בדיוק מה אנחנו עושים, ולא פחות חשוב מכך, מה איננו עושים.",
   updatedLabel: "עדכון אחרון",
   updated: "2026-08-21",
   tocLabel: "בעמוד זה",
@@ -63,16 +66,16 @@ export const TERMS_HE: LegalDoc = {
       blocks: [
         {
           kind: "callout",
-          text: `איננו סוכנות תיווך נדל"ן מורשית לפי הדין הקפריסאי. ${bidiIsolate("SecretBrand Solutions LTD")} פועלת אך ורק כסוכנות שיווק וייעוץ.`,
+          text: `לפי הדין הקפריסאי איננו סוכנות תיווך נדל"ן מורשית. ${bidiIsolate("SecretBrand Solutions LTD")} פועלת אך ורק כסוכנות שיווק וייעוץ.`,
         },
         { kind: "p", text: "בפועל, המשמעות היא:" },
         {
           kind: "list",
           items: [
             `אנחנו מציגים פרויקטים של נדל"ן ומקשרים בין רוכשים פוטנציאליים ליזמים ולעורכי דין עצמאיים.`,
-            "איננו פועלים כמתווכים ואיננו חותמים על הסכמי רכישה בשם אף אחד.",
-            "איננו מספקים ייעוץ משפטי, ייעוץ מס או ייעוץ פיננסי. כאשר נדרשת עצה מקצועית כזו, אנחנו מפנים אתכם לאנשי מקצוע עצמאיים, שפועלים באחריותם.",
-            "הסכם הרכישה נכרת אך ורק בינכם לבין היזם או המוכר. איננו צד לו.",
+            "איננו פועלים כמתווכים ואיננו כורתים הסכמי רכישה בשם אף אחד.",
+            "איננו מספקים ייעוץ משפטי, ייעוץ מס או ייעוץ פיננסי. כאשר נדרשת עצה מקצועית כזו, אנחנו מפנים אתכם לאנשי מקצוע עצמאיים, והם נושאים באחריות לעצה שהם נותנים.",
+            "כל הסכם רכישה נכרת אך ורק בינכם לבין היזם או המוכר. איננו צד לו.",
           ],
         },
       ],
@@ -103,7 +106,7 @@ export const TERMS_HE: LegalDoc = {
           kind: "list",
           items: [
             "איננו אחראים לדיוק המידע, לשלמותו או לעדכניותו.",
-            "תמונות, הדמיות ותצוגות תלת ממד נועדו להמחשה בלבד ואינן מחייבות מבחינה חוזית.",
+            "תמונות, הדמיות ותצוגות תלת-ממד נועדו להמחשה בלבד ואינן מחייבות מבחינה חוזית.",
             "הזמינות והמחירים עשויים להשתנות בכל עת ובלי הודעה מוקדמת. שום דבר באתר זה אינו מהווה הצעה מחייבת.",
           ],
         },
@@ -117,7 +120,7 @@ export const TERMS_HE: LegalDoc = {
       id: "third-parties",
       title: "5. צדדים שלישיים ואחריות",
       blocks: [
-        { kind: "p", text: "אנחנו משמשים גשר מקשר בינכם לבין צדדים שלישיים, ולכן איננו נושאים באחריות בגין:" },
+        { kind: "p", text: "אנחנו מקשרים בינכם לבין צדדים שלישיים, ולכן איננו נושאים באחריות בגין:" },
         {
           kind: "list",
           items: [
@@ -128,7 +131,7 @@ export const TERMS_HE: LegalDoc = {
         },
         {
           kind: "p",
-          text: "אין בתנאים אלה כדי לשלול או להגביל אחריות למוות או לנזק גוף שנגרמו ברשלנות, למרמה או לכל אחריות אחרת שלא ניתן לשלול על פי דין. זכויותיכם הצרכניות על פי חוק אינן נפגעות.",
+          text: "אין בתנאים אלה כדי לשלול או להגביל את אחריותנו למוות או לנזק גוף שנגרמו ברשלנות, את אחריותנו למרמה, או כל אחריות אחרת שלא ניתן לשלול על פי דין. זכויותיכם הצרכניות על פי חוק אינן נפגעות.",
         },
       ],
     },
@@ -138,7 +141,7 @@ export const TERMS_HE: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "תוכן האתר, לרבות טקסטים, צילומים, סרטונים, גרפיקה ועיצוב, מוגן בזכויות יוצרים ושייך לנו או לבעלי הרישיון שלנו. שכפול, הפצה או כל שימוש אחר מעבר למותר בדיני זכויות יוצרים מחייבים את הסכמתנו מראש ובכתב.",
+          text: "תוכן האתר, לרבות טקסטים, צילומים, סרטונים, גרפיקה ועיצוב, מוגן בזכויות יוצרים ושייך לנו או למי שהעניק לנו רישיון להשתמש בו. שכפול, הפצה או כל שימוש אחר מעבר למותר בדיני זכויות יוצרים מחייבים את הסכמתנו מראש ובכתב.",
         },
       ],
     },
@@ -148,7 +151,7 @@ export const TERMS_HE: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "אתרים חיצוניים שאנחנו מקשרים אליהם אינם בשליטתנו, והתוכן שלהם עשוי להשתנות בכל עת. איננו אחראים לו ואיננו מאמצים אותו. אם קישור מוביל לתוכן בלתי חוקי או בלתי הולם, אפשר להודיע לנו והוא יוסר.",
+          text: "אתרים חיצוניים שאנחנו מקשרים אליהם אינם בשליטתנו, והתוכן שלהם עשוי להשתנות בכל עת. איננו אחראים לו ואיננו מאמצים אותו. אם קישור מוביל לתוכן בלתי חוקי או בלתי הולם, אפשר להודיע לנו ואנחנו נסיר אותו.",
         },
       ],
     },
@@ -198,7 +201,7 @@ export const TERMS_HE: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "תנאים אלה מתפרסמים באנגלית, בגרמנית, בפולנית, ברוסית ובעברית. התרגומים ניתנים לנוחותכם, ובמקרה של הבדל במשמעות בין הנוסחים, הנוסח האנגלי הוא הקובע.",
+          text: "תנאים אלה מתפרסמים באנגלית, בגרמנית, בפולנית וברוסית. התרגומים ניתנים לנוחותכם, ובמקרה של הבדל במשמעות בין הנוסחים, הנוסח האנגלי הוא המחייב.",
         },
       ],
     },
@@ -212,7 +215,7 @@ export const TERMS_HE: LegalDoc = {
         },
         {
           kind: "p",
-          text: "צרכן שמתגורר באיחוד האירופי אינו מאבד בשל בחירת דין זו את ההגנה של הוראות קוגנטיות בדין מדינת מגוריו, ורשאי גם להגיש הליכים בבתי המשפט של אותה מדינה.",
+          text: "אם אתם צרכנים המתגוררים באיחוד האירופי, בחירת דין זו אינה שוללת מכם את ההגנה של הוראות קוגנטיות בדין מדינת מגוריכם, ואתם רשאים גם לנקוט הליכים בבתי המשפט של אותה מדינה.",
         },
       ],
     },
@@ -220,5 +223,5 @@ export const TERMS_HE: LegalDoc = {
 
   contactTitle: "שאלות על התנאים?",
   contactText:
-    `אפשר לכתוב לכתובת ${ltrIsolate("office@cyprusvipestates.com")}. נבהיר כל נקודה לפני שתסתמכו עליה.`,
+    `אפשר לכתוב לכתובת ${ltrIsolate("office@cyprusvipestates.com")}. נשמח להבהיר כל נקודה לפני שתסתמכו עליה.`,
 };
