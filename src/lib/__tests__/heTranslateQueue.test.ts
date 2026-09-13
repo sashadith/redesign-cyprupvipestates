@@ -2,6 +2,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   HE_ENTITY_TYPE,
+  enqueueDevelopersForce,
+  enqueueForceForDeveloper,
   enqueueForceForDevelopment,
   enqueueMissing,
   enqueueSample,
@@ -361,7 +363,9 @@ test("enqueueMissing(areas) and enqueueMissing(developers) queue the right rows"
     developers: [
       { id: "dev1", language: "en", slug: "cyfield", title: "Cyfield", translationGroupId: "g1" },
       { id: "dev2", language: "en", slug: "pafilia", title: "Pafilia", translationGroupId: "g2" },
-      { id: "dev3", language: "he", slug: "pafilia", title: "Pafilia", translationGroupId: "g2" },
+      // dev3 has a real Hebrew excerpt — a sibling only counts as "done" once
+      // it actually contains Hebrew script, not merely by existing.
+      { id: "dev3", language: "he", slug: "pafilia", title: "Pafilia", translationGroupId: "g2", excerpt: HE },
     ],
   });
 
@@ -394,4 +398,111 @@ test("enqueueForceForDevelopment queues both kinds with the force marker", async
   const { created } = await enqueueForceForDevelopment(f.prisma, "d1");
   assert.equal(created, 2);
   assert.ok(f.queue.every((q) => q.prompt === "force" && q.locale === "he" && q.status === "PENDING"));
+});
+
+// ── developer "has a real Hebrew profile" gating ────────────────────────────
+// A manually-created translation (createTranslation() in admin/actions.ts)
+// copies the EN title/excerpt/description through verbatim — still English.
+// The queue must see through that and not treat the row's mere existence as done.
+
+test("enqueueMissing(developers) queues an EN-copied Hebrew sibling but not one with real Hebrew script, noting the sibling's id", async () => {
+  const f = fakePrisma({
+    developers: [
+      // dev1's sibling exists but is an EN copy (no Hebrew script anywhere) → must be queued.
+      { id: "dev1", language: "en", slug: "cyfield", title: "Cyfield", translationGroupId: "g1", excerpt: "A Cypriot developer." },
+      { id: "dev1-he", language: "he", slug: "cyfield", title: "Cyfield", translationGroupId: "g1", excerpt: "A Cypriot developer." },
+      // dev2's sibling has a real Hebrew excerpt → already done, must not be queued.
+      { id: "dev2", language: "en", slug: "pafilia", title: "Pafilia", translationGroupId: "g2", excerpt: "A developer." },
+      { id: "dev2-he", language: "he", slug: "pafilia", title: "Pafilia", translationGroupId: "g2", excerpt: HE },
+    ],
+  });
+
+  const { created } = await enqueueMissing("developers", f.prisma);
+  assert.equal(created, 1, "only the EN-copied sibling's English row is queued");
+  assert.equal(f.queue[0].entityId, "dev1");
+  assert.equal(f.queue[0].prompt, "he-sibling:dev1-he", "the sibling's id is noted so the processor updates it, not creates a duplicate");
+});
+
+test('prompt "force" re-translates a developer that already has a real Hebrew sibling, and updates it by id', async () => {
+  const f = fakePrisma({
+    developers: [
+      { id: "dev1", language: "en", slug: "cyfield", title: "Cyfield", translationGroupId: "g1", excerpt: "A Cypriot developer." },
+      { id: "dev1-he", language: "he", slug: "cyfield", title: "Cyfield", translationGroupId: "g1", excerpt: HE },
+    ],
+    queue: [{ id: "q1", entityType: HE_ENTITY_TYPE.developerProfile, entityId: "dev1", status: "PENDING", prompt: "force" }],
+  });
+  const t = fakeTranslate({ slug: "cyfield", title: "Cyfield", excerpt: HE_2 });
+  const summary = await processQueue(
+    [row({ entityType: HE_ENTITY_TYPE.developerProfile, entityId: "dev1", prompt: "force" })],
+    { prisma: f.prisma, translate: t.translate, now },
+  );
+
+  assert.equal(summary.skipped, 0, "force bypasses the already-has-real-Hebrew skip");
+  assert.equal(f.developers.filter((d) => d.language === "he").length, 1, "no duplicate row created");
+  const he = f.developers.find((d) => d.id === "dev1-he");
+  assert.ok(he);
+  assert.equal(he.excerpt, HE_2, "the existing row was updated in place");
+});
+
+test("handleDeveloperProfile updates the Hebrew sibling by id even when its slug has drifted from the EN slug", async () => {
+  const f = fakePrisma({
+    developers: [
+      // The EN slug changed after the Hebrew row was created; both still share translationGroupId "g1".
+      { id: "dev1", language: "en", slug: "cyfield-new-slug", title: "Cyfield", translationGroupId: "g1", excerpt: "A Cypriot developer." },
+      { id: "dev1-he", language: "he", slug: "cyfield-old-slug", title: "Cyfield", translationGroupId: "g1", excerpt: "A Cypriot developer." },
+    ],
+    queue: [{ id: "q1", entityType: HE_ENTITY_TYPE.developerProfile, entityId: "dev1", status: "PENDING" }],
+  });
+  const t = fakeTranslate({ slug: "cyfield-new-slug", title: "Cyfield", excerpt: HE });
+  await processQueue([row({ entityType: HE_ENTITY_TYPE.developerProfile, entityId: "dev1" })], { prisma: f.prisma, translate: t.translate, now });
+
+  assert.equal(f.developers.filter((d) => d.language === "he").length, 1, "no second row created under the new slug");
+  const he = f.developers.find((d) => d.id === "dev1-he");
+  assert.ok(he);
+  assert.equal(he.excerpt, HE, "the original row, found via translationGroupId, was updated in place");
+  assert.equal(he.slug, "cyfield-old-slug", "the drifted slug itself is left untouched");
+});
+
+test("enqueueMissing's noted sibling id is used by the processor even without a translationGroupId link", async () => {
+  const f = fakePrisma({
+    developers: [
+      { id: "dev1", language: "en", slug: "cyfield", title: "Cyfield", excerpt: "A Cypriot developer." },
+      // Same slug, but never linked via translationGroupId (e.g. an older manual translation).
+      { id: "dev1-he", language: "he", slug: "cyfield", title: "Cyfield", excerpt: "A Cypriot developer." },
+    ],
+  });
+
+  await enqueueMissing("developers", f.prisma);
+  assert.equal(f.queue.length, 1);
+  assert.equal(f.queue[0].prompt, "he-sibling:dev1-he");
+
+  const t = fakeTranslate({ slug: "cyfield", title: "Cyfield", excerpt: HE });
+  await processQueue(
+    [row({ entityType: HE_ENTITY_TYPE.developerProfile, entityId: "dev1", prompt: f.queue[0].prompt })],
+    { prisma: f.prisma, translate: t.translate, now },
+  );
+
+  assert.equal(f.developers.filter((d) => d.language === "he").length, 1, "no duplicate created despite the missing group link");
+  const he = f.developers.find((d) => d.id === "dev1-he");
+  assert.ok(he);
+  assert.equal(he.excerpt, HE);
+});
+
+test("enqueueForceForDeveloper and enqueueDevelopersForce queue developer profile rows with the force marker", async () => {
+  const f = fakePrisma({
+    developers: [
+      { id: "dev1", language: "en", slug: "cyfield", title: "Cyfield" },
+      { id: "dev2", language: "en", slug: "pafilia", title: "Pafilia" },
+      { id: "dev3", language: "he", slug: "pafilia-he", title: "Pafilia" },
+    ],
+  });
+
+  const single = await enqueueForceForDeveloper(f.prisma, "dev1");
+  assert.equal(single.created, 1);
+  assert.equal(f.queue[0].entityId, "dev1");
+  assert.equal(f.queue[0].prompt, "force");
+
+  const bulk = await enqueueDevelopersForce(f.prisma);
+  assert.equal(bulk.created, 2, "every EN developer, ignoring pending/Hebrew status");
+  assert.ok(f.queue.every((q) => q.entityType === HE_ENTITY_TYPE.developerProfile && q.prompt === "force"));
 });

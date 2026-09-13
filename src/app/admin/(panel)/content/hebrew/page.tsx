@@ -1,7 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { graphemeLength, TITLE_GRAPHEME_MAX, DESC_GRAPHEME_MAX } from "@/lib/ai/translateHe";
-import { HE_ENTITY_TYPE, HE_ENTITY_TYPES, SAMPLE_SIZE } from "@/lib/ai/heTranslateQueue";
-import { enqueueMissingAction, enqueueSampleAction, rejectSampleAction } from "./actions";
+import { HE_ENTITY_TYPE, HE_ENTITY_TYPES, SAMPLE_SIZE, hasHebrewDeveloperProfile } from "@/lib/ai/heTranslateQueue";
+import {
+  enqueueDevelopersForceAction,
+  enqueueMissingAction,
+  enqueueSampleAction,
+  rejectDeveloperAction,
+  rejectSampleAction,
+} from "./actions";
 
 /* Steering page for the EN→HE volume translation queue (Phase 5e).
    UI language is English (project convention: everything admin-facing is EN);
@@ -86,8 +92,16 @@ export default async function HebrewTranslationPage() {
   const areasWithEn = areas.filter((a) => str(a.textEN));
   const areasWithHe = areasWithEn.filter((a) => str(a.textHE)).length;
   const developersEn = developers.filter((d) => d.language === "en");
-  const heGroups = new Set(developers.filter((d) => d.language === "he").map((d) => str(d.translationGroupId)).filter(Boolean));
-  const developersWithHe = developersEn.filter((d) => str(d.translationGroupId) && heGroups.has(str(d.translationGroupId))).length;
+  const developersHe = developers.filter((d) => d.language === "he");
+  // "Has a HE profile" means the sibling row exists AND actually contains
+  // Hebrew script — a manually-created translation that still copies the
+  // English text verbatim must not count as done (see hasHebrewDeveloperProfile).
+  const developersWithHe = developersEn.filter((d) => {
+    const sibling =
+      developersHe.find((h) => str(d.translationGroupId) && str(h.translationGroupId) === str(d.translationGroupId)) ??
+      developersHe.find((h) => str(h.slug) === str(d.slug));
+    return hasHebrewDeveloperProfile(sibling);
+  }).length;
 
   const pending = queue.filter((q) => q.status === "PENDING").length;
   const failed = queue.filter((q) => q.status === "FAILED").length;
@@ -133,6 +147,7 @@ export default async function HebrewTranslationPage() {
           <form action={enqueueMissingAction.bind(null, "developments")}><Btn>Enqueue missing developments</Btn></form>
           <form action={enqueueMissingAction.bind(null, "areas")}><Btn>Enqueue missing areas</Btn></form>
           <form action={enqueueMissingAction.bind(null, "developers")}><Btn>Enqueue missing developers</Btn></form>
+          <form action={enqueueDevelopersForceAction}><Btn>Enqueue developers (force)</Btn></form>
           <form action={enqueueSampleAction}><Btn>Enqueue {SAMPLE_SIZE} sample</Btn></form>
         </div>
       </section>
@@ -151,11 +166,12 @@ export default async function HebrewTranslationPage() {
                 <th className="p-3 font-medium">Queued</th>
                 <th className="p-3 font-medium">Processed</th>
                 <th className="p-3 font-medium">Note</th>
+                <th className="p-3 font-medium">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E5E7EB]">
               {queue.length === 0 && (
-                <tr><td colSpan={6} className="p-4 text-[#9CA3AF]">Queue is empty.</td></tr>
+                <tr><td colSpan={7} className="p-4 text-[#9CA3AF]">Queue is empty.</td></tr>
               )}
               {queue.map((q) => {
                 const result = seoOf(q.result);
@@ -171,6 +187,13 @@ export default async function HebrewTranslationPage() {
                     <td className="p-3 text-xs text-[#9CA3AF]">{when(q.createdAt)}</td>
                     <td className="p-3 text-xs text-[#9CA3AF]">{when(q.processedAt)}</td>
                     <td className="p-3 text-xs text-[#6B7280]">{note}</td>
+                    <td className="p-3">
+                      {q.entityType === HE_ENTITY_TYPE.developerProfile && q.status !== "PENDING" && (
+                        <form action={rejectDeveloperAction.bind(null, q.entityId)}>
+                          <Btn>Reject &rarr; re-enqueue with force</Btn>
+                        </form>
+                      )}
+                    </td>
                   </tr>
                 );
               })}

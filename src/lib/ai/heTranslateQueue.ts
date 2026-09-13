@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { hasHebrew } from "./localeTextGuards";
 import type { HeTranslateInput, HeTranslateResult } from "./translateHe";
 
 /* The queue side of the EN→HE volume translation (src/lib/ai/translateHe.ts).
@@ -72,8 +73,48 @@ export type ProcessSummary = {
 type Outcome = { skipped?: string; result?: HeTranslateResult };
 
 const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
-const isFilledPortable = (v: unknown): boolean =>
-  Array.isArray(v) ? v.length > 0 : typeof v === "string" ? !!v.trim() : false;
+
+/** Queue-row prompt prefix noting a Hebrew developer sibling found by slug at
+ * enqueue time. Lets `handleDeveloperProfile` update that exact row even when
+ * it isn't (yet, or any more) linked by `translationGroupId` — the fallback
+ * that matters if the EN slug drifts between enqueue and processing. */
+const HE_SIBLING_PREFIX = "he-sibling:";
+
+/** All text nodes inside a developer profile's `description` — Sanity portable
+ * text (an array of blocks), an HTML string, or a plain string — flattened to
+ * one string for a Hebrew-script check. Mirrors the `walk()` in
+ * translateHe.ts's `outputStrings()`, minus the path bookkeeping it doesn't need. */
+function developerDescriptionText(description: unknown): string {
+  if (Array.isArray(description)) {
+    const parts: string[] = [];
+    const walk = (node: unknown): void => {
+      if (Array.isArray(node)) {
+        node.forEach(walk);
+        return;
+      }
+      if (node && typeof node === "object") {
+        for (const [k, v] of Object.entries(node as Record<string, unknown>)) {
+          if (k === "text" && typeof v === "string") parts.push(v);
+          else if (v && typeof v === "object") walk(v);
+        }
+      }
+    };
+    walk(description);
+    return parts.join(" ");
+  }
+  if (typeof description === "string") return description.replace(/<[^>]+>/g, " ");
+  return "";
+}
+
+/** A Hebrew developer row only counts as "has a real Hebrew profile" once it
+ * actually contains Hebrew script in the excerpt or the description's text —
+ * not merely once the row exists. An EN-copied row (e.g. from the manual
+ * "create translation" admin flow, which copies the source verbatim) must not
+ * count as done, or the queue would never pick it back up. */
+export function hasHebrewDeveloperProfile(row: Row | null | undefined): boolean {
+  if (!row) return false;
+  return hasHebrew(str(row.excerpt)) || hasHebrew(developerDescriptionText(row.description));
+}
 
 /** Minimal fact list for a development — qualitative only, never a figure. */
 function developmentFacts(d: Record<string, unknown>): string[] {
@@ -159,8 +200,15 @@ async function handleDeveloperProfile(row: QueueRow, deps: ProcessDeps, force: b
     await deps.prisma.developer.update({ where: { id: en.id }, data: { translationGroupId: groupId } });
   }
 
-  const heRow = await deps.prisma.developer.findFirst({ where: { translationGroupId: groupId, language: "he" } });
-  if (heRow && (str(heRow.excerpt) || isFilledPortable(heRow.description)) && !force) {
+  // Prefer the group-linked sibling; fall back to the one an earlier
+  // enqueueMissing() noted by id (found by slug back then) if the group link
+  // isn't there yet — covers a manually-created translation that never got a
+  // translationGroupId, or one whose slug has since drifted from the EN row's.
+  let heRow = await deps.prisma.developer.findFirst({ where: { translationGroupId: groupId, language: "he" } });
+  if (!heRow && typeof row.prompt === "string" && row.prompt.startsWith(HE_SIBLING_PREFIX)) {
+    heRow = await deps.prisma.developer.findUnique({ where: { id: row.prompt.slice(HE_SIBLING_PREFIX.length) } });
+  }
+  if (heRow && hasHebrewDeveloperProfile(heRow) && !force) {
     return { skipped: "Hebrew developer row already filled" };
   }
 
@@ -193,11 +241,19 @@ async function handleDeveloperProfile(row: QueueRow, deps: ProcessDeps, force: b
     ...(en.logo ? { logo: en.logo } : {}),
   };
 
-  await deps.prisma.developer.upsert({
-    where: { language_slug: { language: "he", slug: str(en.slug) } },
-    create: { ...data, sanityId: `he-${str(en.slug)}`, slug: str(en.slug), language: "he" },
-    update: data,
-  });
+  if (heRow) {
+    // Update the row we already found, by id — never by slug. A slug-keyed
+    // upsert here would silently create a second row (orphaning `heRow`) the
+    // moment the EN slug and the Hebrew row's slug diverge; updating by id
+    // can't miss the target no matter how the slugs have drifted.
+    await deps.prisma.developer.update({ where: { id: heRow.id }, data });
+  } else {
+    await deps.prisma.developer.upsert({
+      where: { language_slug: { language: "he", slug: str(en.slug) } },
+      create: { ...data, sanityId: `he-${str(en.slug)}`, slug: str(en.slug), language: "he" },
+      update: data,
+    });
+  }
   return { result };
 }
 
@@ -323,13 +379,21 @@ export async function enqueueMissing(kind: EnqueueKind, prisma: QueuePrisma): Pr
   }
 
   const rows: Row[] = await prisma.developer.findMany({ orderBy: { title: "asc" } });
-  const heGroups = new Set(rows.filter((r) => r.language === "he").map((r) => str(r.translationGroupId)).filter(Boolean));
-  const heSlugs = new Set(rows.filter((r) => r.language === "he").map((r) => str(r.slug)));
+  const heRows = rows.filter((r) => r.language === "he");
   for (const d of rows) {
     if (d.language !== "en") continue;
-    const hasHe = (str(d.translationGroupId) && heGroups.has(str(d.translationGroupId))) || heSlugs.has(str(d.slug));
-    if (hasHe) continue;
-    if (await enqueue(prisma, taken, HE_ENTITY_TYPE.developerProfile, d.id)) created++;
+    const sibling =
+      heRows.find((r) => str(d.translationGroupId) && str(r.translationGroupId) === str(d.translationGroupId)) ??
+      heRows.find((r) => str(r.slug) === str(d.slug)) ??
+      null;
+    // A sibling row's mere existence isn't "done" — a manually created
+    // translation (createTranslation() in admin/actions.ts) copies the EN
+    // text through verbatim, still English. Only real Hebrew script counts.
+    if (sibling && hasHebrewDeveloperProfile(sibling)) continue;
+    // Note the sibling's id (if any) on the row, so the processor updates it
+    // by id instead of re-deriving it from the (possibly since-drifted) slug.
+    const prompt = sibling ? `${HE_SIBLING_PREFIX}${sibling.id}` : undefined;
+    if (await enqueue(prisma, taken, HE_ENTITY_TYPE.developerProfile, d.id, prompt)) created++;
   }
   return { created };
 }
@@ -357,5 +421,28 @@ export async function enqueueForceForDevelopment(prisma: QueuePrisma, developmen
   let created = 0;
   if (await enqueue(prisma, taken, HE_ENTITY_TYPE.developmentDescription, developmentId, FORCE)) created++;
   if (await enqueue(prisma, taken, HE_ENTITY_TYPE.developmentSeo, developmentId, FORCE)) created++;
+  return { created };
+}
+
+/** "Reject → re-enqueue with force" for one developer profile — the per-row
+ * counterpart to `enqueueForceForDevelopment` above, and the admin's path back
+ * into the queue for a developer stuck behind a non-Hebrew sibling row. */
+export async function enqueueForceForDeveloper(prisma: QueuePrisma, developerId: string): Promise<{ created: number }> {
+  const taken = new Set<string>();
+  const created = (await enqueue(prisma, taken, HE_ENTITY_TYPE.developerProfile, developerId, FORCE)) ? 1 : 0;
+  return { created };
+}
+
+/** Force-enqueue every English developer's profile for re-translation, bypassing
+ * both the no-overwrite check and the already-pending dedup — the bulk
+ * counterpart to `enqueueForceForDeveloper`, mirroring `enqueueSample(force)`. */
+export async function enqueueDevelopersForce(prisma: QueuePrisma): Promise<{ created: number }> {
+  const taken = new Set<string>();
+  const rows: Row[] = await prisma.developer.findMany({ orderBy: { title: "asc" } });
+  let created = 0;
+  for (const d of rows) {
+    if (d.language !== "en") continue;
+    if (await enqueue(prisma, taken, HE_ENTITY_TYPE.developerProfile, d.id, FORCE)) created++;
+  }
   return { created };
 }

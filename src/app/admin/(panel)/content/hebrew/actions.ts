@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import {
+  enqueueDevelopersForce,
+  enqueueForceForDeveloper,
   enqueueForceForDevelopment,
   enqueueMissing,
   enqueueSample,
@@ -49,5 +51,22 @@ export async function enqueueSampleAction(): Promise<void> {
 export async function rejectSampleAction(developmentId: string): Promise<void> {
   await requireSession();
   await enqueueForceForDevelopment(db(), developmentId);
+  revalidatePath(PATH);
+}
+
+/** Force re-enqueue of every English developer's profile — the developer-side
+ * bulk force path, mirroring enqueueSampleAction's role for developments. */
+export async function enqueueDevelopersForceAction(): Promise<void> {
+  await requireSession();
+  await enqueueDevelopersForce(db());
+  revalidatePath(PATH);
+}
+
+/** "Reject → re-enqueue with force" for one developer profile (queue table row):
+ * the per-developer counterpart to rejectSampleAction, and the path back into
+ * the queue for a developer stuck behind a non-Hebrew sibling row. */
+export async function rejectDeveloperAction(developerId: string): Promise<void> {
+  await requireSession();
+  await enqueueForceForDeveloper(db(), developerId);
   revalidatePath(PATH);
 }
