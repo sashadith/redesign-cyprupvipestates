@@ -6,13 +6,13 @@ import {
   getCaseStudiesByLang,
   getPaginatedLandingPageSlugs,
 } from "@/sanity/sanity.utils";
-import { localePrefix, localizedHref } from "@/lib/locale";
+import { localePrefix, localizedHref, PUBLIC_LOCALES } from "@/lib/locale";
 import { prisma } from "@/lib/prisma";
 import { urlFor } from "@/sanity/sanity.client";
 import { NEW_PROJECTS_INDEXABLE } from "@/lib/developmentSeo";
 
 const websiteUrl = "https://cyprusvipestates.com";
-const langs = ["de", "pl", "en", "ru"] as const;
+const langs = PUBLIC_LOCALES;
 const sitemapTypes = [
   "projects",
   "blog",
@@ -97,14 +97,14 @@ const ALT_CFG: Record<string, { model: any; seg: string; status: boolean; nested
 };
 // x-default precedence: prefer English, otherwise fall back deterministically so groups with no
 // English version still advertise an x-default (Google recommends one even for non-EN defaults).
-const XDEFAULT_ORDER = ["en", "de", "pl", "ru"] as const;
+const XDEFAULT_ORDER = PUBLIC_LOCALES;
 
 async function buildAltIndex(typeKey: string): Promise<Map<string, Alt[]>> {
   const cfg = ALT_CFG[typeKey];
-  const rows: any[] = await cfg.model.findMany({
+  const rows: any[] = (await cfg.model.findMany({
     where: { slug: { not: "" }, ...(cfg.status ? { status: "PUBLISHED" } : {}) },
     select: { language: true, slug: true, translationGroupId: true, ...(cfg.nested ? { sanityId: true, parentSanityId: true } : {}) },
-  });
+  })).filter((r: any) => (langs as readonly string[]).includes(r.language));
 
   // Resolve a row to its full path segments. Detail types are always single-segment
   // ("/{seg}/{slug}"); nested singlepages walk their parentSanityId chain (within a language) so

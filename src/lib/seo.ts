@@ -1,10 +1,11 @@
 // Centralised SEO/URL helpers. English is the default locale and is served
 // WITHOUT a URL prefix (`localePrefix: "as-needed"` in middleware.ts); de/pl/ru
-// carry their prefix. So canonical/hreflang/og URLs are prefix-less for English
-// (`/blog/x`) and `/{lang}/...` for the others. The production domain is
-// hard-coded (NEXT_PUBLIC_SITE_URL is build-time inlined to :3000 on the VPS).
+// (/he when live) carry their prefix. So canonical/hreflang/og URLs are
+// prefix-less for English (`/blog/x`) and `/{lang}/...` for the others. The
+// production domain is hard-coded (NEXT_PUBLIC_SITE_URL is build-time inlined
+// to :3000 on the VPS).
 
-import { localizedHref, LOCALES } from "./locale";
+import { localizedHref, PUBLIC_LOCALES } from "./locale";
 
 export const SITE_URL = "https://cyprusvipestates.com";
 
@@ -57,6 +58,8 @@ export function languageAlternates(opts: {
     }
   }
 
+  for (const l of Object.keys(languages)) if (!(PUBLIC_LOCALES as readonly string[]).includes(l)) delete languages[l];
+
   const canonical = languages[lang];
   return {
     canonical,
@@ -74,7 +77,7 @@ export function staticAlternates(
   segments: string | string[] = "",
 ): { canonical: string; languages: Record<string, string> } {
   const languages: Record<string, string> = {};
-  for (const l of LOCALES) languages[l] = abs(localizedHref(l, segments));
+  for (const l of PUBLIC_LOCALES) languages[l] = abs(localizedHref(l, segments));
   return { canonical: abs(localizedHref(lang, segments)), languages: { ...languages, "x-default": languages["en"] } };
 }
 
