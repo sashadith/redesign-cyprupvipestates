@@ -137,7 +137,16 @@ export default async function BlogInsights({ lang, page }: { lang: string; page:
               </h1>
               {heroLead && <p className="ins__hero-lead">{heroLead}</p>}
               <p className="ins__hero-meta">
-                {total} {total === 1 ? t.articleOne : t.articleMany}
+                {/* Hebrew needs the whole line, not "{n} {noun}": at 0 it reads
+                    "there are no articles yet", at 1 the numeral is spelled out
+                    inside the noun phrase and no digit is printed. From 2 up it
+                    is the same "{n} {plural}" shape the LTR locales use, which
+                    stay byte-identical. See docs/i18n/reviews/wp4.md. */}
+                {lang === "he" && total <= 1 ? (
+                  total === 0 ? "אין עדיין מאמרים" : t.articleOne
+                ) : (
+                  <>{total} {total === 1 ? t.articleOne : t.articleMany}</>
+                )}
               </p>
             </div>
 

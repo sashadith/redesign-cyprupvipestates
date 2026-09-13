@@ -13,7 +13,9 @@
 // together since this component is shared across them.
 //
 // `title` is both the <title> and the H1: withAccent() in page.tsx gold-accents
-// its LAST word, which is the country in every locale, Hebrew included.
+// its LAST word, which is the country in every locale, Hebrew included. A
+// locale that needs a different <title> (brand appended, say) sets the optional
+// meta-only `metaTitle` instead of touching the heading — see below.
 import type { Locale } from "@/lib/locale";
 import { isLocale } from "@/lib/locale";
 
@@ -28,7 +30,13 @@ export const DEVELOPERS_PAGE_EN = {
   projects: "projects",
 };
 
-export const DEVELOPERS_PAGE_COPY: Record<Locale, typeof DEVELOPERS_PAGE_EN> = {
+/** `metaTitle` is optional and meta-only: `title` is also the H1, so a locale
+ *  that wants the brand in its <title> (today only `he`: Hebrew SERPs are
+ *  brand-poor and a 19-character, brand-less title wins nothing) sets this
+ *  instead of lengthening the heading. generateMetadata falls back to `title`. */
+export type DevelopersPageStrings = typeof DEVELOPERS_PAGE_EN & { metaTitle?: string };
+
+export const DEVELOPERS_PAGE_COPY: Record<Locale, DevelopersPageStrings> = {
   en: DEVELOPERS_PAGE_EN,
   de: {
     title: "Bauträger auf Zypern",
@@ -60,13 +68,24 @@ export const DEVELOPERS_PAGE_COPY: Record<Locale, typeof DEVELOPERS_PAGE_EN> = {
     ],
     projects: "projektów",
   },
-  he: { // REVIEW(he)
+  // REVIEW(he)
+  // Terminology: the page's referent is the DEVELOPER (he-glossary.md §2,
+  // `יזם / חברה יזמית`) end to end — the construction-company wording belongs
+  // to the Israeli contractor (`קבלן`) field and must not stand in for it, not
+  // even to dodge a word repeat. The `טאבו`-based purchase formula is out too:
+  // the title deed is regularly not yet issued on off-plan stock, so the line
+  // claims clean legal ownership of land and project instead.
+  // The keyword map carries no developer/builder term at all, so the title
+  // rides the hub term plus the brand. `projects` is rendered as a Hebrew
+  // singular phrase at n = 1 in developers/page.tsx.
+  he: {
     title: "יזמי נדל\"ן בקפריסין",
-    sub: "אנחנו עובדים עם היזמים המובילים בקפריסין.",
-    metaDescription: "כל היזמים שאנחנו עובדים איתם ישירות בקפריסין, מחברות בנייה בינלאומיות ועד סטודיו בוטיק בלימסול ובפאפוס. פרויקטים, מחירים ותנאי רכישה מעודכנים.",
+    metaTitle: "יזמי נדל\"ן בקפריסין | Cyprus VIP Estates",
+    sub: "עובדים ישירות מול היזמים המובילים בקפריסין.",
+    metaDescription: "יזמי נדל\"ן בקפריסין שאנחנו עובדים איתם ישירות, בלימסול ובפאפוס. לכל יזם עמוד עם פרויקטים, מחירים ותנאי רכישה מעודכנים, בלי תוספת מחיר לרוכש.",
     intro: [
-      "אנחנו עובדים ישירות עם חברות הבנייה המובילות בקפריסין, מגופים בינלאומיים גדולים ועד סטודיו בוטיק שמתמחים בבתים ברמה גבוהה בלימסול ובפאפוס. כל יזם שמופיע כאן עבר אצלנו בדיקה: טאבו נקי לפרויקטים, היסטוריית מסירה אמיתית ותיק נכסים מעודכן.",
-      "למטה הרשימה המלאה של היזמים שאנחנו עובדים איתם ישירות, בלי תוספת מחיר לרוכש. לכל אחד יש עמוד משלו עם הפרויקטים הזמינים, המחירים ותנאי הרכישה.",
+      "אנחנו עובדים ישירות עם היזמים המובילים בקפריסין, מחברות בינלאומיות גדולות ועד סטודיו בוטיק שמתמחים בבתי יוקרה בלימסול ובפאפוס. כל יזם שמופיע כאן עבר אצלנו בדיקה: בעלות משפטית נקייה על הקרקע ועל הפרויקט, היסטוריית מסירות מוכחת וצבר פרויקטים פעיל.",
+      "בהמשך העמוד הרשימה המלאה של היזמים שעובדים איתנו ישירות, בלי תוספת מחיר לרוכש. לכל יזם עמוד ייעודי עם הפרויקטים העדכניים, המחירים ותנאי הרכישה.",
     ],
     projects: "פרויקטים",
   },

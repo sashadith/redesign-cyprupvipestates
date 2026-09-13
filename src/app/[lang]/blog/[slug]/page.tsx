@@ -355,7 +355,11 @@ const PagePost = async ({ params }: Props) => {
                     <span className="iart__byline-name">{author.name}</span>
                   </span>
                 )}
-                <span className="iart__meta-dot">{minutes} {t.minRead}</span>
+                {/* "1 דקות קריאה" is ungrammatical: Hebrew takes the singular
+                    noun with the numeral as a word after it. LTR unchanged. */}
+                <span className="iart__meta-dot">
+                  {lang === "he" && minutes === 1 ? "דקת קריאה אחת" : <>{minutes} {t.minRead}</>}
+                </span>
                 {fmtDate(blog.publishedAt) && <span className="iart__meta-dot">{fmtDate(blog.publishedAt)}</span>}
               </div>
             </div>

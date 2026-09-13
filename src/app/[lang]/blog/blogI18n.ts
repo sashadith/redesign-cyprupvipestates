@@ -68,30 +68,36 @@ const EN: BlogStrings = {
 export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
   en: EN,
   // REVIEW(he)
-  // /he/blog lists the ENGLISH articles (they are not translated) and is
-  // noindex; `articleOne`/`articleMany` carry that fact in the hero count line
-  // ("12 מאמרים באנגלית") so the Hebrew chrome states it calmly instead of
-  // letting a reader click into an unexpected language. See docs/i18n/reviews/wp4.md.
+  // /he/blog lists the ENGLISH articles (product decision: they are not
+  // translated); `articleOne`/`articleMany` carry that fact in the hero count
+  // line so the Hebrew chrome states it calmly instead of letting a reader
+  // click into an unexpected language. `he` is excluded from the sitemap and
+  // from hreflang (LAUNCH_GATED_LOCALES) but carries NO noindex meta today,
+  // and the route still queries `language: "he"` rows — which posts /he/blog
+  // lists, and whether it should be noindexed, is a Phase 6 route question,
+  // not a copy one. The hero count line therefore has to read correctly at 0
+  // articles too; BlogInsights.tsx carries the Hebrew-only branch for that.
+  // See docs/i18n/reviews/wp4.md.
   he: {
     heroTitle: "תובנות מקפריסין",
     eyebrow: "הבלוג",
-    articleOne: "מאמר באנגלית",
+    articleOne: "מאמר אחד באנגלית", // rendered WITHOUT the numeral for he (see BlogInsights.tsx)
     articleMany: "מאמרים באנגלית",
     filterAll: "הכול",
     read: "לקריאה",
     readArticle: "לקריאת המאמר",
     categoriesAria: "קטגוריות",
     pagerAria: "ניווט בין עמודי הבלוג",
-    firstPage: "העמוד הראשון",
-    lastPage: "העמוד האחרון",
+    firstPage: "מעבר לעמוד הראשון",
+    lastPage: "מעבר לעמוד האחרון",
     pageWord: "עמוד",
     empty: "אין עדיין מאמרים.",
     guideEyebrow: "המדריך",
-    guideTitle: "על הבלוג",
+    guideTitle: "נדל\"ן בקפריסין, בקצרה",
     dateLocale: "he-IL",
-    minRead: "דקות קריאה",
-    tocLabel: "בעמוד הזה",
-    writtenBy: "נכתב על ידי",
+    minRead: "דקות קריאה", // n >= 2 only — blog/[slug]/page.tsx renders the n = 1 form
+    tocLabel: "תוכן העניינים",
+    writtenBy: "מאת",
     relatedLead: "עוד",
     relatedAccent: "מאמרים",
     fallbackProperties: "נכסים מומלצים",

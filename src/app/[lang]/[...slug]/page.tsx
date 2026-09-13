@@ -5,7 +5,7 @@ import AccordionContainer from "@/app/components/AccordionContainer/AccordionCon
 import Footer from "@/app/components/Footer/Footer";
 import Header from "@/app/components/Header/Header";
 import { i18n } from "@/i18n.config";
-import { PUBLIC_LOCALES, bidiIsolate, isLocale, type Locale } from "@/lib/locale";
+import { PUBLIC_LOCALES, bidiIsolate, isLocale, ltrIsolate, type Locale } from "@/lib/locale";
 import {
   getFormStandardDocumentByLang,
   getSinglePageByLang,
@@ -95,15 +95,18 @@ type Props = {
 // paginated URLs don't carry an identical title to page 1 despite
 // self-canonicalizing to their own ?page=N URL (a soft duplicate-content
 // signal otherwise). H1 is deliberately left unchanged.
-// `he` uses a pipe instead of the em dash the LTR locales take: Hebrew
-// punctuation has no `—` (style guide §3), and the pipe is the separator
-// Hebrew SEO titles already use before the brand.
+// `he` takes a comma instead of the em dash the LTR locales use: Hebrew
+// punctuation has no `—` (style guide §3), and a pipe would collide with the
+// pipe a style-guide-conformant Hebrew CMS title already carries before the
+// brand (`… | Cyprus VIP Estates | עמוד 2` — brand stranded mid-title). The
+// page number is LRI/PDI isolated so the digits keep their place when the
+// title ends on a Latin run.
 const PAGE_TITLE_SUFFIX: Record<Locale, (n: number) => string> = {
   en: (n) => ` — Page ${n}`,
   de: (n) => ` — Seite ${n}`,
   pl: (n) => ` — Strona ${n}`,
   ru: (n) => ` — Страница ${n}`,
-  he: (n) => ` | עמוד ${n}`, // REVIEW(he)
+  he: (n) => `, עמוד ${ltrIsolate(String(n))}`, // REVIEW(he)
 };
 
 // No ?page= at all -> "default" (render as page 1, no redirect: the bare URL
@@ -242,7 +245,11 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
     de: "Entdecken Sie Luxusimmobilien, Neubauprojekte und Anlageobjekte in ganz Zypern mit Cyprus VIP Estates.",
     pl: "Odkryj luksusowe nieruchomości, nowe inwestycje i apartamenty inwestycyjne na Cyprze z Cyprus VIP Estates.",
     ru: "Элитная недвижимость, новостройки и инвестиционные объекты на Кипре с Cyprus VIP Estates.",
-    he: `נדל"ן בקפריסין לרוכשים מישראל. פרויקטים חדשים, דירות ווילות למכירה ונכסים להשקעה בלימסול ובפאפוס עם ${bidiIsolate("Cyprus VIP Estates")}.`,
+    // Generic fallback for ANY landing page without its own meta description,
+    // so it must not claim a location the page may not be about (EN says
+    // "across Cyprus" for the same reason); the second sentence carries the
+    // offer instead of a fourth property synonym.
+    he: `נדל"ן בקפריסין לרוכשים מישראל. פרויקטים חדשים, דירות ווילות למכירה ונכסים להשקעה. ליווי אישי מהחיפוש ועד המסירה עם ${bidiIsolate("Cyprus VIP Estates")}.`,
   };
   const ogDesc = (page?.seo?.metaDescription || page?.excerpt || (isLocale(lang) ? FALLBACK_DESC[lang] : undefined) || FALLBACK_DESC.en) + pageSuffix;
   const ogImage = (page as any)?.previewImage

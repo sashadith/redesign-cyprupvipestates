@@ -25,7 +25,10 @@ export async function generateMetadata({ params }: { params: { lang: string } })
   const languages: Record<string, string> = {};
   for (const l of i18n.languages) languages[l.id] = abs(localizedHref(l.id, "developers"));
   return {
-    title: t.title,
+    // `title` doubles as the H1 (withAccent gold-accents its last word), so the
+    // brand can only ride along in a separate meta-only title. Today just `he`
+    // has one; every other locale keeps the H1 string as its <title>.
+    title: t.metaTitle ?? t.title,
     description: t.metaDescription,
     alternates: { canonical: abs(localizedHref(params.lang, "developers")), languages },
   };
@@ -113,8 +116,13 @@ export default async function DevelopersIndex({ params }: { params: { lang: stri
                   <span className="devx__body">
                     <span className="devx__name">{d.title}</span>
                     {d.excerpt && <span className="devx__excerpt">{d.excerpt}</span>}
+                    {/* "1 פרויקטים" is ungrammatical: Hebrew takes the singular
+                        noun with the numeral as a word after it, so the count is
+                        one phrase there and loses the <b>. LTR unchanged. */}
                     {typeof n === "number" && (
-                      <span className="devx__count"><b>{n}</b> {t.projects}</span>
+                      <span className="devx__count">
+                        {lang === "he" && n === 1 ? "פרויקט אחד" : <><b>{n}</b> {t.projects}</>}
+                      </span>
                     )}
                   </span>
                 </Link>
