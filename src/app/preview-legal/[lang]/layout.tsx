@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { localeDir } from "@/lib/locale";
 import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import { SITE_URL } from "@/lib/seo";
 import "../../preview-home/tokens.css";
@@ -54,7 +55,7 @@ export default function LegalLayout({
   params: { lang: string };
 }) {
   return (
-    <html lang={params.lang} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable}`}>
+    <html lang={params.lang} dir={localeDir(params.lang)} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable}`}>
       <body>
         <LenisProvider>{children}</LenisProvider>
       </body>
