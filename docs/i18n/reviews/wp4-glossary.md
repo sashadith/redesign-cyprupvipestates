@@ -3,6 +3,8 @@
 **Stand:** 2026-09-13 · **Fix-Runde 1 nach Pass B eingearbeitet** · Begleitdokument zu
 `docs/i18n/reviews/wp4.md`. Geänderte oder gestrichene Zeilen sind mit „Fix 1" markiert.
 
+> **Konsolidiert am 2026-09-13 in `docs/i18n/he-glossary.md` §1–§5.** Die dort eingetragenen Formen sind verbindlich; Pass-C-Vorbehalte stehen in §6, die Auflösung der cross-WP-Divergenzen in §7. Diese Datei bleibt unverändert als Audit-Trail (Begründungen, Pass-A/Pass-B-Verlauf) erhalten und ist **keine** Quelle mehr.
+
 Begriffe, die WP4 gebraucht hat und die in `docs/i18n/he-glossary.md` §1–5 (und in
 §6.1 aus WP1) fehlten. **`he-glossary.md` wurde bewusst nicht angefasst** — nach dem
 Lektorat (Pass C) wandern die bestätigten Zeilen dort in §2/§4/§5.

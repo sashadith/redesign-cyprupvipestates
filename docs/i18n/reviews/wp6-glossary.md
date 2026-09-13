@@ -4,6 +4,8 @@
 (dort **nicht** eingetragen — WP1 besitzt diese Datei; nach Pass C wandern die bestätigten
 Zeilen in §2/§4/§5 des Hauptglossars).
 
+> **Konsolidiert am 2026-09-13 in `docs/i18n/he-glossary.md` §1–§5.** Die dort eingetragenen Formen sind verbindlich; Pass-C-Vorbehalte stehen in §6, die Auflösung der cross-WP-Divergenzen in §7. Diese Datei bleibt unverändert als Audit-Trail (Begründungen, Pass-A/Pass-B-Verlauf) erhalten und ist **keine** Quelle mehr.
+
 Nur Begriffe, die WP6 gebraucht hat und die in `he-glossary.md` §1–5 (inkl. §6.1 aus WP1)
 sowie in `wp3-glossary.md` / `wp4-glossary.md` fehlen. **Übernommen ohne Änderung** aus den
 bestehenden Dokumenten: `Case studies` = `סיפורי לקוחות` (§4), `case study (Einzelfall)` =

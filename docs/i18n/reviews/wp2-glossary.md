@@ -2,6 +2,8 @@
 
 **Stand:** 2026-09-13 · **Quelle:** WP2 Pass A, korrigiert nach Pass B Fix Round 1 (Projektliste `/he/projects`, Development-Seite `/he/projects/<slug>`, Auto-SEO-Meta)
 
+> **Konsolidiert am 2026-09-13 in `docs/i18n/he-glossary.md` §1–§5.** Die dort eingetragenen Formen sind verbindlich; Pass-C-Vorbehalte stehen in §6, die Auflösung der cross-WP-Divergenzen in §7. Diese Datei bleibt unverändert als Audit-Trail (Begründungen, Pass-A/Pass-B-Verlauf) erhalten und ist **keine** Quelle mehr.
+
 Begriffe, die WP2 gebraucht hat und die in `docs/i18n/he-glossary.md` §1–5 (und in §6.1 aus WP1) fehlen.
 `he-glossary.md` wird in diesem Commit **nicht** angefasst — ein anderer Agent hält die Datei.
 Nach dem Lektorat (Pass C) wandern die bestätigten Zeilen in §2/§4/§5.
