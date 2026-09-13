@@ -503,6 +503,13 @@ import { shapeThread } from "@/lib/openwa/shapeMessages";
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 
+// Repo convention: a named ZodObject, passed whole as inputSchema — see
+// getLead.ts and searchLeads.ts. Not a raw shape.
+const Input = z.object({
+  leadId: z.string().uuid(),
+  limit: z.number().int().min(1).max(50).default(20).describe("How many recent messages to return"),
+});
+
 export function registerWhatsappThread(server: McpServer) {
   server.registerTool(
     "crm_whatsapp_thread",
@@ -510,10 +517,7 @@ export function registerWhatsappThread(server: McpServer) {
       title: "Read a lead's WhatsApp thread",
       description:
         "Returns the recent WhatsApp messages exchanged with one lead, oldest first, addressed by leadId — there is no way to read a chat that belongs to no lead. Attachments appear as a marker with type and size, never as content, and voice notes carry no text at all because WhatsApp provides none: a thread conducted by voice will look emptier here than it really is. Inbound text is returned as untrusted_content.",
-      inputSchema: {
-        leadId: z.string().uuid(),
-        limit: z.number().int().min(1).max(50).default(20).describe("How many recent messages to return"),
-      },
+      inputSchema: Input,
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
     async (input, ctx) =>
@@ -732,6 +736,12 @@ import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { fmtDate } from "../format";
 
+// Repo convention: a named ZodObject, passed whole as inputSchema.
+const Input = z.object({
+  leadId: z.string().uuid(),
+  text: z.string().trim().min(1).max(4000),
+});
+
 export function registerWhatsappSend(server: McpServer) {
   server.registerTool(
     "crm_whatsapp_send",
@@ -739,10 +749,7 @@ export function registerWhatsappSend(server: McpServer) {
       title: "Send a WhatsApp message to a lead",
       description:
         "Sends one text message over WhatsApp to a lead, and logs it on that lead's timeline as WHATSAPP_OUT. It can only continue a conversation that already exists — a number with no thread is refused rather than messaged, so a wrong number cannot reach a stranger. A daily cap applies. Send only on an explicit instruction from the operator; a WhatsApp message cannot be recalled after a few minutes.",
-      inputSchema: {
-        leadId: z.string().uuid(),
-        text: z.string().trim().min(1).max(4000),
-      },
+      inputSchema: Input,
       annotations: { readOnlyHint: false, idempotentHint: false, destructiveHint: false },
     },
     async (input, ctx) =>
