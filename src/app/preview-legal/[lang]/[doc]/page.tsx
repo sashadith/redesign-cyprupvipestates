@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { i18n } from "@/i18n.config";
-import { localizedHref, PUBLIC_LOCALES as LOCALES, isLocale } from "@/lib/locale";
+import { localizedHref, PUBLIC_LOCALES as LOCALES, isLocale, BCP47 } from "@/lib/locale";
 import { languageAlternates } from "@/lib/seo";
 import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporateLocale, type CorporatePage } from "@/lib/corporatePageSlugs";
 import type { Translation } from "@/types/homepage";
@@ -97,7 +97,7 @@ export default async function LegalPage({ params }: Props) {
   }));
 
   const updatedDisplay = new Intl.DateTimeFormat(
-    lang === "de" ? "de-DE" : lang === "pl" ? "pl-PL" : lang === "ru" ? "ru-RU" : "en-GB",
+    isLocale(lang) ? BCP47[lang] : BCP47.en,
     { day: "numeric", month: "long", year: "numeric" },
   ).format(new Date(t.updated));
 

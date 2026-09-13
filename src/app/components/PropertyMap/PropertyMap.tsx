@@ -5,7 +5,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { FC, useState } from "react";
 import Link from "next/link";
-import { localePrefix } from "@/lib/locale";
+import { localePrefix, BCP47, isLocale } from "@/lib/locale";
 import popupStyles from "../ProjectsMapAll/ProjectsMapAll.module.scss";
 import styles from "./PropertyMap.module.scss";
 
@@ -63,14 +63,7 @@ function translateCity(city: string | undefined, lang: SupportedLang): string {
 }
 
 function formatPrice(price: number, lang: SupportedLang): string {
-  const locales: Record<SupportedLang, string> = {
-    en: "en-US",
-    de: "de-DE",
-    ru: "ru-RU",
-    pl: "pl-PL",
-  };
-
-  return new Intl.NumberFormat(locales[lang], {
+  return new Intl.NumberFormat(isLocale(lang) ? BCP47[lang] : BCP47.en, {
     style: "currency",
     currency: "EUR",
     maximumFractionDigits: 0,

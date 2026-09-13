@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { formatInZone } from "@/lib/booking/timezone";
 import { proposeSlotAction } from "@/app/admin/(panel)/crm/[id]/bookingActions";
+import { BCP47 } from "@/lib/locale";
 import { COPY, type BLocale } from "./copy";
 
 export type SlotGroup = { dayLabel: string; slots: { utc: string; cyprusLabel: string }[] };
@@ -115,5 +116,5 @@ export default function SlotPicker({ token, groups, locale }: { token: string; g
 }
 
 function localeToIntl(locale: BLocale): string {
-  return { en: "en-GB", de: "de-DE", pl: "pl-PL", ru: "ru-RU" }[locale];
+  return BCP47[locale];
 }

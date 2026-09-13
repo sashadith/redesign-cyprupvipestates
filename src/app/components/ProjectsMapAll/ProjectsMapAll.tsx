@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { useRouter, useSearchParams } from "next/navigation";
 import L from "leaflet";
 import Link from "next/link";
+import { BCP47, isLocale } from "@/lib/locale";
 import styles from "./ProjectsMapAll.module.scss";
 import "leaflet/dist/leaflet.css";
 import "leaflet-gesture-handling/dist/leaflet-gesture-handling.css";
@@ -189,13 +190,7 @@ const customMarkerIcon = new L.Icon({
 
 function formatPrice(price: number, lang: Lang): string {
   const currency = "EUR";
-  const locales: Record<Lang, string> = {
-    en: "en-US",
-    de: "de-DE",
-    ru: "ru-RU",
-    pl: "pl-PL",
-  };
-  return new Intl.NumberFormat(locales[lang] || "en-US", {
+  return new Intl.NumberFormat(isLocale(lang) ? BCP47[lang] : BCP47.en, {
     style: "currency",
     currency,
     maximumFractionDigits: 0,

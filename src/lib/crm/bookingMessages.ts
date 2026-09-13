@@ -5,6 +5,7 @@
 // the lead directly) — one meeting, one consistent story about "where's the
 // link" across the calendar invite and the email.
 import type { Locale } from "./presentationMessages";
+import { BCP47 } from "@/lib/locale";
 
 function meetingNote(locale: Locale, meetingType: "ZOOM" | "PHONE"): string {
   if (meetingType === "PHONE") {
@@ -48,9 +49,4 @@ export const BOOKING_CONFIRMATION_EMAIL: Record<
 // Maps our Locale to an Intl.DateTimeFormat locale for formatting the
 // confirmed slot in the lead's own timezone — display only, same
 // booking/timezone.ts formatInZone() used everywhere else in this feature.
-export const INTL_LOCALE: Record<Locale, string> = {
-  en: "en-GB",
-  de: "de-DE",
-  pl: "pl-PL",
-  ru: "ru-RU",
-};
+export const INTL_LOCALE = BCP47;
