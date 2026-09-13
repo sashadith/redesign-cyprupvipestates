@@ -112,7 +112,10 @@ export const FORM_STATIC_COPY: Record<Locale, typeof FORM_STATIC_EN> = {
     contactMethodRequired: "יש לבחור דרך התקשרות מועדפת",
     agreementRequired: "נדרש אישור",
     agreementOneOf: "חובה לאשר",
-    title: "השאירו פנייה ונחזור אליכם בהקדם",
+    // WP3 Pass B #11: word-identical with preview-home/sections/Form.tsx
+    // titleNode("he") — `השאירו פרטים` is the standing Israeli lead formula,
+    // `השאירו פנייה` was a calque of the Russian source (§11.6).
+    title: "השאירו פרטים ונחזור אליכם בהקדם",
     nameLabel: "שם פרטי",
     surnameLabel: "שם משפחה",
     emailLabel: "אימייל",

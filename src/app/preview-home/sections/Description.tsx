@@ -16,7 +16,10 @@ const ACCENTS_BY_LANG: Partial<Record<Locale, string[]>> = {
   de: ["wir"],
   pl: ["nas"],
   ru: ["нас"],
-  he: ["בנו"], // REVIEW(he); Hebrew H2: "למה רוכשים מישראל בוחרים בנו"
+  // WP3 Pass B #4: the bound pronoun `בנו` alone is a 3-letter fragment in
+  // gold italics (and, being 3 letters, a substring-collision risk) — the
+  // verb+pronoun pair carries the statement.
+  he: ["בוחרים בנו"], // REVIEW(he); Hebrew H2: "למה רוכשים מישראל בוחרים בנו"
 };
 
 const renderTitle = (title: string, lang: string) => {

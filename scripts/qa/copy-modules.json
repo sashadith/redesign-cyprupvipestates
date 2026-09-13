@@ -51,5 +51,6 @@
   { "path": "src/app/components/roi-calculator/RoiChart.copy.ts", "exports": ["ROI_CHART_COPY"] },
   { "path": "src/app/components/roi-calculator/RoiInputs.copy.ts", "exports": ["ROI_INPUTS_COPY"] },
   { "path": "src/app/components/roi-calculator/RoiResults.copy.ts", "exports": ["ROI_RESULTS_COPY"] },
-  { "path": "src/app/preview-home/sections/Footer.copy.ts", "exports": ["FOOTER_COPY"] }
+  { "path": "src/app/preview-home/sections/Footer.copy.ts", "exports": ["FOOTER_COPY"] },
+  { "path": "src/app/preview-home/sections/Form.copy.ts", "exports": ["FORM_COPY"] }
 ]

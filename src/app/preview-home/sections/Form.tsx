@@ -10,13 +10,15 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { getAttribution } from "@/lib/attribution";
 import { qualifierCopy, BUDGET_VALUES, PROPERTY_VALUES, TIMELINE_VALUES } from "@/app/components/qualifierFields";
 import { consentCopy } from "@/app/components/consentCopy";
+import { formCopy } from "./Form.copy";
 import "@/app/components/formFeedback.css";
 
 /* Contact form — redesign styling. Submission / validation / tracking logic is
    preserved verbatim from the live FormStatic (lead → /api/monday → /api/leads,
-   fbq / lintrk / dataLayer, honeypot, attribution). Now multilingual (en/de/pl/ru)
-   using FormStatic's exact strings; `lang` defaults to "en" so existing EN-only
-   usages (preview-home, preview-insights) are unchanged. */
+   fbq / lintrk / dataLayer, honeypot, attribution). Now multilingual
+   (en/de/pl/ru/he) using FormStatic's exact strings, which live in the sibling
+   Form.copy.ts; `lang` defaults to "en" so existing EN-only usages
+   (preview-home, preview-insights) are unchanged. */
 
 export type FormData = {
   name: string;
@@ -37,60 +39,6 @@ export type FormData = {
 };
 
 const CONSULTANT_IMAGE = "/uploads/files/50b0d355d8507f9aadbe785a65e8a7233dd8f2e6.png";
-
-type Strings = {
-  labelName: string; labelSurname: string; labelPhone: string; labelEmail: string;
-  legend: string; optPhone: string; optEmail: string; send: string;
-  vName: string; vSurname: string; vPhone: string; vEmailInvalid: string; vEmail: string;
-  vContact: string; vConsentReq: string; vConsentOne: string;
-  success: string; error: string;
-  // Optional — only populated for "en" today. showQuestionField is only ever
-  // passed true on the (English-only) FAQ page, so de/pl/ru fall back to the
-  // English copy below rather than risk an unreviewed translation shipping.
-  labelQuestion?: string; placeholderQuestion?: string; vQuestion?: string;
-};
-
-// he (Phase 4): wrap phone/e-mail tokens with ltrIsolate() — RTL only.
-const DICT: Record<string, Strings> = {
-  en: {
-    labelName: "Your name", labelSurname: "Surname", labelPhone: "Phone", labelEmail: "Email",
-    legend: "What’s the best way to contact you?", optPhone: "Phone call", optEmail: "Email", send: "Send",
-    vName: "Name is required", vSurname: "Surname is required", vPhone: "Phone is required",
-    vEmailInvalid: "Invalid email address", vEmail: "Email is required", vContact: "What’s the best way to contact you?",
-    vConsentReq: "Consent is required", vConsentOne: "Consent required",
-    success: "Thank you — your enquiry has reached us. An adviser will be in touch, usually the same day.",
-    error: "Your enquiry could not be sent. Please try again, or reach us at office@cyprusvipestates.com or +357 99 278 285.",
-    labelQuestion: "Your question", placeholderQuestion: "What would you like to know?",
-    vQuestion: "Please enter your question",
-  },
-  de: {
-    labelName: "Ihr Vorname", labelSurname: "Ihr Nachname", labelPhone: "Telefon", labelEmail: "E-Mail Adresse",
-    legend: "Wie möchten Sie am besten kontaktiert werden?", optPhone: "Telefon", optEmail: "E-Mail", send: "Absenden",
-    vName: "Name ist erforderlich", vSurname: "Nachname ist erforderlich", vPhone: "Telefon ist erforderlich",
-    vEmailInvalid: "Ungültige E-Mail Adresse", vEmail: "E-Mail ist erforderlich", vContact: "Wie können wir Sie am besten kontaktieren?",
-    vConsentReq: "Zustimmung erforderlich", vConsentOne: "Einverständnis erforderlich",
-    success: "Vielen Dank — Ihre Anfrage ist bei uns eingegangen. Ein Berater meldet sich, meist noch am selben Tag.",
-    error: "Ihre Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder erreichen Sie uns unter office@cyprusvipestates.com oder +357 99 278 285.",
-  },
-  pl: {
-    labelName: "Imię", labelSurname: "Nazwisko", labelPhone: "Telefon", labelEmail: "E-mail",
-    legend: "W jaki sposób najlepiej się z Tobą skontaktować?", optPhone: "Telefonicznie", optEmail: "E-mail", send: "Wyślij",
-    vName: "Imię jest wymagane", vSurname: "Nazwisko jest wymagane", vPhone: "Telefon jest wymagany",
-    vEmailInvalid: "Nieprawidłowy format email", vEmail: "Email jest wymagany", vContact: "Wybierz preferowaną formę kontaktu",
-    vConsentReq: "Zgoda jest wymagana", vConsentOne: "Wymagane wyrażenie zgody",
-    success: "Dziękujemy — Twoje zapytanie do nas dotarło. Doradca odezwie się, zwykle jeszcze tego samego dnia.",
-    error: "Nie udało się wysłać zapytania. Spróbuj ponownie lub skontaktuj się z nami: office@cyprusvipestates.com albo +357 99 278 285.",
-  },
-  ru: {
-    labelName: "Ваше имя", labelSurname: "Фамилия", labelPhone: "Телефон", labelEmail: "Ваш email",
-    legend: "Как с вами лучше связаться?", optPhone: "Телефон", optEmail: "Email", send: "Отправить",
-    vName: "Имя обязательно", vSurname: "Фамилия обязательна", vPhone: "Телефон обязателен",
-    vEmailInvalid: "Неверный формат email", vEmail: "Email обязателен", vContact: "Как с вами лучше связаться?",
-    vConsentReq: "Согласие обязательно", vConsentOne: "Требуется согласие",
-    success: "Спасибо — ваша заявка получена. Консультант свяжется с вами, обычно в тот же день.",
-    error: "Не удалось отправить заявку. Попробуйте ещё раз или напишите на office@cyprusvipestates.com либо позвоните: +357 99 278 285.",
-  },
-};
 
 // Every locale gets the animated gold-italic accent on its own natural phrase
 // (2026-07-23: de/pl/ru previously rendered plain — only en had it).
@@ -118,7 +66,7 @@ const titleNode = (lang: string) => {
 const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactNode; showQuestionField?: boolean; showQualifiers?: boolean }> = ({
   lang = "en", title, subtitle, showQuestionField = false, showQualifiers = false,
 }) => {
-  const t = DICT[lang] ?? DICT.en;
+  const t = formCopy(lang);
   const q = qualifierCopy(lang);
   const questionLabel = t.labelQuestion ?? "Your question";
   const questionPlaceholder = t.placeholderQuestion ?? "What would you like to know?";

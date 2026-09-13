@@ -571,6 +571,10 @@ img { max-width: 100%; display: block; }
 .pcard__title { font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400; font-size: 1.35rem; line-height: 1.2; color: var(--ivory); margin: 0; }
 .pcard__price { margin: 0; color: var(--accent); font-family: var(--font-body), sans-serif; font-weight: 500; font-size: var(--text-lead); }
 .pcard__from { font-family: var(--font-body), sans-serif; font-size: var(--text-caption); font-weight: 400; text-transform: lowercase; letter-spacing: 0.06em; color: rgba(239,233,219,0.62); margin-inline-end: 0.45em; }
+/* RTL: the Hebrew label ends in the prefix hyphen of `החל מ-`, which must never
+   be separated from what follows (styleguide §5: `החל מ-€450,000`). The 0.45em
+   gap makes it read as a broken-off word. LTR is untouched. */
+[dir="rtl"] .pcard__from { margin-inline-end: 0; }
 
 /* ===================== CITIES — "by Location" (light ivory section) ===================== */
 .cities__title {

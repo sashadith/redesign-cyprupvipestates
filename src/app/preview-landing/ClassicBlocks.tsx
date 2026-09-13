@@ -85,10 +85,13 @@ export function renderClassicBlock(block: any, lang: string, ctaHref: string, ti
     }
 
     case "bulletsBlock":
-      return <HowWeWorkSection block={asStepsBlock(block.title, BULLETS_ICONS, BULLETS_TEXT[lang as Locale] ?? BULLETS_TEXT.en) as any} variant="facts" />;
+      // lang is what selects the localized gold accent in HowWeWork's title —
+      // without it the section defaults to "en" and every non-English landing
+      // page renders its H2 with no highlight at all (WP3 Pass B #7).
+      return <HowWeWorkSection block={asStepsBlock(block.title, BULLETS_ICONS, BULLETS_TEXT[lang as Locale] ?? BULLETS_TEXT.en) as any} variant="facts" lang={lang} />;
 
     case "howWeWorkBlock":
-      return <HowWeWorkSection block={asStepsBlock(block.title, STEPS_ICONS, STEPS_TEXT[lang as Locale] ?? STEPS_TEXT.en) as any} />;
+      return <HowWeWorkSection block={asStepsBlock(block.title, STEPS_ICONS, STEPS_TEXT[lang as Locale] ?? STEPS_TEXT.en) as any} lang={lang} />;
 
     case "buttonBlock":
       return block.buttonText ? (

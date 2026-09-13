@@ -12,7 +12,10 @@ export const SLIDER_REVIEWS_FULL_COPY: Record<Locale, typeof SLIDER_REVIEWS_FULL
   de: { readFullReview: "Ganze Bewertung lesen" },
   pl: { readFullReview: "Przeczytaj całą recenzję" },
   ru: { readFullReview: "Читать полный отзыв" },
-  he: { readFullReview: "לקריאת חוות הדעת המלאה" }, // REVIEW(he)
+  // he: an expert opinion and a customer voice are different words in Hebrew;
+  // Israeli sites say `המלצה` for a testimonial (WP3 Pass B #5, see
+  // docs/i18n/reviews/wp3-glossary.md).
+  he: { readFullReview: "לקריאת ההמלצה המלאה" }, // REVIEW(he)
 };
 
 export const sliderReviewsFullCopy = (lang: string) =>
