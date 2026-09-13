@@ -10,7 +10,7 @@ const STATUSES = ["DRAFT", "PUBLISHED", "SCHEDULED", "ARCHIVED"];
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
 
 export default function PageEditForm({
-  page: p, relatedOptions, relatedInitialIds, relatedEnSuggestion,
+  page: p, relatedOptions, relatedInitialIds, relatedEnSuggestion, dir = "ltr", language,
 }: {
   page: {
     id: string; title: string; slug: string; excerpt: string | null; status: string;
@@ -19,17 +19,19 @@ export default function PageEditForm({
   relatedOptions: { id: string; title: string }[];
   relatedInitialIds: string[];
   relatedEnSuggestion: { id: string; title: string }[];
+  dir?: "ltr" | "rtl";
+  language?: string;
 }) {
   const [state, formAction] = useFormState(saveSinglepageAll.bind(null, p.id), null);
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} dir={dir} className="space-y-5">
       <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-4">
         <div>
           <label className="block text-sm mb-1">Title</label>
           <input name="title" defaultValue={p.title} className={input} />
         </div>
-        <SlugField initialValue={p.slug} />
+        <SlugField initialValue={p.slug} language={language} />
         <div>
           <label className="block text-sm mb-1">Excerpt</label>
           <textarea name="excerpt" rows={3} defaultValue={p.excerpt ?? ""} className={input} />
@@ -43,7 +45,7 @@ export default function PageEditForm({
           </div>
           <div>
             <label className="block text-sm mb-1">Publish at <span className="text-[#9CA3AF]">(German time, when Scheduled)</span></label>
-            <input type="datetime-local" name="scheduledAt" defaultValue={p.scheduledAtInput} className={input} />
+            <input type="datetime-local" dir="ltr" name="scheduledAt" defaultValue={p.scheduledAtInput} className={input} />
           </div>
         </div>
       </div>
@@ -62,7 +64,7 @@ export default function PageEditForm({
 
       <RelatedPagesEditor initialIds={relatedInitialIds} options={relatedOptions} enSuggestion={relatedEnSuggestion} />
 
-      <BlockEditor kind="singlepage" initialBlocks={p.contentBlocks} />
+      <BlockEditor kind="singlepage" initialBlocks={p.contentBlocks} dir={dir} />
 
       <SaveButton result={state} />
     </form>

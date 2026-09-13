@@ -63,8 +63,8 @@
   border-radius: 5px;
   overflow: hidden;
   padding-top: clamp(1.875rem, 0.563rem + 5.25vw, 4.5rem);
-  padding-left: clamp(1.875rem, 0.563rem + 5.25vw, 4.5rem);
-  padding-right: clamp(1.875rem, 0.563rem + 5.25vw, 4.5rem);
+  padding-inline-start: clamp(1.875rem, 0.563rem + 5.25vw, 4.5rem);
+  padding-inline-end: clamp(1.875rem, 0.563rem + 5.25vw, 4.5rem);
   padding-bottom: clamp(1.875rem, 0.563rem + 5.25vw, 4.5rem);
 
   // @media (max-width: 570px) {

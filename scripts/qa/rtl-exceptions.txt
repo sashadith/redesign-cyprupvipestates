@@ -1,0 +1,196 @@
+# RTL physical-property count exceptions (scripts/qa/rtl-physical-count.mjs).
+#
+# Format: one exception per line —
+#   path :: substring
+# A line in `path` (matched as a suffix of the scanned file's repo-relative
+# path, e.g. "tokens.css" or "src/app/preview-home/tokens.css") that contains
+# `substring` is excluded from the physical-property count.
+#
+# Intended use: decorative atmosphere elements (::before/::after "blobs")
+# that are deliberately left physical (they're visual noise, not layout, and
+# mirroring them buys nothing — see the plan's Global Constraints), plus any
+# other line a human has reviewed and decided should stay physical. Every
+# entry should be added deliberately, with a reason a reviewer can check
+# against the plan — never used to silence the gate without also fixing or
+# reviewing the underlying declaration.
+#
+# Populated during Task 3 (hot-core manual CSS fixes). Grouped by file below.
+# Two recurring categories account for most entries:
+#   (a) decorative "cloud"/blob pseudo-elements (atmospheric background glow) —
+#       purely visual noise, not layout; mirroring them buys nothing (see the
+#       plan's Global Constraints) — left physical.
+#   (b) `transform: translateX(...)` — the physical-count tool flags every
+#       literal "translateX(" regardless of context. A CSS transform's pixel
+#       math is unaffected by `direction`/logical properties, so there is no
+#       "logical" form of translateX to convert to. Each site was reviewed:
+#       centering transforms are paired with a PHYSICAL `left: 50%` anchor —
+#       never `inset-inline-start: 50%`. That distinction matters: under
+#       `dir="rtl"`, `inset-inline-start` resolves to `right`, so
+#       `inset-inline-start: 50%` + `translateX(-50%)` mis-centres the box
+#       (it anchors 50% from the wrong edge and slides it the wrong way).
+#       Physical `left: 50%` is direction-agnostic by construction — the box
+#       stays centred regardless of `dir` — so this is the one case where the
+#       physical form is correct BY DESIGN and the "logical" conversion an
+#       earlier automated pass applied was itself the bug (see C1 in the
+#       phase-2 final-review fix wave: 17 such anchors were reverted from
+#       `inset-inline-start: 50%` back to `left: 50%`; each has its own
+#       "centring anchor for translateX(-50%)" entry further below). Aside
+#       from that anchor point, decorative sheens/nudges elsewhere are
+#       cosmetic flourishes with no reading-direction meaning, kept physical;
+#       a few genuine hover "nudge toward next" affordances (icon slides
+#       right on hover) got a `[dir="rtl"]` mirror override placed right next
+#       to them — that override is ALSO a translateX() literal and so is
+#       ALSO flagged and ALSO listed here, even though it IS the RTL fix.
+
+# ---- src/app/header-footer.css ----
+src/app/header-footer.css :: translateX(-220%) skewX(-18deg)
+# decorative hover-sheen sweep on .btn — diagonal light flourish, not reading-direction-dependent
+src/app/header-footer.css :: translateX(320%) skewX(-18deg)
+src/app/header-footer.css :: transform: translateX(3px)
+# .btn__ico hover nudge — genuinely mirrored via the [dir="rtl"] override on the next line (also flagged, see header comment)
+src/app/header-footer.css :: translateX(-3px)
+src/app/header-footer.css :: top: -34%; left: -8%;
+# .pf::before / .pf::after — footer atmosphere clouds, decorative (brief item 11)
+src/app/header-footer.css :: right: -8%; bottom: -34%;
+
+# ---- src/app/preview-home/tokens.css ----
+# .btn sheen + icon-nudge duplicate of header-footer.css (same component, this file's copy for preview-home)
+src/app/preview-home/tokens.css :: translateX(-220%) skewX(-18deg)
+src/app/preview-home/tokens.css :: translateX(320%) skewX(-18deg)
+src/app/preview-home/tokens.css :: transform: translateX(3px)
+src/app/preview-home/tokens.css :: translateX(-3px)
+# .brochure__image — fixed bottom-right compositional placement of a tilted,
+# bled-off-canvas photo (comment: "exactly as the original (right:-50, bottom:-30)");
+# a designed physical corner, not a start/end concept
+src/app/preview-home/tokens.css :: left: unset; right: -40px;
+# .featured__slider::after — carousel edge fade tied to the Swiper instance's
+# own (LTR) physical scroll direction; a real RTL fix needs Swiper's own rtl
+# config (JS, out of CSS scope for this task), not just the CSS mask side
+src/app/preview-home/tokens.css :: right: 0; width: 13%; max-width: 220px;
+# .descblock / .casestudies / .faq / .pf — atmosphere clouds, decorative (brief item 11, lines ~618-1091)
+src/app/preview-home/tokens.css :: left: -12%; animation: cloudDriftA 22s
+src/app/preview-home/tokens.css :: right: -10%; bottom: -16%;
+src/app/preview-home/tokens.css :: left: -10%; animation: cloudDriftA 30s
+src/app/preview-home/tokens.css :: right: -10%; bottom: -18%;
+src/app/preview-home/tokens.css :: top: -34%; left: -8%;
+src/app/preview-home/tokens.css :: right: -8%; bottom: -34%;
+# .howwork connector arrow (desktop-only decorative "step 1 -> step 2" hint) —
+# the `left: calc(100% + gap/2)` + `transform: translate(-50%,-50%)` centering
+# math is anchor-relative to the element's OWN box; a value-preserving swap to
+# inset-inline-end does not reproduce the same centred point (verified by hand:
+# the two are off by exactly the connector's own width), so a safe mirror
+# needs a re-derived formula, not a property rename. Low-impact secondary
+# hint; the arrowhead glyph itself is also baked into a fixed-direction SVG
+# data-URI mask. Left physical; candidate for a follow-up pass with visual QA.
+src/app/preview-home/tokens.css :: left: calc(100% + clamp(24px, 3vw, 44px) / 2)
+# .cscard__more hover-arrow nudge — mirrored via the [dir="rtl"] override
+# immediately below it (also flagged, see header comment)
+src/app/preview-home/tokens.css :: transform: translateX(4px)
+src/app/preview-home/tokens.css :: translateX(-4px)
+# .formsec__select chevron — physical background-image position; RTL is
+# handled by the `[dir="rtl"] .formsec__select { background-position: left ... }`
+# override a few lines below (padding already flips via padding-inline-*)
+src/app/preview-home/tokens.css :: background-position: right 15px center
+# .formsec__consultant-wrap / .formsec__caption — desktop consultant-portrait
+# composition (photo nudged 150px + caption floated at a percentage tied to
+# this specific photo's proportions); precise mirroring needs recalculated
+# constants per image, not a mechanical property swap — left physical,
+# candidate for a follow-up pass with visual QA
+src/app/preview-home/tokens.css :: translateX(-150px)
+src/app/preview-home/tokens.css :: left: calc(54% + 10px)
+
+# ---- src/app/preview-project/project.css ----
+# .pp-atmos / .pp-about / .pp-units-sec — atmosphere clouds, decorative (brief item 11)
+src/app/preview-project/project.css :: decorative cloud placed at right:-9%
+src/app/preview-project/project.css :: left: -10%; animation: cloudDriftA 24s
+src/app/preview-project/project.css :: right: -12%; opacity: 0.85
+src/app/preview-project/project.css :: left: 24%; opacity: 0.9
+src/app/preview-project/project.css :: left: -9%; top: 2%;
+src/app/preview-project/project.css :: left: -8%; top: 10%;
+src/app/preview-project/project.css :: right: -9%; bottom: 6%;
+
+# ---- src/app/preview-insights/insights.css ----
+# .ins__hero / .ins__guide / .iart__hero fallback — atmosphere clouds, decorative (brief item 11)
+src/app/preview-insights/insights.css :: left: -8%; animation: cloudDriftA 30s
+src/app/preview-insights/insights.css :: right: -10%; bottom: 4%;
+src/app/preview-insights/insights.css :: top: -18%; right: -12%;
+src/app/preview-insights/insights.css :: top: -28%; right: -10%;
+
+# ---- src/app/preview-projects/projects.css ----
+# .px__select chevron — same pattern as tokens.css's .formsec__select above;
+# RTL handled by the `[dir="rtl"] .px__select` override a few lines below
+src/app/preview-projects/projects.css :: background-position: right 14px center
+# .px__mapfab — horizontal-centering transform anchored on physical
+# `left: 50%` (NOT inset-inline-start — that would resolve to `right: 50%`
+# under dir="rtl" and mis-centre the box; see C1 fix), symmetric, not
+# direction-dependent
+src/app/preview-projects/projects.css :: transform: translateX(-50%)
+# comment prose mentioning "row-reverse" (not a declaration) — see the real
+# declaration exception below for the actual rule
+src/app/preview-projects/projects.css :: order (row-reverse flips the price
+# .prj--compact .prj__price — kept row-reverse for LTR ("€1,125,000 from");
+# RTL uses plain `row` via the `[dir="rtl"]` override right below it (brief item 7)
+src/app/preview-projects/projects.css :: flex-direction: row-reverse
+
+# ---- src/app/globals.css ----
+# .PhoneInputCountry — dead code, the whole rule is commented out (see the
+# surrounding /* */), inert, never applied
+src/app/globals.css :: left: -5px;
+src/app/globals.css :: left: -25px;
+
+# ---- Form*.module.scss (FormFull, FormStandard, FormPartners,
+#      FormMinimalBlockComponent, FormStatic) ----
+# .errorCheckbox — horizontal-centering transform anchored on physical
+# `left: 50%` (NOT inset-inline-start — that would resolve to `right: 50%`
+# under dir="rtl" and mis-centre the box; see C1 fix), symmetric, not
+# direction-dependent
+src/app/components/FormFull/FormFull.module.scss :: transform: translateX(-50%)
+src/app/components/FormStandard/FormStandard.module.scss :: transform: translateX(-50%)
+src/app/components/FormPartners/FormPartners.module.scss :: transform: translateX(-50%)
+src/app/components/FormMinimalBlockComponent/FormMinimalBlockComponent.module.scss :: transform: translateX(-50%)
+src/app/components/FormStatic/FormStatic.module.scss :: transform: translateX(-50%)
+
+# ---- C1 fix (phase-2 final-review): centring anchors reverted from the
+#      incorrectly-"logicalized" `inset-inline-start: 50%` back to physical
+#      `left: 50%`. These pair with `translateX(-50%)` or
+#      `translate(-50%, ...)` to centre a box; under `dir="rtl"`,
+#      `inset-inline-start: 50%` resolves to `right: 50%`, which mis-centres
+#      the box (anchored from the wrong edge). `left: 50%` is
+#      direction-agnostic by construction, so it is the physically-correct,
+#      by-design form here — logical would be the bug, not the fix. One
+#      entry per reverted declaration (17 total); see C1 in the phase-2
+#      final-review fix wave.
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/globals.css :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/StyledProjectFilters/StyledProjectFilters.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormStatic/FormStatic.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormStatic/FormStatic.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormStatic/FormStatic.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormFull/FormFull.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormFull/FormFull.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormStandard/FormStandard.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormStandard/FormStandard.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormPartners/FormPartners.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormPartners/FormPartners.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormMinimalBlockComponent/FormMinimalBlockComponent.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/FormMinimalBlockComponent/FormMinimalBlockComponent.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/SliderReviewsFull/SliderReviewsFull.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/components/SliderReviewsFull/SliderReviewsFull.module.scss :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/preview-projects/projects.css :: left: 50%
+# centring anchor for translateX(-50%) — physical by design (logical would mis-centre in RTL)
+src/app/preview-insights/insights.css :: left: 50%

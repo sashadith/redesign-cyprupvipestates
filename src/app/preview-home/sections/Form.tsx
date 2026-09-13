@@ -50,6 +50,7 @@ type Strings = {
   labelQuestion?: string; placeholderQuestion?: string; vQuestion?: string;
 };
 
+// he (Phase 4): wrap phone/e-mail tokens with ltrIsolate() — RTL only.
 const DICT: Record<string, Strings> = {
   en: {
     labelName: "Your name", labelSurname: "Surname", labelPhone: "Phone", labelEmail: "Email",

@@ -57,9 +57,32 @@ export function nonDefaultLocalePattern(locales: readonly string[] = LOCALES): s
   return locales.filter((l) => l !== DEFAULT_LOCALE).join("|");
 }
 
-/** Prices are EUR with Western digits in every locale (Israeli convention too). */
-export function fmtPrice(n: number, _lang: string): string {
-  return `€${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n)}`;
+/** Prices use Western digits in every locale (Israeli convention too).
+ *  EUR renders as "€1,234"; any other currency as "USD 1,234" (ISO code +
+ *  space + grouped number) — there's no per-currency symbol table here, just
+ *  the one non-EUR case the feeds actually carry. `_lang` is unused today
+ *  (digits/grouping don't vary by locale) but kept so call sites don't need
+ *  to change if that ever does. */
+export function fmtPrice(n: number, _lang: string, currency: string = "EUR"): string {
+  const grouped = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n);
+  return currency === "EUR" ? `€${grouped}` : `${currency} ${grouped}`;
+}
+
+/** Wrap a plain string (phone/e-mail/price inside otherwise-Hebrew copy) in
+ *  LRI…PDI (U+2066…U+2069) so it renders left-to-right and doesn't get
+ *  visually reordered by the surrounding RTL paragraph. For JSX values,
+ *  prefer <Bdi ltr> (src/app/components/Bdi.tsx) instead. */
+export function ltrIsolate(s: string): string {
+  return `⁦${s}⁩`;
+}
+
+/** Wrap a plain string (a Latin name inside an otherwise-Hebrew generated
+ *  sentence) in FSI…PDI (U+2068…U+2069) so it isolates from the surrounding
+ *  bidi context without forcing a direction — the run keeps its own natural
+ *  (LTR) direction, unlike ltrIsolate's LRI which pins direction too. For
+ *  JSX values, prefer <Bdi> (src/app/components/Bdi.tsx) instead. */
+export function bidiIsolate(s: string): string {
+  return `⁨${s}⁩`;
 }
 
 export function fmtDate(value: string | Date, lang: string, opts: Intl.DateTimeFormatOptions = { year: "numeric", month: "long", day: "numeric" }): string {

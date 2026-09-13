@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { WHATSAPP_UPDATED_MSG } from "@/lib/crm/presentationMessages";
 import { waLink } from "@/lib/crm/waFormat";
+import { isPublicLocale } from "@/lib/locale";
 
 // Same reasoning as the create-flow route (src/app/api/admin/presentations/route.ts):
 // build the origin from the actual request, not a hardcoded production URL.
@@ -48,7 +49,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   const items: ItemInput[] = Array.isArray(body.items) ? body.items : [];
   if (items.length === 0) return NextResponse.json({ error: "At least one item is required" }, { status: 400 });
 
-  const locale = ["en", "de", "pl", "ru"].includes(body.locale) ? body.locale : "en";
+  const locale = isPublicLocale(body.locale) ? body.locale : "en";
   const greetingName = String(body.greetingName ?? "").trim().slice(0, 120) || "there";
   const personalNote = String(body.personalNote ?? "").trim().slice(0, 2000) || null;
   const advisorId = body.advisorId ? String(body.advisorId) : null;

@@ -80,6 +80,7 @@ export type PartnersCopy = {
   vConsent: string;
 };
 
+// he (Phase 4): wrap phone/e-mail tokens with ltrIsolate() — RTL only.
 export const PARTNERS_COPY: Record<string, PartnersCopy> = {
   en: {
     metaTitle: "Partner Program for Property Consultants & Marketers – Cyprus VIP Estates",

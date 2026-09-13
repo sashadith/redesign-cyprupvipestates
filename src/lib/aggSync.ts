@@ -5,6 +5,7 @@ import {
 } from "./agg";
 import { extractAggUnits, type AggUnit } from "./ai/aggPricelist";
 import { generateProjectDescription } from "./ai/projectDescription";
+import type { LocaleText } from "./ai/localeTextGuards";
 import { toTitleCaseName } from "@/lib/textCase";
 import { normalizeRef } from "./unitRef";
 import { recomputeDevelopmentDistances } from "./developmentDistances";
@@ -242,7 +243,7 @@ export async function writeAggDraft(developerAccountId: string, opts: { force?: 
       const stage = rest?.listingStatus[0] || null;
 
       let gallery: string[] = [];
-      let description: { en: string; de: string; pl: string; ru: string } | null = null;
+      let description: LocaleText | null = null;
       const extraFacts: { label: string; value: string }[] = [];
 
       if (needsContent && rest) {
@@ -302,8 +303,8 @@ export async function writeAggDraft(developerAccountId: string, opts: { force?: 
       if (description) {
         await prisma.developmentOverride.upsert({
           where: { developmentId: dev.id },
-          create: { developmentId: dev.id, descriptionEN: description.en, descriptionDE: description.de, descriptionPL: description.pl, descriptionRU: description.ru },
-          update: { descriptionEN: description.en, descriptionDE: description.de, descriptionPL: description.pl, descriptionRU: description.ru },
+          create: { developmentId: dev.id, descriptionEN: description.en, descriptionDE: description.de, descriptionPL: description.pl, descriptionRU: description.ru, descriptionHE: description.he },
+          update: { descriptionEN: description.en, descriptionDE: description.de, descriptionPL: description.pl, descriptionRU: description.ru, descriptionHE: description.he },
         });
       }
 

@@ -8,6 +8,7 @@ import "swiper/css/pagination";
 import { PortableText } from "@portabletext/react";
 import { RichText } from "../RichText/RichText";
 import { Review } from "@/types/homepage";
+import { useIsRtl } from "@/app/components/useIsRtl";
 
 type Props = {
   reviews: Review[];
@@ -16,10 +17,12 @@ type Props = {
 const SliderReviews: FC<Props> = ({ reviews }) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const isRtl = useIsRtl();
 
   return (
     <div className={styles.sliderReviews}>
       <Swiper
+        dir={isRtl ? "rtl" : undefined}
         modules={[Pagination]}
         pagination={{ clickable: true }}
         spaceBetween={20}

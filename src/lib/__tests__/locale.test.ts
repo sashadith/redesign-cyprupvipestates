@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
   LOCALES, DEFAULT_LOCALE, RTL_LOCALES, LAUNCH_GATED_LOCALES, BCP47, LOCALE_LABELS,
-  parsePublicLocales, isLocale, localeDir, nonDefaultLocalePattern, localizedHref, fmtPrice, fmtDate,
+  parsePublicLocales, isLocale, localeDir, nonDefaultLocalePattern, localizedHref, fmtPrice, fmtDate, ltrIsolate, bidiIsolate,
 } from "@/lib/locale";
 import { templateClassOf } from "@/lib/seo/templateClass";
 import { isDarkHeroPath } from "@/app/components/Header/navShared";
@@ -54,6 +54,26 @@ test("fmtPrice and fmtDate", () => {
   assert.equal(fmtPrice(450000, "de"), "€450,000");
   assert.match(fmtDate("2026-05-01", "he", { year: "numeric", month: "long" }), /2026/);
   assert.equal(fmtDate("2026-05-01", "en", { year: "numeric", month: "long" }), "May 2026");
+});
+
+test("fmtPrice: non-EUR currency renders as ISO code + space + grouped number", () => {
+  // no currency arg / explicit "EUR" both render the € symbol
+  assert.equal(fmtPrice(450000, "en", "EUR"), "€450,000");
+  // a non-EUR currency renders as "CODE 1,234" — no symbol table, just the
+  // ISO code + space + grouped number
+  assert.equal(fmtPrice(450000, "en", "USD"), "USD 450,000");
+  assert.equal(fmtPrice(450000, "he", "GBP"), "GBP 450,000");
+});
+
+test("ltrIsolate wraps a string in LRI…PDI so it renders LTR inside RTL prose", () => {
+  assert.equal(ltrIsolate("+357 25 123456"), "⁦+357 25 123456⁩");
+  assert.equal(ltrIsolate("€450,000"), "⁦€450,000⁩");
+  assert.equal(ltrIsolate(""), "⁦⁩");
+});
+
+test("bidiIsolate wraps a string in FSI…PDI so a Latin name isolates without forcing LTR direction", () => {
+  assert.equal(bidiIsolate("John Smith"), "⁨John Smith⁩");
+  assert.equal(bidiIsolate(""), "⁨⁩");
 });
 
 test("he paths classify like the other prefixed locales", () => {

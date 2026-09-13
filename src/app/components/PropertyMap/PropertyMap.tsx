@@ -191,7 +191,7 @@ const PropertyMap: FC<Props> = ({
   };
 
   return (
-    <div className={styles.propertyMap}>
+    <div className={styles.propertyMap} dir="ltr">
       <MapContainer
         center={[lat, lng]}
         zoom={14}

@@ -19,7 +19,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 export default function LeadFilterBar({
   statuses, sources, locales, users,
 }: {
-  statuses: string[]; sources: string[]; locales: string[]; users: { id: string; name: string }[];
+  statuses: string[]; sources: string[]; locales: readonly string[]; users: { id: string; name: string }[];
 }) {
   const router = useRouter();
   const pathname = usePathname();

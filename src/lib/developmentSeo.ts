@@ -14,7 +14,7 @@
 import { prisma } from "@/lib/prisma";
 import type { ProjectVM } from "@/app/preview-project/feeds";
 import { listedUnits, computeAvailability } from "@/lib/developmentAvailability";
-import { isLocale, type Locale as Lang } from "@/lib/locale";
+import { isLocale, bidiIsolate, localeDir, type Locale as Lang } from "@/lib/locale";
 
 export const TITLE_MAX = 60;
 export const DESC_MAX = 160;
@@ -144,7 +144,8 @@ export function autoMetaTitle(vm: ProjectVM, lang: string): string {
   // PL/RU: skip it — gendered adjective endings differ per type noun, no single safe form.
   const typeClause =
     beds && l === "en" ? `${beds}-bed ${type}` : beds && l === "de" ? `${beds}-Zimmer-${type}` : type;
-  const clauses = [vm.publicName, "–", place ? `${typeClause} ${LABELS[l].in} ${place}` : typeClause];
+  const name = localeDir(lang) === "rtl" ? bidiIsolate(vm.publicName) : vm.publicName;
+  const clauses = [name, "–", place ? `${typeClause} ${LABELS[l].in} ${place}` : typeClause];
   return fit(clauses, TITLE_MAX);
 }
 
@@ -171,7 +172,11 @@ export function autoMetaDescription(vm: ProjectVM, lang: string): string {
     return fit([`${lbl.soldOut} — ${sentence1}`, `${lbl.similar}.`], DESC_MAX);
   }
   const avail = vm.units.filter((u) => u.status === "available").length || listedUnits(vm.units).length;
-  const priceClause = vm.priceFrom ? ` ${lbl.from} ${fmtPrice(vm.priceFrom)}` : "";
+  const rawPriceClause = vm.priceFrom ? ` ${lbl.from} ${fmtPrice(vm.priceFrom)}` : "";
+  // Same gate as `name` in autoMetaTitle above: a plain string embedded into a
+  // generated sentence, not JSX (no <Bdi> available here), so it needs the
+  // string-level isolator. bidiIsolate (not ltrIsolate) to match that pattern.
+  const priceClause = localeDir(lang) === "rtl" ? bidiIsolate(rawPriceClause) : rawPriceClause;
   // EN only: "unit"/"units" inflects with the count (DE/PL/RU labels below are
   // already fixed, count-invariant nouns — "Einheiten"/"jednostek"/"объектов" —
   // real-estate convention regardless of n, so no equivalent branch needed there).

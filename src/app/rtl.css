@@ -3,3 +3,33 @@
    Phase 2 (RTL layout pass) grows this file. */
 :lang(he) { font-family: var(--font-body-he, "Rubik"), "Rubik", Arial, sans-serif; }
 [dir="rtl"] { text-align: start; }
+
+/* Bidi isolation utilities — Bdi.tsx (JSX) and ltrIsolate() (plain strings)
+   in src/lib/locale.ts both target these classes. .ltr-isolate additionally
+   forces left-to-right direction, for prices/phones/e-mails whose own
+   internal digit/character order must never be reordered by RTL prose. */
+.bidi-isolate { unicode-bidi: isolate; }
+.ltr-isolate { direction: ltr; unicode-bidi: isolate; }
+
+/* Directional icons (arrows, chevrons) that should mirror under RTL — opt in
+   per-icon with .icon-dir rather than flipping every glyph site-wide.
+   Escape hatch: as of this fix wave, no component uses .icon-dir yet —
+   Phase 2's actual directional-icon fixes (breadcrumb arrow, lightbox/gallery
+   pagers) mirror by other means (dedicated glyph swaps, [dir="rtl"] overrides
+   on the component's own class). Kept for a future case that fits this
+   simpler pattern; grep for call sites before assuming it's live. */
+[dir="rtl"] .icon-dir { transform: scaleX(-1); }
+
+/* Hebrew typography (spec §3.3): display headings prefer the Hebrew display
+   face; Latin-oriented letter-spacing/uppercase tracking reads as broken in
+   Hebrew script, so both are neutralised for the whole :lang(he) subtree
+   except where a component opts back in via .keep-tracking / .keep-case.
+   Escape hatches: as of this fix wave, no component uses .keep-tracking or
+   .keep-case either — every :lang(he) case so far has wanted the
+   neutralised (normal tracking, no uppercase) behaviour. Kept for the first
+   component that genuinely needs Latin-style tracking/case inside Hebrew
+   text (e.g. a co-branded logo mark); grep for call sites before assuming
+   either is live. */
+:lang(he) :is(h1, h2, h3, h4, .display, .h1, .h2, .h3) { font-family: var(--font-display-he, serif), var(--font-display), serif; }
+:lang(he) *:not(.keep-tracking) { letter-spacing: normal !important; }
+:lang(he) *:not(.keep-case) { text-transform: none !important; }

@@ -88,8 +88,8 @@
 .projectData {
   padding: 10px;
   border-bottom: 1px solid rgba(170, 127, 46, 0.5);
-  border-left: 1px solid rgba(170, 127, 46, 0.5);
-  border-right: 1px solid rgba(170, 127, 46, 0.5);
+  border-inline-start: 1px solid rgba(170, 127, 46, 0.5);
+  border-inline-end: 1px solid rgba(170, 127, 46, 0.5);
   display: flex;
   justify-content: space-between;
   align-items: center;

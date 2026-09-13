@@ -6,6 +6,7 @@ import RichTextField from "@/app/admin/RichTextField";
 import { portableTextToHtml } from "@/lib/portableText/ptToHtml.mjs";
 import { isHtmlMarker } from "@/lib/portableText/richText";
 import type { HField } from "@/lib/homepageSchema";
+import { localeDir } from "@/lib/locale";
 
 type Opt = { id: string; title: string };
 type Ctx = { project: Opt[]; caseStudy: Opt[] };
@@ -93,11 +94,10 @@ function SaveBar() {
 export default function HomepageEditor({
   lang, schema, data, action, options,
 }: { lang: string; schema: HField[]; data: any; action: (formData: FormData) => void; options: Ctx }) {
-  /* `lang` is not read here — the caller passes it as `key` as well, which is what
-     remounts this editor per language and makes the initialiser below re-read `data`.
-     The prop is kept so the signature says out loud that this editor is scoped to one
-     language; see the comment at the call site in page.tsx. */
-  void lang;
+  /* The caller also passes `lang` as `key`, which is what remounts this editor per
+     language and makes the initialiser below re-read `data`. The prop itself is used
+     below to derive `dir` for the text field renderers. */
+  const dir = localeDir(lang);
   const [doc, setDoc] = useState<any>(() => JSON.parse(JSON.stringify(data ?? {})));
   const set = (path: Path, value: any) => setDoc((d: any) => setAt(d, path, value));
 
@@ -106,11 +106,11 @@ export default function HomepageEditor({
     const value = getAt(doc, path);
     switch (field.kind) {
       case "string":
-        return <input className={inputCls} value={value ?? ""} onChange={(e) => set(path, e.target.value)} />;
+        return <input className={inputCls} dir={dir} value={value ?? ""} onChange={(e) => set(path, e.target.value)} />;
       case "text":
-        return <textarea className={inputCls} rows={field.rows ?? 3} value={value ?? ""} onChange={(e) => set(path, e.target.value)} />;
+        return <textarea className={inputCls} dir={dir} rows={field.rows ?? 3} value={value ?? ""} onChange={(e) => set(path, e.target.value)} />;
       case "number":
-        return <input type="number" className={inputCls} value={value ?? ""} onChange={(e) => set(path, e.target.value === "" ? null : Number(e.target.value))} />;
+        return <input type="number" className={inputCls} dir="ltr" value={value ?? ""} onChange={(e) => set(path, e.target.value === "" ? null : Number(e.target.value))} />;
       case "boolean":
         return <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={!!value} onChange={(e) => set(path, e.target.checked)} /> {field.title}</label>;
       case "enum":
@@ -129,6 +129,7 @@ export default function HomepageEditor({
           <RichTextField
             initialHtml={isHtmlMarker(value) ? value.__html : portableTextToHtml(Array.isArray(value) ? value : [])}
             onChange={(html) => set(path, { __html: html })}
+            dir={dir}
           />
         );
       default:
@@ -241,7 +242,7 @@ export default function HomepageEditor({
   };
 
   return (
-    <form action={action} className="space-y-6">
+    <form action={action} dir={dir} className="space-y-6">
       <input type="hidden" name="doc" value={JSON.stringify(doc)} />
       <div className="flex justify-end"><SaveBar /></div>
       {schema.map((f) => (

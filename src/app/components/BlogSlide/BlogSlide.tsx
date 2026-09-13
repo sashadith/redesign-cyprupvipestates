@@ -7,6 +7,8 @@ import Link from "next/link";
 import { ButtonModal } from "../ButtonModal/ButtonModal";
 import { ImageAlt } from "@/types/project";
 import { blurProps } from "@/lib/imageBlur";
+import { fmtPrice } from "@/lib/locale";
+import Bdi from "@/app/components/Bdi";
 
 type Props = {
   image: ImageAlt;
@@ -83,7 +85,7 @@ const BlogSlide: FC<Props> = ({
                           ? "Цена от"
                           : "Price from"}
                   &nbsp;
-                  {price.toLocaleString()} €
+                  <Bdi ltr>{fmtPrice(price, lang)}</Bdi>
                 </>)}
           </p>
           {linkLabel && linkDestination && (

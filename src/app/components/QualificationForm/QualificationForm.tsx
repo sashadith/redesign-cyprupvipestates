@@ -18,6 +18,7 @@ interface Props {
   projectTitle?: string;
 }
 
+// he (Phase 4): wrap phone/e-mail tokens with ltrIsolate() — RTL only.
 const T: Record<Lang, Record<string, string>> = {
   en: { heading: "Request a consultation", firstName: "First name", lastName: "Last name", email: "Email", phone: "Phone", nationality: "Nationality", budget: "Budget range", timeline: "Timeline", financing: "Financing", propertyType: "Property interest", message: "Message (optional)", submit: "Send request", sending: "Sending…", success: "Thank you — your enquiry has reached us. An adviser will be in touch, usually the same day.", error: "Your enquiry could not be sent. Please try again, or reach us at office@cyprusvipestates.com or +357 99 278 285.", required: "Please complete the required fields.", choose: "Please choose…" },
   de: { heading: "Beratung anfragen", firstName: "Vorname", lastName: "Nachname", email: "E-Mail", phone: "Telefon", nationality: "Nationalität", budget: "Budget", timeline: "Zeitrahmen", financing: "Finanzierung", propertyType: "Interesse", message: "Nachricht (optional)", submit: "Anfrage senden", sending: "Senden…", success: "Vielen Dank — Ihre Anfrage ist bei uns eingegangen. Ein Berater meldet sich, meist noch am selben Tag.", error: "Ihre Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder erreichen Sie uns unter office@cyprusvipestates.com oder +357 99 278 285.", required: "Bitte füllen Sie die Pflichtfelder aus.", choose: "Bitte wählen…" },

@@ -12,6 +12,7 @@ import { blurProps } from "@/lib/imageBlur";
 import { ImageAlt } from "@/types/project";
 import styles from "./ProjectCardSlider.module.scss";
 import { IoIosArrowBack, IoIosArrowForward } from "react-icons/io";
+import { localeDir } from "@/lib/locale";
 
 type Props = {
   images: ImageAlt[];
@@ -63,6 +64,7 @@ const ProjectCardSlider: FC<Props> = ({ images, title, lang }) => {
       </button>
 
       <Swiper
+        dir={localeDir(lang)}
         slidesPerView={1}
         spaceBetween={0}
         modules={[Navigation]}

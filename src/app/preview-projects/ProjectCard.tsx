@@ -12,6 +12,8 @@
 import type { ProjectsStrings } from "@/app/[lang]/projects/projectsI18n";
 import ScarcityBanner from "@/app/components/ScarcityBanner/ScarcityBanner";
 import { soldOutFromCounts } from "@/lib/developmentAvailability";
+import { fmtPrice } from "@/lib/locale";
+import Bdi from "@/app/components/Bdi";
 
 export type Distances = {
   beach?: string;
@@ -71,9 +73,6 @@ export const topDistances = (d: Distances | null | undefined, s: ProjectsStrings
 const CARD_DIST_ORDER: (keyof Distances)[] = ["beach", "school", "golfCourt", "airport"];
 const cardDistances = (d: Distances | null | undefined, s: ProjectsStrings) =>
   d ? CARD_DIST_ORDER.filter((k) => d[k]).map((k) => ({ label: distLabel(k, s), v: d[k] as string })) : [];
-
-const fmtPrice = (p: number | null, s: ProjectsStrings) =>
-  p == null ? s.priceOnRequest : `€${p.toLocaleString(s.numLocale)}`;
 
 export function ProjectCard({
   c, active = false, onHover = () => {}, s, locale, compact = false,
@@ -140,7 +139,7 @@ export function ProjectCard({
           </div>
           <div className="prj__price">
             {c.price != null && <span className="prj__price-from">{s.priceFrom}</span>}
-            {fmtPrice(c.price, s)}
+            {c.price != null ? <Bdi ltr>{fmtPrice(c.price, locale)}</Bdi> : s.priceOnRequest}
           </div>
         </div>
         {cardDistances(c.distances, s).length > 0 && (

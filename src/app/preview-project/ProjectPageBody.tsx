@@ -22,6 +22,8 @@ import { developmentCopy } from "@/lib/developmentCopy";
 import { getAlternativeDevelopments } from "@/lib/developmentAlternatives";
 import AlternativesBlock from "@/app/preview-project/AlternativesBlock";
 import type { GoldPhrase } from "@/lib/developmentCopy";
+import { fmtPrice, bidiIsolate, localeDir } from "@/lib/locale";
+import Bdi from "@/app/components/Bdi";
 
 // Shared render body for both the SEO-facing slug route (the Development
 // branch of src/app/[lang]/projects/[slug]/page.tsx) and the admin-only
@@ -41,9 +43,6 @@ import type { GoldPhrase } from "@/lib/developmentCopy";
    quietly bring them back. Scoped by adapter key rather than by label alone, so
    another feed introducing a legitimate "Shops" fact stays unaffected. */
 const LEPTOS_FEED_DISTANCES = new Set(["airport", "sea", "shops", "healthcare", "education"]);
-
-const fmtPrice = (n: number | null | undefined, cur = "EUR", priceOnRequest = "Price on request") =>
-  n == null ? priceOnRequest : `${cur === "EUR" ? "€" : cur + " "}${n.toLocaleString("en-US")}`;
 
 // Renders a GoldPhrase (developmentCopy.ts) with its accent word wrapped in
 // the site's existing .it gold-shimmer class (preview-home/tokens.css) —
@@ -87,7 +86,7 @@ export default async function ProjectPageBody({
   // page's language (English fallback); otherwise the static demo library.
   const slugOfArea = (a: string) => a.toLowerCase().replace(/ph/g, "f").replace(/[^a-z]/g, "");
   const areaRow = p.area ? await prisma.areaDescription.findFirst({ where: { areaSlug: slugOfArea(p.area), status: "approved" } }) : null;
-  const areaCol = ({ en: "textEN", de: "textDE", pl: "textPL", ru: "textRU" } as Record<string, string>)[params.lang] ?? "textEN";
+  const areaCol = ({ en: "textEN", de: "textDE", pl: "textPL", ru: "textRU", he: "textHE" } as Record<string, string>)[params.lang] ?? "textEN";
   const areaText = areaRow ? ((areaRow as any)[areaCol] || areaRow.textEN) : null;
   const areaInfo = areaText
     ? { name: p.area, text: areaText as string }
@@ -165,7 +164,7 @@ export default async function ProjectPageBody({
               </div>
               <h1 className="pp-title">{p.publicName}</h1>
               <div className="pp-hero__stats">
-                <div className="pp-hero__price"><b>{priceFrom != null ? fmtPrice(priceFrom, p.currency, t.priceOnRequest) : "—"}</b><span>{priceFrom != null ? (isSold ? t.heroFromSoldOut : `${t.heroFrom}${p.vatApplies !== false ? ` · ${t.vatSuffix}` : ""}`) : t.heroFrom}</span></div>
+                <div className="pp-hero__price"><b>{priceFrom != null ? <Bdi ltr>{fmtPrice(priceFrom, lang, p.currency)}</Bdi> : "—"}</b><span>{priceFrom != null ? (isSold ? t.heroFromSoldOut : `${t.heroFrom}${p.vatApplies !== false ? ` · ${localeDir(lang) === "rtl" ? bidiIsolate(t.vatSuffix) : t.vatSuffix}` : ""}`) : t.heroFrom}</span></div>
                 <div><b>{types.join(" · ") || "—"}</b><span>{t.heroType}</span></div>
                 {listed.length > 0 && <div><b>{avail.length}{avail.length !== listed.length && <small>/{listed.length}</small>}</b><span>{t.heroAvailable}</span></div>}
               </div>

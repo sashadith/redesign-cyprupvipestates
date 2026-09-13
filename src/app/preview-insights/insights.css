@@ -106,7 +106,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
   .ifilter {
     flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain;
     -webkit-overflow-scrolling: touch; scrollbar-width: none;
-    margin-right: calc(-1 * var(--gutter)); padding-right: var(--gutter);
+    margin-inline-end: calc(-1 * var(--gutter)); padding-inline-end: var(--gutter);
   }
   .ifilter::-webkit-scrollbar { display: none; }
   .ifilter__chip { flex: 0 0 auto; }
@@ -178,7 +178,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 .icard:hover .icard__media img { transform: scale(1.05); }
 .icard__ph { width: 100%; height: 100%; background: linear-gradient(135deg, var(--sea), var(--sea-deep)); }
 .icard__cat {
-  position: absolute; top: 12px; left: 12px; font-family: var(--font-body), sans-serif; font-size: var(--text-caption);
+  position: absolute; top: 12px; inset-inline-start: 12px; font-family: var(--font-body), sans-serif; font-size: var(--text-caption);
   letter-spacing: 0.06em; text-transform: uppercase; color: var(--ivory);
   background: rgba(8,21,18,0.6); border: 1px solid var(--hairline-strong); padding: 5px 11px; border-radius: 999px;
   -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
@@ -223,7 +223,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 .ins__guide-cols { margin-top: clamp(28px, 4vw, 44px); display: grid; grid-template-columns: 1fr; gap: clamp(28px, 4vw, 48px); }
 @media (min-width: 880px) {
   .ins__guide-cols { grid-template-columns: 1.15fr 0.85fr; column-gap: clamp(56px, 5vw, 84px); align-items: start; }
-  .ins__guide-outro { width: calc(100% + 50px); margin-left: -50px; }
+  .ins__guide-outro { width: calc(100% + 50px); margin-inline-start: -50px; }
 }
 .ins__guide-intro { max-width: 60ch; }
 .ins__guide-outro {
@@ -240,8 +240,8 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 .ins__guide-p { margin: 0 0 var(--s-4); font-family: var(--font-body), sans-serif; font-size: clamp(1rem, 0.97rem + 0.18vw, 1.0625rem); font-weight: 300; line-height: 1.7; color: var(--text-soft); }
 .ins__guide-outro .ins__guide-p { font-size: var(--text-body); line-height: 1.7; }
 .ins__guide-ul { margin: 0 0 var(--s-4); padding: 0; list-style: none; }
-.ins__guide-ul li { position: relative; padding-left: 24px; margin-bottom: 10px; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.65; color: var(--text-soft); }
-.ins__guide-ul li::before { content: ""; position: absolute; left: 4px; top: 0.6em; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.ins__guide-ul li { position: relative; padding-inline-start: 24px; margin-bottom: 10px; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.65; color: var(--text-soft); }
+.ins__guide-ul li::before { content: ""; position: absolute; inset-inline-start: 4px; top: 0.6em; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
 .ins__guide-link { color: var(--accent); text-decoration: none; }
 
 /* topic cards grid */
@@ -264,7 +264,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 
 /* fixed reading-progress bar */
 /* reading bar sits just under the top menu (nav is ~62px tall, ~74px on desktop) */
-.iart__progress { position: fixed; top: 62px; left: 0; right: 0; height: 3px; z-index: 39; pointer-events: none; }
+.iart__progress { position: fixed; top: 62px; inset-inline: 0; height: 3px; z-index: 39; pointer-events: none; }
 @media (min-width: 1024px) { .iart__progress { top: 74px; } }
 /* champagne fill, static glow (no pulse) */
 .iart__progress-bar { height: 100%; width: 0; background: var(--champagne); box-shadow: 0 0 10px var(--glow); }
@@ -304,8 +304,8 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 .iart__byline { display: inline-flex; align-items: center; gap: 10px; color: var(--ivory); }
 .iart__byline-img { width: 34px; height: 34px; border-radius: 999px; object-fit: cover; border: 1px solid rgba(239,233,219,0.35); }
 .iart__byline-name { font-weight: 500; }
-.iart__meta-dot { position: relative; padding-left: 17px; }
-.iart__meta-dot::before { content: ""; position: absolute; left: 0; top: 50%; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); transform: translateY(-50%); }
+.iart__meta-dot { position: relative; padding-inline-start: 17px; }
+.iart__meta-dot::before { content: ""; position: absolute; inset-inline-start: 0; top: 50%; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); transform: translateY(-50%); }
 
 /* ---- BODY (light) + layout ---- */
 .iart__body { padding-top: clamp(48px, 7vw, 88px); }
@@ -331,10 +331,10 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
   .iart__toc::-webkit-scrollbar-thumb { background: var(--hairline-strong); border-radius: 999px; }
 }
 .iart__toc-label { margin: 0 0 var(--s-4); font-family: var(--font-body), sans-serif; font-size: var(--text-caption); font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent); }
-.iart__toc ul { list-style: none; margin: 0; padding: 0; border-left: 1px solid var(--hairline); }
-.iart__toc-link { display: block; padding: 7px 0 7px 16px; margin-left: -1px; border-left: 1px solid transparent; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.4; color: var(--text-soft); text-decoration: none; transition: color var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease); }
+.iart__toc ul { list-style: none; margin: 0; padding: 0; border-inline-start: 1px solid var(--hairline); }
+.iart__toc-link { display: block; padding: 7px 0 7px 16px; margin-inline-start: -1px; border-inline-start: 1px solid transparent; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); line-height: 1.4; color: var(--text-soft); text-decoration: none; transition: color var(--dur-sm) var(--ease), border-color var(--dur-sm) var(--ease); }
 .iart__toc-link:hover { color: var(--text); }
-.iart__toc-link.is-active { color: var(--accent); border-left-color: var(--accent); }
+.iart__toc-link.is-active { color: var(--accent); border-inline-start-color: var(--accent); }
 
 /* ---- reading column typography ---- */
 .iart__content { min-width: 0; }
@@ -343,7 +343,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 .iart__content strong { font-weight: 600; color: var(--text); }
 /* drop cap on the article's first paragraph */
 .iart__content > .iart__rich:first-of-type .iart__p:first-of-type::first-letter {
-  float: left; font-family: var(--font-display), serif; font-weight: 500; font-size: 3.6em; line-height: 0.72;
+  float: inline-start; font-family: var(--font-display), serif; font-weight: 500; font-size: 3.6em; line-height: 0.72;
   padding: 0.06em 0.12em 0 0; color: var(--accent);
 }
 .iart__h2 { scroll-margin-top: 96px; margin: clamp(44px, 6vw, 72px) 0 var(--s-4); font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400; font-size: clamp(1.6rem, 1.3rem + 1.4vw, 2.2rem); line-height: 1.14; letter-spacing: -0.02em; color: var(--text); text-wrap: balance; }
@@ -355,15 +355,15 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 /* lists */
 .iart__ul, .iart__ol { margin: 0 0 var(--s-5); padding: 0; font-family: var(--font-body), sans-serif; font-size: clamp(1.04rem, 1rem + 0.25vw, 1.15rem); font-weight: 300; line-height: 1.7; color: var(--text); }
 .iart__ul { list-style: none; }
-.iart__ul .iart__li { position: relative; padding-left: 26px; margin: 0 0 12px; }
-.iart__ul .iart__li::before { content: ""; position: absolute; left: 4px; top: 0.62em; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.iart__ul .iart__li { position: relative; padding-inline-start: 26px; margin: 0 0 12px; }
+.iart__ul .iart__li::before { content: ""; position: absolute; inset-inline-start: 4px; top: 0.62em; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
 .iart__ol { list-style: none; counter-reset: ol; }
-.iart__ol .iart__li { position: relative; padding-left: 34px; margin: 0 0 12px; counter-increment: ol; }
-.iart__ol .iart__li::before { content: counter(ol); position: absolute; left: 0; top: 0.05em; font-family: var(--font-display), serif; font-size: 0.95em; color: var(--accent); font-weight: 500; }
+.iart__ol .iart__li { position: relative; padding-inline-start: 34px; margin: 0 0 12px; counter-increment: ol; }
+.iart__ol .iart__li::before { content: counter(ol); position: absolute; inset-inline-start: 0; top: 0.05em; font-family: var(--font-display), serif; font-size: 0.95em; color: var(--accent); font-weight: 500; }
 
 /* pull-quote */
 .iart__quote { position: relative; margin: clamp(40px, 5vw, 64px) 0; padding-top: var(--s-7); }
-.iart__quote::before { content: "\201C"; position: absolute; top: -0.08em; left: -0.02em; font-family: var(--font-display), serif; font-size: 4.2rem; line-height: 1; color: var(--accent); opacity: 0.5; }
+.iart__quote::before { content: "\201C"; position: absolute; top: -0.08em; inset-inline-start: -0.02em; font-family: var(--font-display), serif; font-size: 4.2rem; line-height: 1; color: var(--accent); opacity: 0.5; }
 .iart__quote p { margin: 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-style: italic; font-weight: 400; font-size: clamp(1.35rem, 1.1rem + 1vw, 1.9rem); line-height: 1.34; letter-spacing: -0.01em; color: var(--text); text-wrap: balance; }
 
 /* figures */
@@ -378,9 +378,9 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 .iart__faq-item { border-bottom: 1px solid var(--hairline); }
 /* the question is a <button> now — reset its chrome so it looks exactly like the
    old <summary> (full-width, left-aligned, no background/border) */
-.iart__faq-q { display: block; width: 100%; text-align: left; appearance: none; background: none; border: 0; cursor: pointer; list-style: none; padding: var(--s-5) 36px var(--s-5) 0; position: relative; font-family: var(--font-display), serif; font-weight: 400; font-size: clamp(1.15rem, 1rem + 0.5vw, 1.4rem); color: var(--text); }
+.iart__faq-q { display: block; width: 100%; text-align: start; appearance: none; background: none; border: 0; cursor: pointer; list-style: none; padding: var(--s-5) 36px var(--s-5) 0; position: relative; font-family: var(--font-display), serif; font-weight: 400; font-size: clamp(1.15rem, 1rem + 0.5vw, 1.4rem); color: var(--text); }
 .iart__faq-q::-webkit-details-marker { display: none; }
-.iart__faq-q::after { content: "+"; position: absolute; right: 4px; top: 50%; transform: translateY(-50%); font-size: 1.4rem; color: var(--accent); }
+.iart__faq-q::after { content: "+"; position: absolute; inset-inline-end: 4px; top: 50%; transform: translateY(-50%); font-size: 1.4rem; color: var(--accent); }
 .iart__faq-item.is-open .iart__faq-q::after { content: "\2013"; }
 /* smooth open/close via grid-template-rows (0fr↔1fr); no display toggling */
 .iart__faq-a-wrap { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.42s cubic-bezier(0.32, 0.72, 0, 1); }
@@ -433,7 +433,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
    case-study pages and landing "classic blocks" via the same .iart__table
    rule — sizing it here keeps the bump scoped to tables only. */
 .iart__table { width: 100%; border-collapse: collapse; font-family: var(--font-body), sans-serif; font-size: 0.9375rem; }
-.iart__table th { text-align: left; padding: 12px 16px; background: var(--accent-soft); color: var(--text); font-weight: 600; border-bottom: 1px solid var(--hairline-strong); }
+.iart__table th { text-align: start; padding: 12px 16px; background: var(--accent-soft); color: var(--text); font-weight: 600; border-bottom: 1px solid var(--hairline-strong); }
 .iart__table td { padding: 12px 16px; color: var(--text-soft); border-bottom: 1px solid var(--hairline); }
 
 /* double text block */

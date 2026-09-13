@@ -16,7 +16,7 @@ import { uniqueDevelopmentSlug } from "@/lib/developmentSeo";
 import { generateSeoMeta, getSeoPromptTemplate, saveSeoPromptTemplate, type SeoMetaResult } from "@/lib/ai/seoMeta";
 import { getDbProjectByFeedKey } from "@/lib/developmentRender";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, PUBLIC_LOCALES } from "@/lib/locale";
 import { syncErrorMessage } from "@/lib/syncErrorMessage";
 
 const asArr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
@@ -420,8 +420,8 @@ export async function saveOverride(formData: FormData) {
   // to the auto-generated default (src/lib/developmentSeo.ts) rather than an
   // object of empty strings that would still read as "present".
   const seoEntries = {
-    titleEN: clean(formData, "seoTitleEN"), titleDE: clean(formData, "seoTitleDE"), titlePL: clean(formData, "seoTitlePL"), titleRU: clean(formData, "seoTitleRU"),
-    descEN: clean(formData, "seoDescEN"), descDE: clean(formData, "seoDescDE"), descPL: clean(formData, "seoDescPL"), descRU: clean(formData, "seoDescRU"),
+    titleEN: clean(formData, "seoTitleEN"), titleDE: clean(formData, "seoTitleDE"), titlePL: clean(formData, "seoTitlePL"), titleRU: clean(formData, "seoTitleRU"), titleHE: clean(formData, "seoTitleHE"),
+    descEN: clean(formData, "seoDescEN"), descDE: clean(formData, "seoDescDE"), descPL: clean(formData, "seoDescPL"), descRU: clean(formData, "seoDescRU"), descHE: clean(formData, "seoDescHE"),
   };
   const seo = Object.values(seoEntries).some(Boolean) ? seoEntries : null;
   // Map location is saved independently via saveMapLocationAction (its own
@@ -437,6 +437,7 @@ export async function saveOverride(formData: FormData) {
     descriptionDE: clean(formData, "descriptionDE"),
     descriptionPL: clean(formData, "descriptionPL"),
     descriptionRU: clean(formData, "descriptionRU"),
+    descriptionHE: clean(formData, "descriptionHE"),
     completion: clean(formData, "completion"),
     energy: clean(formData, "energy"),
     // Construction-stage override (Available / Under Construction / Key-Ready /
@@ -470,7 +471,7 @@ export async function saveOverride(formData: FormData) {
   if (seo) {
     const dev = await prisma.development.findUnique({ where: { id }, select: { publishStatus: true, slug: true } });
     if (dev?.publishStatus === "published" && dev.slug) {
-      const urls = ["en", "de", "pl", "ru"].map((l) => absUrl(localizedHref(l, ["projects", dev.slug!])));
+      const urls = PUBLIC_LOCALES.map((l) => absUrl(localizedHref(l, ["projects", dev.slug!])));
       void pingIndexNow("development-meta-edited", urls);
     }
   }
@@ -634,7 +635,7 @@ export async function setStatus(formData: FormData) {
 
   // Fire-and-forget — never awaited, never blocks this action's response.
   if ((status === "published" || status === "archived") && updated.slug) {
-    const urls = ["en", "de", "pl", "ru"].map((l) => absUrl(localizedHref(l, ["projects", updated.slug!])));
+    const urls = PUBLIC_LOCALES.map((l) => absUrl(localizedHref(l, ["projects", updated.slug!])));
     urls.push(absUrl("/projects"));
     void pingIndexNow(`development-${status}`, urls);
   }

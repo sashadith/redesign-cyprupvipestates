@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { gsap, ScrollTrigger, SplitText, prefersReducedMotion } from "../../preview-home/anim/gsap";
+import { isRtlDoc } from "@/app/components/useIsRtl";
 
 /* Scroll/motion orchestrator for the About page — same approach as the
    homepage's PreviewMotion: drives everything off the SSR'd DOM by class, so
@@ -23,6 +24,7 @@ export default function AboutMotion() {
     if (prefersReducedMotion()) return;
 
     const splits: Array<{ revert: () => void }> = [];
+    const isRtl = isRtlDoc(document);
 
     const ctx = gsap.context(() => {
       const toArr = (sel: string) => gsap.utils.toArray<HTMLElement>(sel);
@@ -83,7 +85,7 @@ export default function AboutMotion() {
       /* ---------------- NUMBERED STEPS (slide in from left) ---------------- */
       toArr(".abt__step").forEach((el) => {
         gsap.from(el, {
-          x: -40,
+          x: isRtl ? 40 : -40,
           autoAlpha: 0,
           duration: 0.7,
           ease: "power3.out",

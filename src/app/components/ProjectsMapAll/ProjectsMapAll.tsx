@@ -308,7 +308,7 @@ const ProjectsMapAll: FC<Props> = ({ lang, markers }) => {
   };
 
   return (
-    <div className={styles.mapWrap}>
+    <div className={styles.mapWrap} dir="ltr">
       <MapContainer
         center={center}
         zoom={8}

@@ -17,6 +17,7 @@ export type FormLang = string;
 
 type Copy = { success: string; error: string };
 
+// he (Phase 4): wrap phone/e-mail tokens with ltrIsolate() — RTL only.
 const COPY: Record<"en" | "de" | "pl" | "ru", Copy> = {
   en: {
     success:

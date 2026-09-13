@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
+import { createSiteDocTranslation } from "../../../actions";
+import { LOCALES } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 
 export default async function HeaderList() {
   const items = await prisma.siteDocument.findMany({ where: { type: "header" }, orderBy: { language: "asc" } });
+  const existingLangs = new Set(items.map((h) => h.language));
+  const missing = LOCALES.filter((l) => l !== "en" && !existingLangs.has(l));
   return (
     <div className="max-w-xl">
       <h1 className="text-2xl font-semibold mb-4">Header</h1>
@@ -17,6 +21,17 @@ export default async function HeaderList() {
           </Link>
         ))}
       </div>
+      {existingLangs.has("en") && missing.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-3">
+          {missing.map((l) => (
+            <form key={l} action={createSiteDocTranslation.bind(null, "header", l)}>
+              <button type="submit" className="rounded-md border border-dashed border-[#C29A5E] px-3 py-1.5 text-sm text-[#C29A5E] hover:bg-[#C29A5E]/10">
+                + {l.toUpperCase()} from English
+              </button>
+            </form>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

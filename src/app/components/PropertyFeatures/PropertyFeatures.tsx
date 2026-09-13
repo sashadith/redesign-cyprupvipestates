@@ -3,6 +3,8 @@ import styles from "./PropertyFeatures.module.scss";
 import { PropertyType } from "@/types/homepage";
 import { KeyFeatures } from "@/types/project";
 import { formatMonthYear } from "@/lib/formatMonthYear";
+import { fmtPrice } from "@/lib/locale";
+import Bdi from "@/app/components/Bdi";
 
 const cityTranslations: {
   [city in "Paphos" | "Limassol" | "Larnaca"]: {
@@ -239,7 +241,7 @@ const PropertyFeatures: FC<Props> = ({ keyFeatures, lang }) => {
                           : "Price from (+VAT)"}
                 </div>
                 <div className={styles.featureValue}>
-                  {keyFeatures.price.toLocaleString()} €
+                  <Bdi ltr>{fmtPrice(keyFeatures.price, lang)}</Bdi>
                 </div>
               </div>
             )}
