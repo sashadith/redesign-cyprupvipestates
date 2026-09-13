@@ -1,7 +1,20 @@
-// One-off seed: populate the `faqPage` SiteDocument (type="faqPage") with EN
-// content (copied verbatim from src/app/preview-faq/faqData.ts) plus DE/PL/RU
-// translations, so the redesigned /faq page has real content in all 4
-// languages. Run: node scripts/seed-faq-translations.mjs
+// Seeds the `faqPage` SiteDocument (type="faqPage") with EN content (copied
+// verbatim from src/app/preview-faq/faqData.ts) plus DE/PL/RU/HE
+// translations, so the redesigned /faq page has real content in all 5
+// languages.
+//
+// ****************  THIS WRITES TO THE PRODUCTION DATABASE  *****************
+// The local DATABASE_URL is the PRODUCTION database (see the repo's "Local DB
+// is production" note) — run this on the STAGING SERVER, never on a laptop.
+// Same two-key guard as scripts/he-content/seed.mjs:
+//
+//   node scripts/seed-faq-translations.mjs                 dry run (default):
+//                                                          prints the plan,
+//                                                          touches no DB, exit 0
+//   CVP_CONFIRM_CONTENT_SEED=yes node … --yes              real run
+//
+// Missing either the env var or --yes means no write happens; --yes without
+// the env var is an error (exit 1) rather than a silent downgrade.
 //
 // EN_CATEGORIES below is a verbatim, hand-copied mirror of FAQ_CATEGORIES in
 // faqData.ts (that file is TypeScript with a type annotation this plain
@@ -12,13 +25,20 @@
 // category order, same slugs/ids, only label/description/question/answer
 // translated) — first-pass machine translation, not professionally
 // reviewed, same caveat as the copy.ts UI-chrome translations.
-import { PrismaClient } from "@prisma/client";
+//
+// scripts/faq-translations/he.json is the Hebrew content pack (Phase 5,
+// Task 4): authored against the styleguide/glossary, Pass A + Pass B done,
+// native review (Pass C) still pending — see docs/i18n/reviews/c-faq.md.
+// It cannot carry a `"review": "pending"` field of its own, because
+// buildForLang() below rebuilds every row strictly from EN_CATEGORIES and
+// would drop it; the protocol file carries that status instead.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const prisma = new PrismaClient();
+
+const LANGUAGES = ["en", "de", "pl", "ru", "he"];
 
 const EN_CATEGORIES = JSON.parse(fs.readFileSync(path.join(__dirname, "faq-translations", "en.json"), "utf8"));
 
@@ -50,21 +70,53 @@ function buildForLang(lang) {
 }
 
 async function main() {
-  for (const lang of ["en", "de", "pl", "ru"]) {
+  const yes = process.argv.slice(2).includes("--yes");
+  const confirmed = process.env.CVP_CONFIRM_CONTENT_SEED === "yes";
+
+  if (yes && !confirmed) {
+    console.error(
+      "seed-faq-translations.mjs: --yes was given but CVP_CONFIRM_CONTENT_SEED=yes is not set in the environment. Refusing to run for real (see content/he/README.md).",
+    );
+    process.exitCode = 1;
+    return;
+  }
+  const isDryRun = !yes; // yes ⇒ confirmed, checked above
+
+  // Building every language first also validates every translation file
+  // against EN_CATEGORIES (buildForLang throws on a missing category/item or
+  // a paragraph-count drift) — a dry run is therefore a full structural check.
+  const built = LANGUAGES.map((lang) => {
     const categories = buildForLang(lang);
-    const totalItems = categories.reduce((n, c) => n + c.items.length, 0);
-    await prisma.siteDocument.upsert({
-      where: { type_language: { type: "faqPage", language: lang } },
-      update: { data: { categories } },
-      create: { sanityId: `faqPage-${lang}`, type: "faqPage", language: lang, data: { categories } },
-    });
-    console.log(`✓ ${lang}: ${categories.length} categories, ${totalItems} questions`);
+    return { lang, categories, totalItems: categories.reduce((n, c) => n + c.items.length, 0) };
+  });
+
+  console.log(`seed-faq-translations: ${isDryRun ? "DRY RUN" : "REAL RUN"} — languages: ${LANGUAGES.join(", ")}`);
+  for (const { lang, categories, totalItems } of built) {
+    console.log(`  faqPage-${lang}: upsert — ${categories.length} categories, ${totalItems} questions`);
+  }
+
+  if (isDryRun) {
+    console.log("\nseed-faq-translations.mjs: dry run — nothing written. Re-run with --yes and CVP_CONFIRM_CONTENT_SEED=yes to apply.");
+    return; // no PrismaClient constructed — see the banner at the top
+  }
+
+  const { PrismaClient } = await import("@prisma/client");
+  const prisma = new PrismaClient();
+  try {
+    for (const { lang, categories, totalItems } of built) {
+      await prisma.siteDocument.upsert({
+        where: { type_language: { type: "faqPage", language: lang } },
+        update: { data: { categories } },
+        create: { sanityId: `faqPage-${lang}`, type: "faqPage", language: lang, data: { categories } },
+      });
+      console.log(`✓ ${lang}: ${categories.length} categories, ${totalItems} questions`);
+    }
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
-main()
-  .catch((err) => {
-    console.error(err);
-    process.exitCode = 1;
-  })
-  .finally(() => prisma.$disconnect());
+main().catch((err) => {
+  console.error(err);
+  process.exitCode = 1;
+});
