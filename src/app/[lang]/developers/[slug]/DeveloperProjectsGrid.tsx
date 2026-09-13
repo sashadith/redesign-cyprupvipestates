@@ -27,7 +27,7 @@ import dynamic from "next/dynamic";
 import { ProjectCard, type ProjectCardData } from "@/app/preview-projects/ProjectCard";
 import type { MapMarker } from "@/app/preview-projects/ProjectsExplorer";
 import { projectsStrings } from "@/app/[lang]/projects/projectsI18n";
-import { bidiIsolate } from "@/lib/locale";
+import { bidiIsolate, localeDir } from "@/lib/locale";
 
 const ProjectsMap = dynamic(() => import("@/app/preview-projects/ProjectsMap"), {
   ssr: false,
@@ -66,7 +66,9 @@ export default function DeveloperProjectsGrid({
   formSlot: React.ReactNode;
 }) {
   const s = projectsStrings(lang);
-  const headline = (HEADLINE[lang] ?? HEADLINE.en)(bidiIsolate(developerName));
+  const headline = (HEADLINE[lang] ?? HEADLINE.en)(
+    localeDir(lang) === "rtl" ? bidiIsolate(developerName) : developerName
+  );
   const soldOutHeading = SOLD_OUT_HEADING[lang] ?? SOLD_OUT_HEADING.en;
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 

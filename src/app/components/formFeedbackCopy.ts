@@ -13,36 +13,35 @@
  * So the four locales live here once and every form reads them, with the CMS
  * value still winning wherever a form has one. */
 
-import { ltrIsolate } from "@/lib/locale";
-
 export type FormLang = string;
 
 type Copy = { success: string; error: string };
 
+// he (Phase 4): wrap phone/e-mail tokens with ltrIsolate() — RTL only.
 const COPY: Record<"en" | "de" | "pl" | "ru", Copy> = {
   en: {
     success:
       "Thank you — your enquiry has reached us. An adviser will be in touch, usually the same day.",
     error:
-      `Your enquiry could not be sent. Please try again, or reach us at ${ltrIsolate("office@cyprusvipestates.com")} or ${ltrIsolate("+357 99 278 285")}.`,
+      "Your enquiry could not be sent. Please try again, or reach us at office@cyprusvipestates.com or +357 99 278 285.",
   },
   de: {
     success:
       "Vielen Dank — Ihre Anfrage ist bei uns eingegangen. Ein Berater meldet sich, meist noch am selben Tag.",
     error:
-      `Ihre Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder erreichen Sie uns unter ${ltrIsolate("office@cyprusvipestates.com")} oder ${ltrIsolate("+357 99 278 285")}.`,
+      "Ihre Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder erreichen Sie uns unter office@cyprusvipestates.com oder +357 99 278 285.",
   },
   pl: {
     success:
       "Dziękujemy — Twoje zapytanie do nas dotarło. Doradca odezwie się, zwykle jeszcze tego samego dnia.",
     error:
-      `Nie udało się wysłać zapytania. Spróbuj ponownie lub skontaktuj się z nami: ${ltrIsolate("office@cyprusvipestates.com")} albo ${ltrIsolate("+357 99 278 285")}.`,
+      "Nie udało się wysłać zapytania. Spróbuj ponownie lub skontaktuj się z nami: office@cyprusvipestates.com albo +357 99 278 285.",
   },
   ru: {
     success:
       "Спасибо — ваша заявка получена. Консультант свяжется с вами, обычно в тот же день.",
     error:
-      `Не удалось отправить заявку. Попробуйте ещё раз или напишите на ${ltrIsolate("office@cyprusvipestates.com")} либо позвоните: ${ltrIsolate("+357 99 278 285")}.`,
+      "Не удалось отправить заявку. Попробуйте ещё раз или напишите на office@cyprusvipestates.com либо позвоните: +357 99 278 285.",
   },
 };
 

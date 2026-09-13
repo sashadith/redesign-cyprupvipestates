@@ -12,8 +12,9 @@ import type { ReactNode } from "react";
  *
  * Pure server-safe markup — no client-only code — so it can be used from
  * both server and client components. See src/app/rtl.css for
- * .bidi-isolate / .ltr-isolate, and src/lib/locale.ts's ltrIsolate() for the
- * plain-string equivalent (copy tables, generated sentences).
+ * .bidi-isolate / .ltr-isolate, and src/lib/locale.ts's ltrIsolate() /
+ * bidiIsolate() for the plain-string equivalents (copy tables, generated
+ * sentences) — ltrIsolate() for <Bdi ltr>, bidiIsolate() for bare <Bdi>.
  */
 export default function Bdi({ children, ltr }: { children: ReactNode; ltr?: boolean }) {
   return <bdi className={ltr ? "ltr-isolate" : "bidi-isolate"}>{children}</bdi>;

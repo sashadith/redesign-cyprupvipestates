@@ -1679,9 +1679,9 @@ export async function saveFaqPage(lang: string, categoriesJson: string) {
 }
 
 // Seeds a new language's row for any SiteDocument type from the English one as
-// a starting draft — generalizes the faqPage-only createFaqTranslation below to
-// header/footer/forms/landing/faq, all of which key on SiteDocument's
-// type+language rather than a translationGroupId model.
+// a starting draft — covers header/footer/forms/landing/faq, all of which key
+// on SiteDocument's type+language rather than a translationGroupId model. The
+// FAQ page now calls this directly instead of through a faqPage-only wrapper.
 const SITE_DOC_LIST_PATH: Record<string, string> = {
   header: "/admin/content/header",
   footer: "/admin/settings",
@@ -1705,13 +1705,6 @@ export async function createSiteDocTranslation(type: string, lang: string) {
   });
   const path = SITE_DOC_LIST_PATH[type] ?? "/admin/content/" + type;
   revalidatePath(path);
-}
-
-// Kept as a thin wrapper: the FAQ list page still imports/calls this name and
-// signature (lang, fromLang) — the generalized action above always copies from
-// "en", which matches every existing call site.
-export async function createFaqTranslation(lang: string, fromLang: string = "en") {
-  return createSiteDocTranslation("faqPage", lang);
 }
 
 // ── Translations: create a linked translation of an existing document ──

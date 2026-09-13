@@ -10,7 +10,6 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import { getAttribution } from "@/lib/attribution";
 import { qualifierCopy, BUDGET_VALUES, PROPERTY_VALUES, TIMELINE_VALUES } from "@/app/components/qualifierFields";
 import { consentCopy } from "@/app/components/consentCopy";
-import { ltrIsolate } from "@/lib/locale";
 import "@/app/components/formFeedback.css";
 
 /* Contact form — redesign styling. Submission / validation / tracking logic is
@@ -51,6 +50,7 @@ type Strings = {
   labelQuestion?: string; placeholderQuestion?: string; vQuestion?: string;
 };
 
+// he (Phase 4): wrap phone/e-mail tokens with ltrIsolate() — RTL only.
 const DICT: Record<string, Strings> = {
   en: {
     labelName: "Your name", labelSurname: "Surname", labelPhone: "Phone", labelEmail: "Email",
@@ -59,7 +59,7 @@ const DICT: Record<string, Strings> = {
     vEmailInvalid: "Invalid email address", vEmail: "Email is required", vContact: "What’s the best way to contact you?",
     vConsentReq: "Consent is required", vConsentOne: "Consent required",
     success: "Thank you — your enquiry has reached us. An adviser will be in touch, usually the same day.",
-    error: `Your enquiry could not be sent. Please try again, or reach us at ${ltrIsolate("office@cyprusvipestates.com")} or ${ltrIsolate("+357 99 278 285")}.`,
+    error: "Your enquiry could not be sent. Please try again, or reach us at office@cyprusvipestates.com or +357 99 278 285.",
     labelQuestion: "Your question", placeholderQuestion: "What would you like to know?",
     vQuestion: "Please enter your question",
   },
@@ -70,7 +70,7 @@ const DICT: Record<string, Strings> = {
     vEmailInvalid: "Ungültige E-Mail Adresse", vEmail: "E-Mail ist erforderlich", vContact: "Wie können wir Sie am besten kontaktieren?",
     vConsentReq: "Zustimmung erforderlich", vConsentOne: "Einverständnis erforderlich",
     success: "Vielen Dank — Ihre Anfrage ist bei uns eingegangen. Ein Berater meldet sich, meist noch am selben Tag.",
-    error: `Ihre Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder erreichen Sie uns unter ${ltrIsolate("office@cyprusvipestates.com")} oder ${ltrIsolate("+357 99 278 285")}.`,
+    error: "Ihre Anfrage konnte nicht gesendet werden. Bitte versuchen Sie es erneut oder erreichen Sie uns unter office@cyprusvipestates.com oder +357 99 278 285.",
   },
   pl: {
     labelName: "Imię", labelSurname: "Nazwisko", labelPhone: "Telefon", labelEmail: "E-mail",
@@ -79,7 +79,7 @@ const DICT: Record<string, Strings> = {
     vEmailInvalid: "Nieprawidłowy format email", vEmail: "Email jest wymagany", vContact: "Wybierz preferowaną formę kontaktu",
     vConsentReq: "Zgoda jest wymagana", vConsentOne: "Wymagane wyrażenie zgody",
     success: "Dziękujemy — Twoje zapytanie do nas dotarło. Doradca odezwie się, zwykle jeszcze tego samego dnia.",
-    error: `Nie udało się wysłać zapytania. Spróbuj ponownie lub skontaktuj się z nami: ${ltrIsolate("office@cyprusvipestates.com")} albo ${ltrIsolate("+357 99 278 285")}.`,
+    error: "Nie udało się wysłać zapytania. Spróbuj ponownie lub skontaktuj się z nami: office@cyprusvipestates.com albo +357 99 278 285.",
   },
   ru: {
     labelName: "Ваше имя", labelSurname: "Фамилия", labelPhone: "Телефон", labelEmail: "Ваш email",
@@ -88,7 +88,7 @@ const DICT: Record<string, Strings> = {
     vEmailInvalid: "Неверный формат email", vEmail: "Email обязателен", vContact: "Как с вами лучше связаться?",
     vConsentReq: "Согласие обязательно", vConsentOne: "Требуется согласие",
     success: "Спасибо — ваша заявка получена. Консультант свяжется с вами, обычно в тот же день.",
-    error: `Не удалось отправить заявку. Попробуйте ещё раз или напишите на ${ltrIsolate("office@cyprusvipestates.com")} либо позвоните: ${ltrIsolate("+357 99 278 285")}.`,
+    error: "Не удалось отправить заявку. Попробуйте ещё раз или напишите на office@cyprusvipestates.com либо позвоните: +357 99 278 285.",
   },
 };
 
