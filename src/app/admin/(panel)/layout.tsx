@@ -31,6 +31,8 @@ function buildModules(isAdmin: boolean, isOwner: boolean, trashCount: number, ac
     { href: "/admin/content/forms", label: "Forms" },
     { href: "/admin/content/landing", label: "Landing Pages" },
     { href: "/admin/content/faq", label: "FAQ" },
+    // EN→HE translation queue for the volume content (developments, areas, developers).
+    { href: "/admin/content/hebrew", label: "Hebrew" },
     { href: "/admin/media", label: "Media" },
   ];
 
