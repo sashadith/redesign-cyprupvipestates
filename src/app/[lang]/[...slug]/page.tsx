@@ -95,10 +95,12 @@ type Props = {
 // paginated URLs don't carry an identical title to page 1 despite
 // self-canonicalizing to their own ?page=N URL (a soft duplicate-content
 // signal otherwise). H1 is deliberately left unchanged.
-// `he` takes a comma instead of the em dash the LTR locales use: Hebrew
+// `he` takes a parenthesis instead of the em dash the LTR locales use: Hebrew
 // punctuation has no `—` (style guide §3), and a pipe would collide with the
 // pipe a style-guide-conformant Hebrew CMS title already carries before the
-// brand (`… | Cyprus VIP Estates | עמוד 2` — brand stranded mid-title). The
+// brand (`… | Cyprus VIP Estates | עמוד 2` — brand stranded mid-title); the
+// suffix is also appended to the description, so it must read after a full
+// stop too (`…. (עמוד 2)`). The
 // page number is LRI/PDI isolated so the digits keep their place when the
 // title ends on a Latin run.
 const PAGE_TITLE_SUFFIX: Record<Locale, (n: number) => string> = {
@@ -106,7 +108,7 @@ const PAGE_TITLE_SUFFIX: Record<Locale, (n: number) => string> = {
   de: (n) => ` — Seite ${n}`,
   pl: (n) => ` — Strona ${n}`,
   ru: (n) => ` — Страница ${n}`,
-  he: (n) => `, עמוד ${ltrIsolate(String(n))}`, // REVIEW(he)
+  he: (n) => ` (עמוד ${ltrIsolate(String(n))})`, // REVIEW(he)
 };
 
 // No ?page= at all -> "default" (render as page 1, no redirect: the bare URL
