@@ -11,7 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { mirrorCheck, styleCheck, linkCheck, metaCheck, walkStrings, STYLE_RULES } from "../../he-content/lib.mjs";
+import { mirrorCheck, isHeLinkRewrite, styleCheck, linkCheck, metaCheck, walkStrings, STYLE_RULES } from "../../he-content/lib.mjs";
 import { planSiteDocuments, planSeed, applyPlan, stripPackMetadata } from "../../he-content/seed.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -62,7 +62,7 @@ test("mirrorCheck: EN letters but HE empty fails", () => {
 
 test("mirrorCheck: EN letters but HE has no Hebrew script fails", () => {
   const en = { title: "Apartments for sale" };
-  const he = { title: "Apartments for sale" }; // untranslated — Latin only
+  const he = { title: "Apartments for sale (draft)" }; // untranslated — Latin only, and not a byte-identical keep
   const violations = mirrorCheck(en, he);
   assert.ok(violations.some((v) => v.includes("no Hebrew script")));
 });
@@ -325,4 +325,24 @@ test("stripPackMetadata: removes review/translationGroupSlugEn/parentSlug, keeps
     data: { x: 1 },
   });
   assert.deepEqual(stripped, { title: "בית", data: { x: 1 } });
+});
+
+
+test("mirrorCheck: empty EN string allows empty HE (spacer spans)", () => {
+  assert.deepEqual(mirrorCheck({ t: "" }, { t: "" }), []);
+});
+
+test("mirrorCheck: identical letter strings are a recorded keep, not a violation", () => {
+  const stats = { keptIdentical: [] };
+  assert.deepEqual(mirrorCheck({ category: "villa", name: "Cap St Georges" }, { category: "villa", name: "Cap St Georges" }, "", stats), []);
+  assert.deepEqual(stats.keptIdentical, ["category", "name"]);
+});
+
+test("mirrorCheck: href may be the /he rewrite of the EN link, nothing else", () => {
+  assert.deepEqual(mirrorCheck({ href: "/en/projects" }, { href: "/he/projects" }), []);
+  assert.deepEqual(mirrorCheck({ href: "/contacts" }, { href: "/he/contacts" }), []);
+  // Retargeting to another page is mirrorCheck-neutral; the allow-list is linkCheck's job.
+  assert.deepEqual(mirrorCheck({ href: "/villas-in-cyprus" }, { href: "/he/villas-cyprus" }), []);
+  assert.ok(linkCheck("/de/projects", []));
+  assert.equal(isHeLinkRewrite("https://cyprusvipestates.com/en/faq", "/he/faq"), true);
 });

@@ -21,7 +21,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { mirrorCheck, styleCheck, linkCheck, metaCheck, walkStrings } from "../he-content/lib.mjs";
+import { mirrorCheck, styleCheck, linkCheck, metaCheck, walkStrings, isLinkKey } from "../he-content/lib.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CONTENT_HE_DIR = path.join(ROOT, "content", "he");
@@ -89,7 +89,10 @@ function collectLinks(json, path_ = "", out = []) {
   for (const k of Object.keys(json)) {
     const childPath = path_ ? `${path_}.${k}` : k;
     const v = json[k];
-    if ((k === "href" || k === "url") && typeof v === "string") {
+    // Every link-carrying field (href/url/link/*Destination…) goes through
+    // linkCheck — mirrorCheck deliberately skips these keys, so this walk is
+    // the only place the he allow-list is enforced for them.
+    if (isLinkKey(k) && typeof v === "string" && v.startsWith("/") || (k === "href" || k === "url") && typeof v === "string") {
       out.push({ href: v, path: childPath });
     } else if (v != null && typeof v === "object") {
       collectLinks(v, childPath, out);
@@ -148,8 +151,12 @@ function main() {
         enJson = undefined;
       }
       if (enJson !== undefined) {
-        for (const v of mirrorCheck(stripPackMetadata(enJson), stripPackMetadata(json), "")) {
+        const stats = { keptIdentical: [] };
+        for (const v of mirrorCheck(stripPackMetadata(enJson), stripPackMetadata(json), "", stats)) {
           violations.push(`${rel}: ${v}`);
+        }
+        if (stats.keptIdentical.length) {
+          notes.push(`${rel}: ${stats.keptIdentical.length} string(s) kept identical to EN (enum values, names, tokens) — e.g. ${stats.keptIdentical.slice(0, 3).join(", ")}`);
         }
       }
     } else {

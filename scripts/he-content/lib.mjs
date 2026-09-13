@@ -30,7 +30,25 @@ function hasAnyLetters(s) {
 // listItem/level are block-shape, not content; marks is the list of markDef
 // keys applied to a span, not text) and literal link/asset fields (url, slug,
 // href, _ref) that must keep pointing at the same place.
-const IDENTICAL_KEYS = new Set(["_key", "_ref", "_type", "id", "url", "slug", "href", "marks", "style", "listItem", "level"]);
+const IDENTICAL_KEYS = new Set(["_key", "_ref", "_type", "id", "url", "slug", "href", "link", "linkDestination", "marks", "style", "listItem", "level"]);
+
+// Link-carrying keys may differ from EN only by the locale prefix rewrite
+// (`/en/x` → `/he/x`, `/x` → `/he/x`, absolute site URLs likewise) — the
+// Hebrew page must point at the Hebrew page, and linkCheck validates the target.
+const LINK_KEYS = new Set(["url", "href", "link", "linkDestination"]);
+// Site documents name their link fields freely (agreementLinkDestination,
+// buttonUrl, ctaHref…): anything ending in one of these suffixes is a link.
+export const isLinkKey = (k) => LINK_KEYS.has(k) || /(destination|url|href|link)$/i.test(k);
+export function isHeLinkRewrite(en, he) {
+  if (typeof en !== "string" || typeof he !== "string") return false;
+  const strip = (u) => u.replace(/^https?:\/\/(www\.)?cyprusvipestates\.com/, "");
+  const e = strip(en);
+  const h = strip(he);
+  if (!e.startsWith("/") || !h.startsWith("/he")) return false;
+  const bare = e.replace(/^\/en(?=\/|$)/, "");
+  const expected = "/he" + (bare === "" ? "" : bare.startsWith("/") ? bare : "/" + bare);
+  return h === expected || h.replace(/\/$/, "") === expected.replace(/\/$/, "");
+}
 
 function identicalEqual(a, b) {
   if (a === b) return true;
@@ -49,7 +67,7 @@ function identicalEqual(a, b) {
  * fields non-empty and containing Hebrew script wherever the EN string had
  * letters, and every IDENTICAL_KEYS field byte-identical between EN and HE.
  */
-export function mirrorCheck(enValue, heValue, path = "") {
+export function mirrorCheck(enValue, heValue, path = "", stats = null) {
   const violations = [];
   const label = path || "(root)";
 
@@ -71,7 +89,7 @@ export function mirrorCheck(enValue, heValue, path = "") {
       return violations;
     }
     enValue.forEach((v, i) => {
-      violations.push(...mirrorCheck(v, heValue[i], path ? `${path}[${i}]` : `[${i}]`));
+      violations.push(...mirrorCheck(v, heValue[i], path ? `${path}[${i}]` : `[${i}]`, stats));
     });
     return violations;
   }
@@ -89,13 +107,20 @@ export function mirrorCheck(enValue, heValue, path = "") {
     for (const k of enKeys) {
       if (!heKeySet.has(k)) continue;
       const childPath = path ? `${path}.${k}` : k;
-      if (IDENTICAL_KEYS.has(k)) {
+      // `listItem` is a layout token ("bullet"/"number") on portable-text
+      // blocks but a TEXT field on the homepage's ListItem objects.
+      // Link fields may be retargeted to the matching Hebrew page (the EN
+      // landing slugs differ from the Hebrew pack's); linkCheck enforces the
+      // he allow-list on the target, so no identity or Hebrew is required here.
+      if (isLinkKey(k) && typeof enValue[k] === "string" && typeof heValue[k] === "string") continue;
+      const isLayoutListItem = k === "listItem" && (enValue[k] === "bullet" || enValue[k] === "number");
+      if (IDENTICAL_KEYS.has(k) && (k !== "listItem" || isLayoutListItem)) {
         if (!identicalEqual(enValue[k], heValue[k])) {
           violations.push(`${childPath}: must be identical between en/he (en=${JSON.stringify(enValue[k])}, he=${JSON.stringify(heValue[k])})`);
         }
         continue;
       }
-      violations.push(...mirrorCheck(enValue[k], heValue[k], childPath));
+      violations.push(...mirrorCheck(enValue[k], heValue[k], childPath, stats));
     }
     return violations;
   }
@@ -111,8 +136,17 @@ export function mirrorCheck(enValue, heValue, path = "") {
   }
 
   if (typeof enValue === "string") {
+    // An empty EN string (spacer spans, blank subtitles) may stay empty in HE.
+    if (!enValue.trim()) return violations;
     if (!heValue.trim()) {
       violations.push(`${label}: he value is empty`);
+    } else if (enValue === heValue || heValue === enValue.replace(/\bEN\b/g, "HE")) {
+      // Deliberately kept identical (enum values, layout tokens, person and
+      // developer names, language strings the code maps itself). Not a
+      // violation, but counted so the gate can print how much of a file was
+      // left untranslated — a whole-file "kept" count is a red flag a human
+      // reads, a per-string one is noise.
+      if (hasAnyLetters(enValue) && stats) stats.keptIdentical.push(label);
     } else if (hasAnyLetters(enValue) && !hasHebrewScript(heValue)) {
       violations.push(`${label}: en has letters but he has no Hebrew script (he="${heValue}")`);
     }
@@ -246,7 +280,7 @@ export function metaCheck(seo) {
 // Keys that carry structure/links rather than prose — skipped by walkStrings
 // so callers don't run styleCheck (forbidden-punctuation etc.) against a
 // _key/_ref/slug/url/href value, which is never meant to read as Hebrew text.
-const NON_TEXT_KEYS = new Set(["_key", "_ref", "_type", "id", "url", "slug", "href", "marks"]);
+const NON_TEXT_KEYS = new Set(["_key", "_ref", "_type", "id", "url", "slug", "href", "link", "linkDestination", "marks"]);
 
 /**
  * Walks every string leaf reachable from `json`, calling `fn(value, path)`
