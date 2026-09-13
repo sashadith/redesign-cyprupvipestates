@@ -19,9 +19,15 @@
 //     production DB read, so it is gated behind CVP_ALLOW_DB_READ=yes. For an
 //     EMPTY pack, no PrismaClient is constructed at all; the empty plan is
 //     printed and the process exits 0 without ever touching the network.
-//   * Any existing row this would touch whose `language` is not "he" makes
-//     the whole run refuse (a content pack must never overwrite another
-//     locale's row).
+//   * site-documents/faq: an existing row for the same `type` whose
+//     `language` is not "he" makes the whole run refuse (those types are not
+//     expected to collide across locales the way slugs are).
+//   * case-studies/singlepages: existing-row matching is (language: "he",
+//     slug) only — a same-slug row of another language is EXPECTED (decision
+//     A: a "he" page deliberately shares its Latin slug with its EN sibling)
+//     and is ignored, never a reason to refuse. An insert/update can still
+//     never target a non-"he" row — see assertNoExistingHeRow/
+//     assertUpdateTargetIsHe.
 //
 // Usage:
 //   node scripts/he-content/seed.mjs [--only <kind>] [--yes]
@@ -125,6 +131,50 @@ function pickFields(obj, fields) {
   const out = {};
   for (const f of fields) if (obj && obj[f] !== undefined) out[f] = obj[f];
   return out;
+}
+
+// ─── Language guard (case-studies / singlepages) ───────────────────────────
+//
+// Singlepage and CaseStudy are unique per (language, slug), and under
+// decision A a "he" page deliberately shares its Latin slug with its EN
+// (and sometimes de/pl/ru) sibling — so a same-slug row of another language
+// is the NORM, not a hazard, and must never block a plan. Existing-row
+// matching for both kinds is therefore (language === "he", slug === <the DB
+// slug: leaf for singlepages>) ONLY; a same-slug non-"he" row is looked up
+// solely (via resolveTranslationGroupId's own `(language === "en", slug)`
+// match) when a pack row's translationGroupSlugEn names it.
+//
+// What still must never happen is this planner accidentally treating a
+// non-"he" row as the target of an update, or planning an insert while a
+// "he" row already exists at that key (which should have been an update).
+// Given the (language === "he", slug) match above, `existing` can only ever
+// be a "he" row or undefined — so these two assertions can never actually
+// fire through the public planners today. They stay as explicit,
+// independently-tested guards so a future change to the match (or a
+// genuinely corrupted `existingRows` array) fails loudly instead of quietly
+// upserting the wrong locale's row.
+
+/** Throws unless `existingRow` (about to be UPDATED) is a "he" row. Pass the
+ *  row `existing` matched by `(language === "he", slug)` — under correct
+ *  matching this is always true; the check exists for defense-in-depth. */
+export function assertUpdateTargetIsHe(existingRow, label) {
+  if (existingRow && existingRow.language !== "he") {
+    throw new Error(`${label}: refusing to update a row whose language is "${existingRow.language}", not "he" — existingRows is corrupted`);
+  }
+}
+
+/** Throws if a "he" row for `slug` is already present in `existingRows` —
+ *  an insert must never coincide with an existing "he" row (that case
+ *  belongs to the update branch instead). Same defense-in-depth purpose as
+ *  assertUpdateTargetIsHe. Rows of other languages sharing `slug` are
+ *  expected (decision A) and are not checked here. */
+export function assertNoExistingHeRow(existingRows, slug, label) {
+  const heRow = existingRows.find((r) => r.language === "he" && r.slug === slug);
+  if (heRow) {
+    throw new Error(
+      `${label}: refusing to insert — a "he" row for slug "${slug}" already exists (id ${heRow.id ?? heRow.sanityId ?? "?"}) — this should have been an update`,
+    );
+  }
 }
 
 /**
@@ -346,9 +396,11 @@ export function loadCaseStudiesPack(dir = path.join(CONTENT_HE_DIR, "case-studie
  * Pure planner for the "case-studies" kind.
  *
  * `rows`: `{ slug, raw }` as `loadCaseStudiesPack()` returns.
- * `existingRows.caseStudies`: CaseStudy rows for the SAME slugs (any
- *   language) plus any EN row named by a pack row's `translationGroupSlugEn`,
- *   each carrying `{ id, sanityId, slug, language, translationGroupId,
+ * `existingRows.caseStudies`: "he" CaseStudy rows for the SAME slugs, plus
+ *   any EN row named by a pack row's `translationGroupSlugEn` — never a
+ *   same-slug row of another language otherwise (decision A makes that the
+ *   norm, not something to refuse over; see the language-guard note above
+ *   pickFields) — each carrying `{ id, sanityId, slug, language, translationGroupId,
  *   ...CASE_STUDY_FIELDS, relatedDevelopmentSlugs }` — `relatedDevelopmentSlugs`
  *   (only meaningful for existing "he" rows) is the loader's already-resolved
  *   view of who this case study currently links to (CaseStudyProject →
@@ -367,17 +419,8 @@ export function planCaseStudies(rows, existingRows) {
   const linkPlan = [];
 
   for (const { slug, raw } of rows) {
-    const clashing = existingCaseStudies.find((r) => r.slug === slug && r.language !== "he");
-    if (clashing) {
-      mainPlan.push({
-        kind: "case-studies",
-        key: slug,
-        action: "refuse",
-        reason: `existing row for slug "${slug}" has language "${clashing.language}", not "he" — refusing to touch it`,
-      });
-      continue;
-    }
-
+    // (language === "he", slug) only — a same-slug EN/de/pl/ru row is
+    // expected under decision A and is intentionally ignored here.
     const existing = existingCaseStudies.find((r) => r.slug === slug && r.language === "he");
 
     let tg;
@@ -402,11 +445,15 @@ export function planCaseStudies(rows, existingRows) {
     const resolved = { translationGroupId: tg.translationGroupId, sourceEnRowId: tg.sourceEnRow?.id ?? null, needsEnUpdate: tg.needsEnUpdate };
 
     if (!existing) {
+      assertNoExistingHeRow(existingCaseStudies, slug, `case-studies "${slug}"`);
       mainPlan.push({ kind: "case-studies", key: slug, action: "insert", reason: "no existing he row", sanityId, data, resolved });
-    } else if (!deepEqual(pickFields(existing, CASE_STUDY_FIELDS), data) || existing.translationGroupId !== tg.translationGroupId) {
-      mainPlan.push({ kind: "case-studies", key: slug, action: "update", reason: "data differs from the pack", sanityId, data, resolved, id: existing.id });
     } else {
-      mainPlan.push({ kind: "case-studies", key: slug, action: "skip", reason: "unchanged", id: existing.id, sanityId });
+      assertUpdateTargetIsHe(existing, `case-studies "${slug}"`);
+      if (!deepEqual(pickFields(existing, CASE_STUDY_FIELDS), data) || existing.translationGroupId !== tg.translationGroupId) {
+        mainPlan.push({ kind: "case-studies", key: slug, action: "update", reason: "data differs from the pack", sanityId, data, resolved, id: existing.id });
+      } else {
+        mainPlan.push({ kind: "case-studies", key: slug, action: "skip", reason: "unchanged", id: existing.id, sanityId });
+      }
     }
 
     const existingDevSlugs = (existing?.relatedDevelopmentSlugs ?? []).slice().sort();
@@ -467,9 +514,11 @@ export function singlepageSanityId(packSlug) {
  * Pure planner for the "singlepages" kind.
  *
  * `rows`: `{ slug, raw }` as `loadSinglepagesPack()` returns.
- * `existingRows.singlepages`: Singlepage rows for the SAME slugs (any
- *   language) plus any EN row named by a pack row's `translationGroupSlugEn`,
- *   each carrying `{ id, sanityId, slug, language, translationGroupId,
+ * `existingRows.singlepages`: "he" Singlepage rows for the SAME leaf slugs,
+ *   plus any EN row named by a pack row's `translationGroupSlugEn` — never a
+ *   same-slug row of another language otherwise (decision A makes that the
+ *   norm, not something to refuse over; see the language-guard note above
+ *   pickFields) — each carrying `{ id, sanityId, slug, language, translationGroupId,
  *   parentSanityId, ...SINGLEPAGE_FIELDS, relatedLandingPageSlugs }` —
  *   `relatedLandingPageSlugs` (only meaningful for existing "he" rows) is the
  *   loader's resolved view of `relatedLandingPages` (`[{_ref}]` → pack
@@ -539,17 +588,8 @@ export function planSinglepages(rows, existingRows) {
       continue;
     }
 
-    const clashing = existingSinglepages.find((r) => r.slug === leaf && r.language !== "he");
-    if (clashing) {
-      mainPlan.push({
-        kind: "singlepages",
-        key: slug,
-        action: "refuse",
-        reason: `existing row for slug "${leaf}" has language "${clashing.language}", not "he" — refusing to touch it`,
-      });
-      continue;
-    }
-
+    // (language === "he", slug === leaf) only — a same-slug EN/de/pl/ru row
+    // is expected under decision A and is intentionally ignored here.
     const existing = existingSinglepages.find((r) => r.slug === leaf && r.language === "he");
 
     let tg;
@@ -594,11 +634,15 @@ export function planSinglepages(rows, existingRows) {
     const resolved = { leafSlug: leaf, parentSanityId, translationGroupId: tg.translationGroupId, sourceEnRowId: tg.sourceEnRow?.id ?? null, needsEnUpdate: tg.needsEnUpdate };
 
     if (!existing) {
+      assertNoExistingHeRow(existingSinglepages, leaf, `singlepages "${slug}"`);
       mainPlan.push({ kind: "singlepages", key: slug, slug: leaf, action: "insert", reason: "no existing he row", sanityId, data, resolved });
-    } else if (!deepEqual(existingComparable, data)) {
-      mainPlan.push({ kind: "singlepages", key: slug, slug: leaf, action: "update", reason: "data differs from the pack", sanityId, data, resolved, id: existing.id });
     } else {
-      mainPlan.push({ kind: "singlepages", key: slug, slug: leaf, action: "skip", reason: "unchanged", id: existing.id, sanityId });
+      assertUpdateTargetIsHe(existing, `singlepages "${slug}"`);
+      if (!deepEqual(existingComparable, data)) {
+        mainPlan.push({ kind: "singlepages", key: slug, slug: leaf, action: "update", reason: "data differs from the pack", sanityId, data, resolved, id: existing.id });
+      } else {
+        mainPlan.push({ kind: "singlepages", key: slug, slug: leaf, action: "skip", reason: "unchanged", id: existing.id, sanityId });
+      }
     }
 
     const wantSlugs = Array.isArray(raw.relatedLandingPages) ? raw.relatedLandingPages : [];
@@ -844,8 +888,11 @@ async function loadExistingRowsForPack(prisma, pack) {
     if (!pack.rows.length) return {};
     const slugs = pack.rows.map((r) => r.slug);
     const tgSlugs = [...new Set(pack.rows.map((r) => r.raw.translationGroupSlugEn).filter(Boolean))];
+    // Only "he" rows for the pack's own slugs, plus (separately) any EN
+    // sibling needed for translationGroupSlugEn resolution — never a same-slug
+    // row of another language, which decision A makes the norm, not a hazard.
     const byId = new Map();
-    for (const r of await prisma.caseStudy.findMany({ where: { slug: { in: slugs } } })) byId.set(r.id, r);
+    for (const r of await prisma.caseStudy.findMany({ where: { slug: { in: slugs }, language: "he" } })) byId.set(r.id, r);
     if (tgSlugs.length) for (const r of await prisma.caseStudy.findMany({ where: { language: "en", slug: { in: tgSlugs } } })) byId.set(r.id, r);
     const caseStudies = await Promise.all(
       [...byId.values()].map(async (r) => {
@@ -871,8 +918,12 @@ async function loadExistingRowsForPack(prisma, pack) {
     const relSlugs = pack.rows.flatMap((r) => (Array.isArray(r.raw.relatedLandingPages) ? r.raw.relatedLandingPages : [])).map(leafSlug);
     const tgSlugs = [...new Set(pack.rows.map((r) => r.raw.translationGroupSlugEn).filter(Boolean))];
     const allSlugs = [...new Set([...slugs, ...parentSlugs, ...relSlugs])];
+    // Only "he" rows for the pack's own/parent/related slugs, plus
+    // (separately) any EN sibling needed for translationGroupSlugEn
+    // resolution — never a same-slug row of another language, which
+    // decision A makes the norm, not a hazard.
     const byId = new Map();
-    for (const r of await prisma.singlepage.findMany({ where: { slug: { in: allSlugs } } })) byId.set(r.id, r);
+    for (const r of await prisma.singlepage.findMany({ where: { slug: { in: allSlugs }, language: "he" } })) byId.set(r.id, r);
     if (tgSlugs.length) for (const r of await prisma.singlepage.findMany({ where: { language: "en", slug: { in: tgSlugs } } })) byId.set(r.id, r);
     const bySanityId = new Map([...byId.values()].map((r) => [r.sanityId, r]));
     const singlepages = [...byId.values()].map((r) => {

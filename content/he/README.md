@@ -175,10 +175,22 @@ below exists because the local `DATABASE_URL` in this repo is production:
    CVP_ALLOW_DB_READ=yes to read existing rows` hint and exits **0** — that's
    an expected stopping point for an operator running this from the wrong
    place, not a failure of the pack.
-4. **Row guard:** if an existing row with the SAME slug (or `type`, for
-   site-documents/faq) this would touch has `language` other than `"he"`,
-   the whole run refuses with a clear message rather than silently upserting
-   past it.
+4. **Row guard:**
+   - **site-documents/faq** (keyed by `type`): if an existing row for the
+     SAME `type` has `language` other than `"he"`, the whole run refuses
+     rather than silently upserting past it.
+   - **case-studies/singlepages** (keyed by `slug`, LEAF for singlepages):
+     existing-row matching is `(language: "he", slug)` ONLY. A same-slug row
+     of another language is **expected, not a hazard** — under decision A
+     (see above) a `he` page deliberately shares its Latin slug with its EN
+     sibling, and `CaseStudy`/`Singlepage` are unique per `(language, slug)`,
+     so that EN row can never be the target of this seeder's upsert anyway.
+     `translationGroupSlugEn` still resolves the EN sibling explicitly by
+     `(language: "en", slug)` for the translation-group id, unrelated to this
+     match. What the seeder still refuses to do — as an internal assertion,
+     not a plan-time "refuse" a run can hit — is update a row that turns out
+     not to be `"he"`, or insert where a `"he"` row already exists; either
+     would indicate a corrupted read from the database, not a normal pack.
 5. `--only <kind>` restricts to one kind. Kinds: `site-documents`, `faq`,
    `case-studies`, `singlepages`, `legal-check` — all implemented.
 

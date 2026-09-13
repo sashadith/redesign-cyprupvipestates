@@ -27,6 +27,8 @@ import {
   applyPlan,
   loadSinglepagesPack,
   loadCaseStudiesPack,
+  assertUpdateTargetIsHe,
+  assertNoExistingHeRow,
 } from "../../he-content/seed.mjs";
 
 // ─── faq ────────────────────────────────────────────────────────────────────
@@ -141,14 +143,37 @@ test("planCaseStudies: update when existing he row's fields differ, skip when un
   assert.ok(skipEntry, "expected a skip entry for the main pass");
 });
 
-test("planCaseStudies: refuses when an existing row with the same slug is a different language", () => {
-  const plan = planCaseStudies([caseStudyRow("story-1")], {
-    caseStudies: [{ id: "x", sanityId: "story-1-en", slug: "story-1", language: "en", title: "Title" }],
-    developments: [],
-  });
-  const refusal = plan.find((p) => p.action === "refuse");
-  assert.ok(refusal);
-  assert.match(refusal.reason, /language "en"/);
+test("planCaseStudies: a same-slug EN row is expected (decision A) and never blocks the plan — insert when no he row, update when one exists", () => {
+  const enSibling = { id: "en-1", sanityId: "story-1-en", slug: "story-1", language: "en", title: "Title" };
+
+  // No he row yet — the pack plans an insert, not a refusal.
+  const insertPlan = planCaseStudies([caseStudyRow("story-1")], { caseStudies: [enSibling], developments: [] });
+  const insertEntry = insertPlan.find((p) => p.key === "story-1" && ["insert", "update", "skip", "refuse"].includes(p.action));
+  assert.equal(insertEntry.action, "insert", insertEntry.reason);
+
+  // A he row also exists alongside the EN sibling — the pack plans an update
+  // (targeting the he row), still not a refusal.
+  const heRow = { id: "he-1", sanityId: "he-story-1", slug: "story-1", language: "he", translationGroupId: "tg-1", title: "old title", relatedDevelopmentSlugs: [] };
+  const updatePlan = planCaseStudies([caseStudyRow("story-1")], { caseStudies: [enSibling, heRow], developments: [] });
+  const updateEntry = updatePlan.find((p) => p.key === "story-1" && ["insert", "update", "skip", "refuse"].includes(p.action));
+  assert.equal(updateEntry.action, "update", updateEntry.reason);
+});
+
+test("assertUpdateTargetIsHe / assertNoExistingHeRow: throw against corrupted existingRows", () => {
+  assert.throws(
+    () => assertUpdateTargetIsHe({ id: "x", slug: "story-1", language: "en" }, 'case-studies "story-1"'),
+    /language is "en", not "he"/,
+  );
+  // A genuine "he" row must never trip the guard.
+  assert.doesNotThrow(() => assertUpdateTargetIsHe({ id: "x", slug: "story-1", language: "he" }, 'case-studies "story-1"'));
+  assert.doesNotThrow(() => assertUpdateTargetIsHe(null, 'case-studies "story-1"'));
+
+  assert.throws(
+    () => assertNoExistingHeRow([{ id: "he-1", slug: "story-1", language: "he" }], "story-1", 'case-studies "story-1"'),
+    /a "he" row for slug "story-1" already exists/,
+  );
+  // A same-slug EN row must never trip this guard either.
+  assert.doesNotThrow(() => assertNoExistingHeRow([{ id: "en-1", slug: "story-1", language: "en" }], "story-1", 'case-studies "story-1"'));
 });
 
 test("planCaseStudies: translationGroupSlugEn absent mints a fresh group id; present reuses/errors", () => {
@@ -381,13 +406,29 @@ test("planSinglepages: relatedLandingPages resolved only against rows in this pa
   assert.match(refusal.reason, /unknown pack slug in relatedLandingPages: "not-a-real-page"/);
 });
 
-test("planSinglepages: refuses when an existing row with the same slug is a different language", () => {
-  const plan = planSinglepages([singlepageRow("limassol")], {
-    singlepages: [{ id: "x", sanityId: "limassol-de", slug: "limassol", language: "de", title: "Startseite" }],
-  });
-  const refusal = plan.find((p) => p.action === "refuse");
-  assert.ok(refusal);
-  assert.match(refusal.reason, /language "de"/);
+test("planSinglepages: a same-slug EN row is expected (decision A) and never blocks the plan — insert when no he row, update when one exists", () => {
+  const enSibling = { id: "x", sanityId: "limassol-en", slug: "limassol", language: "en", title: "Homepage" };
+
+  // No he row yet — the pack plans an insert, not a refusal.
+  const insertPlan = planSinglepages([singlepageRow("limassol")], { singlepages: [enSibling] });
+  const insertEntry = insertPlan.find((p) => ["insert", "update", "skip", "refuse"].includes(p.action));
+  assert.equal(insertEntry.action, "insert", insertEntry.reason);
+
+  // A he row also exists alongside the EN sibling — the pack plans an update
+  // (targeting the he row), still not a refusal.
+  const heRow = {
+    id: "sp-1",
+    sanityId: "he-limassol",
+    slug: "limassol",
+    language: "he",
+    title: "כותרת ישנה",
+    excerpt: "תקציר",
+    allowIntroBlock: true,
+    translationGroupId: "tg-existing",
+  };
+  const updatePlan = planSinglepages([singlepageRow("limassol")], { singlepages: [enSibling, heRow] });
+  const updateEntry = updatePlan.find((p) => ["insert", "update", "skip", "refuse"].includes(p.action));
+  assert.equal(updateEntry.action, "update", updateEntry.reason);
 });
 
 test("planSinglepages: idempotency — a second plan over the applied result has zero writes", () => {
