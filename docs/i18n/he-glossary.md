@@ -627,8 +627,8 @@ Alle übrigen in §1–§5 verbindlich gesetzten Formen entsprechen dem heutigen
 
 | Datei | Key / Zeile | Aktuell im Code | Verbindlich laut Glossar |
 |---|---|---|---|
-| `src/app/c/[token]/copy.ts` | `vatLabel` (Z. 256) | `בתוספת מע"מ` | `+ מע"מ` (§2), wortgleich mit `src/lib/developmentCopy.ts:394` |
-| `src/app/c/[token]/copy.ts` | `bedroomLabels["1"]` (Z. 248) | `1 חדר שינה` | `חדר שינה אחד` (§2), wie `heBedrooms()` in `src/lib/heFeedVocab.ts:267` |
+| `src/app/c/[token]/copy.ts` | `vatLabel` (Z. 256) | `בתוספת מע"מ` | `+ מע"מ` (§2) — **erledigt** (Controller-Commit) |
+| `src/app/c/[token]/copy.ts` | `bedroomLabels["1"]` (Z. 248) | `1 חדר שינה` | `חדר שינה אחד` (§2) — **erledigt** (Controller-Commit) |
 | `src/app/c/[token]/copy.ts` | `unitsPlural.one` über `formatUnitsCount` (Z. 254) | `1 יחידה` | `יחידה אחת` — erst nach der §6-Bestätigung; `formatUnitsCount` setzt `${n} ${wort}` für alle Locales und braucht dafür einen he-Sonderweg |
 
 Die drei Code-Angleichungen aus Teil 1 sind erledigt: `filterAll` steht in `blogI18n.ts` und in `BlogPostsRenderer.tsx` inzwischen auf `הכל`, `eyebrow` in `preview-case-studies/[lang]/copy.ts` auf `מהשטח`; `הכול` kommt in `src/` nicht mehr vor.
