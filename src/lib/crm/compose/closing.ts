@@ -13,6 +13,7 @@ const VALEDICTION: Record<string, string> = {
   de: "Mit freundlichen Grüßen,",
   ru: "С уважением,",
   pl: "Z poważaniem,",
+  he: "בברכה,", // REVIEW(he)
 };
 
 const ROLE_LINE: Record<string, string> = {
@@ -20,6 +21,7 @@ const ROLE_LINE: Record<string, string> = {
   de: "Ihr persönlicher Immobilienberater",
   ru: "Ваш персональный консультант по недвижимости",
   pl: "Twój osobisty doradca nieruchomości",
+  he: "היועץ האישי שלכם לנדל\"ן", // REVIEW(he)
 };
 
 export type ClosingVariant = "role-line" | "company-name";

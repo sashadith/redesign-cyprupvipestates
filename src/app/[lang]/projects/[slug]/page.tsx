@@ -316,7 +316,10 @@ const ProjectPage = async ({ params }: Props) => {
             <div className="property-features">
               <PropertyFeatures keyFeatures={project.keyFeatures} lang={lang} />
               <div className="property-features-roi-button">
-                <ProjectPdfButton lang={lang} slug={slug} />
+                {/* No PDF brochure for `he` — the react-pdf document has no
+                    Hebrew font and no RTL support (spec Phase 1–4: PDF is not
+                    offered for Hebrew). The ROI button below stays. */}
+                {lang !== "he" && <ProjectPdfButton lang={lang} slug={slug} />}
                 <ButtonModal modalType="roiCalculator">
                   {projectPageCopy(lang).calculateRoi}
                 </ButtonModal>

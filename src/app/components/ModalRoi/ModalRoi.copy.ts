@@ -22,7 +22,10 @@ export const MODAL_ROI_COPY: Record<Locale, typeof MODAL_ROI_EN> = {
     title: "Отправить расчет на email",
     text: "Мы отправим вам копию расчета и получим ее на нашу почту.",
   },
-  he: MODAL_ROI_EN, // TODO(he)
+  he: {
+    title: "שליחת החישוב לאימייל",
+    text: "נשלח לכם עותק של החישוב ונקבל אותו גם אצלנו.",
+  }, // REVIEW(he)
 };
 
 export const modalRoiCopy = (lang: string) => MODAL_ROI_COPY[isLocale(lang) ? lang : "en"];

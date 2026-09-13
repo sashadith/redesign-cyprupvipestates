@@ -47,7 +47,18 @@ export const ROI_CALCULATOR_COPY: Record<Locale, typeof ROI_CALCULATOR_EN> = {
       "Результаты являются ориентировочными и зависят от цены покупки, ставки НДС, срока владения, расходов на продажу и рыночных условий.",
     cta: "Получить инвестиционную консультацию",
   },
-  he: ROI_CALCULATOR_EN, // TODO(he)
+  // The three scenario words are word-identical with the ROI result e-mail
+  // (src/app/api/roi-calculator/route.ts) — styleguide §11.6.
+  he: {
+    title: "מחשבון תשואה",
+    subtitle: "חישוב משוער לפי תנאי השוק של פרויקטים חדשים בקפריסין",
+    conservative: "שמרני",
+    realistic: "ריאלי",
+    optimistic: "אופטימי",
+    disclaimer:
+      "התוצאות משוערות בלבד ותלויות במחיר הרכישה, בשיעור המע\"מ, בתקופת ההחזקה, בעלויות המכירה ובתנאי השוק.",
+    cta: "לקבלת ייעוץ השקעות",
+  }, // REVIEW(he)
 };
 
 export const roiCalculatorCopy = (lang: string) =>

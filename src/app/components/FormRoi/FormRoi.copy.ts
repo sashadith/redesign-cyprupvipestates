@@ -114,7 +114,36 @@ export const FORM_ROI_COPY: Record<Locale, typeof FORM_ROI_EN> = {
     phoneCallLabel: "Телефон",
     emailRadioLabel: "Email",
   },
-  he: FORM_ROI_EN, // TODO(he)
+  // Labels, the three "יש להזין …" required messages, the consent pair and the
+  // contact-method question are word-identical with FormStatic/FormFull/
+  // FormPartners (styleguide §11.6); the length messages reuse the
+  // `לפחות {min} תווים` / `עד {max} תווים` pattern fixed in WP1.
+  he: {
+    inputName: "שם פרטי",
+    inputSurname: "שם משפחה",
+    inputPhone: "טלפון",
+    inputEmail: "אימייל",
+    buttonText: "שליחת החישוב",
+    successMessage: "שלחנו את החישוב לאימייל שלכם וקיבלנו עותק אצלנו.",
+    validationNameRequired: "יש להזין שם פרטי",
+    validationNameTooShort: "לפחות {min} תווים. כרגע: {current}.",
+    validationNameTooLong: "עד {max} תווים. כרגע: {current}.",
+    validationSurnameRequired: "יש להזין שם משפחה",
+    validationSurnameTooShort: "לפחות {min} תווים. כרגע: {current}.",
+    validationSurnameTooLong: "עד {max} תווים. כרגע: {current}.",
+    validationPhoneRequired: "יש להזין טלפון",
+    validationPhoneTooShort: "מספר הטלפון קצר מדי. לפחות {min} תווים.",
+    validationPhoneTooLong: "מספר הטלפון ארוך מדי. עד {max} תווים.",
+    validationPhoneInvalid: "מספר טלפון לא תקין",
+    validationEmailInvalid: "כתובת אימייל לא תקינה",
+    validationEmailRequired: "יש להזין אימייל",
+    validationAgreementRequired: "נדרש אישור",
+    validationAgreementOneOf: "חובה לאשר",
+    contactMethodRequired: "מה דרך ההתקשרות הנוחה לכם?",
+    contactMethodLegend: "מה דרך ההתקשרות הנוחה לכם?",
+    phoneCallLabel: "שיחת טלפון",
+    emailRadioLabel: "אימייל",
+  }, // REVIEW(he)
 };
 
 export const formRoiCopy = (lang: string) => FORM_ROI_COPY[isLocale(lang) ? lang : "en"];

@@ -34,7 +34,10 @@ const GREETING: Record<Locale, (args: GreetingArgs) => string> = {
     return `Dzień dobry,`;
   },
   ru: ({ first }) => (first ? `Здравствуйте, ${first},` : `Здравствуйте,`),
-  he: GREETING_EN, // TODO(he)
+  // Hebrew has no neutral "Herr/Frau [Nachname]" register in business e-mail —
+  // Israeli practice is the first name, and any titled form would force a
+  // gender choice (styleguide §2). `שלום` covers every time of day.
+  he: ({ first }) => (first ? `שלום ${first},` : `שלום,`), // REVIEW(he)
 };
 
 export function buildFirstContactGreeting(
@@ -58,7 +61,10 @@ const FIRST_CONTACT_INTRO: Record<Locale, string> = {
   de: "vielen Dank für Ihre Anfrage! Mein Name ist Sascha Dith von Cyprus VIP Estates.",
   ru: "спасибо за ваше обращение! Меня зовут Саша Дит, я из Cyprus VIP Estates.",
   pl: "dziękuję za wiadomość! Nazywam się Sascha Dith z Cyprus VIP Estates.",
-  he: FIRST_CONTACT_INTRO_EN, // TODO(he)
+  // Carries the consulting-language note (glossary §5, Entscheidung E) — this
+  // is the one first-contact line every Hebrew lead sees, and the playbook
+  // (compose/playbook/by-language.md) tells the model not to repeat it later.
+  he: "תודה על ההודעה! שמי Sascha Dith, מסוכנות Cyprus VIP Estates. הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה.", // REVIEW(he)
 };
 
 export function buildFirstContactOpening(

@@ -52,7 +52,19 @@ export const ROI_CHART_COPY: Record<Locale, typeof ROI_CHART_EN> = {
     cumulativeNetRent: "Накопленный доход от аренды",
     cumulativeProfit: "Общая прибыль",
   },
-  he: ROI_CHART_EN, // TODO(he)
+  // `numberLocale` stays "en-US": Hebrew uses Western digits and comma
+  // thousands separators (styleguide §5), which is what en-US produces.
+  he: {
+    numberLocale: "en-US",
+    chartTitleBuyHold: "תחזית שווי הנכס והכנסה משכירות",
+    chartTitleBuySell: "תחזית שווי הנכס ורווח ממכירה",
+    xAxis: "שנים",
+    yAxis: "סכום (EUR)",
+    year: "שנה",
+    estimatedValue: "שווי הנכס",
+    cumulativeNetRent: "הכנסה מצטברת משכירות",
+    cumulativeProfit: "רווח כולל",
+  }, // REVIEW(he)
 };
 
 export const roiChartCopy = (lang: string) => ROI_CHART_COPY[isLocale(lang) ? lang : "en"];

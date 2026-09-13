@@ -153,5 +153,32 @@ export const COPY: Record<BLocale, BookingCopy> = {
     goneBody: "Срок действия ссылки для записи истёк, либо она больше не активна. Пожалуйста, свяжитесь со мной — я пришлю новую.",
     contactUs: "Связаться с нами",
   },
-  he: COPY_EN, // TODO(he)
+  he: {
+    eyebrow: "תיאום פגישה",
+    titlePrefix: "שלום ",
+    titleSuffix: ", נמצא זמן שמתאים לכם",
+    // No `formalGreeting` for he: Israeli business practice addresses a client
+    // by first name, and "מר/גב'" would read as stiff or as a slash form (§2.3).
+    intro: "אפשר לבחור 2-3 מועדים שמתאימים לכם, ואחזור אליכם עם אישור בקרוב.",
+    yourTime: "השעה אצלכם",
+    cyprusTime: "שעון קפריסין",
+    detectingTimezone: "מזהים את אזור הזמן שלכם…",
+    selectedTitle: "המועדים שבחרתם",
+    submit: "שליחת המועדים הפנויים",
+    submitting: "שולחים…",
+    hint: "יש לבחור למעלה בין 1 ל-3 מועדים.",
+    pickCountError: "יש לבחור בין 1 ל-3 מועדים.",
+    genericError: "משהו השתבש, נסו שוב.",
+    submittedTitle: "תודה",
+    submittedBody: "קיבלתי את המועדים הפנויים שלכם ואשלח אישור בקרוב באימייל.",
+    alreadyProposedTitle: "תודה",
+    alreadyProposedBody: "כבר קיבלתי את המועדים הפנויים שלכם ואשלח אישור בקרוב באימייל.",
+    confirmedTitle: "הפגישה שלכם מאושרת",
+    confirmedBody: (dt) => `נפגשים ב-${dt} (לפי השעון שלכם). הזמנה ליומן נשלחה לאימייל שלכם.`,
+    confirmedZoomNote: "את הקישור לפגישת Zoom אשלח בנפרד, זמן קצר לפני השיחה.",
+    confirmedPhoneNote: "אתקשר אליכם במועד שנקבע.",
+    goneTitle: "הקישור הזה כבר לא זמין",
+    goneBody: "תוקף קישור התיאום פג או שהוא כבר אינו פעיל. אפשר לפנות אלינו ואשלח לכם קישור חדש.",
+    contactUs: "ליצירת קשר",
+  }, // REVIEW(he)
 };

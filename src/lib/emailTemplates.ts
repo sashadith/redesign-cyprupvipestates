@@ -16,7 +16,10 @@ const SAFE_NAME: Record<Locale, string> = {
   ru: "Уважаемый клиент",
   pl: "Szanowny Kliencie",
   de: "Sehr geehrte Kundin, sehr geehrter Kunde",
-  he: SAFE_NAME_EN, // TODO(he)
+  // "Dear Client" has no gender-free Hebrew equivalent (`לקוח יקר`/`לקוחה יקרה`
+  // would force a choice, styleguide §2) — the bare greeting carries the same
+  // line, since the template renders it as `${safeName},`.
+  he: "שלום", // REVIEW(he)
 };
 
 const AUTO_REPLY_EN = {
@@ -98,7 +101,26 @@ const AUTO_REPLY: Record<Locale, typeof AUTO_REPLY_EN> = {
       "Sie erhalten diese E-Mail, weil Sie eine Anfrage auf der Website von Cyprus VIP Estates gesendet haben.",
     link: "https://cyprusvipestates.com/de/projects",
   },
-  he: AUTO_REPLY_EN, // TODO(he)
+  // `|` instead of the em dash the LTR subjects use (styleguide §3: no `—`).
+  he: {
+    subject: "תודה על הפנייה | Cyprus VIP Estates",
+    title: "תודה על הפנייה",
+    intro1:
+      "תודה שיצרתם קשר עם <strong>Cyprus VIP Estates</strong>.",
+    intro2:
+      "קיבלנו את הפנייה שלכם ונחזור אליכם בקרוב עם הצעות נכסים מתאימות בקפריסין ועם תשובות לשאלות.",
+    whatNextTitle: "מה קורה עכשיו?",
+    li1: "נעבור על הבקשה ועל העדפות הנכס שלכם.",
+    li2: "אחד היועצים שלנו ייצור אתכם קשר בדרך שנוחה לכם.",
+    li3: "נכין הצעות מותאמות אישית ישירות מיזמים אמינים בקפריסין.",
+    speedUp:
+      "כדי לזרז את התהליך, אפשר כבר עכשיו לעיין בפרויקטים העדכניים שלנו.",
+    ctaText: "לצפייה בנכסים בקפריסין",
+    followUs: "עקבו אחרינו:",
+    reason:
+      "קיבלתם את האימייל הזה כי השארתם פנייה באתר של Cyprus VIP Estates.",
+    link: "https://cyprusvipestates.com/he/projects",
+  }, // REVIEW(he)
 };
 
 export function getAutoReplyEmail({ name, lang: langInput = "en" }: AutoReplyOptions) {
@@ -106,15 +128,25 @@ export function getAutoReplyEmail({ name, lang: langInput = "en" }: AutoReplyOpt
   const safeName = (name && name.trim()) || SAFE_NAME[lang];
   const t = AUTO_REPLY[lang];
 
+  // RTL support for `he` (Phase 4 / WP7): `dir="rtl"` on <html> and <body>,
+  // the two `align="left"` text cells flipped, and the bullet list's left
+  // indent mirrored. The table-based layout itself is untouched, and every
+  // LTR locale renders byte-identical HTML to before (all three helpers are
+  // no-ops unless `lang === "he"`).
+  const rtl = lang === "he";
+  const dirAttr = rtl ? ` dir="rtl"` : "";
+  const textAlign = rtl ? "right" : "left";
+  const listIndent = rtl ? "0 20px 12px 0" : "0 0 12px 20px";
+
   const html = `
 <!DOCTYPE html>
-<html lang="${lang || "en"}">
+<html lang="${lang || "en"}"${dirAttr}>
 <head>
   <meta charset="UTF-8" />
   <title>${t.subject}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </head>
-<body style="margin:0; padding:0; background-color:#f4f4f4; font-family:Arial,Helvetica,sans-serif;">
+<body style="margin:0; padding:0; background-color:#f4f4f4; font-family:Arial,Helvetica,sans-serif;"${dirAttr}>
   <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f4f4f4; padding:24px 0;">
     <tr>
       <td align="center">
@@ -141,7 +173,7 @@ export function getAutoReplyEmail({ name, lang: langInput = "en" }: AutoReplyOpt
 
           <!-- HELLO + INTRO -->
           <tr>
-            <td align="left" style="padding:16px 32px 0 32px; color:#333333; font-size:14px; line-height:1.7;">
+            <td align="${textAlign}" style="padding:16px 32px 0 32px; color:#333333; font-size:14px; line-height:1.7;">
               <p style="margin:0 0 12px 0;">${safeName},</p>
               <p style="margin:0 0 8px 0;">${t.intro1}</p>
               <p style="margin:0 0 12px 0;">${t.intro2}</p>
@@ -150,9 +182,9 @@ export function getAutoReplyEmail({ name, lang: langInput = "en" }: AutoReplyOpt
 
           <!-- WHAT HAPPENS NEXT -->
           <tr>
-            <td align="left" style="padding:8px 32px 0 32px; color:#333333; font-size:14px; line-height:1.7;">
+            <td align="${textAlign}" style="padding:8px 32px 0 32px; color:#333333; font-size:14px; line-height:1.7;">
               <p style="margin:0 0 8px 0;"><strong>${t.whatNextTitle}</strong></p>
-              <ul style="margin:0 0 12px 20px; padding:0; color:#333333; font-size:14px; line-height:1.7;">
+              <ul style="margin:${listIndent}; padding:0; color:#333333; font-size:14px; line-height:1.7;">
                 <li>${t.li1}</li>
                 <li>${t.li2}</li>
                 <li>${t.li3}</li>

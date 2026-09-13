@@ -12,7 +12,7 @@ export const PROJECT_PDF_BUTTON_COPY: Record<Locale, typeof PROJECT_PDF_BUTTON_E
   de: { downloadBrochure: "Broschüre herunterladen" },
   pl: { downloadBrochure: "Pobierz broszurę" },
   ru: { downloadBrochure: "Скачать Брошюру" },
-  he: PROJECT_PDF_BUTTON_EN, // TODO(he)
+  he: PROJECT_PDF_BUTTON_EN, // he: PDF not offered for he (spec Phase 1–4)
 };
 
 export const projectPdfButtonCopy = (lang: string) =>

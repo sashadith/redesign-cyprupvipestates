@@ -10,7 +10,7 @@ const GREETING: Record<PLocale, Greeting> = {
   de: { morning: "Guten Morgen", afternoon: "Guten Tag", evening: "Guten Abend" },
   pl: { morning: "Dzień dobry", afternoon: "Dzień dobry", evening: "Dobry wieczór" },
   ru: { morning: "Доброе утро", afternoon: "Добрый день", evening: "Добрый вечер" },
-  he: GREETING_EN, // TODO(he)
+  he: { morning: "בוקר טוב", afternoon: "צהריים טובים", evening: "ערב טוב" }, // REVIEW(he)
 };
 
 /** Time-of-day greeting word, by server clock hour (0-23). */
@@ -202,7 +202,40 @@ export const COPY: Record<PLocale, PresentationCopy> = {
     delivery: "Срок сдачи",
     viewOnSite: "Смотреть на сайте",
   },
-  he: COPY_EN, // TODO(he)
+  he: {
+    eyebrowTag: "המבחר האישי שלכם",
+    intro: "תודה על האמון. בחרתי עבורכם את הנכסים האלה באופן אישי. כל אחד מהם מתאים למה שביקשתם וראוי לתשומת לבכם.",
+    requirementsTitle: "ההעדפות שלכם",
+    budgetUpTo: "עד",
+    propertyTypeNames: { Apartment: "דירה", Villa: "וילה", Townhouse: "בית טורי", Penthouse: "פנטהאוז" },
+    timelineLabels: { IMMEDIATE: "מיידי", THREE_MONTHS: "תוך 3 חודשים", SIX_MONTHS: "תוך 6 חודשים", ONE_YEAR: "תוך שנה", TWO_YEARS: "תוך שנתיים", JUST_LOOKING: "בשלב בדיקה" },
+    bedroomLabels: { "0": "סטודיו", "1": "חדר שינה אחד", "2": "2 חדרי שינה", "3": "3 חדרי שינה", "4": "4 חדרי שינה", "5": "5+ חדרי שינה" },
+    viewDetails: "לפרטים נוספים",
+    availableUnits: "יחידות זמינות",
+    unitsTable: { unit: "יחידה", type: "סוג", beds: "חדרי שינה", area: "שטח", price: "מחיר", status: "סטטוס" },
+    statusLabel: { available: "זמין", reserved: "שמור", sold: "נמכר", unlisted: "לא זמין עוד" },
+    advisorTitle: "היועץ האישי שלכם",
+    unitsPlural: { one: "יחידה", many: "יחידות" },
+    newForYou: "חדש עבורכם",
+    vatLabel: "בתוספת מע\"מ",
+    soldOut: "נמכר",
+    lifeNearby: "החיים בסביבה",
+    closingEyebrow: "קשר ישיר",
+    closingTrust: "אני עונה לכל הודעה באופן אישי, בדרך כלל בתוך שעה. אפשר לשאול אותי כל דבר על הנכסים שבמבחר שלכם, על תיאום ביקור ועל פרטי הרכישה בקפריסין. בלי התחייבות ובלי לחץ.",
+    whatsapp: "וואטסאפ",
+    call: "להתקשר",
+    email: "אימייל",
+    whatsappMessage: "שלום, צפיתי במבחר האישי שלי ואשמח לדבר על",
+    notAvailableTitle: "הדף הזה כבר לא זמין",
+    notAvailableBody: "תוקף הקישור פג או שהוא כבר אינו פעיל. אפשר לפנות אלינו ונשמח לעזור.",
+    contactUs: "ליצירת קשר",
+    legal: "המבחר הזה נועד למידע בלבד ואינו מהווה הצעה.",
+    privacyPolicy: "מדיניות פרטיות",
+    priceFrom: "מחיר התחלתי",
+    units: "יחידות",
+    delivery: "מסירה",
+    viewOnSite: "לצפייה באתר",
+  }, // REVIEW(he)
 };
 
 /** "N <localized unit noun>" with correct plural form per locale (RU/PL are

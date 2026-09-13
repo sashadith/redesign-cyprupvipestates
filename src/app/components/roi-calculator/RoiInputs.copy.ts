@@ -58,7 +58,19 @@ export const ROI_INPUTS_COPY: Record<Locale, typeof ROI_INPUTS_EN> = {
     annualAppreciation: "Годовой рост стоимости",
     yearsUnit: "лет",
   },
-  he: ROI_INPUTS_EN, // TODO(he)
+  he: {
+    purchasePrice: "מחיר הנכס",
+    furnishing: "עלות ריהוט",
+    buildPeriod: "תקופת בנייה",
+    offPlanGrowth: "עליית ערך שנתית בשלב הבנייה",
+    sellingCosts: "עלויות מכירה",
+    rentalSection: "נתוני השכרה",
+    netYieldYearOne: "תשואה נטו (שנה 1)",
+    annualRentGrowth: "עליית שכירות שנתית",
+    rentalPeriodYears: "תקופת השכרה לאחר המסירה",
+    annualAppreciation: "עליית ערך שנתית",
+    yearsUnit: "שנים",
+  }, // REVIEW(he)
 };
 
 export const roiInputsCopy = (lang: string) => ROI_INPUTS_COPY[isLocale(lang) ? lang : "en"];

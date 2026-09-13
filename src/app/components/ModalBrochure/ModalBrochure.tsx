@@ -97,7 +97,7 @@ const ModalBrochure = ({ lang, formDocument }: Props) => {
             className="cvpm__close"
             onClick={closeBrochure}
             aria-label={
-              lang === "de" ? "Schließen" : lang === "pl" ? "Zamknij" : lang === "ru" ? "Закрыть" : "Close"
+              lang === "de" ? "Schließen" : lang === "pl" ? "Zamknij" : lang === "ru" ? "Закрыть" : lang === "he" ? "סגירה" : "Close"
             }
           >
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">

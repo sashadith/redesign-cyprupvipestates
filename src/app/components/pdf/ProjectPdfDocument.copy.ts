@@ -13,7 +13,7 @@ export const PROJECT_PDF_DOCUMENT_COPY: Record<Locale, typeof PROJECT_PDF_DOCUME
   de: { keyFeatures: "Wichtige Informationen", description: "Beschreibung" },
   pl: { keyFeatures: "Najważniejsze informacje", description: "Opis" },
   ru: { keyFeatures: "Основные характеристики", description: "Описание" },
-  he: PROJECT_PDF_DOCUMENT_EN, // TODO(he)
+  he: PROJECT_PDF_DOCUMENT_EN, // he: PDF not offered for he (spec Phase 1–4)
 };
 
 export const projectPdfDocumentCopy = (lang: string) =>

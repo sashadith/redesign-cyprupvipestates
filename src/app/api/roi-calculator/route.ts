@@ -23,17 +23,162 @@ const transporter = nodemailer.createTransport({
 
 type Lang = Locale;
 
-function formatCurrency(value: number, lang: Lang) {
-  const locale =
-    lang === "pl"
-      ? "pl-PL"
-      : lang === "de"
-        ? "de-DE"
-        : lang === "ru"
-          ? "ru-RU"
-          : "en-US";
+// One `Record<Locale, …>` table for everything this route renders per locale
+// (Hebrew Localization Phase 4, WP7). It replaces five `lang === "pl" ? … : …`
+// ternary chains (two Intl tags, three scenario labels, the no-name
+// fallback) AND absorbs the five result-table labels in the client e-mail
+// body, which used to be hard-coded English for every locale — they are
+// carried over verbatim into en/de/pl/ru here, so the LTR HTML is
+// byte-identical to before and only `he` renders anything new.
+type RoiEmailCopy = {
+  /** BCP-47 tag for Intl.NumberFormat — a format tag, not translated copy. */
+  numberLocale: string;
+  strategyBuySell: string;
+  strategyBuyHold: string;
+  scenarioConservative: string;
+  scenarioOptimistic: string;
+  scenarioRealistic: string;
+  /** Greeting fallback when the form carried no usable name. */
+  safeName: string;
+  labelStrategy: string;
+  labelScenario: string;
+  labelTotalEntryCost: string;
+  labelProjectedResult: string;
+  labelAnnualRoi: string;
+  subject: string;
+  title: string;
+  intro: string;
+  summary: string;
+  cta: string;
+  footer: string;
+};
 
-  return new Intl.NumberFormat(locale, {
+const ROI_EMAIL_EN: RoiEmailCopy = {
+  numberLocale: "en-US",
+  strategyBuySell: "Buy & Sell",
+  strategyBuyHold: "Buy & Hold",
+  scenarioConservative: "Conservative",
+  scenarioOptimistic: "Optimistic",
+  scenarioRealistic: "Realistic",
+  safeName: "Dear Client",
+  labelStrategy: "Strategy",
+  labelScenario: "Scenario",
+  labelTotalEntryCost: "Total entry cost",
+  labelProjectedResult: "Projected result",
+  labelAnnualRoi: "Average annual ROI",
+  subject: "Your ROI calculation — Cyprus VIP Estates",
+  title: "Your indicative ROI result",
+  intro:
+    "Thank you for using the ROI Calculator on Cyprus VIP Estates.",
+  summary: "Below is a summary of your projected investment result.",
+  cta: "View property",
+  footer:
+    "This calculation is indicative only. Final figures may vary depending on the property, transaction structure and market conditions.",
+};
+
+const ROI_EMAIL: Record<Locale, RoiEmailCopy> = {
+  en: ROI_EMAIL_EN,
+  ru: {
+    numberLocale: "ru-RU",
+    strategyBuySell: "Buy & Sell",
+    strategyBuyHold: "Buy & Hold",
+    scenarioConservative: "Консервативный",
+    scenarioOptimistic: "Оптимистичный",
+    scenarioRealistic: "Реалистичный",
+    safeName: "Уважаемый клиент",
+    labelStrategy: "Strategy",
+    labelScenario: "Scenario",
+    labelTotalEntryCost: "Total entry cost",
+    labelProjectedResult: "Projected result",
+    labelAnnualRoi: "Average annual ROI",
+    subject: "Ваш расчет ROI — Cyprus VIP Estates",
+    title: "Ваш ориентировочный расчет ROI",
+    intro:
+      "Спасибо за использование ROI Calculator на сайте Cyprus VIP Estates.",
+    summary: "Мы сохранили основные результаты вашего расчета ниже.",
+    cta: "Перейти к объекту",
+    footer:
+      "Расчет носит ориентировочный характер. Финальные показатели могут отличаться в зависимости от объекта, структуры сделки и рыночных условий.",
+  },
+  pl: {
+    numberLocale: "pl-PL",
+    strategyBuySell: "Buy & Sell",
+    strategyBuyHold: "Buy & Hold",
+    scenarioConservative: "Konserwatywny",
+    scenarioOptimistic: "Optymistyczny",
+    scenarioRealistic: "Realistyczny",
+    safeName: "Szanowny Kliencie",
+    labelStrategy: "Strategy",
+    labelScenario: "Scenario",
+    labelTotalEntryCost: "Total entry cost",
+    labelProjectedResult: "Projected result",
+    labelAnnualRoi: "Average annual ROI",
+    subject: "Twój wynik ROI — Cyprus VIP Estates",
+    title: "Twój orientacyjny wynik ROI",
+    intro:
+      "Dziękujemy za skorzystanie z kalkulatora ROI na stronie Cyprus VIP Estates.",
+    summary: "Poniżej znajdziesz główne wyniki swojej kalkulacji.",
+    cta: "Przejdź do oferty",
+    footer:
+      "Kalkulacja ma charakter orientacyjny. Ostateczne wyniki mogą się różnić w zależności od nieruchomości, struktury transakcji i warunków rynkowych.",
+  },
+  de: {
+    numberLocale: "de-DE",
+    strategyBuySell: "Buy & Sell",
+    strategyBuyHold: "Buy & Hold",
+    scenarioConservative: "Konservativ",
+    scenarioOptimistic: "Optimistisch",
+    scenarioRealistic: "Realistisch",
+    safeName: "Sehr geehrte Kundin, sehr geehrter Kunde",
+    labelStrategy: "Strategy",
+    labelScenario: "Scenario",
+    labelTotalEntryCost: "Total entry cost",
+    labelProjectedResult: "Projected result",
+    labelAnnualRoi: "Average annual ROI",
+    subject: "Ihre ROI-Berechnung — Cyprus VIP Estates",
+    title: "Ihr unverbindliches ROI-Ergebnis",
+    intro:
+      "Vielen Dank, dass Sie den ROI-Rechner von Cyprus VIP Estates genutzt haben.",
+    summary:
+      "Nachfolgend finden Sie die wichtigsten Ergebnisse Ihrer Berechnung.",
+    cta: "Zum Objekt",
+    footer:
+      "Diese Berechnung ist indikativ. Die endgültigen Ergebnisse können je nach Immobilie, Transaktionsstruktur und Marktbedingungen abweichen.",
+  },
+  // `numberLocale` stays "en-US": Hebrew uses Western digits and `€` before
+  // the amount (styleguide §5), which is exactly what en-US produces — the
+  // he-IL tag would move the symbol behind the number. `|` replaces the em
+  // dash of the LTR subjects (§3: no `—` in Hebrew).
+  he: {
+    numberLocale: "en-US",
+    strategyBuySell: "רכישה ומכירה",
+    strategyBuyHold: "רכישה והחזקה",
+    scenarioConservative: "שמרני",
+    scenarioOptimistic: "אופטימי",
+    scenarioRealistic: "ריאלי",
+    safeName: "שלום",
+    labelStrategy: "אסטרטגיה",
+    labelScenario: "תרחיש",
+    labelTotalEntryCost: "עלות כניסה כוללת",
+    labelProjectedResult: "תוצאה צפויה",
+    labelAnnualRoi: "תשואה שנתית ממוצעת",
+    subject: "חישוב התשואה שלכם | Cyprus VIP Estates",
+    title: "תוצאת התשואה המשוערת שלכם",
+    intro: "תודה שהשתמשתם במחשבון התשואה של Cyprus VIP Estates.",
+    summary: "לפניכם סיכום התוצאה הצפויה של ההשקעה.",
+    cta: "לצפייה בנכס",
+    footer:
+      "החישוב הזה משוער בלבד. הנתונים הסופיים עשויים להשתנות בהתאם לנכס, למבנה העסקה ולתנאי השוק.",
+  }, // REVIEW(he)
+};
+
+/** Resolves whatever the form sent as `lang` to a copy row; junk falls back to en. */
+function roiEmailCopy(lang: unknown): RoiEmailCopy {
+  return ROI_EMAIL[LOCALES.includes(lang as Locale) ? (lang as Locale) : "en"];
+}
+
+function formatCurrency(value: number, lang: Lang) {
+  return new Intl.NumberFormat(roiEmailCopy(lang).numberLocale, {
     style: "currency",
     currency: "EUR",
     maximumFractionDigits: 0,
@@ -41,54 +186,26 @@ function formatCurrency(value: number, lang: Lang) {
 }
 
 function formatPercent(value: number, lang: Lang) {
-  const locale =
-    lang === "pl"
-      ? "pl-PL"
-      : lang === "de"
-        ? "de-DE"
-        : lang === "ru"
-          ? "ru-RU"
-          : "en-US";
-
-  return new Intl.NumberFormat(locale, {
+  return new Intl.NumberFormat(roiEmailCopy(lang).numberLocale, {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   }).format(value);
 }
 
 function getStrategyLabel(strategy: string, lang: Lang) {
-  if (strategy === "buySell") {
-    return "Buy & Sell";
-  }
-  return "Buy & Hold";
+  const t = roiEmailCopy(lang);
+  return strategy === "buySell" ? t.strategyBuySell : t.strategyBuyHold;
 }
 
 function getScenarioLabel(scenario: string, lang: Lang) {
+  const t = roiEmailCopy(lang);
   switch (scenario) {
     case "conservative":
-      return lang === "pl"
-        ? "Konserwatywny"
-        : lang === "de"
-          ? "Konservativ"
-          : lang === "ru"
-            ? "Консервативный"
-            : "Conservative";
+      return t.scenarioConservative;
     case "optimistic":
-      return lang === "pl"
-        ? "Optymistyczny"
-        : lang === "de"
-          ? "Optimistisch"
-          : lang === "ru"
-            ? "Оптимистичный"
-            : "Optimistic";
+      return t.scenarioOptimistic;
     default:
-      return lang === "pl"
-        ? "Realistyczny"
-        : lang === "de"
-          ? "Realistisch"
-          : lang === "ru"
-            ? "Реалистичный"
-            : "Realistic";
+      return t.scenarioRealistic;
   }
 }
 
@@ -159,81 +276,35 @@ function getInternalEmailHtml(payload: any) {
 function getClientEmail(payload: any) {
   const { name, lang, strategy, scenario, currentPage, result } = payload;
 
-  const safeName =
-    (name && String(name).trim()) ||
-    (lang === "ru"
-      ? "Уважаемый клиент"
-      : lang === "pl"
-        ? "Szanowny Kliencie"
-        : lang === "de"
-          ? "Sehr geehrte Kundin, sehr geehrter Kunde"
-          : "Dear Client");
+  const safeLang: Locale = LOCALES.includes(lang) ? lang : "en";
+  const t = ROI_EMAIL[safeLang];
+
+  const safeName = (name && String(name).trim()) || t.safeName;
 
   const strategyLabel = getStrategyLabel(strategy, lang);
   const scenarioLabel = getScenarioLabel(scenario, lang);
 
-  const CLIENT_EMAIL_EN = {
-    subject: "Your ROI calculation — Cyprus VIP Estates",
-    title: "Your indicative ROI result",
-    intro:
-      "Thank you for using the ROI Calculator on Cyprus VIP Estates.",
-    summary: "Below is a summary of your projected investment result.",
-    cta: "View property",
-    footer:
-      "This calculation is indicative only. Final figures may vary depending on the property, transaction structure and market conditions.",
-  };
-
-  const CLIENT_EMAIL: Record<Locale, typeof CLIENT_EMAIL_EN> = {
-    en: CLIENT_EMAIL_EN,
-    ru: {
-      subject: "Ваш расчет ROI — Cyprus VIP Estates",
-      title: "Ваш ориентировочный расчет ROI",
-      intro:
-        "Спасибо за использование ROI Calculator на сайте Cyprus VIP Estates.",
-      summary: "Мы сохранили основные результаты вашего расчета ниже.",
-      cta: "Перейти к объекту",
-      footer:
-        "Расчет носит ориентировочный характер. Финальные показатели могут отличаться в зависимости от объекта, структуры сделки и рыночных условий.",
-    },
-    pl: {
-      subject: "Twój wynik ROI — Cyprus VIP Estates",
-      title: "Twój orientacyjny wynik ROI",
-      intro:
-        "Dziękujemy za skorzystanie z kalkulatora ROI na stronie Cyprus VIP Estates.",
-      summary: "Poniżej znajdziesz główne wyniki swojej kalkulacji.",
-      cta: "Przejdź do oferty",
-      footer:
-        "Kalkulacja ma charakter orientacyjny. Ostateczne wyniki mogą się różnić w zależności od nieruchomości, struktury transakcji i warunków rynkowych.",
-    },
-    de: {
-      subject: "Ihre ROI-Berechnung — Cyprus VIP Estates",
-      title: "Ihr unverbindliches ROI-Ergebnis",
-      intro:
-        "Vielen Dank, dass Sie den ROI-Rechner von Cyprus VIP Estates genutzt haben.",
-      summary:
-        "Nachfolgend finden Sie die wichtigsten Ergebnisse Ihrer Berechnung.",
-      cta: "Zum Objekt",
-      footer:
-        "Diese Berechnung ist indikativ. Die endgültigen Ergebnisse können je nach Immobilie, Transaktionsstruktur und Marktbedingungen abweichen.",
-    },
-    he: CLIENT_EMAIL_EN, // TODO(he)
-  };
-
-  const safeLang: Locale = LOCALES.includes(lang) ? lang : "en";
-  const t = CLIENT_EMAIL[safeLang];
+  // RTL support for `he` (Phase 4 / WP7): `dir="rtl"` on <html>/<body>, the
+  // one `align="left"` text cell flipped and the result table's value column
+  // mirrored. The table layout itself is unchanged, and all three helpers are
+  // no-ops for every LTR locale.
+  const rtl = safeLang === "he";
+  const dirAttr = rtl ? ` dir="rtl"` : "";
+  const textAlign = rtl ? "right" : "left";
+  const valueAlign = rtl ? "left" : "right";
 
   const link =
     safeUrl(currentPage)?.toString() || "https://cyprusvipestates.com";
 
   const html = `
   <!DOCTYPE html>
-  <html lang="${lang || "en"}">
+  <html lang="${lang || "en"}"${dirAttr}>
   <head>
     <meta charset="UTF-8" />
     <title>${t.subject}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   </head>
-  <body style="margin:0; padding:0; background-color:#f4f4f4; font-family:Arial,Helvetica,sans-serif;">
+  <body style="margin:0; padding:0; background-color:#f4f4f4; font-family:Arial,Helvetica,sans-serif;"${dirAttr}>
     <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color:#f4f4f4; padding:24px 0;">
       <tr>
         <td align="center">
@@ -258,7 +329,7 @@ function getClientEmail(payload: any) {
             </tr>
 
             <tr>
-              <td align="left" style="padding:16px 32px 0 32px; color:#333333; font-size:14px; line-height:1.7;">
+              <td align="${textAlign}" style="padding:16px 32px 0 32px; color:#333333; font-size:14px; line-height:1.7;">
                 <p style="margin:0 0 12px 0;">${escapeHtml(safeName)},</p>
                 <p style="margin:0 0 8px 0;">${t.intro}</p>
                 <p style="margin:0 0 12px 0;">${t.summary}</p>
@@ -269,24 +340,24 @@ function getClientEmail(payload: any) {
               <td style="padding:8px 32px 0 32px;">
                 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border:1px solid #ecefee;">
                   <tr>
-                    <td style="padding:14px 16px; border-bottom:1px solid #ecefee; color:#526264;">Strategy</td>
-                    <td style="padding:14px 16px; border-bottom:1px solid #ecefee; text-align:right; color:#0d3f43;"><strong>${escapeHtml(strategyLabel)}</strong></td>
+                    <td style="padding:14px 16px; border-bottom:1px solid #ecefee; color:#526264;">${t.labelStrategy}</td>
+                    <td style="padding:14px 16px; border-bottom:1px solid #ecefee; text-align:${valueAlign}; color:#0d3f43;"><strong>${escapeHtml(strategyLabel)}</strong></td>
                   </tr>
                   <tr>
-                    <td style="padding:14px 16px; border-bottom:1px solid #ecefee; color:#526264;">Scenario</td>
-                    <td style="padding:14px 16px; border-bottom:1px solid #ecefee; text-align:right; color:#0d3f43;"><strong>${escapeHtml(scenarioLabel)}</strong></td>
+                    <td style="padding:14px 16px; border-bottom:1px solid #ecefee; color:#526264;">${t.labelScenario}</td>
+                    <td style="padding:14px 16px; border-bottom:1px solid #ecefee; text-align:${valueAlign}; color:#0d3f43;"><strong>${escapeHtml(scenarioLabel)}</strong></td>
                   </tr>
                   <tr>
-                    <td style="padding:14px 16px; border-bottom:1px solid #ecefee; color:#526264;">Total entry cost</td>
-                    <td style="padding:14px 16px; border-bottom:1px solid #ecefee; text-align:right; color:#0d3f43;"><strong>${formatCurrency(result.totalEntryCost, lang)}</strong></td>
+                    <td style="padding:14px 16px; border-bottom:1px solid #ecefee; color:#526264;">${t.labelTotalEntryCost}</td>
+                    <td style="padding:14px 16px; border-bottom:1px solid #ecefee; text-align:${valueAlign}; color:#0d3f43;"><strong>${formatCurrency(result.totalEntryCost, lang)}</strong></td>
                   </tr>
                   <tr>
-                    <td style="padding:14px 16px; border-bottom:1px solid #ecefee; color:#526264;">Projected result</td>
-                    <td style="padding:14px 16px; border-bottom:1px solid #ecefee; text-align:right; color:#0d3f43;"><strong>${formatCurrency(result.netProfit, lang)}</strong></td>
+                    <td style="padding:14px 16px; border-bottom:1px solid #ecefee; color:#526264;">${t.labelProjectedResult}</td>
+                    <td style="padding:14px 16px; border-bottom:1px solid #ecefee; text-align:${valueAlign}; color:#0d3f43;"><strong>${formatCurrency(result.netProfit, lang)}</strong></td>
                   </tr>
                   <tr>
-                    <td style="padding:14px 16px; color:#526264;">Average annual ROI</td>
-                    <td style="padding:14px 16px; text-align:right; color:#0d3f43;"><strong>${formatPercent(result.annualizedRoiPercent, lang)}%</strong></td>
+                    <td style="padding:14px 16px; color:#526264;">${t.labelAnnualRoi}</td>
+                    <td style="padding:14px 16px; text-align:${valueAlign}; color:#0d3f43;"><strong>${formatPercent(result.annualizedRoiPercent, lang)}%</strong></td>
                   </tr>
                 </table>
               </td>

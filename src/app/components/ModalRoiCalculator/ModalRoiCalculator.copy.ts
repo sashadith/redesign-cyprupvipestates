@@ -22,7 +22,12 @@ export const MODAL_ROI_CALCULATOR_COPY: Record<Locale, typeof MODAL_ROI_CALCULAT
     title: "Калькулятор ROI",
     subtitle: "Оцените потенциальную доходность этого объекта.",
   },
-  he: MODAL_ROI_CALCULATOR_EN, // TODO(he)
+  // "ROI Calculator" is `מחשבון תשואה` everywhere in this feature — the bare
+  // acronym has no currency in Hebrew consumer copy (glossary: תשואה).
+  he: {
+    title: "מחשבון תשואה",
+    subtitle: "הערכת התשואה הפוטנציאלית של הנכס הזה.",
+  }, // REVIEW(he)
 };
 
 export const modalRoiCalculatorCopy = (lang: string) =>

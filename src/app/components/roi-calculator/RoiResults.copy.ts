@@ -84,7 +84,28 @@ export const ROI_RESULTS_COPY: Record<Locale, typeof ROI_RESULTS_EN> = {
       "Важно: значения являются ориентировочными и могут отличаться в зависимости от объекта, застройщика и рыночных условий.",
     yearsText: "лет",
   },
-  he: ROI_RESULTS_EN, // TODO(he)
+  // `totalEntryCost`, `annualized` and `sellingCosts` are word-identical with
+  // the ROI result e-mail and RoiInputs (styleguide §11.6). `numberLocale`
+  // stays "en-US" — Western digits, `€` before the amount (§5).
+  he: {
+    numberLocale: "en-US",
+    highlightLabelBuyHold: "תשואה נטו כוללת",
+    highlightLabelBuySell: "רווח נטו ממכירה",
+    horizon: "אופק ההשקעה",
+    purchaseCostWithFees: "עלות הרכישה (כולל עמלות)",
+    furnishing: "ריהוט",
+    totalEntryCost: "עלות כניסה כוללת",
+    offPlanGain: "עליית ערך בשלב הבנייה",
+    valueAtCompletion: "שווי משוער במסירה",
+    rentalCashFlow: "תזרים משכירות",
+    valueInFinalYear: "שווי משוער בשנה האחרונה",
+    capitalGain: "רווח הון",
+    sellingCosts: "עלויות מכירה",
+    annualized: "תשואה שנתית ממוצעת",
+    disclaimer:
+      "חשוב לדעת: הנתונים משוערים ועשויים להשתנות בהתאם לנכס, ליזם ולתנאי השוק.",
+    yearsText: "שנים",
+  }, // REVIEW(he)
 };
 
 export const roiResultsCopy = (lang: string) =>
