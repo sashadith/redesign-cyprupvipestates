@@ -163,11 +163,11 @@ function SeoPromptEditor({
             <div className="grid sm:grid-cols-2 gap-3">
               <label className="block">
                 <span className="block text-xs font-medium text-[#166534] mb-1">✓ Emphasize / include (this project only)</span>
-                <textarea value={emphasize} onChange={(e) => onEmphasize(e.target.value)} rows={2} className={ta.replace(" font-mono", "")} />
+                <textarea dir="ltr" value={emphasize} onChange={(e) => onEmphasize(e.target.value)} rows={2} className={ta.replace(" font-mono", "")} />
               </label>
               <label className="block">
                 <span className="block text-xs font-medium text-[#991B1B] mb-1">✕ Avoid / exclude (this project only)</span>
-                <textarea value={avoid} onChange={(e) => onAvoid(e.target.value)} rows={2} className={ta.replace(" font-mono", "")} />
+                <textarea dir="ltr" value={avoid} onChange={(e) => onAvoid(e.target.value)} rows={2} className={ta.replace(" font-mono", "")} />
               </label>
             </div>
             <div className="flex items-center justify-between">

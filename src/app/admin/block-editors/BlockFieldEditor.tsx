@@ -97,7 +97,7 @@ export default function BlockFieldEditor({ block, onChange, dir = "ltr" }: { blo
           <input className={input} value={block.buttonText ?? ""} onChange={(e) => set({ buttonText: e.target.value })} />
         </label>
         <label className="col-span-2 text-xs text-[#6B7280]">Link URL <span className="text-[#9CA3AF]">(leave empty for the brochure popup)</span>
-          <input className={input} value={block.url ?? ""} placeholder="https://…  or  /en/contacts" onChange={(e) => set({ url: e.target.value })} />
+          <input dir="ltr" className={input} value={block.url ?? ""} placeholder="https://…  or  /en/contacts" onChange={(e) => set({ url: e.target.value })} />
         </label>
         <label className="text-xs text-[#6B7280]">Open in
           <select className={input} value={block.target ?? "_self"} onChange={(e) => set({ target: e.target.value })}>
@@ -298,8 +298,8 @@ export default function BlockFieldEditor({ block, onChange, dir = "ltr" }: { blo
       <div className="space-y-2">
         {titleRow}
         <div className="grid grid-cols-2 gap-2">
-          <label className="text-xs text-[#6B7280] block">Latitude<input type="number" step="any" className={input} value={loc.lat ?? ""} onChange={(e) => setLoc({ lat: num(e.target.value) })} /></label>
-          <label className="text-xs text-[#6B7280] block">Longitude<input type="number" step="any" className={input} value={loc.lng ?? ""} onChange={(e) => setLoc({ lng: num(e.target.value) })} /></label>
+          <label className="text-xs text-[#6B7280] block">Latitude<input dir="ltr" type="number" step="any" className={input} value={loc.lat ?? ""} onChange={(e) => setLoc({ lat: num(e.target.value) })} /></label>
+          <label className="text-xs text-[#6B7280] block">Longitude<input dir="ltr" type="number" step="any" className={input} value={loc.lng ?? ""} onChange={(e) => setLoc({ lng: num(e.target.value) })} /></label>
         </div>
       </div>
     );
@@ -363,7 +363,7 @@ export default function BlockFieldEditor({ block, onChange, dir = "ltr" }: { blo
         <ListEditor items={block.contacts} onChange={(c) => set({ contacts: c })} makeNew={() => ({ type: "Email", label: "", title: "" })} addLabel="+ Add contact"
           render={(it, patch) => (<>
             <select className={input} value={it.type ?? "Email"} onChange={(e) => patch({ type: e.target.value })}>{["Email", "Phone", "Link"].map((t) => <option key={t} value={t}>{t}</option>)}</select>
-            <input className={input} placeholder="Value (email / phone / url)" value={it.label ?? ""} onChange={(e) => patch({ label: e.target.value })} />
+            <input dir="ltr" className={input} placeholder="Value (email / phone / url)" value={it.label ?? ""} onChange={(e) => patch({ label: e.target.value })} />
             <input className={input} placeholder="Label" value={it.title ?? ""} onChange={(e) => patch({ title: e.target.value })} />
           </>)} />
       </div>
@@ -543,16 +543,16 @@ function ProjectsSectionEditor({ block, set, titleRow, marginRow }: { block: any
             </select>
           </label>
           <label className="text-xs text-[#6B7280] block">Price min (€)
-            <input type="number" min={0} className={input} value={block.priceMin ?? ""} onChange={(e) => set({ priceMin: num(e.target.value) })} />
+            <input dir="ltr" type="number" min={0} className={input} value={block.priceMin ?? ""} onChange={(e) => set({ priceMin: num(e.target.value) })} />
           </label>
           <label className="text-xs text-[#6B7280] block">Price max (€)
-            <input type="number" min={0} className={input} value={block.priceMax ?? ""} onChange={(e) => set({ priceMax: num(e.target.value) })} />
+            <input dir="ltr" type="number" min={0} className={input} value={block.priceMax ?? ""} onChange={(e) => set({ priceMax: num(e.target.value) })} />
           </label>
         </div>
       </details>
 
       <label className="text-xs text-[#6B7280] block">Results per page
-        <input type="number" min={1} max={60} className={input} value={block.pageSize ?? 12} onChange={(e) => set({ pageSize: num(e.target.value) || 12 })} />
+        <input dir="ltr" type="number" min={1} max={60} className={input} value={block.pageSize ?? 12} onChange={(e) => set({ pageSize: num(e.target.value) || 12 })} />
       </label>
 
       <p className="text-[11px] text-[#9CA3AF]">
