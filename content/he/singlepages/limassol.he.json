@@ -1,0 +1,346 @@
+{
+  "slug": "limassol",
+  "title": "דירות בלימסול ופרויקטים חדשים למכירה",
+  "excerpt": "דירות בלימסול בפרויקטים חדשים, ממגדלים בקו הראשון לים ועד מתחמים מגודרים במרכז העיר, עם זמינות ומחירים מהיזם.",
+  "allowIntroBlock": true,
+  "previewImage": {
+    "alt": "דירות ופרויקטים חדשים למכירה בלימסול",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-2ec5103ee98bec7fd0b4336f5edb6d663f719fd0-850x850-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "דירות בלימסול, פרויקטים חדשים | Cyprus VIP Estates",
+    "metaDescription": "נדל\"ן בלימסול בפרויקטים חדשים של יזמים מקומיים, בלי תוספת מחיר לרוכש. אפשר לקבל טבלת יחידות זמינות, מחירים ומועדי מסירה, ולתאם סיור בנכס."
+  },
+  "contentBlocks": [
+    {
+      "_key": "sb8oe902xitv",
+      "_type": "landingIntroBlock",
+      "image": {
+        "alt": "דירות ופרויקטים חדשים למכירה בלימסול",
+        "_type": "image",
+        "asset": {
+          "_ref": "image-2ec5103ee98bec7fd0b4336f5edb6d663f719fd0-850x850-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "דירות בלימסול ופרויקטים חדשים למכירה",
+      "subtitle": "לימסול",
+      "buttonLabel": "לצפייה בזמינות ובמחירים",
+      "description": "לימסול היא העיר העסקית של קפריסין ומרכז החיים של הקהילה הישראלית באי. ההיצע החדש שם מרוכז במגדלים לאורך החוף, במתחמים מגודרים במרכז העיר ובבנייה נמוכה בפרברים."
+    },
+    {
+      "_key": "rb7tclhbcfbs",
+      "_type": "landingTextStart",
+      "content": [
+        {
+          "_key": "ugcnlv2bf4c2",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "897lmtlv3aly",
+              "text": "דירות בלימסול הן החיפוש הנפוץ ביותר בעברית מבין ערי קפריסין, ויש לכך סיבה מעשית. כאן מרוכזות החברות הבינלאומיות הגדולות, בתי הספר הבינלאומיים והמרינה, וסביבן נבנה בשנים האחרונות רוב ההיצע החדש בקו הראשון לים. התוצאה היא שוק שבו הביקוש מגיע גם מתושבים מקומיים, גם מעובדי החברות הבינלאומיות וגם מרוכשים מחו\"ל, ושלושתם מתחרים על אותו היצע.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "4alh4u4ug7ma",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ee1u0r6njujp",
+              "text": "זו גם העיר היקרה בקפריסין. מחיר הפתיחה של דירה חדשה בלימסול גבוה מזה שבפאפוס, וכך גם הקצה העליון של השוק. מי שמחפש דירה למגורים, לנוכחות עסקית או לשכירות ארוכת טווח ימצא כאן את ההיצע הרחב ביותר. מי שמחפש בעיקר מחיר פתיחה נמוך, או בית פרטי עם בריכה, יבדוק גם את פאפוס לפני שהוא סוגר על אזור. בתוך לימסול עצמה ההפרש בין רחוב לרחוב גדול, ולכן שם השכונה אומר כאן יותר משם העיר.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "xjz9fy4cz11k",
+      "_type": "landingProjectsBlock",
+      "title": "פרויקטים חדשים בלימסול",
+      "filterCity": "Limassol"
+    },
+    {
+      "_key": "60tawnb5al9h",
+      "_type": "landingTextFirst",
+      "content": [
+        {
+          "_key": "28a1aldjk0ts",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "lgar7axovgwn",
+              "text": "מרינה לימסול והקו הראשון לים",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "eqweilzt094u",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "8b7hdww3213u",
+              "text": "רצועת החוף של לימסול היא הכתובת היקרה בעיר. מרינה לימסול, עם מזח היאכטות והמסחר סביבו, הפכה לנקודת הייחוס של השוק המקומי, וככל שמתרחקים ממנה מזרחה או מערבה המחירים יורדים. פרויקטים בקו הראשון נמכרים לרוב מוקדם, עוד בשלבי הבנייה.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "wa26fi31t5km",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "46pjys9du837",
+              "text": "מרכז העיר והפרברים",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "kvemy6nfondh",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "wjgb7dngisne",
+              "text": "במרכז לימסול נבנים מתחמים מגודרים בני כמה קומות, לרוב עם בריכה משותפת וחדר כושר. בפרברים, בכיוון גרמסוגיה ואגיוס טיכונאס, הבנייה נמוכה יותר ויש בה גם בתים פרטיים. וילות בלימסול קיימות, אך הן מיעוט קטן מההיצע החדש, ומי שמחפש בית פרטי עם בריכה ימצא מבחר גדול בהרבה בפאפוס.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "uuvmeucxljwh",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "7umay4lzrh3o",
+              "text": "הקהילה הישראלית בלימסול",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "z7id70bttd49",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "0eujx7f70i45",
+              "text": "לימסול היא המקום שבו מתרכזת הקהילה הישראלית בקפריסין. לזה יש השלכות מעשיות, מנגישות של בתי ספר בינלאומיים ועד שירותים שמתנהלים באנגלית, וזו אחת הסיבות שרוכשים מישראל שבודקים מעבר מגורים מתחילים כאן.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "llqpy0fu37q9",
+      "_type": "landingFaqBlock",
+      "title": "שאלות נפוצות על לימסול",
+      "faq": {
+        "_type": "accordionBlock",
+        "items": [
+          {
+            "_key": "aqz4gsbcbpfo",
+            "answer": [
+              {
+                "_key": "y5hm4kcyvxmu",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "r9w05ydxxkxp",
+                    "text": "לימסול היא העיר היקרה בקפריסין, ומחיר הפתיחה של דירה חדשה שם גבוה מזה שבפאפוס. בתוך העיר, המרחק מהים הוא מה שמזיז את המחיר הכי הרבה. את המחירון המעודכן של פרויקט מסוים אפשר לקבל בפנייה.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "כמה עולה דירה בלימסול?"
+          },
+          {
+            "_key": "3tb06t91qioh",
+            "answer": [
+              {
+                "_key": "oeiw5btmiuye",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "75y75n2dmx9b",
+                    "text": "יש, אבל מעט. ההיצע החדש בלימסול הוא בעיקר דירות במגדלים ובמתחמים מגודרים. מי שמחפש בית פרטי עם בריכה ימצא מבחר גדול בהרבה בפאפוס.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "יש וילות למכירה בלימסול?"
+          },
+          {
+            "_key": "9z9q5ckshphb",
+            "answer": [
+              {
+                "_key": "k04mx3bm5s0e",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "qtgzavbkv7sc",
+                    "text": "מרינה לימסול היא מתחם שמשלב מגורים, מזח יאכטות ומסחר בקצה המערבי של טיילת העיר. היא נקודת הייחוס של שוק היוקרה המקומי, ומחירי הנכסים בסביבתה הגבוהים בעיר.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "מה זו מרינה לימסול?"
+          },
+          {
+            "_key": "92lvn5yctfh3",
+            "answer": [
+              {
+                "_key": "1n4ikru8llbl",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "5hg7tohg6yb4",
+                    "text": "בלימסול מתרכזים בתי הספר הבינלאומיים, החברות הבינלאומיות והקהילה הישראלית, ולכן זו נקודת הפתיחה של רוב מי שבודק מעבר. שאלות של אשרות ותושבות דורשות בדיקה משפטית פרטנית.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "לימסול מתאימה למעבר מגורים?"
+          },
+          {
+            "_key": "xh3ai5rb58n6",
+            "answer": [
+              {
+                "_key": "djn530p6v9r3",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "6vcxezbpqzkl",
+                    "text": "לימסול היא עיר עסקית עם היצע גבוה של דירות במגדלים ורמת מחירים גבוהה. פאפוס שקטה יותר, מחירי הפתיחה בה נמוכים, ובה נמצא רוב ההיצע של בתים פרטיים עם בריכה.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "מה ההבדל בין לימסול לפאפוס?"
+          }
+        ]
+      }
+    },
+    {
+      "_key": "2tdoou4p74dt",
+      "_type": "landingTextSecond",
+      "content": [
+        {
+          "_key": "met7yjcpgxxx",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "gx7pslw7cxvg",
+              "text": "היזמים הפעילים בעיר",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "gihhy4zmv1zt",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "g5v6i1hb0ztl",
+              "text": "בין היזמים שבונים בלימסול נמצאים ⁨Cybarco⁩, ⁨Imperio Properties⁩ ו-⁨Pafilia⁩. אנחנו עובדים מולם ישירות, מקבלים את טבלת היחידות ואת המחירון, ומציגים מה זמין בפועל ובאיזה שלב בנייה נמצא כל פרויקט.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "g2urfbsqrbcb",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "8xc52xzyxeew",
+              "text": "איך מתחילים",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "9tjrh4jz9e9t",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "aca2kow220ek",
+              "text": "שיחה קצרה על תקציב, מספר חדרי שינה ומרחק מהים מספיקה כדי לצמצם את המבחר בלימסול לכמה פרויקטים. אחריה אפשר לקבל תוכניות דירה, מחירון ומועדי מסירה, ולתאם סיור בנכס בכמה מהם באותו יום.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "relatedLandingPages": [
+    "limassol/new-projects",
+    "limassol/investment-apartments",
+    "real-estate-cyprus"
+  ],
+  "translationGroupSlugEn": null,
+  "parentSlug": null,
+  "review": "pending"
+}
