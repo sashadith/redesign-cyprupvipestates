@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { i18n } from "@/i18n.config";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, PUBLIC_LOCALES as LOCALES } from "@/lib/locale";
 import { languageAlternates } from "@/lib/seo";
 import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporateLocale, type CorporatePage } from "@/lib/corporatePageSlugs";
 import type { Translation } from "@/types/homepage";
@@ -24,8 +24,6 @@ import type { LegalBlock } from "./types";
    prominent "last updated" date — which the old pages did not have at all. */
 
 type Props = { params: { lang: string; doc: string } };
-
-const LOCALES = ["en", "de", "pl", "ru"] as const;
 
 export async function generateStaticParams() {
   return LOCALES.flatMap((lang) => ["privacy", "terms"].map((doc) => ({ lang, doc })));

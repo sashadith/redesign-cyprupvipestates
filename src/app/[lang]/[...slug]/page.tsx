@@ -5,6 +5,7 @@ import AccordionContainer from "@/app/components/AccordionContainer/AccordionCon
 import Footer from "@/app/components/Footer/Footer";
 import Header from "@/app/components/Header/Header";
 import { i18n } from "@/i18n.config";
+import { PUBLIC_LOCALES } from "@/lib/locale";
 import {
   getFormStandardDocumentByLang,
   getSinglePageByLang,
@@ -127,7 +128,7 @@ export const revalidate = 60;
  * Собираем все combinations [lang, slug[]] для SSG
  */
 export async function generateStaticParams(): Promise<Props["params"][]> {
-  const langs = i18n.languages.map((l) => l.id);
+  const langs = PUBLIC_LOCALES;
   const paths: Props["params"][] = [];
 
   for (const lang of langs) {

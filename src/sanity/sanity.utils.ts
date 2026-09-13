@@ -7,7 +7,7 @@ import { cache } from "react";
 import { draftMode } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
-import { localizedHref, isLocale } from "@/lib/locale";
+import { localizedHref, isLocale, PUBLIC_LOCALES } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
 import { completionSortKey } from "@/lib/completionDate";
 import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances, districtWithParent, resolveRelativeCompletion } from "@/lib/developmentCard";
@@ -882,7 +882,8 @@ export async function getRelatedLandingPages(lang: string, refs: any): Promise<{
 }
 
 // ── Slug lists for generateStaticParams (ISR static generation) ──
-export const ALL_LOCALES = ["en", "de", "pl", "ru"] as const;
+// Static-generation locale set: only locales that are live get pre-rendered.
+export const ALL_LOCALES = PUBLIC_LOCALES;
 // `published` adds status=PUBLISHED (so drafts aren't pre-rendered). Developer/Author/Category
 // have no status column, so they pass published=false.
 const slugList = (model: any, published: boolean) => async (lang: string): Promise<string[]> =>
