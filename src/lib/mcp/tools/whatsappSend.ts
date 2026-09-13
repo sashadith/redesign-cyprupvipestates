@@ -114,6 +114,14 @@ export async function performSend(deps: SendDeps, input: SendInput, actor: Email
   // Sent. From here a failure must never be reported as "not sent", and
   // the send must never be retried to repair a logging error.
   try {
+    // WHATSAPP_OUT advances nextFollowUpAt here BY DESIGN: a message really
+    // was just sent, so the cadence should move exactly as it does when the
+    // operator logs a contact by hand. Elsewhere in this project historical
+    // rows are backfilled with the "read nextFollowUpAt first, restore it
+    // after" workaround so that importing old contacts does not rewrite the
+    // schedule. That workaround must NOT be copied here — this is a live
+    // contact, not a backfill, and suppressing the cadence would leave a
+    // just-messaged lead sitting at its old due date.
     const { interactionId } = await deps.logInteraction(actor, lead!.id, {
       type: "WHATSAPP_OUT",
       body: input.text,

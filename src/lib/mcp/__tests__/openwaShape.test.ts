@@ -14,6 +14,13 @@ test("shapeThread: drops the empty 'unknown' sync artefacts", () => {
   assert.equal((out[0].text as { untrusted_content: string }).untrusted_content, "real message");
 });
 
+test("shapeThread: a blank type with an empty body is dropped, not treated as a real message", () => {
+  // `!== "unknown"` on the literal string would let type "" through and make a
+  // never-contacted number look like an existing conversation to the send guard.
+  assert.equal(shapeThread([{ body: "", type: "", timestamp: at, fromMe: false }]).length, 0);
+  assert.equal(shapeThread([{ body: "   ", type: "  ", timestamp: at, fromMe: false }]).length, 0);
+});
+
 test("shapeThread: keeps an 'unknown' row that actually carries text", () => {
   const out = shapeThread([{ body: "hello", type: "unknown", timestamp: at, fromMe: true }]);
   assert.equal(out.length, 1);

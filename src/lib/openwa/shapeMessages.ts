@@ -16,13 +16,23 @@ export type ShapedMessage = {
   media: { type: string; mimetype: string | null; sizeBytes: number | null } | null;
 };
 
+// SECURITY PREDICATE — not a display filter. crm_whatsapp_send's
+// thread-existence guard (whatsappSend.ts, "Guard 3") asks shapeThread() how
+// many real messages a number has, and refuses to send when the answer is
+// zero. Loosening this to show more rows in the thread view also loosens that
+// guard, and the guard is the only thing standing between a mistyped number
+// and a stranger receiving a message. Change it only with that in mind.
+//
 // A body-less `unknown` row is a gateway protocol artefact, not a message.
 // One of them, stamped at session-connect time, nearly became a lead's
-// "last contact" during the 2026-09-13 reconciliation.
+// "last contact" during the 2026-09-13 reconciliation. Only one gateway
+// response shape was ever measured, so the type check treats anything blank
+// or whitespace-only as `unknown` too rather than trusting the literal string.
 function isRealMessage(m: RawMessage): boolean {
   if (typeof m.timestamp !== "number") return false;
   const hasBody = !!m.body?.trim();
-  return hasBody || (m.type ?? "unknown") !== "unknown";
+  const type = m.type?.trim() || "unknown";
+  return hasBody || type !== "unknown";
 }
 
 export function shapeThread(raw: RawMessage[]): ShapedMessage[] {

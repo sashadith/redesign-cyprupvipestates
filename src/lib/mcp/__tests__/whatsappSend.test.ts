@@ -105,6 +105,15 @@ test("a refused decision never calls sendText — unknown lead", async () => {
   assert.deepEqual(calls.sendText, []);
 });
 
+test("a refused decision never calls sendText — lead has no usable phone", async () => {
+  const { deps, calls } = fakeDeps({ findLead: async () => ({ id: INPUT.leadId, phone: null }) });
+  const err = await expectRefusal(deps);
+  assert.equal(err.code, "validation");
+  assert.match(err.message, /no usable phone number/i);
+  assert.deepEqual(calls.sendText, []);
+  assert.deepEqual(calls.fetchThread, [], "an unaddressable lead must not even be probed");
+});
+
 test("a refused decision never calls sendText — daily cap reached", async () => {
   const { deps, calls } = fakeDeps({ countSentToday: async () => 20 });
   const err = await expectRefusal(deps);
