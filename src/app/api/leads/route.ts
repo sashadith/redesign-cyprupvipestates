@@ -11,8 +11,9 @@ import { matchDevelopmentsForLead } from "@/lib/crm/matching";
 import { ALLOWED_HOSTS, safeUrl, escapeHtml, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
 import nodemailer from "nodemailer";
 import { PROPERTY_VALUES, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
+import { LOCALES } from "@/lib/locale";
 
-const LOCALES = new Set(["en", "de", "pl", "ru"]);
+const ALLOWED_LANGS = new Set<string>(LOCALES);  // locally named ALLOWED_LANGS to avoid shadowing the imported LOCALES constant
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST || "smtp.hostinger.com",
@@ -92,7 +93,7 @@ export async function POST(request: Request) {
     let projectInterestId: string | null = null;
     let source = leadSource(page);
     const projectSlug = String(body.projectSlug ?? "").trim();
-    if (projectSlug && LOCALES.has(langNorm)) {
+    if (projectSlug && ALLOWED_LANGS.has(langNorm)) {
       const proj = await prisma.project.findFirst({ where: { slug: projectSlug, language: langNorm as any }, select: { id: true } });
       if (proj) { projectInterestId = proj.id; source = "PROJECT_ENQUIRY"; }
     }
@@ -115,7 +116,7 @@ export async function POST(request: Request) {
         financing: financing as any,
         propertyTypeInterest,
         projectInterestId,
-        languagePreference: LOCALES.has(langNorm) ? (langNorm as any) : null,
+        languagePreference: ALLOWED_LANGS.has(langNorm) ? (langNorm as any) : null,
         pageSource: page,
         ...parseAttribution(body),
       },

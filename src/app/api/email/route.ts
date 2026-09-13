@@ -5,8 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { parseAttribution } from "@/lib/attribution";
 import { recordInboundLead } from "@/lib/leadNotify";
 import { ALLOWED_HOSTS, safeUrl, allowedHost, clientIp, escapeHtml, makeRateLimiter } from "@/lib/antispam";
+import { LOCALES } from "@/lib/locale";
 
-const LEAD_LOCALES = new Set(["en", "de", "pl", "ru"]);
+const LEAD_LOCALES = new Set<string>(LOCALES);
 
 /**
  * Разрешаем только страницу партнёров во всех языках:
