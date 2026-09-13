@@ -5,7 +5,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { FC, useState } from "react";
 import Link from "next/link";
-import { localePrefix, BCP47, isLocale, type Locale } from "@/lib/locale";
+import { localePrefix, BCP47, isLocale, bidiIsolate, type Locale } from "@/lib/locale";
 import popupStyles from "../ProjectsMapAll/ProjectsMapAll.module.scss";
 import styles from "./PropertyMap.module.scss";
 
@@ -132,8 +132,8 @@ function t(
       coords: "קואורדינטות",
       copy: "העתקה",
       copied: "הועתק ללוח",
-      open: "פתיחה ב-Google Maps",
-      route: "מסלול (Google/Apple)",
+      open: `פתיחה ב-${bidiIsolate("Google Maps")}`,
+      route: `מסלול (${bidiIsolate("Google/Apple")})`,
       osm: "פתיחה ב-OSM",
     }, // REVIEW(he)
   };

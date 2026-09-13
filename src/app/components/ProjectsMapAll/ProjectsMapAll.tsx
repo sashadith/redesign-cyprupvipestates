@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { useRouter, useSearchParams } from "next/navigation";
 import L from "leaflet";
 import Link from "next/link";
-import { BCP47, isLocale, type Locale } from "@/lib/locale";
+import { BCP47, isLocale, bidiIsolate, type Locale } from "@/lib/locale";
 import styles from "./ProjectsMapAll.module.scss";
 import "leaflet/dist/leaflet.css";
 import "leaflet-gesture-handling/dist/leaflet-gesture-handling.css";
@@ -259,8 +259,8 @@ function t(
       coords: "קואורדינטות",
       copy: "העתקה",
       copied: "הועתק ללוח",
-      open: "פתיחה ב-Google Maps",
-      route: "מסלול (Google/Apple)",
+      open: `פתיחה ב-${bidiIsolate("Google Maps")}`,
+      route: `מסלול (${bidiIsolate("Google/Apple")})`,
       osm: "פתיחה ב-OSM",
     }, // REVIEW(he)
   };
