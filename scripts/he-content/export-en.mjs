@@ -131,6 +131,40 @@ async function exportSinglepages(prisma, outDir) {
   }
 }
 
+// Structural references only: published EN landing pages (the slugs the
+// 2025 landing import created, scripts/landings.csv) so authors of the fresh
+// Hebrew landing pages can mirror the real block shapes. Never mirrored by
+// he-content-check (no Hebrew counterpart lives under reference/).
+const REFERENCE_SINGLEPAGES = [
+  "new-homes-in-cyprus-for-sale",
+  "beach-villas-for-sale-cyprus",
+  "homes-for-sale-in-limassol",
+  "2-bedroom-apartments-for-sale-limassol",
+  "2-bedroom-apartments-in-paphos",
+  "west-coast-properties-paphos",
+];
+
+async function exportReferenceSinglepages(prisma, outDir) {
+  console.log("Exporting reference landing pages…");
+  const rows = await prisma.singlepage.findMany({
+    where: { language: "en", status: "PUBLISHED", slug: { in: REFERENCE_SINGLEPAGES } },
+  });
+  for (const row of rows) {
+    const data = {
+      slug: row.slug,
+      title: row.title,
+      excerpt: row.excerpt,
+      allowIntroBlock: row.allowIntroBlock,
+      previewImage: row.previewImage,
+      seo: row.seo,
+      contentBlocks: row.contentBlocks,
+      relatedLandingPages: row.relatedLandingPages,
+    };
+    writeJson(path.join(outDir, "reference", `${row.slug}.en.json`), data);
+  }
+  console.log(`  ${rows.length} reference page(s)`);
+}
+
 async function exportDevelopers(prisma, outDir) {
   console.log("Exporting developers…");
   const rows = await prisma.developer.findMany({ where: { language: "en" } });
@@ -207,6 +241,7 @@ async function main() {
     await exportSiteDocuments(prisma, out);
     await exportCaseStudies(prisma, out);
     await exportSinglepages(prisma, out);
+    await exportReferenceSinglepages(prisma, out);
     await exportDevelopers(prisma, out);
     await exportInventory(prisma, out);
     console.log("\nDone — this was a READ-ONLY export; nothing was written to the database.");
