@@ -130,8 +130,14 @@ export default function PropertyOverlay({
             <div className="cp-overlay__amenities">
               {amenities.map((a) => (
                 <span key={a} className="cp-overlay__amenity">
+                  {/* iconFor() keeps matching on the RAW English value — the
+                      icon table is regex-driven and must not see Hebrew. Only
+                      the visible label is translated, and only for `he`
+                      (Pass B S17 / Systemic S-A: heFeedVocab.ts is the one
+                      place feed vocabulary becomes Hebrew). Unknown amenities
+                      fall back to the bidi-isolated raw string. */}
                   <span className="cp-overlay__amenity-ic">{iconFor(a)}</span>
-                  {a}
+                  {isHe ? heFeedLabel(a) : a}
                 </span>
               ))}
             </div>

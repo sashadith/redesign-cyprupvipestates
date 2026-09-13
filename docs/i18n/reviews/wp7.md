@@ -481,7 +481,7 @@ eine englische Signatur stehen kann.
 
 | Stelle | Warum | Marker |
 |---|---|---|
-| `ProjectPdfButton.copy.ts` → `he` | Das PDF wird für `he` **im UI nicht angeboten** (Spec Phase 1–4): das react-pdf-Dokument hat keine hebräische Schrift und kein RTL. Der Button wird auf `/he/projects/<slug>` nicht mehr gerendert (`page.tsx:322`), der Eintrag bleibt nur, damit die `Record<Locale, …>`-Typisierung hält. **Offen (Pass B S23):** die Route `/api/projects/he/<slug>/pdf` selbst ist weiterhin erreichbar und rendert mit DejaVuSans ohne hebräische Glyphen (Tofu) — der Guard gehört an den Routenanfang, liegt aber außerhalb der für Fix-Runde 1 freigegebenen Dateien | keiner — der Zähler soll ehrlich bleiben |
+| `ProjectPdfButton.copy.ts` → `he` | Das PDF wird für `he` **im UI nicht angeboten** (Spec Phase 1–4): das react-pdf-Dokument hat keine hebräische Schrift und kein RTL. Der Button wird auf `/he/projects/<slug>` nicht mehr gerendert (`page.tsx:322`), der Eintrag bleibt nur, damit die `Record<Locale, …>`-Typisierung hält. **Erledigt in Fix-Runde 2 (Pass B S23):** die Route `/api/projects/he/<slug>/pdf` gibt jetzt am Handler-Anfang `404` zurück (`route.tsx`, vor dem Sanity-Query) — vorher war sie erreichbar und rendert mit DejaVuSans ohne hebräische Glyphen (Tofu). Die Aussage „wird für `he` nicht angeboten" gilt damit für UI **und** Route | keiner — der Zähler soll ehrlich bleiben |
 | `pdf/ProjectPdfDocument.copy.ts` → `he` | dieselbe Entscheidung; das Dokument kann für `he` gar nicht erzeugt werden | keiner |
 | `getInternalEmailHtml` (ROI-Route) | interne Benachrichtigung an das Büro — Projektkonvention: admin-/internes Deutsch/Englisch bleibt Englisch | keiner |
 | ROI-Mail-Labels für de/pl/ru | Planvorgabe „LTR-Strings identisch": sie standen bisher englisch da und bleiben es, bis jemand anders entscheidet | keiner |
@@ -588,8 +588,8 @@ eine englische Signatur stehen kann.
 
 | Nicht umgesetzt | Warum |
 |---|---|
-| **S17** — Amenity-Chips (`Swimming pool`, `Gym`, …) stehen auf der hebräischen Präsentationsseite weiter englisch | Die Korrektur verlangt einen Amenity-Block in `src/lib/heFeedVocab.ts` (Glossar §2). Diese Datei gehört WP2 und lag außerhalb der für diese Runde freigegebenen Dateien. Eine zweite Label-Tabelle unter `c/[token]/` anzulegen wäre genau der Fehler, den Pass B unter „Systemic S-A" beschreibt: `heFeedVocab.ts` ist der **eine** Ort für Feed-Vokabular. **Bleibt offen.** |
-| **S23** — `/api/projects/he/<slug>/pdf` ist ohne `he`-Guard weiter erreichbar und rendert Tofu | `src/app/api/projects/[lang]/[slug]/pdf/route.tsx` lag außerhalb der freigegebenen Dateien. Der Button ist für `he` bereits ausgeblendet, die Route selbst nicht. **Bleibt offen**, Formulierung in „Bewusst englisch belassen" entsprechend abgeschwächt. |
+| **S17** — Amenity-Chips (`Swimming pool`, `Gym`, …) stehen auf der hebräischen Präsentationsseite weiter englisch | Die Korrektur verlangt einen Amenity-Block in `src/lib/heFeedVocab.ts` (Glossar §2). Diese Datei gehört WP2 und lag außerhalb der für diese Runde freigegebenen Dateien. Eine zweite Label-Tabelle unter `c/[token]/` anzulegen wäre genau der Fehler, den Pass B unter „Systemic S-A" beschreibt: `heFeedVocab.ts` ist der **eine** Ort für Feed-Vokabular. ~~Bleibt offen.~~ **Erledigt in Fix-Runde 2.** |
+| **S23** — `/api/projects/he/<slug>/pdf` ist ohne `he`-Guard weiter erreichbar und rendert Tofu | `src/app/api/projects/[lang]/[slug]/pdf/route.tsx` lag außerhalb der freigegebenen Dateien. Der Button ist für `he` bereits ausgeblendet, die Route selbst nicht. ~~Bleibt offen~~ **Erledigt in Fix-Runde 2.** |
 
 **Bewusste Abweichungen, die protokolliert gehören:**
 
@@ -613,3 +613,169 @@ eine englische Signatur stehen kann.
   in den Seiten. `generateMetadata()` liest dafür je einen zusätzlichen
   `select`-Einzeiler (Locale, sonst nichts) — die Regel „kein Token-Inhalt in den
   Metadaten" bleibt unangetastet (Pass B S21).
+
+---
+
+## Fix-Runde 2 — die zwei aus Fix-Runde 1 übrig gebliebenen Zeilen
+
+Beide Zeilen waren nicht inhaltlich strittig, sondern lagen in Dateien, die für
+Fix-Runde 1 nicht freigegeben waren. Sie sind jetzt umgesetzt.
+
+### S23 — die PDF-Route ist für `he` geschlossen
+
+`src/app/api/projects/[lang]/[slug]/pdf/route.tsx`, direkt nach `await params` und
+**vor** dem Sanity-Query:
+
+```ts
+// Spec (Hebrew Phases 1-4): the project PDF is not offered for `he`. …
+if (lang === "he") {
+  return new Response("Not found", { status: 404 });
+}
+```
+
+Bewusst ein kleiner expliziter Vergleich und keine Locale-Liste: `he` ist der einzige
+Locale ohne PDF, und eine Liste würde vortäuschen, dass die Regel konfigurierbar wäre.
+Am Rendering wurde nichts geändert; die vier LTR-Locales laufen durch denselben Pfad wie
+vorher.
+
+### S17 — Amenity-Chips auf `/c/[token]`
+
+Die Chips im Objekt-Overlay (`PropertyOverlay.tsx`) rendern je einen rohen Feed-String.
+Nach Pass B **Systemic S-A** entsteht dafür *keine* zweite Label-Tabelle unter
+`c/[token]/`: die Begriffe stehen im Amenity-Block der **einen** Tabelle
+`HE_FEED_VOCAB` in `src/lib/heFeedVocab.ts`, und das Overlay ruft für `he`
+`heFeedLabel(a)` auf — genau wie schon für Typ (`heFeedLabel`) und Betten
+(`heBedrooms`). Zwei Eigenschaften bleiben dabei erhalten:
+
+- **`iconFor(a)` sieht weiter den rohen englischen Wert.** Die Icon-Zuordnung ist
+  regex-getrieben (`/pool|swim/`, `/gym|fitness/`, …) und würde an hebräischem Text
+  scheitern. Übersetzt wird ausschließlich das sichtbare Label.
+- **LTR ist byte-identisch.** Der Aufruf steht hinter `isHe ? … : a`; en/de/pl/ru
+  rendern denselben String wie vorher.
+
+Unbekannte Amenities fallen wie überall in `heFeedLabel()` auf den **bidi-isolierten
+Rohwert** zurück — nie auf eine geratene Übersetzung.
+
+#### Protokoll der neu aufgenommenen Amenity-Begriffe
+
+Schlüssel sind normalisiert (`norm()`: lowercase, `[\s_-]+` → ein Leerzeichen), deshalb
+deckt ein Eintrag alle Schreibweisen mit Bindestrich, Unterstrich und Groß-/Kleinschreibung
+ab; Pluralformen und Synonyme bekommen jeweils einen eigenen Schlüssel. Herkunft: **G** =
+`he-glossary.md` §2 wörtlich, **S** = israelischer Standardbegriff aus Anzeigen (nicht im
+Glossar, für Pass C zu prüfen).
+
+| Key `amenity:<raw>` | EN | HE | Anmerkung | Korrektur HE |
+|---|---|---|---|---|
+| `amenity:pool` / `pools` | pool / pools | בריכת שחייה / בריכות שחייה | S — Glossar kennt nur die private/gemeinsame Variante; der generische Chip braucht einen neutralen Begriff | |
+| `amenity:swimming pool` / `swimming pools` | swimming pool(s) | בריכת שחייה / בריכות שחייה | S | |
+| `amenity:private pool` / `private swimming pool` | private (swimming) pool | בריכה פרטית | **G** | |
+| `amenity:communal pool` / `communal swimming pool` / `shared pool` | communal / shared pool | בריכה משותפת | **G** | |
+| `amenity:infinity pool` / `overflow pool` | infinity / overflow pool | בריכת אינסוף | S | |
+| `amenity:childrens pool` / `kids pool` | children's pool | בריכת ילדים | S | |
+| `amenity:heated pool` | heated pool | בריכה מחוממת | S | |
+| `amenity:garden` / `gardens` | garden(s) | גינה / גינות | **G** | |
+| `amenity:private garden` | private garden | גינה פרטית | **G** + פרטית | |
+| `amenity:landscaped garden(s)` / `landscaping` | landscaped garden / landscaping | גינון מעוצב | S — `גינון` ist die Anlage, `מעוצב` das „landscaped" | |
+| `amenity:communal gardens` | communal gardens | גינות משותפות | S, parallel zu `בריכה משותפת` | |
+| `amenity:roof garden` / `roof terrace` | roof garden / roof terrace | מרפסת גג | **G** (`גג / מרפסת גג` — hier die eindeutige Langform) | |
+| `amenity:roof` | roof | גג | **G** | |
+| `amenity:terrace` / `terraces` | terrace(s) | מרפסת / מרפסות | **G** (terrace/balcony fallen im Hebräischen zusammen) | |
+| `amenity:balcony` / `balconies` | balcony / balconies | מרפסת / מרפסות | **G** — dieselbe Zeile; im Hebräischen korrekt, kein Fehler | |
+| `amenity:veranda(s)` / `covered veranda` | veranda | מרפסת מקורה | S — die zyprische „covered veranda" ist die überdachte Terrasse | |
+| `amenity:patio` | patio | פטיו | S, Lehnwort, in israelischen Anzeigen üblich | |
+| `amenity:pergola` | pergola | פרגולה | S, Lehnwort | |
+| `amenity:bbq` / `bbq area` / `barbecue` / `barbecue area` | BBQ (area) | אזור מנגל | S — `מנגל` ist der israelische Alltagsbegriff, `ברביקיו` klingt nach Katalog | |
+| `amenity:outdoor kitchen` | outdoor kitchen | מטבח חוץ | S | |
+| `amenity:parking` / `parking space` | parking | חניה | **G** | |
+| `amenity:covered parking` | covered parking | חניה מקורה | **G** (`חניה (מקורה)` — ohne Klammern, die Klammer war Notation) | |
+| `amenity:underground parking` | underground parking | חניה תת-קרקעית | S | |
+| `amenity:private parking` | private parking | חניה פרטית | S | |
+| `amenity:storage` / `storage room` | storage (room) | מחסן | **G** | |
+| `amenity:ev charger` / `ev charging` / `ev charging point` | EV charger | עמדת טעינה לרכב חשמלי | S — ausgeschrieben; `עמדת טעינה` allein ist auch das Handy-Ladepult | |
+| `amenity:sea view` / `sea views` | sea view(s) | נוף לים | **G** | |
+| `amenity:panoramic sea view` | panoramic sea view | נוף פנורמי לים | **G** + פנורמי | |
+| `amenity:panoramic view` | panoramic view | נוף פנורמי | S | |
+| `amenity:mountain view(s)` | mountain view(s) | נוף להרים | S, parallel gebaut zu `נוף לים` | |
+| `amenity:unobstructed view(s)` / `open view` | unobstructed / open view | נוף פתוח | S — `נוף פתוח` ist der Anzeigenbegriff; ein wörtliches „unverbaut" gibt es als Chip nicht | |
+| `amenity:beachfront` / `first line` | beachfront / first line | קו ראשון לים | **G** | |
+| `amenity:beach access` | beach access | גישה לחוף | S | |
+| `amenity:walking distance to (the) beach` | walking distance to the beach | במרחק הליכה מהחוף | **G** | |
+| `amenity:gym` / `fitness` / `fitness centre` / `fitness center` / `fitness room` | gym / fitness | חדר כושר | **G** | |
+| `amenity:spa` | spa | ספא | S, Lehnwort | |
+| `amenity:sauna` | sauna | סאונה | S, Lehnwort | |
+| `amenity:steam room` | steam room | חדר אדים | S | |
+| `amenity:jacuzzi` / `hot tub` | jacuzzi / hot tub | ג'קוזי | S — mit Geresh, wie im Hebräischen für /dʒ/ üblich | |
+| `amenity:playground` / `childrens playground` | playground | גן משחקים | S | |
+| `amenity:tennis court(s)` | tennis court(s) | מגרש טניס / מגרשי טניס | S (Smichut-Plural) | |
+| `amenity:golf` / `golf course` | golf (course) | מגרש גולף | S | |
+| `amenity:golf resort` | golf resort | ריזורט גולף | **G** (`ריזורט`) + גולף | |
+| `amenity:resort` | resort | ריזורט | **G** | |
+| `amenity:lounge area` | lounge area | פינת ישיבה | S | |
+| `amenity:sunbeds` | sunbeds | מיטות שיזוף | S | |
+| `amenity:restaurant` | restaurant | מסעדה | S | |
+| `amenity:lift(s)` / `elevator(s)` | lift / elevator | מעלית / מעליות | S — im Hebräischen gibt es nur ein Wort für beide | |
+| `amenity:concierge` | concierge | קונסיירז' | **G** | |
+| `amenity:concierge service` | concierge service | שירות קונסיירז' | **G** + שירות | |
+| `amenity:reception` | reception | קבלה | S | |
+| `amenity:lobby` | lobby | לובי | S, Lehnwort | |
+| `amenity:communal areas` | communal areas | שטחים משותפים | S | |
+| `amenity:management company` | management company | חברת ניהול | **G** | |
+| `amenity:gated` / `gated community` | gated (community) | קהילה מגודרת | **G** | |
+| `amenity:gated complex` | gated complex | פרויקט מגודר | **G** (zweite Glossarform, für das Bauprojekt statt der Nachbarschaft) | |
+| `amenity:security` | security | אבטחה | S | |
+| `amenity:24/7 security` / `24 7 security` | 24/7 security | אבטחה ⁦24/7⁩ | S — die Ziffernfolge steht im LRI-Isolat, damit `24/7` im RTL-Absatz nicht kippt (dieselbe Technik wie in `heBedrooms()`) | |
+| `amenity:cctv` / `video surveillance` | CCTV | מצלמות אבטחה | S — das Akronym wird in Israel nicht benutzt | |
+| `amenity:alarm` / `alarm system` | alarm (system) | מערכת אזעקה | S | |
+| `amenity:intercom` | intercom | אינטרקום | S, Lehnwort | |
+| `amenity:video intercom` | video intercom | אינטרקום עם וידאו | S | |
+| `amenity:smart home` / `home automation` | smart home / home automation | בית חכם | **G** | |
+| `amenity:smart home system` | smart home system | מערכת בית חכם | **G** + מערכת | |
+| `amenity:air conditioning` / `a/c` / `ac` / `vrv` / `vrf` | air conditioning, A/C, VRV, VRF | מיזוג אוויר | **G** — die Feeds liefern alle vier Schreibweisen für dieselbe Sache | |
+| `amenity:climate control` | climate control | בקרת אקלים | S | |
+| `amenity:provision for air conditioning` | provision for A/C | הכנה למיזוג אוויר | S — `הכנה ל…` ist der Anzeigenbegriff für „vorbereitet, nicht installiert" | |
+| `amenity:underfloor heating` | underfloor heating | חימום תת-רצפתי | **G** (Glossar §2; **nicht** `הסקה תת-רצפתית`) | |
+| `amenity:central heating` | central heating | חימום מרכזי | S | |
+| `amenity:solar panels` / `photovoltaic` | solar panels / PV | פאנלים סולאריים | S | |
+| `amenity:solar water heating` | solar water heating | דוד שמש | S — in Israel der feststehende Begriff für die Solar-Warmwasseranlage | |
+| `amenity:double glazing` | double glazing | זיגוג כפול | S | |
+| `amenity:double glazed windows` | double glazed windows | חלונות בזיגוג כפול | S | |
+| `amenity:pressurised water` / `pressurized water` / `pressurised water system` | pressurised water (system) | מערכת מים בלחץ | S — beide englischen Schreibweisen kommen aus den zyprischen Feeds | |
+| `amenity:fireplace` | fireplace | קמין | S | |
+| `amenity:furnished` | furnished | מרוהט | **G** | |
+| `amenity:fully furnished` | fully furnished | מרוהט במלואו | **G** + במלואו | |
+| `amenity:unfurnished` | unfurnished | לא מרוהט | S | |
+| `amenity:fitted kitchen` | fitted kitchen | מטבח מאובזר | S | |
+| `amenity:fitted wardrobes` / `wardrobes` | fitted wardrobes | ארונות קיר | S | |
+| `amenity:walk in wardrobe` / `walk in closet` | walk-in wardrobe/closet | חדר ארונות | S — das begehbare Ankleidezimmer, gegenüber `ארונות קיר` abgegrenzt | |
+| `amenity:en suite` / `ensuite` / `en suite bathroom` | en-suite (bathroom) | חדר רחצה צמוד | **G** (§2, „en suite": `חדר רחצה צמוד`) | |
+| `amenity:guest wc` / `guest toilet` | guest WC | שירותי אורחים | S | |
+| `amenity:utility room` | utility room | חדר שירות | S | |
+| `amenity:laundry room` | laundry room | חדר כביסה | S | |
+| `amenity:corner plot` | corner plot | מגרש פינתי | **G** (`מגרש`) + פינתי | |
+
+**Für Pass C:** die mit **S** markierten Zeilen sind neu und stehen nicht im Glossar —
+sie sind der eigentliche Prüfauftrag dieser Tabelle. Die mit **G** markierten Zeilen
+übernehmen den Glossarwortlaut unverändert und sollten nur dann geändert werden, wenn
+gleichzeitig `he-glossary.md` §2 geändert wird.
+
+### Tests
+
+`src/lib/__tests__/heFeedVocab.test.ts` bekommt fünf Tests: 14 Amenity-Zuordnungen ·
+Varianten-Schreibweisen (`SWIMMING POOL`, `roof-garden`, `smart_home`, `En-suite`,
+`Walk-in wardrobe`, `A/C`, `Pressurized`/`Pressurised`) · zwei unbekannte Werte
+(`Padel court`, `Helipad`) fallen bidi-isoliert zurück · `24/7` bleibt LTR-isoliert ·
+kein einziger Wert der Tabelle enthält `–` oder `—`.
+
+Für S23 gibt es bewusst **keinen** Test: die Datei ist ein Next.js-Route-Handler und
+importiert `@react-pdf/renderer` auf Modulebene; sie in einem Unit-Test zu laden hieße,
+PDF-Code auszuführen. Der Guard steht drei Zeilen vor dem ersten Datenzugriff und ist im
+Diff nachprüfbar.
+
+### Gates Fix-Runde 2
+
+| Gate | Ergebnis |
+|---|---|
+| `npx tsc --noEmit -p tsconfig.json` | sauber |
+| `npm test` | 169/169 grün (164 Bestand + 5 neu) |
+| `node --import tsx scripts/qa/copy-snapshot.mjs --check` | sauber, 3197 Leaves — keine Copy-Tabelle angefasst |
+| `node scripts/qa/he-placeholders.mjs` | `TODO(he): 2` · `REVIEW(he): 111` — unverändert |

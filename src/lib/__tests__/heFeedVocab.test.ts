@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { heFeedLabel, heBedrooms } from "@/lib/heFeedVocab";
+import { heFeedLabel, heBedrooms, HE_FEED_VOCAB } from "@/lib/heFeedVocab";
 
 const FSI = "⁨";
 const PDI = "⁩";
@@ -58,4 +58,64 @@ test("heBedrooms keeps a range LTR-isolated and hyphenated, never en-dashed", ()
 test("heBedrooms passes an empty value through and isolates anything unparseable", () => {
   assert.equal(heBedrooms(""), "");
   assert.equal(heBedrooms("3+1"), `${FSI}3+1${PDI}`);
+});
+
+// ---- amenities (Pass B S17) ----------------------------------------------
+// The presentation overlay's amenity chips rendered the raw English feed value
+// among Hebrew copy. The terms live in the ONE vocabulary table, not in a
+// second table under c/[token]/ (Pass B Systemic S-A).
+
+test("heFeedLabel maps the amenity strings the presentation chips render", () => {
+  assert.equal(heFeedLabel("Swimming pool"), "בריכת שחייה");
+  assert.equal(heFeedLabel("Private pool"), "בריכה פרטית");
+  assert.equal(heFeedLabel("Communal pool"), "בריכה משותפת");
+  assert.equal(heFeedLabel("Gym"), "חדר כושר");
+  assert.equal(heFeedLabel("Concierge"), "קונסיירז'");
+  assert.equal(heFeedLabel("Sea view"), "נוף לים");
+  assert.equal(heFeedLabel("Covered parking"), "חניה מקורה");
+  assert.equal(heFeedLabel("Storage room"), "מחסן");
+  assert.equal(heFeedLabel("Lift"), "מעלית");
+  assert.equal(heFeedLabel("Underfloor heating"), "חימום תת-רצפתי");
+  assert.equal(heFeedLabel("Solar panels"), "פאנלים סולאריים");
+  assert.equal(heFeedLabel("Gated community"), "קהילה מגודרת");
+  assert.equal(heFeedLabel("Fitted kitchen"), "מטבח מאובזר");
+  assert.equal(heFeedLabel("Fireplace"), "קמין");
+});
+
+test("heFeedLabel absorbs the casing, hyphen and underscore variants the feeds ship", () => {
+  assert.equal(heFeedLabel("SWIMMING POOL"), heFeedLabel("swimming pool"));
+  assert.equal(heFeedLabel("roof-garden"), "מרפסת גג");
+  assert.equal(heFeedLabel("smart_home"), "בית חכם");
+  assert.equal(heFeedLabel("  Sea  View  "), "נוף לים");
+  assert.equal(heFeedLabel("En-suite"), "חדר רחצה צמוד");
+  assert.equal(heFeedLabel("Walk-in wardrobe"), "חדר ארונות");
+  // norm() does NOT fold plurals or synonyms, so each shipped spelling has its
+  // own key — the table is explicit rather than clever.
+  assert.equal(heFeedLabel("Sea views"), "נוף לים");
+  assert.equal(heFeedLabel("Elevator"), "מעלית");
+  assert.equal(heFeedLabel("Fitness"), "חדר כושר");
+  assert.equal(heFeedLabel("BBQ"), "אזור מנגל");
+  assert.equal(heFeedLabel("Barbecue area"), "אזור מנגל");
+  assert.equal(heFeedLabel("A/C"), "מיזוג אוויר");
+  assert.equal(heFeedLabel("Air conditioning"), "מיזוג אוויר");
+  assert.equal(heFeedLabel("Pressurized water"), "מערכת מים בלחץ");
+  assert.equal(heFeedLabel("Pressurised water"), "מערכת מים בלחץ");
+});
+
+test("heFeedLabel isolates an amenity we have no approved term for", () => {
+  // never a guess, never bare Latin loose in an RTL run
+  assert.equal(heFeedLabel("Padel court"), `${FSI}Padel court${PDI}`);
+  assert.equal(heFeedLabel("Helipad"), `${FSI}Helipad${PDI}`);
+});
+
+test("the 24/7 security chip keeps its digit run LTR-isolated", () => {
+  assert.equal(heFeedLabel("24/7 security"), `אבטחה ${LRI}24/7${PDI}`);
+  assert.equal(heFeedLabel("24-7 Security"), `אבטחה ${LRI}24/7${PDI}`);
+});
+
+test("no vocabulary term smuggles an en dash or em dash into Hebrew", () => {
+  for (const [key, value] of Object.entries(HE_FEED_VOCAB)) {
+    assert.ok(!value.includes("–"), `${key} contains an en dash`);
+    assert.ok(!value.includes("—"), `${key} contains an em dash`);
+  }
 });

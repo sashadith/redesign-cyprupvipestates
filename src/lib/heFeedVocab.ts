@@ -1,7 +1,8 @@
 // Hebrew display labels for the RAW feed/DB vocabulary that reaches a page
 // untranslated — property types ("Villa", "Apartment"), unit statuses
 // ("Available", "Reserved") and the bedroom summary resolveBedRange() produces
-// ("", "Studio", "3", "1-3").
+// ("", "Studio", "3", "1-3") — and, since Pass B S17, the amenity strings the
+// presentation overlay renders as chips ("Swimming pool", "Gym", "Concierge").
 //
 // Pass B, "Systemic" #1: the hebrew page currently ends where the copy table
 // ends. A listing card says "Villa" while the facts panel under it says "וילה",
@@ -60,6 +61,174 @@ export const HE_FEED_VOCAB: Record<string, string> = {
   sold: "נמכרה",
   "under offer": "בהצעה",
   unlisted: "לא בתצוגה",
+
+  // ---- amenities (Pass B S17) ----
+  // The presentation overlay renders one chip per raw feed amenity string, so
+  // "Swimming pool" / "Gym" / "Concierge" stood in Latin among Hebrew copy.
+  // Terms come from he-glossary.md §2 where it has one; the rest are the
+  // standard Israeli listing terms. Feed strings arrive in every casing and
+  // with hyphens/underscores, which norm() flattens — so the common variant
+  // spellings each get their own key rather than a guess at run time.
+
+  // pools
+  pool: "בריכת שחייה",
+  pools: "בריכות שחייה",
+  "swimming pool": "בריכת שחייה",
+  "swimming pools": "בריכות שחייה",
+  "private pool": "בריכה פרטית",
+  "private swimming pool": "בריכה פרטית",
+  "communal pool": "בריכה משותפת",
+  "communal swimming pool": "בריכה משותפת",
+  "shared pool": "בריכה משותפת",
+  "infinity pool": "בריכת אינסוף",
+  "overflow pool": "בריכת אינסוף",
+  "childrens pool": "בריכת ילדים",
+  "kids pool": "בריכת ילדים",
+  "heated pool": "בריכה מחוממת",
+
+  // outdoor space
+  garden: "גינה",
+  gardens: "גינות",
+  "private garden": "גינה פרטית",
+  "landscaped garden": "גינון מעוצב",
+  "landscaped gardens": "גינון מעוצב",
+  landscaping: "גינון מעוצב",
+  "communal gardens": "גינות משותפות",
+  "roof garden": "מרפסת גג",
+  "roof terrace": "מרפסת גג",
+  roof: "גג",
+  terrace: "מרפסת",
+  terraces: "מרפסות",
+  balcony: "מרפסת",
+  balconies: "מרפסות",
+  veranda: "מרפסת מקורה",
+  verandas: "מרפסות מקורות",
+  "covered veranda": "מרפסת מקורה",
+  patio: "פטיו",
+  pergola: "פרגולה",
+  "bbq": "אזור מנגל",
+  "bbq area": "אזור מנגל",
+  barbecue: "אזור מנגל",
+  "barbecue area": "אזור מנגל",
+  "outdoor kitchen": "מטבח חוץ",
+
+  // parking and storage
+  parking: "חניה",
+  "parking space": "חניה",
+  "covered parking": "חניה מקורה",
+  "underground parking": "חניה תת-קרקעית",
+  "private parking": "חניה פרטית",
+  storage: "מחסן",
+  "storage room": "מחסן",
+  "ev charger": "עמדת טעינה לרכב חשמלי",
+  "ev charging": "עמדת טעינה לרכב חשמלי",
+  "ev charging point": "עמדת טעינה לרכב חשמלי",
+
+  // views and location
+  "sea view": "נוף לים",
+  "sea views": "נוף לים",
+  "panoramic sea view": "נוף פנורמי לים",
+  "panoramic view": "נוף פנורמי",
+  "mountain view": "נוף להרים",
+  "mountain views": "נוף להרים",
+  "unobstructed view": "נוף פתוח",
+  "unobstructed views": "נוף פתוח",
+  "open view": "נוף פתוח",
+  beachfront: "קו ראשון לים",
+  "first line": "קו ראשון לים",
+  "beach access": "גישה לחוף",
+  "walking distance to the beach": "במרחק הליכה מהחוף",
+  "walking distance to beach": "במרחק הליכה מהחוף",
+
+  // wellness and leisure
+  gym: "חדר כושר",
+  fitness: "חדר כושר",
+  "fitness centre": "חדר כושר",
+  "fitness center": "חדר כושר",
+  "fitness room": "חדר כושר",
+  spa: "ספא",
+  sauna: "סאונה",
+  "steam room": "חדר אדים",
+  jacuzzi: "ג'קוזי",
+  "hot tub": "ג'קוזי",
+  playground: "גן משחקים",
+  "childrens playground": "גן משחקים",
+  "tennis court": "מגרש טניס",
+  "tennis courts": "מגרשי טניס",
+  golf: "מגרש גולף",
+  "golf course": "מגרש גולף",
+  "golf resort": "ריזורט גולף",
+  resort: "ריזורט",
+  "lounge area": "פינת ישיבה",
+  sunbeds: "מיטות שיזוף",
+  restaurant: "מסעדה",
+
+  // building services
+  lift: "מעלית",
+  lifts: "מעליות",
+  elevator: "מעלית",
+  elevators: "מעליות",
+  concierge: "קונסיירז'",
+  "concierge service": "שירות קונסיירז'",
+  reception: "קבלה",
+  lobby: "לובי",
+  "communal areas": "שטחים משותפים",
+  "management company": "חברת ניהול",
+
+  // security
+  gated: "קהילה מגודרת",
+  "gated community": "קהילה מגודרת",
+  "gated complex": "פרויקט מגודר",
+  security: "אבטחה",
+  "24 7 security": `אבטחה ${ltrIsolate("24/7")}`,
+  "24/7 security": `אבטחה ${ltrIsolate("24/7")}`,
+  cctv: "מצלמות אבטחה",
+  "video surveillance": "מצלמות אבטחה",
+  alarm: "מערכת אזעקה",
+  "alarm system": "מערכת אזעקה",
+  intercom: "אינטרקום",
+  "video intercom": "אינטרקום עם וידאו",
+
+  // technical fit-out
+  "smart home": "בית חכם",
+  "smart home system": "מערכת בית חכם",
+  "home automation": "בית חכם",
+  "air conditioning": "מיזוג אוויר",
+  "a/c": "מיזוג אוויר",
+  ac: "מיזוג אוויר",
+  vrv: "מיזוג אוויר",
+  vrf: "מיזוג אוויר",
+  "climate control": "בקרת אקלים",
+  "provision for air conditioning": "הכנה למיזוג אוויר",
+  "underfloor heating": "חימום תת-רצפתי",
+  "central heating": "חימום מרכזי",
+  "solar panels": "פאנלים סולאריים",
+  photovoltaic: "פאנלים סולאריים",
+  "solar water heating": "דוד שמש",
+  "double glazing": "זיגוג כפול",
+  "double glazed windows": "חלונות בזיגוג כפול",
+  "pressurised water": "מערכת מים בלחץ",
+  "pressurized water": "מערכת מים בלחץ",
+  "pressurised water system": "מערכת מים בלחץ",
+  fireplace: "קמין",
+
+  // interior
+  furnished: "מרוהט",
+  "fully furnished": "מרוהט במלואו",
+  unfurnished: "לא מרוהט",
+  "fitted kitchen": "מטבח מאובזר",
+  "fitted wardrobes": "ארונות קיר",
+  wardrobes: "ארונות קיר",
+  "walk in wardrobe": "חדר ארונות",
+  "walk in closet": "חדר ארונות",
+  "en suite": "חדר רחצה צמוד",
+  ensuite: "חדר רחצה צמוד",
+  "en suite bathroom": "חדר רחצה צמוד",
+  "guest wc": "שירותי אורחים",
+  "guest toilet": "שירותי אורחים",
+  "utility room": "חדר שירות",
+  "laundry room": "חדר כביסה",
+  "corner plot": "מגרש פינתי",
 };
 
 /**
