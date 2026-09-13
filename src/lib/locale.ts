@@ -1,13 +1,76 @@
 // Pure, client-safe locale URL helpers — the single source of truth for building
 // localized hrefs across server + client components, canonical/hreflang URLs, and
-// sitemaps. English is the default locale and has NO URL prefix; de/pl/ru are
-// prefixed. (Do NOT import i18n.config here — it pulls next-intl/server, which is
-// server-only and would break client components.)
+// sitemaps. en/de/pl/ru/he; `he` is RTL; see PUBLIC_LOCALES for what is live.
+// English is the default locale and has NO URL prefix; others are prefixed.
+// (Do NOT import i18n.config here — it pulls next-intl/server, which is server-only
+// and would break client components.)
 
 export const DEFAULT_LOCALE = "en";
-export const LOCALES = ["en", "de", "pl", "ru"] as const;
+/** Every locale the code and the DB know. Adding here = Prisma enum + admin + validation. */
+export const LOCALES = ["en", "de", "pl", "ru", "he"] as const;
+export type Locale = (typeof LOCALES)[number];
 
-/** URL prefix for a locale: "" for the default (en), "/de" | "/pl" | "/ru" otherwise. */
+/** Locales that exist but are NOT routed/advertised until the operator flips
+ *  NEXT_PUBLIC_LIVE_LOCALES. Keeps a forgotten env var from launching a locale. */
+export const LAUNCH_GATED_LOCALES: readonly Locale[] = ["he"];
+export const RTL_LOCALES: readonly Locale[] = ["he"];
+
+export function parsePublicLocales(raw: string | undefined): Locale[] {
+  const known = LOCALES as readonly string[];
+  const listed = raw
+    ? raw.split(",").map((s) => s.trim()).filter((s): s is Locale => known.includes(s))
+    : LOCALES.filter((l) => !LAUNCH_GATED_LOCALES.includes(l));
+  // only prepend the default locale if input is a single value (no comma) or if explicitly included
+  const isSingleValue = raw && !raw.includes(",");
+  const out = listed.includes(DEFAULT_LOCALE) || !isSingleValue ? listed : [DEFAULT_LOCALE as Locale, ...listed];
+  // keep canonical LOCALES order, dedupe
+  return LOCALES.filter((l) => out.includes(l));
+}
+
+/** Locales visible to visitors and search engines: routing, hreflang, sitemaps,
+ *  language switcher, static params, IndexNow. Build-time inlined (NEXT_PUBLIC_). */
+export const PUBLIC_LOCALES: readonly Locale[] = parsePublicLocales(process.env.NEXT_PUBLIC_LIVE_LOCALES);
+
+export function isLocale(lang: string): lang is Locale {
+  return (LOCALES as readonly string[]).includes(lang);
+}
+export function isPublicLocale(lang: string): lang is Locale {
+  return (PUBLIC_LOCALES as readonly string[]).includes(lang);
+}
+export function localeDir(lang: string): "rtl" | "ltr" {
+  return (RTL_LOCALES as readonly string[]).includes(lang) ? "rtl" : "ltr";
+}
+
+export const BCP47: Record<Locale, string> = {
+  en: "en-GB", de: "de-DE", pl: "pl-PL", ru: "ru-RU", he: "he-IL",
+};
+
+export const LOCALE_LABELS: Record<Locale, { code: string; name: string }> = {
+  en: { code: "EN", name: "English" },
+  de: { code: "DE", name: "Deutsch" },
+  pl: { code: "PL", name: "Polski" },
+  ru: { code: "RU", name: "Русский" },
+  he: { code: "HE", name: "עברית" },
+};
+
+/** "de|pl|ru|he" — for the middleware/SEO regexes that used to hard-code (de|pl|ru). */
+export function nonDefaultLocalePattern(locales: readonly string[] = LOCALES): string {
+  return locales.filter((l) => l !== DEFAULT_LOCALE).join("|");
+}
+
+/** Prices are EUR with Western digits in every locale (Israeli convention too). */
+export function fmtPrice(n: number, _lang: string): string {
+  return `€${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(n)}`;
+}
+
+export function fmtDate(value: string | Date, lang: string, opts: Intl.DateTimeFormatOptions = { year: "numeric", month: "long", day: "numeric" }): string {
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  const tag = isLocale(lang) ? BCP47[lang] : BCP47.en;
+  return new Intl.DateTimeFormat(tag, opts).format(d);
+}
+
+/** URL prefix for a locale: "" for the default (en), "/de" | "/pl" | "/ru" | "/he" otherwise. */
 export function localePrefix(lang: string): string {
   return lang === DEFAULT_LOCALE ? "" : `/${lang}`;
 }
@@ -29,18 +92,4 @@ export function localizedHref(lang: string, segments: string | string[] = ""): s
   const prefix = localePrefix(lang);
   if (!tail) return prefix || "/";
   return `${prefix}/${tail}`;
-}
-
-/**
- * Is `lang` one of the four real locales?
- *
- * Next fills a `[lang]` route segment with whatever the URL contained, so any
- * unmatched multi-segment path (/api/x, /og/x, /admin/x — every prefix the
- * middleware matcher excludes) reaches the `[lang]/…` routes with a junk value.
- * Passing that to Prisma as a `Locale` throws a validation error rather than
- * returning no rows, which turned those URLs into 500s instead of 404s. Guard
- * with this before a `lang` is used as a locale.
- */
-export function isLocale(lang: string): lang is (typeof LOCALES)[number] {
-  return (LOCALES as readonly string[]).includes(lang);
 }
