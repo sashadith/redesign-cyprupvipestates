@@ -25,12 +25,12 @@ Gesamt-Pack (Stand dieser Doku, `node scripts/qa/he-content-check.mjs`): **31 Da
 
 | Gate | Befehl | Ergebnis |
 |---|---|---|
-| Content-Gate (ganzes Pack) | `node scripts/qa/he-content-check.mjs` | <!-- FINAL --> (beim Schreiben dieser Doku: `he-content: OK (31 files, 2848 strings)`, 0 Verstöße — vor dem finalen Gate-Lauf über alle Tasks hinweg zu bestätigen) |
-| Tests | `npm test` | <!-- FINAL --> (letzter bekannter Zwischenstand: 298/298 nach Task 3; Tasks 5/6a/6b/9 (Teil 1) fügten keine weiteren `npm test`-Fälle hinzu, da reine Content-/Seeder-Tasks — vom Controller nach dem letzten Commit zu bestätigen) |
-| Typen | `npx tsc --noEmit -p tsconfig.json` | <!-- FINAL --> |
-| Platzhalter | `node scripts/qa/he-placeholders.mjs` | <!-- FINAL --> (`TODO(he)`: 0 im Code — Legal-Marker aus Phase 4/5b vollständig ersetzt; `REVIEW(he)` bleibt bis Pass C bestehen) |
-| LTR-Snapshot | `node --import tsx scripts/qa/copy-snapshot.mjs --check` | <!-- FINAL --> |
-| Meta-Längen | `node --import tsx scripts/qa/he-meta-length.mjs` | <!-- FINAL --> |
+| Content-Gate (ganzes Pack) | `node scripts/qa/he-content-check.mjs` | `he-content: OK (31 files, 2940 strings)`, 0 Verstöße |
+| Tests | `npm test` | 299 grün (Baseline 177 aus Phase 4 + 122 neue: Content-Gate, Seeder, translateHe/Queue, Blog-Cross-Locale) |
+| Typen | `npx tsc --noEmit -p tsconfig.json` | sauber |
+| Platzhalter | `node scripts/qa/he-placeholders.mjs` | `TODO(he)`: 0 (Legal-Marker aus Phase 4/5b ersetzt) · `REVIEW(he)`: 114, bleibt bis Pass C |
+| LTR-Snapshot | `node --import tsx scripts/qa/copy-snapshot.mjs --check` | sauber, 3.381 Blätter — kein en/de/pl/ru-String verändert (Ausnahmen siehe unten) |
+| Meta-Längen | `node --import tsx scripts/qa/he-meta-length.mjs` | 0 neue Verstöße; einzig `preview-partners` metaTitle 73 Zeichen (EN, Entscheidung J) |
 
 **Bewusste, sichtbare Änderungen für en/de/pl/ru** (beide im Ledger als Ruling protokolliert; sonst nichts):
 
