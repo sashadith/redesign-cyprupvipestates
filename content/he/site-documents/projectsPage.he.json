@@ -1,0 +1,16 @@
+{
+  "review": "pending",
+  "seo": {
+    "metaTitle": "פרויקטים חדשים בקפריסין | Cyprus VIP Estates",
+    "metaDescription": "וילות ודירות בפרויקטים חדשים בלימסול ובפאפוס, עם מחירים, זמינות ומועדי מסירה. אפשר לסנן לפי עיר, סוג נכס ותקציב."
+  },
+  "slug": {
+    "en": {
+      "_type": "slug",
+      "current": "projects"
+    },
+    "_type": "localizedSlug"
+  },
+  "title": "Projects HE",
+  "content": []
+}

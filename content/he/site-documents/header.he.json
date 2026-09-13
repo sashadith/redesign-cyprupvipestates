@@ -1,0 +1,69 @@
+{
+  "review": "pending",
+  "logo": {
+    "alt": "",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-8965c6a93692bf62648fca0d47783e098ad5d575-500x70-png",
+      "_type": "reference"
+    }
+  },
+  "title": "Header HE",
+  "navLinks": [
+    {
+      "_key": "5bca34571ca3",
+      "link": "/he/projects",
+      "label": "פרויקטים",
+      "subLinks": []
+    },
+    {
+      "_key": "6d19065636ec",
+      "link": "/he/blog",
+      "label": "בלוג",
+      "subLinks": []
+    },
+    {
+      "_key": "0c3272b0ae7f",
+      "link": "/he/about-us",
+      "label": "עלינו",
+      "subLinks": [
+        {
+          "_key": "02bd0b0b66fd",
+          "link": "/he/faq",
+          "label": "שאלות ותשובות"
+        },
+        {
+          "_key": "f23e99230a0e",
+          "link": "/he/case-studies",
+          "label": "סיפורי לקוחות"
+        },
+        {
+          "_key": "7853879412ad",
+          "link": "/he/partners",
+          "label": "הצטרפות כשותפים"
+        }
+      ]
+    },
+    {
+      "_key": "45e71d2350ed",
+      "link": "/he/contacts",
+      "label": "צור קשר",
+      "subLinks": []
+    },
+    {
+      "_key": "eec2b7d6cf93",
+      "link": "https://private.cyprusvipestates.com/en",
+      "label": "האוסף הפרטי",
+      "variant": "accent",
+      "subLinks": []
+    }
+  ],
+  "logoMobile": {
+    "alt": "",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-c4911e6ba6654becbeda47f9485754fbcfeb407e-500x634-png",
+      "_type": "reference"
+    }
+  }
+}
