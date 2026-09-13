@@ -4,6 +4,8 @@
   { "path": "src/app/[lang]/blog/blogI18n.ts", "exports": ["BLOG_STRINGS"] },
   { "path": "src/app/preview-home/sections/homeI18n.ts", "exports": ["HOME_STRINGS", "CASE_CATEGORY_LABELS"] },
   { "path": "src/app/preview-case-studies/[lang]/copy.ts", "exports": ["CASE_STUDIES_COPY"] },
+  { "path": "src/app/preview-about/[lang]/copy.ts", "exports": ["ABOUT_COPY"] },
+  { "path": "src/app/preview-contacts/[lang]/copy.ts", "exports": ["CONTACTS_COPY"] },
   { "path": "src/app/preview-faq/[lang]/copy.ts", "exports": ["FAQ_COPY"] },
   { "path": "src/app/preview-partners/[lang]/copy.ts", "exports": ["PARTNERS_COPY"] },
   { "path": "src/app/c/[token]/copy.ts", "exports": ["COPY"] },

@@ -262,19 +262,23 @@ const RU: ContactsStrings = {
    1. Decision E (he-glossary.md §5, he-styleguide.md §8): the team does NOT
       speak Hebrew. The honesty line stands verbatim in `finderLead` and in
       `metaDescription` — never replace it with a claim of Hebrew service.
+      In `finderLead` it comes FIRST, before the finder invitation: stated up
+      front it reads as a fact, stated after it reads as a retraction (Pass B
+      Must #2). `finderTitle` must stay nominal for the same reason — it may
+      not promise a consultant who speaks the reader's language.
    2. Latin brand names inside Hebrew sentences are bidi-isolated
       (he-styleguide.md §11.4); the street address is LTR-isolated so the
       house number keeps its place. */
 const HE: ContactsStrings = {
-  metaTitle: "צור קשר עם סוכנות הנדל\"ן בקפריסין | Cyprus VIP Estates",
+  metaTitle: "יצירת קשר עם הצוות שלנו בפאפוס | Cyprus VIP Estates",
   metaDescription:
-    "זמינים בוואטסאפ, בטלפון ובאימייל, מדי יום 9:00 עד 18:00. הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה. המשרד שלנו בפאפוס.",
+    "Cyprus VIP Estates בוואטסאפ, בטלפון ובאימייל, מדי יום 9:00 עד 18:00 שעון קפריסין. הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה.",
   heroEyebrow: "יצירת קשר",
   heroTitle: ["מדברים עם מי שגר ", "כאן", ""],
-  heroLead: `${bidiIsolate("Cyprus VIP Estates")} הוא פרויקט של ${bidiIsolate("SecretBrand Solutions LTD")}. בכל דרך שתפנו אלינו יענה אדם אמיתי, מדי יום בין 9:00 ל-18:00 שעון קפריסין.`,
+  heroLead: `${bidiIsolate("Cyprus VIP Estates")} הוא מותג של ${bidiIsolate("SecretBrand Solutions LTD")}. בכל דרך שתפנו אלינו יענה אדם אמיתי, מדי יום, 9:00 עד 18:00 שעון קפריסין.`,
 
   channelsEyebrow: "קווים ישירים",
-  channelsTitle: "לבחור את הדרך הנוחה לכם",
+  channelsTitle: "הדרך שנוחה לכם",
   channelWhatsapp: "וואטסאפ",
   channelPhone: "טלפון",
   channelEmail: "אימייל",
@@ -291,31 +295,33 @@ const HE: ContactsStrings = {
   hoursOpensAt: "נפתח ב-9:00",
   hoursTimezone: "שעון קפריסין",
 
-  finderEyebrow: "איש הקשר שלכם",
-  finderTitle: "למצוא יועץ שמדבר את השפה שלכם",
+  finderEyebrow: "אנשי הקשר שלכם",
+  finderTitle: "בחירת יועץ לפי שפה",
   finderLead:
-    "הצוות שלנו מכסה שש שפות. בחרו את שלכם ותראו בדיוק עם מי תדברו. הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה.",
-  finderAll: "הכול",
+    "הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה. בצוות שלנו שש שפות, וכאן אפשר לראות בדיוק עם מי תדברו.",
+  finderAll: "הכל",
   finderLanguageLabel: "שפה",
-  finderEmpty: "עדיין אין יועץ לשפה הזו. כתבו לנו ונמצא את האדם המתאים.",
+  finderEmpty: "עדיין אין יועץ לשפה הזו. כתבו לנו ונחזור אליכם.",
   finderCountOne: "יועץ אחד",
   finderCountMany: "{n} יועצים",
   speaks: "שפות",
 
   formEyebrow: "כתבו לנו",
-  formTitle: ["נחזור אליכם ", "בהקדם", ""],
-  formLead: "השאירו פרטים וספרו לנו איך נוח לכם שניצור קשר. אחד היועצים שלנו יחזור אליכם באופן אישי, בדרך כלל עוד באותו יום.",
+  formTitle: ["השאירו פרטים ", "ונחזור אליכם", " בהקדם"],
+  formLead: "השאירו פרטים וספרו לנו איך נוח לכם שניצור קשר. אחד היועצים שלנו יענה לכם אישית, בדרך כלל עוד באותו יום.",
 
   officeEyebrow: "לבקר אצלנו",
   officeTitle: "המשרד שלנו בפאפוס",
   officeCompany: "SecretBrand Solutions LTD",
   officeAddress: `${ltrIsolate("Palaion Patron Germanou 11, 8011")} פאפוס, קפריסין`,
-  officeDirections: `לפתיחה ב-${bidiIsolate("Google Maps")}`,
+  officeDirections: `פתיחה ב-${bidiIsolate("Google Maps")}`,
 };
 
-const ALL: Record<Locale, ContactsStrings> = { en: EN, de: DE, pl: PL, ru: RU, he: HE /* REVIEW(he) */ };
+/* Exported (not a file-local `const ALL`) so scripts/qa/copy-modules.json can
+   register this table with the copy-snapshot and he-meta-length gates. */
+export const CONTACTS_COPY: Record<Locale, ContactsStrings> = { en: EN, de: DE, pl: PL, ru: RU, he: HE /* REVIEW(he) */ };
 
-export const contactsCopy = (lang: string): ContactsStrings => ALL[lang as Locale] ?? EN;
+export const contactsCopy = (lang: string): ContactsStrings => CONTACTS_COPY[lang as Locale] ?? EN;
 
 /* The three channels are identical in every locale (same number, same
    address) — stored once here rather than four times above. */

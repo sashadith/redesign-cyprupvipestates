@@ -405,21 +405,26 @@ const RU: AboutStrings = {
       appointment": Cyprus has no notary in the German sense (§7), so a
       literal translation would state something untrue about the process.
    3. `teamSpeaks` is "שפות" (Languages), not a verb — "speaks" would force a
-      gender onto whichever consultant the card belongs to (§2, §11.2). */
+      gender onto whichever consultant the card belongs to (§2, §11.2).
+   4. `work[1]` says "ניסיון רב", not "עשרות שנים": the stats row two sections
+      above states 10 שנות ניסיון and the H2 עשר שנים בשטח, and on the Hebrew
+      page both sit in the same scroll (§8, §10 — every number has a source).
+      The EN/DE/PL/RU source still says "Decades"; see docs/i18n/reviews/wp5.md
+      "Offene Punkte". */
 const HE: AboutStrings = {
-  metaTitle: "אודות סוכנות הנדל\"ן שלנו בקפריסין | Cyprus VIP Estates",
+  metaTitle: "אודות Cyprus VIP Estates | סוכנות נדל\"ן בפאפוס ובלימסול",
   metaDescription:
-    "מי אנחנו, איך עובדים ומי הצוות שמאחורי Cyprus VIP Estates, סוכנות נדל\"ן ושיווק בפאפוס שמלווה רוכשים מהחיפוש הראשון ועד קבלת המפתחות.",
+    "מי אנחנו, איך אנחנו עובדים ומי הצוות שמאחורי Cyprus VIP Estates, סוכנות נדל\"ן בפאפוס שמלווה רוכשים מהחיפוש הראשון ועד קבלת המפתחות.",
   heroEyebrow: `אודות ${bidiIsolate("Cyprus VIP Estates")}`,
   heroTitle: ["גשר לחיים חדשים תחת שמי ", "הים התיכון", ""],
   heroLead:
-    "אנחנו מחברים בין אנשים לבית שחלמו עליו באי השמש, לא רק כיועצי נדל\"ן אלא כשותפים שנשארים איתכם מהשיחה הראשונה ועד היום שבו תקבלו את המפתחות.",
+    "אנחנו עוזרים לכם למצוא את הבית שחלמתם עליו בקפריסין, לא רק כיועצי נדל\"ן אלא כשותפים שנשארים איתכם מהשיחה הראשונה ועד היום שבו תקבלו את המפתחות.",
   heroCta: "להכיר את הצוות",
   heroImageAlt: "טיילת הים של לימסול בלילה, קפריסין",
   heroScroll: "גלילה",
 
   stanceEyebrow: "מה מניע אותנו",
-  stanceTitle: ["המעבר לקפריסין הוא ", "לא רק", " רכישת נכס"],
+  stanceTitle: ["המעבר לקפריסין הוא ", "הרבה יותר", " מרכישת נכס"],
   stanceBody: [
     "זה צעד לחיים עצמאיים ומהנים יותר, ואנחנו משקיעים בו את כל הלב.",
     "המשימה שלנו היא לעזור לאנשים למצוא את הבית המתאים להם תחת השמש הקפריסאית, עם ייעוץ אישי, שקיפות מלאה ועמידה עקבית בסטנדרטים הגבוהים ביותר.",
@@ -432,32 +437,32 @@ const HE: AboutStrings = {
     { number: 195, live: "projects", title: "פרויקטי נדל\"ן", description: "בדרום קפריסין. מדירות סטודיו ועד וילות יוקרה" },
     { number: 10, title: "שנות ניסיון", description: "כסוכנות שיווק נדל\"ן בשירות מלא" },
     { number: 360, sign: "°", title: "שירות ללקוחות שלנו", description: "מהפנייה הראשונה ועד מסירת המפתחות" },
-    { number: 100, sign: "%", title: "לקוחות מרוצים", description: "מגרמניה, אוסטריה, שווייץ ומדינות נוספות" },
+    { number: 100, sign: "%", title: "לקוחות מרוצים", description: "מכל רחבי אירופה" },
   ],
 
   workEyebrow: "איך אנחנו עובדים",
   workTitle: "שלושה דברים שלא נעביר לאף אחד",
   work: [
-    { title: "ייעוץ אישי בשטח", description: "אנחנו מקשיבים בקפידה כדי להבין את הצרכים, הרצונות ומטרות החיים שלכם, ואז מאתרים נכסים שבאמת מתאימים להם." },
-    { title: "מומחיות בשוק ובחוק", description: "עשרות שנות ניסיון ועבודה צמודה מול הרשויות בקפריסין מאפשרות לנו לנהל משא ומתן והליכי אישור בביטחון." },
-    { title: "תהליכים בתמיכה דיגיטלית", description: "מניתוח בעזרת בינה מלאכותית ועד בדיקת מסמכים אונליין, כלים מודרניים לצד שירות אישי, לשקיפות מרבית." },
+    { title: "ייעוץ אישי בשטח", description: "אנחנו מקשיבים היטב כדי להבין את הצרכים, הרצונות ומטרות החיים שלכם, ואז מאתרים נכסים שבאמת מתאימים." },
+    { title: "מומחיות בשוק ובחוק", description: "ניסיון רב ועבודה צמודה מול הרשויות בקפריסין מאפשרים לנו לנהל משא ומתן והליכי אישור בביטחון." },
+    { title: "תהליכים בתמיכה דיגיטלית", description: "מניתוח בעזרת בינה מלאכותית ועד בדיקת מסמכים אונליין. הכלים המודרניים עובדים לצד שירות אישי, וכך התהליך נשאר שקוף." },
   ],
 
   receiveEyebrow: "מה אתם מקבלים",
   receiveTitle: "שותף אחד, מההתחלה ועד הסוף",
   receive: [
     { title: "בחירה מוקפדת", description: "אתם רואים רק נכסים שעומדים בסטנדרטים שלנו לאיכות ולתשואה, לא את כל מה שיש בשוק." },
-    { title: "ליווי מלא", description: "סיורים בנכסים, מימון, ייעוץ משפטי וחתימה אצל עורך הדין, הכול מול איש קשר אחד." },
-    { title: "תמיכה אחרי הרכישה", description: "שירותי כניסה לדירה, ניהול הנכס וספקים מקומיים בדוקים, כדי שתרגישו בבית מהיום הראשון." },
+    { title: "ליווי מלא", description: "סיורים בנכסים, מימון, ייעוץ משפטי וחתימה אצל עורך הדין, הכל מול איש קשר אחד." },
+    { title: "תמיכה אחרי הרכישה", description: "ליווי במעבר, ניהול הנכס וספקים מקומיים בדוקים, כדי שתרגישו בבית מהיום הראשון." },
   ],
 
   valuesEyebrow: "ערכי הליבה",
   valuesTitle: "מה מנחה אותנו בעבודה",
   values: [
     { title: "יושרה ושקיפות", description: "תקשורת פתוחה, וכל סיכום מתועד בכתב." },
-    { title: "מיקוד בלקוח", description: "יחס אישי לכל לקוח, הדרך היחידה לענות על רצונות אישיים ולבנות אמון לאורך זמן." },
+    { title: "מיקוד בלקוח", description: "יחס אישי לכל לקוח, הדרך היחידה להתאים את הנכס למה שאתם באמת מחפשים ולבנות אמון לאורך זמן." },
     { title: "מומחיות מקומית", description: "היכרות מעמיקה עם האזורים, החוקים והתרבות בקפריסין מאחורי כל החלטה." },
-    { title: "מצוינות ומקצועיות", description: "איכות שירות גבוהה, הכשרה מתמשכת ונוכחות מוקפדת אונליין ומחוצה לו." },
+    { title: "מצוינות ומקצועיות", description: "איכות שירות גבוהה, הכשרה מתמשכת ונוכחות מוקפדת ברשת ומחוצה לה." },
     { title: "קיימות ואחריות", description: "שיקולים סביבתיים בכל פרויקט, ושותפים עם תנאי עבודה ובנייה הוגנים." },
     { title: "חדשנות ויעילות", description: "טכנולוגיה מודרנית, כלי בינה מלאכותית וניהול מסמכים דיגיטלי, לייעול התהליכים ולחיסכון בזמן שלכם." },
   ],
@@ -465,17 +470,17 @@ const HE: AboutStrings = {
   teamEyebrow: "האנשים",
   teamTitle: "עם מי תעבדו",
   teamLead:
-    "צוות שמדבר שש שפות ומגיע מארבע מדינות, וכולם גרים כאן. הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה.",
+    "בצוות שלנו שש שפות וארבע מדינות, וכולם גרים כאן. הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה.",
   teamSpeaks: "שפות",
   teamContact: "ליצירת קשר",
 
   storiesEyebrow: "סיפורי לקוחות",
   storiesTitle: "מה הלקוחות שלנו אומרים",
   storiesLead: "כמה מילים מאנשים שכבר עשו את המעבר.",
-  storiesAll: "לקריאת כל סיפורי הלקוחות",
+  storiesAll: "לכל סיפורי הלקוחות",
 
   ctaTitle: "נדבר על התוכניות שלכם",
-  ctaLead: "ספרו לנו מה אתם מחפשים, ונחזור אליכם באופן אישי, בדרך כלל עוד באותו יום.",
+  ctaLead: "ספרו לנו מה אתם מחפשים, ונחזור אליכם אישית, בדרך כלל עוד באותו יום.",
   channelWhatsapp: "וואטסאפ",
   channelPhone: "טלפון",
   channelEmail: "אימייל",
@@ -486,6 +491,8 @@ const HE: AboutStrings = {
   },
 };
 
-const ALL: Record<Locale, AboutStrings> = { en: EN, de: DE, pl: PL, ru: RU, he: HE /* REVIEW(he) */ };
+/* Exported (not a file-local `const ALL`) so scripts/qa/copy-modules.json can
+   register this table with the copy-snapshot and he-meta-length gates. */
+export const ABOUT_COPY: Record<Locale, AboutStrings> = { en: EN, de: DE, pl: PL, ru: RU, he: HE /* REVIEW(he) */ };
 
-export const aboutCopy = (lang: string): AboutStrings => ALL[lang as Locale] ?? EN;
+export const aboutCopy = (lang: string): AboutStrings => ABOUT_COPY[lang as Locale] ?? EN;
