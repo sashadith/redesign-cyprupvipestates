@@ -31,7 +31,7 @@ export const CASE_STUDY_INTRO_COPY: Record<Locale, typeof CASE_STUDY_INTRO_EN> =
     // Word-identical to CASE_STUDIES_COPY.he.privacyNote (styleguide §11.6) —
     // the two English sources differ only in punctuation.
     disclaimer:
-      "פרטיות הלקוחות קודמת לכל, ולכן מידע עסקי רגיש ופרטים מזהים אינם נחשפים בסיפור זה.",
+      "פרטיות הלקוחות קודמת לכל, ולכן מידע עסקי רגיש ונתונים מזהים אינם נחשפים בסיפור זה.",
   },
 };
 

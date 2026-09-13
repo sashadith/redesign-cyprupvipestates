@@ -226,39 +226,49 @@ export const CASE_STUDIES_COPY: Record<Locale, CaseStudiesCopy> = {
     guideTitle: "Понимание кейсов",
   },
   he: { // REVIEW(he)
-    metaTitle: "סיפורי לקוחות שרכשו נדל\"ן בקפריסין | Cyprus VIP Estates",
-    metaDescription: "סיפורים אמיתיים של רוכשי נדל\"ן בקפריסין. רילוקיישן, השקעה ובית שני, ואיך ליווינו כל אחד מהם עד למציאת הנכס שהתאים בדיוק לצרכים שלו.",
-    eyebrow: "סיפורי הצלחה",
+    metaTitle: "סיפורי לקוחות שקנו נכס בקפריסין | Cyprus VIP Estates",
+    metaDescription: "סיפורים אמיתיים של רוכשי נדל\"ן בקפריסין: רילוקיישן, השקעה ובית שני. בכל סיפור מופיעים התקציב, המיקום, סוג הנכס ולוח הזמנים של העסקה.",
+    eyebrow: "מהשטח",
     heroTitlePlain: "סיפורי ",
     heroTitleItalic: "לקוחות",
-    heroLead: "עסקאות נדל\"ן אמיתיות בקפריסין, מהייעוץ הראשון ועד קבלת המפתחות. כך מצאו איתנו רוכשים שעברו לגור, משקיעים ומחפשי בית שני את הנכס שהתאים להם.",
-    heroMetaOne: "סיפור לקוח",
+    heroLead: "עסקאות נדל\"ן אמיתיות בקפריסין, מהייעוץ הראשון ועד קבלת המפתחות. כך מצאו איתנו רוכשים שעשו רילוקיישן, משקיעים ומחפשי בית שני את הנכס שהתאים להם.",
+    // Carries the numeral as a word, because page.tsx does NOT print a digit
+    // in front of it for `he` (see the count-line branch there). LTR keeps the
+    // bare noun phrase with the digit supplied by the JSX.
+    heroMetaOne: "סיפור לקוח אחד",
     heroMetaMany: (n) => `${n} סיפורי לקוחות`,
     deviceKickerFallback: "סיפור לקוח",
     deviceHeadlineFallback: "סיפור הצלחה של רוכשים בקפריסין",
     deviceRead: "לקריאת הסיפור",
     statBudget: "תקציב",
     statLocation: "מיקום",
-    statProperty: "נכס",
+    statProperty: "סוג הנכס",
     statTimeline: "לוח זמנים",
     ctaReadFull: "לסיפור המלא",
     formIndexTitlePlain: "שוקלים ",
     formIndexTitleItalic: "מהלך דומה?",
-    formIndexSubtitle: "השאירו פרטים והצוות שלנו יחזור אליכם כדי להבין מה אתם מחפשים, לענות על השאלות ולעזור לכם להתקדם בכיוון הנכון.",
+    // Closing sentence = Entscheidung E (he-glossary.md §5), verbatim: this is
+    // a lead form promising a call back, so it says which languages the
+    // consultation runs in. Same sentence in formDetailSubtitle below.
+    formIndexSubtitle: "השאירו פרטים והצוות שלנו יחזור אליכם כדי להבין מה אתם מחפשים, לענות על השאלות ולעזור לכם לבחור נכון. הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה.",
     backLink: "סיפורי לקוחות",
-    privacyNote: "פרטיות הלקוחות קודמת לכל, ולכן מידע עסקי רגיש ופרטים מזהים אינם נחשפים בסיפור זה.",
+    privacyNote: "פרטיות הלקוחות קודמת לכל, ולכן מידע עסקי רגיש ונתונים מזהים אינם נחשפים בסיפור זה.",
     stageClientSituation: "רקע הלקוח",
     stageClientRequirements: "דרישות הלקוח",
     stageOurSolution: "הפתרון שלנו",
     stageSelectedProperty: "הנכס שנבחר",
     stageResult: "התוצאה",
     journeyLabel: "שלבי התהליך",
-    relatedTitlePlain: "נכסים ",
-    relatedTitleItalic: "דומים",
+    // The cards are editorially linked projects (cs.relatedProjects), not a
+    // similarity computation, so no "דומים"; gold accent sits on the noun, the
+    // same rule WP4 fixed for "Related reading". Word-identical to
+    // CASE_STUDY_PAGE_COPY.he.relatedProperties (§11.6).
+    relatedTitlePlain: "עוד ",
+    relatedTitleItalic: "נכסים",
     soldBadge: "נמכר",
     formDetailTitlePlain: "מוכנים לכתוב ",
     formDetailTitleItalic: "סיפור משלכם?",
-    formDetailSubtitle: "השאירו פרטים והצוות שלנו יחזור אליכם כדי לדבר על המטרות שלכם, לענות על השאלות ולהפוך את התוכניות לסיפור ההצלחה הבא.",
+    formDetailSubtitle: "השאירו פרטים והצוות שלנו יחזור אליכם כדי לדבר על המטרות שלכם, לענות על השאלות ולהפוך אותן לסיפור ההצלחה הבא. הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה.",
     propertyTypeVilla: "וילה",
     propertyTypeApartment: "דירה",
     propertyTypePenthouse: "פנטהאוז",

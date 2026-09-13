@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import { LuEuro, LuMapPin, LuHouse, LuClock } from "react-icons/lu";
 import { i18n } from "@/i18n.config";
 import { localizedHref, type Locale } from "@/lib/locale";
@@ -18,6 +19,7 @@ import {
 } from "@/sanity/sanity.utils";
 import { CASE_CATEGORY_LABELS } from "../../preview-home/sections/homeI18n";
 import { caseStudiesCopy } from "./copy";
+import Bdi from "@/app/components/Bdi";
 
 /* Cyprus VIP Estates — Case Studies, redesigned. See ../[lang]/layout.tsx for
    why this lives outside src/app/[lang] despite having its own [lang] segment.
@@ -82,6 +84,29 @@ export default async function CaseStudiesPage({ params }: Props) {
   const stories = await getCaseStudiesByLangWithDetails(lang);
   const pageDoc = await getCaseStudiesPageByLang(lang);
   const labels = CASE_CATEGORY_LABELS[lang as Locale] ?? CASE_CATEGORY_LABELS.en;
+  const isHe = lang === "he";
+
+  /* clientOverview.propertyType is the raw enum key from the admin free-text
+     field ("villa", "apartment", …). de/pl/ru rely on .csstory__cap's
+     text-transform: capitalize to render it as "Villa"; Hebrew cannot, because
+     rtl.css neutralises text-transform for :lang(he) — and a Latin word next to
+     Hebrew stat labels is simply wrong. So `he` gets the same label map the
+     detail page already applies; the LTR locales keep the raw value + CSS
+     capitalize byte-identically. Fixing the LTR side is a separate ticket
+     (docs/i18n/reviews/wp6.md, "Offene Punkte"). */
+  const PROPERTY_TYPE_LABELS: Record<string, string> = {
+    villa: t.propertyTypeVilla, apartment: t.propertyTypeApartment, penthouse: t.propertyTypePenthouse,
+    townhouse: t.propertyTypeTownhouse, plot: t.propertyTypePlot,
+  };
+
+  /* Bidi isolation (styleguide §5/§11.4) — only for `he`, so the LTR DOM stays
+     byte-identical. `budget` is a free-text price RANGE ("€250,000 – €350,000"):
+     without an LTR isolator the neutral separator inherits RTL and the two
+     amounts swap places on screen. `location` and `purchaseTimeline` can carry
+     Latin names ("Limassol") and get a plain isolator that keeps their own
+     direction. */
+  const isoPrice = (v: ReactNode) => (isHe ? <Bdi ltr>{v}</Bdi> : v);
+  const iso = (v: ReactNode) => (isHe ? <Bdi>{v}</Bdi> : v);
 
   const featured = stories[0];
   const featuredImg = featured ? safeUrl(featured.previewImage) || PLACEHOLDER : PLACEHOLDER;
@@ -106,7 +131,18 @@ export default async function CaseStudiesPage({ params }: Props) {
                 <span className="csp__hero-title-lock">{t.heroTitlePlain}<span className="it">{t.heroTitleItalic}</span></span>
               </h1>
               <p className="ins__hero-lead">{t.heroLead}</p>
-              <p className="ins__hero-meta">{total === 1 ? `${total} ${t.heroMetaOne}` : t.heroMetaMany(total)}</p>
+              {/* Hebrew needs the whole line, not "{n} {noun}": at 0 it reads
+                  "there are no client stories yet" (the honest empty state —
+                  the query filters hard on language:"he" with no fallback), at
+                  1 the numeral is spelled out inside the noun phrase and no
+                  digit is printed. From 2 up it is the same "{n} {plural}"
+                  shape the LTR locales use, which stay byte-identical. Same
+                  branch as BlogInsights.tsx (WP4). See docs/i18n/reviews/wp6.md. */}
+              <p className="ins__hero-meta">
+                {isHe && total <= 1
+                  ? (total === 0 ? "אין עדיין סיפורי לקוחות" : t.heroMetaOne)
+                  : (total === 1 ? `${total} ${t.heroMetaOne}` : t.heroMetaMany(total))}
+              </p>
             </div>
 
             <div className="ins__hero-art" aria-hidden>
@@ -150,19 +186,19 @@ export default async function CaseStudiesPage({ params }: Props) {
                       <dl className="csstory__stats">
                         <div className="csstory__stat">
                           <LuEuro size={16} />
-                          <div><dt>{t.statBudget}</dt><dd>{overview.budget}</dd></div>
+                          <div><dt>{t.statBudget}</dt><dd>{isoPrice(overview.budget)}</dd></div>
                         </div>
                         <div className="csstory__stat">
                           <LuMapPin size={16} />
-                          <div><dt>{t.statLocation}</dt><dd>{overview.location}</dd></div>
+                          <div><dt>{t.statLocation}</dt><dd>{iso(overview.location)}</dd></div>
                         </div>
                         <div className="csstory__stat">
                           <LuHouse size={16} />
-                          <div><dt>{t.statProperty}</dt><dd className="csstory__cap">{overview.propertyType}</dd></div>
+                          <div><dt>{t.statProperty}</dt><dd className="csstory__cap">{isHe ? (PROPERTY_TYPE_LABELS[overview.propertyType] || overview.propertyType) : overview.propertyType}</dd></div>
                         </div>
                         <div className="csstory__stat">
                           <LuClock size={16} />
-                          <div><dt>{t.statTimeline}</dt><dd>{overview.purchaseTimeline}</dd></div>
+                          <div><dt>{t.statTimeline}</dt><dd>{iso(overview.purchaseTimeline)}</dd></div>
                         </div>
                       </dl>
                     )}
