@@ -131,12 +131,15 @@ Return via the description tool.` + tuningBlock({ emphasize: ctx.emphasize, avoi
     ].filter(Boolean).join(" "),
   );
   if (isClean(second)) return second;
-  // Still not clean. A language leak is cosmetic and the old behaviour — keep the
-  // first attempt. A figure is not: it would be saved and go stale, so refuse.
-  if (hasDigits(second) && hasDigits(first)) {
-    throw new Error(
-      "Generated description still contains figures after a retry — numbers must not be baked into saved copy (they go stale). Try again, or edit by hand.",
-    );
+  // Still not clean after the retry — refuse rather than silently saving a
+  // figure or a script leak (previously a persistent script leak alone fell
+  // through to `return second`, saving the leaked copy). Align with
+  // areaContent.ts's retry contract: name exactly what's still wrong.
+  const problems: string[] = [];
+  if (hasDigits(second)) {
+    problems.push("contains figures (numbers must not be baked into saved copy — they go stale)");
   }
-  return hasDigits(second) ? first : second;
+  const leaks = scriptLeaks(second);
+  if (leaks.length) problems.push(...leaks);
+  throw new Error(`Description generation failed after retry: ${problems.join("; ")}`);
 }

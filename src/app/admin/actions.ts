@@ -1678,21 +1678,40 @@ export async function saveFaqPage(lang: string, categoriesJson: string) {
   return { ok: true };
 }
 
-// Seeds a new language's faqPage row from an existing one (EN by default) as a
-// starting draft — same spirit as createTranslation below, but against
-// SiteDocument's type+language key rather than a translationGroupId model.
-export async function createFaqTranslation(lang: string, fromLang: string = "en") {
-  await requireSession();
+// Seeds a new language's row for any SiteDocument type from the English one as
+// a starting draft — generalizes the faqPage-only createFaqTranslation below to
+// header/footer/forms/landing/faq, all of which key on SiteDocument's
+// type+language rather than a translationGroupId model.
+const SITE_DOC_LIST_PATH: Record<string, string> = {
+  header: "/admin/content/header",
+  footer: "/admin/settings",
+  formStandardDocument: "/admin/content/forms",
+  blogPage: "/admin/content/landing",
+  caseStudiesPage: "/admin/content/landing",
+  projectsPage: "/admin/content/landing",
+  notFoundPage: "/admin/content/landing",
+  faqPage: "/admin/content/faq",
+};
+
+export async function createSiteDocTranslation(type: string, lang: string) {
+  await requireAdmin();
   if (!isLocale(lang)) throw new Error("Invalid language");
-  const existing = await prisma.siteDocument.findUnique({ where: { type_language: { type: "faqPage", language: lang as any } } });
-  if (!existing) {
-    const source = await prisma.siteDocument.findUnique({ where: { type_language: { type: "faqPage", language: fromLang as any } } });
-    const categories = (source?.data as any)?.categories ?? [];
-    await prisma.siteDocument.create({
-      data: { sanityId: `faqPage-${lang}`, type: "faqPage", language: lang as any, data: { categories } },
-    });
-  }
-  revalidatePath("/admin/content/faq");
+  const en = await prisma.siteDocument.findUnique({ where: { type_language: { type, language: "en" as any } } });
+  if (!en) throw new Error(`No English ${type} document to copy`);
+  await prisma.siteDocument.upsert({
+    where: { type_language: { type, language: lang as any } },
+    update: {},
+    create: { sanityId: `${type}-${lang}`, type, language: lang as any, data: en.data as any },
+  });
+  const path = SITE_DOC_LIST_PATH[type] ?? "/admin/content/" + type;
+  revalidatePath(path);
+}
+
+// Kept as a thin wrapper: the FAQ list page still imports/calls this name and
+// signature (lang, fromLang) — the generalized action above always copies from
+// "en", which matches every existing call site.
+export async function createFaqTranslation(lang: string, fromLang: string = "en") {
+  return createSiteDocTranslation("faqPage", lang);
 }
 
 // ── Translations: create a linked translation of an existing document ──

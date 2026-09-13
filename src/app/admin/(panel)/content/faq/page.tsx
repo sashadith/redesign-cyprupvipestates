@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { createFaqTranslation } from "../../../actions";
+import { createSiteDocTranslation } from "../../../actions";
 import { LOCALES, LOCALE_LABELS } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +35,7 @@ export default async function FaqList() {
                   Edit
                 </Link>
               ) : (
-                <form action={createFaqTranslation.bind(null, lang, "en")}>
+                <form action={createSiteDocTranslation.bind(null, "faqPage", lang)}>
                   <button type="submit" className="rounded-md border border-[#E5E7EB] px-3 py-1.5 text-sm text-[#1B4B43] hover:bg-[#1B4B43]/5">
                     Create from English
                   </button>
