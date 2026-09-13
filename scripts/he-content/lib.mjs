@@ -293,6 +293,35 @@ const NON_TEXT_KEYS = new Set(["_key", "_ref", "_type", "id", "url", "slug", "hr
  * for each one — skipping NON_TEXT_KEYS fields (structure/links, not prose).
  * Arrays are walked by index (`path[i]`); objects by dotted key.
  */
+/**
+ * Portable-text link integrity: a link only renders when the block's
+ * `markDefs` entry is referenced by at least one span's `marks`. An orphan
+ * markDef is a dead link the href allow-list cannot see (Task 6b Pass B found
+ * every inline link on four pages dead this way). Returns violation strings.
+ */
+export function orphanMarkDefs(json, path = "") {
+  const out = [];
+  if (json == null || typeof json !== "object") return out;
+  if (Array.isArray(json)) {
+    json.forEach((v, i) => out.push(...orphanMarkDefs(v, path ? `${path}[${i}]` : `[${i}]`)));
+    return out;
+  }
+  if (Array.isArray(json.markDefs) && Array.isArray(json.children)) {
+    const used = new Set();
+    for (const c of json.children) for (const m of Array.isArray(c?.marks) ? c.marks : []) used.add(m);
+    for (const d of json.markDefs) {
+      if (d && d._key && !used.has(d._key)) {
+        out.push(`${path ? `${path}.` : ""}markDefs[${d._key}]: link (${d.href ?? d._type}) is never referenced by a span's marks — dead link`);
+      }
+    }
+  }
+  for (const k of Object.keys(json)) {
+    const v = json[k];
+    if (v != null && typeof v === "object") out.push(...orphanMarkDefs(v, path ? `${path}.${k}` : k));
+  }
+  return out;
+}
+
 export function walkStrings(json, fn, path = "") {
   if (json == null) return;
   if (typeof json === "string") {

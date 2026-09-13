@@ -21,7 +21,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { mirrorCheck, styleCheck, linkCheck, metaCheck, walkStrings, isLinkKey } from "../he-content/lib.mjs";
+import { mirrorCheck, styleCheck, linkCheck, metaCheck, walkStrings, isLinkKey, orphanMarkDefs } from "../he-content/lib.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 const CONTENT_HE_DIR = path.join(ROOT, "content", "he");
@@ -172,6 +172,7 @@ function main() {
       const v = linkCheck(href, packSlugs);
       if (v) violations.push(`${rel}: ${p}: ${v}`);
     }
+    for (const v of orphanMarkDefs(json)) violations.push(`${rel}: ${v}`);
 
     if (json && typeof json === "object" && !Array.isArray(json) && json.seo) {
       for (const v of metaCheck(json.seo)) violations.push(`${rel}: ${v}`);

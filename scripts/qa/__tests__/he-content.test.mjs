@@ -11,7 +11,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { mirrorCheck, isHeLinkRewrite, styleCheck, linkCheck, metaCheck, walkStrings, STYLE_RULES } from "../../he-content/lib.mjs";
+import { mirrorCheck, isHeLinkRewrite, styleCheck, linkCheck, metaCheck, walkStrings, STYLE_RULES, orphanMarkDefs } from "../../he-content/lib.mjs";
 import { planSiteDocuments, planSeed, applyPlan, stripPackMetadata } from "../../he-content/seed.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -327,6 +327,13 @@ test("stripPackMetadata: removes review/translationGroupSlugEn/parentSlug, keeps
   assert.deepEqual(stripped, { title: "בית", data: { x: 1 } });
 });
 
+
+test("orphanMarkDefs: a markDef no span references is a dead link; a referenced one passes", () => {
+  const dead = { _type: "block", markDefs: [{ _key: "abc", _type: "link", href: "/he/faq" }], children: [{ _type: "span", text: "x", marks: [] }] };
+  const live = { _type: "block", markDefs: [{ _key: "abc", _type: "link", href: "/he/faq" }], children: [{ _type: "span", text: "x", marks: ["abc"] }] };
+  assert.equal(orphanMarkDefs({ contentBlocks: [dead] }).length, 1);
+  assert.deepEqual(orphanMarkDefs({ contentBlocks: [live] }), []);
+});
 
 test("linkCheck: query strings are ignored and the EN partners page is allowed", () => {
   assert.equal(linkCheck("/he/projects?city=Paphos", []), null);
