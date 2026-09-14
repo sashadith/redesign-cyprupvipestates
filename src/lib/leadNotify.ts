@@ -4,9 +4,21 @@
 // /api/monday-newsletter so notification behaviour is consistent across sources.
 import { prisma } from "@/lib/prisma";
 import { sendTelegramMessage } from "@/lib/telegram";
-import { isLocale, LOCALE_LABELS } from "@/lib/locale";
+import { isLocale, LOCALE_LABELS, type Locale } from "@/lib/locale";
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// Normalizes a raw submitted `lang` value (any casing, or junk) to a known
+// Locale for both `Lead.languagePreference` and `recordInboundLead`'s
+// `language` option, or null when unrecognized. Shared by every capture
+// route (fix-round item: the ROI-calculator and partner-form routes each
+// duplicated this check locally but never passed the result on to
+// `recordInboundLead`, so a Hebrew submission's Telegram alert never showed
+// "HE" even though `telegramLanguageTag` already supported it).
+export function normalizeLeadLocale(lang: unknown): Locale | null {
+  const v = String(lang ?? "").trim().toLowerCase();
+  return isLocale(v) ? v : null;
+}
 
 // Upper-cased locale code for a Telegram alert line (e.g. "HE", "DE"), or
 // null when there's nothing to show. Reads LOCALE_LABELS (the single source

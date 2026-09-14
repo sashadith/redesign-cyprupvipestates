@@ -1,8 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { resolveProjectInterest, type ProjectInterestPrisma } from "@/lib/leads/projectInterest";
-import { telegramLanguageTag, buildInboundLeadTelegramMessage } from "@/lib/leadNotify";
+import { telegramLanguageTag, buildInboundLeadTelegramMessage, normalizeLeadLocale } from "@/lib/leadNotify";
 import { resolveSignatureHtml } from "@/lib/emailSignature/resolve";
+import { LOCALES, LOCALE_LABELS } from "@/lib/locale";
 
 // In-memory prisma double — the local DATABASE_URL points at PRODUCTION, so
 // no test in this repo may open a real client (see leadPipelineHe's sibling
@@ -105,6 +106,78 @@ test("buildInboundLeadTelegramMessage: renders HE for a Hebrew lead, DE unchange
   // no language known → no Language line at all (not "Language: null")
   const noLangMsg = buildInboundLeadTelegramMessage({ source: "CONTACT_FORM", email: "a@b.com", name: "Some One", link: "https://x/admin/crm/1" });
   assert.doesNotMatch(noLangMsg, /Language:/);
+});
+
+test("normalizeLeadLocale: known locale (any case) → lowercase Locale; junk/blank → null", () => {
+  assert.equal(normalizeLeadLocale("he"), "he");
+  assert.equal(normalizeLeadLocale("HE"), "he");
+  assert.equal(normalizeLeadLocale(" De "), "de");
+  assert.equal(normalizeLeadLocale("xx"), null);
+  assert.equal(normalizeLeadLocale(""), null);
+  assert.equal(normalizeLeadLocale(null), null);
+  assert.equal(normalizeLeadLocale(undefined), null);
+});
+
+// Fix-round item: the ROI-calculator and partner-form routes each persisted
+// a normalized `languagePreference` on the Lead but never passed a matching
+// `language` on to `recordInboundLead`, so a Hebrew submission's Telegram
+// alert never showed "HE" even though `telegramLanguageTag` already
+// supported it. Both routes now compute `normalizeLeadLocale(lang)` once and
+// feed the same value to both places — this reproduces that exact pipeline
+// (raw form `lang` → normalizeLeadLocale → recordInboundLead's `language` →
+// buildInboundLeadTelegramMessage's "Language:" line) for each sender.
+test("ROI-calculator sender pipeline: raw `lang` reaches the Telegram message as HE / DE", () => {
+  const heMsg = buildInboundLeadTelegramMessage({
+    source: "ROI_CALCULATOR",
+    email: "a@b.com",
+    name: "Some One",
+    language: normalizeLeadLocale("he"),
+    link: "https://x/admin/crm/1",
+  });
+  assert.match(heMsg, /Language: HE\n/);
+
+  const deMsg = buildInboundLeadTelegramMessage({
+    source: "ROI_CALCULATOR",
+    email: "a@b.com",
+    name: "Some One",
+    language: normalizeLeadLocale("de"),
+    link: "https://x/admin/crm/1",
+  });
+  assert.match(deMsg, /Language: DE\n/);
+});
+
+test("Partner-form sender pipeline: raw `lang` reaches the Telegram message as HE / DE", () => {
+  const heMsg = buildInboundLeadTelegramMessage({
+    source: "PARTNER",
+    email: "a@b.com",
+    name: "Some One",
+    language: normalizeLeadLocale("he"),
+    link: "https://x/admin/crm/1",
+  });
+  assert.match(heMsg, /Language: HE\n/);
+
+  const deMsg = buildInboundLeadTelegramMessage({
+    source: "PARTNER",
+    email: "a@b.com",
+    name: "Some One",
+    language: normalizeLeadLocale("de"),
+    link: "https://x/admin/crm/1",
+  });
+  assert.match(deMsg, /Language: DE\n/);
+});
+
+test("Cockpit locale label map: derived from LOCALE_LABELS, matches the old literal for en/de/pl/ru and adds he", () => {
+  // Mirrors CockpitCard.tsx's `LOCALE_LABEL` derivation exactly.
+  const LOCALE_LABEL: Record<string, string> = Object.fromEntries(
+    LOCALES.map((l) => [l, LOCALE_LABELS[l].code]),
+  );
+  // The pre-existing hard-coded map this replaces (fix-round item,
+  // CockpitCard.tsx:18) — every value must be byte-identical.
+  assert.deepEqual(
+    { en: LOCALE_LABEL.en, de: LOCALE_LABEL.de, pl: LOCALE_LABEL.pl, ru: LOCALE_LABEL.ru },
+    { en: "EN", de: "DE", pl: "PL", ru: "RU" },
+  );
+  assert.equal(LOCALE_LABEL.he, "HE");
 });
 
 test("buildInboundLeadTelegramMessage: escapes HTML in the name/email/page fields", () => {
