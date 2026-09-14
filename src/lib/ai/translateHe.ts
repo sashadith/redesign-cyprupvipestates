@@ -85,7 +85,6 @@ const MAX_TOKENS = 4000;
 export function graphemeLength(s: string): number {
   const t = String(s ?? "");
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const Seg = (Intl as any).Segmenter;
     if (Seg) return Array.from(new Seg("he", { granularity: "grapheme" }).segment(t) as Iterable<unknown>).length;
   } catch {
@@ -115,7 +114,6 @@ function payloadFor(input: HeTranslateInput): HeTranslatePayload {
   for (const f of FIELDS[input.kind]) {
     const v = input.en[f];
     if (v === undefined || v === null) continue;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (out as any)[f] = v;
   }
   return out;

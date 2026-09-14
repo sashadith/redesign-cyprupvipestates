@@ -20,10 +20,8 @@ import type { HeTranslateInput, HeTranslateResult } from "./translateHe";
  *     never swallowed, so the admin page can show what went wrong.
  */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Fn = (args: any) => Promise<any>;
 /** A row as it comes back from the (untyped) delegate above. */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = Record<string, any>;
 
 /** The slice of the Prisma client this module uses (fakes implement just this). */
