@@ -3,11 +3,8 @@ import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import { prisma } from "@/lib/prisma";
 import { parseAttribution } from "@/lib/attribution";
-import { recordInboundLead } from "@/lib/leadNotify";
+import { recordInboundLead, normalizeLeadLocale } from "@/lib/leadNotify";
 import { ALLOWED_HOSTS, safeUrl, allowedHost, clientIp, escapeHtml, makeRateLimiter } from "@/lib/antispam";
-import { LOCALES } from "@/lib/locale";
-
-const LEAD_LOCALES = new Set<string>(LOCALES);
 
 /**
  * Разрешаем только страницу партнёров во всех языках:
@@ -226,6 +223,11 @@ export async function POST(request: Request) {
 
     // Persist to the CRM first (system of record); email is the notification.
     let leadId: string | null = null;
+    // Same normalized value feeds both the stored languagePreference and the
+    // Telegram alert's language line (fix-round item: recordInboundLead
+    // wasn't passed `language` before, so a Hebrew submission's Telegram
+    // ping never showed "HE").
+    const langNorm = normalizeLeadLocale(lang);
     try {
       const lead = await prisma.lead.create({
         data: {
@@ -236,15 +238,13 @@ export async function POST(request: Request) {
           source: "PARTNER",
           status: "NEW",
           notes: `Partner / cooperation enquiry${countryNorm ? ` · Country: ${countryNorm}` : ""}`,
-          languagePreference: LEAD_LOCALES.has(String(lang ?? "").toLowerCase())
-            ? (String(lang).toLowerCase() as any)
-            : null,
+          languagePreference: langNorm,
           pageSource: page,
           ...parseAttribution(body),
         },
       });
       leadId = lead.id;
-      await recordInboundLead({ leadId, source: "PARTNER", email: emailNorm, name: `${nameNorm} ${surnameNorm}`.trim(), phone: phoneNorm, page });
+      await recordInboundLead({ leadId, source: "PARTNER", email: emailNorm, name: `${nameNorm} ${surnameNorm}`.trim(), phone: phoneNorm, page, language: langNorm });
     } catch (e) {
       console.error("Partner lead persist error:", e);
     }

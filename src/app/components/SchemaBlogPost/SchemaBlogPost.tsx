@@ -3,6 +3,7 @@ import Script from "next/script";
 import { urlFor } from "@/sanity/sanity.client";
 import { Blog } from "@/types/blog";
 import { abs, localizedPath } from "@/lib/seo";
+import { bcp47For } from "@/lib/locale";
 
 interface SchemaBlogPostProps {
   blog: Blog;
@@ -82,7 +83,10 @@ const SchemaBlogPost = ({ blog, lang }: SchemaBlogPostProps) => {
     },
     datePublished: blog.publishedAt,
     dateModified: blog._updatedAt || blog.publishedAt,
-    inLanguage: lang,
+    // BCP47 tag ("en-GB", "he-IL"...), not the raw route-param locale code
+    // this used to emit — fixed alongside the Phase 8 hreflang/inLanguage
+    // audit; every locale's value changes (metadata, not copy).
+    inLanguage: bcp47For(lang),
     isAccessibleForFree: true,
   };
 

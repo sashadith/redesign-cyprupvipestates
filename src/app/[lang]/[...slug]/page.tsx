@@ -5,7 +5,7 @@ import AccordionContainer from "@/app/components/AccordionContainer/AccordionCon
 import Footer from "@/app/components/Footer/Footer";
 import Header from "@/app/components/Header/Header";
 import { i18n } from "@/i18n.config";
-import { PUBLIC_LOCALES, bidiIsolate, isLocale, ltrIsolate, type Locale } from "@/lib/locale";
+import { PUBLIC_LOCALES, bcp47For, bidiIsolate, isLocale, ltrIsolate, type Locale } from "@/lib/locale";
 import {
   getFormStandardDocumentByLang,
   getSinglePageByLang,
@@ -78,7 +78,7 @@ import TableBlockComponent from "@/app/components/TableBlockComponent/TableBlock
 import NotFoundPageComponent from "@/app/components/NotFoundPageComponent/NotFoundPageComponent";
 import SectionLinks from "@/app/components/SectionLinks/SectionLinks";
 import { urlFor } from "@/sanity/sanity.client";
-import { abs, localizedPath, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import { abs, localizedPath, DEFAULT_OG_IMAGE, ogLocale } from "@/lib/seo";
 
 type Props = {
   params: {
@@ -270,7 +270,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       description: ogDesc,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: lang,
+      locale: ogLocale(lang),
       type: "website",
       images: [{ url: ogImage, width: 1200, height: 630, alt: page?.title }],
     },
@@ -630,6 +630,7 @@ const SinglePage = async ({ params, searchParams }: Props) => {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "FAQPage",
+              inLanguage: bcp47For(lang),
               mainEntity: faqItems,
             }).replace(/</g, "\\u003c"),
           }}

@@ -1,4 +1,10 @@
 #!/usr/bin/env node
+// Page-type/slug list also reused by scripts/qa/hreflang-check.mjs (Phase 8
+// Task 3) — see buildPages()'s `export` below and the isMain guard at the
+// bottom, which stops this file's own CLI `main()` from running a second
+// time (with the OTHER script's argv) when it's imported as a module rather
+// than executed directly.
+//
 // RTL visual-QA matrix for the Hebrew localization Phase 2 (RTL layout) —
 // see docs/superpowers/plans/2026-09-13-hebrew-phase2-rtl.md and
 // docs/i18n/rtl-qa-checklist.md. This script does NOT open a browser or
@@ -34,7 +40,10 @@
 // Text output format: one line per viewport per page type —
 //   type | viewport | EN url | HE url
 
-const DEFAULTS = {
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+export const DEFAULTS = {
   project: "cypress-park",
   case: "how-a-uk-investor-diversified-wealth-through-property-in-limassol",
   landing: "2-bedroom-apartments-in-paphos",
@@ -69,7 +78,7 @@ function parseArgs(argv) {
   return opts;
 }
 
-function buildPages(opts) {
+export function buildPages(opts) {
   return [
     { type: "home", en: "/", he: "/he" },
     { type: "projects", en: "/projects", he: "/he/projects" },
@@ -141,4 +150,5 @@ function main() {
   }
 }
 
-main();
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) main();

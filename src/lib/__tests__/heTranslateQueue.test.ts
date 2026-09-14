@@ -16,7 +16,6 @@ import type { HeTranslateInput, HeTranslateResult } from "@/lib/ai/translateHe";
 /* In-memory prisma double. The local DATABASE_URL points at PRODUCTION, so no
    test in this repo may open a client — these arrays are the whole database. */
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Row = Record<string, any>;
 
 type Seed = {

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { Locale } from "@prisma/client";
+import { LOCALES } from "@/lib/locale";
 import { pagesInSuppressionWindow } from "./titleSweepLog";
 import { REMEASURE_WINDOW_DAYS } from "./titleSweepRemeasure";
 import { templateClassOf, templateClassLabel, type TemplateClass } from "./templateClass";
@@ -112,7 +113,11 @@ export async function getPerLocaleTrend(days = 90): Promise<LocaleTrend[]> {
     select: { date: true, locale: true, page: true, clicks: true, impressions: true },
   });
   const canonicalMap = await buildCanonicalMap();
-  const locales: Locale[] = ["en", "de", "pl", "ru"] as Locale[];
+  // Reads stored SearchMetric rows and buckets what's THERE — single source,
+  // full LOCALES (not PUBLIC_LOCALES): a gated locale with no rows yet just
+  // renders an all-zero series, and this must not silently drop `he` once
+  // GSC starts recording it pre-launch.
+  const locales: Locale[] = [...LOCALES] as Locale[];
   const dayKeys: string[] = [];
   for (let i = days - 1; i >= 0; i--) dayKeys.push(new Date(Date.now() - i * DAY).toISOString().slice(0, 10));
 
@@ -292,7 +297,9 @@ export async function getLocalePeriodComparison(days = ADVISOR_PERIOD_DAYS): Pro
     const bucket = r.date >= periodStart ? cur : prev;
     accumulate(bucket as any, locale, r.impressions, r.clicks, r.position);
   }
-  const locales: Locale[] = ["en", "de", "pl", "ru"] as Locale[];
+  // Same reasoning as getPerLocaleTrend above: reads stored SearchMetric rows,
+  // so this iterates the full LOCALES set, not PUBLIC_LOCALES.
+  const locales: Locale[] = [...LOCALES] as Locale[];
   return locales.map((locale) => {
     const c = cur.get(locale) ?? { impressions: 0, clicks: 0, posWeighted: 0 };
     const p = prev.get(locale) ?? { impressions: 0, clicks: 0, posWeighted: 0 };

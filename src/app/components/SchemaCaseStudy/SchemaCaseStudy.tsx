@@ -3,6 +3,7 @@ import Script from "next/script";
 import { urlFor } from "@/sanity/sanity.client";
 import { CaseStudy } from "@/types/caseStudy";
 import { abs } from "@/lib/seo";
+import { bcp47For } from "@/lib/locale";
 
 type Props = {
   caseStudy: CaseStudy;
@@ -22,7 +23,8 @@ const SchemaCaseStudy = ({ caseStudy, lang }: Props) => {
     image: imageUrl ? [imageUrl] : undefined,
     datePublished: caseStudy.publishedAt,
     dateModified: caseStudy._updatedAt,
-    inLanguage: lang,
+    // BCP47 tag, not the raw route-param locale code (Phase 8 fix, all locales).
+    inLanguage: bcp47For(lang),
     author: {
       "@type": "Organization",
       name: "Cyprus VIP Estates",

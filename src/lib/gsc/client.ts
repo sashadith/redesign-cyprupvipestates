@@ -1,5 +1,6 @@
 import { google } from "googleapis";
 import type { Locale } from "@prisma/client";
+import { LOCALES, DEFAULT_LOCALE } from "@/lib/locale";
 
 // Google Search Console API client — server-to-server via a service account
 // (no OAuth/user consent flow; the service account is added as a GSC user
@@ -43,13 +44,27 @@ async function getSearchConsoleClient() {
 
 // Derives our own locale from GSC's raw page path — matches the same convention
 // used throughout this codebase and the earlier manual-export analysis:
-// /de/... -> de, /pl/... -> pl, /ru/... -> ru, anything else -> en (default,
-// unprefixed locale).
+// /de/... -> de, /pl/... -> pl, /ru/... -> ru, /he/... -> he, anything else ->
+// en (default, unprefixed locale). Parses against the full `LOCALES` set (a
+// `/he/` GSC row is Hebrew even while `he` is gated from PUBLIC_LOCALES) —
+// single source, no hard-coded locale list.
+//
+// Deliberately NOT delegating to `localeFromPath` (lib/locale.ts): that helper
+// also matches a BARE locale root (`/de`), and this function's return value is
+// written straight to `SearchMetric.locale` at sync time (see
+// fetchPageLevelMetrics/fetchQueryLevelMetrics below) — `locale` is part of
+// that table's unique key, so making `/de` derive as "de" here would fork
+// every existing bare-root series (e.g. the German homepage) into a second
+// one. `localeOfPath` in seo/urlCanonical.ts is the correct place for the
+// bare-root case, for JOIN keys only — see its doc comment. This function
+// keeps its original narrower contract (prefix must be followed by a slash),
+// just generalised from three hard-coded checks to every non-default locale.
 export function deriveLocale(pagePath: string): Locale {
-  if (pagePath.startsWith("/de/")) return "de" as Locale;
-  if (pagePath.startsWith("/pl/")) return "pl" as Locale;
-  if (pagePath.startsWith("/ru/")) return "ru" as Locale;
-  return "en" as Locale;
+  for (const l of LOCALES) {
+    if (l === DEFAULT_LOCALE) continue;
+    if (pagePath.startsWith(`/${l}/`)) return l as Locale;
+  }
+  return DEFAULT_LOCALE as Locale;
 }
 
 // GSC returns the page dimension as a full URL — strip the site origin to get

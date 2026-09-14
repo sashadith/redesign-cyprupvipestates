@@ -6,6 +6,14 @@ import { revalidatePath } from "next/cache";
 import { encrypt } from "@/lib/crypto/secretBox";
 import { sanitizeSignatureHtml, mirrorSignatureImages, looksLikeHtml, stripHtmlToText, getSignatureHtml } from "@/lib/emailSignature";
 import { sendUserEmail, getUserEmailSettingsRow } from "@/lib/crm/sendCrmEmail";
+import { LOCALES, type Locale } from "@/lib/locale";
+
+// "signatureEn", "signatureHe", … — the <input name> the form submits each
+// locale's raw signature under. Derived from LOCALES so a future locale
+// needs no new field name wired by hand here.
+function signatureFieldName(locale: Locale): string {
+  return `signature${locale[0].toUpperCase()}${locale.slice(1)}`;
+}
 
 // Self-contained session gate (same reasoning as presentationActions.ts's own
 // copy: exporting requireSession from the main admin/actions.ts "use server"
@@ -63,16 +71,21 @@ export type EmailSettingsView = {
   imapPort: string;
   imapUser: string;
   imapConfigured: boolean;
-  signature: { en: string; de: string; pl: string; ru: string };
+  // One key per known locale (LOCALES), incl. `he` — see updateEmailSettings:
+  // en/de/pl/ru are always present (byte-identical to before), `he` is only
+  // present once the operator has actually saved something for it.
+  signature: Record<Locale, string>;
   lastTestSentAt: Date | null;
   lastTestOk: boolean | null;
 };
+
+const EMPTY_SIGNATURE = Object.fromEntries(LOCALES.map((l) => [l, ""])) as Record<Locale, string>;
 
 const EMPTY_VIEW: EmailSettingsView = {
   fromName: "", fromAddress: "",
   smtpHost: "", smtpPort: "", smtpUser: "", smtpConfigured: false,
   imapHost: "", imapPort: "", imapUser: "", imapConfigured: false,
-  signature: { en: "", de: "", pl: "", ru: "" },
+  signature: EMPTY_SIGNATURE,
   lastTestSentAt: null, lastTestOk: null,
 };
 
@@ -96,7 +109,7 @@ export async function getEmailSettings(userId: string): Promise<EmailSettingsVie
     imapPort: row.imapPort != null ? String(row.imapPort) : "",
     imapUser: row.imapUser ?? "",
     imapConfigured: !!row.imapPasswordEnc,
-    signature: { en: sig.en ?? "", de: sig.de ?? "", pl: sig.pl ?? "", ru: sig.ru ?? "" },
+    signature: Object.fromEntries(LOCALES.map((l) => [l, sig[l] ?? ""])) as Record<Locale, string>,
     lastTestSentAt: row.lastTestSentAt,
     lastTestOk: row.lastTestOk,
   };
@@ -136,13 +149,21 @@ export async function updateEmailSettings(
     const sanitized = sanitizeSignatureHtml(raw);
     return mirrorSignatureImages(sanitized, targetUserId);
   };
-  const [sigEn, sigDe, sigPl, sigRu] = await Promise.all([
-    processSignature(str("signatureEn")),
-    processSignature(str("signatureDe")),
-    processSignature(str("signaturePl")),
-    processSignature(str("signatureRu")),
-  ]);
-  const failedImageCount = sigEn.failedCount + sigDe.failedCount + sigPl.failedCount + sigRu.failedCount;
+  const processedByLocale = Object.fromEntries(
+    await Promise.all(LOCALES.map(async (l) => [l, await processSignature(str(signatureFieldName(l)))] as const)),
+  ) as Record<Locale, { html: string; failedCount: number }>;
+  const failedImageCount = LOCALES.reduce((sum, l) => sum + processedByLocale[l].failedCount, 0);
+
+  // en/de/pl/ru are always written (even empty) — byte-identical to the
+  // pre-Hebrew shape every existing row already has. `he` is launch-gated
+  // and every current user leaves its tab untouched, so it's only added to
+  // the JSON once there's actually something to store — never forced to an
+  // empty string on every unrelated save.
+  const signature: Record<string, string> = {};
+  for (const l of LOCALES) {
+    if (l === "he") { if (processedByLocale.he.html) signature.he = processedByLocale.he.html; }
+    else signature[l] = processedByLocale[l].html;
+  }
 
   const data: any = {
     fromName: str("fromName") || null,
@@ -153,7 +174,7 @@ export async function updateEmailSettings(
     imapHost: str("imapHost") || null,
     imapPort: port("imapPort"),
     imapUser: str("imapUser") || null,
-    signature: { en: sigEn.html, de: sigDe.html, pl: sigPl.html, ru: sigRu.html },
+    signature,
   };
   // Replace-only: an empty password field means "leave whatever's already
   // stored" — never overwrite with an empty/decoy value.

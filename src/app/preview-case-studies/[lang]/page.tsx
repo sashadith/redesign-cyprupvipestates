@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { LuEuro, LuMapPin, LuHouse, LuClock } from "react-icons/lu";
 import { i18n } from "@/i18n.config";
 import { localizedHref, type Locale } from "@/lib/locale";
-import { staticAlternates, DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_WIDTH, DEFAULT_OG_IMAGE_HEIGHT } from "@/lib/seo";
+import { staticAlternates, DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_WIDTH, DEFAULT_OG_IMAGE_HEIGHT, ogLocale } from "@/lib/seo";
 import type { Translation } from "@/types/homepage";
 import Nav from "../../preview-home/sections/Nav";
 import Footer from "../../preview-home/sections/Footer";
@@ -50,7 +50,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: t.metaDescription,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: params.lang,
+      locale: ogLocale(params.lang),
       type: "website",
       images: [{ url: DEFAULT_OG_IMAGE, width: DEFAULT_OG_IMAGE_WIDTH, height: DEFAULT_OG_IMAGE_HEIGHT }],
     },

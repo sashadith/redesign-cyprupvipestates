@@ -2,12 +2,10 @@ import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import { prisma } from "@/lib/prisma";
 import { parseAttribution } from "@/lib/attribution";
-import { recordInboundLead } from "@/lib/leadNotify";
+import { recordInboundLead, normalizeLeadLocale } from "@/lib/leadNotify";
 import { safeUrl, allowedHost, escapeHtml, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
 import { HE_LANGUAGE_NOTE, LOCALES, type Locale } from "@/lib/locale";
 import { stripHtmlToText } from "@/lib/emailSignature/sanitize";
-
-const LEAD_LOCALES = new Set<string>(LOCALES);
 
 const ipLimiter = makeRateLimiter();
 const emailLimiter = makeRateLimiter();
@@ -503,6 +501,11 @@ export async function POST(request: Request) {
         result && typeof result.annualizedRoiPercent === "number"
           ? `${result.annualizedRoiPercent}% avg annual ROI`
           : "";
+      // Same normalized value feeds both the stored languagePreference and
+      // the Telegram alert's language line (fix-round item: recordInboundLead
+      // wasn't passed `language` before, so a Hebrew submission's Telegram
+      // ping never showed "HE").
+      const langNorm = normalizeLeadLocale(lang);
       const lead = await prisma.lead.create({
         data: {
           firstName: nameNorm,
@@ -512,15 +515,13 @@ export async function POST(request: Request) {
           source: "ROI_CALCULATOR",
           status: "NEW",
           notes: `ROI calculator: ${String(strategy)} / ${String(scenario)}${roiPct ? ` · ~${roiPct}` : ""}`,
-          languagePreference: LEAD_LOCALES.has(String(lang ?? "").toLowerCase())
-            ? (String(lang).toLowerCase() as any)
-            : null,
+          languagePreference: langNorm,
           pageSource: currentPageNorm,
           ...parseAttribution(body),
         },
       });
       leadId = lead.id;
-      await recordInboundLead({ leadId, source: "ROI_CALCULATOR", email: emailNorm, name: nameNorm, phone: phoneNorm, page: currentPageNorm });
+      await recordInboundLead({ leadId, source: "ROI_CALCULATOR", email: emailNorm, name: nameNorm, phone: phoneNorm, page: currentPageNorm, language: langNorm });
     } catch (e) {
       console.error("ROI lead persist error:", e);
     }

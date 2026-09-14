@@ -271,7 +271,7 @@
 
 .rangeFieldUnit {
   position: absolute;
-  right: 14px;
+  inset-inline-end: 14px;
   top: 50%;
   transform: translateY(-50%);
   font-size: 13px;

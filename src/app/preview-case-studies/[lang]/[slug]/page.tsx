@@ -14,8 +14,8 @@ import CaseStudyMotion from "./CaseStudyMotion";
 import { urlFor } from "@/sanity/sanity.client";
 import { getCaseStudyByLang } from "@/sanity/sanity.utils";
 import { CASE_CATEGORY_LABELS } from "../../../preview-home/sections/homeI18n";
-import { abs, languageAlternates, pathBuilders, SITE_URL, DEFAULT_OG_IMAGE } from "@/lib/seo";
-import { localizedHref, type Locale } from "@/lib/locale";
+import { abs, languageAlternates, pathBuilders, SITE_URL, DEFAULT_OG_IMAGE, ogLocale } from "@/lib/seo";
+import { localizedHref, bcp47For, type Locale } from "@/lib/locale";
 import type { Translation } from "@/types/homepage";
 import { caseStudiesCopy } from "../copy";
 import Bdi from "@/app/components/Bdi";
@@ -90,7 +90,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
     alternates: { canonical, languages },
     openGraph: {
-      title, description, url: canonical, siteName: "Cyprus VIP Estates", locale: params.lang, type: "article",
+      title, description, url: canonical, siteName: "Cyprus VIP Estates", locale: ogLocale(params.lang), type: "article",
       images: [{ url: ogImage, width: 1200, height: 630, alt: cs.title }],
     },
     twitter: { card: "summary_large_image", title, description, images: [ogImage] },
@@ -166,7 +166,8 @@ export default async function CaseStudyDetailPage({ params }: Props) {
     },
     datePublished: cs.publishedAt,
     dateModified: cs._updatedAt || cs.publishedAt,
-    inLanguage: lang,
+    // BCP47 tag, not the raw route-param locale code (Phase 8 fix, all locales).
+    inLanguage: bcp47For(lang),
     isAccessibleForFree: true,
   };
 
