@@ -17,12 +17,12 @@ Anders als Phase 4 (Code-Copy) und Phase 5 (Inhalte) schließt dieser Plan **Cod
 
 ## Gate-Zahlen
 
-<!-- FINAL: Der Controller trägt hier die Zahlen NACH dem Merge aller Tasks (inkl. eventueller Nacharbeiten aus der laufenden Task-3-Review) ein. Die Werte unten sind der Stand des Task-5-Commits selbst (Task 1–4 + Controller-Font-Fix bereits im Baum) und keine Endabnahme. -->
+Endstand nach allen Tasks, Fix-Rounds (Task 1, 3, 4) und der Gesamt-Review des Branches:
 
-| Gate | Befehl | Ergebnis (Task-5-Commit-Stand) |
+| Gate | Befehl | Ergebnis |
 |---|---|---|
 | Typen | `npx tsc --noEmit -p tsconfig.json` | sauber |
-| Tests | `npm test` | 377 grün (Baseline 362 nach Task 1–4 + 15 neue: `scripts/qa/__tests__/he-launch.test.mjs`) |
+| Tests | `npm test` | 388 grün (Baseline 309 aus Phase 5 + 79 neue: Lead-Pipeline, Locale-Plumbing, Head-Signale, hreflang-Sampler, Launch-Wächter, Partners-Ausschluss) |
 | Platzhalter | `node scripts/qa/he-placeholders.mjs` | `TODO(he)`: 0 · `REVIEW(he)`: 114 (unverändert — Pass C weiterhin zurückgestellt) |
 | LTR-Snapshot | `node --import tsx scripts/qa/copy-snapshot.mjs --check` | sauber, 3.381 Blätter — kein en/de/pl/ru-String verändert |
 | Content-Gate | `node scripts/qa/he-content-check.mjs` | `he-content: OK (31 files, 2941 strings)` |
@@ -68,7 +68,7 @@ Prüft x-default, Reziprozität, Canonical, `og:locale: he_IL`, `robots` (noinde
 ## Zurückgestellt / Tickets
 
 - **`canonicalize()`-Bug** (pre-existing, nicht Teil dieses Plans): `canonicalize()` nutzt `deriveLocale` statt `urlCanonical.localeOfPath` an einer Stelle — beide delegieren seit Task 2 an dieselbe `localeFromPath()`, verhalten sich für `he` also bereits identisch; der historische Namens-/Nutzungs-Unterschied bleibt aber als Aufräum-Ticket bestehen (Task-2-Review-Notiz).
-- **Partners-Sitemap/-Alternates-Verdikt:** siehe Task-3-Review.
+- **Partners (Entscheidung J):** Die Task-3-Review fand `/he/partners` in Sitemap und hreflang. Behoben in Commit 201f242: `UNLOCALIZED_ROUTES` in `src/lib/locale.ts` nimmt `partners` für `he` aus Alternates und Sitemap, `/he/partners` liefert 404, der hreflang-Sampler prüft das Paar (`/partners` ohne `he`-Alternate, `/he/partners` → 404).
 - **Pass C** (muttersprachliches Lektorat) — weiterhin zurückgestellt (Controller-Entscheidung 2026-09-13, Phase 5); `REVIEW(he)`/`"review": "pending"` bleiben bestehen. Abbauregel: `docs/i18n/launch-checklist.md` §12.
 - **Phase 9 (Launch)** — vollständig als Operator-Checkliste in `docs/i18n/launch-checklist.md` dokumentiert, **nicht ausgeführt**: nginx-Reload auf Produktion, `NEXT_PUBLIC_LIVE_LOCALES` in Produktion, Deploy, `he-launch-check.mjs --host` gegen Produktion, GSC-Property, Sitemap-Resubmit, IndexNow-Ping aller `he`-URLs, erste 6 URLs manuell in GSC (Quota ~6/Tag), 14-Tage-Monitoring mit den drei bekannten Fehlalarm-Klassen, AGB-§12-Sprachliste in allen vier LTR-Fassungen, Pass-C-Entscheidung erneut aufgreifen, `REVIEW(he)`-Abbauregel, Partner-Seite bleibt EN/`he/partners` darf nicht verlinkt oder indexiert sein.
 - **Font-Doppelladen** — vom Controller nach Task 3 behoben (`c8eab9f`), siehe Tabelle oben; kein offenes Ticket mehr, hier nur zur Nachvollziehbarkeit gelistet.
