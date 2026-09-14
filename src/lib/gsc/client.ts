@@ -45,10 +45,21 @@ async function getSearchConsoleClient() {
 // used throughout this codebase and the earlier manual-export analysis:
 // /de/... -> de, /pl/... -> pl, /ru/... -> ru, anything else -> en (default,
 // unprefixed locale).
+//
+// Bare locale roots ("/de", "/pl", "/ru", no trailing slash — the localised
+// homepages) need an exact-match check of their own: the prefix checks below
+// require a following "/", so a bare root fell through to "en" for every sync
+// since this table existed. 2026-09-14 fix — see urlCanonical.ts's
+// localeOfPath() for the full incident writeup (found 2026-08-23, worked
+// around there rather than here at the time) and
+// scripts/backfill-homepage-locale.mjs for the one-time relabel of the ~600
+// rows this had already written as locale:"en". localeOfPath() itself now
+// just delegates here; its own bare-root special case is redundant but left
+// in place; removing it is a separate cleanup, not required for correctness.
 export function deriveLocale(pagePath: string): Locale {
-  if (pagePath.startsWith("/de/")) return "de" as Locale;
-  if (pagePath.startsWith("/pl/")) return "pl" as Locale;
-  if (pagePath.startsWith("/ru/")) return "ru" as Locale;
+  if (pagePath === "/de" || pagePath.startsWith("/de/")) return "de" as Locale;
+  if (pagePath === "/pl" || pagePath.startsWith("/pl/")) return "pl" as Locale;
+  if (pagePath === "/ru" || pagePath.startsWith("/ru/")) return "ru" as Locale;
   return "en" as Locale;
 }
 
