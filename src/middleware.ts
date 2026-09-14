@@ -51,7 +51,17 @@ const ALL_LOCALES = ["en", "de", "pl", "ru"];
 // you get the stored refs, which resolve to canonical paths only at render
 // time — asking the database gives false positives in both directions. Fetch
 // the pages and test the hrefs they actually emit.
-const DE_LANDING_MERGES: Record<string, string> = {
+//
+// All four *_LANDING_MERGES maps below are exported (2026-09-14) for the same
+// reason the comment above already flags for relatedLandingPages: a merged
+// page's Singlepage row is still status:PUBLISHED, so anything that queries
+// "published pages" without also knowing about these maps treats it as a
+// real, live URL forever. sitemaps/[type]/route.ts imports them for exactly
+// that check — it had been listing all 28 merged slugs as indexable URLs
+// that immediately 301, found 2026-09-14 while investigating why an AI
+// citation test picked up a since-merged PL page. If a future merge target
+// changes, this filter follows it automatically; no sitemap-side edit needed.
+export const DE_LANDING_MERGES: Record<string, string> = {
   "grosse-villen-zypern": "/de/luxusvillen-in-zypern",
 
   // 2026-09-11: the "Häuser" cluster's 2026-07-28 merge into the villa
@@ -184,7 +194,7 @@ const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
 // still status:"PUBLISHED"), so it's still sitemap-listed despite
 // redirecting (see src/app/sitemaps/[type]/route.ts, PUBLISHED-only
 // filter); not replicated here.
-const EN_LANDING_MERGES: Record<string, string> = {
+export const EN_LANDING_MERGES: Record<string, string> = {
   "villas-limassol": "/houses-in-cyprus/houses-in-limassol",
   "west-coast-properties-cyprus": "/west-coast-properties-paphos",
 };
@@ -198,7 +208,7 @@ const EN_LANDING_MERGES: Record<string, string> = {
 // PL's one live Paphos+Villa page. First PL entry in this family of maps —
 // same shape/mechanism as DE_LANDING_MERGES, kept separate because that one
 // is only ever checked under the /de/ prefix.
-const PL_LANDING_MERGES: Record<string, string> = {
+export const PL_LANDING_MERGES: Record<string, string> = {
   "inwestycje-w-nieruchomosci-pafos": "/pl/wille-na-sprzedaz-pafos-dla-inwestorow",
 
   // PL villa cluster consolidation (2026-09-10): 9 separate villa landing
@@ -285,7 +295,7 @@ const PL_LANDING_MERGES: Record<string, string> = {
 // one live Paphos+Villa page. That target is itself a live Track 1
 // internal-link target — nothing about the target page changes here, it
 // only gains one more inbound redirect.
-const RU_LANDING_MERGES: Record<string, string> = {
+export const RU_LANDING_MERGES: Record<string, string> = {
   "investitsii-v-nedvizhimost-pafos": "/ru/villy-v-pafose-dlya-investorov",
 
   // RU "dom" cluster consolidation (2026-09-11): unlike the RU villa cluster
