@@ -9,6 +9,7 @@ import { insightsComponents } from "@/app/preview-insights/insightsBlocks";
 import { PortableText } from "@portabletext/react";
 import PropertyMap from "@/app/preview-project/PropertyMap";
 import { BULLETS_ICONS, BULLETS_TEXT, STEPS_ICONS, STEPS_TEXT, FAQ_TITLE } from "./blockCopy";
+import OffPlanSnapshot from "./OffPlanSnapshot";
 
 /* Renderers for the block set the remaining 45 pages are built from.
 
@@ -38,6 +39,7 @@ export const CLASSIC_RENDERED = new Set(
     "howWeWorkBlock",
     "buttonBlock",
     "villaNavigatorBlock",
+    "offPlanSnapshotBlock",
     "landingFaqBlock",
     "locationBlock",
   ]),
@@ -96,6 +98,15 @@ export function renderClassicBlock(block: any, lang: string, ctaHref: string, ti
           <a className="btn btn--glass" href={ctaHref}>{block.buttonText}</a>
         </div>
       ) : null;
+
+    // The "Market Snapshot" panel (.pl-snap) — until now wired only into
+    // LandingBody for the three off-plan pages. Reused as-is (same component,
+    // same CSS) so a classic page can carry a proof-panel of real figures
+    // (live inventory counts, or cited market data) near the top of the
+    // page, instead of the only alternative being an FAQ item buried at the
+    // bottom. First use: RU villa-cluster pages, added 2026-09-14.
+    case "offPlanSnapshotBlock":
+      return <OffPlanSnapshot block={block} ctaHref={ctaHref} />;
 
     // A card grid of editor-authored links to sibling pages, each with its
     // own one-line teaser — richer than the site-wide "Related Landing
