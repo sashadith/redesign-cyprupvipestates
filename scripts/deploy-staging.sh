@@ -12,6 +12,12 @@ set -euo pipefail
 KEY="${CVP_SSH_KEY:-$HOME/.ssh/cvp_vps}"
 HOST="root@72.60.89.239"
 DIR="/var/www/cve-staging"
+# 1 = run `npm ci --legacy-peer-deps` on the VPS before the build (same opt-in
+# flag as deploy-prod.sh). Needed whenever package-lock.json changed since the
+# last staging deploy — rsync excludes node_modules, so nothing else refreshes
+# them (2026-09-14: staging build failed on a missing `mcp-handler` for exactly
+# this reason). Default 0 keeps the fast path.
+RUN_INSTALL="${CVP_RUN_INSTALL:-0}"
 
 # Resolve the repo root from THIS script's location, never the caller's CWD —
 # rsync --delete with a stray relative source once wiped staging. Absolute only.
@@ -60,6 +66,7 @@ cd "$DIR"
 # A full rm -rf .next before building has fixed it every time; do it unconditionally
 # rather than waiting for the symptom to reappear.
 rm -rf .next
+$([ "$RUN_INSTALL" = 1 ] && echo 'npm ci --legacy-peer-deps' || echo 'echo "· skip npm ci (set CVP_RUN_INSTALL=1 when package-lock.json changed)"')
 npx prisma generate
 
 # Build-time-only connection cap: next build's static-generation phase spawns
