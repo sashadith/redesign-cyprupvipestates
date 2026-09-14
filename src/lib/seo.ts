@@ -5,7 +5,7 @@
 // production domain is hard-coded (NEXT_PUBLIC_SITE_URL is build-time inlined
 // to :3000 on the VPS).
 
-import { localizedHref, PUBLIC_LOCALES, BCP47 } from "./locale";
+import { localizedHref, PUBLIC_LOCALES, BCP47, localesForStaticRoute, type Locale } from "./locale";
 import { blogIndexInSitemap } from "./blogIndexMode";
 
 export const SITE_URL = "https://cyprusvipestates.com";
@@ -69,18 +69,42 @@ export function languageAlternates(opts: {
   };
 }
 
+/** The first path segment of a `staticAlternates`/sitemap `segments` value —
+ *  the route key `UNLOCALIZED_ROUTES` (lib/locale.ts) is keyed by, e.g.
+ *  "partners" out of `"partners"`, `["partners"]`, or `["projects", slug]`
+ *  → "projects". A key with no `UNLOCALIZED_ROUTES` entry is unaffected. */
+function staticRouteKey(segments: string | string[]): string {
+  return (Array.isArray(segments) ? segments[0] : segments.split("/")[0]) || "";
+}
+
 /**
  * Canonical + hreflang for a FIXED path that exists in every locale at the same
  * sub-path (listing roots, static pages) — i.e. no per-language slug translation.
  * x-default points at English.
+ *
+ * Most routes are offered in every `publicLocales` entry. A route listed in
+ * `UNLOCALIZED_ROUTES` (lib/locale.ts) — today only "partners", decision J —
+ * is the exception: no locale's page gets a hreflang alternate for the
+ * excluded locale, and if the excluded locale's own page is ever rendered
+ * anyway (it should 404 instead — see preview-partners/[lang]/page.tsx) its
+ * alternates collapse to canonical-only, never cross-linking to the other
+ * locales it doesn't actually share this route with.
  */
 export function staticAlternates(
   lang: string,
   segments: string | string[] = "",
+  opts: { publicLocales?: readonly Locale[] } = {},
 ): { canonical: string; languages: Record<string, string> } {
+  const allowed = localesForStaticRoute(staticRouteKey(segments), opts.publicLocales);
+  const canonical = abs(localizedHref(lang, segments));
+
+  if (!allowed.includes(lang as Locale)) {
+    return { canonical, languages: { [lang]: canonical } };
+  }
+
   const languages: Record<string, string> = {};
-  for (const l of PUBLIC_LOCALES) languages[l] = abs(localizedHref(l, segments));
-  return { canonical: abs(localizedHref(lang, segments)), languages: { ...languages, "x-default": languages["en"] } };
+  for (const l of allowed) languages[l] = abs(localizedHref(l, segments));
+  return { canonical, languages: { ...languages, "x-default": languages["en"] } };
 }
 
 /**

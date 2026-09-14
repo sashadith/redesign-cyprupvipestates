@@ -10,6 +10,7 @@ import {
   parseJsonLdInLanguages,
   parsePage,
   assertPair,
+  assertUnlocalizedPair,
 } from "../hreflang-check.mjs";
 
 // --- URL pair list ---------------------------------------------------------
@@ -33,6 +34,15 @@ test("buildUrlPairs has no duplicate EN path", () => {
   const pairs = buildUrlPairs();
   const enPaths = pairs.map((p) => p.en);
   assert.equal(new Set(enPaths).size, enPaths.length);
+});
+
+test("buildUrlPairs includes the partners pair, marked unlocalized (decision J)", () => {
+  const pairs = buildUrlPairs();
+  const partners = pairs.find((p) => p.type === "partners");
+  assert.ok(partners, "partners pair must be sampled — it's the exact pair the Task 3 Critical bug shipped on");
+  assert.equal(partners.en, "/partners");
+  assert.equal(partners.he, "/he/partners");
+  assert.equal(partners.unlocalized, true);
 });
 
 // --- parsers -----------------------------------------------------------------
@@ -202,4 +212,63 @@ test("assertPair: a non-200 EN or HE fetch fails the pair without throwing, and 
   assert.equal(result.checks.heOk, false);
   assert.equal(result.checks.xDefault, null, "dependent checks are inapplicable (null), not falsely failed, on a 404");
   assert.ok(result.issues.some((i) => i.includes("404")));
+});
+
+// --- assertUnlocalizedPair: the partners-shaped pair (decision J) ----------
+
+test("assertUnlocalizedPair passes when the EN page has no he alternate at all and /he/partners 404s", () => {
+  const en = parsePage(
+    "https://design.example/partners",
+    200,
+    `<link rel="canonical" href="https://design.example/partners">
+     <link rel="alternate" hreflang="en" href="https://design.example/partners">
+     <link rel="alternate" hreflang="de" href="https://design.example/de/partners">
+     <link rel="alternate" hreflang="x-default" href="https://design.example/partners">`,
+  );
+  const he = parsePage("https://design.example/he/partners", 404, "");
+  const result = assertUnlocalizedPair(en, he);
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.issues, []);
+  assert.deepEqual(result.checks, { enOk: true, heIs404: true, noHeAlternate: true });
+});
+
+test("assertUnlocalizedPair fails if the EN page still carries a he hreflang alternate (the Task 3 Critical bug, regressed)", () => {
+  const en = parsePage(
+    "https://design.example/partners",
+    200,
+    `<link rel="canonical" href="https://design.example/partners">
+     <link rel="alternate" hreflang="en" href="https://design.example/partners">
+     <link rel="alternate" hreflang="he" href="https://design.example/he/partners">
+     <link rel="alternate" hreflang="x-default" href="https://design.example/partners">`,
+  );
+  const he = parsePage("https://design.example/he/partners", 404, "");
+  const result = assertUnlocalizedPair(en, he);
+  assert.equal(result.ok, false);
+  assert.equal(result.checks.noHeAlternate, false);
+  assert.ok(result.issues.some((i) => i.includes("must not carry")));
+});
+
+test("assertUnlocalizedPair fails if /he/partners doesn't 404 (e.g. it renders English-fallback content with 200)", () => {
+  const en = parsePage(
+    "https://design.example/partners",
+    200,
+    `<link rel="canonical" href="https://design.example/partners">
+     <link rel="alternate" hreflang="en" href="https://design.example/partners">
+     <link rel="alternate" hreflang="x-default" href="https://design.example/partners">`,
+  );
+  const he200 = parsePage("https://design.example/he/partners", 200, `<link rel="canonical" href="https://design.example/he/partners">`);
+  const result = assertUnlocalizedPair(en, he200);
+  assert.equal(result.ok, false);
+  assert.equal(result.checks.heIs404, false);
+  assert.ok(result.issues.some((i) => i.includes("should 404")));
+});
+
+test("assertUnlocalizedPair fails when the EN page itself is down, independent of the he-specific checks", () => {
+  const enDown = parsePage("https://design.example/partners", 500, "");
+  const he = parsePage("https://design.example/he/partners", 404, "");
+  const result = assertUnlocalizedPair(enDown, he);
+  assert.equal(result.ok, false);
+  assert.equal(result.checks.enOk, false);
+  // he/partners is still correctly 404 — that check is independent and still true.
+  assert.equal(result.checks.heIs404, true);
 });

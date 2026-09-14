@@ -36,6 +36,36 @@ export function isLocale(lang: string): lang is Locale {
 export function isPublicLocale(lang: string): lang is Locale {
   return (PUBLIC_LOCALES as readonly string[]).includes(lang);
 }
+
+/** Fixed static routes (keyed by their static URL segment, e.g. "partners")
+ *  that are deliberately NOT offered in some otherwise-public locale — the
+ *  single source of truth for "this route has no localized version here".
+ *  Today: the Partners page (decision J, spec §4.4/§8) stays English-only —
+ *  it must never get a `he` sitemap row, a `he` hreflang alternate from any
+ *  other locale's page, or a live `/he/partners` page (see
+ *  src/lib/seo.ts's `staticAlternates`/`localesForStaticRoute` callers, the
+ *  sitemap's `generatePagesSitemap`, and preview-partners/[lang]/page.tsx's
+ *  notFound() guard). Add a route here — not a one-off exclusion at each
+ *  call site — the next time a route is intentionally left unlocalized. */
+export const UNLOCALIZED_ROUTES: Record<string, readonly Locale[]> = {
+  partners: ["he"],
+};
+
+/** Locales a fixed static route (keyed by its static segment, e.g.
+ *  "partners") is actually offered in: `publicLocales` (default
+ *  `PUBLIC_LOCALES`) minus whatever `UNLOCALIZED_ROUTES` excludes for that
+ *  segment. A segment with no entry in `UNLOCALIZED_ROUTES` gets every
+ *  public locale, unchanged. The optional `publicLocales` param (same
+ *  pattern as `sitemapLocalesForType` in lib/seo.ts) exists so tests can
+ *  exercise the exclusion under an explicit locale set instead of whatever
+ *  this process's `NEXT_PUBLIC_LIVE_LOCALES` happens to be. */
+export function localesForStaticRoute(
+  segment: string,
+  publicLocales: readonly Locale[] = PUBLIC_LOCALES,
+): Locale[] {
+  const excluded = UNLOCALIZED_ROUTES[segment] ?? [];
+  return publicLocales.filter((l) => !excluded.includes(l));
+}
 export function localeDir(lang: string): "rtl" | "ltr" {
   return (RTL_LOCALES as readonly string[]).includes(lang) ? "rtl" : "ltr";
 }

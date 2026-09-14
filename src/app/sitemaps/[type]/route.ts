@@ -7,7 +7,7 @@ import {
   getPaginatedLandingPageSlugs,
   getTotalBlogPostsByLang,
 } from "@/sanity/sanity.utils";
-import { localePrefix, localizedHref, PUBLIC_LOCALES } from "@/lib/locale";
+import { localePrefix, localizedHref, PUBLIC_LOCALES, localesForStaticRoute } from "@/lib/locale";
 import { sitemapLocalesForType } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { urlFor } from "@/sanity/sanity.client";
@@ -77,9 +77,15 @@ function isSitemapType(value: string): value is SitemapType {
   return sitemapTypes.includes(value as SitemapType);
 }
 
-// hreflang alternates for the 4 language versions of a fixed listing path (e.g. "blog").
+// hreflang alternates for the language versions of a fixed listing path (e.g.
+// "blog"). Most segments get one alternate per `langs` (== PUBLIC_LOCALES);
+// a segment listed in UNLOCALIZED_ROUTES (lib/locale.ts — today only
+// "partners", decision J) drops the excluded locale(s) here too, so no
+// locale's page ever advertises a hreflang alternate into a URL that isn't
+// actually offered there.
 function listingAlts(segment: string): Alt[] {
-  const alts: Alt[] = langs.map((l) => ({ hreflang: l, href: buildUrl(localizedHref(l, segment)) }));
+  const locales = localesForStaticRoute(segment, langs);
+  const alts: Alt[] = locales.map((l) => ({ hreflang: l, href: buildUrl(localizedHref(l, segment)) }));
   alts.push({ hreflang: "x-default", href: buildUrl(localizedHref("en", segment)) });
   return alts;
 }
@@ -277,13 +283,18 @@ async function generatePagesSitemap(): Promise<SitemapPage[]> {
     // /partners: a single fixed page (preview-partners/[lang]/page.tsx), not
     // Singlepage-backed, so it never comes from getAllPathsForLang below —
     // added here explicitly now that it's indexable (see that route's
-    // layout.tsx for the noindex removal this pairs with).
-    pages.push({
-      route: localizedHref(lang, "partners"),
-      changefreq: "monthly",
-      priority: 0.6,
-      alternates: listingAlts("partners"),
-    });
+    // layout.tsx for the noindex removal this pairs with). Excluded for `he`
+    // (UNLOCALIZED_ROUTES in lib/locale.ts, decision J) — the page is
+    // deliberately English-only, so `he` never gets a sitemap row for it and
+    // `/he/partners` itself 404s (see preview-partners/[lang]/page.tsx).
+    if (localesForStaticRoute("partners", langs).includes(lang)) {
+      pages.push({
+        route: localizedHref(lang, "partners"),
+        changefreq: "monthly",
+        priority: 0.6,
+        alternates: listingAlts("partners"),
+      });
+    }
 
     // /faq: same shape as /partners just above — a single fixed page
     // (preview-faq/[lang]/page.tsx), not Singlepage-backed, added now that

@@ -79,11 +79,21 @@ const EXTRA_TYPE_PAGES = [
   { type: "terms", en: "/terms-and-conditions", he: "/he/terms-and-conditions" },
 ];
 
+// Partners (decision J, spec §4.4/§8) is the opposite shape from every pair
+// above: it's a Task 3 Critical fix regression guard, not a normal
+// localized pair. The EN page must carry NO `he` hreflang alternate (that
+// alternate is exactly what pointed a Hebrew URL at English-fallback
+// content before the fix) and `/he/partners` must 404, not 200. `unlocalized`
+// routes these through assertUnlocalizedPair() below instead of assertPair().
+const UNLOCALIZED_TYPE_PAGES = [
+  { type: "partners", en: "/partners", he: "/he/partners", unlocalized: true },
+];
+
 /** The full EN<->HE URL-pair list this sampler checks: rtl-matrix.mjs's own
  *  page-type list (minus its synthetic "404" row, which has no hreflang/
  *  canonical/JSON-LD to assert on) + the two extra listing types above +
- *  the 17 keyword landing slugs. Bare site-relative paths — the caller
- *  prepends `host`. */
+ *  the deliberately-unlocalized pair(s) + the 17 keyword landing slugs. Bare
+ *  site-relative paths — the caller prepends `host`. */
 export function buildUrlPairs() {
   const base = buildPages(DEFAULTS).filter((p) => p.type !== "404");
   const landing = LANDING_SLUGS.map((slug) => ({
@@ -93,7 +103,7 @@ export function buildUrlPairs() {
   }));
   const seen = new Set();
   const out = [];
-  for (const p of [...base, ...EXTRA_TYPE_PAGES, ...landing]) {
+  for (const p of [...base, ...EXTRA_TYPE_PAGES, ...UNLOCALIZED_TYPE_PAGES, ...landing]) {
     if (seen.has(p.en)) continue; // rtl-matrix's default "landing" slug and
     seen.add(p.en); // the 17 keyword slugs don't collide today, but a
     out.push(p); // future default change shouldn't produce a duplicate row.
@@ -266,6 +276,43 @@ export function assertPair(en, he) {
   return { ok, checks, issues };
 }
 
+/** Assert the special-case contract for a pair the spec deliberately keeps
+ *  unlocalized in one locale (today: `/partners`, decision J) — the inverse
+ *  of `assertPair`'s "must be reciprocal and indexable" contract. Two
+ *  checks, both load-bearing regression guards for the Task 3 Critical bug:
+ *
+ *    - the EN (or other offered-locale) page must carry NO hreflang
+ *      alternate for `locale` at all — not just "not reciprocal": an
+ *      alternate present but pointing at English-fallback content was
+ *      exactly the bug, and a present-but-wrong alternate would slip past a
+ *      simple "is it reciprocal" check.
+ *    - the localized URL must 404 — not 200 with borrowed English copy.
+ *
+ *  Pure — no I/O, same shape as `assertPair` (`{ ok, checks, issues }`) so
+ *  the caller can treat both uniformly. */
+export function assertUnlocalizedPair(en, he, { locale = "he" } = {}) {
+  const issues = [];
+  const enOk = en.status >= 200 && en.status < 300;
+  const checks = {
+    enOk,
+    heIs404: he.status === 404,
+    noHeAlternate: !Object.prototype.hasOwnProperty.call(en.alternates, locale),
+  };
+
+  if (!enOk) issues.push(`en ${en.url} returned ${en.status}`);
+  if (!checks.heIs404) {
+    issues.push(`${he.url} should 404 (not offered in "${locale}", decision J) but returned ${he.status}`);
+  }
+  if (!checks.noHeAlternate) {
+    issues.push(
+      `${en.url} must not carry a "${locale}" hreflang alternate (found ${en.alternates[locale]}) — this route is deliberately unlocalized in "${locale}" (decision J)`,
+    );
+  }
+
+  const ok = Object.values(checks).every((v) => v === true);
+  return { ok, checks, issues };
+}
+
 // ---------------------------------------------------------------------------
 // I/O — everything below this line touches the network or process.argv/exit.
 
@@ -321,8 +368,8 @@ async function main() {
     const enUrl = opts.host + pair.en;
     const heUrl = opts.host + pair.he;
     const [en, he] = await Promise.all([fetchPage(enUrl), fetchPage(heUrl)]);
-    const { ok, checks, issues } = assertPair(en, he);
-    rows.push({ type: pair.type, en, he, ok, checks, issues });
+    const { ok, checks, issues } = pair.unlocalized ? assertUnlocalizedPair(en, he) : assertPair(en, he);
+    rows.push({ type: pair.type, en, he, ok, checks, issues, unlocalized: !!pair.unlocalized });
   }
 
   const failedCount = rows.filter((r) => !r.ok).length;
@@ -337,12 +384,21 @@ async function main() {
     );
     for (const r of rows) {
       const label = `${r.ok ? "PASS" : "FAIL"}  ${r.type}`.padEnd(28);
-      console.log(
-        `${label}${String(r.en.status).padEnd(5)}${String(r.he.status).padEnd(5)}` +
-          `${statusCell(r.checks.reciprocal)}  ${statusCell(r.checks.xDefault)}  ` +
-          `${statusCell(r.checks.canonicalSelf)}  ${statusCell(r.checks.ogLocale)}  ` +
-          `${statusCell(r.checks.robots)}   ${statusCell(r.checks.inLanguage)}`,
-      );
+      if (r.unlocalized) {
+        // Different contract (see assertUnlocalizedPair) — the generic
+        // ALT/XDEF/CANON/OG/ROBOTS/INLANG columns don't apply.
+        console.log(
+          `${label}${String(r.en.status).padEnd(5)}${String(r.he.status).padEnd(5)}` +
+            `(unlocalized: no "he" alternate + 404 expected)`,
+        );
+      } else {
+        console.log(
+          `${label}${String(r.en.status).padEnd(5)}${String(r.he.status).padEnd(5)}` +
+            `${statusCell(r.checks.reciprocal)}  ${statusCell(r.checks.xDefault)}  ` +
+            `${statusCell(r.checks.canonicalSelf)}  ${statusCell(r.checks.ogLocale)}  ` +
+            `${statusCell(r.checks.robots)}   ${statusCell(r.checks.inLanguage)}`,
+        );
+      }
       if (!r.ok) for (const issue of r.issues) console.log(`        - ${issue}`);
     }
   }
