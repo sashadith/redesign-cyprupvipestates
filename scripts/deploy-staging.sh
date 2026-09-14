@@ -52,7 +52,8 @@ cat > "$REMOTE_SCRIPT" <<REMOTE
 set -euo pipefail
 trap 'echo \$? > "$DIR/.deploy-status"' EXIT
 cd "$DIR"
-# Always build from a clean .next — an incremental `next build` on top of a stale
+# Always build from a clean .next — an incremental 'next build' on top of a stale
+# (no backticks in this heredoc: it is unquoted, so backticks would run locally)
 # .next has repeatedly produced a broken server-reference-manifest (server actions
 # added/changed since the last clean build crash client-side with "undefined is not
 # an object (evaluating 'e.ok')" — the action ID the client calls doesn't resolve).
