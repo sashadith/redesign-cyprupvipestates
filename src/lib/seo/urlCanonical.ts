@@ -3,7 +3,7 @@ import path from "path";
 import type { Locale } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { deriveLocale } from "@/lib/gsc/client";
-import { nonDefaultLocalePattern } from "@/lib/locale";
+import { nonDefaultLocalePattern, localeFromPath } from "@/lib/locale";
 
 const L = nonDefaultLocalePattern();
 
@@ -56,10 +56,18 @@ export type CanonicalTarget = { locale: Locale; page: string };
  * table's unique key — changing it would fork every existing homepage series
  * into a second one. Any source joined on a page key (GSC, PageView, Lead)
  * must use THIS function, not `deriveLocale` directly.
+ *
+ * Delegates to `localeFromPath` (lib/locale.ts), which recognises a bare root
+ * for EVERY non-default locale in `LOCALES` — including `he`, so a bare
+ * `/he` join key resolves correctly even while `he` is gated out of
+ * `PUBLIC_LOCALES` (join keys are about what the data IS, not what is
+ * currently public). Kept as its own named export (rather than inlining
+ * `localeFromPath` at call sites) because every call site here is a
+ * `locale::path` JOIN KEY, and that intent — plus the warning above about
+ * never using `deriveLocale` for it — belongs on one well-documented function.
  */
 export function localeOfPath(path: string): Locale {
-  if (path === "/de" || path === "/pl" || path === "/ru") return path.slice(1) as Locale;
-  return deriveLocale(path);
+  return localeFromPath(path) as Locale;
 }
 
 let cached: { map: Map<string, string>; builtAt: number } | null = null;

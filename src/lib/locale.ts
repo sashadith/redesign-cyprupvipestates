@@ -57,6 +57,29 @@ export function nonDefaultLocalePattern(locales: readonly string[] = LOCALES): s
   return locales.filter((l) => l !== DEFAULT_LOCALE).join("|");
 }
 
+/**
+ * Parses a locale OUT OF a path, against the full known set (`LOCALES`), not
+ * `PUBLIC_LOCALES` — a `/he/...` URL is Hebrew whether or not `he` is
+ * currently gated by `NEXT_PUBLIC_LIVE_LOCALES` (e.g. GSC/analytics data
+ * recorded before or during the gate, or a direct hit on a not-yet-routed
+ * path). Recognises a prefixed path (`/xx/...`) or a bare prefix root
+ * (`/xx`); anything else — including the unprefixed default locale's own
+ * paths — is "en". Pure: no env access, so it is safe to call at parse time
+ * from both server and client code.
+ *
+ *   localeFromPath("/de/projects/x") -> "de"
+ *   localeFromPath("/de")            -> "de"
+ *   localeFromPath("/he")            -> "he" (even while he is gated)
+ *   localeFromPath("/x")             -> "en"
+ */
+export function localeFromPath(path: string): Locale {
+  for (const l of LOCALES) {
+    if (l === DEFAULT_LOCALE) continue;
+    if (path === `/${l}` || path.startsWith(`/${l}/`)) return l;
+  }
+  return DEFAULT_LOCALE as Locale;
+}
+
 /** Prices use Western digits in every locale (Israeli convention too).
  *  EUR renders as "€1,234"; any other currency as "USD 1,234" (ISO code +
  *  space + grouped number) — there's no per-currency symbol table here, just

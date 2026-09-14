@@ -35,7 +35,7 @@ import {
   DEFAULT_OG_IMAGE,
 } from "@/lib/seo";
 import { i18n } from "@/i18n.config";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, LOCALES } from "@/lib/locale";
 import { Translation } from "@/types/homepage";
 import { FormStandardDocument } from "@/types/formStandardDocument";
 import { blogStrings } from "../blogI18n";
@@ -147,6 +147,10 @@ const FALLBACK_MIN = 3;
    guard in renderArticleBlock. Module-level so that guard and the
    does-this-article-already-route check below cannot drift apart. */
 const MIN_BLOCK_RESULTS = 3;
+/* Asset SET, not a locale set (see the contact-art fallback below): derived
+   from LOCALES rather than hard-coded, minus `he` (no iphone-he.webp on disk
+   yet — he explicitly falls back to the English image instead of 404ing). */
+const CONTACT_ART_LOCALES = LOCALES.filter((l) => l !== "he");
 
 /* Whether a Projects block will actually put cards on the page. Mirrors both
    guards in renderArticleBlock. Needed because "the article has a block" is not
@@ -307,7 +311,7 @@ const PagePost = async ({ params }: Props) => {
               {/* Asset SET, not a locale set: only en/de/pl/ru artwork exists on
                   disk, so `he` explicitly falls back to the English image
                   rather than 404ing on a non-existent iphone-he.webp. */}
-              <img src={`/img/contact/iphone-${(["en", "de", "pl", "ru"] as const).includes(lang as any) ? lang : "en"}.webp`} alt="" />
+              <img src={`/img/contact/iphone-${CONTACT_ART_LOCALES.includes(lang as any) ? lang : "en"}.webp`} alt="" />
             </div>
           </div>
         );
