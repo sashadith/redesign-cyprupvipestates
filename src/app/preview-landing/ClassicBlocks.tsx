@@ -37,6 +37,7 @@ export const CLASSIC_RENDERED = new Set(
     "bulletsBlock",
     "howWeWorkBlock",
     "buttonBlock",
+    "villaNavigatorBlock",
     "landingFaqBlock",
     "locationBlock",
   ]),
@@ -95,6 +96,30 @@ export function renderClassicBlock(block: any, lang: string, ctaHref: string, ti
           <a className="btn btn--glass" href={ctaHref}>{block.buttonText}</a>
         </div>
       ) : null;
+
+    // A card grid of editor-authored links to sibling pages, each with its
+    // own one-line teaser — richer than the site-wide "Related Landing
+    // Pages" pill list (relatedLandingPages/SectionLinks), which carries no
+    // per-item copy. Used so far only to cross-link the RU villa cluster
+    // (villy-na-kipre -> its 5 segment pages), added 2026-09-14.
+    case "villaNavigatorBlock": {
+      const items = Array.isArray(block.items) ? block.items : [];
+      if (!items.length) return null;
+      return (
+        <>
+          {block.title && <h2 className="pl__h2">{block.title}</h2>}
+          <div className="pl-nav">
+            {items.map((it: any, i: number) => (
+              <a className="pl-nav__card" href={it.href} key={it.href ?? i}>
+                <span className="pl-nav__title">{it.title}</span>
+                {it.teaser && <span className="pl-nav__teaser">{it.teaser}</span>}
+                <span className="pl-nav__arrow" aria-hidden="true">→</span>
+              </a>
+            ))}
+          </div>
+        </>
+      );
+    }
 
     case "formMinimalBlock": {
       // The homepage's own contact section — its own background and styling.

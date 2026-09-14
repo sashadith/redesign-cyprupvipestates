@@ -328,6 +328,70 @@
   padding-block: var(--s-7);
 }
 
+/* ------------------------------------------------------- VILLA NAVIGATOR */
+/* villaNavigatorBlock's card grid (ClassicBlocks.tsx). Five cards need to sit
+   in one row on desktop without the ones near 300px-per-card width that
+   .pl-grid uses — at 300px minimum, five columns would demand ~1580px of
+   content width, wider than --maxw itself. 200px holds five across from
+   900px (five * 200px + four * var(--s-4) gaps == 1064px, comfortably under
+   --maxw's own gutter-trimmed content width) down to tablet width; below
+   900px it falls back to auto-fit so the cards wrap instead of squeezing. */
+.pl__h2 + .pl-nav { margin-top: clamp(40px, 5vw, 72px); }
+
+.pl-nav {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--s-4);
+}
+
+@media (min-width: 900px) {
+  .pl-nav { grid-template-columns: repeat(5, 1fr); }
+}
+
+.pl-nav__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-5) var(--s-4);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-ui);
+  background: var(--glass-bg);
+  text-decoration: none;
+  transition: border-color var(--dur-sm) var(--ease), background var(--dur-sm) var(--ease);
+}
+
+.pl-nav__card:hover,
+.pl-nav__card:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.pl-nav__card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.pl-nav__title {
+  color: var(--text);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  line-height: 1.3;
+}
+
+.pl-nav__teaser {
+  color: var(--text-faint);
+  font-size: var(--text-caption);
+  line-height: 1.5;
+}
+
+.pl-nav__arrow {
+  margin-top: auto;
+  padding-top: var(--s-2);
+  color: var(--accent);
+  font-size: var(--text-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pl-nav__card { transition: none; }
+}
+
 /* ------------------------------------------------------------------- 404 */
 /* The not-found page reuses the article hero wholesale (iart__hero--image,
    the shimmer stripe, .btn--glass). Only the numeral above the headline and
