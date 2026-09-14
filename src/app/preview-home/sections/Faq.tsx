@@ -7,6 +7,7 @@ import type { FaqSection } from "@/types/homepage";
 import { homeStrings } from "./homeI18n";
 import { highlightAccents } from "./highlightAccents";
 import type { Locale } from "@/lib/locale";
+import { bcp47For } from "@/lib/locale";
 
 /* FAQ — dark section, editorial split: heading/context on the left (sticky),
    an accordion of question/answer items on the right. Reuses the original
@@ -61,6 +62,7 @@ export default function Faq({ section, lang = "en" }: { section: FaqSection; lan
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
+    inLanguage: bcp47For(lang),
     mainEntity: items.map((it) => ({
       "@type": "Question",
       name: it.question,

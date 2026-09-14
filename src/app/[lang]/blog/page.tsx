@@ -7,6 +7,7 @@ import {
   DEFAULT_OG_IMAGE,
   DEFAULT_OG_IMAGE_WIDTH,
   DEFAULT_OG_IMAGE_HEIGHT,
+  ogLocale,
 } from "@/lib/seo";
 import { getBlogPageByLang, getTotalBlogPostsByLang } from "@/sanity/sanity.utils";
 import { blogIndexMode } from "@/lib/blogIndexMode";
@@ -31,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: data?.metaDescription,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: params.lang,
+      locale: ogLocale(params.lang),
       type: "website",
       images: [{ url: DEFAULT_OG_IMAGE, width: DEFAULT_OG_IMAGE_WIDTH, height: DEFAULT_OG_IMAGE_HEIGHT }],
     },

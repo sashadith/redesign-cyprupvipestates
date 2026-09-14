@@ -2,12 +2,14 @@
 import Script from "next/script";
 import { urlFor } from "@/sanity/sanity.client";
 import { abs } from "@/lib/seo";
+import { bcp47For } from "@/lib/locale";
 
 interface SchemaMarkupProps {
   project: any;
+  lang: string;
 }
 
-const SchemaMarkup: React.FC<SchemaMarkupProps> = ({ project }) => {
+const SchemaMarkup: React.FC<SchemaMarkupProps> = ({ project, lang }) => {
   const kf = project.keyFeatures ?? {};
 
   // Property entity type (schema.org Apartment / House are valid Accommodation
@@ -35,6 +37,7 @@ const SchemaMarkup: React.FC<SchemaMarkupProps> = ({ project }) => {
   const jsonLd: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": schemaType,
+    inLanguage: bcp47For(lang),
     name: project.title,
     description: project.excerpt,
     ...(images && images.length ? { image: images } : {}),

@@ -33,6 +33,7 @@ import {
   languageAlternates,
   pathBuilders,
   DEFAULT_OG_IMAGE,
+  ogLocale,
 } from "@/lib/seo";
 import { i18n } from "@/i18n.config";
 import { localizedHref, LOCALES } from "@/lib/locale";
@@ -94,7 +95,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: data?.seo.metaDescription,
       url,
       siteName: "Cyprus VIP Estates",
-      locale: lang,
+      locale: ogLocale(lang),
       type: "article",
       images: [{ url: previewImageUrl, width: 1200, height: 630, alt: data?.title }],
     },
@@ -326,7 +327,7 @@ const PagePost = async ({ params }: Props) => {
     <>
       <Header params={params} translations={translations} />
       <SchemaBlogPost blog={blog} lang={lang} />
-      <SchemaBlogFaq blocks={contentBlocks} />
+      <SchemaBlogFaq blocks={contentBlocks} lang={lang} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }} />
       <ArticleMotion />
       <ReadingProgress />

@@ -5,7 +5,8 @@
 // production domain is hard-coded (NEXT_PUBLIC_SITE_URL is build-time inlined
 // to :3000 on the VPS).
 
-import { localizedHref, PUBLIC_LOCALES } from "./locale";
+import { localizedHref, PUBLIC_LOCALES, BCP47 } from "./locale";
+import { blogIndexInSitemap } from "./blogIndexMode";
 
 export const SITE_URL = "https://cyprusvipestates.com";
 
@@ -80,6 +81,51 @@ export function staticAlternates(
   const languages: Record<string, string> = {};
   for (const l of PUBLIC_LOCALES) languages[l] = abs(localizedHref(l, segments));
   return { canonical: abs(localizedHref(lang, segments)), languages: { ...languages, "x-default": languages["en"] } };
+}
+
+/**
+ * `og:locale` value for a page's locale. Every existing `openGraph.locale`
+ * call site in the app today interpolates the raw locale code directly
+ * (`locale: lang` → "en"/"de"/"pl"/"ru"/"he"), which is not the OG-spec
+ * format (a language_TERRITORY tag, e.g. "en_GB"). Retrofitting the correct
+ * format for en/de/pl/ru is out of this task's scope and would change
+ * LTR-visible metadata with no coverage here, so this returns the SAME raw
+ * code, byte-identical, for every locale except `he` — which gets the
+ * correct `he_IL` (BCP47.he = "he-IL", "-" → "_"). `he` is therefore the
+ * only locale whose `og:locale` output changes.
+ */
+export function ogLocale(lang: string): string {
+  if (lang === "he") return BCP47.he.replace("-", "_");
+  return lang;
+}
+
+/**
+ * Which locales a sitemap listing type should emit rows for. Every type
+ * simply follows the given `publicLocales` set (default: `PUBLIC_LOCALES`)
+ * — a locale that isn't live never gets a sitemap row, full stop — except
+ * "blog": while `/he/blog` is borrowing English content (Phase 6, fewer
+ * than 5 own PUBLISHED Hebrew articles) its index and articles stay
+ * noindex'd and out of the sitemap (see blogIndexInSitemap). Each listing
+ * type's own row-builder query (projects/blog/case-studies: `status:
+ * "PUBLISHED"` in sanity.utils.ts; pages: `getAllPathsForLang`, same filter)
+ * already restricts rows to PUBLISHED — that filtering happens at the data
+ * layer, not duplicated here; this only decides the locale axis.
+ */
+export type SitemapListingType =
+  | "projects"
+  | "developers"
+  | "blog"
+  | "case-studies"
+  | "pages"
+  | "developments";
+
+export function sitemapLocalesForType(
+  type: SitemapListingType,
+  opts: { publicLocales?: readonly string[]; heBlogCount?: number } = {},
+): string[] {
+  const locales = opts.publicLocales ?? PUBLIC_LOCALES;
+  if (type !== "blog") return [...locales];
+  return locales.filter((l) => blogIndexInSitemap(l, opts.heBlogCount ?? 0));
 }
 
 /** Path builders for the localized content types. */

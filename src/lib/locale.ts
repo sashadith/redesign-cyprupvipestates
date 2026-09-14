@@ -44,6 +44,15 @@ export const BCP47: Record<Locale, string> = {
   en: "en-GB", de: "de-DE", pl: "pl-PL", ru: "ru-RU", he: "he-IL",
 };
 
+/** BCP47 tag for JSON-LD `inLanguage` / `<html lang>`-style consumers that
+ *  may receive an unvalidated string (route params, CMS rows). Falls back to
+ *  English for anything not in `LOCALES`, same fallback `fmtDate` already
+ *  uses inline — this just gives that one-liner a name other call sites
+ *  (JSON-LD emitters) can share instead of repeating the ternary. */
+export function bcp47For(lang: string): string {
+  return isLocale(lang) ? BCP47[lang] : BCP47.en;
+}
+
 export const LOCALE_LABELS: Record<Locale, { code: string; name: string }> = {
   en: { code: "EN", name: "English" },
   de: { code: "DE", name: "Deutsch" },

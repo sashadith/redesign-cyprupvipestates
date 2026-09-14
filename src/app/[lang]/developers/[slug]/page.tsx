@@ -45,7 +45,7 @@ import Form from "@/app/preview-home/sections/Form";
 import DeveloperSchemaMarkup from "@/app/components/DeveloperSchemaMarkup/DeveloperSchemaMarkup";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 import NotFoundPageComponent from "@/app/components/NotFoundPageComponent/NotFoundPageComponent";
-import { abs, localizedPath, languageAlternates, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import { abs, localizedPath, languageAlternates, DEFAULT_OG_IMAGE, ogLocale } from "@/lib/seo";
 import { localizedHref } from "@/lib/locale";
 import { resolveCompletionYear } from "@/lib/text";
 
@@ -114,7 +114,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: data?.seo.metaDescription,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: lang,
+      locale: ogLocale(lang),
       type: "website",
       images: [{ url: ogImage, width: 1200, height: 630, alt: data?.seo.metaTitle }],
     },
