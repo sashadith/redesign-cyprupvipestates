@@ -22,8 +22,8 @@ Endstand nach allen Tasks, Fix-Rounds (Task 1, 3, 4) und der Gesamt-Review des B
 | Gate | Befehl | Ergebnis |
 |---|---|---|
 | Typen | `npx tsc --noEmit -p tsconfig.json` | sauber |
-| Tests | `npm test` | 388 grün (Baseline 309 aus Phase 5 + 79 neue: Lead-Pipeline, Locale-Plumbing, Head-Signale, hreflang-Sampler, Launch-Wächter, Partners-Ausschluss) |
-| Platzhalter | `node scripts/qa/he-placeholders.mjs` | `TODO(he)`: 0 · `REVIEW(he)`: 114 (unverändert — Pass C weiterhin zurückgestellt) |
+| Tests | `npm test` | 392 grün (Baseline 309 aus Phase 5 + 83 neue: Lead-Pipeline, Locale-Plumbing, Head-Signale, hreflang-Sampler, Launch-Wächter, Partners-Ausschluss, Final-Review-Fixes) |
+| Platzhalter | `node scripts/qa/he-placeholders.mjs` | `TODO(he)`: 0 · `REVIEW(he)`: 115 (+1: Blog-Breadcrumb „דף הבית"; Pass C weiterhin zurückgestellt) |
 | LTR-Snapshot | `node --import tsx scripts/qa/copy-snapshot.mjs --check` | sauber, 3.381 Blätter — kein en/de/pl/ru-String verändert |
 | Content-Gate | `node scripts/qa/he-content-check.mjs` | `he-content: OK (31 files, 2941 strings)` |
 | Physische CSS-Deklarationen | `node scripts/qa/rtl-physical-count.mjs --strict` | 0 (115 Dateien gescannt, 84 Ausnahmeregeln) — **Phase 2b abgeschlossen** |
