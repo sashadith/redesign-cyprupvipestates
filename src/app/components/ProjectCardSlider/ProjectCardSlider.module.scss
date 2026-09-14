@@ -53,11 +53,11 @@
 }
 
 .swiperButtonPrev {
-  left: 10px;
+  inset-inline-start: 10px;
 }
 
 .swiperButtonNext {
-  right: 10px;
+  inset-inline-end: 10px;
 }
 
 /* скрываем, но оставляем в DOM */

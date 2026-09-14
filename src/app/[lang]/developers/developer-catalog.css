@@ -91,7 +91,7 @@
 .dev-hero .ins__hero-title { font-size: var(--text-h1); }
 /* .ins__hero's own clouds (insights.css) are retired here — .dev-atmos below
    covers this whole page including the hero, so keeping both would double
-   them up, and .ins__hero::after's own right:-10% bleed was what caused the
+   them up, and .ins__hero::after's own -10% inline-end bleed was what caused the
    whole-page horizontal-scroll bug in the first place (nothing on this
    route clipped it). /blog itself is untouched — this is scoped to
    .dev-hero only. Compound selector (.ins__hero.dev-hero::before, NOT

@@ -20,10 +20,8 @@
 
 .closeButton {
   position: absolute;
-  // top: 15px;
-  // right: 15px;
   top: 30px;
-  right: 50px;
+  inset-inline-end: 50px;
   border: none;
   cursor: pointer;
   font-size: 22px;
@@ -37,7 +35,7 @@
 
   @media (max-width: 768px) {
     top: 15px;
-    right: 15px;
+    inset-inline-end: 15px;
     width: 35px;
     height: 35px;
   }
@@ -90,7 +88,7 @@
 .overlay {
   position: absolute;
   top: 0;
-  left: 0;
+  inset-inline-start: 0;
   width: 100%;
   height: 400px; /* Выберите высоту, которая подходит для вашего дизайна */
   opacity: 0.8;
@@ -104,12 +102,12 @@
   max-width: 350px;
   position: absolute;
   top: 85%;
-  left: 5%;
+  inset-inline-start: 5%;
   transform: translate(-5%, -85%);
 
   @media screen and (max-width: 880px) {
     top: 0;
-    left: 50%;
+    left: 50%; // centring anchor for translate(-50%, 0) — physical by design (logical would mis-centre in RTL)
     transform: translate(-50%, 0);
     width: 100%;
     text-align: center;
@@ -158,7 +156,7 @@
 .formBlock {
   position: absolute;
   top: -20px;
-  left: 40%;
+  left: 40%; // brochure form panel overlaid on the promotional image — horizontal offset tied to this specific image's composition (matches consultant-portrait precedent in tokens.css); needs recalculated constants for RTL, left physical, candidate for follow-up visual QA
   width: 55%;
   border-radius: 15px;
   border: 4px solid #bd8948;
@@ -173,7 +171,7 @@
   @media screen and (max-width: 880px) {
     width: 100%;
     top: 30%;
-    left: 0;
+    left: 0; // mobile full-width override of the image-composition-tied form panel above — kept physical for consistency
   }
 
   @media screen and (max-width: 570px) {

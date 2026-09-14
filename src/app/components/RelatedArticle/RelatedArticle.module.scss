@@ -52,7 +52,7 @@
   background-color: var(--corp-color);
   position: absolute;
   bottom: 10px;
-  left: 10px;
+  inset-inline-start: 10px;
   z-index: 1;
 }
 
