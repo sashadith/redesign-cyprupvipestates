@@ -16,7 +16,32 @@ const handler = createMcpHandler(
     registerWriteTools(server);
   },
   {
-    serverInfo: { name: "cyprus-vip-estates-crm", version: "1.0.0" },
+    // The icon is served with an OPAQUE light background on purpose. Every icon
+    // the site itself publishes — favicon.ico, icon.png, apple-icon.png and both
+    // manifest icons — is a transparent gold line-drawing, and clients that place
+    // a transparent icon on their own dark tile render it as thin gold lines on
+    // near-black (measured ~#121509 in the claude.ai connector list, which is not
+    // the manifest's #142E2D — the tile is the client's, not ours). Carrying our
+    // own background is the only way to control that, and it is why these files
+    // exist separately from the site's icon set rather than replacing it.
+    //
+    // The cast is narrow and deliberate: createMcpHandler types this option as
+    // `{ name, version }`, but the value is handed straight to the Server as an
+    // `Implementation` (dist/mcp-*.mjs:457 spreads it verbatim into
+    // _meta["io.modelcontextprotocol/serverInfo"]), and `Implementation` in the
+    // protocol schema carries title/websiteUrl/icons. The option type is simply
+    // narrower than what is forwarded. Whether a given client renders `icons` is
+    // up to that client — if claude.ai ignores them, this is inert metadata.
+    serverInfo: {
+      name: "cyprus-vip-estates-crm",
+      version: "1.0.0",
+      title: "Cyprus VIP Estates CRM",
+      websiteUrl: "https://cyprusvipestates.com",
+      icons: [
+        { src: "https://cyprusvipestates.com/icons/mcp-icon-512.png", mimeType: "image/png", sizes: ["512x512"] },
+        { src: "https://cyprusvipestates.com/icons/mcp-icon-192.png", mimeType: "image/png", sizes: ["192x192"] },
+      ],
+    } as { name: string; version: string },
     instructions: MCP_INSTRUCTIONS,
     capabilities: { tools: {} },
   },
