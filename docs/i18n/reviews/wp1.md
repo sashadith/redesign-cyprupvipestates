@@ -135,7 +135,7 @@ Ergibt zusammengesetzt (Stand Code): `אישור `**תנאי השימוש**` ו`
 | title | "We use cookies" | "אנחנו משתמשים בעוגיות" | Cookies = עוגיות (Glossar §4) |  |
 | description | "We use necessary cookies for the site to work. We also use analytics and marketing cookies to improve our services – only if you agree." | "אנחנו משתמשים בעוגיות הכרחיות כדי שהאתר יעבוד. בנוסף אנחנו משתמשים בעוגיות אנליטיקה ושיווק כדי לשפר את השירות, רק אם תאשרו." | Gedankenstrich → Komma (§3); zwei kurze Sätze statt eines langen |  |
 | acceptAll | "Accept all" | "אישור הכל" | Kurzform gewählt (Button-Breite); Glossar §4. **HE-Spalte nach Fix Round 1 aktualisiert** (zeigt den ausgelieferten String). |  |
-| rejectAll | "Only necessary" | "רק הנחוצות" | Glossar §4 |  |
+| rejectAll | "Only necessary" | "רק ההכרחיות" | Glossar §4; in Phase 5 an die Cookie-Kategorie der Datenschutzerklärung (הכרחיות) angeglichen |  |
 | privacy | "Cookie Policy" | "מדיניות העוגיות" | **neu**, Glossar §6.1 |  |
 
 ## 6. Newsletter — `NewsletterForm/NewsletterForm.copy.ts` und `Footer/FooterNewsletter.tsx`

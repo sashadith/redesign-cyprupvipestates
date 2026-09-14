@@ -45,7 +45,7 @@ export const COOKIE_CONSENT_COPY: Record<Locale, typeof COOKIE_CONSENT_EN> = {
     description:
       "אנחנו משתמשים בעוגיות הכרחיות כדי שהאתר יעבוד. בעוגיות אנליטיקה ושיווק נשתמש רק אם תאשרו, כדי לשפר את השירות.",
     acceptAll: "אישור הכל",
-    rejectAll: "רק הנחוצות",
+    rejectAll: "רק ההכרחיות",
     privacy: "מדיניות העוגיות",
   }, // REVIEW(he)
 };

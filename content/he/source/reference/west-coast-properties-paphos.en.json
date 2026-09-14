@@ -1,0 +1,918 @@
+{
+  "slug": "west-coast-properties-paphos",
+  "title": "West Coast Properties in Paphos for Sale",
+  "excerpt": "Discover west coast properties in Paphos — from seafront villas to modern apartments — through our developer network with no additional buyer’s fees and full support from inquiry to acquisition.",
+  "allowIntroBlock": false,
+  "previewImage": {
+    "alt": "West Coast Properties Paphos – Coastal Homes & Investment",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-1e438cc976464250a802dd3a907af656105d0be6-850x850-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "West Coast Properties Paphos – Coastal Homes & Investment",
+    "metaDescription": "Explore west coast properties in Paphos. Find quality coastal homes, modern apartments and villas with direct developer access and no extra buyer fees through our network."
+  },
+  "contentBlocks": [
+    {
+      "_key": "b-intro-en-1771245188198",
+      "_type": "landingIntroBlock",
+      "image": {
+        "alt": "West Coast Properties Paphos – Coastal Homes & Investment",
+        "_type": "image",
+        "asset": {
+          "_ref": "image-1e438cc976464250a802dd3a907af656105d0be6-850x850-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "West Coast Properties in Paphos for Sale",
+      "subtitle": "Exclusive Properties",
+      "buttonLabel": "Buy a Property",
+      "description": "Discover west coast properties in Paphos — from seafront villas to modern apartments — through our developer network with no additional buyer’s fees and full support from inquiry to acquisition."
+    },
+    {
+      "_key": "b-tstart-en-1771245188198",
+      "_type": "landingTextStart",
+      "content": [
+        {
+          "_key": "pt-0-1771245188198",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-0-0-1771245188198-t0-t0",
+              "text": "Welcome to Cyprus VIP Estates — your gateway to exceptional west coast properties in Paphos, Cyprus. This sought-after coastal region is renowned for its breathtaking Mediterranean views, relaxed lifestyle, and high-quality real estate opportunities. If you are considering a coastal home, an investment property, or a lifestyle upgrade, our curated selection connects you directly to trusted developers — with no extra buyer’s fee.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-2-1771245188198",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-2-0-1771245188198-t0-t0",
+              "text": "The west coast of Paphos stretches from the city’s historic harbour out towards serene beaches and countryside hills. It blends cultural richness, modern amenities, and picturesque seascapes, making it one of the island’s most appealing areas for international buyers from Europe, the UK, Israel, the UAE, China, CIS countries, and beyond.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "b-proj-en-1771245188198",
+      "_type": "landingProjectsBlock",
+      "title": "List of West Coast Properties in Paphos",
+      "filterCity": "Paphos"
+    },
+    {
+      "_key": "b-tf-en-1771245188198",
+      "_type": "landingTextFirst",
+      "content": [
+        {
+          "_key": "pt-0-1771245188198",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-0-0-1771245188198-t0-t0",
+              "text": "Why Choose West Coast Properties in Paphos",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-2-1771245188198",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-2-0-1771245188198-t0-t0",
+              "text": "Investing in west coast properties paphos means securing a home or investment in a region that offers both traditional charm and contemporary comforts. Its coastal setting appeals to those seeking tranquillity without sacrificing accessibility.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-4-1771245188198",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-4-0-1771245188198-t0-t0",
+              "text": "Key reasons to consider this area include:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-6-1771245188198",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-6-0-1771245188198-t0-t0",
+              "text": "Unrivalled coastal panoramas — sunsets over the Mediterranean",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-7-1771245188198",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-7-0-1771245188198-t0-t0",
+              "text": "Proximity to beaches, marinas and promenades",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-8-1771245188198",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-8-0-1771245188198-t0-t0",
+              "text": "Close access to historic Paphos town and amenities",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-9-1771245188198",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-9-0-1771245188198-t0-t0",
+              "text": "Growing demand for high-quality rentals",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-10-1771245188198",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-10-0-1771245188198-t0-t0",
+              "text": "Potential for long-term capital appreciation",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-12-1771245188198",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-12-0-1771245188198-t0-t0",
+              "text": "The west coast appeals to retirees, holiday homeowners, and investors alike — all attracted by its blend of natural beauty, excellent infrastructure, and lifestyle appeal.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-14-1771245188198",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-14-0-1771245188198-t0-t0",
+              "text": "Types of West Coast Properties You Can Explore",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-16-1771245188198",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-16-0-1771245188198-t0-t0",
+              "text": "Our portfolio of west coast properties in Paphos features a variety of real estate options designed to suit different tastes, budgets, and purposes:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-18-1771245188198",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-18-0-1771245188198-t0-t0",
+              "text": "Seafront & Beach-Adjacent Villas",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-20-1771245188198",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-20-0-1771245188198-t0-t0",
+              "text": "Luxurious villas with direct access or close proximity to the coastline. These homes often feature panoramic sea views, private gardens, pools, and spacious outdoor areas — ideal for families or second homes.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-22-1771245188198",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-22-0-1771245188198-t0-t0",
+              "text": "Modern Apartments & Flats",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-24-1771245188198",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-24-0-1771245188198-t0-t0",
+              "text": "Stylish 1-, 2-, and 3-bedroom apartments in modern complexes, many with shared amenities such as parking, landscaped gardens, and secure entry. These units represent excellent options for coastal living with low maintenance.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-26-1771245188198",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-26-0-1771245188198-t0-t0",
+              "text": "New Build Developments",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-28-1771245188198",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-28-0-1771245188198-t0-t0",
+              "text": "Properties in newly completed or under-construction projects designed with contemporary standards, eco-friendly features, and modern layouts. These are attractive for buyers seeking a fresh start or future resale value.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-30-1771245188198",
+          "_type": "block",
+          "style": "h3",
+          "children": [
+            {
+              "_key": "span-30-0-1771245188198-t0-t0",
+              "text": "Investment-Driven Properties",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-32-1771245188198",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-32-0-1771245188198-t0-t0",
+              "text": "Strategically located homes geared toward rental income and capital growth. These are often positioned near key attractions, business hubs, or amenities that support steady occupancy.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-34-1771245188198",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-34-0-1771245188198-t0-t0",
+              "text": "Whether you seek a seaside retreat, a permanent residence, or a rental-focused investment, the west coast of Paphos offers diverse opportunities.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "il-1784408343709-84",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "il-1784408343709-85",
+              "text": "",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "il-1784408343709-90",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "il-1784408343709-86",
+              "text": "A current example on the market is ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "il-1784408343709-88",
+              "text": "Avalon Gardens in Paphos",
+              "_type": "span",
+              "marks": [
+                "il-1784408343709-87"
+              ]
+            },
+            {
+              "_key": "il-1784408343709-89",
+              "text": ", offering apartments in this exact area.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "il-1784408343709-87",
+              "href": "/projects/avalon-gardens-island-blue",
+              "_type": "link"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "faq": {
+        "_type": "accordionBlock",
+        "items": [
+          {
+            "_key": "faq-en-0-1771245188198",
+            "answer": [
+              {
+                "_key": "pt-0-1771245188199",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245188198-t0-t0",
+                    "text": "The west coast offers a range of homes — seafront villas, modern apartments, new developments, and investment-oriented properties suitable for families, retirees, holiday homeowners, and investors.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "What kinds of west coast properties are available in Paphos?"
+          },
+          {
+            "_key": "faq-en-1-1771245188199",
+            "answer": [
+              {
+                "_key": "pt-0-1771245188199",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245188199-t0-t0",
+                    "text": "Yes. Its mild Mediterranean climate, proximity to amenities, and vibrant local culture make it desirable for full-time residents as well as seasonal visitors.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Is the west coast of Paphos a good place to live year-round?"
+          },
+          {
+            "_key": "faq-en-2-1771245188199",
+            "answer": [
+              {
+                "_key": "pt-0-1771245188199",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245188199-t0-t0",
+                    "text": "No. Cyprus VIP Estates operates as a marketing agency representing developers — there are no additional buyer’s or marketing fees for you.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Do buyers pay any extra fees through Cyprus VIP Estates?"
+          },
+          {
+            "_key": "faq-en-3-1771245188199",
+            "answer": [
+              {
+                "_key": "pt-0-1771245188199",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245188199-t0-t0",
+                    "text": "Absolutely. Buyers from Europe, UK, Israel, UAE, China, and CIS regions can legally purchase property in Cyprus with professional guidance.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Can international buyers invest in west coast properties in Paphos?"
+          },
+          {
+            "_key": "faq-en-4-1771245188199",
+            "answer": [
+              {
+                "_key": "pt-0-1771245188199",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245188199-t0-t0",
+                    "text": "Properties in this coastal region tend to have strong rental appeal and potential for appreciation due to limited beachfront supply and increasing demand from international buyers.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Are west coast properties a good investment?"
+          },
+          {
+            "_key": "faq-en-5-1771245188199",
+            "answer": [
+              {
+                "_key": "pt-0-1771245188199",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245188199-t0-t0",
+                    "text": "Yes. We offer virtual tours, video walkthroughs, and remote consultations to help you explore options from anywhere in the world.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Can I view properties remotely?"
+          },
+          {
+            "_key": "faq-en-6-1771245188199",
+            "answer": [
+              {
+                "_key": "pt-0-1771245188199",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245188199-t0-t0",
+                    "text": "New developments may offer modern design, energy efficiency, and contemporary amenities that attract long-term value and rental interest. Resale homes, however, may offer character or location advantages depending on the property.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "Are new build properties more desirable than resale homes?"
+          },
+          {
+            "_key": "faq-en-7-1771245188199",
+            "answer": [
+              {
+                "_key": "pt-0-1771245188199",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "span-0-0-1771245188199-t0-t0",
+                    "text": "Times vary by project and buyer circumstances, but transactions typically complete within several weeks to a few months, depending on financing, documentation, and developer timelines.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "How long does the purchase process take?"
+          }
+        ]
+      },
+      "_key": "b-faq-en-1771245188199",
+      "_type": "landingFaqBlock",
+      "title": "Frequently asked questions"
+    },
+    {
+      "_key": "b-ts-en-1771245188199",
+      "_type": "landingTextSecond",
+      "content": [
+        {
+          "_key": "pt-0-1771245188199",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-0-0-1771245188199-t0-t0",
+              "text": "Discover the Lifestyle of West Coast Living in Paphos",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-2-1771245188199",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-2-0-1771245188199-t0-t0",
+              "text": "The west coast of Paphos combines relaxed seaside living with convenient lifestyle features:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-4-1771245188199",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-4-0-1771245188199-t0-t0",
+              "text": "Mediterranean beaches untouched by crowds",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-5-1771245188199",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-5-0-1771245188199-t0-t0",
+              "text": "Paphos Old Town and Harbour — culture, dining, and entertainment",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-6-1771245188199",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-6-0-1771245188199-t0-t0",
+              "text": "Walking trails, cycling paths and nature spots",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-7-1771245188199",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-7-0-1771245188199-t0-t0",
+              "text": "Proximity to international schools and transport links",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-8-1771245188199",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-8-0-1771245188199-t0-t0",
+              "text": "Access to shops, healthcare, and community amenities",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pt-10-1771245188199",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-10-0-1771245188199-t0-t0",
+              "text": "This region perfectly suits international buyers looking for a balanced lifestyle — where peace, beauty, and connectivity coexist.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-12-1771245188199",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-12-0-1771245188199-t0-t0",
+              "text": "How We Support Your Purchase of West Coast Homes",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-14-1771245188199",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-14-0-1771245188199-t0-t0",
+              "text": "Buying property abroad can be a complex journey, but Cyprus VIP Estates simplifies every step by connecting you directly to developers and supporting you from start to finish:",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-16-1771245188199",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-16-0-1771245188199-t0-t0",
+              "text": "Initial Consultation – Discuss your goals, timeline, and budget.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-17-1771245188199",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-17-0-1771245188199-t0-t0",
+              "text": "Property Selection – Receive tailored west coast listings based on your preferences.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-18-1771245188199",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-18-0-1771245188199-t0-t0",
+              "text": "Viewings & Virtual Tours – Choose between in-person visits or online walkthroughs.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-19-1771245188199",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-19-0-1771245188199-t0-t0",
+              "text": "Direct Developer Engagement – Transparent pricing and communication.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-20-1771245188199",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-20-0-1771245188199-t0-t0",
+              "text": "Legal & Administrative Support – Experienced partners assist with due diligence and contracts.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-21-1771245188199",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-21-0-1771245188199-t0-t0",
+              "text": "Purchase Completion & Handover – Smooth process with no additional buyer’s fees.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-23-1771245188199",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-23-0-1771245188199-t0-t0",
+              "text": "Our multilingual support ensures clear communication and comfort throughout, whether you speak English, German, Russian, Polish, or other languages.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-25-1771245188199",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "span-25-0-1771245188199-t0-t0",
+              "text": "Explore your West Coast Property Today",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-27-1771245188199",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-27-0-1771245188199-t0-t0",
+              "text": "Whether you are seeking a tranquil seaside villa, a modern coastal apartment, or a solid investment property, the west coast of Paphos delivers a unique blend of lifestyle, beauty, and long-term potential. Through Cyprus VIP Estates, you gain direct access to trusted developers, transparent pricing, and no additional buyer’s fees — supported by professional guidance at every step.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "pt-29-1771245188199",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "span-29-0-1771245188199-t0-t0",
+              "text": "Start your property search today and discover exceptional west coast properties in Paphos that match your goals and aspirations.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "relatedLandingPages": [
+    {
+      "_key": "n6fgakpjinj",
+      "_ref": "single-properties-for-sale-paphos.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "s6n6c1juyu",
+      "_ref": "single-investment-property-paphos.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "3xkmu1sm94q",
+      "_ref": "single-villas-in-paphos-for-investors.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "d6y8cz1mabr",
+      "_ref": "a4cb29a9-7f65-4831-ba70-820ec18988e1",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "3396w26zggg",
+      "_ref": "single-properties-near-city-centre-in-paphos.en",
+      "_type": "singlepageRef"
+    },
+    {
+      "_key": "r8mmx4xaoy",
+      "_ref": "single-2-bedroom-apartments-in-paphos.en",
+      "_type": "singlepageRef"
+    }
+  ]
+}

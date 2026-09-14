@@ -1,0 +1,739 @@
+{
+  "slug": "buying-property-in-cyprus",
+  "title": "איך קונים דירה בקפריסין, המדריך לרוכשים מישראל",
+  "excerpt": "קניית דירה בקפריסין שלב אחר שלב, תפקיד עורך הדין, המסמכים הנדרשים והעלויות שמעבר למחיר הנכס.",
+  "allowIntroBlock": false,
+  "previewImage": {
+    "alt": "וילה חדשה עם בריכה פרטית וגינה במחוז פאפוס",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-2ec5103ee98bec7fd0b4336f5edb6d663f719fd0-850x850-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "קניית דירה בקפריסין | Cyprus VIP Estates",
+    "metaDescription": "שלבי הרכישה בקפריסין, מהסכם שמירת נכס ועד הפקדת החוזה, תפקיד עורך הדין, המסמכים הנדרשים והעלויות שמעבר למחיר הנכס עצמו. מדריך לרוכשים מישראל."
+  },
+  "contentBlocks": [
+    {
+      "_key": "8tqjc8xjdzpg",
+      "_type": "landingIntroBlock",
+      "image": {
+        "alt": "",
+        "_type": "image",
+        "asset": {
+          "_ref": "image-2ec5103ee98bec7fd0b4336f5edb6d663f719fd0-850x850-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "איך קונים דירה בקפריסין, המדריך לרוכשים מישראל",
+      "subtitle": "שלב אחר שלב",
+      "buttonLabel": "לקבל שיחה מיועץ",
+      "description": "קניית דירה בקפריסין היא תהליך מוסדר שרוב הרוכשים עוברים בלי הפתעות, בתנאי שהוא מתחיל בסדר הנכון. השלבים למטה מתוארים כפי שהם מתרחשים בפועל, מהסכם שמירת נכס ועד הפקדת החוזה, לצד תפקידו של עורך הדין בכל אחד מהם."
+    },
+    {
+      "_key": "kt9yl5uc3zox",
+      "_type": "landingTextStart",
+      "content": [
+        {
+          "_key": "eixy23ypgomh",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "moipg68dbf4q",
+              "text": "תהליך רכישת נכס בקפריסין מורכב בדרך כלל משישה שלבים.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "p1ec14f1y651",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "xkbofk5fmup1",
+              "text": "בוחרים נכס ומשווים פרויקטים, מיקומים ויזמים.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "number",
+          "markDefs": []
+        },
+        {
+          "_key": "8dilfs5p6qcl",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "m5sb9ypbyxq7",
+              "text": "אפשר לחתום על הסכם שמירת נכס, שמוריד את הנכס מהשוק באופן זמני.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "number",
+          "markDefs": []
+        },
+        {
+          "_key": "wq9viuehrhvz",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "y5z0pfuz20o3",
+              "text": "עורך הדין מבצע בדיקת נאותות ובודק מסמכי בעלות, היתרים, חובות, שעבודים ואישורי הפרויקט.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "number",
+          "markDefs": []
+        },
+        {
+          "_key": "50xuhi04htky",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "nh43zozxjy3l",
+              "text": "מכינים את חוזה המכר וחותמים עליו.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "number",
+          "markDefs": []
+        },
+        {
+          "_key": "f7nh6c3a2hke",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "dps4ibzvk7lb",
+              "text": "החוזה מופקד בדרך כלל אצל רשם המקרקעין כדי להבטיח את זכויות הרוכש.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "number",
+          "markDefs": []
+        },
+        {
+          "_key": "d81dvj2wuju6",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "1y4s3kp4431e",
+              "text": "משלימים את התשלומים ואת הליכי ההעברה לפי לוח הזמנים שסוכם.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "number",
+          "markDefs": []
+        },
+        {
+          "_key": "6u3mf58hi2tp",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "d3e85fwmexzg",
+              "text": "התהליך המדויק שונה בין נכסי יד שנייה לבין פרויקטים חדשים, ומשך הזמן תלוי בסוג הנכס, במימון ובבדיקות המשפטיות. תשובות קצרות על כל שלב נמצאות ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "8p1hbjyy8htd",
+              "text": "בעמוד שאלות ותשובות",
+              "_type": "span",
+              "marks": [
+                "yhjh14dnrs3y"
+              ]
+            },
+            {
+              "_key": "6p8lh38lazgd",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "yhjh14dnrs3y",
+              "href": "/he/faq",
+              "_type": "link"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_key": "gos2930ktkrx",
+      "_type": "landingProjectsBlock",
+      "title": "דירות חדשות שהתהליך הזה חל עליהן",
+      "filterPropertyType": "Apartment"
+    },
+    {
+      "_key": "xp30m7i8uyh5",
+      "_type": "landingTextFirst",
+      "content": [
+        {
+          "_key": "zr19inj46vwt",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "movwlg11xuem",
+              "text": "מה עושה עורך הדין",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "tsin6y5tr025",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "6kzvh5t3da6y",
+              "text": "ייצוג משפטי עצמאי הוא אחת ההגנות החשובות ביותר בתהליך. עורך הדין מוודא שהמוכר אכן הבעלים החוקי של הנכס, בודק אם קיימות הלוואות או שעבודים, עובר על היתרי הבנייה ועל אישורי התכנון, בודק את נוסח החוזה ומטפל בדרישות הרישום. הבדיקות האלה מקטינות את הסיכון למחלוקות או לחבויות לא צפויות אחרי הרכישה.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "feowky65vq0c",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "9bjdn6mfbb6r",
+              "text": "אילו מסמכים נדרשים",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "7ab33wjtrden",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "z63wa4cwtn1t",
+              "text": "המסמכים משתנים לפי אזרחות הרוכש ולפי סוג העסקה, ואלה המסמכים שנדרשים בדרך כלל.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "20boai7y1ka7",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "pwq2zfwbec5a",
+              "text": "דרכון",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "bg0jqikv3ou8",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "vmzzqh8gxtrg",
+              "text": "אישור על כתובת מגורים",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "25ty8lda3fz4",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "9obhmbyv2881",
+              "text": "מסמכי מקור הכספים",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "kazia0uth26l",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "0eyj691prq4r",
+              "text": "הסכם שמירת נכס וחוזה מכר",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "e5erstd0hpc3",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "u27lngg92f3u",
+              "text": "מידע פיננסי לצורך משכנתא",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "lwhedcw3jwrv",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "gibdm29ona6s",
+              "text": "רוכשים שאינם אזרחי האיחוד האירופי, וכן רכישות הקשורות לתושבות, עשויים להידרש למסמכים נוספים.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "5laiaqa9tmri",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "i5jz9p40q72a",
+              "text": "העלויות שמעבר למחיר הנכס",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "uh1fmj84cz80",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ewgqyg68vsu5",
+              "text": "המחיר המפורסם הוא לרוב לא הסכום הסופי, ואלה החיובים שנכנסים לחישוב מעבר לו.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "f7n92311ojpn",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "1dq8ouaoz5g6",
+              "text": "שכר טרחת עורך דין",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "pjc0im39ggh8",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "1jc0z46om090",
+              "text": "מס בולים שמחושב לפי שווי הנכס",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "rvqppzwnm7cg",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ztan7t6nwxu3",
+              "text": "מע\"מ שחל על חלק מהפרויקטים החדשים",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "2azjp7cie43o",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "e81ceiyrnrm1",
+              "text": "דמי העברה שחלים במקרים מסוימים",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "ug1eilreikiu",
+          "_type": "block",
+          "level": 1,
+          "style": "normal",
+          "children": [
+            {
+              "_key": "eu4gup7hhruh",
+              "text": "ביטוח נכס ועלויות בנק והמרת מטבע",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "listItem": "bullet",
+          "markDefs": []
+        },
+        {
+          "_key": "fb3u07b57y77",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "kq0mukfbsm8p",
+              "text": "כדאי להכיר את סך עלות הרכישה עוד לפני הבחירה בנכס. פירוט מלא נמצא ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "5t5dj12ddlwt",
+              "text": "בעמוד המיסים על נדל\"ן בקפריסין",
+              "_type": "span",
+              "marks": [
+                "v62y8nmdp2jz"
+              ]
+            },
+            {
+              "_key": "t20lvh5yl027",
+              "text": ".",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "v62y8nmdp2jz",
+              "href": "/he/property-tax-cyprus",
+              "_type": "link"
+            }
+          ]
+        },
+        {
+          "_key": "je4u18s2ryh3",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ar07lojdq7h0",
+              "text": "טעויות נפוצות",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "acym960g2owz",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "2be26infe0og",
+              "text": "הטעויות שחוזרות אצל רוכשים מחו\"ל הן בחירה לפי מחיר בלבד, הערכת חסר של העלויות הנוספות, הסתמכות על חומרי שיווק בלבד, ויתור על בדיקות משפטיות והנחה שהתשואה החזויה מובטחת. תכנון מוקפד וייעוץ עצמאי מקטינים את הסיכון במידה ניכרת.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "4qvqgleeua8f",
+      "_type": "landingFaqBlock",
+      "title": "שאלות נפוצות על תהליך הרכישה",
+      "faq": {
+        "_type": "accordionBlock",
+        "items": [
+          {
+            "_key": "sq9idv2d88r4",
+            "answer": [
+              {
+                "_key": "tb675e59wgx3",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "ig5m3xvw4um7",
+                    "text": "משך הזמן תלוי בסוג הנכס, במימון, בבדיקות המשפטיות ובנסיבות של הרוכש. עסקה פשוטה עשויה להסתיים בתוך כמה שבועות, ועסקאות מורכבות יותר, שכוללות משכנתא, רכישה על הנייר או אישורים נוספים, נמשכות לא פעם זמן רב יותר.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "כמה זמן לוקח לקנות נכס בקפריסין?"
+          },
+          {
+            "_key": "47feaavh3fdm",
+            "answer": [
+              {
+                "_key": "esvoo35efo1z",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "637ga6hfnd53",
+                    "text": "הסכם שמירת נכס הוא מסמך מוקדם שנועד לשמור על הנכס באופן זמני בזמן שמתבצעות הבדיקות המשפטיות. הוא מפרט בדרך כלל את סכום השמירה, את משך התקופה, את התנאים ואת כללי ההחזר. התנאים משתנים מאוד בין מוכרים ובין יזמים.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "מהו הסכם שמירת נכס?"
+          },
+          {
+            "_key": "yuqe9afkqghn",
+            "answer": [
+              {
+                "_key": "rl0cm02rfa6t",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "118cb467iwqj",
+                    "text": "ההחזר תלוי לחלוטין בתנאי ההסכם. יש מקרים שבהם הסכום מוחזר בתנאים מסוימים, ויש מקרים שלא. כדאי לקרוא את הסכם השמירה בעיון לפני החתימה.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "האם דמי הרצינות מוחזרים?"
+          },
+          {
+            "_key": "vz7jvhc4n4i7",
+            "answer": [
+              {
+                "_key": "1yzvafmpma7n",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "rlu7sgmki3xb",
+                    "text": "כן. עסקאות רבות נסגרות באמצעות ייצוג משפטי וייפוי כוח, לצד סיור וידאו בנכס, בדיקת חוזים באימייל והעברות בנקאיות לתשלומים בשלבים. גם כשקונים מרחוק, בדיקה משפטית עצמאית נשארת חשובה.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "אפשר לקנות נכס בקפריסין מרחוק?"
+          },
+          {
+            "_key": "qljdy4bu12ll",
+            "answer": [
+              {
+                "_key": "ddoamhzxyf6r",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "hqsldgo447ez",
+                    "text": "לא תמיד, אבל ביקור נותן תמונה טובה על המיקומים, על התשתיות, על השכונות ועל אורח החיים. משקיעים רבים קונים מרחוק, ומי שקונה בית למגורים מעדיף לרוב לראות אותו במו עיניו לפני החלטה לטווח ארוך.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "האם חייבים לבקר בקפריסין לפני הרכישה?"
+          },
+          {
+            "_key": "jsxmeo69t0gg",
+            "answer": [
+              {
+                "_key": "cetohd01v3fi",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "xiyblqpg29tg",
+                    "text": "אחרי החתימה אפשר להפקיד את החוזה אצל רשם המקרקעין כדי להגן על זכויות הרוכש. בין השלבים הנוספים לוחות תשלומים, הליכי העברה, סגירת המשכנתא ורישום הבעלות הסופי.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "מה קורה אחרי החתימה על החוזה?"
+          }
+        ]
+      }
+    },
+    {
+      "_key": "e8jfrfreetas",
+      "_type": "landingTextSecond",
+      "content": [
+        {
+          "_key": "hi5ogt7nygal",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "0jy8fyr3p0qm",
+              "text": "משכנתא ומימון",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "a8b90kdiv5jq",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "k504c4wapb4k",
+              "text": "רוכשים זרים עשויים לקבל משכנתא בקפריסין, ותנאי האישור משתנים לפי אזרחות, מעמד תושבות, הכנסה ודרישות הבנק. אישור משכנתא אינו מחייב תמיד תושבות בקפריסין, אבל הקריטריונים לתושבי חוץ שונים לעיתים מאלה שחלים על תושבי המקום. מדיניות האשראי משתנה עם הזמן, ולכן כדאי לברר את התנאים העדכניים מול הגופים הפיננסיים או מול יועץ, ולעשות זאת לפני החתימה על הסכם שמירת נכס ולא אחריה.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "dyvk24bnmntd",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "zreudp5p7ukk",
+              "text": "לפני שחותמים על הסכם שמירת נכס",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "s7z5j0i25nlp",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "s7niastxy7ul",
+              "text": "הסכם השמירה הוא הרגע שבו הבחירה מתקבעת, ולכן כדאי להגיע אליו כשהתקציב, המימון והליווי המשפטי כבר סגורים. אפשר ",
+              "_type": "span",
+              "marks": []
+            },
+            {
+              "_key": "xr4e3yv77k7q",
+              "text": "לפנות אלינו",
+              "_type": "span",
+              "marks": [
+                "f9keokg53uih"
+              ]
+            },
+            {
+              "_key": "d2qtx70bh5lj",
+              "text": " ולקבל רשימה ממוקדת עם מחירי היזם המעודכנים ומועדי מסירה. אנחנו ממליצים בכל מקרה על עורך דין מקומי שאינו קשור ליזם. המידע אינו מהווה ייעוץ משפטי או מס. בכפוף לבדיקה פרטנית.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": [
+            {
+              "_key": "f9keokg53uih",
+              "href": "/he/contacts",
+              "_type": "link"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "relatedLandingPages": [
+    "real-estate-cyprus",
+    "permanent-residency-cyprus",
+    "property-tax-cyprus",
+    "relocation-cyprus"
+  ],
+  "translationGroupSlugEn": null,
+  "parentSlug": null,
+  "review": "pending"
+}

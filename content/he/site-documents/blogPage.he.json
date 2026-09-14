@@ -1,0 +1,893 @@
+{
+  "review": "pending",
+  "slug": {
+    "en": {
+      "_type": "slug",
+      "current": "blog"
+    },
+    "_type": "localizedSlug"
+  },
+  "title": "תובנות מקפריסין",
+  "content": [
+    {
+      "_key": "c6b1a9279e37",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "0cf78065b0020",
+          "text": "ברוכים הבאים ל",
+          "_type": "span",
+          "marks": []
+        },
+        {
+          "_key": "ecfc3c0c285e",
+          "text": "תובנות מקפריסין",
+          "_type": "span",
+          "marks": [
+            "strong"
+          ]
+        },
+        {
+          "_key": "9d07c9ddd768",
+          "text": ", מרכז הידע שלנו על שוק הנדל\"ן בקפריסין. תמצאו כאן מגמות שוק, מדריכים מעשיים ותשובות לשאלות שעולות לפני רכישה: וילה ראשונה, נכס להשקעה או מעבר עם המשפחה. המאמרים מתפרסמים באנגלית.",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "b63b25b3d7cf",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "9da5568e35e1",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "3d957d993e47",
+      "_type": "block",
+      "style": "h2",
+      "children": [
+        {
+          "_key": "be7d9d8612c5",
+          "text": "למה נדל\"ן בקפריסין מעניין רוכשים מישראל",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "6692c7d84ac3",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "e4945cc7e7d6",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "fb564e11caa8",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "64b1fcd4749b",
+          "text": "קפריסין ממשיכה למשוך רוכשים מחו\"ל בזכות:",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "d1168c409605",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "6a0beda382ce",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "44479dfa29bf",
+      "_type": "block",
+      "level": 1,
+      "style": "normal",
+      "children": [
+        {
+          "_key": "5e7d1f0995ee",
+          "text": "מיקום אסטרטגי בין אירופה, המזרח התיכון ואסיה",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "listItem": "bullet",
+      "markDefs": []
+    },
+    {
+      "_key": "bfa7ef81b7c4",
+      "_type": "block",
+      "level": 1,
+      "style": "normal",
+      "children": [
+        {
+          "_key": "d9aeb3c817a3",
+          "text": "מערכת משפטית בטוחה שמיושרת לתקני האיחוד האירופי",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "listItem": "bullet",
+      "markDefs": []
+    },
+    {
+      "_key": "3bb1cb17bb0e",
+      "_type": "block",
+      "level": 1,
+      "style": "normal",
+      "children": [
+        {
+          "_key": "964be639d0e7",
+          "text": "הטבות מס אטרקטיביות למשקיעי נדל\"ן",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "listItem": "bullet",
+      "markDefs": []
+    },
+    {
+      "_key": "7c2aaae07b6a",
+      "_type": "block",
+      "level": 1,
+      "style": "normal",
+      "children": [
+        {
+          "_key": "7e4353bf2b21",
+          "text": "ביקוש חזק להשכרה לטווח קצר ולטווח ארוך",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "listItem": "bullet",
+      "markDefs": []
+    },
+    {
+      "_key": "6d3033082281",
+      "_type": "block",
+      "level": 1,
+      "style": "normal",
+      "children": [
+        {
+          "_key": "bc88f2511fc1",
+          "text": "אקלים ים תיכוני נוח ואיכות חיים גבוהה",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "listItem": "bullet",
+      "markDefs": []
+    },
+    {
+      "_key": "3c098c43ca6b",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "ba41cf2f4bd5",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "02311e012a57",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "51e09c720b5b",
+          "text": "פרויקטים חדשים, וילות למשפחות, תושבות דרך השקעה או תשואה משכירות לטווח קצר, בכל אחד מהמסלולים האלה היכרות עם השוק היא תנאי להצלחה.",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "d3d239276f81",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "cee35edfcd56",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "ee485c88cc23",
+      "_type": "block",
+      "style": "h2",
+      "children": [
+        {
+          "_key": "5d89dda523d1",
+          "text": "מה תמצאו בתובנות מקפריסין",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "94dc265e5005",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "634dd2106045",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "5b9682c31035",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "3553665a9abd",
+          "text": "הבלוג בנוי סביב השאלות שרוכשים ומשקיעים באמת שואלים לפני שהם פועלים:",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "833381c89615",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "3478cb5a6162",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "f910e4e69ffb",
+      "_type": "block",
+      "style": "h3",
+      "children": [
+        {
+          "_key": "bd980b5eb4ae",
+          "text": "רכישת נכס בקפריסין",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "3bf1ee38706e",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "b57cd11d46a4",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "336f7987a561",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "c417b410eba2",
+          "text": "איך קונים נכס שלב אחר שלב, מהבדיקה המשפטית ועד שטר הבעלות (Title Deed), אפשרויות המימון ומה מצפה לכם בעבודה מול יזם.",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "5c311820abaa",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "89ed5c6aa3db",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "1851596bf259",
+      "_type": "block",
+      "style": "h3",
+      "children": [
+        {
+          "_key": "3ef4770c2e96",
+          "text": "החיים בקפריסין",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "da531873ce8f",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "b05132cd535f",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "21aae88d4b70",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "3a41a84a99a1",
+          "text": "מדריכים על החיים בלימסול ובפאפוס: בתי ספר בינלאומיים, מערכת הבריאות, תשתיות ויוקר המחיה.",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "4bedf09313d0",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "98154f9384a6",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "44a541f906d6",
+      "_type": "block",
+      "style": "h3",
+      "children": [
+        {
+          "_key": "e0c4d09f2c1d",
+          "text": "השקעות ומגמות שוק",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "2c215c9a1e6c",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "fcdea89a7a53",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "14297453b196",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "d10b538efbe1",
+          "text": "עדכונים רבעוניים על מגמות מחירים, ביקוש, תשואות שכירות ותחזיות. רלוונטי למשקיעים ולמי שמחפש בית שני.",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "b3aa89339c42",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "eaf3876ee7d5",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "1ffaee1e2246",
+      "_type": "block",
+      "style": "h3",
+      "children": [
+        {
+          "_key": "adb5a55928ce",
+          "text": "מיסוי ומשפט",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "6c6c0c3a4e3c",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "0711cc51f308",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "fca818ee700f",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "faec0c663a17",
+          "text": "מיסי נדל\"ן בקפריסין, דיני ירושה, בעלות של תושבי חוץ ואיך לבנות את העסקה כך שתהיה יעילה מבחינת מס.",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "5ea6f3e17bc3",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "9c6dd329ae48",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "118c8039a400",
+      "_type": "block",
+      "style": "h3",
+      "children": [
+        {
+          "_key": "b2363d8bdc10",
+          "text": "מדריכי אזורים",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "bdd7dc9e4fa0",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "a1e716656a0b",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "e383ae9892f5",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "e3c027b3ac09",
+          "text": "השוואה בין המיקומים המובילים: אורח חיים, נגישות, פוטנציאל צמיחה ועליית ערך.",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "c6793b3c1c3f",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "56c6c19ae7e7",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "de1887a0b24c",
+      "_type": "block",
+      "style": "h3",
+      "children": [
+        {
+          "_key": "f278619efc5e",
+          "text": "פרויקטים חדשים של יזמים",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "b7ade7790f6a",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "147cc1445eb4",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "06819c298ae3",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "7e957bf0e640",
+          "text": "פרויקטים חדשים ופרויקטים על הנייר שנבחרו בקפידה, עם גישה מוקדמת וסקירות מפורטות.",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "ef2213e26671",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "7cebf4232dd4",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "ded6f423477a",
+      "_type": "block",
+      "style": "h3",
+      "children": [
+        {
+          "_key": "63473f63f311",
+          "text": "טיפים למעבר ולחיים בקפריסין",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "5c4b87d59f68",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "5cd2d1da8b1b",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "a013d4d1b1d8",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "df2480cb0cea",
+          "text": "מלוגיסטיקה של המעבר ועד פתיחת חשבון בנק, כאן תמצאו את מה שעוזר להיכנס לחיים בקפריסין בלי הפתעות.",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "b54c9afe885a",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "9a6c6b55afa4",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "d10729270c52",
+      "_type": "block",
+      "style": "h3",
+      "children": [
+        {
+          "_key": "643cd8b1f511",
+          "text": "נכסים נבחרים",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "dd1866ffdb0f",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "c28f27d2247d",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "bce513b7e2a8",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "61c642831362",
+          "text": "דירות ווילות מוכנות להשקעה ופרויקטים שמגיעים ישירות מהיזמים, בלי תוספת מחיר לרוכש.",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "2bacadb98e44",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "5597aabc5955",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "ed9fa178f73c",
+      "_type": "block",
+      "style": "h2",
+      "children": [
+        {
+          "_key": "676988319626",
+          "text": "מקור אמין לרוכשים מחו\"ל",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "351342c4b45d",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "6e7cf1fcd190",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "b278b35fd4ba",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "a3ea5223a0d0",
+          "text": "צוות מומחי הנדל\"ן, היועצים המשפטיים ואנליסטי השוק שלנו כותב כאן באופן קבוע, כדי שהתוכן יישאר מדויק, עדכני וישים. אנחנו מתמקדים בצרכים של רוכשים מבריטניה, מהאיחוד האירופי, ממדינות חבר העמים, מישראל ומהמזרח התיכון.",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "f76ae7ca4741",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "e92bb208f311",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "39877bc946fb",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "d005804a0182",
+          "text": "כל מאמר נכתב כדי לעזור לכם ",
+          "_type": "span",
+          "marks": []
+        },
+        {
+          "_key": "903329d67c75",
+          "text": "להימנע מטעויות ולהבין את הכללים המקומיים",
+          "_type": "span",
+          "marks": [
+            "strong"
+          ]
+        },
+        {
+          "_key": "9c51fc87148a",
+          "text": ", ולהפיק את המרב מהנכס, גם בווילת נופש וגם בתיק נכסים לטווח ארוך.",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "a00664274acb",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "4af4531f78bd",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "ec42c4f2afed",
+      "_type": "block",
+      "style": "h2",
+      "children": [
+        {
+          "_key": "3ee6c5c73624",
+          "text": "מכאן מתחילים",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "69d5a9cd44ab",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "b123ea230859",
+          "text": "",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    },
+    {
+      "_key": "d5f1fb21f3f2",
+      "_type": "block",
+      "style": "normal",
+      "children": [
+        {
+          "_key": "6db4cd27be89",
+          "text": "אפשר לסנן לפי קטגוריה או להתחיל מהמאמרים המומלצים ולהעמיק בנושאים שחשובים לכם. גם בשלב הבדיקה וגם כשאתם מוכנים לקנות, ",
+          "_type": "span",
+          "marks": []
+        },
+        {
+          "_key": "26119958b2d5",
+          "text": "תובנות מקפריסין כאן כדי שתקבלו את ההחלטות בביטחון",
+          "_type": "span",
+          "marks": [
+            "strong"
+          ]
+        },
+        {
+          "_key": "9cf94de20166",
+          "text": ".",
+          "_type": "span",
+          "marks": []
+        }
+      ],
+      "markDefs": []
+    }
+  ],
+  "metaTitle": "מדריכים ותובנות לרוכשים בקפריסין | Cyprus VIP Estates",
+  "metaDescription": "מדריכים ותובנות על רכישת נדל\"ן בקפריסין, מהמחירים ומהאזורים ועד התהליך המשפטי ועלויות הבעלות השוטפות. המאמרים מתפרסמים באנגלית."
+}

@@ -5,8 +5,10 @@ import {
   getBlogPostsByLang,
   getCaseStudiesByLang,
   getPaginatedLandingPageSlugs,
+  getTotalBlogPostsByLang,
 } from "@/sanity/sanity.utils";
 import { localePrefix, localizedHref, PUBLIC_LOCALES } from "@/lib/locale";
+import { blogIndexInSitemap } from "@/lib/blogIndexMode";
 import { prisma } from "@/lib/prisma";
 import { urlFor } from "@/sanity/sanity.client";
 import { NEW_PROJECTS_INDEXABLE } from "@/lib/developmentSeo";
@@ -221,8 +223,15 @@ async function generateDevelopersSitemap(): Promise<SitemapPage[]> {
 async function generateBlogSitemap(): Promise<SitemapPage[]> {
   const pages: SitemapPage[] = [];
   const altIdx = await buildAltIndex("blog");
+  // Computed once (PUBLISHED-only, matching the grid) and reused for every
+  // `he` iteration below — Phase 6: while `he` has fewer than 5 own articles,
+  // /he/blog (and any future /he/blog/page/N) borrows EN content and stays
+  // out of the sitemap. See src/lib/blogIndexMode.ts.
+  const heCount = (langs as readonly string[]).includes("he") ? await getTotalBlogPostsByLang("he") : 0;
 
   for (const lang of langs) {
+    if (lang === "he" && !blogIndexInSitemap(lang, heCount)) continue;
+
     // English (default) is prefix-less; de/pl/ru are prefixed.
     const prefix = localePrefix(lang);
 

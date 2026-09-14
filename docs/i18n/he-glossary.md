@@ -90,6 +90,7 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 | second home | בית שני | nicht `דירת נופש` (klingt nach Ferienvermietung) |
 | new build / new development | פרויקט חדש | Plural פרויקטים חדשים; auch Abschnittstitel „Latest developments" (nicht `אחרונים`) |
 | off-plan | על הנייר | Standardbegriff: `רכישה על הנייר` |
+| off-market | נכסים שאינם מפורסמים | **nicht** `על הנייר` — off-market ≠ off-plan (Task-3-Pass-B M11: die beiden waren verwechselt). „Off-Market Opportunities" als Rubrik: `הזדמנויות בנכסים שאינם מפורסמים` |
 | under construction | בבנייה | |
 | construction stage | שלב הבנייה | Faktenpanel Development-Seite |
 | completed / ready | מוכן למגורים | „key-ready" |
@@ -153,8 +154,9 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 | stamp duty | מס בולים | |
 | VAT (reduced 5%) | מע"מ (מופחת 5%) | nur mit Quelle |
 | +VAT (an einer Preisangabe) | + מע"מ | mit Leerzeichen, oder `לא כולל מע"מ`; ohne Leerzeichen liest es sich als ein Wort. **nicht verwenden: `בתוספת מע"מ`** — WP7s Einwand galt der Form *ohne* Leerzeichen (`+מע"מ`), die auch hier ausgeschlossen ist; mit Leerzeichen liegt das Pluszeichen als Neutralzeichen zwischen LTR-Betrag und RTL-Wort und landet richtig. Wortgleich in `developmentCopy.ts` und auf der Präsentationskarte; siehe §6 und §7 |
-| transfer fees | דמי העברה | |
-| immovable property tax | (abgeschafft) | nicht erwähnen |
+| transfer fees (Grundbuch-Übertragungsgebühr) | דמי העברה | die staatliche Gebühr beim Eigentumsübergang. **Nicht** `מס העברה` (das wäre eine Steuer, die Quelle sagt „fees") |
+| bank transfer fees / remittance charges | עמלות ההעברה | Bankgebühr bei Auslandsüberweisung und Währungsumtausch. **Bewusste Abgrenzung zu `דמי העברה`** — beides heißt im EN „transfer fees", meint aber zwei verschiedene Kosten; im selben Text nie vermischen (Fix-Runde 1 `c-faq`, Pass B Terminology) |
+| immovable property tax | (abgeschafft, national) | laut `faq:are-annual-property-taxes-payable-in-cyprus` darf erwähnt werden, dass die nationale Grundsteuer abgeschafft ist — aber nur zusammen mit dem Hinweis, dass kommunale/lokale Abgaben je nach Standort weiterhin möglich sind; nicht als „gibt es keine Steuer mehr" ohne diese Einschränkung darstellen |
 | capital gains tax | מס רווחי הון | |
 | rental yield | תשואה משכירות | Suchbegriff: תשואה |
 | buy-to-let | להשקעה להשכרה | |
@@ -201,7 +203,9 @@ Regel: **Eigennamen in Lateinschrift bleiben lateinisch** (Marke, Projekte, Baut
 | Israeli community | הקהילה הישראלית | |
 | expats | תושבים זרים / זרים | nicht „אקספטים" |
 | buyers | רוכשים | nicht `קונים` (Einzelhandel) |
-| international clients / buyers from abroad | רוכשים מחו"ל | |
+| foreign buyers (zyprische Rechtskategorie) | רוכשים זרים | wo das EN „foreigners"/„foreign buyers" im Rechtssinn meint: Genehmigung der `מועצת השרים`, Nicht-EU-Status, Kreditvergabe an Nicht-Ansässige. Non-EU präzise: `רוכשים שאינם אזרחי האיחוד האירופי` — `אזרחי`, nicht `תושבי`, solange das EN „citizens" sagt |
+| international clients / buyers from abroad | רוכשים מחו"ל | nur als **Marktgruppe**, wo das EN „international"/„overseas buyers" sagt (Nachfrage, Investorenprofile). Nicht dort, wo es um den Rechtsstatus geht — dann `רוכשים זרים` |
+| buyers (Leseransprache im Seiten-Chrome) | רוכשים מישראל | wo der Text den Leser direkt anspricht (H1, Meta, Intro, CTA). **Nicht** in 1:1 aus dem EN übersetzten Fließtext-Aussagen in der dritten Person — das wäre ein Zusatz gegenüber der Quelle (Entscheidung Fix-Runde 1 `c-faq`) |
 | investor | משקיע | Plural משקיעים |
 | investment | השקעה | `השקעה בנדל"ן בקפריסין` |
 | investment property | נכס להשקעה | Kategorie-Chip |
@@ -250,6 +254,33 @@ Die Rechner-Oberfläche (`RoiInputs`, `RoiResults`, `RoiChart`, `ModalRoiCalcula
 | get investment consultation (CTA) | לקבלת ייעוץ השקעות | baut auf dem Header-CTA `לקבלת ייעוץ` auf (§4) |
 | send calculation (Button) | שליחת החישוב | nominal |
 | send calculation by email (Modaltitel) | שליחת החישוב לאימייל | |
+
+### 3.2 Rechtstexte: GDPR, Vertrag, Gerichtsstand (verbindlich)
+
+Diese Zeilen sind **verbindlich**, nicht Vorschlag: jeder Begriff hat genau **eine** hebräische Form in `privacy.he.ts` und `terms.he.ts` (Pass B, Task 2, Fix-Runde 1). Wer eine Zeile ändert, ändert beide Dateien zusammen (Styleguide §11.6). Artikelzitate bleiben lateinisch und bidi-isoliert (`Art. 6 (1) (f) GDPR`).
+
+| Englisch | Hebräisch (verbindlich) | Hinweis |
+|---|---|---|
+| controller | בעל השליטה בנתונים | bei Erstnennung glossiert: `בעל השליטה בנתונים (⁨controller⁩)`. Flexionen derselben Form: `בעלי שליטה נפרדים בנתונים`, `בעל שליטה אחר`. **Nicht** `הגורם האחראי` — das ist die Person im Haus, nicht die Rechtsrolle |
+| processor | מעבד נתונים | `הם פועלים כמעבדי נתונים לפי Art. 28 GDPR` |
+| personal data | נתונים אישיים | nie `מידע אישי` |
+| processing | עיבוד | Verb `מעבדים`; die Rechtsgrundlage heißt immer `הבסיס המשפטי:` |
+| consent | הסכמה | Bannerklick: `לאחר אישורכם` / `בכפוף להסכמתכם` — beides zulässig, weil es den Klick meint, nicht den Rechtsbegriff |
+| legitimate interest | אינטרס לגיטימי שלנו | das Possessiv ist Pflicht: die EN sagt durchgehend „our legitimate interest" |
+| data subject / betroffene Person | *kein Substantiv* — 2. Pl. `אתם` / `-כם` | Hebräisch hat keine etablierte Entsprechung; die Anrede trägt die Rolle |
+| profiling | יצירת פרופיל | Verbform `בונה פרופיל`. Nie `פרופיילינג` (Anglizismus, Styleguide §7) |
+| cookies | עוגיות | Kategorien `הכרחיות / אנליטיקה / שיווק`, wortgleich mit dem Bannertext |
+| third parties | צדדים שלישיים | |
+| binding / prevailing (Sprachfassung) | מחייב | `הנוסח האנגלי הוא המחייב.` (§5). Nie `הקובע` für die Sprachfassung; `הגרסה הנוכחית היא הקובעת` (aktuelle Fassung) ist ein anderer Sachverhalt und bleibt |
+| governing law | הדין החל | |
+| jurisdiction | סמכות שיפוט | `סמכות השיפוט הבלעדית` |
+| licensor | מי שהעניק לנו רישיון | `בעלי הרישיון שלנו` heißt Lizenz**nehmer** und dreht die Eigentumslage um |
+| conclude (a contract) | כריתה — `נכרת` / `כורתים` | nie `חותמים על` in derselben Aufzählung |
+| right to have X done (Art. 16/17) | הזכות לדרוש ש… | `לדרוש שנתקן` / `לדרוש שנמחק` — der Anspruch richtet sich gegen uns, nicht an euch selbst |
+| obtain confirmation (Art. 15) | לקבל מאיתנו אישור | nicht `לברר` (nachfragen) |
+| have it sent to another controller (Art. 20) | לבקש שנעביר … ישירות | nicht `להעביר אותם` (ihr übertragt) |
+| email | אימייל | nie `דואר אלקטרוני` |
+| Dokumentnamen | מדיניות הפרטיות / תנאי השימוש | **definit**, weil jedes Link-Label auf der Seite definit ist (`consentCopy.ts`, beide Formular-Copys, `terms.he.ts` §10) |
 
 ## 4. Marke, Navigation, UI-Chrome
 
@@ -377,7 +408,7 @@ Die Rechner-Oberfläche (`RoiInputs`, `RoiResults`, `RoiChart`, `ModalRoiCalcula
 | Loading… / Loading map… | טוענים… / טוענים את המפה… | dieselbe Regel wie `שולחים…`; nicht verwenden: `בטעינה…` |
 | Thank you, we will contact you shortly | תודה, ניצור קשר בהקדם | |
 | Something went wrong | משהו השתבש, נסו שוב | |
-| Cookie consent (Accept all / Only necessary / Settings) | אישור הכל / רק הנחוצות / הגדרות | Cookies = עוגיות; Kurzform `אישור הכל` statt `אישור כל העוגיות`, ausbalanciert neben dem 10-Zeichen-Button `רק הנחוצות` |
+| Cookie consent (Accept all / Only necessary / Settings) | אישור הכל / רק ההכרחיות / הגדרות | Cookies = עוגיות; Kurzform `אישור הכל` statt `אישור כל העוגיות`, ausbalanciert neben dem 10-Zeichen-Button `רק הנחוצות` |
 
 ### 4.4 Blog und Artikel
 
@@ -514,6 +545,7 @@ Betreffzeilen, Anreden, Grußformeln und Signatur — für Client-Mails (Auto-Re
 | Beratungssprache (Entscheidung E) — liegt als **eine** exportierte Konstante `HE_LANGUAGE_NOTE` in `src/lib/locale.ts`; die Annahme „einmal sagen reicht" gilt pro Kanal, nicht pro Firma, deshalb tragen Auto-Reply, ROI-Ergebnismail, Booking- und Präsentationsseite sie jeweils selbst | הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה. |
 | Rechtsvorbehalt | המידע אינו מהווה ייעוץ משפטי או מס. בכפוף לבדיקה פרטנית. |
 | Maßgeblichkeit (Legal) | הנוסח האנגלי הוא המחייב. |
+| English binding (Rechtstexte) — Langfassung unter der H1 von Datenschutzerklärung und AGB (`bindingNote`, `privacy.he.ts` / `terms.he.ts`); die Kurzform darüber bleibt für Fließtext und Fußzeilen | הנוסח האנגלי של מסמך זה הוא הנוסח המחייב; התרגום לעברית נועד לנוחות בלבד. |
 | Preisvorbehalt | המחירים עשויים להשתנות. הזמינות מתעדכנת מול היזם. |
 | Unternehmensbeschreibung (kurz) | Cyprus VIP Estates היא סוכנות נדל"ן בקפריסין המתמחה בפרויקטים חדשים של יזמים מובילים בלימסול ובפאפוס. |
 | Nähe zu Israel | כ-45 דקות טיסה מתל אביב, כמה טיסות ביום. |
@@ -636,3 +668,9 @@ Die drei Code-Angleichungen aus Teil 1 sind erledigt: `filterAll` steht in `blog
 Alle übrigen WP7-Formen entsprechen dem heutigen Stand von `src/` (geprüft: `מחשבון תשואה`, `roiShort` = `תשואה`, `מעל`/`עד`, `חד׳ שינה`, `לא זמינה עוד`, `היועץ האישי שלכם`, `יועץ הנדל"ן האישי שלכם`, `שמירה למועדפים`, `סגירה`, `להתקשר`, `לפרטים נוספים`, `לצפייה באתר`, `מזהים את אזור הזמן שלכם…`, `הפגישה שלכם מאושרת`, `תודה על הפנייה`, `עקבו אחרינו:`, `יזמים אמינים`, `HE_LANGUAGE_NOTE` in `src/lib/locale.ts` mit vier Trägern, `hePrefixDate()`).
 
 **Zum Abkürzungszeichen:** `חד׳ שינה`, `יום ד׳` und `באוק׳` tragen den Geresh (U+05F3) — so steht es im Code und so liefert es `Intl` für `he-IL`. Wo §1–§4 einen geraden Apostroph schreibt (`דק'`, `קונסיירז'`, `לאצ'י`), ist das eine Schreibvereinfachung dieses Dokuments und keine abweichende Vorgabe an den Code.
+
+### 2026-09-13 — Task 3 Fix-Runde 1 (Site-Dokumente)
+
+**Neu in §2:** `off-market` → `נכסים שאינם מפורסמים`. Anlass ist Pass B M11 zu `content/he/site-documents/caseStudiesPage.he.json`: dort war „Off-Market Opportunities" mit `רכישה על הנייר` (off-plan) übersetzt. Die beiden Begriffe sind nicht dasselbe; §2 trennt sie ab sofort ausdrücklich. Rubrikform: `הזדמנויות בנכסים שאינם מפורסמים`.
+
+Offen für Pass C (nicht entschieden, nur festgehalten): das Genus der Marke `Cyprus VIP Estates` — die Site trägt heute `הוא`, `פועלת`, `מציעה`, `הופכת`, `מציגה`, `תעזור` nebeneinander. Eine Form gehört nach der Lektorenrunde in §4.

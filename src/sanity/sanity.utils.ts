@@ -147,10 +147,36 @@ async function mapProjectRowsToLang(rows: AnyRow[], lang: string): Promise<AnyRo
   const langRows = tgids.length ? await prisma.project.findMany({ where: { language: lang as any, translationGroupId: { in: tgids } } }) : [];
   const byTgid = new Map<string, AnyRow>();
   for (const r of langRows) if (r.translationGroupId && !byTgid.has(r.translationGroupId)) byTgid.set(r.translationGroupId, r as AnyRow);
+
+  // Hebrew-only fallback (Phase 5): the legacy `Project` model predates
+  // Development and nothing creates `he` rows in it (decision H — Hebrew
+  // content is seeded as Development/CaseStudy/Singlepage only). Without a
+  // fallback every card sourced from a Project row would be dropped above,
+  // so `he` case studies would render an EMPTY "related properties" section
+  // no matter how correctly CaseStudyProject is linked. Fall back to the EN
+  // sibling: the card's link is `/he/projects/<slug>` and project slugs are
+  // Latin and locale-agnostic (decision A), so the EN row's slug resolves
+  // under `/he` exactly as it does under `/en`. Gated on `lang === "he"` —
+  // en/de/pl/ru behaviour is byte-identical to before.
+  const enFallbackTgids =
+    lang === "he"
+      ? Array.from(
+          new Set(
+            rows
+              .filter((r) => r.language !== "en" && r.translationGroupId && !byTgid.has(r.translationGroupId as string))
+              .map((r) => r.translationGroupId as string),
+          ),
+        )
+      : [];
+  const enRows = enFallbackTgids.length ? await prisma.project.findMany({ where: { language: "en", translationGroupId: { in: enFallbackTgids } } }) : [];
+  const enByTgid = new Map<string, AnyRow>();
+  for (const r of enRows) if (r.translationGroupId && !enByTgid.has(r.translationGroupId)) enByTgid.set(r.translationGroupId, r as AnyRow);
+
   const out: AnyRow[] = [];
   const seen = new Set<string>();
   for (const r of rows) {
-    const m = r.language === lang ? r : (r.translationGroupId ? byTgid.get(r.translationGroupId) : undefined);
+    let m = r.language === lang ? r : (r.translationGroupId ? byTgid.get(r.translationGroupId) : undefined);
+    if (!m && lang === "he") m = r.language === "en" ? r : (r.translationGroupId ? enByTgid.get(r.translationGroupId) : undefined);
     if (m && !seen.has(m.sanityId)) { seen.add(m.sanityId); out.push(m); }
   }
   return out;
@@ -1013,7 +1039,11 @@ export async function getBlogPostsByLangWithPagination(lang: string, limit: numb
 
 export async function getTotalBlogPostsByLang(lang: string): Promise<number> {
   if (!isLocale(lang)) return 0;
-  return prisma.blog.count({ where: { language: lang as any } });
+  // PUBLISHED only — matches the PUBLISHED-only rows the grid actually
+  // renders (getBlogPostsByLang/getBlogPostsByLangWithPagination), so the
+  // hero counter can never claim more articles than the list shows. Also the
+  // basis for the Phase 6 he-article-count gate (blogIndexMode).
+  return prisma.blog.count({ where: { language: lang as any, status: "PUBLISHED" } });
 }
 
 // === Case Study ===

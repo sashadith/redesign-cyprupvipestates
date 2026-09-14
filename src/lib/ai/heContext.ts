@@ -33,7 +33,7 @@ const GLOSSARY = read("he-glossary.md");
 
 export const HE_STYLE_CONTEXT = `# Hebrew (he) writing rules — binding\n\n${STYLEGUIDE}\n\n${GLOSSARY}`;
 
-export type HeContextKind = "description" | "area" | "seo";
+export type HeContextKind = "description" | "area" | "seo" | "translation";
 
 /**
  * Pure helper: splits `md` on "\n## " headings and keeps the sections whose
@@ -60,16 +60,23 @@ export function sliceSections(md: string, wantedPrefixes: string[]): string {
 // SEO meta needs the rules that actually bear on a 60/155-character field —
 // spelling, numbers, the SEO-specific section, banned patterns — and can skip
 // the tone/register material (§1-3) that doesn't change a title or description.
+// "translation" (src/lib/ai/translateHe.ts) is the widest kind: one generator
+// handles running prose, SEO pairs, area texts and developer profiles, so it
+// needs the prose register rules AND the SEO section AND §11 (the Pass B
+// learnings, which the self-critique pass is explicitly asked to check against).
+// It gets the whole glossary except the reviewer notes (§6) and the changelog (§7).
 const STYLEGUIDE_SECTIONS: Record<HeContextKind, string[]> = {
   description: ["1", "2", "3", "4", "5", "7", "8"],
   area: ["1", "2", "3", "4", "5", "7", "8"],
   seo: ["4", "5", "6", "7"],
+  translation: ["1", "2", "3", "4", "5", "6", "7", "8", "11"],
 };
 
 const GLOSSARY_SECTIONS: Record<HeContextKind, string[]> = {
   description: ["1", "2", "3", "5"],
   area: ["1", "2", "3", "5"],
   seo: ["2", "4", "5"],
+  translation: ["1", "2", "3", "4", "5"],
 };
 
 /**

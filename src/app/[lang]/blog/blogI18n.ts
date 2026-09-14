@@ -13,6 +13,9 @@ export type BlogStrings = {
   eyebrow: string;
   articleOne: string; // singular noun, shown after the count
   articleMany: string; // plural noun
+  /** Cross-locale mode only (he showing EN articles): noun phrases that name the language. Optional — LTR locales never render cross-locale. */
+  articleOneCross?: string;
+  articleManyCross?: string;
   filterAll: string;
   read: string; // card CTA
   readArticle: string; // featured CTA
@@ -37,6 +40,9 @@ export type BlogStrings = {
   // cities the projects filter knows.
   fallbackProperties: string;
   fallbackPropertiesInCity: string; // contains the literal placeholder {city}
+  // Phase 6 cross-locale badge: shown on every card/featured item when /he/blog
+  // is rendering EN articles (blogIndexMode's sourceLang !== the route locale).
+  englishBadge: string;
 };
 
 const EN: BlogStrings = {
@@ -63,6 +69,7 @@ const EN: BlogStrings = {
   relatedAccent: "reading",
   fallbackProperties: "Recommended properties",
   fallbackPropertiesInCity: "Recommended properties in {city}",
+  englishBadge: "In English",
 };
 
 export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
@@ -81,8 +88,10 @@ export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
   he: {
     heroTitle: "תובנות מקפריסין",
     eyebrow: "הבלוג",
-    articleOne: "מאמר אחד באנגלית", // rendered WITHOUT the numeral for he (see BlogInsights.tsx)
-    articleMany: "מאמרים באנגלית",
+    articleOne: "מאמר אחד", // rendered WITHOUT the numeral for he (see BlogInsights.tsx)
+    articleMany: "מאמרים",
+    articleOneCross: "מאמר אחד באנגלית", // cross-locale mode: EN articles under /he/blog
+    articleManyCross: "מאמרים באנגלית",
     filterAll: "הכל",
     read: "לקריאה",
     readArticle: "לקריאת המאמר",
@@ -105,6 +114,8 @@ export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
     // by the blog route, so it is FSI/PDI isolated here (bidiIsolate) and the
     // preposition takes the hyphen form the style guide §3 prescribes.
     fallbackPropertiesInCity: "נכסים מומלצים ב-\u2068{city}\u2069",
+    // REVIEW(he)
+    englishBadge: "באנגלית",
   },
   de: {
     heroTitle: "Zypern Insights",
@@ -130,6 +141,7 @@ export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
     relatedAccent: "Beiträge",
     fallbackProperties: "Empfohlene Objekte",
     fallbackPropertiesInCity: "Empfohlene Objekte in {city}",
+    englishBadge: "Auf Englisch",
   },
   pl: {
     heroTitle: "Cypr Insights",
@@ -155,6 +167,7 @@ export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
     relatedAccent: "artykuły",
     fallbackProperties: "Polecane nieruchomości",
     fallbackPropertiesInCity: "Polecane nieruchomości w {city}",
+    englishBadge: "Po angielsku",
   },
   ru: {
     heroTitle: "Кипр Инсайты",
@@ -180,6 +193,7 @@ export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
     relatedAccent: "статьи",
     fallbackProperties: "Рекомендуемые объекты",
     fallbackPropertiesInCity: "Рекомендуемые объекты в {city}",
+    englishBadge: "На английском",
   },
 };
 
