@@ -11,6 +11,8 @@ import {
   parsePage,
   assertPair,
   assertUnlocalizedPair,
+  samePath,
+  PRODUCTION_ORIGIN,
 } from "../hreflang-check.mjs";
 
 // --- URL pair list ---------------------------------------------------------
@@ -137,10 +139,95 @@ test("assertPair: a fully correct EN/HE pair passes every check", () => {
     xDefault: true,
     reciprocal: true,
     canonicalSelf: true,
+    origin: true,
     ogLocale: true,
     robots: true,
     inLanguage: true,
   });
+  assert.equal(result.originLabel, "matches host");
+});
+
+// --- C1 regression: identity checks compare PATHS, origin is separate -----
+//
+// Every canonical/hreflang URL the app actually emits is absolute against
+// the hard-coded production SITE_URL (src/lib/seo.ts:11), never against
+// whatever host served the request. Before the C1 fix, assertPair compared
+// full URL strings (`en.alternates["x-default"] === en.url`, etc.) against
+// `host + path`, so every pair FAILED the instant the fetched host wasn't
+// exactly `https://cyprusvipestates.com` — i.e. every run against staging,
+// which is the only host where `he` is public pre-launch (see
+// docs/i18n/acceptance/phase-7-8.md and the launch-checklist's Schritt 4).
+
+test("samePath compares pathname only, ignoring origin and a trailing slash", () => {
+  assert.equal(samePath("https://design.example/paphos", "https://cyprusvipestates.com/paphos"), true);
+  assert.equal(samePath("https://design.example/paphos/", "https://cyprusvipestates.com/paphos"), true);
+  assert.equal(samePath("https://design.example/paphos", "https://design.example/limassol"), false);
+  assert.equal(samePath(undefined, "https://design.example/paphos"), false);
+  assert.equal(samePath("not a url", "https://design.example/paphos"), false);
+});
+
+test("assertPair: canonical/hreflang pinned to the production origin still passes every identity check when fetched from a staging host (C1)", () => {
+  const en = parsePage(
+    "https://design.example/paphos", // fetched from staging...
+    200,
+    enHtml({
+      canonical: `${PRODUCTION_ORIGIN}/paphos`, // ...but the app always emits production-absolute URLs
+      heAlt: `${PRODUCTION_ORIGIN}/he/paphos`,
+    }),
+  );
+  const he = parsePage(
+    "https://design.example/he/paphos",
+    200,
+    heHtml({
+      canonical: `${PRODUCTION_ORIGIN}/he/paphos`,
+      enAlt: `${PRODUCTION_ORIGIN}/paphos`,
+    }),
+  );
+  const result = assertPair(en, he);
+  assert.equal(result.checks.xDefault, true);
+  assert.equal(result.checks.reciprocal, true);
+  assert.equal(result.checks.canonicalSelf, true);
+  assert.equal(result.checks.origin, true);
+  assert.equal(result.originLabel, "production");
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.issues, []);
+});
+
+test("assertPair: a canonical origin that is neither the sampled host nor the configured production origin still fails (the path fix must not mask a real cross-domain bug)", () => {
+  const en = parsePage(
+    "https://design.example/paphos",
+    200,
+    enHtml({ canonical: "https://evil.example/paphos", heAlt: `${PRODUCTION_ORIGIN}/he/paphos` }),
+  );
+  const he = parsePage(
+    "https://design.example/he/paphos",
+    200,
+    heHtml({ canonical: `${PRODUCTION_ORIGIN}/he/paphos`, enAlt: "https://evil.example/paphos" }),
+  );
+  const result = assertPair(en, he);
+  // Paths still line up (both /paphos), so the C1 fix alone would pass this —
+  // the separate origin check is what still catches it.
+  assert.equal(result.checks.canonicalSelf, true);
+  assert.equal(result.checks.origin, false);
+  assert.equal(result.ok, false);
+  assert.ok(result.issues.some((i) => i.includes("origin")));
+});
+
+test("assertPair: --canonical-origin overrides the default production origin", () => {
+  const en = parsePage(
+    "https://design.example/paphos",
+    200,
+    enHtml({ canonical: "https://alt-prod.example/paphos", heAlt: "https://alt-prod.example/he/paphos" }),
+  );
+  const he = parsePage(
+    "https://design.example/he/paphos",
+    200,
+    heHtml({ canonical: "https://alt-prod.example/he/paphos", enAlt: "https://alt-prod.example/paphos" }),
+  );
+  const result = assertPair(en, he, { canonicalOrigin: "https://alt-prod.example" });
+  assert.equal(result.checks.origin, true);
+  assert.equal(result.originLabel, "production");
+  assert.equal(result.ok, true);
 });
 
 test("assertPair: fails reciprocity when the HE page's own 'en' alternate points at the wrong URL", () => {

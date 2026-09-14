@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { i18n } from "@/i18n.config";
-import { localizedHref, UNLOCALIZED_ROUTES } from "@/lib/locale";
+import { localizedHref, localesForStaticRoute, UNLOCALIZED_ROUTES } from "@/lib/locale";
 import { abs, staticAlternates, ogLocale } from "@/lib/seo";
 import type { Translation } from "@/types/homepage";
 import type { BenefitsBlock } from "@/types/homepage";
@@ -114,9 +113,16 @@ export default function PartnersPage({ params }: Props) {
   if (!partnersOfferedIn(lang)) notFound();
   const t = partnersCopy(lang);
 
-  const translations: Translation[] = i18n.languages.map((l) => ({
-    language: l.id,
-    path: localizedHref(l.id, "partners"),
+  // I1 fix: build the switcher straight from localesForStaticRoute
+  // ("partners") — the same source that gates the route itself (decision J
+  // excludes "he" for "partners") — instead of the full public-locale list
+  // the i18n config exposes, so no Hebrew entry is ever offered here once
+  // `he` goes public (it would 404, see partnersOfferedIn() above).
+  // LangSwitch only needs {language, path} per entry — it derives each
+  // display name itself from LANG_LABELS — so no separate lookup is needed.
+  const translations: Translation[] = localesForStaticRoute("partners").map((l) => ({
+    language: l,
+    path: localizedHref(l, "partners"),
   }));
 
   // Shaped exactly like the homepage's own BenefitsBlock (src/types/homepage.ts)

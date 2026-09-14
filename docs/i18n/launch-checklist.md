@@ -132,8 +132,8 @@ Phase 5 hat Pass C (muttersprachliches Lektorat) bewusst zurückgestellt (Contro
 Entscheidung J (Spec §2): die B2B-Partnerseite wird **nicht** in Phase 1 übersetzt. Vor und nach dem Launch sicherstellen:
 
 - Kein Header-/Footer-Link zeigt auf eine `/he/partners`-Route (der Header-Sublink zeigt bewusst weiter auf `/partners`, siehe `phase-5.md` „Zurückgestellt").
-- `/he/partners` erzeugt entweder ein normales 404 (keine `Singlepage`-Zeile mit `slug: "partners", language: "he"` existiert) oder — falls die Catch-all-Route sie doch auflöst — trägt sie `noindex` und erscheint in keiner Sitemap.
-- `hreflang-check.mjs`/`he-launch-check.mjs --host` decken `/partners` nicht in ihrer URL-Pair-Liste ab (kein `he`-Pendant vorgesehen) — das ist beabsichtigt, kein blinder Fleck, der nachgerüstet werden muss.
+- `/he/partners` erzeugt ein hartes 404 — `preview-partners/[lang]/page.tsx`s `generateMetadata` **und** die Komponente selbst rufen `notFound()`, sobald `partnersOfferedIn(lang)` (Quelle: `localesForStaticRoute("partners")`/`UNLOCALIZED_ROUTES`, `src/lib/locale.ts`) `he` ausschließt — keine `noindex`-200-Variante, kein Sonderfall.
+- `hreflang-check.mjs`/`he-launch-check.mjs --host` **decken** das Paar `/partners` ↔ `/he/partners` explizit ab: eine eigene `UNLOCALIZED_TYPE_PAGES`-Zeile mit `assertUnlocalizedPair()`-Kontrakt prüft sowohl, dass `/he/partners` 404t, als auch, dass die EN-Seite **keinen** `he`-hreflang-Alternate trägt (die Sprachumschaltung auf `/partners` selbst wird ebenfalls dagegen getestet). Das ist der Regressions-Schutz für genau diesen Punkt — kein manueller Check nötig, kein blinder Fleck.
 
 ---
 

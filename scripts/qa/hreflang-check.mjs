@@ -9,6 +9,15 @@
 //   - the EN page lists a `he` alternate pointing at the HE url and vice
 //     versa (reciprocity)
 //   - each page's own canonical is self-referencing
+//   - (identity checks above compare PATHS ONLY — every canonical/hreflang
+//     URL the app emits is absolute against the hard-coded SITE_URL,
+//     src/lib/seo.ts:11, regardless of which host actually served the
+//     page, so comparing full URL strings against `host + path` fails on
+//     every non-production host; see the C1 fix note on `samePath`/
+//     `classifyOrigin` below. The origin itself is checked separately,
+//     informationally, and only FAILS a pair when it is neither the
+//     sampled host nor the configured production origin — override with
+//     `--canonical-origin <origin>`.)
 //   - the HE page's `og:locale` meta is "he_IL"
 //   - `robots` is noindex ONLY on /he/blog* (Phase 6 borrowed-content index)
 //     or on a non-2xx (404/gated) page — every other HE/EN page must be
@@ -16,7 +25,7 @@
 //   - every JSON-LD `inLanguage` value found on the HE page is "he-IL"
 //
 // Usage:
-//   node scripts/qa/hreflang-check.mjs <host> [--json]
+//   node scripts/qa/hreflang-check.mjs <host> [--json] [--canonical-origin <origin>]
 //
 // <host>   Origin to check, e.g. https://design.cyprusvipestates.com. This
 //          is a live network sampler (not a unit test) — point it at a
@@ -27,6 +36,12 @@
 //          not a bug in this script.
 //   --json  Print the full per-pair result array as JSON instead of the
 //           text table (exit code is unaffected).
+//   --canonical-origin <origin>  The app's configured production origin
+//           (default: https://cyprusvipestates.com, i.e. SITE_URL —
+//           src/lib/seo.ts:11). Every canonical/hreflang URL the app emits
+//           is absolute against this origin regardless of the sampled
+//           host (see C1 in the identity-checks list above) — this is
+//           what the informational ORIGIN column is checked against.
 //
 // Exit code: 0 if every pair passes every check, 1 otherwise (including "no
 // host given" and any pair with a non-200 EN or HE fetch).
@@ -205,6 +220,64 @@ export function parsePage(url, status, html, robotsHeader) {
   };
 }
 
+// C1 fix: every canonical/hreflang URL the app emits is absolute against a
+// single hard-coded origin (`SITE_URL` in src/lib/seo.ts:11 — the comment
+// there says so explicitly), not against whatever host actually served the
+// page. This constant mirrors that value (not imported — this is a plain
+// .mjs network sampler and seo.ts is TypeScript; keep the two in sync by
+// hand) and is only the DEFAULT for `--canonical-origin` — never hard-coded
+// into the identity checks themselves.
+export const PRODUCTION_ORIGIN = "https://cyprusvipestates.com";
+
+function originOf(url) {
+  if (typeof url !== "string") return null;
+  try {
+    return new URL(url).origin;
+  } catch {
+    return null;
+  }
+}
+
+function pathOf(url) {
+  if (typeof url !== "string") return null;
+  try {
+    const p = new URL(url).pathname;
+    return p.length > 1 ? p.replace(/\/+$/, "") : p; // normalise a trailing slash, keep bare "/"
+  } catch {
+    return null;
+  }
+}
+
+/** Compare two absolute URLs (or a URL and any string) by PATHNAME only,
+ *  ignoring origin and a trailing slash. `xDefault`/`reciprocal`/
+ *  `canonicalSelf` all used to compare full URL strings against
+ *  `host + path`, which fails the instant the fetched host differs from
+ *  the app's hard-coded SITE_URL (i.e. every run against staging) — see
+ *  C1. Null/undefined/unparseable input reads as "doesn't match" (false),
+ *  not a thrown error, so a missing alternate still fails the check
+ *  instead of crashing the sampler. */
+export function samePath(a, b) {
+  const pa = pathOf(a);
+  const pb = pathOf(b);
+  return pa !== null && pb !== null && pa === pb;
+}
+
+/** Classify a page's canonical origin as "matches host" (the origin that
+ *  actually served the page — correct on any host, staging included),
+ *  "production" (the app's hard-coded `SITE_URL`/`canonicalOrigin` — also
+ *  correct, since every canonical/hreflang URL the app emits is pinned
+ *  there regardless of which host served the page), or a genuine mismatch
+ *  (anything else — e.g. a stray third-party domain, which the samePath()
+ *  fix above would otherwise mask since it only looks at the path). This
+ *  is what keeps the C1 fix from also hiding a real cross-origin bug. */
+function classifyOrigin(canonical, hostOrigin, canonicalOrigin) {
+  const o = originOf(canonical);
+  if (o === null) return { ok: false, label: "missing" };
+  if (o === hostOrigin) return { ok: true, label: "matches host" };
+  if (o === canonicalOrigin) return { ok: true, label: "production" };
+  return { ok: false, label: `unexpected (${o})` };
+}
+
 const HE_BLOG_RE = /\/he\/blog(\/|$|\?)/;
 
 /** Assert the full head-signal contract for one EN/HE pair, given two
@@ -212,7 +285,7 @@ const HE_BLOG_RE = /\/he\/blog(\/|$|\?)/;
  *  `{ ok, checks, issues }`; `checks` names each individual assertion
  *  (`null` when a 404/error on either side made it inapplicable) so a
  *  caller can render a table without re-deriving pass/fail per column. */
-export function assertPair(en, he) {
+export function assertPair(en, he, { canonicalOrigin = PRODUCTION_ORIGIN } = {}) {
   const issues = [];
   const enOk = en.status >= 200 && en.status < 300;
   const heOk = he.status >= 200 && he.status < 300;
@@ -222,32 +295,55 @@ export function assertPair(en, he) {
     xDefault: null,
     reciprocal: null,
     canonicalSelf: null,
+    origin: null,
     ogLocale: null,
     robots: null,
     inLanguage: null,
   };
+  let originLabel = null;
 
   if (!enOk) issues.push(`en ${en.url} returned ${en.status}`);
   if (!heOk) issues.push(`he ${he.url} returned ${he.status}`);
 
   if (enOk && heOk) {
-    checks.xDefault = en.alternates["x-default"] === en.url && he.alternates["x-default"] === en.url;
+    // C1 fix: PATH-only comparison (samePath) — the app's canonical/
+    // hreflang URLs are absolute against SITE_URL, not the fetched host,
+    // so comparing full URL strings against `en.url`/`he.url` failed on
+    // every non-production host. The origin itself is checked separately
+    // below (checks.origin), so a genuinely wrong domain still fails.
+    checks.xDefault = samePath(en.alternates["x-default"], en.url) && samePath(he.alternates["x-default"], en.url);
     if (!checks.xDefault) {
       issues.push(
         `x-default should be ${en.url} (en saw ${en.alternates["x-default"] ?? "none"}, he saw ${he.alternates["x-default"] ?? "none"})`,
       );
     }
 
-    checks.reciprocal = en.alternates["he"] === he.url && he.alternates["en"] === en.url;
+    checks.reciprocal = samePath(en.alternates["he"], he.url) && samePath(he.alternates["en"], en.url);
     if (!checks.reciprocal) {
       issues.push(
         `reciprocity failed (en's "he" alternate: ${en.alternates["he"] ?? "none"}, he's "en" alternate: ${he.alternates["en"] ?? "none"})`,
       );
     }
 
-    checks.canonicalSelf = en.canonical === en.url && he.canonical === he.url;
+    checks.canonicalSelf = samePath(en.canonical, en.url) && samePath(he.canonical, he.url);
     if (!checks.canonicalSelf) {
       issues.push(`canonical not self-referencing (en: ${en.canonical ?? "none"}, he: ${he.canonical ?? "none"})`);
+    }
+
+    // Informational-but-real check: the canonical's ORIGIN must be either
+    // the host we actually sampled (correct on staging or production) or
+    // the app's configured production origin (also correct — see the
+    // header comment). Anything else is a genuine bug that samePath()
+    // above would otherwise mask.
+    const hostOrigin = originOf(en.url);
+    const enOrigin = classifyOrigin(en.canonical, hostOrigin, canonicalOrigin);
+    const heOrigin = classifyOrigin(he.canonical, hostOrigin, canonicalOrigin);
+    checks.origin = enOrigin.ok && heOrigin.ok;
+    originLabel = enOrigin.label === heOrigin.label ? enOrigin.label : `en: ${enOrigin.label}, he: ${heOrigin.label}`;
+    if (!checks.origin) {
+      issues.push(
+        `canonical origin unexpected (en: ${enOrigin.label}, he: ${heOrigin.label}) — want either the sampled host (${hostOrigin}) or production (${canonicalOrigin})`,
+      );
     }
 
     checks.ogLocale = he.ogLocale === "he_IL";
@@ -273,7 +369,7 @@ export function assertPair(en, he) {
   }
 
   const ok = Object.values(checks).every((v) => v === true);
-  return { ok, checks, issues };
+  return { ok, checks, issues, originLabel };
 }
 
 /** Assert the special-case contract for a pair the spec deliberately keeps
@@ -317,10 +413,15 @@ export function assertUnlocalizedPair(en, he, { locale = "he" } = {}) {
 // I/O — everything below this line touches the network or process.argv/exit.
 
 function parseArgs(argv) {
-  const opts = { host: "", json: false };
-  for (const arg of argv) {
+  const opts = { host: "", json: false, canonicalOrigin: PRODUCTION_ORIGIN };
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
     if (arg === "--json") opts.json = true;
-    else if (arg.startsWith("--")) throw new Error(`Unknown flag: ${arg}`);
+    else if (arg === "--canonical-origin") {
+      const value = argv[++i];
+      if (!value) throw new Error("--canonical-origin requires a value, e.g. --canonical-origin https://cyprusvipestates.com");
+      opts.canonicalOrigin = value.replace(/\/+$/, "");
+    } else if (arg.startsWith("--")) throw new Error(`Unknown flag: ${arg}`);
     else if (!opts.host) opts.host = arg.replace(/\/+$/, "");
     else throw new Error(`Unexpected extra argument: ${arg}`);
   }
@@ -350,13 +451,13 @@ async function main() {
     opts = parseArgs(process.argv.slice(2));
   } catch (err) {
     console.error(err.message);
-    console.error("Usage: node scripts/qa/hreflang-check.mjs <host> [--json]");
+    console.error("Usage: node scripts/qa/hreflang-check.mjs <host> [--json] [--canonical-origin <origin>]");
     process.exitCode = 1;
     return;
   }
 
   if (!opts.host) {
-    console.error("Usage: node scripts/qa/hreflang-check.mjs <host> [--json]");
+    console.error("Usage: node scripts/qa/hreflang-check.mjs <host> [--json] [--canonical-origin <origin>]");
     console.error("Example: node scripts/qa/hreflang-check.mjs https://design.cyprusvipestates.com");
     process.exitCode = 1;
     return;
@@ -368,8 +469,10 @@ async function main() {
     const enUrl = opts.host + pair.en;
     const heUrl = opts.host + pair.he;
     const [en, he] = await Promise.all([fetchPage(enUrl), fetchPage(heUrl)]);
-    const { ok, checks, issues } = pair.unlocalized ? assertUnlocalizedPair(en, he) : assertPair(en, he);
-    rows.push({ type: pair.type, en, he, ok, checks, issues, unlocalized: !!pair.unlocalized });
+    const { ok, checks, issues, originLabel } = pair.unlocalized
+      ? assertUnlocalizedPair(en, he)
+      : assertPair(en, he, { canonicalOrigin: opts.canonicalOrigin });
+    rows.push({ type: pair.type, en, he, ok, checks, issues, originLabel, unlocalized: !!pair.unlocalized });
   }
 
   const failedCount = rows.filter((r) => !r.ok).length;
@@ -380,22 +483,26 @@ async function main() {
     console.log(`host: ${opts.host}`);
     console.log(`${rows.length} pairs checked, ${rows.length - failedCount} passed, ${failedCount} failed\n`);
     console.log(
-      "STATUS  TYPE".padEnd(28) + "EN   HE   ALT  XDEF CANON OG   ROBOTS INLANG",
+      "STATUS  TYPE".padEnd(28) + "EN   HE   ALT  XDEF CANON ORIGIN         OG   ROBOTS INLANG",
     );
     for (const r of rows) {
       const label = `${r.ok ? "PASS" : "FAIL"}  ${r.type}`.padEnd(28);
       if (r.unlocalized) {
         // Different contract (see assertUnlocalizedPair) — the generic
-        // ALT/XDEF/CANON/OG/ROBOTS/INLANG columns don't apply.
+        // ALT/XDEF/CANON/ORIGIN/OG/ROBOTS/INLANG columns don't apply.
         console.log(
           `${label}${String(r.en.status).padEnd(5)}${String(r.he.status).padEnd(5)}` +
             `(unlocalized: no "he" alternate + 404 expected)`,
         );
       } else {
+        // ORIGIN is informational (shows "matches host" / "production" /
+        // the mismatch label from classifyOrigin) — see the C1 fix note
+        // above assertPair. It still counts toward checks.origin/`ok`.
         console.log(
           `${label}${String(r.en.status).padEnd(5)}${String(r.he.status).padEnd(5)}` +
             `${statusCell(r.checks.reciprocal)}  ${statusCell(r.checks.xDefault)}  ` +
-            `${statusCell(r.checks.canonicalSelf)}  ${statusCell(r.checks.ogLocale)}  ` +
+            `${statusCell(r.checks.canonicalSelf)}  ${(r.originLabel ?? "-").padEnd(14)} ` +
+            `${statusCell(r.checks.ogLocale)}  ` +
             `${statusCell(r.checks.robots)}   ${statusCell(r.checks.inLanguage)}`,
         );
       }

@@ -149,8 +149,30 @@ const ARRAY_RE = /\[\s*["']en["']\s*,\s*["']de["']\s*,\s*["']pl["']\s*,\s*["']ru
 // The union form, captured with whatever (if anything) follows so a `| "he"`
 // suffix can be checked for and excluded.
 const UNION_RE = /["']en["']\s*\|\s*["']de["']\s*\|\s*["']pl["']\s*\|\s*["']ru["']/g;
+// The `Record`/object-literal form (final-review fix wave, I2): a compact,
+// SINGLE-LINE object with exactly the four keys en/de/pl/ru in this order
+// and nothing else — no `he:` entry anywhere before the closing brace.
+// `[^\n,}]+` for each value can't cross a newline or contain a `,`/`}`, so
+// (a) the trailing `,?[ \t]*\}` only matches when ru's entry is the LAST
+// one — an object that goes on to add `he: ...` before the brace fails to
+// match here, exactly like the union regex's "followed by | he" allowance
+// above — and (b) the whole match can never span multiple lines. That
+// single-line restriction is deliberate, not incidental: this exact shape
+// (a compact one-line locale->value LOOKUP MAP, e.g. `const LOCALE_LABEL:
+// Record<string, string> = { en: …, de: …, pl: …, ru: … };`) is what the
+// admin SEO analytics page's LOCALE_LABEL (I2) and blog/[slug]/page.tsx's
+// HOME_LABEL (Minor 8) both were, and what CockpitCard.tsx's LOCALE_LABEL
+// (Task 1 review) was fixed to stop looking like. A multi-line, one-
+// key-per-line object (there are many across src/ — per-string UI-copy
+// dictionaries like `{\n  en: "Sold out",\n  de: "Ausverkauft",\n  ...\n}`)
+// is a different, pre-existing content-translation gap tracked by the
+// separate placeholder-marker content pipeline instead (he-placeholders.mjs), not this structural test —
+// allowing `\s` (which matches newlines) here would flag ~25 such files
+// that are out of scope for a locale-plumbing regression guard.
+const OBJECT_RE =
+  /\{[ \t]*en[ \t]*:[ \t]*[^\n,}]+,[ \t]*de[ \t]*:[ \t]*[^\n,}]+,[ \t]*pl[ \t]*:[ \t]*[^\n,}]+,[ \t]*ru[ \t]*:[ \t]*[^\n,}]+,?[ \t]*\}/g;
 
-test("no new hard-coded [\"en\",\"de\",\"pl\",\"ru\"] array or \"en\"|\"de\"|\"pl\"|\"ru\" union outside src/lib/__tests__/", () => {
+test("no new hard-coded [\"en\",\"de\",\"pl\",\"ru\"] array, \"en\"|\"de\"|\"pl\"|\"ru\" union, or { en:…, de:…, pl:…, ru:… } object literal outside src/lib/__tests__/", () => {
   const offenders: string[] = [];
   for (const file of walk(SRC_ROOT)) {
     const text = fs.readFileSync(file, "utf8");
@@ -163,6 +185,9 @@ test("no new hard-coded [\"en\",\"de\",\"pl\",\"ru\"] array or \"en\"|\"de\"|\"p
       const after = text.slice(m.index! + m[0].length, m.index! + m[0].length + 20);
       if (/^\s*\|\s*["']he["']/.test(after)) continue; // followed by | "he" — allowed
       offenders.push(`${rel}: union type ${JSON.stringify(m[0])} not followed by | "he"`);
+    }
+    for (const m of Array.from(text.matchAll(OBJECT_RE))) {
+      offenders.push(`${rel}: object literal ${JSON.stringify(m[0])} has no "he" key`);
     }
   }
   assert.deepEqual(offenders, []);
@@ -180,6 +205,11 @@ test("the grep helper actually matches the shapes it is meant to catch", () => {
   assert.ok(m);
   const after = unionSampleOk.slice(m.index! + m[0].length, m.index! + m[0].length + 20);
   assert.match(after, /^\s*\|\s*["']he["']/);
+
+  const objectSampleBad = 'const LOCALE_LABEL: Record<string, string> = { en: "English", de: "German", pl: "Polish", ru: "Russian" };';
+  assert.equal(Array.from(objectSampleBad.matchAll(OBJECT_RE)).length, 1);
+  const objectSampleOk = 'const LOCALE_LABEL: Record<string, string> = { en: "English", de: "German", pl: "Polish", ru: "Russian", he: "Hebrew" };';
+  assert.equal(Array.from(objectSampleOk.matchAll(OBJECT_RE)).length, 0);
 });
 
 // Confirms LOCALES itself stays the one place all five are declared together.

@@ -129,7 +129,11 @@ const wordCount = (blocks: any[]) => {
   return n;
 };
 
-const HOME_LABEL: Record<string, string> = { en: "Home", de: "Startseite", pl: "Strona główna", ru: "Главная" };
+// he added per the final-review fix wave (grep test now flags any
+// four-key en/de/pl/ru object with no he — Minor 8 from the whole-branch
+// review: a Hebrew blog post's BreadcrumbList JSON-LD was emitting the
+// English fallback "Home" instead of a Hebrew label).
+const HOME_LABEL: Record<string, string> = { en: "Home", de: "Startseite", pl: "Strona główna", ru: "Главная", he: "בית" /* REVIEW(he) */ };
 
 /* The three cities ProjectsSectionBlock.filterCity actually accepts, with the
    spellings that turn up in this site's four locales — RU and PL slugs are
