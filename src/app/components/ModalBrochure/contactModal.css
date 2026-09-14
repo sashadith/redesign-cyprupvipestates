@@ -191,7 +191,7 @@
   /* 30px lower than the panel's own -4% bleed. */
   bottom: calc(-4% - 30px);
   right: 0; /* phone illustration bled to one side — tied to imagery, not reading direction */
-  left: auto; /* see right: 0 above — same imagery-composition exception */
+  inset-inline-start: auto; /* `auto` carries no direction; the imagery-tied `right: 0` above stays physical */
   width: min(112%, 462px);
   transform: none;
   filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.55));

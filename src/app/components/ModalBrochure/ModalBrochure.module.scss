@@ -171,7 +171,7 @@
   @media screen and (max-width: 880px) {
     width: 100%;
     top: 30%;
-    left: 0; // mobile full-width override of the image-composition-tied form panel above — kept physical for consistency
+    inset-inline-start: 0; // mobile full-width override (width: 100% makes the offset inert either way)
   }
 
   @media screen and (max-width: 570px) {

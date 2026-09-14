@@ -245,16 +245,13 @@ src/app/components/ModalBrochure/ModalBrochure.module.scss :: centring anchor fo
 # physical, candidate for a follow-up pass with visual QA
 src/app/components/ModalBrochure/ModalBrochure.module.scss :: brochure form panel overlaid
 # mobile full-width override of the image-composition-tied form panel above — kept physical for consistency
-src/app/components/ModalBrochure/ModalBrochure.module.scss :: mobile full-width override
 
 # phone illustration bled to one side — tied to imagery, not reading direction
 src/app/components/ModalBrochure/contactModal.css :: phone illustration bled to one side
-src/app/components/ModalBrochure/contactModal.css :: see right: 0 above
 
 # centring anchor for translate(-50%, -50%) — physical by design (logical would mis-centre in RTL)
 src/app/components/PartnersPage/PartnersHero/PartnersHero.module.scss :: centring anchor for translate(-50%, -50%)
 # resets the centring anchor above — kept physical to match it
-src/app/components/PartnersPage/PartnersHero/PartnersHero.module.scss :: resets the centring anchor above
 
 # centring anchor for translate(-50%, -50%) — physical by design (logical would mis-centre in RTL)
 src/app/components/BlogVideo/BlogVideo.module.scss :: centring anchor for translate(-50%, -50%)

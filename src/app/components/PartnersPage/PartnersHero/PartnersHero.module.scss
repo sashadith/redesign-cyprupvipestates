@@ -56,7 +56,7 @@
   @media screen and (min-width: 980px) {
     position: static;
     top: unset;
-    left: unset; // resets the centring anchor above — kept physical to match it
+    inset-inline-start: unset; // resets the (physical) centring anchor above; under position: static the value is inert
     transform: unset;
     text-align: unset;
     flex: 1 0 50%;
