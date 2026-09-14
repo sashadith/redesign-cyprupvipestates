@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import type { Locale } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { deriveLocale } from "@/lib/gsc/client";
 import { nonDefaultLocalePattern, localeFromPath } from "@/lib/locale";
 
 const L = nonDefaultLocalePattern();
@@ -139,7 +138,9 @@ export async function buildCanonicalMap(): Promise<Map<string, string>> {
 // Resolves a (locale, page) pair to its canonical form — follows chained
 // redirects up to 5 hops (the migration snapshot + a later legacy-project
 // redirect could in principle stack) and re-derives locale from the final
-// path so the two never disagree.
+// path so the two never disagree. The result is a locale::page JOIN key, so
+// the re-derivation goes through localeOfPath (bare locale roots included),
+// never deriveLocale — see localeOfPath above.
 export function canonicalize(map: Map<string, string>, locale: Locale, page: string): CanonicalTarget {
   let curPage = page;
   for (let i = 0; i < 5; i++) {
@@ -147,5 +148,5 @@ export function canonicalize(map: Map<string, string>, locale: Locale, page: str
     if (!next || next === curPage) break;
     curPage = next;
   }
-  return curPage === page ? { locale, page } : { locale: deriveLocale(curPage), page: curPage };
+  return curPage === page ? { locale, page } : { locale: localeOfPath(curPage), page: curPage };
 }

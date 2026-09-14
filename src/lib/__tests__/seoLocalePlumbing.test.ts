@@ -6,7 +6,7 @@ import {
   LOCALES, DEFAULT_LOCALE, localeFromPath, parsePublicLocales,
 } from "@/lib/locale";
 import { deriveLocale } from "@/lib/gsc/client";
-import { localeOfPath } from "@/lib/seo/urlCanonical";
+import { localeOfPath, canonicalize } from "@/lib/seo/urlCanonical";
 import { absUrl } from "@/lib/indexnow";
 
 // --- localeFromPath: the single parsing source for every locale-aware path ---
@@ -63,6 +63,37 @@ test("localeOfPath resolves a bare locale root for every locale, he included, un
   assert.equal(localeOfPath("/de/projects/x"), "de");
   assert.equal(localeOfPath("/he/projects/x"), "he");
   assert.equal(localeOfPath("/x"), "en");
+});
+
+// --- canonicalize: its output IS a locale::page JOIN key (queries.ts buckets
+// on it), so the re-derived locale of a redirect TARGET must come from
+// localeOfPath, never deriveLocale. A legacy_project_redirects targetPath is a
+// hand-typed admin string (deactivateProjectWithRedirect stores it as-is), so
+// a bare locale root such as "/de" is a reachable target in production. ---
+
+test("canonicalize re-derives the locale of a bare locale-root redirect target via localeOfPath (not deriveLocale)", () => {
+  const map = new Map<string, string>([
+    ["/de/projects/old-de-slug", "/de"],
+    ["/pl/projects/old-pl-slug", "/pl"],
+    ["/ru/projects/old-ru-slug", "/ru"],
+    ["/he/projects/old-he-slug", "/he"],
+    ["/projects/old-en-slug", "/"],
+  ]);
+  assert.deepEqual(canonicalize(map, "de", "/de/projects/old-de-slug"), { locale: "de", page: "/de" });
+  assert.deepEqual(canonicalize(map, "pl", "/pl/projects/old-pl-slug"), { locale: "pl", page: "/pl" });
+  assert.deepEqual(canonicalize(map, "ru", "/ru/projects/old-ru-slug"), { locale: "ru", page: "/ru" });
+  assert.deepEqual(canonicalize(map, "he", "/he/projects/old-he-slug"), { locale: "he", page: "/he" });
+  // The default locale's root still derives as "en" — no change there.
+  assert.deepEqual(canonicalize(map, "en", "/projects/old-en-slug"), { locale: "en", page: "/" });
+  // A chained redirect whose LAST hop lands on a bare root must also key by
+  // the root's locale, not "en".
+  const chained = new Map<string, string>([
+    ["/projects/a", "/de/projects/b"],
+    ["/de/projects/b", "/de"],
+  ]);
+  assert.deepEqual(canonicalize(chained, "en", "/projects/a"), { locale: "de", page: "/de" });
+  // Unredirected input passes through with the caller's locale untouched.
+  assert.deepEqual(canonicalize(map, "de", "/de/projects/live"), { locale: "de", page: "/de/projects/live" });
 });
 
 // --- IndexNow fan-out: PUBLIC_LOCALES only, gated by NEXT_PUBLIC_LIVE_LOCALES ---
