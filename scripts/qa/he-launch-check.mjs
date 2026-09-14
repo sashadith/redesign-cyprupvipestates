@@ -24,6 +24,14 @@
 // process against a host unless told to — the default (no --host) touches
 // nothing but the local filesystem.
 //
+// Known scope approximations against spec §5 Phase 8 (accepted, Task 5 review):
+//   - "no he URL without an hreflang backlink from en" is verified ONLY in
+//     --host mode (hreflang-check.mjs samples live pages); local mode cannot
+//     see rendered alternates and does not claim to.
+//   - "every he PUBLISHED row has a review protocol" is approximated at pack
+//     level: each content/he/**/*.he.json carries "review" metadata and each
+//     pack has its docs/i18n/reviews/c-<pack>.md — no database read here.
+//
 // Usage:
 //   node scripts/qa/he-launch-check.mjs
 //   node scripts/qa/he-launch-check.mjs --host https://design.cyprusvipestates.com
