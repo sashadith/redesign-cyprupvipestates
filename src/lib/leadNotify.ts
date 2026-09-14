@@ -4,8 +4,44 @@
 // /api/monday-newsletter so notification behaviour is consistent across sources.
 import { prisma } from "@/lib/prisma";
 import { sendTelegramMessage } from "@/lib/telegram";
+import { isLocale, LOCALE_LABELS } from "@/lib/locale";
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// Upper-cased locale code for a Telegram alert line (e.g. "HE", "DE"), or
+// null when there's nothing to show. Reads LOCALE_LABELS (the single source
+// of locale metadata) rather than special-casing a fixed set of codes, so a
+// future sixth locale needs no change here — a known locale renders its
+// LOCALE_LABELS code, anything else (legacy junk, a locale added to LOCALES
+// after this shipped) still degrades to its own upper-cased value instead of
+// silently vanishing.
+export function telegramLanguageTag(locale: string | null | undefined): string | null {
+  if (!locale) return null;
+  return isLocale(locale) ? LOCALE_LABELS[locale].code : locale.toUpperCase();
+}
+
+// Pure message builder (no DB, no Telegram call) — split out of
+// recordInboundLead so it's directly testable with fakes. Admin-facing copy
+// stays English per project convention.
+export function buildInboundLeadTelegramMessage(opts: {
+  source: string;
+  email: string;
+  name?: string;
+  phone?: string | null;
+  page?: string;
+  language?: string | null;
+  link: string;
+}): string {
+  const langTag = telegramLanguageTag(opts.language);
+  return (
+    `<b>New ${esc(opts.source.replace(/_/g, " "))} lead</b>\n` +
+    `<b>${esc(opts.name || "-")}</b>\n` +
+    `Email: ${esc(opts.email)}\nPhone: ${esc(opts.phone || "-")}\n` +
+    (langTag ? `Language: ${esc(langTag)}\n` : "") +
+    (opts.page ? `Page: ${esc(opts.page)}\n` : "") +
+    `\n<a href="${opts.link}">Open in CRM</a>`
+  );
+}
 
 export async function recordInboundLead(opts: {
   leadId: string;
@@ -14,6 +50,7 @@ export async function recordInboundLead(opts: {
   name?: string;
   phone?: string | null;
   page?: string;
+  language?: string | null; // lead's languagePreference, when known — renders as an upper-cased locale code
   notifyTelegram?: boolean; // default true; pass false for low-value/high-volume sources
 }) {
   // Timeline entry so every lead (not just manual ones) has a creation activity.
@@ -36,12 +73,7 @@ export async function recordInboundLead(opts: {
   if (opts.notifyTelegram === false) return;
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://72.60.89.239";
   const link = `${siteUrl}/admin/crm/${opts.leadId}`;
-  const msg =
-    `<b>New ${esc(opts.source.replace(/_/g, " "))} lead</b>\n` +
-    `<b>${esc(opts.name || "-")}</b>\n` +
-    `Email: ${esc(opts.email)}\nPhone: ${esc(opts.phone || "-")}\n` +
-    (opts.page ? `Page: ${esc(opts.page)}\n` : "") +
-    `\n<a href="${link}">Open in CRM</a>`;
+  const msg = buildInboundLeadTelegramMessage({ ...opts, link });
   try {
     const tgResult = await sendTelegramMessage(msg);
     if (tgResult) {
