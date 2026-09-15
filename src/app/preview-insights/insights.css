@@ -414,7 +414,10 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 }
 .iart__inrel-card:hover .iart__inrel-title { color: var(--bronze); }
 .iart__inrel-excerpt {
-  margin: var(--s-3) 0 0; max-width: 62ch;
+  /* No max-width, deliberately — .iart__inrel-title right above it has none
+     either, so a reading-length cap here narrowed only the excerpt, leaving
+     it visibly short of the title and card width above it. */
+  margin: var(--s-3) 0 0;
   font-family: var(--font-body), sans-serif; font-size: var(--text-sm); font-weight: 300; line-height: 1.62; color: var(--text-soft);
 }
 .iart__inrel-cta {
