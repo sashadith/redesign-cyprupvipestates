@@ -20,7 +20,7 @@
 // layer). Add new consumers to this list so a future edit knows its blast
 // radius.
 export const PROJECT_BRIEF = `WHO WE ARE
-Cyprus VIP Estates (cyprusvipestates.com) sells new-build and off-plan property in Cyprus — villas and apartments in Paphos, Limassol and Larnaca — direct from developers to international buyers. Four locales: en (prefix-less URLs), de, pl, ru. A "property page" means a Development page OR a legacy project page; both live at /projects/<slug> and both count as properties. Around them: commercial landing pages, a blog capturing relocation/tax/lifestyle research traffic, developer profiles and case studies.
+Cyprus VIP Estates (cyprusvipestates.com) sells new-build and off-plan property in Cyprus — villas and apartments in Paphos, Limassol and Larnaca — direct from developers to international buyers. Five locales: en (prefix-less URLs), de, pl, ru, he (Hebrew, RTL; Latin slugs). A "property page" means a Development page OR a legacy project page; both live at /projects/<slug> and both count as properties. Around them: commercial landing pages, a blog capturing relocation/tax/lifestyle research traffic, developer profiles and case studies.
 
 WHAT SUCCESS IS
 An enquiry from a plausible buyer — not traffic. The funnel the site actually measures, in order: a session enters on some page → goes on to view two or more distinct properties beyond its landing page → submits an enquiry traceable to a page. Landing pages and property pages exist to convert; the blog exists to catch researchers and route them toward properties. When you recommend or write anything, name the funnel step it is supposed to move.

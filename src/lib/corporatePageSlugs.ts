@@ -12,25 +12,29 @@
    OLD block-rendered singlepage route — visibly the pre-redesign design,
    not a 404, so it fails soft rather than hard. */
 
-export const CORPORATE_LOCALES = ["en", "de", "pl", "ru"] as const;
-export type CorporateLocale = (typeof CORPORATE_LOCALES)[number];
+import { LOCALES, PUBLIC_LOCALES, type Locale } from "@/lib/locale";
+
+export const CORPORATE_LOCALES = LOCALES;
+export type CorporateLocale = Locale;
 
 export type CorporatePage = "about" | "contacts" | "privacy" | "terms";
 
 export const CORPORATE_SLUGS: Record<CorporatePage, Record<CorporateLocale, string>> = {
-  about: { en: "about-us", de: "ueber-uns", pl: "o-nas", ru: "o-nas" },
-  contacts: { en: "contacts", de: "kontakt", pl: "kontakty", ru: "kontakty" },
+  about: { en: "about-us", de: "ueber-uns", pl: "o-nas", ru: "o-nas", he: "about-us" },
+  contacts: { en: "contacts", de: "kontakt", pl: "kontakty", ru: "kontakty", he: "contacts" },
   privacy: {
     en: "privacy-policy",
     de: "datenschutzrichtlinie",
     pl: "polityka-prywatnosci",
     ru: "politika-privatnosti",
+    he: "privacy-policy",
   },
   terms: {
     en: "terms-and-conditions",
     de: "geschaftsbedingungen",
     pl: "warunki",
     ru: "uslovija-i-polozhenija",
+    he: "terms-and-conditions",
   },
 };
 
@@ -43,7 +47,7 @@ export function corporatePath(page: CorporatePage, lang: string): string {
 
 /** Shape languageAlternates() expects: one entry per locale carrying its own slug. */
 export function corporateTranslations(page: CorporatePage) {
-  return CORPORATE_LOCALES.map((l) => ({
+  return PUBLIC_LOCALES.map((l) => ({
     slug: { [l]: { current: CORPORATE_SLUGS[page][l] } },
   }));
 }

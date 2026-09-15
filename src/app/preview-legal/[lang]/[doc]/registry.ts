@@ -15,8 +15,8 @@ export type LegalDocKey = "privacy" | "terms";
    section to the English privacy policy without adding it to the other three
    is a compile error, not something discovered a year later. */
 const DOCS: Record<LegalDocKey, Record<string, LegalDoc>> = {
-  privacy: { en: PRIVACY_EN, de: PRIVACY_DE, pl: PRIVACY_PL, ru: PRIVACY_RU },
-  terms: { en: TERMS_EN, de: TERMS_DE, pl: TERMS_PL, ru: TERMS_RU },
+  privacy: { en: PRIVACY_EN, de: PRIVACY_DE, pl: PRIVACY_PL, ru: PRIVACY_RU, he: PRIVACY_EN /* TODO(he) placeholder — real translation in Phase 5b */ },
+  terms: { en: TERMS_EN, de: TERMS_DE, pl: TERMS_PL, ru: TERMS_RU, he: TERMS_EN /* TODO(he) */ },
 };
 
 export function getLegalDoc(doc: string, lang: string): LegalDoc | null {

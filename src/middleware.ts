@@ -1,14 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 import createIntlMiddleware from "next-intl/middleware";
 
-import { defaultLocale, locales } from "@/i18n.config";
+import { DEFAULT_LOCALE, PUBLIC_LOCALES, nonDefaultLocalePattern, isLocale, isPublicLocale } from "@/lib/locale";
 import nestedPageRedirects from "@/lib/nestedPageRedirects.json";
 import { CORPORATE_SLUGS } from "@/lib/corporatePageSlugs";
 import { EN_REDIRECT_TITLE_SWEEP_EXCLUDE } from "@/lib/seo/enRedirectTitleSweepExclude";
 
 // Reserved first segments that are their own route, not singlepages — never canonicalised here.
 const RESERVED = new Set(["projects", "blog", "developers", "case-studies", "files", "partners"]);
-const ALL_LOCALES = ["en", "de", "pl", "ru"];
+// Locales that are LIVE. A gated locale (see LAUNCH_GATED_LOCALES) is NOT in
+// this set — it is answered with a guaranteed 404 by the gated-locale guard
+// at the top of middleware() below, not by falling through unmatched (that
+// was the assumption before the Task 3 runtime finding: /he/faq actually
+// fell through to the singlepage catch-all and served English content at a
+// duplicate URL instead of 404ing).
+const ALL_LOCALES: readonly string[] = PUBLIC_LOCALES;
+// PUBLIC_LOCALES always holds at least one non-default locale in practice
+// (today: de/pl/ru on prod, +he on staging), so NON_DEFAULT is never empty.
+const NON_DEFAULT = nonDefaultLocalePattern(PUBLIC_LOCALES); // "de|pl|ru" on prod, "de|pl|ru|he" on staging
+
+// Hoisted to module scope so these are compiled once, not on every request.
+const PROPERTIES_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?properties(?:/.*)?$`);
+const FAQ_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?faq$`);
+const CASE_STUDIES_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?case-studies(?:/([^/]+))?$`);
+const PARTNERS_RE = new RegExp(`^/(?:(${NON_DEFAULT})/)?partners$`);
 
 // German landing-page cluster consolidation (2026-07-28): thin-wrapper
 // landing pages merged into their canonical target, confirmed by identical
@@ -324,6 +339,18 @@ export const RU_LANDING_MERGES: Record<string, string> = {
 };
 
 export default async function middleware(request: NextRequest) {
+  // Gated locale (known in LOCALES, not in PUBLIC_LOCALES, e.g. /he/* before
+  // launch): answer 404 instead of letting next-intl treat "he" as a plain
+  // path segment and the singlepage catch-all serve English content at a
+  // duplicate URL. The rewrite target is not a route; [lang]/layout.tsx
+  // rejects it via isPublicLocale() → notFound().
+  const firstSeg = request.nextUrl.pathname.split("/")[1] ?? "";
+  if (firstSeg && isLocale(firstSeg) && !isPublicLocale(firstSeg)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/_gated-locale-404";
+    return NextResponse.rewrite(url);
+  }
+
   const deMergeMatch = request.nextUrl.pathname.match(/^\/de\/(.+)$/);
   if (deMergeMatch && DE_LANDING_MERGES[deMergeMatch[1]]) {
     const url = request.nextUrl.clone();
@@ -362,7 +389,7 @@ export default async function middleware(request: NextRequest) {
   // The "Properties" section is hidden pre-launch — the live inventory is under
   // "Projects" (audit H3). Redirect any /properties[/...] to the localized projects
   // listing with a real HTTP redirect (page-level redirect() is swallowed by the i18n rewrite).
-  const propMatch = request.nextUrl.pathname.match(/^\/(?:(de|pl|ru)\/)?properties(?:\/.*)?$/);
+  const propMatch = request.nextUrl.pathname.match(PROPERTIES_RE);
   if (propMatch) {
     const url = request.nextUrl.clone();
     url.pathname = propMatch[1] ? `/${propMatch[1]}/projects` : "/projects";
@@ -370,15 +397,15 @@ export default async function middleware(request: NextRequest) {
     return NextResponse.redirect(url, 308);
   }
 
-  // FAQ redesign — now locale-aware for all 4 languages, same shape as the
+  // FAQ redesign — locale-aware for every live locale, same shape as the
   // Case Studies block below (both were English/prefixless-only until their
-  // respective translation work). /faq, /de/faq, /pl/faq, /ru/faq all rewrite
-  // to preview-faq/[lang] — the visible URL never changes. Content per
-  // language lives in the faqPage SiteDocument; a language with no row yet
-  // would 404 via the page's own notFound() rather than silently falling
-  // back, so this only ships once every language actually has content (see
-  // scripts/seed-faq-translations.mjs).
-  const faqMatch = request.nextUrl.pathname.match(/^\/(?:(de|pl|ru)\/)?faq$/);
+  // respective translation work). /faq, /de/faq, /pl/faq, /ru/faq (and /he/faq
+  // once live) all rewrite to preview-faq/[lang] — the visible URL never
+  // changes. Content per language lives in the faqPage SiteDocument; a
+  // language with no row yet would 404 via the page's own notFound() rather
+  // than silently falling back, so this only ships once every language
+  // actually has content (see scripts/seed-faq-translations.mjs).
+  const faqMatch = request.nextUrl.pathname.match(FAQ_RE);
   if (faqMatch) {
     const lang = faqMatch[1] || "en";
     const url = request.nextUrl.clone();
@@ -390,7 +417,7 @@ export default async function middleware(request: NextRequest) {
   // /de/case-studies, /pl/case-studies, /ru/case-studies (and their /slug
   // children) all rewrite to preview-case-studies/[lang]/... — the visible
   // URL never changes, only what's rendered behind it.
-  const caseStudiesMatch = request.nextUrl.pathname.match(/^\/(?:(de|pl|ru)\/)?case-studies(?:\/([^/]+))?$/);
+  const caseStudiesMatch = request.nextUrl.pathname.match(CASE_STUDIES_RE);
   if (caseStudiesMatch) {
     const [, localeSeg, slug] = caseStudiesMatch;
     const lang = localeSeg || "en";
@@ -407,7 +434,7 @@ export default async function middleware(request: NextRequest) {
   // exact /partners path. The old hardcoded /[lang]/partners/page.tsx this
   // used to sit alongside has been deleted — this rewrite is no longer
   // provisional, it's the only implementation left.
-  const partnersMatch = request.nextUrl.pathname.match(/^\/(?:(de|pl|ru)\/)?partners$/);
+  const partnersMatch = request.nextUrl.pathname.match(PARTNERS_RE);
   if (partnersMatch) {
     const lang = partnersMatch[1] || "en";
     const url = request.nextUrl.clone();
@@ -428,8 +455,8 @@ export default async function middleware(request: NextRequest) {
   {
     const segs = request.nextUrl.pathname.split("/").filter(Boolean);
     const maybeLocale = segs[0];
-    const hasLocalePrefix = maybeLocale === "de" || maybeLocale === "pl" || maybeLocale === "ru";
-    const lang = hasLocalePrefix ? maybeLocale : "en";
+    const hasLocalePrefix = maybeLocale !== DEFAULT_LOCALE && ALL_LOCALES.includes(maybeLocale);
+    const lang = hasLocalePrefix ? maybeLocale : DEFAULT_LOCALE;
     const rest = hasLocalePrefix ? segs.slice(1) : segs;
     if (rest.length === 1) {
       const slug = rest[0];
@@ -512,8 +539,8 @@ export default async function middleware(request: NextRequest) {
   }
 
   const handleI18nRouting = createIntlMiddleware({
-    locales,
-    defaultLocale,
+    locales: [...PUBLIC_LOCALES],
+    defaultLocale: DEFAULT_LOCALE,
     // Default locale (English) is served without a URL prefix; de/pl/ru keep
     // their prefix. next-intl also redirects `/en/...` → `/...` automatically
     // (307) — the block above intercepts most cases with a 301 first; this

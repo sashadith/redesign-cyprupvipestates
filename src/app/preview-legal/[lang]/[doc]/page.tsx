@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { i18n } from "@/i18n.config";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, PUBLIC_LOCALES as LOCALES, isLocale, isPublicLocale, BCP47 } from "@/lib/locale";
 import { languageAlternates } from "@/lib/seo";
-import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporateLocale, type CorporatePage } from "@/lib/corporatePageSlugs";
+import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporatePage } from "@/lib/corporatePageSlugs";
 import type { Translation } from "@/types/homepage";
 import Nav from "../../../preview-home/sections/Nav";
 import Footer from "../../../preview-home/sections/Footer";
@@ -25,8 +25,6 @@ import type { LegalBlock } from "./types";
 
 type Props = { params: { lang: string; doc: string } };
 
-const LOCALES = ["en", "de", "pl", "ru"] as const;
-
 export async function generateStaticParams() {
   return LOCALES.flatMap((lang) => ["privacy", "terms"].map((doc) => ({ lang, doc })));
 }
@@ -37,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = getLegalDoc(doc, lang);
   if (!t) return {};
 
-  const l = (LOCALES as readonly string[]).includes(lang) ? (lang as CorporateLocale) : "en";
+  const l = isPublicLocale(lang) ? lang : "en";
   const page: CorporatePage = doc === "privacy" ? "privacy" : "terms";
 
   const { canonical, languages } = languageAlternates({
@@ -99,7 +97,7 @@ export default async function LegalPage({ params }: Props) {
   }));
 
   const updatedDisplay = new Intl.DateTimeFormat(
-    lang === "de" ? "de-DE" : lang === "pl" ? "pl-PL" : lang === "ru" ? "ru-RU" : "en-GB",
+    isLocale(lang) ? BCP47[lang] : BCP47.en,
     { day: "numeric", month: "long", year: "numeric" },
   ).format(new Date(t.updated));
 

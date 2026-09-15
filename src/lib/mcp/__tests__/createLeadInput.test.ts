@@ -27,3 +27,8 @@ test("enums are the admin's: property types, timeline, financing, language, stat
   assert.equal(CreateLeadInput.safeParse({ firstName: "A", timeline: "ONE_YEAR", financing: "CASH", languagePreference: "de", status: "CONTACTED" }).success, true);
   assert.equal(CreateLeadInput.safeParse({ firstName: "A", status: "DELETED" }).success, false);
 });
+
+test("languagePreference accepts he", () => {
+  const parsed = CreateLeadInput.parse({ firstName: "Test", email: "t@example.com", languagePreference: "he" });
+  assert.equal(parsed.languagePreference, "he");
+});

@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { generateAvailableSlots } from "@/lib/booking/slots";
 import { formatInZone, CYPRUS_TZ } from "@/lib/booking/timezone";
 import { getConfirmedBookings, findConflict } from "@/lib/booking/conflicts";
+import { BCP47 } from "@/lib/locale";
 import { asBLocale, COPY } from "./copy";
 import SlotPicker, { type SlotGroup } from "./SlotPicker";
 
@@ -140,5 +141,5 @@ export default async function BookingPage({ params }: { params: { token: string 
 }
 
 function localeToIntl(locale: ReturnType<typeof asBLocale>): string {
-  return { en: "en-GB", de: "de-DE", pl: "pl-PL", ru: "ru-RU" }[locale];
+  return BCP47[locale];
 }

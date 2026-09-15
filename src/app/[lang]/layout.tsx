@@ -2,6 +2,7 @@
 import "@/app/globals.css";
 import "@/app/design-tokens.css"; // shared design tokens (definitions only — see file header)
 import "@/app/header-footer.css"; // global header + footer chrome (redesign) — see file header
+import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import type { Metadata } from "next";
 import { Rubik, Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import { cookies, draftMode } from "next/headers";
@@ -20,17 +21,24 @@ import { MotionConfig } from "framer-motion";
 import Script from "next/script";
 import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_WIDTH, DEFAULT_OG_IMAGE_HEIGHT } from "@/lib/seo";
 import { notFound } from "next/navigation";
-import { isLocale } from "@/lib/locale";
+import { isPublicLocale, localeDir, nonDefaultLocalePattern, type Locale } from "@/lib/locale";
+import { frankRuhlLibre, rubikHebrew } from "@/app/fonts/hebrew";
 
 // Localized label for the "skip to main content" accessibility link.
-const SKIP_LINK_LABELS: Record<string, string> = {
+const SKIP_LINK_LABELS: Record<Locale, string> = {
   en: "Skip to main content",
   de: "Zum Hauptinhalt springen",
   pl: "Przejdź do treści głównej",
   ru: "Перейти к основному содержанию",
+  he: "דלג לתוכן הראשי",
 };
 
-const rubik = Rubik({ subsets: ["latin", "cyrillic"] });
+// Built from the same helper as isDarkHeroPath() in navShared.tsx so the two
+// route tests cannot drift apart.
+const NON_DEFAULT = nonDefaultLocalePattern();
+const PREPAINT = `(function(){try{var p=location.pathname.replace(/\\/+$/,'')||'/';if(/^\\/(${NON_DEFAULT})?$/.test(p)||/^(\\/(${NON_DEFAULT}))?\\/projects$/.test(p))document.documentElement.setAttribute('data-hero-dark','')}catch(e){}})()`;
+
+const rubik = Rubik({ subsets: ["latin", "cyrillic", "hebrew"] });
 
 // Redesign chrome fonts — define the CSS vars the global header/footer use.
 // Applied as `.variable` classes on <body> (they only DEFINE the vars; the body
@@ -97,7 +105,7 @@ export default function RootLayout({
   // Every prefix the middleware matcher excludes (/api, /og, /admin, …) reaches
   // this layout with that prefix as `lang` when nothing more specific matched.
   // Reject it here so the whole `[lang]` tree 404s instead of 500ing downstream.
-  if (!isLocale(params.lang)) notFound();
+  if (!isPublicLocale(params.lang)) notFound();
 
   const cookieStore = cookies();
   const consentCookie = cookieStore.get("cookieConsent");
@@ -115,18 +123,15 @@ export default function RootLayout({
   const isDraftPreview = draftMode().isEnabled;
 
   return (
-    <html lang={params.lang} suppressHydrationWarning>
+    <html lang={params.lang} dir={localeDir(params.lang)} suppressHydrationWarning>
       <LenisProvider />
-      <body className={`${rubik.className} ${fraunces.variable} ${mulish.variable} ${playfairCyr.variable}`}>
+      <body className={`${rubik.className} ${fraunces.variable} ${mulish.variable} ${playfairCyr.variable} ${frankRuhlLibre.variable} ${rubikHebrew.variable}`}>
         {/* Pre-paint: mark dark-hero routes (home, /projects) so the global nav is
             transparent there from the first frame (no bar → transparent flash).
             Client-side navigation is handled by <NavHeroFlag>. Keep the route test
             in sync with isDarkHeroPath() in navShared.tsx. */}
         <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "(function(){try{var p=location.pathname.replace(/\\/+$/,'')||'/';if(/^\\/(de|pl|ru)?$/.test(p)||/^(\\/(de|pl|ru))?\\/projects$/.test(p))document.documentElement.setAttribute('data-hero-dark','')}catch(e){}})()",
-          }}
+          dangerouslySetInnerHTML={{ __html: PREPAINT }}
         />
         <NavHeroFlag />
         <SkipLink label={SKIP_LINK_LABELS[params.lang] ?? SKIP_LINK_LABELS.en} />
@@ -206,7 +211,7 @@ export default function RootLayout({
         {/* GA4 (G-WLD3B6GN9P) is managed exclusively through GTM (GTM-MQNF6L9V) — the direct
             gtag GoogleAnalyticsWrapper was removed to eliminate duplicate page_views. */}
 
-        <CustomCookieConsent lang={params.lang as "en" | "de" | "pl" | "ru"} />
+        <CustomCookieConsent lang={params.lang as Locale} />
       </body>
     </html>
   );

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import styles from "./CustomCookieConsent.module.scss";
-import { localePrefix } from "@/lib/locale";
+import { localePrefix, type Locale } from "@/lib/locale";
+import { CORPORATE_SLUGS } from "@/lib/corporatePageSlugs";
 
 const COOKIE_NAME = "cookieConsent";
 
@@ -15,7 +16,7 @@ type Consent = {
 };
 
 type Props = {
-  lang: "en" | "de" | "pl" | "ru";
+  lang: Locale;
 };
 
 const dictionary = {
@@ -55,7 +56,7 @@ const dictionary = {
 
 export default function CustomCookieConsent({ lang }: Props) {
   const router = useRouter();
-  const t = dictionary[lang] || dictionary.en;
+  const t = dictionary[lang as keyof typeof dictionary] || dictionary.en;
 
   const getNormalizedHref = (lang: string, link: string) => {
     const normalizedLink = link.startsWith("/") ? link.slice(1) : link;
@@ -109,15 +110,7 @@ export default function CustomCookieConsent({ lang }: Props) {
       <p>
         {t.description}{" "}
         <a
-          href={getNormalizedHref(
-            lang,
-            {
-              en: "privacy-policy",
-              de: "datenschutzrichtlinie",
-              pl: "polityka-prywatnosci",
-              ru: "politika-privatnosti",
-            }[lang]
-          )}
+          href={getNormalizedHref(lang, CORPORATE_SLUGS.privacy[lang])}
           target="_blank"
           className={styles.policyLink}
         >

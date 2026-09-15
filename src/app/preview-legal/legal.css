@@ -24,7 +24,7 @@
   font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent);
 }
 .lgl__title {
-  margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  margin: 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
   /* Hero/H1 step — see the same note in contacts.css. */
   font-size: var(--text-h1); line-height: 1.05; letter-spacing: -0.02em; color: var(--text);
   text-wrap: balance; max-width: 18ch;

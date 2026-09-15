@@ -40,7 +40,7 @@
 /* same container as the global header/footer (--maxw / --gutter) */
 .pp-wrap { width: 100%; max-width: var(--maxw); margin: 0 auto; padding-inline: var(--gutter); }
 .pp-section { padding-block: clamp(28px, 4vw, 52px); }
-.pp-h2 { font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+.pp-h2 { font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
   font-size: clamp(1.5rem, 1.2rem + 1.4vw, 2.1rem); color: var(--ivory); margin: 0 0 .7em; letter-spacing: -0.01em; }
 .pp-count { font-family: var(--font-body), sans-serif; font-size: 0.9rem; color: var(--text-faint); font-weight: 600; }
 .pp-desc { font-size: var(--text-body); line-height: 1.8; color: var(--text-soft); max-width: 70ch; margin: 0; }
@@ -145,7 +145,7 @@
 .pp-loc { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
   color: rgba(255,255,255,0.92); padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.14);
   background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-.pp-title { font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+.pp-title { font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
   font-size: clamp(2.2rem, 1.4rem + 3.4vw, 3.8rem); line-height: 1.06; color: #fff; margin: 0 0 22px; letter-spacing: -0.015em;
   text-shadow: 0 2px 34px rgba(0,0,0,0.45); }
 .pp-hero__stats { display: flex; flex-wrap: wrap; gap: clamp(20px, 3vw, 40px); }
@@ -209,7 +209,7 @@
 /* odd total: last fact spans full width so the row dividers close cleanly */
 .pp-panel__facts .pp-fact:last-child:nth-child(odd) { grid-column: 1 / -1; }
 .pp-panel__facts .pp-fact span { color: var(--champagne); opacity: 0.72; font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase; }
-.pp-panel__facts .pp-fact b { font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: 1.12rem; color: var(--ivory); }
+.pp-panel__facts .pp-fact b { font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400; font-size: 1.12rem; color: var(--ivory); }
 .pp-panel__amen { padding: 16px clamp(15px, 1.6vw, 20px) 18px; border-top: 1px solid var(--hairline); }
 .pp-panel__label { font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--champagne); opacity: 0.72; margin-bottom: 12px; }
 .pp-benefits { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }

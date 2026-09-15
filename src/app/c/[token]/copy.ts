@@ -1,13 +1,16 @@
-export type PLocale = "en" | "de" | "pl" | "ru";
-export const P_LOCALES: PLocale[] = ["en", "de", "pl", "ru"];
-export const asPLocale = (v: string | null | undefined): PLocale => (P_LOCALES.includes(v as PLocale) ? (v as PLocale) : "en");
+import { LOCALES, isLocale, type Locale } from "@/lib/locale";
+export type PLocale = Locale;
+export const P_LOCALES = LOCALES;
+export const asPLocale = (v: string | null | undefined): PLocale => (v && isLocale(v) ? v : "en");
 
 type Greeting = { morning: string; afternoon: string; evening: string };
+const GREETING_EN: Greeting = { morning: "Good morning", afternoon: "Good afternoon", evening: "Good evening" };
 const GREETING: Record<PLocale, Greeting> = {
-  en: { morning: "Good morning", afternoon: "Good afternoon", evening: "Good evening" },
+  en: GREETING_EN,
   de: { morning: "Guten Morgen", afternoon: "Guten Tag", evening: "Guten Abend" },
   pl: { morning: "Dzień dobry", afternoon: "Dzień dobry", evening: "Dobry wieczór" },
   ru: { morning: "Доброе утро", afternoon: "Добрый день", evening: "Добрый вечер" },
+  he: GREETING_EN, // TODO(he)
 };
 
 /** Time-of-day greeting word, by server clock hour (0-23). */
@@ -18,7 +21,7 @@ export function timeOfDayGreeting(locale: PLocale, hour: number): string {
   return g.evening;
 }
 
-export const COPY: Record<PLocale, {
+export type PresentationCopy = {
   eyebrowTag: string;
   intro: string;
   requirementsTitle: string;
@@ -58,41 +61,45 @@ export const COPY: Record<PLocale, {
   units: string;
   delivery: string;
   viewOnSite: string;
-}> = {
-  en: {
-    eyebrowTag: "YOUR PERSONAL SELECTION",
-    intro: "Thank you for your trust. I have personally selected these properties for you - each of them matches your wishes and deserves your attention.",
-    requirementsTitle: "Your preferences",
-    budgetUpTo: "up to",
-    propertyTypeNames: { Apartment: "Apartment", Villa: "Villa", Townhouse: "Townhouse", Penthouse: "Penthouse" },
-    timelineLabels: { IMMEDIATE: "Immediate", THREE_MONTHS: "Within 3 months", SIX_MONTHS: "Within 6 months", ONE_YEAR: "Within a year", TWO_YEARS: "Within 2 years", JUST_LOOKING: "Just looking" },
-    bedroomLabels: { "0": "Studio", "1": "1 bedroom", "2": "2 bedrooms", "3": "3 bedrooms", "4": "4 bedrooms", "5": "5+ bedrooms" },
-    viewDetails: "View details",
-    availableUnits: "Available units",
-    unitsTable: { unit: "Unit", type: "Type", beds: "Beds", area: "Area", price: "Price", status: "Status" },
-    statusLabel: { available: "Available", reserved: "Reserved", sold: "Sold", unlisted: "No longer available" },
-    advisorTitle: "Your personal advisor",
-    unitsPlural: { one: "unit", many: "units" },
-    newForYou: "New for you",
-    vatLabel: "+VAT",
-    soldOut: "Sold out",
-    lifeNearby: "LIFE NEARBY",
-    closingEyebrow: "DIRECT CONTACT",
-    closingTrust: "I personally answer every message - usually within the hour. Ask me anything about the properties in your selection, arranging a viewing, or the details of buying in Cyprus. No obligation, no rush.",
-    whatsapp: "WhatsApp",
-    call: "Call",
-    email: "Email",
-    whatsappMessage: "Hello, I viewed my personal selection and would like to talk about",
-    notAvailableTitle: "This page is no longer available",
-    notAvailableBody: "The link you used has expired or is no longer active. Please get in touch and we will be glad to help.",
-    contactUs: "Contact us",
-    legal: "This selection is provided for informational purposes and does not constitute an offer.",
-    privacyPolicy: "Privacy policy",
-    priceFrom: "from",
-    units: "units",
-    delivery: "Delivery",
-    viewOnSite: "View on site",
-  },
+};
+
+const COPY_EN: PresentationCopy = {
+  eyebrowTag: "YOUR PERSONAL SELECTION",
+  intro: "Thank you for your trust. I have personally selected these properties for you - each of them matches your wishes and deserves your attention.",
+  requirementsTitle: "Your preferences",
+  budgetUpTo: "up to",
+  propertyTypeNames: { Apartment: "Apartment", Villa: "Villa", Townhouse: "Townhouse", Penthouse: "Penthouse" },
+  timelineLabels: { IMMEDIATE: "Immediate", THREE_MONTHS: "Within 3 months", SIX_MONTHS: "Within 6 months", ONE_YEAR: "Within a year", TWO_YEARS: "Within 2 years", JUST_LOOKING: "Just looking" },
+  bedroomLabels: { "0": "Studio", "1": "1 bedroom", "2": "2 bedrooms", "3": "3 bedrooms", "4": "4 bedrooms", "5": "5+ bedrooms" },
+  viewDetails: "View details",
+  availableUnits: "Available units",
+  unitsTable: { unit: "Unit", type: "Type", beds: "Beds", area: "Area", price: "Price", status: "Status" },
+  statusLabel: { available: "Available", reserved: "Reserved", sold: "Sold", unlisted: "No longer available" },
+  advisorTitle: "Your personal advisor",
+  unitsPlural: { one: "unit", many: "units" },
+  newForYou: "New for you",
+  vatLabel: "+VAT",
+  soldOut: "Sold out",
+  lifeNearby: "LIFE NEARBY",
+  closingEyebrow: "DIRECT CONTACT",
+  closingTrust: "I personally answer every message - usually within the hour. Ask me anything about the properties in your selection, arranging a viewing, or the details of buying in Cyprus. No obligation, no rush.",
+  whatsapp: "WhatsApp",
+  call: "Call",
+  email: "Email",
+  whatsappMessage: "Hello, I viewed my personal selection and would like to talk about",
+  notAvailableTitle: "This page is no longer available",
+  notAvailableBody: "The link you used has expired or is no longer active. Please get in touch and we will be glad to help.",
+  contactUs: "Contact us",
+  legal: "This selection is provided for informational purposes and does not constitute an offer.",
+  privacyPolicy: "Privacy policy",
+  priceFrom: "from",
+  units: "units",
+  delivery: "Delivery",
+  viewOnSite: "View on site",
+};
+
+export const COPY: Record<PLocale, PresentationCopy> = {
+  en: COPY_EN,
   de: {
     eyebrowTag: "IHRE PERSÖNLICHE AUSWAHL",
     intro: "Ich danke Ihnen für Ihr Vertrauen. Ich habe diese Objekte persönlich für Sie ausgewählt - jedes von ihnen entspricht Ihren Wünschen und verdient Ihre Aufmerksamkeit.",
@@ -195,6 +202,7 @@ export const COPY: Record<PLocale, {
     delivery: "Срок сдачи",
     viewOnSite: "Смотреть на сайте",
   },
+  he: COPY_EN, // TODO(he)
 };
 
 /** "N <localized unit noun>" with correct plural form per locale (RU/PL are

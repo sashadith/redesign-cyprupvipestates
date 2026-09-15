@@ -41,7 +41,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
   font-weight: 600; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent);
 }
 .ins__hero-title {
-  margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  margin: 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
   font-size: var(--text-display); line-height: 1.0; letter-spacing: -0.02em; color: var(--text); text-wrap: balance;
 }
 .ins__hero-lead {
@@ -131,7 +131,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
   color: var(--accent-ink); background: var(--accent); padding: 3px 9px; border-radius: 999px;
 }
 .ifeat__title {
-  margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  margin: 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
   font-size: var(--text-h2); line-height: 1.08; letter-spacing: -0.02em; color: var(--ivory); text-wrap: balance;
 }
 .ifeat:hover .ifeat__title { color: #fff; }
@@ -185,7 +185,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 }
 .icard__body { padding-top: var(--s-4); display: flex; flex-direction: column; gap: var(--s-3); flex: 1; }
 .icard__title {
-  margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  margin: 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
   font-size: clamp(1.2rem, 1.05rem + 0.7vw, 1.5rem); line-height: 1.18; letter-spacing: -0.01em; color: var(--ivory); text-wrap: balance;
   transition: color var(--dur-sm) var(--ease);
 }
@@ -214,7 +214,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 .ins__guide .ins__eyebrow { color: var(--accent); }
 .ins__guide-head { max-width: 60ch; }
 .ins__guide-title {
-  margin: var(--s-4) 0 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  margin: var(--s-4) 0 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
   font-size: var(--text-h2); line-height: 1.08; letter-spacing: -0.02em; color: var(--text); text-wrap: balance;
 }
 .ins__guide-stripe { margin: var(--s-5) 0 0; max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }
@@ -253,7 +253,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 }
 .ins__topic:hover { border-color: var(--accent); transform: translateY(-3px); background: var(--surface-raised); box-shadow: 0 20px 50px -34px rgba(34,28,21,0.3); }
 .ins__topic-no { font-family: var(--font-display), serif; font-size: 1.05rem; color: var(--accent); letter-spacing: 0.04em; }
-.ins__topic-title { margin: var(--s-3) 0 var(--s-3); font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: clamp(1.2rem, 1.05rem + 0.5vw, 1.4rem); line-height: 1.18; color: var(--text); text-wrap: balance; }
+.ins__topic-title { margin: var(--s-3) 0 var(--s-3); font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400; font-size: clamp(1.2rem, 1.05rem + 0.5vw, 1.4rem); line-height: 1.18; color: var(--text); text-wrap: balance; }
 .ins__topic-body .ins__guide-p { font-size: var(--text-sm); line-height: 1.6; margin: 0; color: var(--text-soft); }
 .ins__topic-body .ins__guide-p + .ins__guide-p { margin-top: 10px; }
 
@@ -299,7 +299,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 .iart__back:hover { color: var(--ivory); }
 .iart__sep { color: var(--text-faint); }
 .iart__cat { color: var(--ivory); }
-.iart__title { margin: 0; max-width: 18ch; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: var(--text-h1); line-height: 1.04; letter-spacing: -0.02em; color: var(--ivory); text-wrap: balance; text-shadow: 0 2px 36px rgba(8,21,18,0.45); }
+.iart__title { margin: 0; max-width: 18ch; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400; font-size: var(--text-h1); line-height: 1.04; letter-spacing: -0.02em; color: var(--ivory); text-wrap: balance; text-shadow: 0 2px 36px rgba(8,21,18,0.45); }
 .iart__meta { margin: var(--s-6) 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: rgba(239,233,219,0.82); }
 .iart__byline { display: inline-flex; align-items: center; gap: 10px; color: var(--ivory); }
 .iart__byline-img { width: 34px; height: 34px; border-radius: 999px; object-fit: cover; border: 1px solid rgba(239,233,219,0.35); }
@@ -346,7 +346,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
   float: left; font-family: var(--font-display), serif; font-weight: 500; font-size: 3.6em; line-height: 0.72;
   padding: 0.06em 0.12em 0 0; color: var(--accent);
 }
-.iart__h2 { scroll-margin-top: 96px; margin: clamp(44px, 6vw, 72px) 0 var(--s-4); font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: clamp(1.6rem, 1.3rem + 1.4vw, 2.2rem); line-height: 1.14; letter-spacing: -0.02em; color: var(--text); text-wrap: balance; }
+.iart__h2 { scroll-margin-top: 96px; margin: clamp(44px, 6vw, 72px) 0 var(--s-4); font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400; font-size: clamp(1.6rem, 1.3rem + 1.4vw, 2.2rem); line-height: 1.14; letter-spacing: -0.02em; color: var(--text); text-wrap: balance; }
 .iart__h3 { margin: clamp(32px, 4vw, 48px) 0 var(--s-3); font-family: var(--font-display), serif; font-weight: 500; font-size: clamp(1.3rem, 1.1rem + 0.8vw, 1.6rem); line-height: 1.2; color: var(--text); }
 .iart__h4 { margin: var(--s-6) 0 var(--s-3); font-family: var(--font-body), sans-serif; font-weight: 600; font-size: 1.05rem; letter-spacing: 0.02em; color: var(--text); }
 .iart__link { color: var(--champagne); text-decoration: none; }
@@ -364,7 +364,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 /* pull-quote */
 .iart__quote { position: relative; margin: clamp(40px, 5vw, 64px) 0; padding-top: var(--s-7); }
 .iart__quote::before { content: "\201C"; position: absolute; top: -0.08em; left: -0.02em; font-family: var(--font-display), serif; font-size: 4.2rem; line-height: 1; color: var(--accent); opacity: 0.5; }
-.iart__quote p { margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-style: italic; font-weight: 400; font-size: clamp(1.35rem, 1.1rem + 1vw, 1.9rem); line-height: 1.34; letter-spacing: -0.01em; color: var(--text); text-wrap: balance; }
+.iart__quote p { margin: 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-style: italic; font-weight: 400; font-size: clamp(1.35rem, 1.1rem + 1vw, 1.9rem); line-height: 1.34; letter-spacing: -0.01em; color: var(--text); text-wrap: balance; }
 
 /* figures */
 .iart__figure { margin: clamp(32px, 4vw, 52px) 0; }
@@ -408,7 +408,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 }
 .iart__inrel-label::before { content: ""; width: 18px; height: 1px; background: var(--accent); display: inline-block; }
 .iart__inrel-title {
-  margin: var(--s-3) 0 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  margin: var(--s-3) 0 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
   font-size: clamp(1.25rem, 1.05rem + 0.7vw, 1.55rem); line-height: 1.2; letter-spacing: -0.01em; color: var(--text); text-wrap: balance;
   transition: color 0.45s var(--ease);
 }
@@ -468,5 +468,5 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 
 /* related (dark) */
 .iart__related { background: var(--sea-deep); border-top: 1px solid var(--hairline); padding: clamp(56px, 8vw, 104px) 0; }
-.iart__related-title { margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em; color: var(--ivory); }
+.iart__related-title { margin: 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400; font-size: var(--text-h2); line-height: 1.1; letter-spacing: -0.02em; color: var(--ivory); }
 .iart__related-stripe { margin: var(--s-5) 0 clamp(36px, 5vw, 56px); max-width: none; background: linear-gradient(90deg, var(--accent), transparent); }

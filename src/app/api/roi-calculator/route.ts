@@ -4,8 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { parseAttribution } from "@/lib/attribution";
 import { recordInboundLead } from "@/lib/leadNotify";
 import { safeUrl, allowedHost, escapeHtml, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
+import { LOCALES } from "@/lib/locale";
 
-const LEAD_LOCALES = new Set(["en", "de", "pl", "ru"]);
+const LEAD_LOCALES = new Set<string>(LOCALES);
 
 const ipLimiter = makeRateLimiter();
 const emailLimiter = makeRateLimiter();

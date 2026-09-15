@@ -1,5 +1,5 @@
 import React from "react";
-import { localizedHref, localePrefix } from "@/lib/locale";
+import { localizedHref, localePrefix, LOCALE_LABELS, nonDefaultLocalePattern } from "@/lib/locale";
 
 /* Shared nav data + lightweight SVG icons (no icon library) + link resolution.
    Used by the desktop nav links, the language switcher, and the mobile menu.
@@ -7,14 +7,13 @@ import { localizedHref, localePrefix } from "@/lib/locale";
    for the LIVE multilingual site (localized hrefs + real language switching). */
 
 /* i18n language id → { code shown in the pill, native name in the menu } */
-export const LANG_LABELS: Record<string, { code: string; name: string }> = {
-  en: { code: "EN", name: "English" },
-  de: { code: "DE", name: "Deutsch" },
-  pl: { code: "PL", name: "Polski" },
-  ru: { code: "RU", name: "Русский" },
-};
+export const LANG_LABELS: Record<string, { code: string; name: string }> = LOCALE_LABELS;
 
 export const langCode = (id: string) => LANG_LABELS[id]?.code ?? id.toUpperCase();
+
+const NON_DEFAULT = nonDefaultLocalePattern();
+const HOME_RE = new RegExp(`^/(${NON_DEFAULT})?$`);
+const PROJECTS_RE = new RegExp(`^(/(${NON_DEFAULT}))?/projects$`);
 
 /* Routes with a dark, full-bleed hero where the nav should stay FULLY transparent
    at the top (signature look): the home page and the /projects listing, in every
@@ -23,7 +22,7 @@ export const langCode = (id: string) => LANG_LABELS[id]?.code ?? id.toUpperCase(
    [lang]/layout.tsx. */
 export function isDarkHeroPath(pathname: string): boolean {
   const p = pathname.replace(/\/+$/, "") || "/";
-  return /^\/(de|pl|ru)?$/.test(p) || /^(\/(de|pl|ru))?\/projects$/.test(p);
+  return HOME_RE.test(p) || PROJECTS_RE.test(p);
 }
 
 export type ResolvedNav = {

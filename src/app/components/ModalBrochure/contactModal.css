@@ -116,7 +116,7 @@
 
 .cvpm__title {
   margin: 0;
-  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), Georgia, serif;
   font-weight: 400;
   /* Sized so the LONGEST of the four headlines still fits on one line, not so
      the English one looks good. Measured at 1512px: "Sprechen Sie mit einem
