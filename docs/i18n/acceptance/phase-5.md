@@ -41,13 +41,13 @@ Alles andere in Phase 5/6 ist entweder `he`-only (Sprachlisten-Chips auf About/K
 
 ## Operator-Schritte auf Staging (in dieser Reihenfolge)
 
-1. **Deploy des gestapelten Branches** (wie in `phase-1.md`/`phase-4.md`):
+1. **Phase-1-Migration anwenden, falls auf dieser Umgebung noch nicht geschehen — VOR dem Deploy** (additiv, geteilte DB — bewusst freigegeben; Details, Vorab-Sync des `prisma/`-Ordners und Kontrollabfrage in `phase-1.md` Schritt 2). Der Build braucht den Enum-Wert `he`, weil `generateStaticParams` die Datenbank damit abfragt:
+   ```bash
+   cd /var/www/cve-staging && CVP_CONFIRM_PROD_MIGRATE=yes ./scripts/migrate-deploy-safe.sh migrate deploy
+   ```
+2. **Deploy des gestapelten Branches** (wie in `phase-1.md`/`phase-4.md`):
    ```bash
    ./scripts/deploy-staging.sh
-   ```
-2. **Phase-1-Migration anwenden, falls auf dieser Umgebung noch nicht geschehen** (additiv, geteilte DB — bewusst freigegeben; siehe `phase-1.md` für die Postgres-Versions-Einschränkung):
-   ```bash
-   cd /var/www/cve-staging && CVP_CONFIRM_PROD_MIGRATE=yes ./scripts/migrate-deploy-safe.sh migrate deploy && pm2 reload cve-staging --update-env
    ```
 3. **Content-Pack seeden** (im Checkout auf dem Staging-Server, niemals vom Laptop):
    ```bash

@@ -34,6 +34,12 @@ NEXT_PUBLIC_LIVE_LOCALES=en,de,pl,ru,he
 
 ## 3. Deploy
 
+Voraussetzung: die beiden Phase-1-Migrationen sind bereits eingespielt (das passiert im Staging-Runbook, `acceptance/phase-1.md` Schritt 2 — geteilte Datenbank). Ohne den Enum-Wert `he` bricht auch der Produktions-Build bei „Collecting page data" ab. Lesende Kontrolle auf dem VPS:
+
+```bash
+sudo -u postgres psql -d cyprusvipestates -tAc 'select enum_range(null::"Locale")'
+```
+
 Produktion wird nie unaufgefordert deployed (Projektregel). Auf Anweisung:
 
 ```bash
