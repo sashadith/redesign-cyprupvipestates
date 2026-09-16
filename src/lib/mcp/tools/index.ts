@@ -7,6 +7,7 @@ import { registerGetProject } from "./getProject";
 import { registerPlaybook } from "./playbook";
 import { registerSearchProjects } from "./searchProjects";
 import { registerInventoryChanges } from "./inventoryChanges";
+import { registerWhatsappThread } from "./whatsappThread";
 import { registerLogInteraction } from "./logInteraction";
 import { registerUpdateLead } from "./updateLead";
 import { registerDraftEmail } from "./draftEmail";
@@ -15,6 +16,7 @@ import { registerListDrafts } from "./listDrafts";
 import { registerCreateLead } from "./createLead";
 import { registerDeleteLead } from "./deleteLead";
 import { registerRestoreLead } from "./restoreLead";
+import { registerWhatsappSend } from "./whatsappSend";
 
 export function registerReadTools(server: McpServer): void {
   registerWorklist(server);
@@ -25,6 +27,7 @@ export function registerReadTools(server: McpServer): void {
   registerPlaybook(server);
   registerSearchProjects(server);
   registerInventoryChanges(server);
+  registerWhatsappThread(server);
 }
 
 // Phase 2 — writes. Registered after the read tools; each one is attributed
@@ -39,4 +42,5 @@ export function registerWriteTools(server: McpServer): void {
   registerCreateLead(server);
   registerDeleteLead(server);
   registerRestoreLead(server);
+  registerWhatsappSend(server);
 }

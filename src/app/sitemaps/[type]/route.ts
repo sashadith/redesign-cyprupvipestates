@@ -7,11 +7,12 @@ import {
   getPaginatedLandingPageSlugs,
   getTotalBlogPostsByLang,
 } from "@/sanity/sanity.utils";
-import { localePrefix, localizedHref, PUBLIC_LOCALES, localesForStaticRoute } from "@/lib/locale";
+import { localePrefix, localizedHref, PUBLIC_LOCALES, localesForStaticRoute, type Locale } from "@/lib/locale";
 import { sitemapLocalesForType } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { urlFor } from "@/sanity/sanity.client";
 import { NEW_PROJECTS_INDEXABLE } from "@/lib/developmentSeo";
+import { DE_LANDING_MERGES, EN_LANDING_MERGES, PL_LANDING_MERGES, RU_LANDING_MERGES } from "@/middleware";
 
 const websiteUrl = "https://cyprusvipestates.com";
 const langs = PUBLIC_LOCALES;
@@ -25,6 +26,22 @@ const sitemapTypes = [
 ] as const;
 
 type SitemapType = (typeof sitemapTypes)[number];
+
+// A merged page's Singlepage row stays status:PUBLISHED forever (see the
+// *_LANDING_MERGES comment in middleware.ts) — getAllPathsForLang has no way
+// to know it now 301s, so without this filter every one of these 28 slugs
+// was listed here as an indexable URL that immediately redirects. Only flat,
+// single-segment paths are ever merge-map keys (middleware only merges exact
+// leaf paths, never nested children — see the domy-w-limassol note in
+// PL_LANDING_MERGES), so this only ever drops length-1 segments.
+// Partial: `he` has no merge map (its landing pages were authored fresh, no
+// legacy slugs were ever merged), so it falls back to an empty map below.
+const MERGED_SLUGS_BY_LANG: Partial<Record<Locale, Record<string, string>>> = {
+  de: DE_LANDING_MERGES,
+  pl: PL_LANDING_MERGES,
+  en: EN_LANDING_MERGES,
+  ru: RU_LANDING_MERGES,
+};
 
 type Alt = { hreflang: string; href: string };
 type SitemapPage = {
@@ -306,7 +323,10 @@ async function generatePagesSitemap(): Promise<SitemapPage[]> {
       alternates: listingAlts("faq"),
     });
 
-    const allPaths = await getAllPathsForLang(lang);
+    const merged = MERGED_SLUGS_BY_LANG[lang] ?? {};
+    const allPaths = (await getAllPathsForLang(lang)).filter(
+      (segments) => !(Array.isArray(segments) && segments.length === 1 && merged[segments[0]]),
+    );
 
     allPaths
       .filter((segments) => Array.isArray(segments) && segments.length > 0)

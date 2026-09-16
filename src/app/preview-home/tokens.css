@@ -1077,11 +1077,18 @@ img { max-width: 100%; display: block; }
 }
 /* Same treatment as the adviser popup's .cvpm__art (contactModal.css) — a
    decorative photo has no business taking space from the fields on mobile.
-   Same 860px breakpoint so every form on the site behaves alike. The name/
-   role caption stays: unlike the photo it's real attribution text, not
-   decorative. */
+   Same 860px breakpoint so every form on the site behaves alike. Reverted
+   2026-09-13: an earlier version of this rule kept the name/role caption
+   visible on its own, reasoning it was "real attribution text, not
+   decorative" — but a floating "Sascha Dith / CEO Cyprus VIP Estates" with
+   no photo above it read as a stray fragment, not attribution, once actually
+   seen on a phone. Hide both together, matching how FormStatic (case-studies
+   pages) has always treated its own consultant block as one unit. */
 @media (max-width: 860px) {
-  .formsec__consultant-wrap { display: none; }
+  .formsec__consultant-wrap,
+  .formsec__caption {
+    display: none;
+  }
 }
 
 

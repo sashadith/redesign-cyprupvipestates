@@ -35,8 +35,9 @@ test("localeFromPath is pure — no env access, unaffected by PUBLIC_LOCALES gat
   assert.equal(DEFAULT_LOCALE, "en");
 });
 
-// --- deriveLocale: writes SearchMetric.locale — must NOT change its bare-root
-// contract for the pre-existing locales (that would fork historical series) ---
+// --- deriveLocale: writes SearchMetric.locale. Since #49 (2026-09-14, with
+// the one-time backfill-homepage-locale relabel) a bare locale root derives as
+// its locale — the same contract as localeOfPath, for every locale incl. he ---
 
 test("deriveLocale recognises every non-default locale's slash-suffixed prefix, including the new he", () => {
   assert.equal(deriveLocale("/de/projects/x"), "de");
@@ -46,16 +47,18 @@ test("deriveLocale recognises every non-default locale's slash-suffixed prefix, 
   assert.equal(deriveLocale("/projects/x"), "en");
 });
 
-test("deriveLocale keeps its bare-root contract byte-identical (a bare /de is 'en', same as before Task 2) — changing it would fork SearchMetric's historical series", () => {
-  assert.equal(deriveLocale("/de"), "en");
-  assert.equal(deriveLocale("/pl"), "en");
-  assert.equal(deriveLocale("/ru"), "en");
-  assert.equal(deriveLocale("/he"), "en");
+test("deriveLocale resolves a bare locale root as its locale (#49 contract), he included", () => {
+  assert.equal(deriveLocale("/de"), "de");
+  assert.equal(deriveLocale("/pl"), "pl");
+  assert.equal(deriveLocale("/ru"), "ru");
+  assert.equal(deriveLocale("/he"), "he");
+  assert.equal(deriveLocale("/"), "en");
+  assert.equal(deriveLocale("/dex"), "en");
 });
 
 // --- localeOfPath: the JOIN-key derivation — bare root DOES resolve, he included ---
 
-test("localeOfPath resolves a bare locale root for every locale, he included, unlike deriveLocale", () => {
+test("localeOfPath resolves a bare locale root for every locale, he included, same as deriveLocale", () => {
   assert.equal(localeOfPath("/de"), "de");
   assert.equal(localeOfPath("/pl"), "pl");
   assert.equal(localeOfPath("/ru"), "ru");

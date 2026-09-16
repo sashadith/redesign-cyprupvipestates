@@ -408,13 +408,20 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 }
 .iart__inrel-label::before { content: ""; width: 18px; height: 1px; background: var(--accent); display: inline-block; }
 .iart__inrel-title {
+  /* No text-wrap: balance (2026-09-15) — balance intentionally shortens
+     each line to even them out, so a 2-line title stopped well short of the
+     card's right edge while .iart__inrel-excerpt right below it (plain
+     wrapping, no balance) filled it — the two looked inconsistent even
+     after the excerpt's own max-width fix. Plain wrapping here matches it. */
   margin: var(--s-3) 0 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
-  font-size: clamp(1.25rem, 1.05rem + 0.7vw, 1.55rem); line-height: 1.2; letter-spacing: -0.01em; color: var(--text); text-wrap: balance;
+  font-size: clamp(1.25rem, 1.05rem + 0.7vw, 1.55rem); line-height: 1.2; letter-spacing: -0.01em; color: var(--text);
   transition: color 0.45s var(--ease);
 }
 .iart__inrel-card:hover .iart__inrel-title { color: var(--bronze); }
 .iart__inrel-excerpt {
-  margin: var(--s-3) 0 0; max-width: 62ch;
+  /* No max-width, deliberately — matches the title's own full-width wrap
+     (see above) so the two lines don't look inconsistent side by side. */
+  margin: var(--s-3) 0 0;
   font-family: var(--font-body), sans-serif; font-size: var(--text-sm); font-weight: 300; line-height: 1.62; color: var(--text-soft);
 }
 .iart__inrel-cta {

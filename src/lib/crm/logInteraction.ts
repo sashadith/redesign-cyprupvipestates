@@ -47,7 +47,7 @@ export type LogInteractionInput = {
   occurredAt?: Date;
   leadReacted?: boolean;
   aiGenerated?: boolean;
-  via?: "mcp";
+  via?: "mcp" | "mcp-whatsapp";
 };
 
 // Pure rule for what counts as "enough to log": every type needs a non-empty

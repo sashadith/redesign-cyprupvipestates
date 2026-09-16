@@ -41,29 +41,27 @@ export type CanonicalTarget = { locale: Locale; page: string };
 /**
  * The single locale derivation for everything joined on a `locale::path` key.
  *
- * `deriveLocale` only recognises a prefix that is FOLLOWED BY A SLASH
- * (`/de/x`), so a bare locale root (`/de`) derives as "en". That would key the
- * German, Polish and Russian homepages as `en::/de` on the GSC side while the
- * page inventory keys them as `de::/de` — the three localised homepages would
- * never match, their clicks would count as uncovered, and all three would be
- * reported as having no impressions while being among the highest-traffic
- * pages on the site. (Confirmed against production 2026-08-23: `/de` 123
- * impressions, `/pl` 29, `/ru` 491, none of which would have joined.)
+ * History: `deriveLocale` (gsc/client.ts) used to recognise only a prefix
+ * FOLLOWED BY A SLASH (`/de/x`), so a bare locale root (`/de`) derived as
+ * "en". That keyed the German, Polish and Russian homepages as `en::/de` on
+ * the GSC side while the page inventory keyed them as `de::/de` — the three
+ * localised homepages never matched, their clicks counted as uncovered, and
+ * all three were reported as having no impressions while being among the
+ * highest-traffic pages on the site. (Confirmed against production
+ * 2026-08-23: `/de` 123 impressions, `/pl` 29, `/ru` 491, none of which
+ * joined.) This function was the workaround; since 2026-09-14 (#49, plus the
+ * one-time scripts/backfill-homepage-locale.mjs relabel of SearchMetric)
+ * `deriveLocale` resolves bare roots as well, and both now delegate to the
+ * same `localeFromPath`.
  *
- * Fixed here rather than inside `deriveLocale` itself, because that function
- * also decides `SearchMetric.locale` at sync time and `locale` is part of that
- * table's unique key — changing it would fork every existing homepage series
- * into a second one. Any source joined on a page key (GSC, PageView, Lead)
- * must use THIS function, not `deriveLocale` directly.
- *
- * Delegates to `localeFromPath` (lib/locale.ts), which recognises a bare root
- * for EVERY non-default locale in `LOCALES` — including `he`, so a bare
- * `/he` join key resolves correctly even while `he` is gated out of
- * `PUBLIC_LOCALES` (join keys are about what the data IS, not what is
- * currently public). Kept as its own named export (rather than inlining
- * `localeFromPath` at call sites) because every call site here is a
- * `locale::path` JOIN KEY, and that intent — plus the warning above about
- * never using `deriveLocale` for it — belongs on one well-documented function.
+ * `localeFromPath` (lib/locale.ts) recognises a bare root for EVERY
+ * non-default locale in `LOCALES` — including `he`, so a bare `/he` join key
+ * resolves correctly even while `he` is gated out of `PUBLIC_LOCALES` (join
+ * keys are about what the data IS, not what is currently public). Kept as
+ * its own named export (rather than inlining `localeFromPath` at call sites)
+ * because every call site here is a `locale::path` JOIN KEY, and that intent
+ * belongs on one well-documented function: any source joined on a page key
+ * (GSC, PageView, Lead) uses THIS function.
  */
 export function localeOfPath(path: string): Locale {
   return localeFromPath(path) as Locale;

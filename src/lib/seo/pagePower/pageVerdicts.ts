@@ -76,9 +76,9 @@ async function gscTotals(canonicalMap: Map<string, string>, windows: WindowSet):
     // The locale argument below is inert — `target.locale` is deliberately
     // ignored, see the next line — but `canonicalize` requires one.
     const target = canonicalize(canonicalMap, localeOfPath(row.page), row.page);
-    // Re-derived from the CANONICAL path, discarding `target.locale`, because
-    // `canonicalize` fills that in with `deriveLocale` and inherits its
-    // bare-root blind spot. Neither call is redundant: this one decides the key.
+    // Re-derived from the CANONICAL path, discarding `target.locale`: the key
+    // is decided here, from the final path, in one place — not from whatever
+    // `canonicalize` carried through. Neither call is redundant.
     const key = pageKey(localeOfPath(target.page), target.page);
     const at = row.date.getTime();
     for (const name of WINDOW_NAMES) {
