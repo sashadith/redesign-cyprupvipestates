@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { duplicateDevelopmentPairs } from "@/lib/overlapSweep";
 import { computeAvailability, availabilityContradiction } from "@/lib/developmentAvailability";
 import { computePublishGate, areaSlugOf } from "@/lib/developmentPublishGate";
 import { SYNCED_DEVS } from "@/lib/feedSync";
@@ -773,11 +774,69 @@ async function manualSyncDue(): Promise<ActionItem[]> {
   return items;
 }
 
+/* (q) The SAME building present twice as two Developments (2026-09-16, the
+   Eden Golf incident). Rule (j) above only ever compares a legacy Project
+   against a Development, so a pair of Developments was invisible to it: BBF
+   had /projects/golf-residences (hand-made, 2026-07-12) and /projects/eden-golf
+   (feed project 38, 2026-08-28) live against each other for two and a half
+   weeks, competing for the same searches with near-identical prices.
+
+   Report only — there is nothing to confirm. Between two Developments no
+   supersession relation exists in the schema, so the resolution is to archive
+   one, and an archived side removes the pair from the scan. That archive is
+   the acknowledgement, which is why this needs no candidate table and no
+   reject list.
+
+   Severity follows the damage: two PUBLISHED pages actually compete in search
+   and split their own traffic, so that is ACTION. If one side is still a draft
+   nothing is public yet and it is INFO — worth knowing before publishing,
+   not worth interrupting the day.
+
+   The deep link goes to whichever side has fewer units, which in the observed
+   case was the hand-made page with no images and a frozen unit list. That is a
+   convenience for the common shape, NOT a recommendation about which to keep:
+   both names, slugs and unit counts are in the description so the comparison
+   is made on the facts, not on which one this link happened to open. */
+async function duplicateDevelopments(): Promise<ActionItem[]> {
+  const pairs = await duplicateDevelopmentPairs();
+  if (!pairs.length) return [];
+  const ids = Array.from(new Set(pairs.flatMap((p) => [p.aId, p.bId])));
+  const rows = await prisma.development.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, publicName: true, slug: true, publishStatus: true, unitsTotal: true, createdAt: true },
+  });
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const out: ActionItem[] = [];
+  for (const pair of pairs) {
+    const a = byId.get(pair.aId), b = byId.get(pair.bId);
+    if (!a || !b) continue;
+    const bothPublished = a.publishStatus === "published" && b.publishStatus === "published";
+    /* Fewer units first — see the header. Ties broken by the newer row, the
+       likelier accident. */
+    const [weaker, stronger] = a.unitsTotal === b.unitsTotal
+      ? (a.createdAt > b.createdAt ? [a, b] : [b, a])
+      : (a.unitsTotal < b.unitsTotal ? [a, b] : [b, a]);
+    const describe = (d: typeof a) => `${d.slug ? `/${d.slug}` : "(no slug)"} · ${d.unitsTotal} unit${d.unitsTotal === 1 ? "" : "s"} · ${d.publishStatus}`;
+    out.push({
+      /* Sorted ids so the key never flips with scan order — a dismissal must
+         not be undone by the pair being found the other way round. */
+      id: `duplicate-development:${[pair.aId, pair.bId].sort().join(":")}`,
+      severity: bothPublished ? "ACTION" : "INFO",
+      category: "DEVELOPERS",
+      title: `"${a.publicName}" exists twice`,
+      description: `${describe(weaker)} and ${describe(stronger)} — ${pair.note}. Two Developments, not a legacy page: archive one to resolve.`,
+      deepLink: `/admin/developments/${weaker.id}`,
+      since: weaker.createdAt,
+    });
+  }
+  return out;
+}
+
 export async function developerRules(): Promise<ActionItem[]> {
-  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p] = await Promise.all([
+  const [a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q] = await Promise.all([
     soldOutReminders(), newUnpublished(), availabilityContradictions(), readyToPublishBatch(), feedSyncFailures(), feedMissingReminders(), backInStockReminders(),
     developerNoPageReminders(), developerLinkBrokenReminders(), overlapCandidatesPending(), developerLinkCollisions(), feedIncompleteWarnings(), imageDriftPending(),
-    emptyDraftReminders(), manualDataStaleReminders(), manualSyncDue(),
+    emptyDraftReminders(), manualDataStaleReminders(), manualSyncDue(), duplicateDevelopments(),
   ]);
-  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l, ...m, ...n, ...o, ...p];
+  return [...a, ...b, ...c, ...d, ...e, ...f, ...g, ...h, ...i, ...j, ...k, ...l, ...m, ...n, ...o, ...p, ...q];
 }
