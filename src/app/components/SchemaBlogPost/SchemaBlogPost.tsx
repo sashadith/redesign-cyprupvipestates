@@ -1,5 +1,4 @@
 // app/components/SchemaBlogPost.tsx
-import Script from "next/script";
 import { urlFor } from "@/sanity/sanity.client";
 import { Blog } from "@/types/blog";
 import { abs, localizedPath } from "@/lib/seo";
@@ -87,10 +86,9 @@ const SchemaBlogPost = ({ blog, lang }: SchemaBlogPostProps) => {
   };
 
   return (
-    <Script
+    <script
       id={`schema-article-${lang}-${slug}`}
       type="application/ld+json"
-      strategy="beforeInteractive"
       dangerouslySetInnerHTML={{
         __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
       }}

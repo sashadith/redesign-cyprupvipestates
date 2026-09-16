@@ -1,12 +1,11 @@
 // app/components/StructuredData.tsx
 
 import { generateStructuredData, PageInput } from "@/utils/structuredData";
-import Script from "next/script";
 
 export function StructuredData(props: PageInput) {
   const jsonLd = generateStructuredData(props);
   return (
-    <Script
+    <script
       id="structured-data"
       type="application/ld+json"
       dangerouslySetInnerHTML={{

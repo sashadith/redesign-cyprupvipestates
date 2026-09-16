@@ -1,5 +1,4 @@
 // components/DeveloperSchemaMarkup.tsx
-import Script from "next/script";
 import { urlFor } from "@/sanity/sanity.client";
 import { abs } from "@/lib/seo";
 
@@ -27,13 +26,11 @@ const DeveloperSchemaMarkup: React.FC<DeveloperSchemaMarkupProps> = ({
   };
 
   return (
-    <Script
+    <script
       id="schema-org-developer"
       type="application/ld+json"
-      strategy="beforeInteractive"
-    >
-      {JSON.stringify(schemaOrgJSONLD).replace(/</g, "\\u003c")}
-    </Script>
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaOrgJSONLD).replace(/</g, "\\u003c") }}
+    />
   );
 };
 
