@@ -1,5 +1,4 @@
 // components/SchemaCaseStudy.tsx
-import Script from "next/script";
 import { urlFor } from "@/sanity/sanity.client";
 import { CaseStudy } from "@/types/caseStudy";
 import { abs } from "@/lib/seo";
@@ -44,13 +43,11 @@ const SchemaCaseStudy = ({ caseStudy, lang }: Props) => {
   };
 
   return (
-    <Script
+    <script
       id="schema-case-study"
       type="application/ld+json"
-      strategy="beforeInteractive"
-    >
-      {JSON.stringify(jsonLd).replace(/</g, "\\u003c")}
-    </Script>
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+    />
   );
 };
 

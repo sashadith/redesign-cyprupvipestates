@@ -1,5 +1,4 @@
 // components/SchemaMarkup.tsx
-import Script from "next/script";
 import { urlFor } from "@/sanity/sanity.client";
 import { abs } from "@/lib/seo";
 
@@ -72,13 +71,11 @@ const SchemaMarkup: React.FC<SchemaMarkupProps> = ({ project }) => {
   };
 
   return (
-    <Script
+    <script
       id="schema-markup"
       type="application/ld+json"
-      strategy="beforeInteractive"
-    >
-      {JSON.stringify(jsonLd).replace(/</g, "\\u003c")}
-    </Script>
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+    />
   );
 };
 

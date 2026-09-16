@@ -2,7 +2,6 @@
 // SEO-facing project pages. VM-based (no Sanity coupling) — see
 // src/app/components/SchemaMarkup/SchemaMarkup.tsx for the legacy Sanity-Project
 // equivalent this mirrors. Renders RealEstateListing + BreadcrumbList JSON-LD.
-import Script from "next/script";
 import { abs } from "@/lib/seo";
 import { localizedHref } from "@/lib/locale";
 import type { ProjectVM } from "@/app/preview-project/feeds";
@@ -77,12 +76,16 @@ export default function DevelopmentSchema({ p, lang, canonical }: { p: ProjectVM
 
   return (
     <>
-      <Script id="development-schema" type="application/ld+json" strategy="beforeInteractive">
-        {JSON.stringify(listing).replace(/</g, "\\u003c")}
-      </Script>
-      <Script id="development-breadcrumb" type="application/ld+json" strategy="beforeInteractive">
-        {JSON.stringify(breadcrumb).replace(/</g, "\\u003c")}
-      </Script>
+      <script
+        id="development-schema"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(listing).replace(/</g, "\\u003c") }}
+      />
+      <script
+        id="development-breadcrumb"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb).replace(/</g, "\\u003c") }}
+      />
     </>
   );
 }

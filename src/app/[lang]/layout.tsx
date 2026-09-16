@@ -17,7 +17,6 @@ import AnalyticsTracker from "../components/AnalyticsTracker/AnalyticsTracker";
 import SkipLink from "../components/SkipLink/SkipLink";
 import NavHeroFlag from "../components/Header/NavHeroFlag";
 import { MotionConfig } from "framer-motion";
-import Script from "next/script";
 import { DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_WIDTH, DEFAULT_OG_IMAGE_HEIGHT } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/lib/locale";
@@ -136,7 +135,7 @@ export default function RootLayout({
             <a href="/api/preview/disable" style={{ textDecoration: "underline", fontWeight: 600 }}>Exit preview</a>
           </div>
         )}
-        <Script
+        <script
           id="organization-schema"
           type="application/ld+json"
           dangerouslySetInnerHTML={{
