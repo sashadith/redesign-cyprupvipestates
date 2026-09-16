@@ -36,6 +36,36 @@ export function isLocale(lang: string): lang is Locale {
 export function isPublicLocale(lang: string): lang is Locale {
   return (PUBLIC_LOCALES as readonly string[]).includes(lang);
 }
+
+/** Fixed static routes (keyed by their static URL segment, e.g. "partners")
+ *  that are deliberately NOT offered in some otherwise-public locale — the
+ *  single source of truth for "this route has no localized version here".
+ *  Today: the Partners page (decision J, spec §4.4/§8) stays English-only —
+ *  it must never get a `he` sitemap row, a `he` hreflang alternate from any
+ *  other locale's page, or a live `/he/partners` page (see
+ *  src/lib/seo.ts's `staticAlternates`/`localesForStaticRoute` callers, the
+ *  sitemap's `generatePagesSitemap`, and preview-partners/[lang]/page.tsx's
+ *  notFound() guard). Add a route here — not a one-off exclusion at each
+ *  call site — the next time a route is intentionally left unlocalized. */
+export const UNLOCALIZED_ROUTES: Record<string, readonly Locale[]> = {
+  partners: ["he"],
+};
+
+/** Locales a fixed static route (keyed by its static segment, e.g.
+ *  "partners") is actually offered in: `publicLocales` (default
+ *  `PUBLIC_LOCALES`) minus whatever `UNLOCALIZED_ROUTES` excludes for that
+ *  segment. A segment with no entry in `UNLOCALIZED_ROUTES` gets every
+ *  public locale, unchanged. The optional `publicLocales` param (same
+ *  pattern as `sitemapLocalesForType` in lib/seo.ts) exists so tests can
+ *  exercise the exclusion under an explicit locale set instead of whatever
+ *  this process's `NEXT_PUBLIC_LIVE_LOCALES` happens to be. */
+export function localesForStaticRoute(
+  segment: string,
+  publicLocales: readonly Locale[] = PUBLIC_LOCALES,
+): Locale[] {
+  const excluded = UNLOCALIZED_ROUTES[segment] ?? [];
+  return publicLocales.filter((l) => !excluded.includes(l));
+}
 export function localeDir(lang: string): "rtl" | "ltr" {
   return (RTL_LOCALES as readonly string[]).includes(lang) ? "rtl" : "ltr";
 }
@@ -43,6 +73,15 @@ export function localeDir(lang: string): "rtl" | "ltr" {
 export const BCP47: Record<Locale, string> = {
   en: "en-GB", de: "de-DE", pl: "pl-PL", ru: "ru-RU", he: "he-IL",
 };
+
+/** BCP47 tag for JSON-LD `inLanguage` / `<html lang>`-style consumers that
+ *  may receive an unvalidated string (route params, CMS rows). Falls back to
+ *  English for anything not in `LOCALES`, same fallback `fmtDate` already
+ *  uses inline — this just gives that one-liner a name other call sites
+ *  (JSON-LD emitters) can share instead of repeating the ternary. */
+export function bcp47For(lang: string): string {
+  return isLocale(lang) ? BCP47[lang] : BCP47.en;
+}
 
 export const LOCALE_LABELS: Record<Locale, { code: string; name: string }> = {
   en: { code: "EN", name: "English" },
@@ -55,6 +94,29 @@ export const LOCALE_LABELS: Record<Locale, { code: string; name: string }> = {
 /** "de|pl|ru|he" — for the middleware/SEO regexes that used to hard-code (de|pl|ru). */
 export function nonDefaultLocalePattern(locales: readonly string[] = LOCALES): string {
   return locales.filter((l) => l !== DEFAULT_LOCALE).join("|");
+}
+
+/**
+ * Parses a locale OUT OF a path, against the full known set (`LOCALES`), not
+ * `PUBLIC_LOCALES` — a `/he/...` URL is Hebrew whether or not `he` is
+ * currently gated by `NEXT_PUBLIC_LIVE_LOCALES` (e.g. GSC/analytics data
+ * recorded before or during the gate, or a direct hit on a not-yet-routed
+ * path). Recognises a prefixed path (`/xx/...`) or a bare prefix root
+ * (`/xx`); anything else — including the unprefixed default locale's own
+ * paths — is "en". Pure: no env access, so it is safe to call at parse time
+ * from both server and client code.
+ *
+ *   localeFromPath("/de/projects/x") -> "de"
+ *   localeFromPath("/de")            -> "de"
+ *   localeFromPath("/he")            -> "he" (even while he is gated)
+ *   localeFromPath("/x")             -> "en"
+ */
+export function localeFromPath(path: string): Locale {
+  for (const l of LOCALES) {
+    if (l === DEFAULT_LOCALE) continue;
+    if (path === `/${l}` || path.startsWith(`/${l}/`)) return l;
+  }
+  return DEFAULT_LOCALE as Locale;
 }
 
 /** Prices use Western digits in every locale (Israeli convention too).

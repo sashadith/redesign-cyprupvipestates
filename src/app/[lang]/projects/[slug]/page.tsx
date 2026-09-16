@@ -13,7 +13,7 @@ import React from "react";
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { Metadata } from "next";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, bcp47For } from "@/lib/locale";
 import { projectPageCopy } from "./page.copy";
 import {
   getFormStandardDocumentByLang,
@@ -43,7 +43,7 @@ import ProjectPageBody from "@/app/preview-project/ProjectPageBody";
 import DevelopmentSchema from "@/app/components/DevelopmentSchema/DevelopmentSchema";
 import { getDbProjectBySlug } from "@/lib/developmentRender";
 import { resolveMetaTitle, resolveMetaDescription, NEW_PROJECTS_INDEXABLE } from "@/lib/developmentSeo";
-import { abs, staticAlternates, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import { abs, staticAlternates, DEFAULT_OG_IMAGE, ogLocale } from "@/lib/seo";
 
 import Header from "@/app/components/Header/Header";
 import Footer from "@/app/components/Footer/Footer";
@@ -103,7 +103,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       alternates: { canonical, languages },
       robots: { index: canIndex, follow: canIndex },
       openGraph: {
-        title, description, url: canonical, siteName: "Cyprus VIP Estates", locale: lang, type: "website",
+        title, description, url: canonical, siteName: "Cyprus VIP Estates", locale: ogLocale(lang), type: "website",
         images: [{ url: ogImage, width: 1200, height: 630, alt: dev.publicName }],
       },
       twitter: { card: "summary_large_image", title, description, images: [ogImage] },
@@ -135,7 +135,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: data?.seo.metaDescription,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: lang,
+      locale: ogLocale(lang),
       type: "website",
       images: [
         {
@@ -253,7 +253,7 @@ const ProjectPage = async ({ params }: Props) => {
 
   return (
     <>
-      {project.location && project.previewImage && <SchemaMarkup project={project} />}
+      {project.location && project.previewImage && <SchemaMarkup project={project} lang={params.lang} />}
       {faqEntities.length > 0 && (
         <script
           type="application/ld+json"
@@ -261,6 +261,7 @@ const ProjectPage = async ({ params }: Props) => {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "FAQPage",
+              inLanguage: bcp47For(params.lang),
               mainEntity: faqEntities,
             }).replace(/</g, "\\u003c"),
           }}

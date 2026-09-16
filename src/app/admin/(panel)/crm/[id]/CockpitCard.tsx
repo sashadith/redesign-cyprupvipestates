@@ -8,6 +8,7 @@ import { leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/co
 import { ActionIcon } from "../ActionIcons";
 import QualificationEditor from "./QualificationEditor";
 import { COUNTRY_NAME_BY_CODE, countryCodeToFlagEmoji } from "@/lib/countries";
+import { LOCALES, LOCALE_LABELS } from "@/lib/locale";
 
 // The Lead Cockpit's hero card (Phase 1 of 4, 2026-07-23; consolidated in the
 // correction batch, 2026-07-23) — a single glance-able summary that now
@@ -15,7 +16,14 @@ import { COUNTRY_NAME_BY_CODE, countryCodeToFlagEmoji } from "@/lib/countries";
 // "Status" box used to show. Email/Phone/Assigned-to are shown once, as the
 // contact row / assignee cluster below — not repeated in the detail groups.
 
-const LOCALE_LABEL: Record<string, string> = { en: "EN", de: "DE", pl: "PL", ru: "RU" };
+// Derived from LOCALE_LABELS (the single source of locale metadata) rather
+// than a hard-coded four-locale map — `.code` matches the previous literals
+// (en/de/pl/ru) byte-for-byte, and `he` now renders "HE" instead of falling
+// through to the `.toUpperCase()` fallback below. Fix-round item from the
+// Task 1 review (CockpitCard.tsx:18 predated `he`).
+const LOCALE_LABEL: Record<string, string> = Object.fromEntries(
+  LOCALES.map((l) => [l, LOCALE_LABELS[l].code]),
+);
 
 const CHANNEL_LABEL: Record<string, string> = { EMAIL: "Email", WHATSAPP: "WhatsApp", PHONE: "Phone" };
 

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { i18n } from "@/i18n.config";
 import { localizedHref, PUBLIC_LOCALES as LOCALES, isLocale, isPublicLocale, BCP47 } from "@/lib/locale";
-import { languageAlternates } from "@/lib/seo";
+import { languageAlternates, ogLocale } from "@/lib/seo";
 import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporatePage } from "@/lib/corporatePageSlugs";
 import type { Translation } from "@/types/homepage";
 import Nav from "../../../preview-home/sections/Nav";
@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // Legal boilerplate has no business competing in search results, but it
     // must stay indexable — several jurisdictions expect these pages to be
     // publicly reachable, and trust signals depend on them being findable.
-    openGraph: { title: t.metaTitle, description: t.metaDescription, url: canonical, siteName: "Cyprus VIP Estates", locale: lang, type: "article" },
+    openGraph: { title: t.metaTitle, description: t.metaDescription, url: canonical, siteName: "Cyprus VIP Estates", locale: ogLocale(lang), type: "article" },
   };
 }
 

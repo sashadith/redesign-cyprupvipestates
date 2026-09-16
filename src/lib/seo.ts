@@ -5,7 +5,8 @@
 // production domain is hard-coded (NEXT_PUBLIC_SITE_URL is build-time inlined
 // to :3000 on the VPS).
 
-import { localizedHref, PUBLIC_LOCALES } from "./locale";
+import { localizedHref, PUBLIC_LOCALES, BCP47, localesForStaticRoute, type Locale } from "./locale";
+import { blogIndexInSitemap } from "./blogIndexMode";
 
 export const SITE_URL = "https://cyprusvipestates.com";
 
@@ -68,18 +69,87 @@ export function languageAlternates(opts: {
   };
 }
 
+/** The first path segment of a `staticAlternates`/sitemap `segments` value —
+ *  the route key `UNLOCALIZED_ROUTES` (lib/locale.ts) is keyed by, e.g.
+ *  "partners" out of `"partners"`, `["partners"]`, or `["projects", slug]`
+ *  → "projects". A key with no `UNLOCALIZED_ROUTES` entry is unaffected. */
+function staticRouteKey(segments: string | string[]): string {
+  return (Array.isArray(segments) ? segments[0] : segments.split("/")[0]) || "";
+}
+
 /**
  * Canonical + hreflang for a FIXED path that exists in every locale at the same
  * sub-path (listing roots, static pages) — i.e. no per-language slug translation.
  * x-default points at English.
+ *
+ * Most routes are offered in every `publicLocales` entry. A route listed in
+ * `UNLOCALIZED_ROUTES` (lib/locale.ts) — today only "partners", decision J —
+ * is the exception: no locale's page gets a hreflang alternate for the
+ * excluded locale, and if the excluded locale's own page is ever rendered
+ * anyway (it should 404 instead — see preview-partners/[lang]/page.tsx) its
+ * alternates collapse to canonical-only, never cross-linking to the other
+ * locales it doesn't actually share this route with.
  */
 export function staticAlternates(
   lang: string,
   segments: string | string[] = "",
+  opts: { publicLocales?: readonly Locale[] } = {},
 ): { canonical: string; languages: Record<string, string> } {
+  const allowed = localesForStaticRoute(staticRouteKey(segments), opts.publicLocales);
+  const canonical = abs(localizedHref(lang, segments));
+
+  if (!allowed.includes(lang as Locale)) {
+    return { canonical, languages: { [lang]: canonical } };
+  }
+
   const languages: Record<string, string> = {};
-  for (const l of PUBLIC_LOCALES) languages[l] = abs(localizedHref(l, segments));
-  return { canonical: abs(localizedHref(lang, segments)), languages: { ...languages, "x-default": languages["en"] } };
+  for (const l of allowed) languages[l] = abs(localizedHref(l, segments));
+  return { canonical, languages: { ...languages, "x-default": languages["en"] } };
+}
+
+/**
+ * `og:locale` value for a page's locale. Every existing `openGraph.locale`
+ * call site in the app today interpolates the raw locale code directly
+ * (`locale: lang` → "en"/"de"/"pl"/"ru"/"he"), which is not the OG-spec
+ * format (a language_TERRITORY tag, e.g. "en_GB"). Retrofitting the correct
+ * format for en/de/pl/ru is out of this task's scope and would change
+ * LTR-visible metadata with no coverage here, so this returns the SAME raw
+ * code, byte-identical, for every locale except `he` — which gets the
+ * correct `he_IL` (BCP47.he = "he-IL", "-" → "_"). `he` is therefore the
+ * only locale whose `og:locale` output changes.
+ */
+export function ogLocale(lang: string): string {
+  if (lang === "he") return BCP47.he.replace("-", "_");
+  return lang;
+}
+
+/**
+ * Which locales a sitemap listing type should emit rows for. Every type
+ * simply follows the given `publicLocales` set (default: `PUBLIC_LOCALES`)
+ * — a locale that isn't live never gets a sitemap row, full stop — except
+ * "blog": while `/he/blog` is borrowing English content (Phase 6, fewer
+ * than 5 own PUBLISHED Hebrew articles) its index and articles stay
+ * noindex'd and out of the sitemap (see blogIndexInSitemap). Each listing
+ * type's own row-builder query (projects/blog/case-studies: `status:
+ * "PUBLISHED"` in sanity.utils.ts; pages: `getAllPathsForLang`, same filter)
+ * already restricts rows to PUBLISHED — that filtering happens at the data
+ * layer, not duplicated here; this only decides the locale axis.
+ */
+export type SitemapListingType =
+  | "projects"
+  | "developers"
+  | "blog"
+  | "case-studies"
+  | "pages"
+  | "developments";
+
+export function sitemapLocalesForType(
+  type: SitemapListingType,
+  opts: { publicLocales?: readonly string[]; heBlogCount?: number } = {},
+): string[] {
+  const locales = opts.publicLocales ?? PUBLIC_LOCALES;
+  if (type !== "blog") return [...locales];
+  return locales.filter((l) => blogIndexInSitemap(l, opts.heBlogCount ?? 0));
 }
 
 /** Path builders for the localized content types. */

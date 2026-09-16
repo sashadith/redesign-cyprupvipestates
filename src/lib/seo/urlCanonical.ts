@@ -2,8 +2,7 @@ import fs from "fs";
 import path from "path";
 import type { Locale } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { deriveLocale } from "@/lib/gsc/client";
-import { nonDefaultLocalePattern } from "@/lib/locale";
+import { nonDefaultLocalePattern, localeFromPath } from "@/lib/locale";
 
 const L = nonDefaultLocalePattern();
 
@@ -42,24 +41,30 @@ export type CanonicalTarget = { locale: Locale; page: string };
 /**
  * The single locale derivation for everything joined on a `locale::path` key.
  *
- * `deriveLocale` only recognises a prefix that is FOLLOWED BY A SLASH
- * (`/de/x`), so a bare locale root (`/de`) derives as "en". That would key the
- * German, Polish and Russian homepages as `en::/de` on the GSC side while the
- * page inventory keys them as `de::/de` — the three localised homepages would
- * never match, their clicks would count as uncovered, and all three would be
- * reported as having no impressions while being among the highest-traffic
- * pages on the site. (Confirmed against production 2026-08-23: `/de` 123
- * impressions, `/pl` 29, `/ru` 491, none of which would have joined.)
+ * History: `deriveLocale` (gsc/client.ts) used to recognise only a prefix
+ * FOLLOWED BY A SLASH (`/de/x`), so a bare locale root (`/de`) derived as
+ * "en". That keyed the German, Polish and Russian homepages as `en::/de` on
+ * the GSC side while the page inventory keyed them as `de::/de` — the three
+ * localised homepages never matched, their clicks counted as uncovered, and
+ * all three were reported as having no impressions while being among the
+ * highest-traffic pages on the site. (Confirmed against production
+ * 2026-08-23: `/de` 123 impressions, `/pl` 29, `/ru` 491, none of which
+ * joined.) This function was the workaround; since 2026-09-14 (#49, plus the
+ * one-time scripts/backfill-homepage-locale.mjs relabel of SearchMetric)
+ * `deriveLocale` resolves bare roots as well, and both now delegate to the
+ * same `localeFromPath`.
  *
- * Fixed here rather than inside `deriveLocale` itself, because that function
- * also decides `SearchMetric.locale` at sync time and `locale` is part of that
- * table's unique key — changing it would fork every existing homepage series
- * into a second one. Any source joined on a page key (GSC, PageView, Lead)
- * must use THIS function, not `deriveLocale` directly.
+ * `localeFromPath` (lib/locale.ts) recognises a bare root for EVERY
+ * non-default locale in `LOCALES` — including `he`, so a bare `/he` join key
+ * resolves correctly even while `he` is gated out of `PUBLIC_LOCALES` (join
+ * keys are about what the data IS, not what is currently public). Kept as
+ * its own named export (rather than inlining `localeFromPath` at call sites)
+ * because every call site here is a `locale::path` JOIN KEY, and that intent
+ * belongs on one well-documented function: any source joined on a page key
+ * (GSC, PageView, Lead) uses THIS function.
  */
 export function localeOfPath(path: string): Locale {
-  if (path === "/de" || path === "/pl" || path === "/ru") return path.slice(1) as Locale;
-  return deriveLocale(path);
+  return localeFromPath(path) as Locale;
 }
 
 let cached: { map: Map<string, string>; builtAt: number } | null = null;
@@ -131,7 +136,9 @@ export async function buildCanonicalMap(): Promise<Map<string, string>> {
 // Resolves a (locale, page) pair to its canonical form — follows chained
 // redirects up to 5 hops (the migration snapshot + a later legacy-project
 // redirect could in principle stack) and re-derives locale from the final
-// path so the two never disagree.
+// path so the two never disagree. The result is a locale::page JOIN key, so
+// the re-derivation goes through localeOfPath (bare locale roots included),
+// never deriveLocale — see localeOfPath above.
 export function canonicalize(map: Map<string, string>, locale: Locale, page: string): CanonicalTarget {
   let curPage = page;
   for (let i = 0; i < 5; i++) {
@@ -139,5 +146,5 @@ export function canonicalize(map: Map<string, string>, locale: Locale, page: str
     if (!next || next === curPage) break;
     curPage = next;
   }
-  return curPage === page ? { locale, page } : { locale: deriveLocale(curPage), page: curPage };
+  return curPage === page ? { locale, page } : { locale: localeOfPath(curPage), page: curPage };
 }

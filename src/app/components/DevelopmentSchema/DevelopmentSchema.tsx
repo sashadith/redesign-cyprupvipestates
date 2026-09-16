@@ -4,7 +4,7 @@
 // equivalent this mirrors. Renders RealEstateListing + BreadcrumbList JSON-LD.
 import Script from "next/script";
 import { abs } from "@/lib/seo";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, bcp47For } from "@/lib/locale";
 import type { ProjectVM } from "@/app/preview-project/feeds";
 import { computeAvailability, listedUnits } from "@/lib/developmentAvailability";
 
@@ -33,6 +33,7 @@ export default function DevelopmentSchema({ p, lang, canonical }: { p: ProjectVM
     name: p.publicName,
     description: p.description || undefined,
     url: canonical,
+    inLanguage: bcp47For(lang),
     image: p.gallery.map((g) => abs(g)),
     address: {
       "@type": "PostalAddress",

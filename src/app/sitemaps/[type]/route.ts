@@ -7,11 +7,12 @@ import {
   getPaginatedLandingPageSlugs,
   getTotalBlogPostsByLang,
 } from "@/sanity/sanity.utils";
-import { localePrefix, localizedHref, PUBLIC_LOCALES } from "@/lib/locale";
-import { blogIndexInSitemap } from "@/lib/blogIndexMode";
+import { localePrefix, localizedHref, PUBLIC_LOCALES, localesForStaticRoute, type Locale } from "@/lib/locale";
+import { sitemapLocalesForType } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { urlFor } from "@/sanity/sanity.client";
 import { NEW_PROJECTS_INDEXABLE } from "@/lib/developmentSeo";
+import { DE_LANDING_MERGES, EN_LANDING_MERGES, PL_LANDING_MERGES, RU_LANDING_MERGES } from "@/middleware";
 
 const websiteUrl = "https://cyprusvipestates.com";
 const langs = PUBLIC_LOCALES;
@@ -25,6 +26,22 @@ const sitemapTypes = [
 ] as const;
 
 type SitemapType = (typeof sitemapTypes)[number];
+
+// A merged page's Singlepage row stays status:PUBLISHED forever (see the
+// *_LANDING_MERGES comment in middleware.ts) — getAllPathsForLang has no way
+// to know it now 301s, so without this filter every one of these 28 slugs
+// was listed here as an indexable URL that immediately redirects. Only flat,
+// single-segment paths are ever merge-map keys (middleware only merges exact
+// leaf paths, never nested children — see the domy-w-limassol note in
+// PL_LANDING_MERGES), so this only ever drops length-1 segments.
+// Partial: `he` has no merge map (its landing pages were authored fresh, no
+// legacy slugs were ever merged), so it falls back to an empty map below.
+const MERGED_SLUGS_BY_LANG: Partial<Record<Locale, Record<string, string>>> = {
+  de: DE_LANDING_MERGES,
+  pl: PL_LANDING_MERGES,
+  en: EN_LANDING_MERGES,
+  ru: RU_LANDING_MERGES,
+};
 
 type Alt = { hreflang: string; href: string };
 type SitemapPage = {
@@ -77,9 +94,15 @@ function isSitemapType(value: string): value is SitemapType {
   return sitemapTypes.includes(value as SitemapType);
 }
 
-// hreflang alternates for the 4 language versions of a fixed listing path (e.g. "blog").
+// hreflang alternates for the language versions of a fixed listing path (e.g.
+// "blog"). Most segments get one alternate per `langs` (== PUBLIC_LOCALES);
+// a segment listed in UNLOCALIZED_ROUTES (lib/locale.ts — today only
+// "partners", decision J) drops the excluded locale(s) here too, so no
+// locale's page ever advertises a hreflang alternate into a URL that isn't
+// actually offered there.
 function listingAlts(segment: string): Alt[] {
-  const alts: Alt[] = langs.map((l) => ({ hreflang: l, href: buildUrl(localizedHref(l, segment)) }));
+  const locales = localesForStaticRoute(segment, langs);
+  const alts: Alt[] = locales.map((l) => ({ hreflang: l, href: buildUrl(localizedHref(l, segment)) }));
   alts.push({ hreflang: "x-default", href: buildUrl(localizedHref("en", segment)) });
   return alts;
 }
@@ -228,10 +251,9 @@ async function generateBlogSitemap(): Promise<SitemapPage[]> {
   // /he/blog (and any future /he/blog/page/N) borrows EN content and stays
   // out of the sitemap. See src/lib/blogIndexMode.ts.
   const heCount = (langs as readonly string[]).includes("he") ? await getTotalBlogPostsByLang("he") : 0;
+  const blogLocales = sitemapLocalesForType("blog", { publicLocales: langs, heBlogCount: heCount });
 
-  for (const lang of langs) {
-    if (lang === "he" && !blogIndexInSitemap(lang, heCount)) continue;
-
+  for (const lang of blogLocales) {
     // English (default) is prefix-less; de/pl/ru are prefixed.
     const prefix = localePrefix(lang);
 
@@ -278,13 +300,18 @@ async function generatePagesSitemap(): Promise<SitemapPage[]> {
     // /partners: a single fixed page (preview-partners/[lang]/page.tsx), not
     // Singlepage-backed, so it never comes from getAllPathsForLang below —
     // added here explicitly now that it's indexable (see that route's
-    // layout.tsx for the noindex removal this pairs with).
-    pages.push({
-      route: localizedHref(lang, "partners"),
-      changefreq: "monthly",
-      priority: 0.6,
-      alternates: listingAlts("partners"),
-    });
+    // layout.tsx for the noindex removal this pairs with). Excluded for `he`
+    // (UNLOCALIZED_ROUTES in lib/locale.ts, decision J) — the page is
+    // deliberately English-only, so `he` never gets a sitemap row for it and
+    // `/he/partners` itself 404s (see preview-partners/[lang]/page.tsx).
+    if (localesForStaticRoute("partners", langs).includes(lang)) {
+      pages.push({
+        route: localizedHref(lang, "partners"),
+        changefreq: "monthly",
+        priority: 0.6,
+        alternates: listingAlts("partners"),
+      });
+    }
 
     // /faq: same shape as /partners just above — a single fixed page
     // (preview-faq/[lang]/page.tsx), not Singlepage-backed, added now that
@@ -296,7 +323,10 @@ async function generatePagesSitemap(): Promise<SitemapPage[]> {
       alternates: listingAlts("faq"),
     });
 
-    const allPaths = await getAllPathsForLang(lang);
+    const merged = MERGED_SLUGS_BY_LANG[lang] ?? {};
+    const allPaths = (await getAllPathsForLang(lang)).filter(
+      (segments) => !(Array.isArray(segments) && segments.length === 1 && merged[segments[0]]),
+    );
 
     allPaths
       .filter((segments) => Array.isArray(segments) && segments.length > 0)

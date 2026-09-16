@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { i18n } from "@/i18n.config";
 import { localizedHref, isLocale } from "@/lib/locale";
-import { abs, languageAlternates } from "@/lib/seo";
+import { abs, languageAlternates, ogLocale } from "@/lib/seo";
 import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporateLocale } from "@/lib/corporatePageSlugs";
 import type { BenefitsBlock } from "@/types/homepage";
 import type { Translation } from "@/types/homepage";
@@ -58,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: t.metaDescription,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: lang,
+      locale: ogLocale(lang),
       type: "website",
       ...(ogImage ? { images: [{ url: ogImage, width: 1200, height: 630 }] } : {}),
     },

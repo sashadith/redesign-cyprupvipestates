@@ -11,7 +11,7 @@ import { getDbProjectsByIds } from "@/lib/developmentRender";
 import { resolveDevelopmentPrice, toDeliveryQuarter } from "@/lib/developmentCard";
 import { normalizeRef } from "@/lib/unitRef";
 import type { MatchFilters } from "@/lib/crm/matching";
-import { SITE_URL } from "@/lib/seo";
+import { SITE_URL, ogLocale } from "@/lib/seo";
 import { hePlaceOrIsolated } from "@/lib/hePlaces";
 import { asPLocale, COPY, timeOfDayGreeting } from "./copy";
 import { budgetChip } from "./budgetChip";
@@ -50,6 +50,11 @@ export async function generateMetadata({ params }: { params: { token: string } }
     openGraph: {
       title,
       description,
+      // Always noindex (see above) so this has no hreflang/sitemap surface —
+      // added only so a WhatsApp/Facebook link-preview crawler reports the
+      // right language for the shared page (Pass B "no untranslated surface"
+      // rule applies here too, even though it's metadata, not copy).
+      locale: ogLocale(locale),
       images: [{ url: PRESENTATION_OG_IMAGE, width: 1000, height: 1000 }],
     },
   };

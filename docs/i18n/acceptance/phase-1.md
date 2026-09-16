@@ -20,16 +20,24 @@
    ```bash
    echo 'NEXT_PUBLIC_LIVE_LOCALES=en,de,pl,ru,he' >> /var/www/cve-staging/.env
    ```
-2. **Deploy von diesem Branch** (aus dem Worktree-Checkout, damit der Branch-Stand gesynct wird):
+2. **Migration einspielen — VOR dem Deploy** (additiv; Staging und Produktion teilen die Datenbank, deshalb ist das ein Produktions-Schreibzugriff — bewusst und freigegeben). Die Migrationsdateien müssen dafür schon auf dem Server liegen; falls noch kein Deploy gelaufen ist, nur den Prisma-Ordner synchronisieren:
+   ```bash
+   rsync -az -e "ssh -i ~/.ssh/cvp_vps" prisma/ root@72.60.89.239:/var/www/cve-staging/prisma/
+   ```
+   dann auf dem Server:
+   ```bash
+   cd /var/www/cve-staging && CVP_CONFIRM_PROD_MIGRATE=yes ./scripts/migrate-deploy-safe.sh migrate deploy
+   ```
+   Warum zuerst: `next build` ruft `generateStaticParams` auf, und die fragen seit Phase 5 die Datenbank mit `language: "he"` ab — ohne den Enum-Wert bricht der Build bei „Collecting page data" mit `invalid input value for enum "Locale": "he"` ab (so passiert 2026-09-16). Voraussetzung Postgres ≥ 12 (`ADD VALUE` in Transaktion; der VPS läuft 16). Die laufende Produktions-App kennt den Wert `he` nicht und schreibt ihn nie; die zusätzlichen Spalten stören sie nicht. Kontrolle (nur lesend):
+   ```bash
+   sudo -u postgres psql -d cyprusvipestates -tAc 'select enum_range(null::"Locale")'
+   ```
+   Erwartung: `{en,de,pl,ru,he}`.
+3. **Deploy von diesem Branch** (aus dem Worktree-Checkout, damit der Branch-Stand gesynct wird; beim ersten Deploy nach einer `package-lock.json`-Änderung zusätzlich `CVP_RUN_INSTALL=1` voranstellen):
    ```bash
    ./scripts/deploy-staging.sh
    ```
-   Erwartung: Build grün. Direkt nach dem Reload liefern DB-gestützte Seiten kurz **500**, weil der neue Prisma-Client die Spalte `descriptionHE` erwartet, die erst Schritt 3 anlegt. Das betrifft nur Staging.
-3. **Migration einspielen** (additiv; Staging und Produktion teilen die Datenbank, deshalb ist das ein Produktions-Schreibzugriff — bewusst und freigegeben):
-   ```bash
-   cd /var/www/cve-staging && CVP_CONFIRM_PROD_MIGRATE=yes ./scripts/migrate-deploy-safe.sh migrate deploy && pm2 reload cve-staging --update-env
-   ```
-   Voraussetzung Postgres ≥ 12 (`ADD VALUE` in Transaktion). Bei älterem Postgres: Migration 1 manuell außerhalb einer Transaktion ausführen und mit `prisma migrate resolve --applied 20260914100000_locale_add_he` markieren. Die laufende Produktions-App kennt den Wert `he` nicht und schreibt ihn nie; die zusätzlichen Spalten stören sie nicht.
+   Erwartung: Build grün, `pm2 reload` inklusive.
 4. **Smoke-Test gegen Staging:**
    ```bash
    scripts/qa/he-smoke.sh https://design.cyprusvipestates.com

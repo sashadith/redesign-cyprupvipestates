@@ -18,10 +18,12 @@ const EXPECTED = [
   "crm_search_projects",
   "crm_send_email",
   "crm_update_lead",
+  "crm_whatsapp_send",
+  "crm_whatsapp_thread",
   "crm_worklist",
 ];
 
-test("READ_TOOL_NAMES + WRITE_TOOL_NAMES union is exactly the sixteen registered tools", () => {
+test("READ_TOOL_NAMES + WRITE_TOOL_NAMES union is exactly the eighteen registered tools", () => {
   const union = [...READ_TOOL_NAMES, ...WRITE_TOOL_NAMES].slice().sort();
   assert.deepEqual(union, EXPECTED);
 });

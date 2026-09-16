@@ -87,7 +87,7 @@
 .form-feedback::before {
   content: "";
   position: absolute;
-  left: 16px;
+  inset-inline-start: 16px;
   top: 50%;
   width: 20px;
   height: 20px;
@@ -99,7 +99,7 @@
 .form-feedback::after {
   content: "";
   position: absolute;
-  left: 22px;
+  inset-inline-start: 22px;
   top: 50%;
   width: 8px;
   height: 4px;
@@ -114,7 +114,7 @@
    and a second colour would compete with the brand bronze. */
 .form-feedback--error::after {
   content: "!";
-  left: 16px;
+  inset-inline-start: 16px;
   top: 50%;
   width: 20px;
   height: 20px;
