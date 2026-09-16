@@ -3,6 +3,7 @@ import createIntlMiddleware from "next-intl/middleware";
 
 import { defaultLocale, locales } from "@/i18n.config";
 import nestedPageRedirects from "@/lib/nestedPageRedirects.json";
+import { retiredProjectTarget } from "@/lib/retiredProjectRedirects";
 import { CORPORATE_SLUGS } from "@/lib/corporatePageSlugs";
 import { EN_REDIRECT_TITLE_SWEEP_EXCLUDE } from "@/lib/seo/enRedirectTitleSweepExclude";
 
@@ -355,6 +356,18 @@ export default async function middleware(request: NextRequest) {
   if (enMergeMatch && EN_LANDING_MERGES[enMergeMatch[1]]) {
     const url = request.nextUrl.clone();
     url.pathname = EN_LANDING_MERGES[enMergeMatch[1]];
+    url.search = "";
+    return NextResponse.redirect(url, 301);
+  }
+
+  /* Retired project slugs. Matched here rather than in the page, for the same
+     reason the /properties rule below gives: a page-level redirect() is
+     swallowed by the i18n rewrite. See src/lib/retiredProjectRedirects.ts for
+     the list and why it is not a database feature. */
+  const retiredTarget = retiredProjectTarget(request.nextUrl.pathname);
+  if (retiredTarget) {
+    const url = request.nextUrl.clone();
+    url.pathname = retiredTarget;
     url.search = "";
     return NextResponse.redirect(url, 301);
   }
