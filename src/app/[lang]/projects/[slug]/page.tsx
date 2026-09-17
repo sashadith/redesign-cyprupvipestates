@@ -8,6 +8,13 @@ import "@/app/preview-home/tokens.css";
 // .pp-map-scoped overrides (narrower selectors, same specificity tier) still win.
 import "@/app/preview-projects/projects.css";
 import "@/app/preview-project/project.css";
+// The promotional content block (ProjectPageBody, between the map and units
+// sections) reuses renderInsightsBlock's textContent/tableBlock rendering —
+// same component blog articles use — which is styled by insights.css's
+// .iart__rich/.iart__table classes, not this route's own pp-* system. Every
+// other route that reuses renderInsightsBlock imports this file for the same
+// reason (see blog/[slug]/page.tsx, [...slug]/page.tsx, developers/[slug]/page.tsx).
+import "@/app/preview-insights/insights.css";
 
 import React from "react";
 import Link from "next/link";

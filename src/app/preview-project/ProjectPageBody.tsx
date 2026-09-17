@@ -18,6 +18,7 @@ import { splitDescriptionParagraphs } from "@/lib/text";
 import { resolveDevelopmentType } from "@/lib/developmentCard";
 import DistancesStrip from "@/app/components/DistancesStrip/DistancesStrip";
 import { computeAvailability, listedUnits, resolveAvailabilityStatusLabel, resolveStageLabel } from "@/lib/developmentAvailability";
+import { renderInsightsBlock } from "@/app/preview-insights/insightsBlocks";
 import { developmentCopy } from "@/lib/developmentCopy";
 import { getAlternativeDevelopments } from "@/lib/developmentAlternatives";
 import AlternativesBlock from "@/app/preview-project/AlternativesBlock";
@@ -62,7 +63,7 @@ const LocationPin = () => (
 export default async function ProjectPageBody({
   p, lang, params, translations, banner,
 }: {
-  p: ProjectVM & { slug?: string | null };
+  p: ProjectVM & { slug?: string | null; promoBlocks?: any[] };
   lang: string;
   params: { lang: string };
   translations: Translation[];
@@ -284,6 +285,20 @@ export default async function ProjectPageBody({
         {p.center && (
           <section className="pp-mapsection">
             <PropertyMapBlock lat={p.center.lat} lng={p.center.lng} locale={lang} />
+          </section>
+        )}
+
+        {/* ---------- PROMOTIONAL CONTENT ----------
+            Long-form, admin-authored (PromoBlocksField/BlockEditor in the
+            admin panel) — separate from the short, factual "About this
+            development" copy above the fold. Reuses renderInsightsBlock,
+            the same textContent/tableBlock renderer blog articles use, so
+            headings/lists/tables come out styled and no accordion/collapse
+            wrapper is involved. Empty until an admin writes one — most
+            projects have nothing here yet. */}
+        {p.promoBlocks && p.promoBlocks.length > 0 && (
+          <section className="pp-wrap pp-section pp-promo">
+            {p.promoBlocks.map((block) => renderInsightsBlock(block))}
           </section>
         )}
 

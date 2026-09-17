@@ -83,7 +83,7 @@ export default function DescriptionField({ developmentId, initial, aiReady }: { 
         </button>
         {qa && <span style={{ color: badge![1] }} className="font-medium">{badge![0]} {qa.uniqueness}% unique{qa.sim > 15 && qa.mostSimilar ? ` · ${qa.sim}% overlap with ${qa.mostSimilar}` : ""}</span>}
       </div>
-      <p className="text-[11px] text-[#9CA3AF]">Rewrite is name-free and synthesises location, amenities and unit data across all 4 languages. External AI-content detection (Originality.ai) plugs in once its key is set.</p>
+      <p className="text-[11px] text-[#9CA3AF]">Rewrite synthesises the project/developer name, location, amenities and unit data across all 4 languages. External AI-content detection (Originality.ai) plugs in once its key is set.</p>
     </div>
   );
 }
