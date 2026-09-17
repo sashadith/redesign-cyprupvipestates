@@ -52,7 +52,7 @@ export async function syncThisDevelopmentUnitsAction(developmentId: string): Pro
   }
 }
 
-// (C) Generate a fresh 4-language description from ALL project data, no project name.
+// (C) Generate a fresh 4-language description from ALL project data, naming the project/developer.
 export async function generateDescription(developmentId: string, words: number, tuning?: { emphasize?: string; avoid?: string }): Promise<{ ok: boolean; texts?: FourLang; error?: string }> {
   try {
     const d = await prisma.development.findUnique({ where: { id: developmentId }, include: { override: true, units: true } });
@@ -79,6 +79,7 @@ export async function generateDescription(developmentId: string, words: number, 
     ].filter(Boolean).join(", ");
 
     const texts = await generateProjectDescription({
+      publicName: ov?.alias || d.publicName, developer: d.developer ?? undefined,
       district: ov?.district || d.district || "",
       town: ov?.town || d.town || "",
       area,
