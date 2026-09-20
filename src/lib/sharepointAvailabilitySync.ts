@@ -693,6 +693,7 @@ export async function writeKorantinaDraft(
 
         const description = needsContent && sourceText
           ? await generateProjectDescription({
+              publicName: t.projectName, developer: acct.name,
               district: "", town: "", area: "",
               projectAmenities: amenities, unitAmenities: [],
               unitSummary: `${units.length} units, ${avail} available`,

@@ -6,11 +6,17 @@ import { PROJECT_BRIEF } from "./projectBrief";
 import { heSystemBlock } from "./heContext";
 
 /* Generate a fresh property description from ALL available data — location, area
-   character, amenities, unit mix, developer source text — WITHOUT ever naming the
-   project or developer. Five native languages. Tuned to avoid AI-tells (varied
-   rhythm, no clichés) so it survives AI-content detection. */
+   character, amenities, unit mix, developer source text. Five native languages.
+   2026-09-17: dropped the "never name the project/developer" rule — a content
+   audit found real search demand for exact project/developer names (e.g. "Soho
+   Resort", "Korantina Homes") that this description could never reinforce while
+   withholding them. Scope of this change is deliberately narrow: naming is now
+   allowed, nothing else about the voice/rules below changed — a broader rewrite
+   of the description style is a separate, not-yet-scoped piece of work. */
 
 export type DescriptionContext = {
+  publicName?: string;
+  developer?: string;
   district: string;
   town: string;
   area: string;
@@ -34,6 +40,8 @@ export async function generateProjectDescription(ctx: DescriptionContext): Promi
   const words = Math.min(400, Math.max(50, Math.round(ctx.words || 130)));
 
   const facts = [
+    ctx.publicName ? `Project name: ${ctx.publicName}` : "",
+    ctx.developer ? `Developer: ${ctx.developer}` : "",
     `Location: ${[ctx.area, ctx.town, ctx.district].filter(Boolean).join(", ")}, Cyprus`,
     ctx.areaText ? `Neighbourhood character: ${ctx.areaText.slice(0, 600)}` : "",
     ctx.category ? `Category: ${ctx.category}` : "",
@@ -63,7 +71,7 @@ ${facts}
 
 Rules:
 - ~${words} words in EACH language.
-- NEVER mention the project's name or the developer's name — describe the property, lifestyle, location and features.
+- Name the project and, where given, the developer where it reads naturally — do not force them into every sentence.
 - Use ONLY the data given; do not invent facts, figures or amenities.
 - NEVER write a digit. No unit counts, no prices, no completion dates or quarters, no square metres, no percentages. This description is SAVED and never regenerated, while the project's real numbers move with every feed sync — so a figure written here is wrong as soon as stock sells or a price changes. Nothing in the data gives you a figure to quote. Bedroom counts are the one thing you may name, and only spelled out as words ("two-bedroom", never "2-bedroom"), because that describes the homes themselves rather than what is currently for sale.
 - Sophisticated, confident, understated. No clichés ("nestled", "hidden gem", "boasts", "oasis"), no marketing hype.

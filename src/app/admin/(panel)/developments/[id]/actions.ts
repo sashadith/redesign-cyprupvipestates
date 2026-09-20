@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { extractProjectFromPdfs } from "@/lib/ai/pdfExtract";
 import { generateProjectDescription } from "@/lib/ai/projectDescription";
@@ -18,8 +19,53 @@ import { getDbProjectByFeedKey } from "@/lib/developmentRender";
 import { pingIndexNow, absUrl } from "@/lib/indexnow";
 import { localizedHref, PUBLIC_LOCALES } from "@/lib/locale";
 import { syncErrorMessage } from "@/lib/syncErrorMessage";
+import { htmlToPortableText } from "@/lib/portableText/htmlToPt.mjs";
+import { isHtmlMarker } from "@/lib/portableText/richText";
 
 const asArr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
+
+// Duplicated from src/app/admin/actions.ts's own blocksFromItemsJson rather
+// than imported: that file is "use server", where every export must be an
+// async function, and every one of its own 5+ callers already relies on it
+// staying a plain sync helper. Small and stable enough (11 lines) that
+// duplicating beats reworking a shared, working file for one new caller.
+function convertHtmlMarkers(node: any): any {
+  if (isHtmlMarker(node)) return htmlToPortableText(node.__html);
+  if (Array.isArray(node)) return node.map(convertHtmlMarkers);
+  if (node && typeof node === "object") {
+    const o: any = {};
+    for (const [key, v] of Object.entries(node)) o[key] = convertHtmlMarkers(v);
+    return o;
+  }
+  return node;
+}
+
+// Converts BlockEditor's serialized item list (see fieldName/CONTENT_BLOCKS_FIELD
+// in BlockEditor.tsx) into stored Portable Text blocks — textContent items get
+// their HTML converted, everything else (just tableBlock, for kind="development")
+// is preserved verbatim.
+function blocksFromItemsJson(json: string): any[] {
+  let items: { type: string; key: string; html?: string; block?: any }[];
+  try { items = JSON.parse(json || "[]"); } catch { throw new Error("Content blocks were corrupted — please reload and retry."); }
+  if (!Array.isArray(items)) throw new Error("Content blocks were corrupted — please reload and retry.");
+  return items
+    .map((it) => {
+      if (it.type === "textContent") {
+        const orig = (it.block && typeof it.block === "object") ? it.block : {};
+        return { ...orig, _type: "textContent", _key: it.key, content: htmlToPortableText(it.html ?? "") };
+      }
+      return it.block ? convertHtmlMarkers(it.block) : null;
+    })
+    .filter(Boolean);
+}
+
+// Prisma.JsonNull, not plain `null` — a nullable Json column takes a
+// sentinel to mean "SQL NULL" vs "the empty value null"; the bare value
+// doesn't type-check against JsonNullValueInput.
+function promoBlocksFromForm(formData: FormData, field: string): any {
+  const blocks = blocksFromItemsJson(String(formData.get(field) ?? "[]"));
+  return blocks.length ? blocks : Prisma.JsonNull;
+}
 
 // "Sync with Drive" on a single development's own page — full re-import (rich data +
 // description + images), but scoped to just this project so its siblings aren't touched.
@@ -52,7 +98,7 @@ export async function syncThisDevelopmentUnitsAction(developmentId: string): Pro
   }
 }
 
-// (C) Generate a fresh 4-language description from ALL project data, no project name.
+// (C) Generate a fresh 4-language description from ALL project data, naming the project/developer.
 export async function generateDescription(developmentId: string, words: number, tuning?: { emphasize?: string; avoid?: string }): Promise<{ ok: boolean; texts?: FourLang; error?: string }> {
   try {
     const d = await prisma.development.findUnique({ where: { id: developmentId }, include: { override: true, units: true } });
@@ -79,6 +125,7 @@ export async function generateDescription(developmentId: string, words: number, 
     ].filter(Boolean).join(", ");
 
     const texts = await generateProjectDescription({
+      publicName: ov?.alias || d.publicName, developer: d.developer ?? undefined,
       district: ov?.district || d.district || "",
       town: ov?.town || d.town || "",
       area,
@@ -451,6 +498,14 @@ export async function saveOverride(formData: FormData) {
     stage: clean(formData, "stage"),
     amenities,
     seo: seo as any,
+    // Empty (no blocks added) stores as null rather than [] — "nothing to
+    // render" should read the same as the description fields' own null-when-
+    // empty convention above.
+    promoBlocksEN: promoBlocksFromForm(formData, "promoBlocksEN"),
+    promoBlocksDE: promoBlocksFromForm(formData, "promoBlocksDE"),
+    promoBlocksPL: promoBlocksFromForm(formData, "promoBlocksPL"),
+    promoBlocksRU: promoBlocksFromForm(formData, "promoBlocksRU"),
+    promoBlocksHE: promoBlocksFromForm(formData, "promoBlocksHE"),
   };
   await prisma.developmentOverride.upsert({
     where: { developmentId: id },

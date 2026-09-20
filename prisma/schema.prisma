@@ -1402,6 +1402,22 @@ model DevelopmentOverride {
   descriptionPL String?
   descriptionRU String?
   descriptionHE String?
+  // Long-form promotional content block, rendered between the map and the
+  // units section — separate from description{EN,DE,PL,RU} above, which
+  // stays the short, factual "About this development" copy near the top of
+  // the page. Same shape BlockEditor/blocksFromItemsJson already produce for
+  // blog/case-study content (array of Portable-Text-shaped blocks — only
+  // "textContent" and "tableBlock" are offered for this field, see
+  // BlockEditor's kind="development"), rendered via renderInsightsBlock
+  // (src/app/preview-insights/insightsBlocks.tsx), the same renderer blog
+  // articles use. Admin-authored (or AI-drafted then admin-edited, same
+  // pattern as description{EN,DE,PL,RU}) — nothing generates this
+  // automatically yet.
+  promoBlocksEN Json?
+  promoBlocksDE Json?
+  promoBlocksPL Json?
+  promoBlocksRU Json?
+  promoBlocksHE Json?
   amenities     Json? // admin-checked amenities merged with feed ones
   vatApplies    Boolean? // null = follow feed; true/false = admin decision (e.g. renovated no-VAT)
   completion    String?

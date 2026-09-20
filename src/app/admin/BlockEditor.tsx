@@ -20,7 +20,22 @@ function summarize(b: any): string {
 // gets content-block persistence "for free", no per-page wiring needed).
 export const CONTENT_BLOCKS_FIELD = "contentBlocksJson";
 
-export default function BlockEditor({ kind, initialBlocks, dir = "ltr" }: { kind: "blog" | "singlepage" | "caseStudy"; initialBlocks: any[]; dir?: "ltr" | "rtl" }) {
+export default function BlockEditor({
+  kind,
+  initialBlocks,
+  dir = "ltr",
+  fieldName = CONTENT_BLOCKS_FIELD,
+}: {
+  kind: "blog" | "singlepage" | "caseStudy" | "development";
+  initialBlocks: any[];
+  // Text direction of the content being edited (Hebrew rows pass "rtl").
+  dir?: "ltr" | "rtl";
+  // Override for a page that mounts more than one BlockEditor at once (the
+  // Development promo block, one per language) — each needs its own form
+  // field, since the parent's single Save form can't tell four instances
+  // of "contentBlocksJson" apart.
+  fieldName?: string;
+}) {
   const [items, setItems] = useState<Item[]>(() =>
     (Array.isArray(initialBlocks) ? initialBlocks : []).map((b, i) => ({
       key: b?._key || `b${i}`,
@@ -116,7 +131,7 @@ export default function BlockEditor({ kind, initialBlocks, dir = "ltr" }: { kind
 
   return (
     <div className="bg-white rounded-lg border border-[#E5E7EB] p-5">
-      <input type="hidden" name={CONTENT_BLOCKS_FIELD} value={serialized} />
+      <input type="hidden" name={fieldName} value={serialized} />
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-sm font-semibold">Content blocks <span className="text-[#9CA3AF] font-normal">({items.length})</span></h2>
       </div>
@@ -161,14 +176,25 @@ export default function BlockEditor({ kind, initialBlocks, dir = "ltr" }: { kind
         <button type="button" onClick={addText} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-1.5 hover:bg-[#1B4B43]/5">
           + Add text block
         </button>
-        <button type="button" onClick={addRelated} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-1.5 hover:bg-[#1B4B43]/5">
-          + Add related article
-        </button>
+        {/* Related-article callouts assume a blog/case-study/singlepage context
+            (they link to another article) — not offered for kind="development",
+            whose promo block has no such neighbour to point at. */}
+        {kind !== "development" && (
+          <button type="button" onClick={addRelated} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-1.5 hover:bg-[#1B4B43]/5">
+            + Add related article
+          </button>
+        )}
+        {/* Table is the one extra block kind="development" gets — comparison
+            tables are explicitly part of its spec. FAQ/image/button/projects
+            stay blog-only: none of them fit "long-form text between the map
+            and the units list". */}
+        {(kind === "blog" || kind === "development") && (
+          <button type="button" onClick={addTable} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-1.5 hover:bg-[#1B4B43]/5">
+            + Add table
+          </button>
+        )}
         {kind === "blog" && (
           <>
-            <button type="button" onClick={addTable} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-1.5 hover:bg-[#1B4B43]/5">
-              + Add table
-            </button>
             <button type="button" onClick={addFaq} className="rounded-md border border-[#1B4B43] text-[#1B4B43] text-sm px-4 py-1.5 hover:bg-[#1B4B43]/5">
               + Add FAQ
             </button>

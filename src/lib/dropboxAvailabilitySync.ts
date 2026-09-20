@@ -530,6 +530,7 @@ export async function writeKuutioDraft(developerAccountId: string, opts: { force
     }
 
     const descCtx = isNewDev ? {
+      publicName: r.projectName, developer: acct.name,
       district: "", town: "", area: "",
       projectAmenities: amenities, unitAmenities: [],
       unitSummary: `${r.units.length} units, ${avail} available`,

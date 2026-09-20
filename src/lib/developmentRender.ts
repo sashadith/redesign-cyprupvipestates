@@ -25,7 +25,16 @@ type Row = Development & { units: DevelopmentUnit[]; override: DevelopmentOverri
 // (slug/publishStatus/seoOverride aren't part of the feed-facing ProjectVM
 // contract, but are harmless extra properties on the returned object —
 // structural typing means every existing ProjectVM consumer just ignores them).
-export type DbProjectVM = ProjectVM & { slug: string | null; publishStatus: string; seoOverride: SeoOverride | null };
+export type DbProjectVM = ProjectVM & {
+  slug: string | null;
+  publishStatus: string;
+  seoOverride: SeoOverride | null;
+  // Long-form promotional content block (rendered between the map and units
+  // section) — same per-language resolution as `description` above, admin-
+  // authored via PromoBlocksField/BlockEditor, portable-text-shaped, empty
+  // array when nothing's been written for this project yet.
+  promoBlocks: any[];
+};
 
 // Exported for the Client Presentation system (src/app/c/[token]), which
 // renders developments from potentially many different developers in one
@@ -86,6 +95,9 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
     stage: ov?.stage || d.stage || undefined, completion: resolveRelativeCompletion(ov?.completion || d.completion), energy: ov?.energy || d.energy || "",
     priceFrom, priceTo, currency: d.currency ?? "EUR",
     description: ({ en: ov?.descriptionEN, de: ov?.descriptionDE, pl: ov?.descriptionPL, ru: ov?.descriptionRU, he: ov?.descriptionHE } as Record<string, string | null | undefined>)[lang] || ov?.descriptionEN || d.description || "",
+    // Same EN fallback as the description above: an empty promoBlocksHE shows
+    // the EN block (translation-queue support for this field is a follow-up).
+    promoBlocks: (({ en: ov?.promoBlocksEN, de: ov?.promoBlocksDE, pl: ov?.promoBlocksPL, ru: ov?.promoBlocksRU, he: ov?.promoBlocksHE } as Record<string, unknown>)[lang] || ov?.promoBlocksEN || []) as any[],
     gallery: finalGallery, plans: arr<string>(d.plans), renders: [], amenities,
     extraFacts: arr<{ label: string; value: string }>(d.extraFacts), heroVideo: ov?.heroVideo || undefined,
     vatApplies: ov?.vatApplies ?? null,

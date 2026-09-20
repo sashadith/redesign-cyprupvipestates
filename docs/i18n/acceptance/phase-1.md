@@ -32,7 +32,7 @@
    ```bash
    sudo -u postgres psql -d cyprusvipestates -tAc 'select enum_range(null::"Locale")'
    ```
-   Erwartung: `{en,de,pl,ru,he}`.
+   Erwartung: `{en,de,pl,ru,he}`. `migrate deploy` spielt dabei alle drei Hebräisch-Migrationen ein: `20260914100000_locale_add_he`, `20260914100100_he_content_columns` und `20260920100000_he_promo_blocks` (Spalte `promoBlocksHE` für den Promo-Block aus PR #58; additiv).
 3. **Deploy von diesem Branch** (aus dem Worktree-Checkout, damit der Branch-Stand gesynct wird; beim ersten Deploy nach einer `package-lock.json`-Änderung zusätzlich `CVP_RUN_INSTALL=1` voranstellen):
    ```bash
    ./scripts/deploy-staging.sh

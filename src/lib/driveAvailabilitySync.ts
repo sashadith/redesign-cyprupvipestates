@@ -333,6 +333,7 @@ async function writeProject(developerAccountId: string, accountName: string, p: 
       }
 
       const texts = await generateProjectDescription({
+        publicName: dev.publicName, developer: dev.developer ?? undefined,
         district: "", town: "", area: areaText ?? "",
         category: nn(p.propertyType) ?? undefined, completion: nn(p.completion) ?? undefined,
         priceFrom, projectAmenities: (p.amenities ?? []).filter(Boolean), unitAmenities: unitFeatures,

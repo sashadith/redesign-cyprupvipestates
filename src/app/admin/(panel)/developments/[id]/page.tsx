@@ -6,6 +6,7 @@ import { saveOverride, setStatus } from "./actions";
 import PdfImport from "./PdfImport";
 import AmenitiesField from "./AmenitiesField";
 import DescriptionField from "./DescriptionField";
+import PromoBlocksField from "./PromoBlocksField";
 import SaveOverridesButton from "./SaveOverridesButton";
 import BackLink from "../BackLink";
 import UnitsEditor from "./UnitsEditor";
@@ -309,6 +310,19 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
                 pl: ov?.descriptionPL ?? "",
                 ru: ov?.descriptionRU ?? "",
                 he: ov?.descriptionHE ?? "",
+              }}
+            />
+          </div>
+
+          <div>
+            <label className={label}>Promotional content <span className="font-normal text-[#9CA3AF]">— rendered between the map and the units list</span></label>
+            <PromoBlocksField
+              initial={{
+                en: (ov?.promoBlocksEN as any[]) ?? [],
+                de: (ov?.promoBlocksDE as any[]) ?? [],
+                pl: (ov?.promoBlocksPL as any[]) ?? [],
+                ru: (ov?.promoBlocksRU as any[]) ?? [],
+                he: (ov?.promoBlocksHE as any[]) ?? [],
               }}
             />
           </div>

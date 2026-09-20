@@ -260,6 +260,7 @@ export async function writeAggDraft(developerAccountId: string, opts: { force?: 
 
         if (rest.description) {
           description = await generateProjectDescription({
+            publicName: rest ? toTitleCaseName(rest.title) : toTitleCaseName(plan.projectName), developer: acct.name,
             district: "", town: town || "", area: "",
             category: rest.propertyType.join(", "),
             stage: stage || "",
