@@ -79,7 +79,13 @@ export class HeTranslationError extends Error {
 
 export const TITLE_GRAPHEME_MAX = 60;
 export const DESC_GRAPHEME_MAX = 155;
-const MAX_TOKENS = 4000;
+// 16000, not 4000: claude-sonnet-5 runs adaptive thinking by default and the
+// thinking tokens count against max_tokens — with 4000 two of the first nine
+// staging rows (2026-09-20) came back as `stop_reason: max_tokens` with NO
+// text block at all (the budget went entirely into thinking, whose text is
+// omitted by default), i.e. "No content (stop: max_tokens)". Non-streaming
+// requests should leave ~16k of room; the model still stops at end_turn.
+const MAX_TOKENS = 16000;
 
 /** Grapheme count (what a Hebrew meta field is actually budgeted in). */
 export function graphemeLength(s: string): number {
@@ -406,8 +412,19 @@ export async function translateHe(input: HeTranslateInput, deps?: TranslateHeDep
       messages: [{ role: "user", content: prompt }],
     });
     const text = textOf(msg);
-    if (!text) throw new Error(`No content (stop: ${msg?.stop_reason ?? "unknown"})`);
-    return parseJsonReply(text);
+    if (!text) {
+      // Name the block types so a thinking-only reply (budget exhausted before
+      // any text) is distinguishable from a genuinely empty one in the queue row.
+      const kinds = (Array.isArray(msg?.content) ? msg.content : []).map((b) => (b && typeof b === "object" ? String((b as { type?: unknown }).type ?? "?") : "?"));
+      throw new Error(`No content (stop: ${msg?.stop_reason ?? "unknown"}; blocks: ${kinds.join(",") || "none"})`);
+    }
+    try {
+      return parseJsonReply(text);
+    } catch (e) {
+      // A reply cut off by max_tokens is the usual reason there is no JSON
+      // object — say so, instead of only "no JSON object".
+      throw new Error(`${e instanceof Error ? e.message : String(e)} (stop: ${msg?.stop_reason ?? "unknown"}, ${text.length} chars)`);
+    }
   };
 
   let corrections: string[] = [];
