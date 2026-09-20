@@ -84,20 +84,21 @@ Alles andere in Phase 5/6 ist entweder `he`-only (Sprachlisten-Chips auf About/K
    ```
    Erst danach mit Schritt 8 weitermachen.
 8. **Übersetzungswarteschlange öffnen:** `/admin/content/hebrew` aufrufen → **„Enqueue 15 sample"** klicken.
-9. **Cron-Route einmal manuell auslösen** (verarbeitet die 15 Sample-Zeilen; Auth ist ein Query-Parameter, kein Header — wie bei `api/cron/psi-sync`, siehe `src/app/api/cron/he-translate/route.ts:25`):
+9. **Cron-Route einmal manuell auslösen** (verarbeitet die Sample-Zeilen; Auth ist ein Query-Parameter, kein Header — wie bei `api/cron/psi-sync`, siehe `src/app/api/cron/he-translate/route.ts:25`). **Auf dem Server, gegen `127.0.0.1:3200`, nicht über nginx:** jede Zeile kostet zwei Modellaufrufe (Übersetzung + Kritik) und rund eine Minute, nginx bricht nach `proxy_read_timeout` (300 s) mit 504 ab — die App rechnet dann zwar weiter, aber die Antwort geht verloren (so passiert 2026-09-20 mit `limit=15`). Das Secret liest die Shell auf dem Server aus der `.env`, damit es nirgends im Klartext steht:
    ```bash
-   curl -s "https://design.cyprusvipestates.com/api/cron/he-translate?key=$CRON_SECRET&limit=15"
+   ssh -i ~/.ssh/cvp_vps root@72.60.89.239 'cd /var/www/cve-staging && k=$(grep "^CRON_SECRET=" .env | cut -d= -f2- | tr -d "\"") && curl -s --max-time 1800 -H "Host: design.cyprusvipestates.com" "http://127.0.0.1:3200/api/cron/he-translate?key=$k&limit=15"'
    ```
+   Ein „Enqueue 15 sample" legt **30** Zeilen an (Beschreibung + SEO je Projekt); zweimal aufrufen oder `limit=25` (Maximum) plus einen zweiten Lauf. Eine Zeile mit `FAILED` (z. B. `No content (stop: max_tokens)`) bleibt liegen — sie wird beim nächsten „Enqueue missing …" (Schritt 11) automatisch neu eingereiht, weil das Zielfeld noch leer ist. **Nicht manuell auslösen, solange die Crontab-Zeile (Schritt 12) aktiv ist:** die Route markiert Zeilen nicht als „in Arbeit", zwei gleichzeitige Läufe würden dieselben Zeilen doppelt übersetzen (die zweite Fassung wird verworfen, die Tokens nicht).
 10. **Samples lesen** auf `/admin/content/hebrew` (EN/HE nebeneinander, `dir="rtl"` auf der HE-Spalte) — bei schlechten Ergebnissen **„Reject → re-enqueue with force"** pro Zeile.
 11. **Restliche Zeilen einreihen** — je Kind einzeln:
     ```
     „Enqueue missing developments" / „Enqueue missing areas" / „Enqueue missing developers"
     ```
-12. **Staging-Crontab-Zeile** (drainiert die Warteschlange automatisch, alle 10 Minuten, 10 Zeilen pro Lauf, Log-Datei):
+12. **Staging-Crontab-Zeile** (drainiert die Warteschlange automatisch, alle 10 Minuten, 10 Zeilen pro Lauf, Log-Datei). Gegen `127.0.0.1:3200` (kein nginx-Timeout) und unter `flock`, damit sich ein noch laufender Lauf (≈ 1 Minute pro Zeile, also bis zu 10 Minuten) nie mit dem nächsten überlappt:
     ```
-    */10 * * * * curl -s "https://design.cyprusvipestates.com/api/cron/he-translate?key=REPLACE_WITH_CRON_SECRET&limit=10" >> /var/log/he-translate-cron.log 2>&1
+    */10 * * * * flock -n /tmp/he-translate.lock curl -s --max-time 1800 -H "Host: design.cyprusvipestates.com" "http://127.0.0.1:3200/api/cron/he-translate?key=REPLACE_WITH_CRON_SECRET&limit=10" >> /var/log/he-translate-cron.log 2>&1
     ```
-    (Crontab-Zeilen erben keine Shell-Umgebung — den tatsächlichen `CRON_SECRET`-Wert einsetzen, nicht die Variable.) Zähler auf `/admin/content/hebrew` beobachten, bis „mit HE" für Developments/Gebiete/Bauträger den „veröffentlicht"-Zähler erreicht.
+    (Crontab-Zeilen erben keine Shell-Umgebung — den tatsächlichen `CRON_SECRET`-Wert einsetzen, nicht die Variable. Der Wert steht damit in der Crontab und, weil die Route per Query-Parameter authentifiziert, auch im nginx-Access-Log — Bestandsmuster aller Cron-Routen hier, Ticket „Header-Auth" unter „Zurückgestellt".) Zähler auf `/admin/content/hebrew` beobachten, bis „mit HE" für Developments/Gebiete/Bauträger den „veröffentlicht"-Zähler erreicht.
 13. **Automatisierte Smoke-Checks:**
     ```bash
     scripts/qa/he-smoke.sh https://design.cyprusvipestates.com live
@@ -135,6 +136,9 @@ Schritte 1–7 sind auf Staging durch; Befunde und Korrekturen, alle auf dem Bra
 - **`<ul>`-Renderer** — FAQ-Antworten mit Aufzählungen rendern derzeit ohne Listenelement (Ticket aus `c-faq.md`/Pass-B-Fixrunde 1, Task 4).
 - **Bidi-Isolation lateinischer Tokens in JSON-Inhalten** — Renderer-seitige Lücke (kein `<bdi>`/U+2066 in `content/he/**`-Strings selbst): betrifft Telefonnummer/Firmenname/USt-ID im Footer, E-Mail/Telefon in Formular-Fehlermeldungen, `שטר הבעלות (Title Deed)` im Blog-Chrome und jede lateinische Marke in einem hebräischen Satz (`c-site-documents.md`). Entweder tragen die Renderer die Isolation nach, oder die JSON-Strings erhalten die Steuerzeichen selbst — Phase 8.
 - **S24** (`caseStudiesPage.seo.metaDescription`) — bewusst unverändert gelassen, weil wortgleich mit `preview-case-studies/[lang]/copy.ts:230` (§11.6, außerhalb des Task-3-Pathspecs) und von der Vollständigkeit der Case-Study-Datenfelder abhängig; Pass-C-Frage 7 in `c-site-documents.md`.
+- **Cron-Auth per Header statt Query-Parameter** — `he-translate` folgt dem Bestandsmuster (`psi-sync` u. a.), dadurch steht `CRON_SECRET` im nginx-Access-Log und in der Crontab (Staging-Lauf 2026-09-20). Betrifft alle Cron-Routen, nicht nur Hebräisch.
+- **Warteschlange: Zeilen beim Abholen als „in Arbeit" markieren** — heute schützt nur `flock` in der Crontab vor doppelter Übersetzung durch überlappende Läufe; ein Status `PROCESSING` (mit Rückfall auf `PENDING` nach Timeout) würde auch manuelle Läufe absichern.
+- **`No content (stop: max_tokens)`** — eine von sechs SEO-Zeilen im ersten Staging-Lauf (Sonnet, 4000 Tokens, Antwort ohne Textblock); einmalig beobachtet, Zeile wird über „Enqueue missing" neu eingereiht. Falls es sich häuft: Antwort-Blöcke loggen, `MAX_TOKENS` prüfen.
 - **Partnerseite** bleibt englisch (Entscheidung J) — der Header-Sublink zeigt bewusst auf `/partners`, nicht auf eine nicht existierende `/he/partners`-Übersetzung.
 - **Phase 7 (Lead-Pipeline)** — noch nicht Teil dieses Plans.
 - **Phase 8 (SEO-Härtung)** — u. a. hreflang für `/he/blog` (cross-locale Sonderfall, noch nicht spezifiziert), Sitemap-Einschlussregeln für `he`, sobald `/he/blog` indexierbar wird; Transliterationstabelle (`src/lib/hePlaces.ts`) bei Bedarf erweitern.
