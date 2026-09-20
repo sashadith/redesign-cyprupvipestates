@@ -7,7 +7,7 @@ import { cache } from "react";
 import { draftMode } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
-import { localizedHref, isLocale, PUBLIC_LOCALES, nonDefaultLocalePattern } from "@/lib/locale";
+import { localizedHref, isLocale, PUBLIC_LOCALES, nonDefaultLocalePattern, localePrefix, DEFAULT_LOCALE } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
 import { completionSortKey } from "@/lib/completionDate";
 import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances, districtWithParent, resolveRelativeCompletion } from "@/lib/developmentCard";
@@ -1197,7 +1197,22 @@ export async function getLegacyProjectRedirect(lang: string, slug: string): Prom
     where: { language: lang as any, slug, status: "ARCHIVED" },
     select: { redirectTarget: { select: { targetPath: true } } },
   });
-  return row?.redirectTarget?.targetPath ?? null;
+  if (row?.redirectTarget?.targetPath) return row.redirectTarget.targetPath;
+  // A locale that never had legacy Project rows (Hebrew — decision: no legacy
+  // rows for he) still gets the OLD slug requested under its prefix; without
+  // this, /he/projects/cypress-park 404'd while every other locale 308'd to
+  // the Development that replaced it (staging, 2026-09-20). Resolve through
+  // the EN row's redirect and re-prefix its (prefix-less) target for `lang`.
+  // A target that is itself a legacy-only page still ends in a 404 for such
+  // a locale — nothing to show there, same as before.
+  if (lang === DEFAULT_LOCALE) return null;
+  const en = await prisma.project.findFirst({
+    where: { language: DEFAULT_LOCALE as any, slug, status: "ARCHIVED" },
+    select: { redirectTarget: { select: { targetPath: true } } },
+  });
+  const enTarget = en?.redirectTarget?.targetPath;
+  if (!enTarget || !enTarget.startsWith("/")) return null;
+  return `${localePrefix(lang)}${enTarget}`;
 }
 
 export async function getAllDevelopersByLang(lang: string): Promise<Developer[]> {
