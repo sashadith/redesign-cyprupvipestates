@@ -392,7 +392,7 @@ test("planSinglepages: an already-seeded nested he row is matched by its leaf sl
     excerpt: "תקציר",
     allowIntroBlock: true,
     translationGroupId: "tg-1",
-    relatedLandingPageSlugs: [],
+    relatedLandingPages: null,
   };
   // Another page links the nested one by its FULL pack path.
   const plan = planSinglepages([singlepageRow("paphos", { relatedLandingPages: ["limassol/new-projects"] })], {
@@ -494,12 +494,73 @@ test("planSinglepages: idempotency — a second plan over the applied result has
       allowIntroBlock: raw.allowIntroBlock ?? false,
       parentSanityId: insertEntry.resolved.parentSanityId,
       translationGroupId: insertEntry.resolved.translationGroupId,
-      relatedLandingPageSlugs: linkEntry ? (raw.relatedLandingPages ?? []) : [],
+      // What applyPlan's link pass writes: the refs themselves (or nothing).
+      relatedLandingPages: linkEntry?.action === "link" ? linkEntry.resolved.relatedRefs : null,
     };
   });
 
   const secondPlan = planSinglepages(rows, { singlepages: existingAfterApply });
   for (const entry of secondPlan) assert.equal(entry.action, "skip", `expected "skip" for ${entry.kind}/${entry.key}, got "${entry.action}": ${entry.reason}`);
+});
+
+// Staging idempotency probe, 2026-09-20: the real run wrote 31 rows and the
+// very next dry-run wanted to rewrite 21 of them plus every link to a nested
+// page. Three causes, each pinned here so they cannot come back.
+test("planSinglepages: idempotency survives jsonb key reordering, a DB-null column the pack never sets, and refs to NESTED pages", () => {
+  const rows = [
+    singlepageRow("limassol", { seo: { metaTitle: "כותרת", metaDescription: "תיאור" }, contentBlocks: [{ _type: "textContent", _key: "a", body: "טקסט" }], relatedLandingPages: ["limassol/new-projects", "paphos"] }),
+    singlepageRow("limassol/new-projects", { parentSlug: "limassol" }),
+    singlepageRow("paphos"),
+  ];
+  const firstPlan = planSinglepages(rows, { singlepages: [] });
+  const existingAfterApply = rows.map(({ slug, raw }) => {
+    const insertEntry = firstPlan.find((p) => p.key === slug && p.action === "insert");
+    const linkEntry = firstPlan.find((p) => p.key === slug && p.action === "link");
+    return {
+      id: `sp-${slug}`,
+      sanityId: insertEntry.sanityId,
+      slug: insertEntry.slug, // LEAF, as the DB column holds it
+      language: "he",
+      title: raw.title,
+      excerpt: raw.excerpt,
+      allowIntroBlock: raw.allowIntroBlock ?? false,
+      // jsonb reads keys back in its own order (shorter first, then bytewise)
+      seo: raw.seo ? { metaDescription: raw.seo.metaDescription, metaTitle: raw.seo.metaTitle } : null,
+      contentBlocks: raw.contentBlocks ? raw.contentBlocks.map((b) => ({ body: b.body, _key: b._key, _type: b._type })) : null,
+      previewImage: null, // nullable column the pack never sets
+      parentSanityId: insertEntry.resolved.parentSanityId,
+      translationGroupId: insertEntry.resolved.translationGroupId,
+      relatedLandingPages: linkEntry ? linkEntry.resolved.relatedRefs.slice().reverse() : null, // order must not matter either
+    };
+  });
+  assert.deepEqual(
+    firstPlan.find((p) => p.key === "limassol" && p.action === "link").resolved.relatedRefs,
+    [{ _ref: "he-limassol-new-projects" }, { _ref: "he-paphos" }],
+  );
+
+  const secondPlan = planSinglepages(rows, { singlepages: existingAfterApply });
+  for (const entry of secondPlan) assert.equal(entry.action, "skip", `expected "skip" for ${entry.kind}/${entry.key}, got "${entry.action}": ${entry.reason}`);
+});
+
+test("planCaseStudies: a DB-null previewImage the pack never sets is not a difference", () => {
+  const rows = [{ slug: "cs-1", raw: { title: "כותרת", excerpt: "תקציר", seo: { metaTitle: "א", metaDescription: "ב" }, mainContent: [{ _type: "block", _key: "k", children: [] }] } }];
+  const firstPlan = planCaseStudies(rows, { caseStudies: [], developments: [] });
+  const insertEntry = firstPlan.find((p) => p.action === "insert");
+  const existing = {
+    id: "cs-row",
+    sanityId: insertEntry.sanityId,
+    slug: "cs-1",
+    language: "he",
+    title: "כותרת",
+    excerpt: "תקציר",
+    seo: { metaDescription: "ב", metaTitle: "א" }, // jsonb key order
+    mainContent: [{ _key: "k", _type: "block", children: [] }],
+    previewImage: null,
+    translationGroupId: insertEntry.resolved.translationGroupId,
+    relatedDevelopmentSlugs: [],
+  };
+  const secondPlan = planCaseStudies(rows, { caseStudies: [existing], developments: [] });
+  for (const entry of secondPlan) assert.equal(entry.action, "skip", `expected "skip" for ${entry.key}, got "${entry.action}": ${entry.reason}`);
 });
 
 // ─── legal-check ────────────────────────────────────────────────────────────

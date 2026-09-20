@@ -127,13 +127,32 @@ export function stripPackMetadata(obj) {
   return clone;
 }
 
+// Structural equality with CANONICAL key order. Every Json column here is
+// Postgres jsonb, which stores object keys in its own order (shorter keys
+// first, then bytewise) — so a freshly written contentBlocks/seo/categories
+// value reads back with reordered keys, and a plain JSON.stringify compare
+// reported "data differs from the pack" for 21 rows right after the seeder's
+// own real run (staging, 2026-09-20). Order is not content.
+function canonical(v) {
+  if (Array.isArray(v)) return v.map(canonical);
+  if (v && typeof v === "object") {
+    const out = {};
+    for (const k of Object.keys(v).sort()) out[k] = canonical(v[k]);
+    return out;
+  }
+  return v;
+}
 function deepEqual(a, b) {
-  return JSON.stringify(a) === JSON.stringify(b);
+  return JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
 }
 
+// A nullable column the pack never sets (e.g. CaseStudy.previewImage) reads
+// back as `null`; a pack file simply has no such key. Both mean "nothing", so
+// both are left out of the comparable — otherwise every such row looked
+// changed on the second run (same staging idempotency probe as above).
 function pickFields(obj, fields) {
   const out = {};
-  for (const f of fields) if (obj && obj[f] !== undefined) out[f] = obj[f];
+  for (const f of fields) if (obj && obj[f] !== undefined && obj[f] !== null) out[f] = obj[f];
   return out;
 }
 
@@ -643,9 +662,17 @@ export function planSinglepages(rows, existingRows) {
       continue;
     }
     const relatedRefs = wantSlugs.map((relSlug) => ({ _ref: sanityIdBySlug.get(relSlug) }));
-    const existingRelSlugs = (existing?.relatedLandingPageSlugs ?? []).slice().sort();
-    const wantSlugsSorted = wantSlugs.slice().sort();
-    if (deepEqual(existingRelSlugs, wantSlugsSorted)) {
+    // Compare by sanityId, not by slug: the DB row's refs point at sanityIds,
+    // and a nested target's DB slug is only its LEAF ("new-projects") while
+    // the pack names the full path ("limassol/new-projects") — a slug-level
+    // compare re-planned every link to a nested page on every run (staging
+    // idempotency probe, 2026-09-20).
+    const existingRefIds = (Array.isArray(existing?.relatedLandingPages) ? existing.relatedLandingPages : [])
+      .map((ref) => ref?._ref)
+      .filter(Boolean)
+      .sort();
+    const wantRefIds = relatedRefs.map((r) => r._ref).sort();
+    if (deepEqual(existingRefIds, wantRefIds)) {
       linkPlan.push({ kind: "singlepages", key: slug, slug: leaf, action: "skip", reason: "related landing pages unchanged" });
     } else {
       linkPlan.push({ kind: "singlepages", key: slug, slug: leaf, action: "link", reason: "related landing pages differ", resolved: { relatedRefs, relatedSlugs: wantSlugs } });
@@ -940,14 +967,9 @@ async function loadExistingRowsForPack(prisma, pack) {
     const byId = new Map();
     for (const r of await prisma.singlepage.findMany({ where: { slug: { in: allSlugs }, language: "he" } })) byId.set(r.id, r);
     if (tgSlugs.length) for (const r of await prisma.singlepage.findMany({ where: { language: "en", slug: { in: tgSlugs } } })) byId.set(r.id, r);
-    const bySanityId = new Map([...byId.values()].map((r) => [r.sanityId, r]));
-    const singlepages = [...byId.values()].map((r) => {
-      if (r.language !== "he") return { ...r, relatedLandingPageSlugs: [] };
-      const refs = Array.isArray(r.relatedLandingPages) ? r.relatedLandingPages : [];
-      const relatedLandingPageSlugs = refs.map((ref) => bySanityId.get(ref?._ref)?.slug).filter(Boolean);
-      return { ...r, relatedLandingPageSlugs };
-    });
-    return { singlepages };
+    // Rows carry their raw `relatedLandingPages` refs; planSinglepages compares
+    // those sanityIds directly (no slug round-trip — see the link pass there).
+    return { singlepages: [...byId.values()] };
   }
 
   if (pack.kind === "legal-check") return {};
