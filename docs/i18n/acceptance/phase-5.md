@@ -115,6 +115,20 @@ Alles andere in Phase 5/6 ist entweder `he`-only (Sprachlisten-Chips auf About/K
     - `/he/privacy-policy`, `/he/terms-and-conditions` (Verbindlichkeits-Hinweis unter der H1 prüfen)
     - eine paginierte Seite (z. B. `/he/projects?page=2`)
 
+## Staging-Lauf 2026-09-20 (Protokoll)
+
+Schritte 1–7 sind auf Staging durch; Befunde und Korrekturen, alle auf dem Branch:
+
+- **Migration vor Deploy** (siehe Schritt 1): der erste Build brach bei „Collecting page data" mit `invalid input value for enum "Locale": "he"` ab. Zusätzlich war `he_content_columns` mit den Prisma-Modellnamen statt der `@@map`-Tabellennamen geschrieben (P3018/42P01, Transaktion zurückgerollt) → SQL korrigiert, `migrate resolve --rolled-back` + `migrate deploy`. Drei Hebräisch-Migrationen sind eingespielt (`locale_add_he`, `he_content_columns`, `he_promo_blocks`).
+- **Seed:** 31 `he`-Zeilen + FAQ (9 Kategorien / 60 Fragen). Vorher zwei Dry-Run-Korrekturen: die Case Studies verwiesen auf Alt-Projekt-Slugs (jetzt Development-Slugs; `palisandro-hills-inex` und `limassol-blu-marine` haben keinen Nachfolger und wurden gestrichen), der Content-Gate behandelt `relatedProjects` als Slug-Liste.
+- **Idempotenz** war zunächst verletzt (21 Rewrites + 9 Links): JSONB liefert Schlüssel in eigener Reihenfolge (Vergleich jetzt kanonisch), DB-`null` ≠ fehlendes Pack-Feld (`previewImage`), Link-Vergleich per sanityId statt Blatt-Slug (verschachtelte Seiten), Case-Study-Links nur gegen verknüpfbare Developments und dedupliziert. Zweiter Dry-Run: 54 `skip`, 0 Schreibvorgänge.
+- **Filter-Gate (Schritt 7):** `/he/seafront-villas-cyprus` 60 Karten, `/he/limassol/investment-apartments` 8 Karten — kein Lockern nötig.
+- **Staging-Eigenheiten, keine Fehler:** nginx sendet `X-Robots-Tag: noindex, nofollow` auf jeder Antwort; `NEW_PROJECTS_INDEXABLE` ist auf Staging nicht gesetzt, daher tragen alle `/projects/<slug>` dort ein `noindex`-Meta (in jeder Sprache). `scripts/qa/hreflang-check.mjs` bewertet beides jetzt als Host- bzw. Paritätsbefund, nicht als he-Defekt; die 17 Landingpages laufen als „he-only" (EN 404 erwartet, hreflang nur `he` + `x-default` auf sich selbst).
+- **Echte Fehler, gefixt, brauchen den nächsten Deploy:** `/he/projects/<umbenannter-slug>` lief in 404 statt 308 (Redirect-Regex kannte nur de/pl/ru); Developers-Liste ohne `x-default`/`og:locale` in allen Sprachen; `/he/projects` warf ohne Site-Dokument 500 statt 404.
+- **hreflang-Sampler gegen Staging:** 30 Paare, 28 grün; die zwei roten (developers, project) sind genau die beiden gefixten, noch nicht deployten Punkte.
+- **Seiten-Walk per HTTP:** `/he`, `/he/projects(?page=2)`, drei Projektseiten, `/he/faq` (60 Fragen im JSON-LD), `/he/about-us`, `/he/contacts`, Case-Study-Liste + Detail, `/he/blog` (Badge „באנגלית", `noindex, follow`), `/he/developers` + Detail, alle 17 Landingpages, `/he/privacy-policy`, `/he/terms-and-conditions` (RTL, Verbindlichkeits-Hinweis) → alle 200, `/he/partners` 404 wie vorgesehen.
+- **Noch offen (Operator, Browser):** Schritte 8–12 (Warteschlange: „Enqueue 15 sample", Cron-Aufruf, Samples lesen, restliche Zeilen, Crontab), Schritt 13 `rtl-matrix` (Screenshots), Schritt 14 inhaltliches Gegenlesen.
+
 ## Zurückgestellt / Tickets
 
 - **Pass C** — muttersprachliches Lektorat aller Content-Protokolle (`c-*.md`); Lektor noch nicht benannt. Bis dahin trägt jede Datei `"review": "pending"`.
