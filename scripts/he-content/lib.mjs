@@ -128,6 +128,23 @@ export function mirrorCheck(enValue, heValue, path = "", stats = null) {
         });
         continue;
       }
+      // A site document's `slug` is a localizedSlug OBJECT keyed by language
+      // ({ en: { _type: "slug", current } }); the language switcher reads
+      // slug[lang], so the Hebrew row must carry it under `he` — same Latin
+      // value (decision A), except the homepage's "/" which becomes "/he"
+      // like the Russian row's "/ru". Keeping it byte-identical to EN (the
+      // IDENTICAL_KEYS rule below) is exactly what hid Hebrew from the
+      // switcher on staging (2026-09-20).
+      if (k === "slug" && enValue[k]?._type === "localizedSlug" && typeof enValue[k] === "object") {
+        const enCurrent = Object.entries(enValue[k]).find(([kk]) => kk !== "_type")?.[1]?.current;
+        const he = heValue[k];
+        const heCurrent = he?.he?.current;
+        const want = enCurrent === "/" ? "/he" : enCurrent;
+        if (!he || he._type !== "localizedSlug" || he.he?._type !== "slug" || heCurrent !== want || Object.keys(he).some((kk) => kk !== "_type" && kk !== "he")) {
+          violations.push(`${childPath}: localizedSlug must be { he: { _type: "slug", current: ${JSON.stringify(want)} }, _type: "localizedSlug" } (got ${JSON.stringify(he)})`);
+        }
+        continue;
+      }
       const isLayoutListItem = k === "listItem" && (enValue[k] === "bullet" || enValue[k] === "number");
       if (IDENTICAL_KEYS.has(k) && (k !== "listItem" || isLayoutListItem)) {
         if (!identicalEqual(enValue[k], heValue[k])) {

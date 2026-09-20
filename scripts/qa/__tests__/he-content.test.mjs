@@ -436,3 +436,18 @@ test("mirrorCheck: href may be the /he rewrite of the EN link, nothing else", ()
   assert.ok(linkCheck("/de/projects", []));
   assert.equal(isHeLinkRewrite("https://cyprusvipestates.com/en/faq", "/he/faq"), true);
 });
+
+// Staging 2026-09-20: the five Hebrew site documents carried their localizedSlug
+// under `en` (byte-identical to the EN export, as the IDENTICAL_KEYS rule then
+// demanded), so the language switcher — which reads slug[lang] — never listed
+// Hebrew. The Hebrew row must carry the object under `he`.
+test("mirrorCheck: a site document's localizedSlug must be re-keyed to he (Latin value kept; homepage '/' becomes '/he')", () => {
+  const en = { slug: { en: { _type: "slug", current: "blog" }, _type: "localizedSlug" } };
+  assert.deepEqual(mirrorCheck(en, { slug: { he: { _type: "slug", current: "blog" }, _type: "localizedSlug" } }), []);
+  assert.equal(mirrorCheck(en, { slug: { en: { _type: "slug", current: "blog" }, _type: "localizedSlug" } }).length, 1, "kept under en → violation");
+  assert.equal(mirrorCheck(en, { slug: { he: { _type: "slug", current: "בלוג" }, _type: "localizedSlug" } }).length, 1, "value must stay the Latin slug");
+
+  const home = { slug: { en: { _type: "slug", current: "/" }, _type: "localizedSlug" } };
+  assert.deepEqual(mirrorCheck(home, { slug: { he: { _type: "slug", current: "/he" }, _type: "localizedSlug" } }), []);
+  assert.equal(mirrorCheck(home, { slug: { he: { _type: "slug", current: "/" }, _type: "localizedSlug" } }).length, 1, "homepage root must be /he");
+});
