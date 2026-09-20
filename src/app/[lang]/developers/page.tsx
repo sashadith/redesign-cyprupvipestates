@@ -10,7 +10,7 @@ import HeaderWrapper from "@/app/components/HeaderWrapper/HeaderWrapper";
 import Footer from "@/app/components/Footer/Footer";
 import { i18n } from "@/i18n.config";
 import { localizedHref } from "@/lib/locale";
-import { abs } from "@/lib/seo";
+import { ogLocale, staticAlternates } from "@/lib/seo";
 import { urlFor } from "@/sanity/sanity.client";
 import { getAllDevelopersByLang, getDeveloperProjectCounts } from "@/sanity/sanity.utils";
 import DevAtmosphere from "@/app/[lang]/developers/[slug]/DevAtmosphere";
@@ -22,15 +22,26 @@ export const revalidate = 3600;
 
 export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
   const t = developersPageCopy(params.lang);
-  const languages: Record<string, string> = {};
-  for (const l of i18n.languages) languages[l.id] = abs(localizedHref(l.id, "developers"));
+  // Same single-source head signals as /projects and /faq: staticAlternates
+  // adds the x-default alternate and ogLocale the og:locale meta — both were
+  // missing here in every locale (hreflang sampler against staging,
+  // 2026-09-20).
+  const { canonical, languages } = staticAlternates(params.lang, "developers");
   return {
     // `title` doubles as the H1 (withAccent gold-accents its last word), so the
     // brand can only ride along in a separate meta-only title. Today just `he`
     // has one; every other locale keeps the H1 string as its <title>.
     title: t.metaTitle ?? t.title,
     description: t.metaDescription,
-    alternates: { canonical: abs(localizedHref(params.lang, "developers")), languages },
+    alternates: { canonical, languages },
+    openGraph: {
+      title: t.metaTitle ?? t.title,
+      description: t.metaDescription,
+      url: canonical,
+      siteName: "Cyprus VIP Estates",
+      locale: ogLocale(params.lang),
+      type: "website",
+    },
   };
 }
 

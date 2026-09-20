@@ -110,11 +110,17 @@ const UNLOCALIZED_TYPE_PAGES = [
  *  the deliberately-unlocalized pair(s) + the 17 keyword landing slugs. Bare
  *  site-relative paths — the caller prepends `host`. */
 export function buildUrlPairs() {
-  const base = buildPages(DEFAULTS).filter((p) => p.type !== "404");
+  // rtl-matrix's own "landing" row is dropped: its slug is one of the 17
+  // keyword pages, which are listed explicitly below with the heOnly contract.
+  const base = buildPages(DEFAULTS).filter((p) => p.type !== "404" && p.type !== "landing");
+  // The 17 keyword landing pages exist ONLY in Hebrew (authored fresh, no EN
+  // twin — content/he/singlepages/*.he.json, Phase 5): the EN URL must 404
+  // and the HE page carries a self-only hreflang set (see assertHeOnlyPage).
   const landing = LANDING_SLUGS.map((slug) => ({
     type: `landing:${slug}`,
     en: `/${slug}`,
     he: `/he/${slug}`,
+    heOnly: true,
   }));
   const seen = new Set();
   const out = [];
@@ -209,15 +215,34 @@ export function parseJsonLdInLanguages(html) {
  *  through from the caller's fetch (or supplied directly by a test fixture
  *  without ever calling fetch). */
 export function parsePage(url, status, html, robotsHeader) {
+  const robotsMeta = parseRobotsMeta(html);
   return {
     url,
     status,
     alternates: parseHreflangAlternates(html),
     canonical: parseCanonical(html),
     ogLocale: parseOgLocale(html),
-    robots: parseRobotsMeta(html) ?? robotsHeader ?? null,
+    robots: robotsMeta ?? robotsHeader ?? null,
+    // Kept apart so assertPair can tell a page-level decision (meta tag,
+    // emitted by the app) from a host-level one (X-Robots-Tag header —
+    // staging's nginx sends "noindex, nofollow" on EVERY response).
+    robotsMeta: robotsMeta ?? null,
+    robotsHeader: robotsHeader ?? null,
     inLanguage: parseJsonLdInLanguages(html),
   };
+}
+
+/** Is `page` noindex for a reason the APP decided? A robots meta tag always
+ *  counts. An X-Robots-Tag header counts only when the reference page (the
+ *  EN twin, or `null` when there is none) does NOT carry the same header —
+ *  when both sides have it, the host is noindex-wide (staging) and the
+ *  header says nothing about this page in particular. */
+export function appNoindex(page, reference) {
+  if (/noindex/i.test(page.robotsMeta ?? "")) return true;
+  const headerNoindex = /noindex/i.test(page.robotsHeader ?? "");
+  if (!headerNoindex) return false;
+  const referenceHeaderNoindex = reference ? /noindex/i.test(reference.robotsHeader ?? "") : true;
+  return !referenceHeaderNoindex;
 }
 
 // C1 fix: every canonical/hreflang URL the app emits is absolute against a
@@ -350,8 +375,17 @@ export function assertPair(en, he, { canonicalOrigin = PRODUCTION_ORIGIN } = {})
     if (!checks.ogLocale) issues.push(`og:locale on ${he.url} is ${he.ogLocale ?? "missing"}, want he_IL`);
 
     const wantNoindex = HE_BLOG_RE.test(he.url);
-    const isNoindex = /noindex/i.test(he.robots ?? "");
-    checks.robots = wantNoindex ? isNoindex : !isNoindex;
+    // A host-wide X-Robots-Tag (staging) is not this page's decision — see
+    // appNoindex. A /he/blog page must still be noindex by META, since the
+    // header would satisfy the check for the wrong reason. And when the EN
+    // twin itself carries a noindex META, the HE page inheriting it is
+    // parity, not a localization defect (staging runs without
+    // NEW_PROJECTS_INDEXABLE, so every /projects/<slug> is noindex there in
+    // every locale) — the sampler asserts the HE page is no LESS indexable
+    // than its EN twin.
+    const enMetaNoindex = /noindex/i.test(en.robotsMeta ?? "");
+    const isNoindex = wantNoindex ? /noindex/i.test(he.robotsMeta ?? "") : appNoindex(he, en);
+    checks.robots = wantNoindex ? isNoindex : enMetaNoindex || !isNoindex;
     if (!checks.robots) {
       issues.push(
         wantNoindex
@@ -407,6 +441,73 @@ export function assertUnlocalizedPair(en, he, { locale = "he" } = {}) {
 
   const ok = Object.values(checks).every((v) => v === true);
   return { ok, checks, issues };
+}
+
+/** Assert the contract for a page that exists ONLY in Hebrew (the 17 keyword
+ *  landing pages, Phase 5): no EN twin, so `assertPair`'s reciprocity and
+ *  "x-default points at EN" rules do not apply. Instead:
+ *
+ *    - the EN URL must 404 (the day an EN twin ships, this row has to become
+ *      a normal pair — the failure names that explicitly)
+ *    - the HE page is 2xx, canonical self-referencing, its hreflang set is
+ *      exactly {he, x-default} and both point at the HE URL itself
+ *    - og:locale he_IL, indexable (app-level, see appNoindex — with no EN
+ *      reference a header-only noindex is read as host-wide), JSON-LD
+ *      inLanguage he-IL
+ *
+ *  Pure — same `{ ok, checks, issues, originLabel }` shape as assertPair. */
+export function assertHeOnlyPage(en, he, { canonicalOrigin = PRODUCTION_ORIGIN } = {}) {
+  const issues = [];
+  const heOk = he.status >= 200 && he.status < 300;
+  const checks = {
+    enIs404: en.status === 404,
+    heOk,
+    selfOnlyAlternates: null,
+    canonicalSelf: null,
+    origin: null,
+    ogLocale: null,
+    robots: null,
+    inLanguage: null,
+  };
+  let originLabel = null;
+
+  if (!checks.enIs404) {
+    issues.push(`en ${en.url} returned ${en.status} — this slug is Hebrew-only; if an EN page now exists, move it out of the heOnly list and assert it as a normal pair`);
+  }
+  if (!heOk) issues.push(`he ${he.url} returned ${he.status}`);
+
+  if (heOk) {
+    const keys = Object.keys(he.alternates).sort();
+    checks.selfOnlyAlternates =
+      keys.join(",") === "he,x-default" && samePath(he.alternates.he, he.url) && samePath(he.alternates["x-default"], he.url);
+    if (!checks.selfOnlyAlternates) {
+      issues.push(`hreflang set on ${he.url} should be exactly he + x-default, both self (saw ${JSON.stringify(he.alternates)})`);
+    }
+
+    checks.canonicalSelf = samePath(he.canonical, he.url);
+    if (!checks.canonicalSelf) issues.push(`canonical not self-referencing (he: ${he.canonical ?? "none"})`);
+
+    const heOrigin = classifyOrigin(he.canonical, originOf(he.url), canonicalOrigin);
+    checks.origin = heOrigin.ok;
+    originLabel = heOrigin.label;
+    if (!checks.origin) issues.push(`canonical origin unexpected (he: ${heOrigin.label})`);
+
+    checks.ogLocale = he.ogLocale === "he_IL";
+    if (!checks.ogLocale) issues.push(`og:locale on ${he.url} is ${he.ogLocale ?? "missing"}, want he_IL`);
+
+    checks.robots = !appNoindex(he, null);
+    if (!checks.robots) issues.push(`${he.url} should be indexable but robots=${he.robots ?? "none"}`);
+
+    if (he.inLanguage.length > 0) {
+      checks.inLanguage = he.inLanguage.every((v) => v === "he-IL");
+      if (!checks.inLanguage) issues.push(`inLanguage on ${he.url}: [${he.inLanguage.join(", ")}], want he-IL`);
+    } else {
+      checks.inLanguage = true;
+    }
+  }
+
+  const ok = Object.values(checks).every((v) => v === true);
+  return { ok, checks, issues, originLabel };
 }
 
 // ---------------------------------------------------------------------------
@@ -471,8 +572,10 @@ async function main() {
     const [en, he] = await Promise.all([fetchPage(enUrl), fetchPage(heUrl)]);
     const { ok, checks, issues, originLabel } = pair.unlocalized
       ? assertUnlocalizedPair(en, he)
-      : assertPair(en, he, { canonicalOrigin: opts.canonicalOrigin });
-    rows.push({ type: pair.type, en, he, ok, checks, issues, originLabel, unlocalized: !!pair.unlocalized });
+      : pair.heOnly
+        ? assertHeOnlyPage(en, he, { canonicalOrigin: opts.canonicalOrigin })
+        : assertPair(en, he, { canonicalOrigin: opts.canonicalOrigin });
+    rows.push({ type: pair.type, en, he, ok, checks, issues, originLabel, unlocalized: !!pair.unlocalized, heOnly: !!pair.heOnly });
   }
 
   const failedCount = rows.filter((r) => !r.ok).length;
@@ -493,6 +596,16 @@ async function main() {
         console.log(
           `${label}${String(r.en.status).padEnd(5)}${String(r.he.status).padEnd(5)}` +
             `(unlocalized: no "he" alternate + 404 expected)`,
+        );
+      } else if (r.heOnly) {
+        // Hebrew-only page (assertHeOnlyPage): ALT = self-only hreflang set,
+        // XDEF folded into it, EN column is expected to read 404.
+        console.log(
+          `${label}${String(r.en.status).padEnd(5)}${String(r.he.status).padEnd(5)}` +
+            `${statusCell(r.checks.selfOnlyAlternates)}  ${statusCell(r.checks.selfOnlyAlternates)}  ` +
+            `${statusCell(r.checks.canonicalSelf)}  ${(r.originLabel ?? "-").padEnd(14)} ` +
+            `${statusCell(r.checks.ogLocale)}  ` +
+            `${statusCell(r.checks.robots)}   ${statusCell(r.checks.inLanguage)}  (he-only: EN 404 expected)`,
         );
       } else {
         // ORIGIN is informational (shows "matches host" / "production" /

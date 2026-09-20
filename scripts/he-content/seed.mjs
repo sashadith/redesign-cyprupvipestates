@@ -467,7 +467,10 @@ export function planCaseStudies(rows, existingRows) {
     }
 
     const existingDevSlugs = (existing?.relatedDevelopmentSlugs ?? []).slice().sort();
-    const wantDevSlugs = relatedProjects.slice().sort();
+    // Only developments applyPlan can actually link count towards "unchanged":
+    // `linkable === false` marks one with no legacy Project row (set by the
+    // DB fetch; absent — e.g. in unit tests — means linkable).
+    const wantDevSlugs = relatedProjects.filter((devSlug) => developments.find((d) => d.slug === devSlug)?.linkable !== false).slice().sort();
     if (deepEqual(existingDevSlugs, wantDevSlugs)) {
       linkPlan.push({ kind: "case-studies", key: slug, action: "skip", reason: "related projects unchanged" });
     } else {
@@ -943,11 +946,25 @@ async function loadExistingRowsForPack(prisma, pack) {
           where: { caseStudyId: r.id },
           include: { project: { include: { supersededByDevelopment: true } } },
         });
-        return { ...r, relatedDevelopmentSlugs: links.map((l) => l.project?.supersededByDevelopment?.slug).filter(Boolean) };
+        // One legacy Project row per LANGUAGE can point at the same
+        // Development, so the join yields duplicates — dedupe, the planner
+        // compares slug SETS (staging idempotency probe, 2026-09-20).
+        return { ...r, relatedDevelopmentSlugs: [...new Set(links.map((l) => l.project?.supersededByDevelopment?.slug).filter(Boolean))] };
       }),
     );
     const devSlugs = [...new Set(pack.rows.flatMap((r) => (Array.isArray(r.raw.relatedProjects) ? r.raw.relatedProjects : [])))];
     const developments = devSlugs.length ? await prisma.development.findMany({ where: { slug: { in: devSlugs } }, select: { id: true, slug: true } }) : [];
+    // A Development is only LINKABLE when at least one legacy Project row
+    // points at it (CaseStudyProject joins Project, see the kind comment
+    // above) — applyPlan skips the rest, so the planner must not count them
+    // as a pending write on the next run (staging idempotency probe,
+    // 2026-09-20: all three case studies re-planned "link" forever).
+    const linkableIds = new Set(
+      developments.length
+        ? (await prisma.project.findMany({ where: { supersededByDevelopmentId: { in: developments.map((d) => d.id) } }, select: { supersededByDevelopmentId: true } })).map((p) => p.supersededByDevelopmentId)
+        : [],
+    );
+    for (const d of developments) d.linkable = linkableIds.has(d.id);
     return { caseStudies, developments };
   }
 

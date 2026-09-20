@@ -43,10 +43,14 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+// 2026-09-20: "cypress-park" was renamed to "cypress-park-living" (the old
+// slug now 308s), and "2-bedroom-apartments-in-paphos" exists only in EN — the
+// 17 keyword landing pages exist only in HE (docs/i18n/he-keyword-map.md §4),
+// so the landing row's EN column is expected to 404 on a Hebrew-only slug.
 export const DEFAULTS = {
-  project: "cypress-park",
+  project: "cap-st-georges-resort",
   case: "how-a-uk-investor-diversified-wealth-through-property-in-limassol",
-  landing: "2-bedroom-apartments-in-paphos",
+  landing: "real-estate-cyprus",
 };
 
 const VIEWPORTS = [

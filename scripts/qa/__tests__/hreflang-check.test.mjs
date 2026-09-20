@@ -11,6 +11,8 @@ import {
   parsePage,
   assertPair,
   assertUnlocalizedPair,
+  assertHeOnlyPage,
+  appNoindex,
   samePath,
   PRODUCTION_ORIGIN,
 } from "../hreflang-check.mjs";
@@ -358,4 +360,83 @@ test("assertUnlocalizedPair fails when the EN page itself is down, independent o
   assert.equal(result.checks.enOk, false);
   // he/partners is still correctly 404 — that check is independent and still true.
   assert.equal(result.checks.heIs404, true);
+});
+
+// --- 2026-09-20 staging run: three sampler assumptions that did not survive
+// contact with a real host, each pinned here ---------------------------------
+
+test("buildUrlPairs: the 17 landing rows are heOnly and rtl-matrix's own landing row is dropped (those pages exist only in Hebrew)", () => {
+  const pairs = buildUrlPairs();
+  assert.ok(!pairs.some((p) => p.type === "landing"), "rtl-matrix's generic landing row would demand an EN twin that does not exist");
+  const landingRows = pairs.filter((p) => p.type.startsWith("landing:"));
+  assert.equal(landingRows.length, 17);
+  for (const p of landingRows) assert.equal(p.heOnly, true, `${p.type} must carry the heOnly contract`);
+});
+
+test("appNoindex: a host-wide X-Robots-Tag (present on the EN twin too) is not the page's decision; a meta tag or a he-only header is", () => {
+  const hostWide = (url) => parsePage(url, 200, "<html></html>", "noindex, nofollow");
+  assert.equal(appNoindex(hostWide("https://s/he/faq"), hostWide("https://s/faq")), false);
+  assert.equal(appNoindex(hostWide("https://s/he/faq"), parsePage("https://s/faq", 200, "<html></html>", null)), true, "header only on the HE side is app-level");
+  assert.equal(appNoindex(parsePage("https://s/he/faq", 200, '<html><head><meta name="robots" content="noindex"></head></html>', null), hostWide("https://s/faq")), true, "a meta tag always counts");
+  assert.equal(appNoindex(hostWide("https://s/he/x"), null), false, "no reference page: a header alone reads as host-wide");
+});
+
+test("assertPair: a staging-style host-wide noindex header on both pages still passes the robots check", () => {
+  const en = parsePage("https://design.example/paphos", 200, enHtml().replace(/<meta name="robots"[^>]*>/, ""), "noindex, nofollow");
+  const he = parsePage("https://design.example/he/paphos", 200, heHtml().replace(/<meta name="robots"[^>]*>/, ""), "noindex, nofollow");
+  const result = assertPair(en, he);
+  assert.equal(result.checks.robots, true, result.issues.join("; "));
+  assert.equal(result.ok, true, result.issues.join("; "));
+});
+
+test("assertPair: a /he/blog page must be noindex by META — a host-wide header does not satisfy the Phase 6 rule", () => {
+  const en = parsePage("https://design.example/blog", 200, enHtml({ canonical: "https://design.example/blog", heAlt: "https://design.example/he/blog" }).replace(/<meta name="robots"[^>]*>/, ""), "noindex, nofollow");
+  const he = parsePage("https://design.example/he/blog", 200, heHtml({ canonical: "https://design.example/he/blog", enAlt: "https://design.example/blog" }).replace(/<meta name="robots"[^>]*>/, ""), "noindex, nofollow");
+  const result = assertPair(en, he);
+  assert.equal(result.checks.robots, false);
+});
+
+function heOnlyHtml({ url = "https://design.example/he/limassol", robots = "index, follow" } = {}) {
+  return `<html dir="rtl"><head>
+    <link rel="canonical" href="${url}">
+    <link rel="alternate" hreflang="he" href="${url}">
+    <link rel="alternate" hreflang="x-default" href="${url}">
+    <meta property="og:locale" content="he_IL">
+    <meta name="robots" content="${robots}">
+    <script type="application/ld+json">{"@type":"WebPage","inLanguage":"he-IL"}</script>
+  </head></html>`;
+}
+
+test("assertHeOnlyPage: EN 404 + a self-only HE hreflang set passes; the app's production-pinned origin is fine on a staging host", () => {
+  const en = parsePage("https://design.example/limassol", 404, "<html></html>", "noindex, nofollow");
+  const he = parsePage("https://design.example/he/limassol", 200, heOnlyHtml({ url: "https://cyprusvipestates.com/he/limassol" }), "noindex, nofollow");
+  const result = assertHeOnlyPage(en, he);
+  assert.deepEqual(result.issues, []);
+  assert.equal(result.ok, true);
+  assert.equal(result.originLabel, "production");
+});
+
+test("assertHeOnlyPage: an EN twin that now answers 200, an 'en' alternate, an off-self x-default or a noindex meta each fail", () => {
+  const he = parsePage("https://design.example/he/limassol", 200, heOnlyHtml(), null);
+  const enLive = parsePage("https://design.example/limassol", 200, enHtml(), null);
+  assert.equal(assertHeOnlyPage(enLive, he).checks.enIs404, false);
+
+  const en404 = parsePage("https://design.example/limassol", 404, "", null);
+  const withEn = parsePage("https://design.example/he/limassol", 200, heOnlyHtml().replace('hreflang="x-default"', 'hreflang="en"'), null);
+  assert.equal(assertHeOnlyPage(en404, withEn).checks.selfOnlyAlternates, false);
+
+  const offSelf = parsePage("https://design.example/he/limassol", 200, heOnlyHtml().replace('hreflang="x-default" href="https://design.example/he/limassol"', 'hreflang="x-default" href="https://design.example/limassol"'), null);
+  assert.equal(assertHeOnlyPage(en404, offSelf).checks.selfOnlyAlternates, false);
+
+  const noindexMeta = parsePage("https://design.example/he/limassol", 200, heOnlyHtml({ robots: "noindex" }), null);
+  assert.equal(assertHeOnlyPage(en404, noindexMeta).checks.robots, false);
+});
+
+test("assertPair: a HE page that is noindex by META passes when its EN twin carries the same meta (parity — e.g. NEW_PROJECTS_INDEXABLE unset on staging), fails when only the HE side has it", () => {
+  const en = parsePage("https://design.example/paphos", 200, enHtml({ robots: "noindex, nofollow" }), null);
+  const he = parsePage("https://design.example/he/paphos", 200, heHtml({ robots: "noindex, nofollow" }), null);
+  assert.equal(assertPair(en, he).checks.robots, true, "parity with EN is not a localization defect");
+
+  const enIndexable = parsePage("https://design.example/paphos", 200, enHtml(), null);
+  assert.equal(assertPair(enIndexable, he).checks.robots, false, "HE must not be less indexable than its EN twin");
 });
