@@ -113,6 +113,21 @@ export function mirrorCheck(enValue, heValue, path = "", stats = null) {
       // landing slugs differ from the Hebrew pack's); linkCheck enforces the
       // he allow-list on the target, so no identity or Hebrew is required here.
       if (isLinkKey(k) && typeof enValue[k] === "string" && typeof heValue[k] === "string") continue;
+      // `relatedProjects` (case studies) is a list of Development SLUGS, not
+      // text: the EN source still names legacy Project slugs (e.g.
+      // "trylogy-cybarco"), the pack names the Development that replaced it
+      // ("trilogy-limassol-seafront") or drops an entry with no Development
+      // at all — so neither identity nor equal length is required. The
+      // seeder refuses any slug that is not a Development at plan time
+      // (2026-09-20 staging dry-run), which is the real validation.
+      if (k === "relatedProjects" && Array.isArray(enValue[k]) && Array.isArray(heValue[k])) {
+        heValue[k].forEach((s, i) => {
+          if (typeof s !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s)) {
+            violations.push(`${childPath}[${i}]: must be a Development slug (got ${JSON.stringify(s)})`);
+          }
+        });
+        continue;
+      }
       const isLayoutListItem = k === "listItem" && (enValue[k] === "bullet" || enValue[k] === "number");
       if (IDENTICAL_KEYS.has(k) && (k !== "listItem" || isLayoutListItem)) {
         if (!identicalEqual(enValue[k], heValue[k])) {

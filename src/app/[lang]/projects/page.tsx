@@ -81,12 +81,12 @@ export async function generateMetadata({ params }: { params: { lang: string } })
   const { canonical, languages } = staticAlternates(params.lang, "projects");
 
   return {
-    title: data?.seo.metaTitle,
-    description: data?.seo.metaDescription,
+    title: data?.seo?.metaTitle,
+    description: data?.seo?.metaDescription,
     alternates: { canonical, languages },
     openGraph: {
-      title: data?.seo.metaTitle,
-      description: data?.seo.metaDescription,
+      title: data?.seo?.metaTitle,
+      description: data?.seo?.metaDescription,
       url: canonical,
       siteName: "Cyprus VIP Estates",
       locale: ogLocale(params.lang),
@@ -95,8 +95,8 @@ export async function generateMetadata({ params }: { params: { lang: string } })
     },
     twitter: {
       card: "summary_large_image",
-      title: data?.seo.metaTitle,
-      description: data?.seo.metaDescription,
+      title: data?.seo?.metaTitle,
+      description: data?.seo?.metaDescription,
       images: [DEFAULT_OG_IMAGE],
     },
   };
