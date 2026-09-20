@@ -32,7 +32,12 @@
    ```bash
    sudo -u postgres psql -d cyprusvipestates -tAc 'select enum_range(null::"Locale")'
    ```
-   Erwartung: `{en,de,pl,ru,he}`. `migrate deploy` spielt dabei alle drei Hebräisch-Migrationen ein: `20260914100000_locale_add_he`, `20260914100100_he_content_columns` und `20260920100000_he_promo_blocks` (Spalte `promoBlocksHE` für den Promo-Block aus PR #58; additiv).
+   Erwartung: `{en,de,pl,ru,he}`. Falls ein früherer Lauf mit `P3018 … relation "DevelopmentOverride" does not exist` abgebrochen ist (Stand vor dem 2026-09-20, falsche Tabellennamen in `he_content_columns`): den fehlgeschlagenen Eintrag zurücksetzen und erneut deployen — nichts davon war teilweise angewendet, Postgres hat die Transaktion zurückgerollt:
+   ```bash
+   cd /var/www/cve-staging && CVP_CONFIRM_PROD_MIGRATE=yes ./scripts/migrate-deploy-safe.sh migrate resolve --rolled-back 20260914100100_he_content_columns
+   cd /var/www/cve-staging && CVP_CONFIRM_PROD_MIGRATE=yes ./scripts/migrate-deploy-safe.sh migrate deploy
+   ```
+   `migrate deploy` spielt dabei alle drei Hebräisch-Migrationen ein: `20260914100000_locale_add_he`, `20260914100100_he_content_columns` und `20260920100000_he_promo_blocks` (Spalte `promoBlocksHE` für den Promo-Block aus PR #58; additiv).
 3. **Deploy von diesem Branch** (aus dem Worktree-Checkout, damit der Branch-Stand gesynct wird; beim ersten Deploy nach einer `package-lock.json`-Änderung zusätzlich `CVP_RUN_INSTALL=1` voranstellen):
    ```bash
    ./scripts/deploy-staging.sh
