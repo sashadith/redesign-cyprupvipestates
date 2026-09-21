@@ -205,7 +205,7 @@ const KIND_RULES: Record<HeTranslateKind, string> = {
     "This is a property description that is SAVED ONCE and never regenerated, while the project's real numbers move with every feed sync.",
     "NEVER write a digit: no unit counts, no prices, no completion dates or quarters, no square metres, no percentages. Do not spell a figure out in words to get around this either — drop the fact instead.",
     "Keep the paragraph structure of the English: the same number of paragraphs, separated by a blank line.",
-    "Never name the project or the developer.",
+    "Project and developer names: keep them exactly as the English has them, in Latin script (a digit inside such a name, e.g. \"Abiete 2\", stays). Do not add a name the English does not use.",
   ].join(" "),
   developmentSeo: [
     `"title" is a meta title: at most ${TITLE_GRAPHEME_MAX} characters. "description" is a meta description: at most ${DESC_GRAPHEME_MAX} characters. Count the characters you actually type.`,
@@ -380,8 +380,20 @@ export function guardViolations(input: HeTranslateInput, he: HeTranslatePayload)
 
   // 5. Evergreen prose carries no figures (they rot; see projectDescription.ts).
   if (input.kind === "developmentDescription") {
+    // A digit that is part of a Latin proper name the ENGLISH already carries
+    // ("Abiete 2", "Agnades Village 1") is a name, not a figure: the prompt
+    // keeps such names verbatim, so they must not trip this rule — 2 of the
+    // first 6 staging descriptions (2026-09-21) failed twice on exactly that.
+    const namesWithDigits = new Set<string>();
+    for (const [, enValue] of enPairs) {
+      for (const m of Array.from(enValue.matchAll(/[A-Za-z][A-Za-z'’-]*(?:[ -]\d+[A-Za-z]*)+/g))) namesWithDigits.add(m[0]);
+    }
+    const withoutNames = (s: string) => Array.from(namesWithDigits).reduce((acc, name) => acc.split(name).join(""), s);
     for (const [label, value] of heStrings) {
-      if (/\d/.test(value)) problems.push(`${label}: contains a digit (saved copy must carry no figure)`);
+      // Quote the offending passages: the correction round (and the FAILED
+      // queue row) then say WHICH figure slipped through, not just that one did.
+      const hits = Array.from(withoutNames(value).matchAll(/.{0,25}\d[\d.,%/-]*.{0,25}/g)).map((m) => `"…${m[0].trim()}…"`).slice(0, 3);
+      if (hits.length) problems.push(`${label}: contains a digit (saved copy must carry no figure) at ${hits.join(", ")} — rewrite each of these without the figure, or drop that fact`);
     }
   }
 

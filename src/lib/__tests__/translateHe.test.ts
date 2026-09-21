@@ -260,3 +260,14 @@ test("translateHe keeps pass A when the critique pass returns nothing usable", a
   assert.equal(out.he.text, HE_PROSE);
   assert.match(out.critique.join(" "), /no corrected payload/);
 });
+
+// Staging 2026-09-21: "Abiete 2" and "Agnades Village 1" are project NAMES the
+// English carries; the translator keeps them verbatim (Latin script), and the
+// digit rule must not reject the name while still catching a real figure.
+test("guardViolations lets a digit inside a Latin proper name from the English through, still flags a real figure", () => {
+  const input = { kind: "developmentDescription" as const, en: { text: "Abiete 2 apartments offer an exceptional living experience near the sea." } };
+  assert.deepEqual(guardViolations(input, { text: "הדירות של Abiete 2 מציעות חוויית מגורים יוצאת דופן קרוב לים." }).filter((p) => /digit/.test(p)), []);
+  const withFigure = guardViolations(input, { text: "הדירות של Abiete 2 נמצאות במרחק 200 מטר מהים." });
+  assert.match(withFigure.join(" "), /contains a digit .* "…/);
+  assert.doesNotMatch(withFigure.join(" "), /Abiete 2/);
+});
