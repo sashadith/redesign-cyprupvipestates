@@ -9,6 +9,7 @@ import {
   guardViolations,
   mergePortableText,
   parseJsonReply,
+  staleFiguresIn,
   translateHe,
   type AnthropicLike,
   type HeTranslateInput,
@@ -270,4 +271,30 @@ test("guardViolations lets a digit inside a Latin proper name from the English t
   const withFigure = guardViolations(input, { text: "הדירות של Abiete 2 נמצאות במרחק 200 מטר מהים." });
   assert.match(withFigure.join(" "), /contains a digit .* "…/);
   assert.doesNotMatch(withFigure.join(" "), /Abiete 2/);
+});
+
+// Staging 2026-09-21 (amelia-luxury-apartments): the English source itself still
+// carried "77.5 m²" and "€310,000" (pre-no-digit-policy copy) and the model kept
+// them twice despite "drop the fact". The prompt now names them explicitly.
+test("staleFiguresIn lists the English figures minus digits that belong to Latin names", () => {
+  assert.deepEqual(staleFiguresIn(["each measuring 77.5 m². Prices from €310,000. Abiete 2 apartments, 3 minutes from the beach."]), ["77.5 m²", "€310,000", "3"]);
+  assert.deepEqual(staleFiguresIn(["Agnades Village 1 sits above the bay."]), []);
+});
+
+test("passAPrompt names the stale English figures for a development description, and stays silent when there are none", async () => {
+  const prompts: string[] = [];
+  const client = {
+    messages: {
+      create: async (args: Record<string, unknown>) => {
+        const msgs = args.messages as { content: string }[];
+        prompts.push(msgs[0].content);
+        return { content: [{ type: "text", text: JSON.stringify({ text: HE_PROSE, violations: [] }) }], stop_reason: "end_turn" };
+      },
+    },
+  };
+  await translateHe({ kind: "developmentDescription", en: { text: "Each apartment measures 77.5 m² and prices start from €310,000." } }, { client });
+  assert.match(prompts[0], /STALE .* "77\.5 m²", "€310,000"/);
+  prompts.length = 0;
+  await translateHe({ kind: "developmentDescription", en: { text: "Abiete 2 apartments offer sea views." } }, { client });
+  assert.doesNotMatch(prompts[0], /STALE/);
 });

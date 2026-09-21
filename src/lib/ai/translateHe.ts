@@ -226,7 +226,37 @@ const KIND_RULES: Record<HeTranslateKind, string> = {
   ].join(" "),
 };
 
+/** Latin proper names that carry a digit ("Abiete 2", "Agnades Village 1") in
+ *  the given strings — a name, not a figure, for the no-digit rule. */
+export function latinNamesWithDigits(strings: string[]): string[] {
+  const out = new Set<string>();
+  // Capitalised word + digit only ("Abiete 2", "Village 1"): a lower-case word
+  // before a number ("measuring 77") is prose, and the number is a figure.
+  for (const s of strings) for (const m of Array.from(s.matchAll(/[A-Z][A-Za-z'’-]*(?:[ -]\d+[A-Za-z]*)+/g))) out.add(m[0]);
+  return Array.from(out);
+}
+
+/** Figures the English still carries (older descriptions pre-date the
+ *  no-digit policy: "77.5 m²", "€310,000"), names with digits excluded. Named
+ *  explicitly in the prompt because "drop the fact" alone was not enough —
+ *  the model kept them twice on staging (2026-09-21). */
+export function staleFiguresIn(strings: string[]): string[] {
+  const names = latinNamesWithDigits(strings);
+  const out = new Set<string>();
+  for (const s of strings) {
+    const cleaned = names.reduce((acc, name) => acc.split(name).join(" "), s);
+    for (const m of Array.from(cleaned.matchAll(/[€$£]?\d[\d.,]*\d|[€$£]?\d/g))) {
+      // A unit glued to the figure belongs to it ("77.5 m²", "40%"); a bare
+      // "m" does not (it would swallow the m of "minutes").
+      const after = cleaned.slice(m.index! + m[0].length).match(/^\s?(?:m²|sqm|sq\.?\s?m|%|km|ha)(?![A-Za-z])/);
+      out.add(`${m[0]}${after ? after[0] : ""}`);
+    }
+  }
+  return Array.from(out);
+}
+
 function passAPrompt(input: HeTranslateInput, corrections: string[]): string {
+  const staleFigures = input.kind === "developmentDescription" ? staleFiguresIn(outputStrings(payloadFor(input)).map(([, v]) => v)) : [];
   const parts = [
     "You translate English website copy into native Hebrew for an Israeli audience buying property in Cyprus.",
     "",
@@ -234,6 +264,9 @@ function passAPrompt(input: HeTranslateInput, corrections: string[]): string {
     "",
     `Content kind: ${input.kind}.`,
     KIND_RULES[input.kind],
+    staleFigures.length
+      ? `The English still carries these figures — they are STALE and must not reach the Hebrew in any form, not even spelled out: ${staleFigures.map((f) => `"${f}"`).join(", ")}. Drop each such fact and keep the surrounding sentence natural.`
+      : "",
     "",
     "General rules:",
     "- Write Hebrew that reads as if it was written in Hebrew, not translated. Rework the word order; do not mirror the English syntax.",
@@ -384,11 +417,8 @@ export function guardViolations(input: HeTranslateInput, he: HeTranslatePayload)
     // ("Abiete 2", "Agnades Village 1") is a name, not a figure: the prompt
     // keeps such names verbatim, so they must not trip this rule — 2 of the
     // first 6 staging descriptions (2026-09-21) failed twice on exactly that.
-    const namesWithDigits = new Set<string>();
-    for (const [, enValue] of enPairs) {
-      for (const m of Array.from(enValue.matchAll(/[A-Za-z][A-Za-z'’-]*(?:[ -]\d+[A-Za-z]*)+/g))) namesWithDigits.add(m[0]);
-    }
-    const withoutNames = (s: string) => Array.from(namesWithDigits).reduce((acc, name) => acc.split(name).join(""), s);
+    const namesWithDigits = latinNamesWithDigits(enPairs.map(([, v]) => v));
+    const withoutNames = (s: string) => namesWithDigits.reduce((acc, name) => acc.split(name).join(""), s);
     for (const [label, value] of heStrings) {
       // Quote the offending passages: the correction round (and the FAILED
       // queue row) then say WHICH figure slipped through, not just that one did.
