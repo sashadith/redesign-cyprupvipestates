@@ -28,7 +28,7 @@
    ```bash
    cd /var/www/cve-staging && CVP_CONFIRM_PROD_MIGRATE=yes ./scripts/migrate-deploy-safe.sh migrate deploy
    ```
-   Warum zuerst: `next build` ruft `generateStaticParams` auf, und die fragen seit Phase 5 die Datenbank mit `language: "he"` ab — ohne den Enum-Wert bricht der Build bei „Collecting page data" mit `invalid input value for enum "Locale": "he"` ab (so passiert 2026-09-16). Voraussetzung Postgres ≥ 12 (`ADD VALUE` in Transaktion; der VPS läuft 16). Die laufende Produktions-App kennt den Wert `he` nicht und schreibt ihn nie; die zusätzlichen Spalten stören sie nicht. Kontrolle (nur lesend):
+   Warum zuerst: `next build` ruft `generateStaticParams` auf, und die fragen seit Phase 5 die Datenbank mit `language: "he"` ab — ohne den Enum-Wert bricht der Build bei „Collecting page data" mit `invalid input value for enum "Locale": "he"` ab (so passiert 2026-09-16). Voraussetzung Postgres ≥ 12 (`ADD VALUE` in Transaktion; der VPS läuft 16). Die laufende Produktions-App kennt den Wert `he` nicht und schreibt ihn nie; die zusätzlichen Spalten stören sie nicht. **Zeilen mit `language = 'he'` stören sie dagegen sehr wohl** — jede Abfrage über alle Sprachen (`/faq`, `/case-studies`, Admin-Listen) bricht mit „Value 'he' not found in enum 'Locale'" (Vorfall 2026-09-20, siehe `phase-5.md`). Deshalb: Migration ja, **Seed erst nach dem Produktions-Deploy des Stacks**. Kontrolle (nur lesend):
    ```bash
    sudo -u postgres psql -d cyprusvipestates -tAc 'select enum_range(null::"Locale")'
    ```

@@ -41,6 +41,23 @@ Alles andere in Phase 5/6 ist entweder `he`-only (Sprachlisten-Chips auf About/K
 
 ## Operator-Schritte auf Staging (in dieser Reihenfolge)
 
+> **HARTE REGEL (Vorfall 2026-09-20/21): Erst der Produktions-Deploy, dann der Seed.**
+> Staging und Produktion teilen die Datenbank. Der Prisma-Client der laufenden
+> Produktions-App kennt den Enum-Wert `he` erst, wenn der Hebräisch-Stack auf
+> Produktion deployed ist (gated über `NEXT_PUBLIC_LIVE_LOCALES`, `/he` bleibt
+> dort 404). Bis dahin bricht **jede Zeile** mit `language = 'he'` in
+> `singlepages`, `site_documents`, `case_studies` oder `developers` alle
+> Produktions-Abfragen, die über alle Sprachen gehen: `/faq` (alle Sprachen),
+> `/case-studies` und die Admin-Listen liefern 500 („Value 'he' not found in
+> enum 'Locale'"). Genau das ist am 2026-09-20 nach dem Staging-Seed passiert
+> (31 Zeilen, ~30 h Ausfall der genannten Seiten, Zeilen am 2026-09-21
+> entfernt, Backups unter `/tmp/he-backup-*-2.json` auf dem VPS). Die
+> **Migrationen** selbst (Enum-Wert, neue Spalten) sind für Produktion
+> harmlos; die **Zeilen** sind es nicht. Folge: Schritte 3–5 (Seed, FAQ) und
+> „Enqueue missing developers" (Schritt 11) erst nach dem Produktions-Deploy
+> des Stacks. Die Übersetzungswarteschlange für Developments/Areas schreibt
+> nur in Spalten, die Produktion ignoriert, und darf vorher laufen.
+
 1. **Phase-1-Migration anwenden, falls auf dieser Umgebung noch nicht geschehen — VOR dem Deploy** (additiv, geteilte DB — bewusst freigegeben; Details, Vorab-Sync des `prisma/`-Ordners und Kontrollabfrage in `phase-1.md` Schritt 2). Der Build braucht den Enum-Wert `he`, weil `generateStaticParams` die Datenbank damit abfragt:
    ```bash
    cd /var/www/cve-staging && CVP_CONFIRM_PROD_MIGRATE=yes ./scripts/migrate-deploy-safe.sh migrate deploy
@@ -128,6 +145,8 @@ Schritte 1–7 sind auf Staging durch; Befunde und Korrekturen, alle auf dem Bra
 - **Echte Fehler, gefixt, brauchen den nächsten Deploy:** `/he/projects/<umbenannter-slug>` lief in 404 statt 308 (Redirect-Regex kannte nur de/pl/ru); Developers-Liste ohne `x-default`/`og:locale` in allen Sprachen; `/he/projects` warf ohne Site-Dokument 500 statt 404.
 - **hreflang-Sampler gegen Staging:** 30 Paare, 28 grün; die zwei roten (developers, project) sind genau die beiden gefixten, noch nicht deployten Punkte.
 - **Seiten-Walk per HTTP:** `/he`, `/he/projects(?page=2)`, drei Projektseiten, `/he/faq` (60 Fragen im JSON-LD), `/he/about-us`, `/he/contacts`, Case-Study-Liste + Detail, `/he/blog` (Badge „באנגלית", `noindex, follow`), `/he/developers` + Detail, alle 17 Landingpages, `/he/privacy-policy`, `/he/terms-and-conditions` (RTL, Verbindlichkeits-Hinweis) → alle 200, `/he/partners` 404 wie vorgesehen.
+- **Vorfall (2026-09-20 → 21):** der Staging-Seed hat die 31 `he`-Zeilen in die geteilte Datenbank geschrieben; die Produktions-App (Client ohne `he`) lieferte daraufhin `/faq`, `/case-studies` und die Admin-Listen als 500. Zeilen am 2026-09-21 entfernt (siehe harte Regel oben), Produktion wieder grün. Die hebräischen Inhalte fehlen seither auf Staging und werden nach dem Produktions-Deploy identisch neu geseedet.
+- **Warteschlange (2026-09-21):** Deploy mit `max_tokens` 16000; manueller 25er-Lauf 21 fertig / 4 abgelehnt (Qualitätsregeln: Ziffern in Projektnamen, alte Zahlen im EN-Text, Rechtschreibregel — beide Ziffern-Ursachen im Übersetzer behoben, noch nicht deployed); „Enqueue missing developments" hat alle ~490 Zeilen eingereiht; Crontab-Zeile aktiv seit 11:50 UTC.
 - **Noch offen (Operator, Browser):** Schritte 8–12 (Warteschlange: „Enqueue 15 sample", Cron-Aufruf, Samples lesen, restliche Zeilen, Crontab), Schritt 13 `rtl-matrix` (Screenshots), Schritt 14 inhaltliches Gegenlesen.
 
 ## Zurückgestellt / Tickets

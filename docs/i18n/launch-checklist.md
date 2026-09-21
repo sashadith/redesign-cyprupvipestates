@@ -34,6 +34,8 @@ NEXT_PUBLIC_LIVE_LOCALES=en,de,pl,ru,he
 
 ## 3. Deploy
 
+Reihenfolge-Regel aus dem Vorfall vom 2026-09-20 (`acceptance/phase-5.md`): dieser Produktions-Deploy muss **vor** jedem Seed hebräischer Inhaltszeilen liegen — der alte Produktions-Client kann Zeilen mit `language = 'he'` nicht lesen. `he` bleibt dabei gated (Schritt 2 noch nicht ausführen), der Deploy ist für Besucher unsichtbar; erst danach Seed auf Staging, Abnahme, dann Schritt 2.
+
 Voraussetzung: die drei Hebräisch-Migrationen (`locale_add_he`, `he_content_columns`, `he_promo_blocks`) sind bereits eingespielt (das passiert im Staging-Runbook, `acceptance/phase-1.md` Schritt 2 — geteilte Datenbank). Ohne den Enum-Wert `he` bricht auch der Produktions-Build bei „Collecting page data" ab. Lesende Kontrolle auf dem VPS:
 
 ```bash
