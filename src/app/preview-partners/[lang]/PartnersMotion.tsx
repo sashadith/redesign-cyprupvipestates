@@ -71,6 +71,16 @@ export default function PartnersMotion() {
         });
       }
 
+      /* ---------- FAQ ITEMS ---------- */
+      const faqItems = document.querySelectorAll<HTMLElement>(".pnr__faq-section .faq__item");
+      if (faqItems.length) {
+        gsap.set(faqItems, { y: 24, autoAlpha: 0 });
+        gsap.to(faqItems, {
+          y: 0, autoAlpha: 1, duration: 0.6, stagger: 0.08, ease: "power2.out",
+          scrollTrigger: { trigger: ".pnr__faq-section", start: "top 85%", once: true },
+        });
+      }
+
       /* ---------- FORM / FINAL CTA SECTION ---------- */
       toArr(".formsec__head, .formsec__form").forEach((el, i) => {
         gsap.set(el, { y: 30, autoAlpha: 0 });
