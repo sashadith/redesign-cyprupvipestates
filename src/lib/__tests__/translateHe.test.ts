@@ -327,6 +327,11 @@ test("translateHe sends the stripped payload to Pass A (the figure never reaches
   const payloadPart = prompts[0].split("English payload (JSON):")[1];
   assert.doesNotMatch(payloadPart, /32,000/);
   assert.match(payloadPart, /\[figure removed\] of green space/);
+  // Pass B (the critic) must see the same stripped source — with the original
+  // it re-inserted the figure under "drop none" (staging retry batch, 2026-09-22).
+  const sourcePart = prompts[1].split("English source (JSON):")[1];
+  assert.doesNotMatch(sourcePart, /32,000/);
+  assert.match(prompts[1], /deliberately removed/);
 });
 
 // The two mechanical house-style rules the model kept breaking are now fixed

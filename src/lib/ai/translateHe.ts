@@ -319,16 +319,24 @@ function passAPrompt(input: HeTranslateInput, corrections: string[]): string {
 }
 
 function passBPrompt(input: HeTranslateInput, draft: HeTranslatePayload): string {
+  // The critic sees the SAME figure-stripped English as Pass A. With the
+  // original it "restored" every dropped figure under "drop none" — the
+  // 2026-09-22 staging retry batch failed on exactly the figures Pass A had
+  // correctly left out.
+  const { payload: promptPayload, removed } = promptPayloadFor(input);
   return [
     "Read the Hebrew below as an Israeli copy editor reviewing a translation.",
     "",
     "Mark every anglicism, calque, gender error, unnatural word order, marketing cliché, and every breach of §7 (banned AI patterns) or §11 (Pass B learnings) of the style guide in the system prompt.",
     "Rewrite each marked passage so it reads as if it had been written in Hebrew from the start. Change NO facts, add none, drop none.",
+    removed.length
+      ? `The English source below has had its stale figures deliberately removed (marker ${FIGURE_REMOVED}); the Hebrew must NOT carry those figures either — never re-insert a number, and never write the marker.`
+      : "",
     "Keep every structural element identical: the same JSON keys, the same array lengths, the same `_key`/`_type`/`marks`/`markDefs`, the same Latin identifiers, the same {placeholder} tokens.",
     "",
     "English source (JSON):",
     "```json",
-    JSON.stringify(payloadFor(input), null, 2),
+    JSON.stringify(promptPayload, null, 2),
     "```",
     "",
     "Hebrew draft (JSON):",
