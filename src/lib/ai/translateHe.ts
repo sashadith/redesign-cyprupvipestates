@@ -272,7 +272,11 @@ function passAPrompt(input: HeTranslateInput, corrections: string[]): string {
     "- Write Hebrew that reads as if it was written in Hebrew, not translated. Rework the word order; do not mirror the English syntax.",
     "- Change no facts. Add no fact the English does not contain. Drop nothing the English does contain (except a figure a rule above forbids).",
     "- Latin proper names (project names, developer names, Cyprus VIP Estates, GDPR) stay in Latin script.",
-    "- Western digits, the currency symbol before the number, no em dash, no exclamation marks, no slash gender forms.",
+    "- Western digits, the currency symbol before the number, no em dash and no en dash (use a comma or a colon), no exclamation marks, no slash gender forms.",
+    // The two style rules the model tripped most on staging (2026-09-21/22:
+    // 17 + 3 of 87 rejections) — named here so Pass A gets them right instead
+    // of Pass B having to repair them.
+    "- Spell הכל without a vav (never הכול); the house style uses the short form.",
     "",
     input.facts?.length ? `Facts you may rely on (never invent beyond them):\n${input.facts.map((f) => `- ${f}`).join("\n")}\n` : "",
     "English payload (JSON):",
