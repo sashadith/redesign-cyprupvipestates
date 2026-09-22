@@ -8,6 +8,7 @@ import Nav from "../../preview-home/sections/Nav";
 import Footer from "../../preview-home/sections/Footer";
 import Benefits from "../../preview-home/sections/Benefits";
 import LightHeroFlag from "../../preview-insights/LightHeroFlag";
+import HreflangLinks from "../../components/HreflangLinks/HreflangLinks";
 import PartnersMotion from "./PartnersMotion";
 import PartnersForm from "./PartnersForm";
 import { partnersCopy } from "./copy";
@@ -18,9 +19,17 @@ import { partnersCopy } from "./copy";
    /[lang]/partners page (PartnersHero/Benefits/Cta/Stars/Count/Contact +
    FormPartners/ModalPartners) has been deleted — it was unreachable dead
    code once middleware.ts's rewrite shipped, and is fully superseded by
-   this page. generateMetadata below already builds canonical + hreflang via
-   staticAlternates() (fixed-path type — /partners is identical across all
-   4 locales), unchanged by this cutover.
+   this page. generateMetadata below builds canonical via staticAlternates()
+   (fixed-path type — /partners is identical across all 4 locales); hreflang
+   is rendered SEPARATELY via <HreflangLinks> in the page body below, not
+   through generateMetadata's `alternates.languages` field — see that
+   component's own file header for why (short version: both that mechanism
+   AND a plain JSX `<link hrefLang="...">` render as `hrefLang`, the DOM-IDL
+   casing, not the HTML5 spec's lowercase `hreflang` attribute name — harmless
+   for real browsers/Google/Bing, which are case-insensitive here, but
+   <HreflangLinks> sidesteps it anyway as cheap insurance for simpler
+   text-matching tools). Same component to reuse if this is ever rolled out
+   to other routes.
 
    REUSED, not reinvented (see partners.css header for the full breakdown):
      - Hero: Home's OWN .hero/.hero__media/.hero__scrim/.hero__inner/
@@ -69,12 +78,14 @@ const CONSULTANT_IMAGE = "/uploads/files/50b0d355d8507f9aadbe785a65e8a7233dd8f2e
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!partnersOfferedIn(params.lang)) notFound();
   const t = partnersCopy(params.lang);
-  const { canonical, languages } = staticAlternates(params.lang, "partners");
+  const { canonical } = staticAlternates(params.lang, "partners");
   const ogImage = abs(HERO_IMAGE);
   return {
     title: t.metaTitle,
     description: t.metaDescription,
-    alternates: { canonical, languages },
+    // `languages` deliberately NOT passed here — see the file-header comment
+    // above. Rendered instead via <HreflangLinks> in the page body.
+    alternates: { canonical },
     openGraph: {
       title: t.metaTitle,
       description: t.metaDescription,
@@ -112,6 +123,7 @@ export default function PartnersPage({ params }: Props) {
   const { lang } = params;
   if (!partnersOfferedIn(lang)) notFound();
   const t = partnersCopy(lang);
+  const { languages } = staticAlternates(lang, "partners");
 
   // I1 fix: build the switcher straight from localesForStaticRoute
   // ("partners") — the same source that gates the route itself (decision J
@@ -146,6 +158,7 @@ export default function PartnersPage({ params }: Props) {
 
   return (
     <>
+      <HreflangLinks languages={languages} />
       <PartnersMotion />
       <Nav lang={lang} translations={translations} homeHref={localizedHref(lang)} />
 
