@@ -10,6 +10,7 @@ import Benefits from "../../preview-home/sections/Benefits";
 import LightHeroFlag from "../../preview-insights/LightHeroFlag";
 import PartnersMotion from "./PartnersMotion";
 import PartnersForm from "./PartnersForm";
+import PartnersFaq from "./PartnersFaq";
 import { partnersCopy } from "./copy";
 
 /* Cyprus VIP Estates — Partners, redesigned. This is now the LIVE /partners
@@ -233,6 +234,14 @@ export default function PartnersPage({ params }: Props) {
             </div>
           </div>
         </section>
+
+        {/* ----------------------------------------------------------- FAQ */}
+        <PartnersFaq
+          eyebrow={t.faqEyebrow}
+          titleStart={t.faqTitleStart}
+          titleAccent={t.faqTitleAccent}
+          items={t.faq}
+        />
 
         {/* -------------------------------------------------- FORM / FINAL CTA */}
         <section className="section is-light formsec" id="register">
