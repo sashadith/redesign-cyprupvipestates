@@ -255,8 +255,30 @@ export function staleFiguresIn(strings: string[]): string[] {
   return Array.from(out);
 }
 
+export const FIGURE_REMOVED = "[figure removed]";
+
+/** The English payload with every stale figure replaced by FIGURE_REMOVED —
+ *  what Pass A actually sees for a development description. Naming the
+ *  figures ("these are stale, drop them") was not enough: the model kept
+ *  "32,000 m²" twice on staging (2026-09-22) even with the passage quoted
+ *  back to it. It cannot copy what it never reads. */
+export function promptPayloadFor(input: HeTranslateInput): { payload: HeTranslatePayload; removed: string[] } {
+  const payload = payloadFor(input);
+  if (input.kind !== "developmentDescription") return { payload, removed: [] };
+  const strings = outputStrings(payload).map(([, v]) => v);
+  const removed = staleFiguresIn(strings).sort((a, b) => b.length - a.length); // longest first: "77.5 m²" before "77.5"
+  if (!removed.length) return { payload, removed };
+  const strip = (s: string) => removed.reduce((acc, f) => acc.split(f).join(FIGURE_REMOVED), s).replace(/\s{2,}/g, " ");
+  const out: HeTranslatePayload = { ...payload };
+  for (const k of Object.keys(out) as (keyof HeTranslatePayload)[]) {
+    const v = out[k];
+    if (typeof v === "string") (out as any)[k] = strip(v);
+  }
+  return { payload: out, removed };
+}
+
 function passAPrompt(input: HeTranslateInput, corrections: string[]): string {
-  const staleFigures = input.kind === "developmentDescription" ? staleFiguresIn(outputStrings(payloadFor(input)).map(([, v]) => v)) : [];
+  const { payload: promptPayload, removed: staleFigures } = promptPayloadFor(input);
   const parts = [
     "You translate English website copy into native Hebrew for an Israeli audience buying property in Cyprus.",
     "",
@@ -265,7 +287,7 @@ function passAPrompt(input: HeTranslateInput, corrections: string[]): string {
     `Content kind: ${input.kind}.`,
     KIND_RULES[input.kind],
     staleFigures.length
-      ? `The English still carries these figures — they are STALE and must not reach the Hebrew in any form, not even spelled out: ${staleFigures.map((f) => `"${f}"`).join(", ")}. Drop each such fact and keep the surrounding sentence natural.`
+      ? `The English had stale figures (${staleFigures.map((f) => `"${f}"`).join(", ")}); each has been replaced by the marker ${FIGURE_REMOVED}. Write those sentences naturally WITHOUT the fact — never restore, estimate or spell out a number, and never write the marker itself.`
       : "",
     "",
     "General rules:",
@@ -281,7 +303,7 @@ function passAPrompt(input: HeTranslateInput, corrections: string[]): string {
     input.facts?.length ? `Facts you may rely on (never invent beyond them):\n${input.facts.map((f) => `- ${f}`).join("\n")}\n` : "",
     "English payload (JSON):",
     "```json",
-    JSON.stringify(payloadFor(input), null, 2),
+    JSON.stringify(promptPayload, null, 2),
     "```",
     "",
     "Return ONLY a JSON object with EXACTLY the same keys and the same structure, with the Hebrew values in place of the English ones. No prose before or after it, no markdown fences around anything else.",
@@ -343,10 +365,25 @@ export function parseJsonReply(raw: string): Record<string, unknown> {
 // ── assembly + guards ───────────────────────────────────────────────────────
 
 /** Build the output payload from the model's JSON, keeping EN structure where it must be kept. */
+/** Deterministic house-style fixes applied to every Hebrew string the model
+ *  returns, before the guard sees it. Both are mechanical and unambiguous, and
+ *  the model kept getting them wrong even when told twice (staging
+ *  2026-09-21/22: 17 + 3 of 87 rejections): הכול → הכל, and an en/em dash
+ *  between words → a comma. A leftover FIGURE_REMOVED marker is dropped. */
+export function normalizeHebrew(s: string): string {
+  return s
+    .replace(/הכול/g, "הכל")
+    .replace(/\s*[–—]\s*/g, ", ")
+    .split(FIGURE_REMOVED)
+    .join("")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 function assemble(input: HeTranslateInput, raw: Record<string, unknown>, problems: string[]): HeTranslatePayload {
   const en = payloadFor(input);
   const out: HeTranslatePayload = {};
-  const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
+  const str = (v: unknown): string => (typeof v === "string" ? normalizeHebrew(v) : "");
 
   if (en.text !== undefined) out.text = str(raw.text);
   if (en.excerpt !== undefined) out.excerpt = str(raw.excerpt);

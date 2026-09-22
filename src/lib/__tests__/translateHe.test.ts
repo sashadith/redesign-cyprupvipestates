@@ -8,7 +8,9 @@ import {
   graphemeLength,
   guardViolations,
   mergePortableText,
+  normalizeHebrew,
   parseJsonReply,
+  promptPayloadFor,
   staleFiguresIn,
   translateHe,
   type AnthropicLike,
@@ -201,19 +203,21 @@ test("translateHe retries exactly once when a guard fires, then succeeds", async
 });
 
 test("translateHe throws HeTranslationError with the violations when the retry also fails", async () => {
-  const withDash = `דירה — קרובה לים`;
+  // An exclamation mark: a style violation normalizeHebrew does NOT repair
+  // (dashes and הכול are fixed mechanically now, so they can no longer fail a run).
+  const shouting = `דירה קרובה לים!`;
   const { client, prompts } = fakeClient([
-    JSON.stringify({ text: withDash }),
-    critiqued({ text: withDash }),
-    JSON.stringify({ text: withDash }),
-    critiqued({ text: withDash }),
+    JSON.stringify({ text: shouting }),
+    critiqued({ text: shouting }),
+    JSON.stringify({ text: shouting }),
+    critiqued({ text: shouting }),
   ]);
   await assert.rejects(
     () => translateHe(descInput, { client }),
     (e: unknown) => {
       assert.ok(e instanceof HeTranslationError);
       assert.equal(e.attempts, 2);
-      assert.match(e.violations.join(" "), /em-dash/);
+      assert.match(e.violations.join(" "), /exclamation-mark/);
       return true;
     },
   );
@@ -293,8 +297,49 @@ test("passAPrompt names the stale English figures for a development description,
     },
   };
   await translateHe({ kind: "developmentDescription", en: { text: "Each apartment measures 77.5 m² and prices start from €310,000." } }, { client });
-  assert.match(prompts[0], /STALE .* "77\.5 m²", "€310,000"/);
+  assert.match(prompts[0], /stale figures \([^)]*"77\.5 m²"[^)]*\)/);
+  assert.match(prompts[0], /stale figures \([^)]*"€310,000"[^)]*\)/);
   prompts.length = 0;
   await translateHe({ kind: "developmentDescription", en: { text: "Abiete 2 apartments offer sea views." } }, { client });
-  assert.doesNotMatch(prompts[0], /STALE/);
+  assert.doesNotMatch(prompts[0], /stale figures/);
+});
+
+// Staging 2026-09-22 (elements, elements-oxygen-park-of-colours): the model
+// copied "32,000 m²" even with the figure named as stale and the passage
+// quoted back — so Pass A no longer sees the figure at all.
+test("promptPayloadFor replaces stale English figures with the marker and keeps names with digits", () => {
+  const { payload, removed } = promptPayloadFor({
+    kind: "developmentDescription",
+    en: { text: "Abiete 2 sits within 32,000 m² of parkland – among the largest in Paphos – with prices from €310,000." },
+  });
+  assert.deepEqual(removed.sort(), ["32,000 m²", "€310,000"]);
+  assert.equal(payload.text, "Abiete 2 sits within [figure removed] of parkland – among the largest in Paphos – with prices from [figure removed].");
+  const untouched = promptPayloadFor({ kind: "developmentDescription", en: { text: "A quiet street near the sea." } });
+  assert.deepEqual(untouched.removed, []);
+  assert.equal(untouched.payload.text, "A quiet street near the sea.");
+});
+
+test("translateHe sends the stripped payload to Pass A (the figure never reaches the model)", async () => {
+  const { client, prompts } = fakeClient([JSON.stringify({ text: HE_PROSE }), critiqued({ text: HE_PROSE })]);
+  await translateHe({ kind: "developmentDescription", en: { text: "The park covers 32,000 m² of green space." } }, { client });
+  // The figure is named once in the instruction (so the model knows what was
+  // cut) but is absent from the payload it translates.
+  const payloadPart = prompts[0].split("English payload (JSON):")[1];
+  assert.doesNotMatch(payloadPart, /32,000/);
+  assert.match(payloadPart, /\[figure removed\] of green space/);
+});
+
+// The two mechanical house-style rules the model kept breaking are now fixed
+// deterministically before the guard runs.
+test("normalizeHebrew: הכול → הכל, dashes between words → comma, leftover marker dropped", () => {
+  assert.equal(normalizeHebrew("הכול קרוב – הים, החנויות ובתי הספר"), "הכל קרוב, הים, החנויות ובתי הספר");
+  assert.equal(normalizeHebrew("דירה במרחק [figure removed] מהים"), "דירה במרחק מהים");
+  assert.equal(normalizeHebrew(HE_PROSE), HE_PROSE);
+});
+
+test("translateHe passes the guard when the model writes הכול and an en dash (normalized away)", async () => {
+  const dashed = "הכול קרוב – הים ובתי הספר, במרחק הליכה.";
+  const { client } = fakeClient([JSON.stringify({ text: dashed }), critiqued({ text: dashed })]);
+  const out = await translateHe(descInput, { client });
+  assert.equal(out.he.text, "הכל קרוב, הים ובתי הספר, במרחק הליכה.");
 });
