@@ -3,13 +3,12 @@ import { prisma } from "@/lib/prisma";
 import { saveHomepage } from "../../../actions";
 import HomepageEditor from "./HomepageEditor";
 import { HOMEPAGE_SCHEMA } from "@/lib/homepageSchema";
+import { LOCALES, isLocale } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 
-const LANGS = ["en", "de", "pl", "ru"];
-
 export default async function HomepageEditorPage({ searchParams }: { searchParams: { lang?: string } }) {
-  const lang = LANGS.includes(searchParams.lang ?? "") ? (searchParams.lang as string) : "en";
+  const lang = isLocale(searchParams.lang ?? "") ? (searchParams.lang as string) : "en";
 
   const [doc, projects, caseStudies] = await Promise.all([
     prisma.siteDocument.findUnique({ where: { type_language: { type: "homepage", language: lang as any } } }),
@@ -30,7 +29,7 @@ export default async function HomepageEditorPage({ searchParams }: { searchParam
       </p>
 
       <div className="flex gap-2 mb-5">
-        {LANGS.map((l) => (
+        {LOCALES.map((l) => (
           <Link key={l} href={`/admin/content/featured?lang=${l}`}
             className={`rounded-md px-3 py-1.5 text-sm border ${l === lang ? "bg-[#1B4B43] text-white border-[#1B4B43]" : "border-[#E5E7EB] text-[#1B4B43] hover:bg-[#F8F9FA]"}`}>
             {l.toUpperCase()}

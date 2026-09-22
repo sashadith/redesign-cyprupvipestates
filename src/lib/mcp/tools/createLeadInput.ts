@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { LEAD_STATUSES } from "@/lib/crm/updateLeadStatus";
 import { PROPERTY_VALUES } from "@/app/components/qualifierFields";
+import { LOCALES } from "@/lib/locale";
 
 // Input contract of crm_create_lead, prisma-free for the pure test. Mirrors
 // the admin "New lead" form: first name required, email optional but valid
@@ -15,7 +16,7 @@ export const CreateLeadInput = z
     email: z.string().trim().max(200).optional().describe("Optional (WhatsApp-only leads often have none) but must be a valid address when given."),
     phone: z.string().trim().max(40).optional(),
     nationality: z.string().trim().max(80).optional(),
-    languagePreference: z.enum(["en", "de", "pl", "ru"]).optional(),
+    languagePreference: z.enum(LOCALES).optional(),
     budgetMin: z.number().int().nonnegative().optional(),
     budgetMax: z.number().int().nonnegative().optional(),
     timeline: z.enum(["IMMEDIATE", "THREE_MONTHS", "SIX_MONTHS", "ONE_YEAR", "TWO_YEARS", "JUST_LOOKING"]).optional(),

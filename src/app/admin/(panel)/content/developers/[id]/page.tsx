@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import TranslationsPanel from "@/app/admin/TranslationsPanel";
 import DeveloperEditForm from "./DeveloperEditForm";
+import { localeDir } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,8 @@ export default async function EditDeveloper({ params }: { params: { id: string }
           logo: d.logo, seoTitle: seo.metaTitle ?? "", seoDescription: seo.metaDescription ?? "",
           description: d.description,
         }}
+        dir={localeDir(d.language)}
+        language={d.language}
       />
     </div>
   );

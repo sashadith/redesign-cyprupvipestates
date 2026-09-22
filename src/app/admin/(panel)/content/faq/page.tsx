@@ -1,11 +1,9 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { createFaqTranslation } from "../../../actions";
+import { createSiteDocTranslation } from "../../../actions";
+import { LOCALES, LOCALE_LABELS } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
-
-const LANGS = ["en", "de", "pl", "ru"] as const;
-const LANG_NAMES: Record<string, string> = { en: "English", de: "Deutsch", pl: "Polski", ru: "Русский" };
 
 export default async function FaqList() {
   const docs = await prisma.siteDocument.findMany({ where: { type: "faqPage" } });
@@ -20,14 +18,14 @@ export default async function FaqList() {
         or Case Studies.
       </p>
       <div className="bg-white rounded-lg border border-[#E5E7EB] divide-y divide-[#E5E7EB]">
-        {LANGS.map((lang) => {
+        {LOCALES.map((lang) => {
           const doc = byLang.get(lang);
           const categories = Array.isArray((doc?.data as any)?.categories) ? (doc!.data as any).categories : [];
           const questionCount = categories.reduce((n: number, c: any) => n + (c.items?.length ?? 0), 0);
           return (
             <div key={lang} className="p-4 flex items-center justify-between gap-3">
               <div>
-                <div className="text-sm font-medium">{LANG_NAMES[lang]} ({lang.toUpperCase()})</div>
+                <div className="text-sm font-medium">{LOCALE_LABELS[lang].name} ({lang.toUpperCase()})</div>
                 <div className="text-xs text-[#9CA3AF]">
                   {doc ? `${categories.length} categories · ${questionCount} questions` : "not created yet"}
                 </div>
@@ -37,7 +35,7 @@ export default async function FaqList() {
                   Edit
                 </Link>
               ) : (
-                <form action={createFaqTranslation.bind(null, lang, "en")}>
+                <form action={createSiteDocTranslation.bind(null, "faqPage", lang)}>
                   <button type="submit" className="rounded-md border border-[#E5E7EB] px-3 py-1.5 text-sm text-[#1B4B43] hover:bg-[#1B4B43]/5">
                     Create from English
                   </button>

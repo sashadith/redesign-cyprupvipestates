@@ -6,9 +6,9 @@ import { matchLeadAction, type LocationOptions } from "../../../presentationActi
 import type { DevelopmentMatch, MatchFilters } from "@/lib/crm/matching";
 import { normalizeRef } from "@/lib/unitRef";
 import { PROPERTY_VALUES } from "@/app/components/qualifierFields";
+import { PUBLIC_LOCALES, isPublicLocale } from "@/lib/locale";
 
-const LOCALES = ["en", "de", "pl", "ru"] as const;
-type Locale = (typeof LOCALES)[number];
+type Locale = (typeof PUBLIC_LOCALES)[number];
 const PROPERTY_TYPES = PROPERTY_VALUES;
 const BED_OPTIONS = [0, 1, 2, 3, 4, 5]; // 5 = "5+"
 
@@ -84,7 +84,7 @@ export default function PresentationEditor({
 
   const [items, setItems] = useState<EditorItem[]>(initialItems);
   const [greetingName, setGreetingName] = useState(general.greetingName);
-  const [locale, setLocale] = useState<Locale>((LOCALES as readonly string[]).includes(general.locale) ? (general.locale as Locale) : "en");
+  const [locale, setLocale] = useState<Locale>(isPublicLocale(general.locale) ? (general.locale as Locale) : "en");
   const [personalNote, setPersonalNote] = useState(general.personalNote);
   const [advisorId, setAdvisorId] = useState(general.advisorId);
   const [expiresAt, setExpiresAt] = useState(general.expiresAt);
@@ -279,7 +279,7 @@ export default function PresentationEditor({
           <div>
             <label className={label}>Locale</label>
             <select value={locale} onChange={(e) => setLocale(e.target.value as Locale)} className={`${field} w-full`}>
-              {LOCALES.map((l) => <option key={l} value={l}>{l.toUpperCase()}</option>)}
+              {PUBLIC_LOCALES.map((l) => <option key={l} value={l}>{l.toUpperCase()}</option>)}
             </select>
           </div>
           <div>

@@ -15,6 +15,7 @@ import RoiInputs from "./RoiInputs";
 import RoiResults from "./RoiResults";
 import RoiChart from "./RoiChart";
 import ModalRoi from "../ModalRoi/ModalRoi";
+import { roiCalculatorCopy } from "./RoiCalculator.copy";
 
 type Props = {
   project?: Project | null;
@@ -45,64 +46,9 @@ const RoiCalculator: React.FC<Props> = ({
   }, [strategy, input]);
 
   const labels = {
-    title:
-      lang === "pl"
-        ? "Kalkulator ROI"
-        : lang === "de"
-          ? "ROI-Rechner"
-          : lang === "ru"
-            ? "Калькулятор ROI"
-            : "ROI Calculator",
-    subtitle:
-      lang === "pl"
-        ? "Szacunkowa kalkulacja oparta na warunkach rynkowych nowych nieruchomości na Cyprze"
-        : lang === "de"
-          ? "Geschätzte Kalkulation auf Basis der Marktbedingungen für Neubauten auf Zypern"
-          : lang === "ru"
-            ? "Ориентировочный расчет на основе рыночных условий для новостроек на Кипре"
-            : "Estimated calculation based on Cyprus new-build market conditions",
+    ...roiCalculatorCopy(lang),
     buyHold: "Buy & Hold",
     buySell: "Buy & Sell",
-    conservative:
-      lang === "pl"
-        ? "Konserwatywny"
-        : lang === "de"
-          ? "Konservativ"
-          : lang === "ru"
-            ? "Консервативный"
-            : "Conservative",
-    realistic:
-      lang === "pl"
-        ? "Realistyczny"
-        : lang === "de"
-          ? "Realistisch"
-          : lang === "ru"
-            ? "Реалистичный"
-            : "Realistic",
-    optimistic:
-      lang === "pl"
-        ? "Optymistyczny"
-        : lang === "de"
-          ? "Optimistisch"
-          : lang === "ru"
-            ? "Оптимистичный"
-            : "Optimistic",
-    disclaimer:
-      lang === "pl"
-        ? "Wyniki mają charakter orientacyjny i zależą od ceny zakupu, stawki VAT, okresu utrzymania, kosztów sprzedaży i warunków rynkowych."
-        : lang === "de"
-          ? "Die Ergebnisse sind unverbindliche Schätzungen und hängen von Kaufpreis, MwSt.-Satz, Haltedauer, Verkaufskosten und Marktbedingungen ab."
-          : lang === "ru"
-            ? "Результаты являются ориентировочными и зависят от цены покупки, ставки НДС, срока владения, расходов на продажу и рыночных условий."
-            : "Results are indicative only and depend on purchase price, VAT rate, holding period, selling costs and market conditions.",
-    cta:
-      lang === "pl"
-        ? "Uzyskaj konsultację inwestycyjną"
-        : lang === "de"
-          ? "Investmentberatung anfragen"
-          : lang === "ru"
-            ? "Получить инвестиционную консультацию"
-            : "Get investment consultation",
   };
 
   return (

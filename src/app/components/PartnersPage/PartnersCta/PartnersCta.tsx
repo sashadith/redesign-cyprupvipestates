@@ -4,6 +4,7 @@ import { Oswald } from "next/font/google";
 import { ButtonModal } from "../../ButtonModal/ButtonModal";
 import Image from "next/image";
 import FadeUpAnimate from "../../FadeUpAnimate/FadeUpAnimate";
+import type { Locale } from "@/lib/locale";
 
 const oswald = Oswald({
   subsets: ["latin", "cyrillic"],
@@ -21,7 +22,14 @@ type PartnersCtaTranslation = {
   button: string;
 };
 
-const translations: Record<string, PartnersCtaTranslation> = {
+const EN: PartnersCtaTranslation = {
+  titleStart: "become our ",
+  titleHighlight: "partner!",
+  description: "Fill out the form and become part of our international team",
+  button: "become a partner",
+};
+
+const translations: Record<Locale, PartnersCtaTranslation> = {
   de: {
     titleStart: "werde unser ",
     titleHighlight: "partner!",
@@ -29,12 +37,7 @@ const translations: Record<string, PartnersCtaTranslation> = {
       "Fülle das Formular aus und werde Teil unseres internationalen Teams",
     button: "jetzt partner werden!",
   },
-  en: {
-    titleStart: "become our ",
-    titleHighlight: "partner!",
-    description: "Fill out the form and become part of our international team",
-    button: "become a partner",
-  },
+  en: EN,
   pl: {
     titleStart: "zostań naszym ",
     titleHighlight: "partnerem!",
@@ -48,10 +51,11 @@ const translations: Record<string, PartnersCtaTranslation> = {
     description: "Заполни форму и стань частью нашей международной команды",
     button: "стать партнёром",
   },
+  he: EN, // decision J: Partners page stays English for he
 };
 
 const PartnersCta: FC<Props> = ({ lang }) => {
-  const t = translations[lang] ?? translations["de"];
+  const t = translations[lang as Locale] ?? translations.en;
 
   return (
     <section className={styles.partnersCta}>

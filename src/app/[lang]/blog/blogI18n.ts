@@ -4,6 +4,8 @@
 // English (eyebrow, "articles", filter "All", "Read", pager a11y labels, the
 // guide header) now localized for en/de/pl/ru.
 
+import type { Locale } from "@/lib/locale";
+
 export type BlogStrings = {
   // compact hero heading (visual H1, like the preview's "Cyprus Insights").
   // Last word is gold-accented. The SEO <title> still comes from the blogPage doc.
@@ -11,6 +13,9 @@ export type BlogStrings = {
   eyebrow: string;
   articleOne: string; // singular noun, shown after the count
   articleMany: string; // plural noun
+  /** Cross-locale mode only (he showing EN articles): noun phrases that name the language. Optional — LTR locales never render cross-locale. */
+  articleOneCross?: string;
+  articleManyCross?: string;
   filterAll: string;
   read: string; // card CTA
   readArticle: string; // featured CTA
@@ -35,6 +40,9 @@ export type BlogStrings = {
   // cities the projects filter knows.
   fallbackProperties: string;
   fallbackPropertiesInCity: string; // contains the literal placeholder {city}
+  // Phase 6 cross-locale badge: shown on every card/featured item when /he/blog
+  // is rendering EN articles (blogIndexMode's sourceLang !== the route locale).
+  englishBadge: string;
 };
 
 const EN: BlogStrings = {
@@ -61,10 +69,54 @@ const EN: BlogStrings = {
   relatedAccent: "reading",
   fallbackProperties: "Recommended properties",
   fallbackPropertiesInCity: "Recommended properties in {city}",
+  englishBadge: "In English",
 };
 
-export const BLOG_STRINGS: Record<string, BlogStrings> = {
+export const BLOG_STRINGS: Record<Locale, BlogStrings> = {
   en: EN,
+  // REVIEW(he)
+  // /he/blog lists the ENGLISH articles (product decision: they are not
+  // translated); `articleOne`/`articleMany` carry that fact in the hero count
+  // line so the Hebrew chrome states it calmly instead of letting a reader
+  // click into an unexpected language. `he` is excluded from the sitemap and
+  // from hreflang (LAUNCH_GATED_LOCALES) but carries NO noindex meta today,
+  // and the route still queries `language: "he"` rows — which posts /he/blog
+  // lists, and whether it should be noindexed, is a Phase 6 route question,
+  // not a copy one. The hero count line therefore has to read correctly at 0
+  // articles too; BlogInsights.tsx carries the Hebrew-only branch for that.
+  // See docs/i18n/reviews/wp4.md.
+  he: {
+    heroTitle: "תובנות מקפריסין",
+    eyebrow: "הבלוג",
+    articleOne: "מאמר אחד", // rendered WITHOUT the numeral for he (see BlogInsights.tsx)
+    articleMany: "מאמרים",
+    articleOneCross: "מאמר אחד באנגלית", // cross-locale mode: EN articles under /he/blog
+    articleManyCross: "מאמרים באנגלית",
+    filterAll: "הכל",
+    read: "לקריאה",
+    readArticle: "לקריאת המאמר",
+    categoriesAria: "קטגוריות",
+    pagerAria: "ניווט בין עמודי הבלוג",
+    firstPage: "מעבר לעמוד הראשון",
+    lastPage: "מעבר לעמוד האחרון",
+    pageWord: "עמוד",
+    empty: "אין עדיין מאמרים.",
+    guideEyebrow: "המדריך",
+    guideTitle: "נדל\"ן בקפריסין, בקצרה",
+    dateLocale: "he-IL",
+    minRead: "דקות קריאה", // n >= 2 only — blog/[slug]/page.tsx renders the n = 1 form
+    tocLabel: "תוכן העניינים",
+    writtenBy: "מאת",
+    relatedLead: "עוד",
+    relatedAccent: "מאמרים",
+    fallbackProperties: "נכסים מומלצים",
+    // {city} is substituted with the LATIN city name (Paphos/Limassol/Larnaca)
+    // by the blog route, so it is FSI/PDI isolated here (bidiIsolate) and the
+    // preposition takes the hyphen form the style guide §3 prescribes.
+    fallbackPropertiesInCity: "נכסים מומלצים ב-\u2068{city}\u2069",
+    // REVIEW(he)
+    englishBadge: "באנגלית",
+  },
   de: {
     heroTitle: "Zypern Insights",
     eyebrow: "Das Journal",
@@ -89,6 +141,7 @@ export const BLOG_STRINGS: Record<string, BlogStrings> = {
     relatedAccent: "Beiträge",
     fallbackProperties: "Empfohlene Objekte",
     fallbackPropertiesInCity: "Empfohlene Objekte in {city}",
+    englishBadge: "Auf Englisch",
   },
   pl: {
     heroTitle: "Cypr Insights",
@@ -114,6 +167,7 @@ export const BLOG_STRINGS: Record<string, BlogStrings> = {
     relatedAccent: "artykuły",
     fallbackProperties: "Polecane nieruchomości",
     fallbackPropertiesInCity: "Polecane nieruchomości w {city}",
+    englishBadge: "Po angielsku",
   },
   ru: {
     heroTitle: "Кипр Инсайты",
@@ -139,7 +193,8 @@ export const BLOG_STRINGS: Record<string, BlogStrings> = {
     relatedAccent: "статьи",
     fallbackProperties: "Рекомендуемые объекты",
     fallbackPropertiesInCity: "Рекомендуемые объекты в {city}",
+    englishBadge: "На английском",
   },
 };
 
-export const blogStrings = (lang: string): BlogStrings => BLOG_STRINGS[lang] ?? EN;
+export const blogStrings = (lang: string): BlogStrings => BLOG_STRINGS[lang as Locale] ?? EN;

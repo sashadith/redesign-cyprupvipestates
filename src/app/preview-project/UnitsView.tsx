@@ -7,6 +7,9 @@ import { developmentCopy, type DevelopmentStrings } from "@/lib/developmentCopy"
 import { roundArea } from "@/lib/formatArea";
 import { listedUnits } from "@/lib/developmentAvailability";
 import { capitalizeType } from "@/lib/developmentCard";
+import { heFeedLabel } from "@/lib/heFeedVocab";
+import { fmtPrice } from "@/lib/locale";
+import Bdi from "@/app/components/Bdi";
 
 export type UnitVM = {
   id?: string; // DevelopmentUnit.id — only populated by the DB-backed path (developmentRender.ts); optional so the live-feed adapters (feeds.ts), which have no DB row yet, are unaffected
@@ -61,17 +64,23 @@ const areaNum = (v: string): number | null => {
   const n = m ? Number(m[0]) : NaN;
   return Number.isFinite(n) && n > 0 ? n : null;
 };
-const fmtPrice = (n: number | null, cur = "EUR", priceOnRequest = "Price on request") =>
-  n == null ? priceOnRequest : `${cur === "EUR" ? "€" : cur + " "}${n.toLocaleString("en-US")}`;
 // Sold → a muted dash (the status pill already says "Sold"). Reserved → the word
 // itself in the price slot, not "Price on request" or the actual figure.
-const priceCell = (u: UnitVM, t: DevelopmentStrings) =>
+const priceCell = (u: UnitVM, t: DevelopmentStrings, lang: string) =>
   u.status === "sold" ? <span className="pp-price-na">—</span>
   : u.status === "reserved" ? <span className="pp-price-na">{t.unitStatus.reserved}</span>
-  : <>{fmtPrice(u.price, u.currency, t.priceOnRequest)}{u.price != null && <span className="pp-vat">{t.vatSuffix}</span>}</>;
+  : u.price == null ? <>{t.priceOnRequest}</>
+  : <><Bdi ltr>{fmtPrice(u.price, lang, u.currency)}</Bdi><span className="pp-vat"><Bdi>{t.vatSuffix}</Bdi></span></>;
 
-function StatusPill({ u }: { u: UnitVM }) {
-  return <span className={`pp-pill pp-pill--${statusClass(u.status)}`}>{u.statusLabel || u.status}</span>;
+// `u.statusLabel` is the developer feed's own English wording and `u.status`
+// the raw enum, so on a Hebrew page this pill (and the units table's status
+// column) was the one Latin element among Hebrew rows — the entry the copy
+// table already holds was simply never reached (Pass B, reported dev task).
+// The pill labels a יחידה, hence the feminine forms in heFeedVocab; the
+// project-level badge in ProjectPageBody keeps its masculine "זמין".
+function StatusPill({ u, lang }: { u: UnitVM; lang: string }) {
+  const raw = u.statusLabel || u.status;
+  return <span className={`pp-pill pp-pill--${statusClass(u.status)}`}>{lang === "he" ? heFeedLabel(raw) : raw}</span>;
 }
 
 // Branded factsheet download — generation is built in the backend phase.
@@ -129,7 +138,7 @@ function UnitDetails({ u, t, withPhotos = true, withFeatures = false, onOpenPhot
   );
 }
 
-function UnitCard({ u, t, open, onToggle }: { u: UnitVM; t: DevelopmentStrings; open: boolean; onToggle: () => void }) {
+function UnitCard({ u, t, lang, open, onToggle }: { u: UnitVM; t: DevelopmentStrings; lang: string; open: boolean; onToggle: () => void }) {
   const [lb, setLb] = useState<number | null>(null);
   // Covered Area is never stored — computed here from areaBuilt + areaVeranda
   // so it stays correct if a manual edit later adds/changes the veranda
@@ -153,14 +162,14 @@ function UnitCard({ u, t, open, onToggle }: { u: UnitVM; t: DevelopmentStrings; 
     <article className={`pp-uc pp-uc--${statusClass(u.status)}`}>
       <button type="button" className={`pp-uc__media${u.photos.length ? " is-zoomable" : ""}`} onClick={() => u.photos.length > 0 && setLb(0)} aria-label={u.photos.length ? t.enlargePhotos : undefined}>
         {u.photos[0] ? <img src={atSize(u.photos[0], "medium")} alt={u.name} loading="lazy" /> : <span className="pp-uc__ph" />}
-        <StatusPill u={u} />
-        {u.type && <span className="pp-uc__type">{capitalizeType(u.type)}</span>}
+        <StatusPill u={u} lang={lang} />
+        {u.type && <span className="pp-uc__type">{lang === "he" ? heFeedLabel(u.type) : capitalizeType(u.type)}</span>}
         {u.photos.length > 1 && <span className="pp-uc__count"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8"/><rect x="13" y="3" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8"/><rect x="3" y="13" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8"/><rect x="13" y="13" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.8"/></svg>{u.photos.length}</span>}
       </button>
       <div className="pp-uc__body">
         <div className="pp-uc__row">
           <h3 className="pp-uc__name">{unitLabel(u)}</h3>
-          <span className="pp-uc__price">{priceCell(u, t)}</span>
+          <span className="pp-uc__price">{priceCell(u, t, lang)}</span>
         </div>
         {facts.length > 0 && (
           <div className="pp-uc__facts">
@@ -192,7 +201,7 @@ function UnitCard({ u, t, open, onToggle }: { u: UnitVM; t: DevelopmentStrings; 
   );
 }
 
-function UnitsTable({ units, t }: { units: UnitVM[]; t: DevelopmentStrings }) {
+function UnitsTable({ units, t, lang }: { units: UnitVM[]; t: DevelopmentStrings; lang: string }) {
   const [open, setOpen] = useState<string | null>(null);
   const COLS = 8;
   return (
@@ -216,13 +225,13 @@ function UnitsTable({ units, t }: { units: UnitVM[]; t: DevelopmentStrings }) {
                   aria-expanded={isOpen}
                 >
                   <td className="pp-tbl__name"><span className="pp-tbl__chev" aria-hidden>{isOpen ? "▾" : "▸"}</span>{unitLabel(u)}<small>{u.ref}</small></td>
-                  <td>{u.type ? capitalizeType(u.type) : "—"}</td>
+                  <td>{u.type ? (lang === "he" ? heFeedLabel(u.type) : capitalizeType(u.type)) : "—"}</td>
                   <td>{u.floor || "—"}</td>
                   <td className="r">{u.beds || "—"}</td>
                   <td className="r">{u.areaBuilt ? sqm(u.areaBuilt, t.unitM2) : "—"}</td>
                   <td className="r">{u.areaPlot ? sqm(u.areaPlot, t.unitM2) : "—"}</td>
-                  <td className="r pp-tbl__price">{priceCell(u, t)}</td>
-                  <td><StatusPill u={u} /></td>
+                  <td className="r pp-tbl__price">{priceCell(u, t, lang)}</td>
+                  <td><StatusPill u={u} lang={lang} /></td>
                 </tr>
                 {isOpen && (
                   <tr className="pp-tbl__detail">
@@ -302,7 +311,7 @@ export default function UnitsView({ units, lang = "en" }: { units: UnitVM[]; lan
       </div>
       {view === "cards" ? (
         <>
-          <div className="pp-ugrid" ref={gridRef}>{cardsList.map((u, i) => <UnitCard key={u.ref || u.name} u={u} t={t} open={openRows.has(rowOf(i))} onToggle={() => toggleRow(i)} />)}</div>
+          <div className="pp-ugrid" ref={gridRef}>{cardsList.map((u, i) => <UnitCard key={u.ref || u.name} u={u} t={t} lang={lang} open={openRows.has(rowOf(i))} onToggle={() => toggleRow(i)} />)}</div>
           {!showSold && hiddenUnavailable > 0 && (
             <button className="pp-showmore" type="button" onClick={() => setShowSold(true)}>
               {t.showMoreUnits(hiddenUnavailable)}
@@ -310,7 +319,7 @@ export default function UnitsView({ units, lang = "en" }: { units: UnitVM[]; lan
           )}
         </>
       ) : (
-        <UnitsTable units={sorted} t={t} />
+        <UnitsTable units={sorted} t={t} lang={lang} />
       )}
     </div>
   );

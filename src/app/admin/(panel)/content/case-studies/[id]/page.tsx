@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import TranslationsPanel from "@/app/admin/TranslationsPanel";
 import CaseStudyEditForm from "./CaseStudyEditForm";
 import { utcToZonedInput } from "@/lib/tz";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, localeDir } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +29,8 @@ export default async function EditCaseStudy({ params }: { params: { id: string }
           previewImage: c.previewImage, seoTitle: seo.metaTitle ?? "", seoDescription: seo.metaDescription ?? "",
           co, caseDetails: (c.caseDetails as any) ?? {}, mainContent: (c.mainContent as any[]) ?? [],
         }}
+        dir={localeDir(c.language)}
+        language={c.language}
       />
     </div>
   );

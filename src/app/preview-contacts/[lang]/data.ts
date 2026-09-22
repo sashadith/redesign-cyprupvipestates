@@ -2,6 +2,7 @@ import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { refToLocalUrl } from "@/lib/sanityRefs";
 import { CORPORATE_SLUGS, type CorporateLocale } from "@/lib/corporatePageSlugs";
+import { isLocale } from "@/lib/locale";
 
 /* The team stays database-backed (people join and leave — that must not need
    a deploy), read out of the same singlepages row the old block-rendered page
@@ -23,7 +24,7 @@ export type ContactsPageData = {
 };
 
 export const getContactsPageData = cache(async (lang: string): Promise<ContactsPageData> => {
-  const l = (["en", "de", "pl", "ru"].includes(lang) ? lang : "en") as CorporateLocale;
+  const l: CorporateLocale = isLocale(lang) ? lang : "en";
   const row = await prisma.singlepage.findUnique({
     where: { language_slug: { language: l as any, slug: CORPORATE_SLUGS.contacts[l] } },
     select: { contentBlocks: true, previewImage: true },

@@ -1,7 +1,7 @@
 import React from "react";
 import type { FeaturedCaseStudiesBlock } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client";
-import { localePrefix } from "@/lib/locale";
+import { localePrefix, type Locale } from "@/lib/locale";
 import { homeStrings, CASE_CATEGORY_LABELS } from "./homeI18n";
 import { highlightAccents } from "./highlightAccents";
 
@@ -22,15 +22,16 @@ const safeUrl = (img: unknown) => {
 // DE/PL/RU (2026-09-07 fix): see highlightAccents.tsx — the split() below
 // only ever matched literal English words, so translated titles rendered
 // with no highlight at all.
-const ACCENTS_BY_LANG: Record<string, string[]> = {
+const ACCENTS_BY_LANG: Partial<Record<Locale, string[]>> = {
   de: ["Erfolgsgeschichten"],
   pl: ["sukcesu"],
   ru: ["успеха"],
+  he: ["סיפורי לקוחות"], // REVIEW(he); Hebrew H2: "סיפורי לקוחות מקפריסין"
 };
 
 const renderTitle = (title: string, lang: string) => {
-  if (lang !== "en" && ACCENTS_BY_LANG[lang]) {
-    return highlightAccents(title, ACCENTS_BY_LANG[lang]);
+  if (lang !== "en" && ACCENTS_BY_LANG[lang as Locale]) {
+    return highlightAccents(title, ACCENTS_BY_LANG[lang as Locale]!);
   }
   return title.split(/(Success|Cyprus)/i).map((part, i) =>
     /^(success|cyprus)$/i.test(part) ? (
@@ -51,7 +52,7 @@ export default function CaseStudies({ block, lang = "en" }: { block: FeaturedCas
   if (!block?.caseStudies?.length) return null;
   const { title, description, button, caseStudies } = block;
   const t = homeStrings(lang);
-  const labels = CASE_CATEGORY_LABELS[lang] || CASE_CATEGORY_LABELS.en;
+  const labels = CASE_CATEGORY_LABELS[lang as Locale] || CASE_CATEGORY_LABELS.en;
   const px = localePrefix(lang);
 
   return (

@@ -7,10 +7,11 @@ import { prisma } from "@/lib/prisma";
 import { parseAttribution } from "@/lib/attribution";
 import { recordInboundLead } from "@/lib/leadNotify";
 import { ALLOWED_HOSTS, safeUrl, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
+import { LOCALES } from "@/lib/locale";
 
 const MONDAY_API_URL = "https://api.monday.com/v2";
 const NEWSLETTER_BOARD_ID = process.env.MONDAY_NEWSLETTER_BOARD_ID || "1761993654";
-const LEAD_LOCALES = new Set(["en", "de", "pl", "ru"]);
+const LEAD_LOCALES = new Set<string>(LOCALES);
 
 const ipLimiter = makeRateLimiter();
 const emailLimiter = makeRateLimiter();

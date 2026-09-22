@@ -16,6 +16,8 @@
  * differently per language: German closes with " zu" after the second link,
  * the other three end at the link itself. */
 
+import type { Locale } from "@/lib/locale";
+
 export type ConsentCopy = {
   lead: string;
   termsLabel: string;
@@ -26,11 +28,15 @@ export type ConsentCopy = {
   tail: string;
 };
 
-const CONSENT: Record<string, ConsentCopy> = {
-  en: {
-    lead: "I agree to the ", termsLabel: "Terms and Conditions", termsHref: "/terms-and-conditions",
-    mid: " and the ", privacyLabel: "Data Privacy Policy", privacyHref: "/privacy-policy", tail: "",
-  },
+const EN: ConsentCopy = {
+  lead: "I agree to the ", termsLabel: "Terms and Conditions", termsHref: "/terms-and-conditions",
+  mid: " and the ", privacyLabel: "Data Privacy Policy", privacyHref: "/privacy-policy", tail: "",
+};
+
+// Exported so scripts/qa/copy-snapshot.mjs can pin the en/de/pl/ru rows
+// (final review I3) — `consentCopy()` stays the accessor callers use.
+export const CONSENT: Record<Locale, ConsentCopy> = {
+  en: EN,
   de: {
     lead: "Ich stimme den ", termsLabel: "AGB", termsHref: "/de/geschaftsbedingungen",
     mid: " und der ", privacyLabel: "Datenschutzrichtlinie", privacyHref: "/de/datenschutzrichtlinie", tail: " zu",
@@ -43,8 +49,17 @@ const CONSENT: Record<string, ConsentCopy> = {
     lead: "Согласен с ", termsLabel: "Условиями", termsHref: "/ru/uslovija-i-polozhenija",
     mid: " и ", privacyLabel: "Политикой конфиденциальности", privacyHref: "/ru/politika-privatnosti", tail: "",
   },
+  // he: the hrefs stay the EN slugs under the /he prefix (registry.ts's
+  // CORPORATE_SLUGS.terms/privacy.he). The checkbox label is nominal
+  // ("אישור …") per style guide §2.3 — the gendered form is a fallback
+  // only, not used here (Pass B fix round 1).
+  he: {
+    lead: "אישור ", termsLabel: "תנאי השימוש", termsHref: "/he/terms-and-conditions",
+    mid: " ו", privacyLabel: "מדיניות הפרטיות", privacyHref: "/he/privacy-policy",
+    tail: "",
+  }, // REVIEW(he)
 };
 
 export function consentCopy(lang: string): ConsentCopy {
-  return CONSENT[lang] ?? CONSENT.en;
+  return CONSENT[lang as Locale] ?? CONSENT.en;
 }

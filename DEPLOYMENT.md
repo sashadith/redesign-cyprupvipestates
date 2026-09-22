@@ -35,6 +35,12 @@ deliberately disabled there (`MONDAY_API_KEY`/`TELEGRAM_BOT_TOKEN` blanked in
 its `.env`) so form tests never reach the real CRM — everything else reads
 and writes the one shared database.
 
+## Build-time environment variables
+
+| Variable | Purpose | Scope |
+|---|---|---|
+| `NEXT_PUBLIC_LIVE_LOCALES` | Controls which locales are visible to visitors and search engines. Unset = all locales except `he` (launch-gated); staging typically sets `en,de,pl,ru,he` to test all locales. **Build-time inlined** — changing it requires a rebuild (run `npm run build` as part of deploy). Production launch of a new locale: set this var + add locale prefix to the nginx `location ~` regex in `ops/nginx/cyprusvipestates.conf` + deploy. |  `.env` (read at build time) |
+
 ## The nginx layer (routing decisions made OUTSIDE this repo)
 
 Production's nginx vhost (`/etc/nginx/sites-enabled/cyprusvipestates` on the

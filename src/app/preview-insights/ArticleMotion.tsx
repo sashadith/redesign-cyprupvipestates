@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "../preview-home/anim/gsap";
+import { isRtlDoc } from "@/app/components/useIsRtl";
 
 /* Load + scroll motion for an Insights article. Mounted once; drives reveals off
    the existing DOM by class. No-ops under prefers-reduced-motion (content shown
@@ -9,6 +10,8 @@ import { gsap, ScrollTrigger, prefersReducedMotion } from "../preview-home/anim/
 export default function ArticleMotion() {
   useEffect(() => {
     if (prefersReducedMotion()) return;
+
+    const isRtl = isRtlDoc(document);
 
     const ctx = gsap.context(() => {
       /* ---------- HERO (on load) ---------- */
@@ -31,7 +34,7 @@ export default function ArticleMotion() {
         .from(".iart__meta", { y: 22, autoAlpha: 0, duration: 0.7 }, 0.7);
 
       /* ---------- TOC aside ---------- */
-      gsap.from(".iart__aside", { autoAlpha: 0, x: -18, duration: 0.8, delay: 0.5, ease: "power2.out" });
+      gsap.from(".iart__aside", { autoAlpha: 0, x: isRtl ? 18 : -18, duration: 0.8, delay: 0.5, ease: "power2.out" });
 
       /* ---------- ARTICLE BODY — block-by-block fade up on scroll ---------- */
       const blocks = gsap.utils.toArray<HTMLElement>(".iart__content > *");

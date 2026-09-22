@@ -2,7 +2,7 @@
 /* Guard for the homepage editor's language switcher.
 
    The bug this exists for (reported 2026-09-11): picking DE, PL or RU left the
-   editor showing English. The documents were correct in the database — all four
+   editor showing English. The documents were correct in the database — every locale
    carried their own title and meta title — and the switcher did navigate. The
    fault was one missing React key.
 

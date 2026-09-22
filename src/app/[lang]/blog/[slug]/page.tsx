@@ -33,9 +33,10 @@ import {
   languageAlternates,
   pathBuilders,
   DEFAULT_OG_IMAGE,
+  ogLocale,
 } from "@/lib/seo";
 import { i18n } from "@/i18n.config";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, LOCALES } from "@/lib/locale";
 import { Translation } from "@/types/homepage";
 import { FormStandardDocument } from "@/types/formStandardDocument";
 import { blogStrings } from "../blogI18n";
@@ -94,7 +95,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: data?.seo.metaDescription,
       url,
       siteName: "Cyprus VIP Estates",
-      locale: lang,
+      locale: ogLocale(lang),
       type: "article",
       images: [{ url: previewImageUrl, width: 1200, height: 630, alt: data?.title }],
     },
@@ -128,7 +129,11 @@ const wordCount = (blocks: any[]) => {
   return n;
 };
 
-const HOME_LABEL: Record<string, string> = { en: "Home", de: "Startseite", pl: "Strona główna", ru: "Главная" };
+// he added per the final-review fix wave (grep test now flags any
+// four-key en/de/pl/ru object with no he — Minor 8 from the whole-branch
+// review: a Hebrew blog post's BreadcrumbList JSON-LD was emitting the
+// English fallback "Home" instead of a Hebrew label).
+const HOME_LABEL: Record<string, string> = { en: "Home", de: "Startseite", pl: "Strona główna", ru: "Главная", he: "דף הבית" /* REVIEW(he) — same label as Breadcrumbs.copy.ts */ };
 
 /* The three cities ProjectsSectionBlock.filterCity actually accepts, with the
    spellings that turn up in this site's four locales — RU and PL slugs are
@@ -147,6 +152,10 @@ const FALLBACK_MIN = 3;
    guard in renderArticleBlock. Module-level so that guard and the
    does-this-article-already-route check below cannot drift apart. */
 const MIN_BLOCK_RESULTS = 3;
+/* Asset SET, not a locale set (see the contact-art fallback below): derived
+   from LOCALES rather than hard-coded, minus `he` (no iphone-he.webp on disk
+   yet — he explicitly falls back to the English image instead of 404ing). */
+const CONTACT_ART_LOCALES = LOCALES.filter((l) => l !== "he");
 
 /* Whether a Projects block will actually put cards on the page. Mirrors both
    guards in renderArticleBlock. Needed because "the article has a block" is not
@@ -304,7 +313,10 @@ const PagePost = async ({ params }: Props) => {
                   positioned, it has no height until it loads, so it can fail to
                   intersect and never load at all (the aspect-ratio in
                   articleForm.css guards that, but eager is simply certain). */}
-              <img src={`/img/contact/iphone-${["en", "de", "pl", "ru"].includes(lang) ? lang : "en"}.webp`} alt="" />
+              {/* Asset SET, not a locale set: only en/de/pl/ru artwork exists on
+                  disk, so `he` explicitly falls back to the English image
+                  rather than 404ing on a non-existent iphone-he.webp. */}
+              <img src={`/img/contact/iphone-${CONTACT_ART_LOCALES.includes(lang as any) ? lang : "en"}.webp`} alt="" />
             </div>
           </div>
         );
@@ -319,7 +331,7 @@ const PagePost = async ({ params }: Props) => {
     <>
       <Header params={params} translations={translations} />
       <SchemaBlogPost blog={blog} lang={lang} />
-      <SchemaBlogFaq blocks={contentBlocks} />
+      <SchemaBlogFaq blocks={contentBlocks} lang={lang} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }} />
       <ArticleMotion />
       <ReadingProgress />
@@ -352,7 +364,11 @@ const PagePost = async ({ params }: Props) => {
                     <span className="iart__byline-name">{author.name}</span>
                   </span>
                 )}
-                <span className="iart__meta-dot">{minutes} {t.minRead}</span>
+                {/* "1 דקות קריאה" is ungrammatical: Hebrew takes the singular
+                    noun with the numeral as a word after it. LTR unchanged. */}
+                <span className="iart__meta-dot">
+                  {lang === "he" && minutes === 1 ? "דקת קריאה אחת" : <>{minutes} {t.minRead}</>}
+                </span>
                 {fmtDate(blog.publishedAt) && <span className="iart__meta-dot">{fmtDate(blog.publishedAt)}</span>}
               </div>
             </div>

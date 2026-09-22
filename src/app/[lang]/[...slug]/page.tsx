@@ -5,6 +5,7 @@ import AccordionContainer from "@/app/components/AccordionContainer/AccordionCon
 import Footer from "@/app/components/Footer/Footer";
 import Header from "@/app/components/Header/Header";
 import { i18n } from "@/i18n.config";
+import { PUBLIC_LOCALES, bcp47For, bidiIsolate, isLocale, ltrIsolate, type Locale } from "@/lib/locale";
 import {
   getFormStandardDocumentByLang,
   getSinglePageByLang,
@@ -77,7 +78,7 @@ import TableBlockComponent from "@/app/components/TableBlockComponent/TableBlock
 import NotFoundPageComponent from "@/app/components/NotFoundPageComponent/NotFoundPageComponent";
 import SectionLinks from "@/app/components/SectionLinks/SectionLinks";
 import { urlFor } from "@/sanity/sanity.client";
-import { abs, localizedPath, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import { abs, localizedPath, DEFAULT_OG_IMAGE, ogLocale } from "@/lib/seo";
 
 type Props = {
   params: {
@@ -94,11 +95,20 @@ type Props = {
 // paginated URLs don't carry an identical title to page 1 despite
 // self-canonicalizing to their own ?page=N URL (a soft duplicate-content
 // signal otherwise). H1 is deliberately left unchanged.
-const PAGE_TITLE_SUFFIX: Record<string, (n: number) => string> = {
+// `he` takes a parenthesis instead of the em dash the LTR locales use: Hebrew
+// punctuation has no `—` (style guide §3), and a pipe would collide with the
+// pipe a style-guide-conformant Hebrew CMS title already carries before the
+// brand (`… | Cyprus VIP Estates | עמוד 2` — brand stranded mid-title); the
+// suffix is also appended to the description, so it must read after a full
+// stop too (`…. (עמוד 2)`). The
+// page number is LRI/PDI isolated so the digits keep their place when the
+// title ends on a Latin run.
+const PAGE_TITLE_SUFFIX: Record<Locale, (n: number) => string> = {
   en: (n) => ` — Page ${n}`,
   de: (n) => ` — Seite ${n}`,
   pl: (n) => ` — Strona ${n}`,
   ru: (n) => ` — Страница ${n}`,
+  he: (n) => ` (עמוד ${ltrIsolate(String(n))})`, // REVIEW(he)
 };
 
 // No ?page= at all -> "default" (render as page 1, no redirect: the bare URL
@@ -127,7 +137,7 @@ export const revalidate = 60;
  * Собираем все combinations [lang, slug[]] для SSG
  */
 export async function generateStaticParams(): Promise<Props["params"][]> {
-  const langs = i18n.languages.map((l) => l.id);
+  const langs = PUBLIC_LOCALES;
   const paths: Props["params"][] = [];
 
   for (const lang of langs) {
@@ -223,20 +233,27 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
   // Page-specific OG/Twitter image (was inheriting the generic site-logo default). Use the
   // landing page's own previewImage; fall back to the logo only when the page has none.
-  const pageSuffix = requestedPage > 1 ? (PAGE_TITLE_SUFFIX[lang] ?? PAGE_TITLE_SUFFIX.en)(requestedPage) : "";
+  const pageSuffix = requestedPage > 1 ? (isLocale(lang) ? PAGE_TITLE_SUFFIX[lang] : PAGE_TITLE_SUFFIX.en)(requestedPage) : "";
   const ogTitle = (page?.seo?.metaTitle || page?.title) + pageSuffix;
   // Never emit an empty (or literal "undefined") description: when both the CMS
   // metaDescription and the excerpt are blank, `x || y` collapsed to undefined
   // and `undefined + ""` shipped the string "undefined" — or an empty string,
   // which let Google fall back to the footer disclaimer text in sitelink
   // snippets. Fall through to a per-language brand default instead.
-  const FALLBACK_DESC: Record<string, string> = {
+  // REVIEW(he) — the brand is FSI/PDI isolated because `pageSuffix` can append
+  // Hebrew after it on page 2+, which would otherwise reorder the Latin run.
+  const FALLBACK_DESC: Record<Locale, string> = {
     en: "Explore luxury properties, new developments and investment homes for sale across Cyprus with Cyprus VIP Estates.",
     de: "Entdecken Sie Luxusimmobilien, Neubauprojekte und Anlageobjekte in ganz Zypern mit Cyprus VIP Estates.",
     pl: "Odkryj luksusowe nieruchomości, nowe inwestycje i apartamenty inwestycyjne na Cyprze z Cyprus VIP Estates.",
     ru: "Элитная недвижимость, новостройки и инвестиционные объекты на Кипре с Cyprus VIP Estates.",
+    // Generic fallback for ANY landing page without its own meta description,
+    // so it must not claim a location the page may not be about (EN says
+    // "across Cyprus" for the same reason); the second sentence carries the
+    // offer instead of a fourth property synonym.
+    he: `נדל"ן בקפריסין לרוכשים מישראל. פרויקטים חדשים, דירות ווילות למכירה ונכסים להשקעה. ליווי אישי מהחיפוש ועד המסירה עם ${bidiIsolate("Cyprus VIP Estates")}.`,
   };
-  const ogDesc = (page?.seo?.metaDescription || page?.excerpt || FALLBACK_DESC[lang] || FALLBACK_DESC.en) + pageSuffix;
+  const ogDesc = (page?.seo?.metaDescription || page?.excerpt || (isLocale(lang) ? FALLBACK_DESC[lang] : undefined) || FALLBACK_DESC.en) + pageSuffix;
   const ogImage = (page as any)?.previewImage
     ? urlFor((page as any).previewImage).width(1200).height(630).url()
     : DEFAULT_OG_IMAGE;
@@ -253,7 +270,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
       description: ogDesc,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: lang,
+      locale: ogLocale(lang),
       type: "website",
       images: [{ url: ogImage, width: 1200, height: 630, alt: page?.title }],
     },
@@ -613,6 +630,7 @@ const SinglePage = async ({ params, searchParams }: Props) => {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "FAQPage",
+              inLanguage: bcp47For(lang),
               mainEntity: faqItems,
             }).replace(/</g, "\\u003c"),
           }}

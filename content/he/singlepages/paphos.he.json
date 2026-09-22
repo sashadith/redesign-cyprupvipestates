@@ -1,0 +1,347 @@
+{
+  "slug": "paphos",
+  "title": "נדל\"ן בפאפוס, וילות ודירות בפרויקטים חדשים",
+  "excerpt": "המבחר בפאפוס כולל בתים פרטיים עם בריכה בפייה ובסביבתה ודירות במתחמים סמוכים לחוף, כולם מפרויקטים חדשים.",
+  "allowIntroBlock": false,
+  "previewImage": {
+    "alt": "בית פרטי עם בריכה במחוז פאפוס",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-2ec5103ee98bec7fd0b4336f5edb6d663f719fd0-850x850-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "נדל\"ן בפאפוס | Cyprus VIP Estates",
+    "metaDescription": "וילות ודירות בפרויקטים חדשים בפאפוס, ישירות מהיזמים ובלי תוספת מחיר לרוכש. אפשר לקבל מבחר מותאם לתקציב ולתאם סיור בנכס או סיור וירטואלי."
+  },
+  "contentBlocks": [
+    {
+      "_key": "lp2ujc0mqajw",
+      "_type": "landingIntroBlock",
+      "image": {
+        "alt": "מתחם מגורים חדש בפאפוס",
+        "_type": "image",
+        "asset": {
+          "_ref": "image-2ec5103ee98bec7fd0b4336f5edb6d663f719fd0-850x850-jpg",
+          "_type": "reference"
+        }
+      },
+      "title": "נדל\"ן בפאפוס, וילות ודירות בפרויקטים חדשים",
+      "subtitle": "פאפוס",
+      "buttonLabel": "לצפייה בזמינות ובמחירים",
+      "description": "פאפוס היא המחוז שבו מרוכז החלק הגדול של ההיצע החדש שאנחנו מלווים. היא שקטה יותר מלימסול, מחירי הפתיחה בה נמוכים יותר, ובה נמצא רוב ההיצע של בתים פרטיים עם בריכה."
+    },
+    {
+      "_key": "am20lkyt9wej",
+      "_type": "landingTextStart",
+      "content": [
+        {
+          "_key": "gzzr5hramzfi",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "b6eecoawq22p",
+              "text": "נדל\"ן בפאפוס מתנהג אחרת מזה שבלימסול. במקום מגדלים לאורך החוף, רוב הבנייה כאן נמוכה, מתחמים בני כמה קומות עם בריכה משותפת וגינה, ובתים פרטיים על מגרש. זה גם המחוז שבו מרוכזים רוב הפרויקטים החדשים שאנחנו מלווים, והמבחר בו רחב הרבה יותר. גם רמת המחירים כאן נמוכה יותר, וזה נכון גם למחיר הפתיחה של דירה חדשה וגם לבית פרטי על מגרש.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "19u42w4qk8jy",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "r7ji22bn4mjr",
+              "text": "פאפוס פרושה על שטח גדול, ולכן שם המחוז לבדו לא אומר הרבה. העיר עצמה, שכוללת את קאטו פאפוס לאורך החוף, היא מרכז אחד. מצפון לה נמצאים כלורקה ופייה, ובהמשך קורל ביי, ושם מרוכז רוב ההיצע של בתים פרטיים. בהמשך הכביש נמצאת פוליס, שקטה עוד יותר ורחוקה יותר מהשירותים. לכל אזור אופי ורמת מחירים משלו, ולמי שמגיע לסיור כדאי להקצות יום שלם, כי המרחק בין הקצה הצפוני של המחוז לעיר עצמה מורגש.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "z1fqpuro0a15",
+      "_type": "landingProjectsBlock",
+      "title": "פרויקטים חדשים בפאפוס",
+      "filterCity": "Paphos"
+    },
+    {
+      "_key": "1eb3vevmhs2t",
+      "_type": "landingTextFirst",
+      "content": [
+        {
+          "_key": "4mmglni9eva7",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "ilx5zf1w9i9d",
+              "text": "למה מחפשים בית פרטי דווקא בפאפוס",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "3fbec9457yp0",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "8ueoplokf6kq",
+              "text": "רוב ההיצע של בתים פרטיים במחוז נמצא בפייה ובסביבתה, ובקורל ביי ובכלורקה הסמוכות, לרוב על מגרש עם בריכה פרטית וגינה. את המבחר המלא ואת ההבדל בין האזורים אפשר לראות בדף הווילות בפאפוס.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "00f108i0dhah",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "bah0igbtftj5",
+              "text": "הצד של הדירות במחוז",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "6rts0nm1naps",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "puyxj217j7ew",
+              "text": "דירות בפאפוס נבנות בעיקר במתחמים בני כמה קומות, בעיר עצמה ובאזורים הסמוכים לה. את הרשימה המלאה ואת מה שכדאי לבדוק במתחם אפשר לראות בדף הדירות בפאפוס.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "w2dt9k17rz4e",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "g2j6422q0hlv",
+              "text": "החיים בפאפוס",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "kspadjmjpgi6",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "cma0ocb3ed6s",
+              "text": "פאפוס קטנה מלימסול ומתנהלת בקצב אחר. יש בה שדה תעופה בינלאומי משלה ומרחקי נסיעה קצרים בתוך המחוז. מי שמחפש בית שני לחופשות ולתקופות ארוכות בוחר בה לא פעם דווקא בגלל השקט.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    },
+    {
+      "_key": "zmpjmth9c4eb",
+      "_type": "landingFaqBlock",
+      "title": "שאלות נפוצות על פאפוס",
+      "faq": {
+        "_type": "accordionBlock",
+        "items": [
+          {
+            "_key": "7g0yhoot70mt",
+            "answer": [
+              {
+                "_key": "ti7jty0v4whd",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "p9k5tf6y344o",
+                    "text": "רוכשים מחו\"ל שמחפשים בית שני, פורשים שעוברים לגור באי, ומשפחות שמחפשות בית פרטי עם בריכה במרחק נסיעה קצר מהעיר. גם הביקוש להשכרת נופש קיים במחוז, והוא משפיע על סוגי הנכסים שנבנים בו.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "מי קונה נכס בפאפוס?"
+          },
+          {
+            "_key": "2mvbnhhl14qe",
+            "answer": [
+              {
+                "_key": "c79p1bcqxyrh",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "8pdleu1u825t",
+                    "text": "בעיר עצמה ובקאטו פאפוס נמצאים המתחמים הקרובים לים ולטיילת, והשירותים בהישג הליכה. באזורים שמצפון, כלורקה, פייה וקורל ביי, הבנייה נמוכה יותר ורוב ההיצע הוא בתים פרטיים, אבל מכונית נדרשת שם לכל דבר.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "מה ההבדל בין העיר פאפוס לאזורים שמצפון לה?"
+          },
+          {
+            "_key": "n687uhd9kbsf",
+            "answer": [
+              {
+                "_key": "b7hr3niolcbb",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "0s0c61inwbq4",
+                    "text": "מחירי הפתיחה בפאפוס הם הנמוכים מבין שני המחוזות שאנחנו מלווים, אך הטווח רחב מאוד, מדירה במתחם בעיר ועד בית פרטי על מגרש גדול עם נוף לים. את הטווח של פרויקט מסוים אפשר לקבל בפנייה.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "כמה עולה נכס בפאפוס?"
+          },
+          {
+            "_key": "4rg6yrhfyn1j",
+            "answer": [
+              {
+                "_key": "pqcalt4lp6jq",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "guz1790iy6od",
+                    "text": "לפאפוס יש שדה תעופה בינלאומי משלה, ובנוסף אפשר לנחות בלרנקה ולהמשיך בנסיעה. את לוח הטיסות העדכני כדאי לבדוק מול חברות התעופה.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "יש טיסות ישירות לפאפוס?"
+          },
+          {
+            "_key": "2t0dvifxbimo",
+            "answer": [
+              {
+                "_key": "6jy98su34524",
+                "_type": "block",
+                "style": "normal",
+                "children": [
+                  {
+                    "_key": "rx0z6iow1qfn",
+                    "text": "כן, וזה נפוץ בקרב בעלי בית שני. יש חברות ניהול מקומיות שמטפלות בהשכרה ובתחזוקה. אנחנו לא מפעילים נכסים להשכרה, ולכן את התנאים כדאי לבדוק מולן ישירות.",
+                    "_type": "span",
+                    "marks": []
+                  }
+                ],
+                "markDefs": []
+              }
+            ],
+            "question": "אפשר להשכיר את הנכס בפאפוס כשלא משתמשים בו?"
+          }
+        ]
+      }
+    },
+    {
+      "_key": "wvw96o16ks98",
+      "_type": "landingTextSecond",
+      "content": [
+        {
+          "_key": "qql0dln53ayp",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "7e5mzvmjzv7o",
+              "text": "היזמים הפעילים במחוז",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "wx8hghc5zcbl",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "eibnvvhpuxw9",
+              "text": "בין היזמים שבונים בפאפוס נמצאים ⁨Aristo Developers⁩, ⁨Leptos Estates⁩, ⁨Pafilia⁩ ו-⁨Korantina Homes⁩. אנחנו עובדים מולם ישירות, ומציגים את הזמינות ואת המחירים כפי שהם מגיעים מהיזם.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "zu61lw31cmu6",
+          "_type": "block",
+          "style": "h2",
+          "children": [
+            {
+              "_key": "i5ujtjddvuwu",
+              "text": "איך בונים יום סיור במחוז",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        },
+        {
+          "_key": "0rddg4yzlock",
+          "_type": "block",
+          "style": "normal",
+          "children": [
+            {
+              "_key": "ep88pylvbweg",
+              "text": "המרחקים בתוך מחוז פאפוס גדולים, ולכן כדאי לבחור מראש שני אזורים ולא יותר. אפשר לקבל את הפרויקטים שבהם עם תוכניות, מחירון ומועדי מסירה, ולסדר אותם למסלול נסיעה אחד ליום ביקור אחד.",
+              "_type": "span",
+              "marks": []
+            }
+          ],
+          "markDefs": []
+        }
+      ]
+    }
+  ],
+  "relatedLandingPages": [
+    "paphos/apartments",
+    "paphos/villas",
+    "property-prices-cyprus",
+    "real-estate-cyprus"
+  ],
+  "translationGroupSlugEn": null,
+  "parentSlug": null,
+  "review": "pending"
+}

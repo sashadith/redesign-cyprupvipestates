@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { PortableText } from "@portabletext/react";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, localeDir, type Locale } from "@/lib/locale";
 import { urlFor } from "@/sanity/sanity.client";
 import { projectsStrings } from "@/app/[lang]/projects/projectsI18n";
 import LandingProjectsGrid from "./LandingProjectsGrid";
@@ -98,6 +98,9 @@ export default function LandingBody({
   const texts = blocks.filter((b) => LANDING_TEXT.has(b?._type));
 
   const s = projectsStrings(lang);
+  const isRtl = localeDir(lang) === "rtl";
+  const prevGlyph = isRtl ? "›" : "‹";
+  const nextGlyph = isRtl ? "‹" : "›";
 
   // Same precedence the live block uses: a hand-pinned list wins over the
   // live query, and an absent field is an empty list rather than a crash.
@@ -176,9 +179,9 @@ export default function LandingBody({
               {isPaginated && (
                 <nav className={pagerStyles.pager} aria-label="Results pagination">
                   {currentPage > 1 ? (
-                    <Link href={hrefFor(currentPage - 1)} className={pagerStyles.pagerLink} aria-label="Previous">‹</Link>
+                    <Link href={hrefFor(currentPage - 1)} className={pagerStyles.pagerLink} aria-label="Previous">{prevGlyph}</Link>
                   ) : (
-                    <span className={`${pagerStyles.pagerLink} ${pagerStyles.pagerLinkDisabled}`} aria-hidden="true">‹</span>
+                    <span className={`${pagerStyles.pagerLink} ${pagerStyles.pagerLinkDisabled}`} aria-hidden="true">{prevGlyph}</span>
                   )}
                   {pageWindow(currentPage, totalPages!).map((it, i) =>
                     it === "…" ? (
@@ -195,9 +198,9 @@ export default function LandingBody({
                     ),
                   )}
                   {currentPage < totalPages! ? (
-                    <Link href={hrefFor(currentPage + 1)} className={pagerStyles.pagerLink} aria-label="Next">›</Link>
+                    <Link href={hrefFor(currentPage + 1)} className={pagerStyles.pagerLink} aria-label="Next">{nextGlyph}</Link>
                   ) : (
-                    <span className={`${pagerStyles.pagerLink} ${pagerStyles.pagerLinkDisabled}`} aria-hidden="true">›</span>
+                    <span className={`${pagerStyles.pagerLink} ${pagerStyles.pagerLinkDisabled}`} aria-hidden="true">{nextGlyph}</span>
                   )}
                 </nav>
               )}
@@ -245,7 +248,7 @@ export default function LandingBody({
                 so the wording stays in one place. */}
             {relatedLinks.length > 0 && (
               <div className="pl__wrap pl-links">
-                <h2 className="pl__h2">{HEADINGS.related?.[lang] ?? HEADINGS.related.en}</h2>
+                <h2 className="pl__h2">{HEADINGS.related?.[lang as Locale] ?? HEADINGS.related.en}</h2>
                 <ul className="pl-links__list">
                   {relatedLinks.map((l) => (
                     <li key={l.href}>

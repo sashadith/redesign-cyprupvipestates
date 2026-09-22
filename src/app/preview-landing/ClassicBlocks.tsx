@@ -1,5 +1,6 @@
 import React from "react";
 import { renderInsightsBlock } from "@/app/preview-insights/insightsBlocks";
+import type { Locale } from "@/lib/locale";
 import Form from "@/app/preview-home/sections/Form";
 import HowWeWorkSection from "@/app/preview-home/sections/HowWeWork";
 import FaqSection from "@/app/preview-home/sections/Faq";
@@ -87,10 +88,13 @@ export function renderClassicBlock(block: any, lang: string, ctaHref: string, ti
     }
 
     case "bulletsBlock":
-      return <HowWeWorkSection block={asStepsBlock(block.title, BULLETS_ICONS, BULLETS_TEXT[lang] ?? BULLETS_TEXT.en) as any} variant="facts" />;
+      // lang is what selects the localized gold accent in HowWeWork's title —
+      // without it the section defaults to "en" and every non-English landing
+      // page renders its H2 with no highlight at all (WP3 Pass B #7).
+      return <HowWeWorkSection block={asStepsBlock(block.title, BULLETS_ICONS, BULLETS_TEXT[lang as Locale] ?? BULLETS_TEXT.en) as any} variant="facts" lang={lang} />;
 
     case "howWeWorkBlock":
-      return <HowWeWorkSection block={asStepsBlock(block.title, STEPS_ICONS, STEPS_TEXT[lang] ?? STEPS_TEXT.en) as any} />;
+      return <HowWeWorkSection block={asStepsBlock(block.title, STEPS_ICONS, STEPS_TEXT[lang as Locale] ?? STEPS_TEXT.en) as any} lang={lang} />;
 
     case "buttonBlock":
       return block.buttonText ? (
@@ -160,7 +164,7 @@ export function renderClassicBlock(block: any, lang: string, ctaHref: string, ti
       if (!items.length) return null;
       // titleOverride is the heading lifted out of the prose block above; the
       // block's own title is empty on nearly every one of these pages.
-      const faqTitle = titleOverride || block.title || FAQ_TITLE[lang] || FAQ_TITLE.en;
+      const faqTitle = titleOverride || block.title || FAQ_TITLE[lang as Locale] || FAQ_TITLE.en;
       return <FaqSection section={{ faqTitle, faq: { faq: { items } } } as any} lang={lang} />;
     }
 

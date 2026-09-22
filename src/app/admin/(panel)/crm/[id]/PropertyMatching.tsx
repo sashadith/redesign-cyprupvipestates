@@ -7,6 +7,7 @@ import { normalizeRef } from "@/lib/unitRef";
 import ComposeEmailModal from "./ComposeEmailModal";
 import { PRESENTATION_EMAIL_TEMPLATE } from "@/lib/crm/presentationMessages";
 import { PROPERTY_VALUES } from "@/app/components/qualifierFields";
+import { PUBLIC_LOCALES, isPublicLocale } from "@/lib/locale";
 
 type LeadBrief = {
   firstName: string;
@@ -19,8 +20,7 @@ type LeadBrief = {
   lastMatchFilters: MatchFilters | null;
 };
 
-const LOCALES = ["en", "de", "pl", "ru"] as const;
-type Locale = (typeof LOCALES)[number];
+type Locale = (typeof PUBLIC_LOCALES)[number];
 const PROPERTY_TYPES = PROPERTY_VALUES;
 const BED_OPTIONS = [0, 1, 2, 3, 4, 5]; // 5 = "5+"
 
@@ -49,7 +49,7 @@ export default function PropertyMatching({
   users: { id: string; name: string }[];
   sendPresentationEmailAction: (opts: { subject: string; body: string; leadReacted?: boolean; presentationToken?: string }) => Promise<{ ok?: string; error?: string }>;
 }) {
-  const initialLocale: Locale = (LOCALES as readonly string[]).includes(lead.languagePreference ?? "") ? (lead.languagePreference as Locale) : "en";
+  const initialLocale: Locale = isPublicLocale(lead.languagePreference ?? "") ? (lead.languagePreference as Locale) : "en";
 
   // Last-used filters (auto-saved per lead, see saveMatchFiltersAction below)
   // win over the generic lead-profile defaults, so reopening a lead shows
@@ -504,7 +504,7 @@ export default function PropertyMatching({
             <div>
               <label className={label}>Locale</label>
               <select value={locale} onChange={(e) => setLocale(e.target.value as Locale)} className={`${field} w-full`}>
-                {LOCALES.map((l) => <option key={l} value={l}>{l.toUpperCase()}</option>)}
+                {PUBLIC_LOCALES.map((l) => <option key={l} value={l}>{l.toUpperCase()}</option>)}
               </select>
             </div>
             <div className="sm:col-span-2 lg:col-span-2">

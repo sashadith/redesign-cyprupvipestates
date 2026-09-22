@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { atSize } from "./imageSize";
 import { developmentCopy } from "@/lib/developmentCopy";
+import { useIsRtl } from "@/app/components/useIsRtl";
 
 /* Shared fullscreen image viewer: prev/next, keyboard, counter, and a clickable
    thumbnail strip that keeps the active thumb centred (clamping at the ends).
@@ -16,6 +17,7 @@ export default function Lightbox({
   images: string[]; index: number | null; onClose: () => void; onIndex: (i: number) => void; alt?: string; lang?: string;
 }) {
   const t = developmentCopy(lang);
+  const isRtl = useIsRtl();
   const n = images.length;
   const activeRef = useRef<HTMLButtonElement>(null);
   const lastWheel = useRef(0);
@@ -30,8 +32,10 @@ export default function Lightbox({
     document.body.style.overflow = "hidden";
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
-      if (e.key === "ArrowRight") onIndex((index + 1) % n);
-      if (e.key === "ArrowLeft") onIndex((index - 1 + n) % n);
+      const nextKey = isRtl ? "ArrowLeft" : "ArrowRight";
+      const prevKey = isRtl ? "ArrowRight" : "ArrowLeft";
+      if (e.key === nextKey) onIndex((index + 1) % n);
+      if (e.key === prevKey) onIndex((index - 1 + n) % n);
     };
     // switch images by scrolling — throttled so one gesture = one image
     const onWheel = (e: WheelEvent) => {
@@ -51,7 +55,7 @@ export default function Lightbox({
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("wheel", onWheel);
     };
-  }, [index, n, onClose, onIndex]);
+  }, [index, n, onClose, onIndex, isRtl]);
 
   // keep the active thumbnail centred; the browser clamps at the strip's ends,
   // so it sits left at the start, centred in the middle, right at the end
@@ -92,9 +96,9 @@ export default function Lightbox({
       <button className="pp-lb__close" type="button" aria-label={t.close} onClick={closeSelf}>✕</button>
       <span className="pp-lb__count">{index + 1} / {n}</span>
       <div className="pp-lb__stage">
-        {n > 1 && <button className="pp-lb__nav pp-lb__nav--prev" type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label={t.previous}>‹</button>}
+        {n > 1 && <button className="pp-lb__nav pp-lb__nav--prev" type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label={t.previous}>{isRtl ? "›" : "‹"}</button>}
         <img className="pp-lb__img" src={atSize(images[index], "large")} alt={alt} onClick={(e) => e.stopPropagation()} />
-        {n > 1 && <button className="pp-lb__nav pp-lb__nav--next" type="button" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label={t.next}>›</button>}
+        {n > 1 && <button className="pp-lb__nav pp-lb__nav--next" type="button" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label={t.next}>{isRtl ? "‹" : "›"}</button>}
       </div>
       {n > 1 && (
         <div className="pp-lb__thumbs" onClick={(e) => e.stopPropagation()}>

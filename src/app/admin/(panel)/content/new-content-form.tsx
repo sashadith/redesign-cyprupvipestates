@@ -1,6 +1,7 @@
 "use client";
 import { useFormState, useFormStatus } from "react-dom";
 import SlugField from "@/app/admin/SlugField";
+import { LOCALES, LOCALE_LABELS } from "@/lib/locale";
 
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm text-[#111827] outline-none focus:border-[#1B4B43]";
 
@@ -33,7 +34,7 @@ export default function NewContentForm({
       <div className="max-w-[10rem]">
         <label className="block text-sm mb-1">Language</label>
         <select name="language" defaultValue="en" className={input}>
-          {["en", "de", "pl", "ru"].map((l) => <option key={l} value={l}>{l.toUpperCase()}</option>)}
+          {LOCALES.map((l) => <option key={l} value={l}>{LOCALE_LABELS[l].name}</option>)}
         </select>
       </div>
       <div>

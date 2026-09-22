@@ -10,6 +10,7 @@ import ProjectsExplorer, { type ProjectCardData, type MapMarker } from "./Projec
 import Nav from "../preview-home/sections/Nav";
 import Footer from "../preview-home/sections/Footer";
 import { resolveCompletionYear } from "@/lib/text";
+import { isLocale } from "@/lib/locale";
 
 /* Cyprus VIP Estates — Projects search (isolated redesign preview, EN).
    Map-centric explorer: URL-driven filters → server fetch → list + live map. The
@@ -36,8 +37,8 @@ export default async function ProjectsPreview({ searchParams }: { searchParams: 
   const page = Math.max(1, Number(searchParams.page) || 1);
   // Active site locale for UI strings like the map gesture hint (data still EN).
   // On the real [lang] route this comes from the route; the isolated preview
-  // reads ?lang= so all four locales (en/de/pl/ru) are demonstrable.
-  const locale = ["en", "de", "pl", "ru"].includes(searchParams.lang || "") ? (searchParams.lang as string) : "en";
+  // reads ?lang= so every locale is demonstrable.
+  const locale = isLocale(searchParams.lang || "") ? (searchParams.lang as string) : "en";
   const filters = {
     city: searchParams.city || "",
     propertyType: searchParams.propertyType || "",

@@ -14,7 +14,10 @@ import { developmentCopy } from "@/lib/developmentCopy";
    fallback for anything not yet synced. */
 
 const arr = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
-const statusLabel = (s: string, lang: string) => developmentCopy(lang).unitStatus[(s === "sold" ? "sold" : s === "reserved" ? "reserved" : "available") as "available" | "sold" | "reserved"];
+// For `he` the VM keeps the English label: UnitsView's StatusPill / status column
+// localize it at render time via heFeedLabel() (feminine forms for a יחידה), so a
+// pre-resolved Hebrew label here would bypass that mapping (Task 5 review).
+const statusLabel = (s: string, lang: string) => developmentCopy(lang === "he" ? "en" : lang).unitStatus[(s === "sold" ? "sold" : s === "reserved" ? "reserved" : "available") as "available" | "sold" | "reserved"];
 
 type Row = Development & { units: DevelopmentUnit[]; override: DevelopmentOverride | null };
 
@@ -91,8 +94,10 @@ export function mapRowToVM(d: Row, lang: string = "en"): DbProjectVM {
     status: d.status ?? "", category: d.category ?? undefined,
     stage: ov?.stage || d.stage || undefined, completion: resolveRelativeCompletion(ov?.completion || d.completion), energy: ov?.energy || d.energy || "",
     priceFrom, priceTo, currency: d.currency ?? "EUR",
-    description: ({ en: ov?.descriptionEN, de: ov?.descriptionDE, pl: ov?.descriptionPL, ru: ov?.descriptionRU } as Record<string, string | null | undefined>)[lang] || ov?.descriptionEN || d.description || "",
-    promoBlocks: (({ en: ov?.promoBlocksEN, de: ov?.promoBlocksDE, pl: ov?.promoBlocksPL, ru: ov?.promoBlocksRU } as Record<string, unknown>)[lang] || ov?.promoBlocksEN || []) as any[],
+    description: ({ en: ov?.descriptionEN, de: ov?.descriptionDE, pl: ov?.descriptionPL, ru: ov?.descriptionRU, he: ov?.descriptionHE } as Record<string, string | null | undefined>)[lang] || ov?.descriptionEN || d.description || "",
+    // Same EN fallback as the description above: an empty promoBlocksHE shows
+    // the EN block (translation-queue support for this field is a follow-up).
+    promoBlocks: (({ en: ov?.promoBlocksEN, de: ov?.promoBlocksDE, pl: ov?.promoBlocksPL, ru: ov?.promoBlocksRU, he: ov?.promoBlocksHE } as Record<string, unknown>)[lang] || ov?.promoBlocksEN || []) as any[],
     gallery: finalGallery, plans: arr<string>(d.plans), renders: [], amenities,
     extraFacts: arr<{ label: string; value: string }>(d.extraFacts), heroVideo: ov?.heroVideo || undefined,
     vatApplies: ov?.vatApplies ?? null,

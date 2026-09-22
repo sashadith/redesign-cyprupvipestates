@@ -7,6 +7,9 @@ import Link from "next/link";
 import { ButtonModal } from "../ButtonModal/ButtonModal";
 import { ImageAlt } from "@/types/project";
 import { blurProps } from "@/lib/imageBlur";
+import { fmtPrice } from "@/lib/locale";
+import Bdi from "@/app/components/Bdi";
+import { blogSlideCopy } from "./BlogSlide.copy";
 
 type Props = {
   image: ImageAlt;
@@ -63,27 +66,11 @@ const BlogSlide: FC<Props> = ({
           <p className={styles.title}>{title}</p>
           <p className={styles.price}>
             {price == null
-              ? (lang === "en"
-                  ? "Price on request"
-                  : lang === "de"
-                    ? "Preis auf Anfrage"
-                    : lang === "pl"
-                      ? "Cena na życzenie"
-                      : lang === "ru"
-                        ? "Цена по запросу"
-                        : "Price on request")
+              ? blogSlideCopy(lang).priceOnRequest
               : (<>
-                  {lang === "en"
-                    ? "Price from"
-                    : lang === "de"
-                      ? "Preis ab"
-                      : lang === "pl"
-                        ? "Cena od"
-                        : lang === "ru"
-                          ? "Цена от"
-                          : "Price from"}
+                  {blogSlideCopy(lang).priceFrom}
                   &nbsp;
-                  {price.toLocaleString()} €
+                  <Bdi ltr>{fmtPrice(price, lang)}</Bdi>
                 </>)}
           </p>
           {linkLabel && linkDestination && (

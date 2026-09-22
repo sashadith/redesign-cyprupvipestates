@@ -266,12 +266,12 @@
   font-size: 15px;
   background: #fff;
   color: #2a3b3b;
-  text-align: right;
+  text-align: end;
 }
 
 .rangeFieldUnit {
   position: absolute;
-  right: 14px;
+  inset-inline-end: 14px;
   top: 50%;
   transform: translateY(-50%);
   font-size: 13px;

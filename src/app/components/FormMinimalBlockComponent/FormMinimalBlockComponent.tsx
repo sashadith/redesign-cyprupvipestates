@@ -21,6 +21,7 @@ import Link from "next/link";
 import "../formFeedback.css";
 import { formSuccessText, formErrorText } from "../formFeedbackCopy";
 import { consentCopy } from "../consentCopy";
+import { formMinimalCopy } from "./FormMinimalBlockComponent.copy";
 
 export type FormData = {
   name: string;
@@ -139,15 +140,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
 
     preferredContact: Yup.string()
       .oneOf(["phone", "whatsapp", "email"])
-      .required(
-        lang === "ru"
-          ? "Как с вами лучше связаться?"
-          : lang === "de"
-            ? "Wie können wir Sie am besten kontaktieren?"
-            : lang === "pl"
-              ? "Wybierz preferowaną formę kontaktu"
-              : "What’s the best way to contact you?",
-      ),
+      .required(formMinimalCopy(lang).contactMethodRequired),
 
     agreedToPolicy: Yup.boolean()
       .required(`${dataForm.validationAgreementRequired}`)
@@ -319,14 +312,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                       htmlFor={`${uid}-surname`}
                       className={`${styles.label} ${isSurnameFilled ? styles.filled : ""}`}
                     >
-                      {(dataForm as any).inputSurname ??
-                        (lang === "ru"
-                          ? "Фамилия"
-                          : lang === "de"
-                            ? "Nachname"
-                            : lang === "pl"
-                              ? "Nazwisko"
-                              : "Surname")}
+                      {(dataForm as any).inputSurname ?? formMinimalCopy(lang).surnameLabel}
                     </label>
 
                     <Field name="surname">
@@ -420,13 +406,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
 
                   <fieldset className={`${styles.inputWrapper} min-w-0`}>
                     <legend className={styles.radioGroupLabel}>
-                      {lang === "ru"
-                        ? "Как с вами лучше связаться?"
-                        : lang === "de"
-                          ? "Wie können wir Sie am besten kontaktieren?"
-                          : lang === "pl"
-                            ? "W jaki sposób najlepiej się z Tobą skontaktować?"
-                            : "What’s the best way to contact you?"}
+                      {formMinimalCopy(lang).contactMethodLegend}
                     </legend>
 
                     <div className={styles.radioGroupWrapper}>
@@ -436,15 +416,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                           name="preferredContact"
                           value="phone"
                         />
-                        <span>
-                          {lang === "ru"
-                            ? "Телефон"
-                            : lang === "de"
-                              ? "Anruf"
-                              : lang === "pl"
-                                ? "Telefonicznie"
-                                : "Phone call"}
-                        </span>
+                        <span>{formMinimalCopy(lang).phoneCallLabel}</span>
                       </label>
 
                       <label className={styles.radioOption}>
@@ -462,13 +434,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                           name="preferredContact"
                           value="email"
                         />
-                        <span>
-                          {lang === "de"
-                            ? "E-Mail"
-                            : lang === "pl"
-                              ? "E-mail"
-                              : "Email"}
-                        </span>
+                        <span>{formMinimalCopy(lang).emailLabel}</span>
                       </label>
                     </div>
 

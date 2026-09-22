@@ -1,5 +1,6 @@
 import { google } from "googleapis";
 import type { Locale } from "@prisma/client";
+import { localeFromPath } from "@/lib/locale";
 
 // Google Search Console API client — server-to-server via a service account
 // (no OAuth/user consent flow; the service account is added as a GSC user
@@ -43,24 +44,23 @@ async function getSearchConsoleClient() {
 
 // Derives our own locale from GSC's raw page path — matches the same convention
 // used throughout this codebase and the earlier manual-export analysis:
-// /de/... -> de, /pl/... -> pl, /ru/... -> ru, anything else -> en (default,
-// unprefixed locale).
+// /de/... -> de, /pl/... -> pl, /ru/... -> ru, /he/... -> he, anything else ->
+// en (default, unprefixed locale).
 //
-// Bare locale roots ("/de", "/pl", "/ru", no trailing slash — the localised
-// homepages) need an exact-match check of their own: the prefix checks below
-// require a following "/", so a bare root fell through to "en" for every sync
-// since this table existed. 2026-09-14 fix — see urlCanonical.ts's
-// localeOfPath() for the full incident writeup (found 2026-08-23, worked
-// around there rather than here at the time) and
-// scripts/backfill-homepage-locale.mjs for the one-time relabel of the ~600
-// rows this had already written as locale:"en". localeOfPath() itself now
-// just delegates here; its own bare-root special case is redundant but left
-// in place; removing it is a separate cleanup, not required for correctness.
+// A BARE locale root ("/de", no trailing slash — the localised homepage)
+// derives as its locale too. 2026-09-14 fix (#49): the prefix check used to
+// require a following "/", so every bare root fell through to "en" for as
+// long as SearchMetric existed; scripts/backfill-homepage-locale.mjs relabelled
+// the ~600 rows written that way once, so the stored series and this
+// derivation now agree. (The Hebrew branch had kept the narrower contract on
+// purpose to avoid forking those series — obsolete now that the backfill ran.)
+//
+// Delegates to `localeFromPath` (lib/locale.ts): the same derivation that
+// `localeOfPath` in seo/urlCanonical.ts uses for every locale::path JOIN key,
+// parsed against the full `LOCALES` set — a `/he/` GSC row is Hebrew even
+// while `he` is gated from PUBLIC_LOCALES. Single source, no hard-coded list.
 export function deriveLocale(pagePath: string): Locale {
-  if (pagePath === "/de" || pagePath.startsWith("/de/")) return "de" as Locale;
-  if (pagePath === "/pl" || pagePath.startsWith("/pl/")) return "pl" as Locale;
-  if (pagePath === "/ru" || pagePath.startsWith("/ru/")) return "ru" as Locale;
-  return "en" as Locale;
+  return localeFromPath(pagePath) as Locale;
 }
 
 // GSC returns the page dimension as a full URL — strip the site origin to get

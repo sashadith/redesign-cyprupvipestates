@@ -6,6 +6,8 @@ import { RichText } from "@/app/components/RichText/RichText";
 import type { FaqSection } from "@/types/homepage";
 import { homeStrings } from "./homeI18n";
 import { highlightAccents } from "./highlightAccents";
+import type { Locale } from "@/lib/locale";
+import { bcp47For } from "@/lib/locale";
 
 /* FAQ — dark section, editorial split: heading/context on the left (sticky),
    an accordion of question/answer items on the right. Reuses the original
@@ -14,15 +16,16 @@ import { highlightAccents } from "./highlightAccents";
 // DE/PL/RU (2026-09-07 fix): see highlightAccents.tsx — the split() below
 // only ever matched literal English words, so translated titles rendered
 // with no highlight at all.
-const ACCENTS_BY_LANG: Record<string, string[]> = {
+const ACCENTS_BY_LANG: Partial<Record<Locale, string[]>> = {
   de: ["Fragen"],
   pl: ["pytania"],
   ru: ["вопросы"],
+  he: ["שאלות"], // REVIEW(he); Hebrew H2: "שאלות נפוצות על נדל\"ן בקפריסין"
 };
 
 const renderTitle = (title: string, lang: string) => {
-  if (lang !== "en" && ACCENTS_BY_LANG[lang]) {
-    return highlightAccents(title, ACCENTS_BY_LANG[lang]);
+  if (lang !== "en" && ACCENTS_BY_LANG[lang as Locale]) {
+    return highlightAccents(title, ACCENTS_BY_LANG[lang as Locale]!);
   }
   return title.split(/(Questions|Cyprus)/i).map((part, i) =>
     /^(questions|cyprus)$/i.test(part) ? (
@@ -59,6 +62,7 @@ export default function Faq({ section, lang = "en" }: { section: FaqSection; lan
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
+    inLanguage: bcp47For(lang),
     mainEntity: items.map((it) => ({
       "@type": "Question",
       name: it.question,

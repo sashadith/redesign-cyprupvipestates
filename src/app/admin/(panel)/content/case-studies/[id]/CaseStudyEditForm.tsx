@@ -19,7 +19,7 @@ const DETAIL_FIELDS = [
 ] as const;
 
 export default function CaseStudyEditForm({
-  cs: c,
+  cs: c, dir = "ltr", language,
 }: {
   cs: {
     id: string; title: string; slug: string; fullTitle: string | null; excerpt: string | null;
@@ -29,17 +29,19 @@ export default function CaseStudyEditForm({
     caseDetails: Record<string, any>;
     mainContent: any[];
   };
+  dir?: "ltr" | "rtl";
+  language?: string;
 }) {
   const [state, formAction] = useFormState(saveCaseStudyAll.bind(null, c.id), null);
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} dir={dir} className="space-y-5">
       <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-4">
         <div>
           <label className="block text-sm mb-1">Title</label>
           <input name="title" defaultValue={c.title} className={input} />
         </div>
-        <SlugField initialValue={c.slug} />
+        <SlugField initialValue={c.slug} language={language} />
         <div>
           <label className="block text-sm mb-1">Full title</label>
           <input name="fullTitle" defaultValue={c.fullTitle ?? ""} className={input} />
@@ -61,7 +63,7 @@ export default function CaseStudyEditForm({
           </div>
           <div>
             <label className="block text-sm mb-1">Publish at <span className="text-[#9CA3AF]">(DE)</span></label>
-            <input type="datetime-local" name="scheduledAt" defaultValue={c.scheduledAtInput} className={input} />
+            <input type="datetime-local" dir="ltr" name="scheduledAt" defaultValue={c.scheduledAtInput} className={input} />
           </div>
         </div>
       </div>
@@ -96,13 +98,13 @@ export default function CaseStudyEditForm({
       <div className="space-y-5">
         <h2 className="text-sm font-semibold">Case details (rich sections)</h2>
         {DETAIL_FIELDS.map(([fieldKey, fieldLabel]) => (
-          <PtEditor key={fieldKey} name={`caseDetail_${fieldKey}`} label={fieldLabel} initial={c.caseDetails?.[fieldKey]} />
+          <PtEditor key={fieldKey} name={`caseDetail_${fieldKey}`} label={fieldLabel} initial={c.caseDetails?.[fieldKey]} dir={dir} />
         ))}
       </div>
 
       <div>
         <h2 className="text-sm font-semibold mb-2">Main body</h2>
-        <BlockEditor kind="caseStudy" initialBlocks={c.mainContent} />
+        <BlockEditor kind="caseStudy" initialBlocks={c.mainContent} dir={dir} />
       </div>
 
       <SaveButton result={state} />

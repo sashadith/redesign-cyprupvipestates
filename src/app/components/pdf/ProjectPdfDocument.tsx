@@ -2,6 +2,7 @@
 
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { Project } from "@/types/project";
+import { projectPdfDocumentCopy } from "./ProjectPdfDocument.copy";
 
 type Props = {
   project: Project;
@@ -48,15 +49,7 @@ export default function ProjectPdfDocument({ project, lang }: Props) {
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            {lang === "ru"
-              ? "Основные характеристики"
-              : lang === "pl"
-                ? "Najważniejsze informacje"
-                : lang === "de"
-                  ? "Wichtige Informationen"
-                  : "Key Features"}
-          </Text>
+          <Text style={styles.sectionTitle}>{projectPdfDocumentCopy(lang).keyFeatures}</Text>
 
           {features?.price && (
             <Text style={styles.row}>Price: €{features.price}</Text>
@@ -87,15 +80,7 @@ export default function ProjectPdfDocument({ project, lang }: Props) {
 
         {project.description && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>
-              {lang === "ru"
-                ? "Описание"
-                : lang === "pl"
-                  ? "Opis"
-                  : lang === "de"
-                    ? "Beschreibung"
-                    : "Description"}
-            </Text>
+            <Text style={styles.sectionTitle}>{projectPdfDocumentCopy(lang).description}</Text>
 
             <Text>{project.description}</Text>
           </View>

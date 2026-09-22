@@ -15,6 +15,8 @@ import { RichText } from "../RichText/RichText";
 import { ReviewFull } from "@/types/blog";
 import { urlFor } from "@/sanity/sanity.client";
 import FadeUpAnimate from "../FadeUpAnimate/FadeUpAnimate";
+import { localeDir } from "@/lib/locale";
+import { sliderReviewsFullCopy } from "./SliderReviewsFull.copy";
 
 type Props = {
   reviews: ReviewFull[];
@@ -87,13 +89,13 @@ const SliderReviewsFull: FC<Props> = ({ reviews, lang }) => {
 
   const handlePrevious = () => {
     setCurrentPhotoIndex((prevIndex) =>
-      prevIndex === 0 ? reviews.length - 1 : prevIndex - 1
+      prevIndex === 0 ? reviews.length - 1 : prevIndex - 1,
     );
   };
 
   const handleNext = () => {
     setCurrentPhotoIndex((prevIndex) =>
-      prevIndex === reviews.length - 1 ? 0 : prevIndex + 1
+      prevIndex === reviews.length - 1 ? 0 : prevIndex + 1,
     );
   };
 
@@ -115,6 +117,7 @@ const SliderReviewsFull: FC<Props> = ({ reviews, lang }) => {
   return (
     <div className={styles.sliderDiplomas}>
       <Swiper
+        dir={localeDir(lang)}
         modules={[Pagination]}
         pagination={{ clickable: true }}
         spaceBetween={20}
@@ -180,15 +183,7 @@ const SliderReviewsFull: FC<Props> = ({ reviews, lang }) => {
                     <PortableText value={previewBlocks} components={RichText} />
                   </div>
                   <button className={styles.buttonReadMore}>
-                    {lang === "de"
-                      ? "Ganze Bewertung lesen"
-                      : lang === "en"
-                        ? "Read full review"
-                        : lang === "pl"
-                          ? "Przeczytaj całą recenzję"
-                          : lang === "ru"
-                            ? "Читать полный отзыв"
-                            : "Read full review"}
+                    {sliderReviewsFullCopy(lang).readFullReview}
                   </button>
                 </div>
               </FadeUpAnimate>
@@ -203,6 +198,7 @@ const SliderReviewsFull: FC<Props> = ({ reviews, lang }) => {
             <TfiClose color="#fff" fontSize="2.5em" />
           </button>
           <Swiper
+            dir={localeDir(lang)}
             modules={[Navigation, Pagination]}
             navigation={{
               prevEl: modalPrevRef.current,

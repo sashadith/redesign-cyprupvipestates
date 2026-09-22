@@ -6,6 +6,7 @@ import NavLinks from "../NavLinks/NavLinks";
 import BurgerMenu from "../BurgerMenu/BurgerMenu";
 import { Header as HeaderType } from "@/types/header";
 import { ButtonModal } from "../ButtonModal/ButtonModal";
+import { navWrapperCopy } from "./NavWrapper.copy";
 
 type Props = {
   navLinks: HeaderType["navLinks"];
@@ -23,14 +24,7 @@ const NavWrapper: React.FC<Props> = ({ navLinks, params }) => {
     setIsMenuOpen(false);
   };
 
-  const consultationText =
-    params.lang === "de"
-      ? "Beratung anfragen"
-      : params.lang === "pl"
-        ? "Umów konsultację"
-        : params.lang === "ru"
-          ? "Получить консультацию"
-          : "Get Consultation";
+  const consultationText = navWrapperCopy(params.lang).consultation;
 
   return (
     <>

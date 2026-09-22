@@ -2,6 +2,7 @@ import React, { FC } from "react";
 import type { FeaturedProjectsBlock } from "@/types/homepage";
 import FeaturedSlider from "./FeaturedSlider";
 import { highlightAccents } from "./highlightAccents";
+import type { Locale } from "@/lib/locale";
 
 /* Featured Real Estate Projects — dark section: title + description + an
    auto-playing carousel of restyled project cards. */
@@ -9,15 +10,16 @@ import { highlightAccents } from "./highlightAccents";
 // DE/PL/RU (2026-09-07 fix): see highlightAccents.tsx — the split() below
 // only ever matched literal English words, so translated titles rendered
 // with no highlight at all.
-const ACCENTS_BY_LANG: Record<string, string[]> = {
+const ACCENTS_BY_LANG: Partial<Record<Locale, string[]>> = {
   de: ["Immobilienprojekte"],
   pl: ["inwestycje"],
   ru: ["проекты недвижимости"],
+  he: ["פרויקטים"], // REVIEW(he); Hebrew H2: "פרויקטים נבחרים בקפריסין"
 };
 
 const renderTitle = (title: string, lang: string) => {
-  if (lang !== "en" && ACCENTS_BY_LANG[lang]) {
-    return highlightAccents(title, ACCENTS_BY_LANG[lang]);
+  if (lang !== "en" && ACCENTS_BY_LANG[lang as Locale]) {
+    return highlightAccents(title, ACCENTS_BY_LANG[lang as Locale]!);
   }
   return title.split(/(Real Estate|Projects)/i).map((part, i) => {
     const p = part.toLowerCase();

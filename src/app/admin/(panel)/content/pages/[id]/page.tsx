@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import TranslationsPanel from "@/app/admin/TranslationsPanel";
 import PageEditForm from "./PageEditForm";
-import { localizedHref } from "@/lib/locale";
+import { localizedHref, localeDir } from "@/lib/locale";
 import { utcToZonedInput } from "@/lib/tz";
 
 export const dynamic = "force-dynamic";
@@ -58,6 +58,8 @@ export default async function EditPage({ params }: { params: { id: string } }) {
         relatedOptions={options}
         relatedInitialIds={currentIds}
         relatedEnSuggestion={enSuggestion}
+        dir={localeDir(p.language)}
+        language={p.language}
       />
     </div>
   );

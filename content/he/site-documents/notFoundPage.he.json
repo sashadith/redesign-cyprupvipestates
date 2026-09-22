@@ -1,0 +1,19 @@
+{
+  "review": "pending",
+  "seo": {
+    "metaTitle": "הדף לא נמצא",
+    "metaDescription": "אין תוכן בכתובת זו."
+  },
+  "slug": {
+    "he": {
+      "_type": "slug",
+      "current": "404"
+    },
+    "_type": "localizedSlug"
+  },
+  "title": "404 Page HE",
+  "textEnd": "לא מצאנו את הדף",
+  "textStart": "404",
+  "buttonText": "לצפייה בכל הפרויקטים",
+  "description": "ייתכן שהדף הועבר, ששמו שונה או שאינו זמין כרגע."
+}

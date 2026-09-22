@@ -36,7 +36,7 @@ export async function sendLeadEmail(actor: EmailActor, leadId: string, opts: Sen
   if (!subject || !body) return { ok: false, error: "Subject and body are required." };
 
   const locale = lead.languagePreference ?? "en";
-  const { html, text } = renderLeadEmail(body, await getSignatureHtml(actor.userId, locale));
+  const { html, text } = renderLeadEmail(body, await getSignatureHtml(actor.userId, locale), locale);
 
   let messageId: string;
   try {

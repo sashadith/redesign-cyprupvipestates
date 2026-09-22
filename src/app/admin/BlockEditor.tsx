@@ -23,10 +23,13 @@ export const CONTENT_BLOCKS_FIELD = "contentBlocksJson";
 export default function BlockEditor({
   kind,
   initialBlocks,
+  dir = "ltr",
   fieldName = CONTENT_BLOCKS_FIELD,
 }: {
   kind: "blog" | "singlepage" | "caseStudy" | "development";
   initialBlocks: any[];
+  // Text direction of the content being edited (Hebrew rows pass "rtl").
+  dir?: "ltr" | "rtl";
   // Override for a page that mounts more than one BlockEditor at once (the
   // Development promo block, one per language) — each needs its own form
   // field, since the parent's single Save form can't tell four instances
@@ -161,8 +164,8 @@ export default function BlockEditor({
             </div>
             <div className="p-3">
               {it.type === "textContent"
-                ? <RichTextField initialHtml={it.html ?? ""} onChange={(html) => setHtml(it.key, html)} />
-                : <BlockFieldEditor block={it.block} onChange={(b) => setBlock(it.key, b)} />}
+                ? <RichTextField initialHtml={it.html ?? ""} onChange={(html) => setHtml(it.key, html)} dir={dir} />
+                : <BlockFieldEditor block={it.block} onChange={(b) => setBlock(it.key, b)} dir={dir} />}
             </div>
           </div>
         ))}

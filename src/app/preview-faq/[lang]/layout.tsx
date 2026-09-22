@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { localeDir } from "@/lib/locale";
 import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
+import { frankRuhlLibre, rubikHebrew } from "@/app/fonts/hebrew";
 import { SITE_URL } from "@/lib/seo";
 import "../../preview-home/tokens.css";
 import "../faq.css";
+import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import LenisProvider from "../../preview-home/anim/LenisProvider";
 
 /* FAQ — redesigned. Reuses the homepage design tokens + fonts + smooth scroll
@@ -62,7 +65,7 @@ export default function FaqLayout({
   params: { lang: string };
 }) {
   return (
-    <html lang={params.lang} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable}`}>
+    <html lang={params.lang} dir={localeDir(params.lang)} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable} ${frankRuhlLibre.variable} ${rubikHebrew.variable}`}>
       <body>
         <LenisProvider>{children}</LenisProvider>
       </body>

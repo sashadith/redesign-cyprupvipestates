@@ -9,6 +9,7 @@
 // human sees the list while typing.
 import { prisma } from "@/lib/prisma";
 import type { EmailActor } from "./sendLeadEmail";
+import type { Locale } from "@/lib/locale";
 import { EXCLUDE_NEWSLETTER } from "./leadBucket";
 import { emailKey, phoneDigits, phonesMatch, MIN_PHONE_DIGITS, PHONE_SUFFIX_DIGITS } from "./leadIdentity";
 
@@ -18,7 +19,7 @@ export type CreateLeadData = {
   email?: string | null;
   phone?: string | null;
   nationality?: string | null;
-  languagePreference?: "en" | "de" | "pl" | "ru" | null;
+  languagePreference?: Locale | null;
   budgetMin?: number | null;
   budgetMax?: number | null;
   timeline?: "IMMEDIATE" | "THREE_MONTHS" | "SIX_MONTHS" | "ONE_YEAR" | "TWO_YEARS" | "JUST_LOOKING" | null;

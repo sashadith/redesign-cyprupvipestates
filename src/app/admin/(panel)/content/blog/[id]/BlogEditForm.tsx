@@ -10,7 +10,7 @@ const STATUSES = ["DRAFT", "PUBLISHED", "SCHEDULED", "ARCHIVED"];
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
 
 export default function BlogEditForm({
-  blog: b, authors, categories,
+  blog: b, authors, categories, dir = "ltr", language,
 }: {
   blog: {
     id: string; title: string; slug: string; excerpt: string | null; status: string;
@@ -20,17 +20,19 @@ export default function BlogEditForm({
   };
   authors: { id: string; name: string }[];
   categories: { id: string; title: string }[];
+  dir?: "ltr" | "rtl";
+  language?: string;
 }) {
   const [state, formAction] = useFormState(saveBlogAll.bind(null, b.id), null);
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} dir={dir} className="space-y-5">
       <div className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-4">
         <div>
           <label className="block text-sm mb-1">Title</label>
           <input name="title" defaultValue={b.title} className={input} />
         </div>
-        <SlugField initialValue={b.slug} />
+        <SlugField initialValue={b.slug} language={language} />
         <div>
           <label className="block text-sm mb-1">Excerpt</label>
           <textarea name="excerpt" rows={3} defaultValue={b.excerpt ?? ""} className={input} />
@@ -44,11 +46,11 @@ export default function BlogEditForm({
           </div>
           <div>
             <label className="block text-sm mb-1">Publication date <span className="text-[#9CA3AF]">(German time)</span></label>
-            <input type="datetime-local" name="publishedAt" defaultValue={b.publishedAtInput} className={input} />
+            <input type="datetime-local" dir="ltr" name="publishedAt" defaultValue={b.publishedAtInput} className={input} />
           </div>
           <div>
             <label className="block text-sm mb-1">Publish at <span className="text-[#9CA3AF]">(German time, when Scheduled)</span></label>
-            <input type="datetime-local" name="scheduledAt" defaultValue={b.scheduledAtInput} className={input} />
+            <input type="datetime-local" dir="ltr" name="scheduledAt" defaultValue={b.scheduledAtInput} className={input} />
           </div>
         </div>
       </div>
@@ -86,7 +88,7 @@ export default function BlogEditForm({
         </div>
       </div>
 
-      <BlockEditor kind="blog" initialBlocks={b.contentBlocks} />
+      <BlockEditor kind="blog" initialBlocks={b.contentBlocks} dir={dir} />
 
       <SaveButton result={state} />
     </form>

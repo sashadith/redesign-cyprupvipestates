@@ -4,8 +4,9 @@
 // PRESENTATION_EMAIL_TEMPLATE is new, for the "Send by email" option added
 // alongside the existing "Share via WhatsApp"/"Copy link").
 import { buildEmailClosing } from "./compose/closing";
-
-export type Locale = "en" | "de" | "pl" | "ru";
+import { bidiIsolate } from "@/lib/locale";
+import type { Locale } from "@/lib/locale";
+export type { Locale };
 
 // A brand-new link, just generated ("Generate Client Presentation").
 export const WHATSAPP_MSG: Record<Locale, (name: string, url: string) => string> = {
@@ -13,6 +14,9 @@ export const WHATSAPP_MSG: Record<Locale, (name: string, url: string) => string>
   de: (name, url) => `Hallo ${name}, ich habe Ihre persönliche Immobilienauswahl vorbereitet: ${url}`,
   pl: (name, url) => `Dzień dobry ${name}, przygotowałem Państwa osobisty wybór nieruchomości: ${url}`,
   ru: (name, url) => `Здравствуйте, ${name}. Я подготовил для вас персональную подборку объектов: ${url}`,
+  // The URL is deliberately NOT bidi-isolated: it is the last token of the
+  // message and WhatsApp's own link detection can swallow a trailing PDI.
+  he: (name, url) => `שלום ${bidiIsolate(name)}, הכנתי עבורכם מבחר נכסים אישי: ${url}`, // REVIEW(he)
 };
 
 // A nudge back to an EXISTING, already-shared link that was just edited —
@@ -23,6 +27,7 @@ export const WHATSAPP_UPDATED_MSG: Record<Locale, (url: string) => string> = {
   de: (url) => `Ich habe Ihre Auswahl aktualisiert - werfen Sie einen Blick darauf, es gibt etwas Neues: ${url}`,
   pl: (url) => `Zaktualizowałem Państwa wybór - proszę spojrzeć, pojawiło się coś nowego: ${url}`,
   ru: (url) => `Я обновил вашу подборку — взгляните, там появилось кое-что новое: ${url}`,
+  he: (url) => `עדכנתי את המבחר שלכם, יש שם משהו חדש: ${url}`, // REVIEW(he)
 };
 
 // Email version of WHATSAPP_MSG's "brand-new link" message — used by the new
@@ -53,4 +58,11 @@ export const PRESENTATION_EMAIL_TEMPLATE: Record<Locale, (name: string, url: str
     subject: "Ваша персональная подборка объектов — Cyprus VIP Estates",
     body: `Здравствуйте, ${name}.\n\nЯ подготовил для вас персональную подборку объектов. Вы можете посмотреть её здесь:\n${url}\n\nЕсли у вас появятся вопросы, буду рад помочь.\n\n${buildEmailClosing("ru")}`,
   }),
+  // `|` instead of the em dash the LTR subjects use (styleguide §3: no `—` in
+  // Hebrew). The URL stays on its own line and un-isolated so mail clients
+  // still auto-link it.
+  he: (name, url) => ({
+    subject: "מבחר הנכסים האישי שלכם | Cyprus VIP Estates",
+    body: `שלום ${bidiIsolate(name)},\n\nהכנתי עבורכם מבחר נכסים אישי. אפשר לצפות בו כאן:\n${url}\n\nאשמח לענות על כל שאלה.\n\n${buildEmailClosing("he")}`,
+  }), // REVIEW(he)
 };

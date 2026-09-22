@@ -1,16 +1,14 @@
 import React from "react";
 import { getLatestDevelopmentsByLang } from "@/sanity/sanity.utils";
-import { localePrefix } from "@/lib/locale";
+import { localePrefix, fmtPrice } from "@/lib/locale";
 import { homeStrings } from "./homeI18n";
+import Bdi from "@/app/components/Bdi";
 
 /* Latest Developments — light "gallery" section: a deep-green title tile sits
    in the grid alongside the most recently published Developments (reusing the
    Featured .pcard look). Sourced from the Development system (getLatestDevelopmentsByLang),
    excluding sold-out and capped at 5 — replaces the old static-Project "New
    Listings" block, which never surfaced new-system projects or sold-out state. */
-
-const fmtPrice = (p?: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(p || 0);
 
 const ArrowRight = () => (
   <svg width="17" height="17" viewBox="0 0 17 17" fill="none" aria-hidden>
@@ -52,7 +50,7 @@ export default async function LatestDevelopments({ lang = "en" }: { lang?: strin
                     {price && price > 0 ? (
                       <>
                         <span className="pcard__from">{t.priceFrom}</span>
-                        {fmtPrice(price)}
+                        <Bdi ltr>{fmtPrice(price, lang)}</Bdi>
                       </>
                     ) : (
                       t.onRequest

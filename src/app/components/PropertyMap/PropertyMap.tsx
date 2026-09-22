@@ -5,11 +5,11 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { FC, useState } from "react";
 import Link from "next/link";
-import { localePrefix } from "@/lib/locale";
+import { localePrefix, BCP47, isLocale, bidiIsolate, type Locale } from "@/lib/locale";
 import popupStyles from "../ProjectsMapAll/ProjectsMapAll.module.scss";
 import styles from "./PropertyMap.module.scss";
 
-type SupportedLang = "de" | "en" | "ru" | "pl";
+type SupportedLang = Locale;
 type CityKey = "Paphos" | "Limassol" | "Larnaca";
 
 type Props = {
@@ -49,11 +49,14 @@ const CITY_CANONICAL: Record<string, CityKey> = {
   larnaka: "Larnaca",
 };
 
+const CITY_I18N_EN = { Paphos: "Paphos", Limassol: "Limassol", Larnaca: "Larnaca" };
+
 const CITY_I18N: Record<SupportedLang, Record<CityKey, string>> = {
-  en: { Paphos: "Paphos", Limassol: "Limassol", Larnaca: "Larnaca" },
+  en: CITY_I18N_EN,
   de: { Paphos: "Paphos", Limassol: "Limassol", Larnaca: "Larnaca" },
   ru: { Paphos: "Пафос", Limassol: "Лимассол", Larnaca: "Ларнака" },
   pl: { Paphos: "Pafos", Limassol: "Limassol", Larnaca: "Larnaka" },
+  he: { Paphos: "פאפוס", Limassol: "לימסול", Larnaca: "לרנקה" }, // REVIEW(he)
 };
 
 function translateCity(city: string | undefined, lang: SupportedLang): string {
@@ -63,14 +66,7 @@ function translateCity(city: string | undefined, lang: SupportedLang): string {
 }
 
 function formatPrice(price: number, lang: SupportedLang): string {
-  const locales: Record<SupportedLang, string> = {
-    en: "en-US",
-    de: "de-DE",
-    ru: "ru-RU",
-    pl: "pl-PL",
-  };
-
-  return new Intl.NumberFormat(locales[lang], {
+  return new Intl.NumberFormat(isLocale(lang) ? BCP47[lang] : BCP47.en, {
     style: "currency",
     currency: "EUR",
     maximumFractionDigits: 0,
@@ -96,15 +92,16 @@ function t(
   label: "coords" | "copy" | "copied" | "open" | "route" | "osm",
   lang: SupportedLang,
 ) {
+  const dictEn = {
+    coords: "Coordinates",
+    copy: "Copy",
+    copied: "Copied!",
+    open: "Open in Google Maps",
+    route: "Route (Google/Apple)",
+    osm: "Open in OSM",
+  };
   const dict: Record<SupportedLang, Record<string, string>> = {
-    en: {
-      coords: "Coordinates",
-      copy: "Copy",
-      copied: "Copied!",
-      open: "Open in Google Maps",
-      route: "Route (Google/Apple)",
-      osm: "Open in OSM",
-    },
+    en: dictEn,
     de: {
       coords: "Koordinaten",
       copy: "Kopieren",
@@ -129,24 +126,33 @@ function t(
       route: "Trasa (Google/Apple)",
       osm: "Otwórz w OSM",
     },
+    // Same wording as the listing map's popup controls (ProjectsMapAll.tsx) so
+    // the identical control reads identically on both surfaces.
+    he: {
+      coords: "קואורדינטות",
+      copy: "העתקה",
+      copied: "הועתק ללוח",
+      open: `פתיחה ב-${bidiIsolate("Google Maps")}`,
+      route: `מסלול (${bidiIsolate("Google/Apple")})`,
+      osm: `פתיחה ב-${bidiIsolate("OSM")}`,
+    }, // REVIEW(he)
   };
 
   return dict[lang][label];
 }
 
+const PROJECT_LINK_LABEL_EN = "Open project";
+
+const PROJECT_LINK_LABEL: Record<SupportedLang, string> = {
+  de: "Projekt öffnen",
+  en: PROJECT_LINK_LABEL_EN,
+  ru: "Открыть проект",
+  pl: "Otwórz projekt",
+  he: "מעבר לפרויקט", // REVIEW(he)
+};
+
 function projectLinkLabel(lang: SupportedLang) {
-  switch (lang) {
-    case "de":
-      return "Projekt öffnen";
-    case "en":
-      return "Open project";
-    case "ru":
-      return "Открыть проект";
-    case "pl":
-      return "Otwórz projekt";
-    default:
-      return "Open project";
-  }
+  return PROJECT_LINK_LABEL[lang] ?? PROJECT_LINK_LABEL_EN;
 }
 
 function thumb(url?: string, w = 420, h = 240) {
@@ -158,11 +164,14 @@ function thumb(url?: string, w = 420, h = 240) {
   return url;
 }
 
+const POPUP_MESSAGE_EN = "This property is located here.";
+
 const popupMessages: Record<SupportedLang, string> = {
   de: "Diese Immobilie befindet sich hier.",
-  en: "This property is located here.",
+  en: POPUP_MESSAGE_EN,
   ru: "Объект находится здесь.",
   pl: "Tutaj znajduje się ta nieruchomość.",
+  he: "הנכס נמצא כאן", // REVIEW(he)
 };
 
 const PropertyMap: FC<Props> = ({
@@ -178,9 +187,7 @@ const PropertyMap: FC<Props> = ({
 }) => {
   const [copied, setCopied] = useState(false);
 
-  const safeLang: SupportedLang = ["de", "en", "ru", "pl"].includes(lang)
-    ? (lang as SupportedLang)
-    : "de";
+  const safeLang: SupportedLang = isLocale(lang) ? lang : "de";
 
   const cityLabel = translateCity(city, safeLang);
   const links = buildMapLinks(lat, lng);
@@ -198,7 +205,7 @@ const PropertyMap: FC<Props> = ({
   };
 
   return (
-    <div className={styles.propertyMap}>
+    <div className={styles.propertyMap} dir="ltr">
       <MapContainer
         center={[lat, lng]}
         zoom={14}

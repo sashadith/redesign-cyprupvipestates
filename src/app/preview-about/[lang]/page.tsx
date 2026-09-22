@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { i18n } from "@/i18n.config";
-import { localizedHref } from "@/lib/locale";
-import { abs, languageAlternates } from "@/lib/seo";
+import { localizedHref, isLocale } from "@/lib/locale";
+import { abs, languageAlternates, ogLocale } from "@/lib/seo";
 import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporateLocale } from "@/lib/corporatePageSlugs";
 import type { BenefitsBlock } from "@/types/homepage";
 import type { Translation } from "@/types/homepage";
@@ -9,9 +9,11 @@ import Nav from "../../preview-home/sections/Nav";
 import Footer from "../../preview-home/sections/Footer";
 import Benefits from "../../preview-home/sections/Benefits";
 import ContactChannels from "@/app/components/ContactChannels/ContactChannels";
+import Bdi from "@/app/components/Bdi";
 import AboutMotion from "./AboutMotion";
 import { aboutCopy } from "./copy";
 import { getAboutPageData, getProjectCount } from "./data";
+import { toLanguageKey, languageLabel } from "@/app/preview-contacts/[lang]/languages";
 
 /* Cyprus VIP Estates — About, redesigned.
 
@@ -36,7 +38,7 @@ type Props = { params: { lang: string } };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const lang = params.lang;
   const t = aboutCopy(lang);
-  const l = (["en", "de", "pl", "ru"].includes(lang) ? lang : "en") as CorporateLocale;
+  const l: CorporateLocale = isLocale(lang) ? lang : "en";
 
   const { canonical, languages } = languageAlternates({
     lang: l,
@@ -56,7 +58,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: t.metaDescription,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: lang,
+      locale: ogLocale(lang),
       type: "website",
       ...(ogImage ? { images: [{ url: ogImage, width: 1200, height: 630 }] } : {}),
     },
@@ -273,7 +275,23 @@ export default async function AboutPage({ params }: Props) {
                   {m.languages.length > 0 && (
                     <p className="abt__member-langs">
                       <span className="abt__member-langs-label">{t.teamSpeaks}</span>
-                      {m.languages.join(" · ")}
+                      {/* The stored list is the members' own native spellings
+                          ("deutsch, english, русский") — Latin/Cyrillic text
+                          that has to stay one isolated run inside the Hebrew
+                          page (he-styleguide.md §11.4). No-op for the LTR
+                          locales: <bdi> around all-LTR content in an LTR
+                          paragraph changes nothing.
+                          For `he` only, map each raw entry through the same
+                          toLanguageKey()/languageLabel() helpers the contacts
+                          page uses, so the chips read as Hebrew labels
+                          instead of the raw native text (Pass B systemic
+                          finding S-1). en/de/pl/ru keep the untouched
+                          native-spelling join. */}
+                      <Bdi>
+                        {lang === "he"
+                          ? m.languages.map((raw) => languageLabel(toLanguageKey(raw), lang, raw)).join(" · ")
+                          : m.languages.join(" · ")}
+                      </Bdi>
                     </p>
                   )}
                 </li>

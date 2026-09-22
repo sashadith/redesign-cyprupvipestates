@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { i18n } from "@/i18n.config";
-import { localizedHref } from "@/lib/locale";
-import { languageAlternates } from "@/lib/seo";
-import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporateLocale, type CorporatePage } from "@/lib/corporatePageSlugs";
+import { localizedHref, PUBLIC_LOCALES as LOCALES, isLocale, isPublicLocale, BCP47 } from "@/lib/locale";
+import { languageAlternates, ogLocale } from "@/lib/seo";
+import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporatePage } from "@/lib/corporatePageSlugs";
 import type { Translation } from "@/types/homepage";
 import Nav from "../../../preview-home/sections/Nav";
 import Footer from "../../../preview-home/sections/Footer";
@@ -25,8 +25,6 @@ import type { LegalBlock } from "./types";
 
 type Props = { params: { lang: string; doc: string } };
 
-const LOCALES = ["en", "de", "pl", "ru"] as const;
-
 export async function generateStaticParams() {
   return LOCALES.flatMap((lang) => ["privacy", "terms"].map((doc) => ({ lang, doc })));
 }
@@ -37,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = getLegalDoc(doc, lang);
   if (!t) return {};
 
-  const l = (LOCALES as readonly string[]).includes(lang) ? (lang as CorporateLocale) : "en";
+  const l = isPublicLocale(lang) ? lang : "en";
   const page: CorporatePage = doc === "privacy" ? "privacy" : "terms";
 
   const { canonical, languages } = languageAlternates({
@@ -54,7 +52,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     // Legal boilerplate has no business competing in search results, but it
     // must stay indexable — several jurisdictions expect these pages to be
     // publicly reachable, and trust signals depend on them being findable.
-    openGraph: { title: t.metaTitle, description: t.metaDescription, url: canonical, siteName: "Cyprus VIP Estates", locale: lang, type: "article" },
+    openGraph: { title: t.metaTitle, description: t.metaDescription, url: canonical, siteName: "Cyprus VIP Estates", locale: ogLocale(lang), type: "article" },
   };
 }
 
@@ -99,7 +97,7 @@ export default async function LegalPage({ params }: Props) {
   }));
 
   const updatedDisplay = new Intl.DateTimeFormat(
-    lang === "de" ? "de-DE" : lang === "pl" ? "pl-PL" : lang === "ru" ? "ru-RU" : "en-GB",
+    isLocale(lang) ? BCP47[lang] : BCP47.en,
     { day: "numeric", month: "long", year: "numeric" },
   ).format(new Date(t.updated));
 
@@ -120,6 +118,11 @@ export default async function LegalPage({ params }: Props) {
           <div className="wrap">
             <p className="lgl__eyebrow">{t.eyebrow}</p>
             <h1 className="lgl__title">{t.title}</h1>
+            {/* Prevailing-language notice. Only set on locales whose text is a
+                courtesy translation of a binding English original (`he`);
+                undefined everywhere else, so en/de/pl/ru render exactly as
+                before. */}
+            {t.bindingNote && <p className="lgl__binding">{t.bindingNote}</p>}
             <p className="lgl__intro">{t.intro}</p>
             <p className="lgl__updated">
               <span className="lgl__updated-label">{t.updatedLabel}</span>

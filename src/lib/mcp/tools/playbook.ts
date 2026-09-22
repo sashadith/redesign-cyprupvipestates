@@ -6,6 +6,7 @@ import { buildEmailClosing } from "@/lib/crm/compose/closing";
 import { CONTACT_PHONE } from "@/lib/crm/compose/generate";
 import { runTool } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
+import { LOCALES } from "@/lib/locale";
 
 // Same on-disk read as loadPlaybook.ts (edits to the markdown take effect
 // without a rebuild; see the comment there).
@@ -32,7 +33,7 @@ export function registerPlaybook(server: McpServer) {
         }).filter((s) => s.markdown);
         return {
           contactPhone: CONTACT_PHONE,
-          closings: Object.fromEntries(["en", "de", "pl", "ru"].map((l) => [l, buildEmailClosing(l)])),
+          closings: Object.fromEntries(LOCALES.map((l) => [l, buildEmailClosing(l)])),
           sections,
         };
       }),
