@@ -6,8 +6,9 @@ import { Autoplay } from "swiper/modules";
 import "swiper/css";
 import type { FeaturedProject } from "@/types/homepage";
 import { urlFor } from "@/sanity/sanity.client";
-import { localePrefix } from "@/lib/locale";
+import { localePrefix, fmtPrice, localeDir } from "@/lib/locale";
 import { homeStrings } from "./homeI18n";
+import Bdi from "@/app/components/Bdi";
 
 const safeUrl = (img: unknown) => {
   try {
@@ -17,10 +18,10 @@ const safeUrl = (img: unknown) => {
   }
 };
 
-const fmtPrice = (p?: number) =>
-  new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(p || 0);
-
-const Card: React.FC<{ project: FeaturedProject; lang: string }> = ({ project, lang }) => {
+const Card: React.FC<{ project: FeaturedProject; lang: string }> = ({
+  project,
+  lang,
+}) => {
   const t = homeStrings(lang);
   const img = safeUrl(project.previewImage);
   // hrefPath: legacy project folded into a developer overview.
@@ -40,7 +41,7 @@ const Card: React.FC<{ project: FeaturedProject; lang: string }> = ({ project, l
           {price && price > 0 ? (
             <>
               <span className="pcard__from">{t.priceFrom}</span>
-              {fmtPrice(price)}
+              <Bdi ltr>{fmtPrice(price, lang)}</Bdi>
             </>
           ) : (
             t.priceOnRequest
@@ -60,8 +61,13 @@ export default function FeaturedSlider({
 }) {
   return (
     <Swiper
+      dir={localeDir(lang)}
       modules={[Autoplay]}
-      autoplay={{ delay: 2800, disableOnInteraction: false, pauseOnMouseEnter: true }}
+      autoplay={{
+        delay: 2800,
+        disableOnInteraction: false,
+        pauseOnMouseEnter: true,
+      }}
       loop
       spaceBetween={20}
       slidesPerView={1.15}

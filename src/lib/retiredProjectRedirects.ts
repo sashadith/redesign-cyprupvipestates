@@ -18,6 +18,8 @@
    Development-to-Development redirect exists anywhere. One retired slug does
    not justify a schema. A second one is the moment to re-take that decision
    rather than let this list quietly grow. */
+import { nonDefaultLocalePattern } from "@/lib/locale";
+
 export const RETIRED_PROJECT_REDIRECTS: Record<string, string> = {
   "golf-residences": "eden-golf",
 };
@@ -31,7 +33,10 @@ export const RETIRED_PROJECT_REDIRECTS: Record<string, string> = {
    NextRequest — the redirect data lives in lib the same way
    nestedPageRedirects.json does. */
 export function retiredProjectTarget(pathname: string): string | null {
-  const m = pathname.match(/^\/(?:(de|pl|ru)\/)?projects\/([^/]+)$/);
+  // Locale prefix from lib/locale, not a hard-coded (de|pl|ru): with the
+  // literal list, /he/projects/<retired> fell through to a 404 while every
+  // other locale 308'd (staging, 2026-09-20).
+  const m = pathname.match(new RegExp(`^\\/(?:(${nonDefaultLocalePattern()})\\/)?projects\\/([^/]+)$`));
   if (!m) return null;
   const target = RETIRED_PROJECT_REDIRECTS[m[2]];
   if (!target) return null;

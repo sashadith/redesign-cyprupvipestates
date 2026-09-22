@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import { localeDir } from "@/lib/locale";
 import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
+import { frankRuhlLibre, rubikHebrew } from "@/app/fonts/hebrew";
 import "../../preview-home/tokens.css";
 import "../../preview-projects/projects.css";
 import "../../preview-insights/insights.css";
 import "../landing.css";
+import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import LenisProvider from "../../preview-home/anim/LenisProvider";
 
 /* The redesigned landing family, served under a "preview" prefix while the
@@ -56,7 +59,7 @@ export default function PreviewLandingLayout({
   params: { lang: string };
 }) {
   return (
-    <html lang={params.lang} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable}`}>
+    <html lang={params.lang} dir={localeDir(params.lang)} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable} ${frankRuhlLibre.variable} ${rubikHebrew.variable}`}>
       <head>
         <meta name="robots" content="noindex, nofollow" />
       </head>

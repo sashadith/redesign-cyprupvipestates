@@ -7,7 +7,7 @@ import { cache } from "react";
 import { draftMode } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
-import { localizedHref, isLocale } from "@/lib/locale";
+import { localizedHref, isLocale, PUBLIC_LOCALES, nonDefaultLocalePattern, localePrefix, DEFAULT_LOCALE } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
 import { completionSortKey } from "@/lib/completionDate";
 import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances, districtWithParent, resolveRelativeCompletion } from "@/lib/developmentCard";
@@ -30,6 +30,7 @@ import { FaqPage } from "@/types/faq";
 
 type AnyRow = Record<string, any>;
 const D = <T>(v: T): T => dereferenceAssets(v);
+const L = nonDefaultLocalePattern();
 
 // Draft Preview: when an admin has enabled Next.js Draft Mode (preview cookie), detail
 // getters include unpublished content; otherwise only PUBLISHED. Safe at build time
@@ -146,10 +147,36 @@ async function mapProjectRowsToLang(rows: AnyRow[], lang: string): Promise<AnyRo
   const langRows = tgids.length ? await prisma.project.findMany({ where: { language: lang as any, translationGroupId: { in: tgids } } }) : [];
   const byTgid = new Map<string, AnyRow>();
   for (const r of langRows) if (r.translationGroupId && !byTgid.has(r.translationGroupId)) byTgid.set(r.translationGroupId, r as AnyRow);
+
+  // Hebrew-only fallback (Phase 5): the legacy `Project` model predates
+  // Development and nothing creates `he` rows in it (decision H — Hebrew
+  // content is seeded as Development/CaseStudy/Singlepage only). Without a
+  // fallback every card sourced from a Project row would be dropped above,
+  // so `he` case studies would render an EMPTY "related properties" section
+  // no matter how correctly CaseStudyProject is linked. Fall back to the EN
+  // sibling: the card's link is `/he/projects/<slug>` and project slugs are
+  // Latin and locale-agnostic (decision A), so the EN row's slug resolves
+  // under `/he` exactly as it does under `/en`. Gated on `lang === "he"` —
+  // en/de/pl/ru behaviour is byte-identical to before.
+  const enFallbackTgids =
+    lang === "he"
+      ? Array.from(
+          new Set(
+            rows
+              .filter((r) => r.language !== "en" && r.translationGroupId && !byTgid.has(r.translationGroupId as string))
+              .map((r) => r.translationGroupId as string),
+          ),
+        )
+      : [];
+  const enRows = enFallbackTgids.length ? await prisma.project.findMany({ where: { language: "en", translationGroupId: { in: enFallbackTgids } } }) : [];
+  const enByTgid = new Map<string, AnyRow>();
+  for (const r of enRows) if (r.translationGroupId && !enByTgid.has(r.translationGroupId)) enByTgid.set(r.translationGroupId, r as AnyRow);
+
   const out: AnyRow[] = [];
   const seen = new Set<string>();
   for (const r of rows) {
-    const m = r.language === lang ? r : (r.translationGroupId ? byTgid.get(r.translationGroupId) : undefined);
+    let m = r.language === lang ? r : (r.translationGroupId ? byTgid.get(r.translationGroupId) : undefined);
+    if (!m && lang === "he") m = r.language === "en" ? r : (r.translationGroupId ? enByTgid.get(r.translationGroupId) : undefined);
     if (m && !seen.has(m.sanityId)) { seen.add(m.sanityId); out.push(m); }
   }
   return out;
@@ -197,7 +224,7 @@ async function resolveProjectRefs(refs: any[], lang: string) {
       .filter((r) => !/\/projects\/[^/?#]+/.test(r.targetPath))
       .map((r) => {
         const path = r.targetPath.replace(/^https?:\/\/[^/]+/, "");
-        return [r.projectId, path.replace(/^\/(?:en|de|pl|ru)(?=\/)/, "")] as const;
+        return [r.projectId, path.replace(new RegExp(`^/(?:en|${L})(?=/)`), "")] as const;
       })
       .filter((entry): entry is [string, string] => entry[1].startsWith("/"))
   );
@@ -882,7 +909,8 @@ export async function getRelatedLandingPages(lang: string, refs: any): Promise<{
 }
 
 // ── Slug lists for generateStaticParams (ISR static generation) ──
-export const ALL_LOCALES = ["en", "de", "pl", "ru"] as const;
+// Static-generation locale set: only locales that are live get pre-rendered.
+export const ALL_LOCALES = PUBLIC_LOCALES;
 // `published` adds status=PUBLISHED (so drafts aren't pre-rendered). Developer/Author/Category
 // have no status column, so they pass published=false.
 const slugList = (model: any, published: boolean) => async (lang: string): Promise<string[]> =>
@@ -1011,7 +1039,11 @@ export async function getBlogPostsByLangWithPagination(lang: string, limit: numb
 
 export async function getTotalBlogPostsByLang(lang: string): Promise<number> {
   if (!isLocale(lang)) return 0;
-  return prisma.blog.count({ where: { language: lang as any } });
+  // PUBLISHED only — matches the PUBLISHED-only rows the grid actually
+  // renders (getBlogPostsByLang/getBlogPostsByLangWithPagination), so the
+  // hero counter can never claim more articles than the list shows. Also the
+  // basis for the Phase 6 he-article-count gate (blogIndexMode).
+  return prisma.blog.count({ where: { language: lang as any, status: "PUBLISHED" } });
 }
 
 // === Case Study ===
@@ -1165,7 +1197,22 @@ export async function getLegacyProjectRedirect(lang: string, slug: string): Prom
     where: { language: lang as any, slug, status: "ARCHIVED" },
     select: { redirectTarget: { select: { targetPath: true } } },
   });
-  return row?.redirectTarget?.targetPath ?? null;
+  if (row?.redirectTarget?.targetPath) return row.redirectTarget.targetPath;
+  // A locale that never had legacy Project rows (Hebrew — decision: no legacy
+  // rows for he) still gets the OLD slug requested under its prefix; without
+  // this, /he/projects/cypress-park 404'd while every other locale 308'd to
+  // the Development that replaced it (staging, 2026-09-20). Resolve through
+  // the EN row's redirect and re-prefix its (prefix-less) target for `lang`.
+  // A target that is itself a legacy-only page still ends in a 404 for such
+  // a locale — nothing to show there, same as before.
+  if (lang === DEFAULT_LOCALE) return null;
+  const en = await prisma.project.findFirst({
+    where: { language: DEFAULT_LOCALE as any, slug, status: "ARCHIVED" },
+    select: { redirectTarget: { select: { targetPath: true } } },
+  });
+  const enTarget = en?.redirectTarget?.targetPath;
+  if (!enTarget || !enTarget.startsWith("/")) return null;
+  return `${localePrefix(lang)}${enTarget}`;
 }
 
 export async function getAllDevelopersByLang(lang: string): Promise<Developer[]> {

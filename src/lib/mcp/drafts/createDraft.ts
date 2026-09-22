@@ -41,6 +41,7 @@ export async function createEmailDraft(actor: EmailActor, input: { leadId: strin
     signatureHtml: await getSignatureHtml(actor.userId, locale),
     approvalCode,
     expiresAtLabel: adminDateTime(expiresAt),
+    locale,
   });
 
   let previewMessageId: string;

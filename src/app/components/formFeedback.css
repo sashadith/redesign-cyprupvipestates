@@ -77,7 +77,7 @@
   font-family: var(--font-body), sans-serif;
   font-size: 15px;
   line-height: 1.5;
-  text-align: left;
+  text-align: start;
   letter-spacing: 0;
 
   animation: formAlertIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
@@ -87,7 +87,7 @@
 .form-feedback::before {
   content: "";
   position: absolute;
-  left: 16px;
+  inset-inline-start: 16px;
   top: 50%;
   width: 20px;
   height: 20px;
@@ -99,12 +99,12 @@
 .form-feedback::after {
   content: "";
   position: absolute;
-  left: 22px;
+  inset-inline-start: 22px;
   top: 50%;
   width: 8px;
   height: 4px;
   margin-top: -4px;
-  border-left: 1.5px solid #efe9db;
+  border-inline-start: 1.5px solid #efe9db;
   border-bottom: 1.5px solid #efe9db;
   rotate: -45deg;
 }
@@ -114,7 +114,7 @@
    and a second colour would compete with the brand bronze. */
 .form-feedback--error::after {
   content: "!";
-  left: 16px;
+  inset-inline-start: 16px;
   top: 50%;
   width: 20px;
   height: 20px;

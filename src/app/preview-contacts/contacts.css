@@ -78,7 +78,7 @@ h1.cnt__hero-title { font-size: var(--text-h1); max-width: none; }
      hero headline — and it keeps the gold rule beneath it aligned with the
      text rather than running past it. */
   margin: 0;
-  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), Georgia, serif;
   font-size: var(--text-h2); font-weight: 400; line-height: 1.1;
   letter-spacing: -0.02em; color: var(--text); text-wrap: balance;
 }
@@ -118,7 +118,7 @@ hr.cnt__stripe { margin: var(--s-5) 0 0; max-width: none; background: linear-gra
      numeral bled off the corner, but the card's overflow:hidden sliced it flat
      across the top and it read as a clipping bug rather than a flourish. */
   position: absolute; top: var(--s-4); right: var(--s-5); pointer-events: none;
-  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 300;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 300;
   font-size: 4.5rem; line-height: 1; color: var(--accent); opacity: 0.14;
   transition: opacity var(--dur-sm) var(--ease), transform var(--dur-sm) var(--ease-soft);
 }
@@ -144,7 +144,7 @@ hr.cnt__stripe { margin: var(--s-5) 0 0; max-width: none; background: linear-gra
 }
 /* The line people actually came here for — display face, properly sized. */
 .cnt__channel-value {
-  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
   font-size: clamp(1.25rem, 1.05rem + 0.9vw, 1.7rem); line-height: 1.25; letter-spacing: -0.01em;
   color: var(--text); margin-bottom: var(--s-4);
   /* Break at the @ / dots rather than mid-word — `word-break: break-word` split

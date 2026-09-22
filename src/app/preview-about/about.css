@@ -58,7 +58,7 @@ h1.abt__hero-title { font-size: var(--text-h1); max-width: none; }
 }
 .abt__title {
   margin: 0; max-width: 22ch;
-  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), Georgia, serif;
   font-size: var(--text-h2); font-weight: 400; line-height: 1.1;
   letter-spacing: -0.02em; color: var(--text); text-wrap: balance;
 }
@@ -144,13 +144,13 @@ hr.abt__stripe { margin: var(--s-5) 0 0; max-width: none; background: linear-gra
    ("Digitally supported processes" ran straight through the 03). */
 .abt__step-num {
   display: block; margin-bottom: var(--s-4);
-  font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 300;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 300;
   font-size: 2.6rem; line-height: 1; color: var(--accent);
   transition: transform var(--dur-sm) var(--ease-soft);
 }
 .abt__step:hover .abt__step-num { transform: translateY(-3px); }
 .abt__step-title {
-  font-family: var(--font-display), var(--font-display-cyr), serif; font-size: var(--text-h3);
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-size: var(--text-h3);
   font-weight: 400; line-height: 1.2; margin: 0 0 var(--s-4); color: var(--text);
 }
 .abt__step-desc { margin: 0; color: var(--text-soft); line-height: 1.75; }
@@ -180,7 +180,7 @@ section.abt__receive { padding-block: var(--section-y); background: var(--surfac
   transform: translateY(-3px); box-shadow: 0 0 0 1px var(--accent), 0 14px 30px -14px var(--glow);
 }
 .abt__card-title {
-  font-family: var(--font-display), var(--font-display-cyr), serif; font-size: var(--text-h3);
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-size: var(--text-h3);
   font-weight: 400; line-height: 1.2; margin: 0; color: var(--text);
 }
 .abt__card-desc { margin: 0; color: var(--text-soft); line-height: 1.75; max-width: 34ch; }
@@ -201,7 +201,7 @@ section.abt__receive { padding-block: var(--section-y); background: var(--surfac
 .abt__value { display: grid; grid-template-columns: 2.6rem minmax(0, 1fr); gap: var(--s-2) var(--s-4); align-items: baseline;
   padding-top: var(--s-5); border-top: 1px solid var(--hairline); }
 .abt__value-num {
-  grid-row: span 2; font-family: var(--font-display), var(--font-display-cyr), serif;
+  grid-row: span 2; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif;
   font-size: 1.5rem; font-weight: 300; line-height: 1; color: var(--accent); opacity: 0.75;
 }
 .abt__value-title { margin: 0; font-family: var(--font-body), sans-serif;

@@ -4,12 +4,13 @@ import { useRef, useState } from "react";
 import { generateDescription, checkDescriptionUniqueness } from "./actions";
 import { ClaudeButton, PromptTuner } from "../_ai";
 
-type Lang = "en" | "de" | "pl" | "ru";
+type Lang = "en" | "de" | "pl" | "ru" | "he";
 const LANGS: [Lang, string, string][] = [
   ["en", "English", "descriptionEN"],
   ["de", "Deutsch", "descriptionDE"],
   ["pl", "Polski", "descriptionPL"],
   ["ru", "Русский", "descriptionRU"],
+  ["he", "עברית", "descriptionHE"],
 ];
 
 export default function DescriptionField({ developmentId, initial, aiReady }: { developmentId: string; initial: Record<Lang, string>; aiReady: boolean }) {
@@ -67,12 +68,12 @@ export default function DescriptionField({ developmentId, initial, aiReady }: { 
         </div>
       </div>
 
-      <textarea value={texts[tab]} onChange={(e) => setTexts({ ...texts, [tab]: e.target.value })} rows={6} className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm leading-relaxed focus:border-[#1B4B43] focus:outline-none" />
+      <textarea value={texts[tab]} onChange={(e) => setTexts({ ...texts, [tab]: e.target.value })} rows={6} dir={tab === "he" ? "rtl" : "ltr"} className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm leading-relaxed focus:border-[#1B4B43] focus:outline-none" />
       {err && <p className="text-sm text-[#DC2626]">{err}</p>}
       {justGen && !err && (
         <p className="flex items-center gap-2 rounded-md bg-[#FFF7ED] border border-[#FED7AA] px-3 py-2 text-xs font-medium text-[#9A3412]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
-          Generated in all 4 languages — click “Save overrides” below to publish it.
+          Generated in {`all ${LANGS.length} languages`} — click “Save overrides” below to publish it.
         </p>
       )}
 
@@ -83,7 +84,7 @@ export default function DescriptionField({ developmentId, initial, aiReady }: { 
         </button>
         {qa && <span style={{ color: badge![1] }} className="font-medium">{badge![0]} {qa.uniqueness}% unique{qa.sim > 15 && qa.mostSimilar ? ` · ${qa.sim}% overlap with ${qa.mostSimilar}` : ""}</span>}
       </div>
-      <p className="text-[11px] text-[#9CA3AF]">Rewrite synthesises the project/developer name, location, amenities and unit data across all 4 languages. External AI-content detection (Originality.ai) plugs in once its key is set.</p>
+      <p className="text-[11px] text-[#9CA3AF]">Rewrite synthesises the project/developer name, location, amenities and unit data across {`all ${LANGS.length} languages`}. External AI-content detection (Originality.ai) plugs in once its key is set.</p>
     </div>
   );
 }

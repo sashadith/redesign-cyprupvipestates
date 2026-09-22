@@ -116,7 +116,7 @@
 
 .cvpm__title {
   margin: 0;
-  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), Georgia, serif;
   font-weight: 400;
   /* Sized so the LONGEST of the four headlines still fits on one line, not so
      the English one looks good. Measured at 1512px: "Sprechen Sie mit einem
@@ -161,7 +161,7 @@
 .cvpm__close {
   position: absolute;
   top: 14px;
-  right: 14px;
+  inset-inline-end: 14px;
   z-index: 3;
   width: 40px;
   height: 40px;
@@ -190,8 +190,8 @@
   position: absolute;
   /* 30px lower than the panel's own -4% bleed. */
   bottom: calc(-4% - 30px);
-  right: 0;
-  left: auto;
+  right: 0; /* phone illustration bled to one side — tied to imagery, not reading direction */
+  inset-inline-start: auto; /* `auto` carries no direction; the imagery-tied `right: 0` above stays physical */
   width: min(112%, 462px);
   transform: none;
   filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.55));
@@ -318,7 +318,7 @@
 .cvpm__form textarea + div > div,
 .cvpm__form .PhoneInput + div > div,
 .cvpm__form fieldset > div + div > div {
-  text-align: left;
+  text-align: start;
   font-size: 12.5px;
   line-height: 1.35;
   color: var(--fs-error);
@@ -357,7 +357,7 @@
 .cvpm__form div:has(> input[type="checkbox"]) > input[type="checkbox"] {
   display: block;
   position: absolute;
-  left: 0;
+  inset-inline-start: 0;
   top: 0;
   width: 1px;
   height: 1px;
@@ -439,7 +439,7 @@
   box-shadow: none;
 }
 /* Flag and number read as one field. */
-.cvpm__form .PhoneInputCountry { margin-right: 12px; }
+.cvpm__form .PhoneInputCountry { margin-inline-end: 12px; }
 .cvpm__form .PhoneInputCountryIcon {
   background: transparent;
   box-shadow: none;
@@ -476,7 +476,7 @@
      (the two longest headlines) wrapped a line under it. Padding, not a
      fixed width, so it reserves the button's exact footprint (40px width +
      14px right offset + a small gap) regardless of viewport width. */
-  .cvpm__title { padding-right: 40px; }
+  .cvpm__title { padding-inline-end: 40px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

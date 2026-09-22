@@ -18,6 +18,7 @@ import PropertyPhotoGallery from "../PropertyPhotoGallery/PropertyPhotoGallery";
 import { ButtonModal } from "../ButtonModal/ButtonModal";
 import ResponsiveMedia from "../ResponsiveMedia/ResponsiveMedia";
 import { urlFor } from "@/sanity/sanity.client";
+import { propertyIntroCopy } from "./PropertyIntro.copy";
 
 type Props = {
   title: string;
@@ -61,17 +62,7 @@ const PropertyIntro: FC<Props> = ({
             <h1 className={styles.title}>{title}</h1>
             <p className={styles.description}>{excerpt}</p>
             <div className={styles.button}>
-              <ButtonModal>
-                {lang === "en"
-                  ? "Request Personal Offer"
-                  : lang === "de"
-                    ? "Persönliches Angebot anfordern"
-                    : lang === "pl"
-                      ? "Poproś o indywidualną ofertę"
-                      : lang === "ru"
-                        ? "Запросить персональное предложение"
-                        : "Request Personal Offer"}
-              </ButtonModal>
+              <ButtonModal>{propertyIntroCopy(lang).requestOffer}</ButtonModal>
             </div>
           </div>
         </div>

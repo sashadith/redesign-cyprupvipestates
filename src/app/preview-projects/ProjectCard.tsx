@@ -12,6 +12,10 @@
 import type { ProjectsStrings } from "@/app/[lang]/projects/projectsI18n";
 import ScarcityBanner from "@/app/components/ScarcityBanner/ScarcityBanner";
 import { soldOutFromCounts } from "@/lib/developmentAvailability";
+import { fmtPrice } from "@/lib/locale";
+import { hePlaceList } from "@/lib/hePlaces";
+import { heFeedLabel, heBedrooms } from "@/lib/heFeedVocab";
+import Bdi from "@/app/components/Bdi";
 
 export type Distances = {
   beach?: string;
@@ -72,9 +76,6 @@ const CARD_DIST_ORDER: (keyof Distances)[] = ["beach", "school", "golfCourt", "a
 const cardDistances = (d: Distances | null | undefined, s: ProjectsStrings) =>
   d ? CARD_DIST_ORDER.filter((k) => d[k]).map((k) => ({ label: distLabel(k, s), v: d[k] as string })) : [];
 
-const fmtPrice = (p: number | null, s: ProjectsStrings) =>
-  p == null ? s.priceOnRequest : `€${p.toLocaleString(s.numLocale)}`;
-
 export function ProjectCard({
   c, active = false, onHover = () => {}, s, locale, compact = false,
 }: {
@@ -95,6 +96,18 @@ export function ProjectCard({
   compact?: boolean;
 }) {
   const soldOut = c.unitsTotal != null && soldOutFromCounts(c.unitsAvailable ?? 0, c.unitsTotal);
+  // `c.city`, `c.type` and `c.bedrooms` are raw feed/DB values, not copy: on a
+  // Hebrew card they used to read "Paphos", "Villa" and "1 חדרי שינה" /
+  // "Studio חדרי שינה" while the filter bar and facts panel next to them said
+  // "פאפוס" / "וילה" (Pass B, Must fix #9 + systemic #1). Mapped for `he` only —
+  // every LTR locale renders exactly the strings it did before.
+  const isHe = locale === "he";
+  const cityLabel = isHe ? hePlaceList(c.city) : c.city;
+  const typeLabel = isHe ? heFeedLabel(c.type) : c.type;
+  // he needs the whole phrase (the numeral for one is written out and
+  // postposed, a studio takes no unit word at all), so it replaces the
+  // "{value} {bedUnit}" pattern rather than just the unit word.
+  const bedsLabel = isHe ? heBedrooms(c.bedrooms) : `${c.bedrooms} ${s.bedUnit}`;
   return (
     <a
       className={`prj${compact ? " prj--compact" : ""}${active ? " is-active" : ""}${soldOut ? " is-sold" : ""}`}
@@ -114,16 +127,16 @@ export function ProjectCard({
               : <ScarcityBanner available={c.unitsAvailable ?? 0} total={c.unitsTotal} locale={locale} seedKey={c.id} />
           )}
         </div>
-        {c.type && <span className="prj__type">{c.type}</span>}
+        {c.type && <span className="prj__type">{typeLabel}</span>}
         <div className="prj__info">
           <h3 className="prj__title">{c.title}</h3>
-          <p className="prj__loc">{c.city}</p>
+          <p className="prj__loc">{cityLabel}</p>
         </div>
       </div>
       <div className="prj__footer">
         <div className="prj__specrow">
           <div className="prj__specs">
-            {c.bedrooms && <span>{c.bedrooms} {s.bedUnit}</span>}
+            {c.bedrooms && <span>{bedsLabel}</span>}
             {c.area && <span>{c.area} {s.areaUnit}</span>}
             {c.energy && <span>{s.energyPrefix} {c.energy}</span>}
             {/* c.completion is already resolved to a plain year string (or "")
@@ -140,7 +153,7 @@ export function ProjectCard({
           </div>
           <div className="prj__price">
             {c.price != null && <span className="prj__price-from">{s.priceFrom}</span>}
-            {fmtPrice(c.price, s)}
+            {c.price != null ? <Bdi ltr>{fmtPrice(c.price, locale)}</Bdi> : s.priceOnRequest}
           </div>
         </div>
         {cardDistances(c.distances, s).length > 0 && (

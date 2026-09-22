@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { formatInZone } from "@/lib/booking/timezone";
 import { proposeSlotAction } from "@/app/admin/(panel)/crm/[id]/bookingActions";
+import { BCP47 } from "@/lib/locale";
 import { COPY, type BLocale } from "./copy";
 
 export type SlotGroup = { dayLabel: string; slots: { utc: string; cyprusLabel: string }[] };
@@ -99,7 +100,12 @@ export default function SlotPicker({ token, groups, locale }: { token: string; g
           {selected.map((utc) => (
             <div key={utc} className="bk-selected__row">
               <span className="bk-selected__your">{yourTimeLabel(utc) ?? c.detectingTimezone}</span>
-              <span className="bk-selected__cyprus">{formatInZone(new Date(utc), "Asia/Nicosia")} ({c.cyprusTime})</span>
+              {/* The Cyprus column had no locale argument at all and fell back
+                  to formatInZone's en-GB default, so the Hebrew page showed the
+                  lead's time in Hebrew and the identical slot in English right
+                  next to it (Pass B Must fix #19). Passed for `he` only — every
+                  LTR locale keeps the exact en-GB rendering it had. */}
+              <span className="bk-selected__cyprus">{formatInZone(new Date(utc), "Asia/Nicosia", locale === "he" ? localeToIntl(locale) : undefined)} ({c.cyprusTime})</span>
             </div>
           ))}
         </div>
@@ -115,5 +121,5 @@ export default function SlotPicker({ token, groups, locale }: { token: string; g
 }
 
 function localeToIntl(locale: BLocale): string {
-  return { en: "en-GB", de: "de-DE", pl: "pl-PL", ru: "ru-RU" }[locale];
+  return BCP47[locale];
 }

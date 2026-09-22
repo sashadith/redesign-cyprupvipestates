@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { updateFormDoc } from "../../../../actions";
+import { localeDir } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 const input = "w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm outline-none focus:border-[#1B4B43]";
@@ -21,7 +22,7 @@ export default async function EditForm({ params }: { params: { id: string } }) {
     <div className="max-w-2xl">
       <Link href="/admin/content/forms" className="text-sm text-[#1B4B43] hover:underline">← Back to forms</Link>
       <h1 className="text-2xl font-semibold mt-2 mb-6">Standard form · {doc.language.toUpperCase()}</h1>
-      <form action={save} className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-4">
+      <form action={save} dir={localeDir(doc.language)} className="bg-white rounded-lg border border-[#E5E7EB] p-5 space-y-4">
         {fields.map(([k, v]) => (
           <div key={k}>
             <label className="block text-sm mb-1">{label(k)}</label>

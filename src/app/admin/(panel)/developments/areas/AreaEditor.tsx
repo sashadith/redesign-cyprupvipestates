@@ -11,6 +11,7 @@ const LANGS: [keyof FourLang, string][] = [
   ["de", "Deutsch"],
   ["pl", "Polski"],
   ["ru", "Русский"],
+  ["he", "עברית"],
 ];
 
 export default function AreaEditor({
@@ -52,7 +53,7 @@ export default function AreaEditor({
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2 text-sm">
           <span className="text-[#6B7280]">Languages filled:</span>
-          <span className="font-medium">{filled}/4</span>
+          <span className="font-medium">{filled}/{LANGS.length}</span>
           <span className={`rounded px-2 py-0.5 text-xs capitalize ${status === "approved" ? "bg-[#DCFCE7] text-[#166534]" : status === "draft" ? "bg-[#FEF3C7] text-[#92400E]" : "bg-[#F3F4F6] text-[#6B7280]"}`}>{status === "none" ? "not created" : status}</span>
         </div>
         <div className="flex items-center gap-2">
@@ -66,7 +67,7 @@ export default function AreaEditor({
             <span>words</span>
           </label>
           <ClaudeButton onClick={onGenerate} busy={busy === "gen"} disabled={!aiReady || busy !== null} title={aiReady ? "" : "Add ANTHROPIC_API_KEY to enable"}>
-            {busy === "gen" ? "Generating…" : "Generate all 4 languages with Claude"}
+            {busy === "gen" ? "Generating…" : `Generate all ${LANGS.length} languages with Claude`}
           </ClaudeButton>
           <PromptTuner emphasize={emphasize} avoid={avoid} onEmphasize={setEmphasize} onAvoid={setAvoid} presetKey="area" />
         </div>
@@ -93,7 +94,8 @@ export default function AreaEditor({
           value={texts[tab] || ""}
           onChange={(e) => setTexts({ ...texts, [tab]: e.target.value })}
           rows={8}
-          placeholder={aiReady ? "Write, or click “Generate all 4 languages”." : "Add ANTHROPIC_API_KEY to generate, or write manually."}
+          placeholder={aiReady ? `Write, or click “Generate all ${LANGS.length} languages”.` : "Add ANTHROPIC_API_KEY to generate, or write manually."}
+          dir={tab === "he" ? "rtl" : "ltr"}
           className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm leading-relaxed focus:border-[#1B4B43] focus:outline-none"
         />
         <div className="text-xs text-[#9CA3AF] mt-1">{wordCount} words · target 80–110</div>

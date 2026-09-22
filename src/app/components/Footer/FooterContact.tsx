@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { Contact } from "@/types/footer";
 import { urlFor } from "@/sanity/sanity.client";
+import Bdi from "@/app/components/Bdi";
 
 /* Footer contact link (redesign look) — keeps the previous live ContactLink
    behaviour verbatim: mailto/tel/wa.me/http resolution + fbq "Contact" and GTM
@@ -62,7 +63,7 @@ export default function FooterContact({ contact }: { contact: Contact }) {
       rel={contact.type === "Link" ? "noopener" : undefined}
     >
       {icon && <img className="pf__contact-icon" src={icon} alt="" width={20} height={20} />}
-      <span>{contact.label}</span>
+      <span><Bdi ltr>{contact.label}</Bdi></span>
     </Link>
   );
 }

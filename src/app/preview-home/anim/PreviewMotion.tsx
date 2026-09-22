@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { gsap, ScrollTrigger, SplitText, prefersReducedMotion } from "./gsap";
+import { isRtlDoc } from "@/app/components/useIsRtl";
 
 /* Preview-only scroll/motion orchestrator. Mounted once in the page; drives all the
    Phase-2 animations off the existing DOM by class, so NO server component changes
@@ -18,6 +19,7 @@ export default function PreviewMotion() {
     if (prefersReducedMotion()) return;
 
     const splits: Array<{ revert: () => void }> = [];
+    const isRtl = isRtlDoc(document);
 
     const ctx = gsap.context(() => {
       const toArr = (sel: string) => gsap.utils.toArray<HTMLElement>(sel);
@@ -97,7 +99,7 @@ export default function PreviewMotion() {
       const checklist = document.querySelectorAll(".brochure__list li");
       if (checklist.length) {
         gsap.from(checklist, {
-          x: -20,
+          x: isRtl ? 20 : -20,
           autoAlpha: 0,
           duration: 0.5,
           stagger: 0.08,

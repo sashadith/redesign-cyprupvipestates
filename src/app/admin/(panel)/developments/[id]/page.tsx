@@ -24,6 +24,7 @@ import { getSeoPromptTemplate } from "@/lib/ai/seoMeta";
 import SeoMetaFields from "./SeoMetaFields";
 import SyncControlPanel from "./SyncControlPanel";
 import { SYNCED_DEVS, FORCE_SYNC_DEVS } from "@/lib/feedSync";
+import { LOCALES } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 
@@ -109,7 +110,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
   // src/lib/developmentSeo.ts. Needs the full render VM (units drive the
   // beds/type/price computations), so reuse the same lookup the public page uses.
   const vmForSeo = await getDbProjectByFeedKey(d.feedKey);
-  const seoLangs = ["en", "de", "pl", "ru"] as const;
+  const seoLangs = LOCALES;
   const autoTitle = Object.fromEntries(seoLangs.map((l) => [l, vmForSeo ? autoMetaTitle(vmForSeo, l) : ""])) as Record<string, string>;
   const autoDesc = Object.fromEntries(seoLangs.map((l) => [l, vmForSeo ? autoMetaDescription(vmForSeo, l) : ""])) as Record<string, string>;
   const seoOv = (ov?.seo as Record<string, string> | null) ?? null;
@@ -308,6 +309,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
                 de: ov?.descriptionDE ?? "",
                 pl: ov?.descriptionPL ?? "",
                 ru: ov?.descriptionRU ?? "",
+                he: ov?.descriptionHE ?? "",
               }}
             />
           </div>
@@ -320,6 +322,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
                 de: (ov?.promoBlocksDE as any[]) ?? [],
                 pl: (ov?.promoBlocksPL as any[]) ?? [],
                 ru: (ov?.promoBlocksRU as any[]) ?? [],
+                he: (ov?.promoBlocksHE as any[]) ?? [],
               }}
             />
           </div>
@@ -327,7 +330,7 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
           <div className="grid grid-cols-3 gap-3">
             <div><label className={label}>Completion</label><input name="completion" defaultValue={ov?.completion ?? ""} placeholder={d.completion ?? ""} className={field} /></div>
             <div><label className={label}>Energy</label><input name="energy" defaultValue={ov?.energy ?? ""} placeholder={d.energy ?? ""} className={field} /></div>
-            <div><label className={label}>Hero video URL</label><input name="heroVideo" defaultValue={ov?.heroVideo ?? ""} placeholder="upload later" className={field} /></div>
+            <div><label className={label}>Hero video URL</label><input name="heroVideo" dir="ltr" defaultValue={ov?.heroVideo ?? ""} placeholder="upload later" className={field} /></div>
           </div>
 
           <div>

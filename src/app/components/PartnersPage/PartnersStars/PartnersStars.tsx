@@ -2,6 +2,7 @@ import React, { FC } from "react";
 import styles from "./PartnersStars.module.scss";
 import { Oswald } from "next/font/google";
 import FadeUpAnimate from "../../FadeUpAnimate/FadeUpAnimate";
+import type { Locale } from "@/lib/locale";
 
 const oswald = Oswald({
   subsets: ["latin", "cyrillic"],
@@ -25,7 +26,31 @@ type PartnersStarsTranslation = {
   items: StarsItem[];
 };
 
-const translations: Record<string, PartnersStarsTranslation> = {
+const EN: PartnersStarsTranslation = {
+  headingStart: "Which ",
+  headingHighlight1: "companies",
+  headingMiddle: " do we work ",
+  headingHighlight2: "with",
+  items: [
+    {
+      title: "Developers",
+      description:
+        "Our partners are the most reputable developers on the island – carefully selected and verified to ensure top quality for our clients.",
+    },
+    {
+      title: "Legal advisors",
+      description:
+        "We work closely with experienced lawyers and notaries to guarantee maximum security and confidence throughout the property process.",
+    },
+    {
+      title: "Agencies and private brokers",
+      description:
+        "You get access to our updated property database with selected listings and exclusive referral fee terms.",
+    },
+  ],
+};
+
+const translations: Record<Locale, PartnersStarsTranslation> = {
   de: {
     headingStart: "Mit welchen ",
     headingHighlight1: "unternehmen",
@@ -49,29 +74,7 @@ const translations: Record<string, PartnersStarsTranslation> = {
       },
     ],
   },
-  en: {
-    headingStart: "Which ",
-    headingHighlight1: "companies",
-    headingMiddle: " do we work ",
-    headingHighlight2: "with",
-    items: [
-      {
-        title: "Developers",
-        description:
-          "Our partners are the most reputable developers on the island – carefully selected and verified to ensure top quality for our clients.",
-      },
-      {
-        title: "Legal advisors",
-        description:
-          "We work closely with experienced lawyers and notaries to guarantee maximum security and confidence throughout the property process.",
-      },
-      {
-        title: "Agencies and private brokers",
-        description:
-          "You get access to our updated property database with selected listings and exclusive referral fee terms.",
-      },
-    ],
-  },
+  en: EN,
   pl: {
     headingStart: "Z jakimi ",
     headingHighlight1: "firmami",
@@ -118,10 +121,11 @@ const translations: Record<string, PartnersStarsTranslation> = {
       },
     ],
   },
+  he: EN, // decision J: Partners page stays English for he
 };
 
 const PartnersStars: FC<Props> = ({ lang }) => {
-  const t = translations[lang] ?? translations.de;
+  const t = translations[lang as Locale] ?? translations.en;
 
   return (
     <section className={styles.stars}>

@@ -4,6 +4,7 @@ import React from "react";
 import styles from "./roi-calculator.module.scss";
 import { RoiCalculatorInput, RoiStrategy } from "@/lib/roi";
 import RoiRangeField from "./RoiRangeField";
+import { roiInputsCopy } from "./RoiInputs.copy";
 
 type Props = {
   input: RoiCalculatorInput;
@@ -13,106 +14,9 @@ type Props = {
 };
 
 const RoiInputs: React.FC<Props> = ({ input, strategy, lang, onChange }) => {
-  const t = {
-    purchasePrice:
-      lang === "pl"
-        ? "Cena nieruchomości"
-        : lang === "de"
-          ? "Kaufpreis"
-          : lang === "ru"
-            ? "Цена недвижимости"
-            : "Property price",
+  const t = roiInputsCopy(lang);
 
-    furnishing:
-      lang === "pl"
-        ? "Koszt wyposażenia"
-        : lang === "de"
-          ? "Ausstattungskosten"
-          : lang === "ru"
-            ? "Стоимость меблировки"
-            : "Furnishing cost",
-
-    buildPeriod:
-      lang === "pl"
-        ? "Czas budowy"
-        : lang === "de"
-          ? "Bauzeit"
-          : lang === "ru"
-            ? "Срок строительства"
-            : "Build period",
-
-    offPlanGrowth:
-      lang === "pl"
-        ? "Wzrost w budowie (rocznie)"
-        : lang === "de"
-          ? "Wachstum während der Bauphase"
-          : lang === "ru"
-            ? "Рост на этапе строительства"
-            : "Annual off-plan growth",
-
-    sellingCosts:
-      lang === "pl"
-        ? "Koszty sprzedaży"
-        : lang === "de"
-          ? "Verkaufskosten"
-          : lang === "ru"
-            ? "Расходы на продажу"
-            : "Selling costs",
-
-    rentalSection:
-      lang === "pl"
-        ? "Parametry najmu"
-        : lang === "de"
-          ? "Mietparameter"
-          : lang === "ru"
-            ? "Параметры аренды"
-            : "Rental parameters",
-
-    netYieldYearOne:
-      lang === "pl"
-        ? "Yield netto (rok 1)"
-        : lang === "de"
-          ? "Netto-Rendite (Jahr 1)"
-          : lang === "ru"
-            ? "Чистая доходность (год 1)"
-            : "Net yield (year 1)",
-
-    annualRentGrowth:
-      lang === "pl"
-        ? "Wzrost czynszu rocznie"
-        : lang === "de"
-          ? "Jährliches Mietwachstum"
-          : lang === "ru"
-            ? "Рост аренды в год"
-            : "Annual rent growth",
-
-    rentalPeriodYears:
-      lang === "pl"
-        ? "Okres najmu po oddaniu"
-        : lang === "de"
-          ? "Mietdauer nach Fertigstellung"
-          : lang === "ru"
-            ? "Срок аренды после сдачи"
-            : "Rental period after completion",
-
-    annualAppreciation:
-      lang === "pl"
-        ? "Aprecjacja roczna"
-        : lang === "de"
-          ? "Jährliche Wertsteigerung"
-          : lang === "ru"
-            ? "Годовой рост стоимости"
-            : "Annual appreciation",
-  };
-
-  const yearsUnit =
-    lang === "pl"
-      ? "lat"
-      : lang === "de"
-        ? "J."
-        : lang === "ru"
-          ? "лет"
-          : "yrs";
+  const yearsUnit = t.yearsUnit;
 
   const clamp = (value: number, min: number, max: number) =>
     Math.min(Math.max(value, min), max);

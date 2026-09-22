@@ -570,8 +570,8 @@ export async function writeKuutioDraft(developerAccountId: string, opts: { force
     if (description) {
       await prisma.developmentOverride.upsert({
         where: { developmentId: dev.id },
-        create: { developmentId: dev.id, descriptionEN: description.en, descriptionDE: description.de, descriptionPL: description.pl, descriptionRU: description.ru },
-        update: { descriptionEN: description.en, descriptionDE: description.de, descriptionPL: description.pl, descriptionRU: description.ru },
+        create: { developmentId: dev.id, descriptionEN: description.en, descriptionDE: description.de, descriptionPL: description.pl, descriptionRU: description.ru, descriptionHE: description.he },
+        update: { descriptionEN: description.en, descriptionDE: description.de, descriptionPL: description.pl, descriptionRU: description.ru, descriptionHE: description.he },
       });
     }
 

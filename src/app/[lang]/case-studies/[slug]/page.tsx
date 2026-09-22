@@ -44,8 +44,9 @@ import CaseStudyDetails from "@/app/components/CaseStudyDetails/CaseStudyDetails
 import CaseStudyOverview from "@/app/components/CaseStudyOverview/CaseStudyOverview";
 import CaseStudyIntro from "@/app/components/CaseStudyIntro/CaseStudyIntro";
 import FormStatic from "@/app/components/FormStatic/FormStatic";
-import { languageAlternates, pathBuilders, DEFAULT_OG_IMAGE } from "@/lib/seo";
+import { languageAlternates, pathBuilders, DEFAULT_OG_IMAGE, ogLocale } from "@/lib/seo";
 import { urlFor } from "@/sanity/sanity.client";
+import { caseStudyPageCopy } from "./page.copy";
 
 type Props = {
   params: {
@@ -86,7 +87,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: ogDesc,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: params.lang,
+      locale: ogLocale(params.lang),
       type: "article",
       images: [{ url: ogImage, width: 1200, height: 630, alt: caseStudy.title }],
     },
@@ -128,14 +129,7 @@ const CaseStudyPage = async ({ params }: Props) => {
     });
   }
 
-  const relatedPropertiesTitle =
-    lang === "de"
-      ? "Verwandte Immobilien"
-      : lang === "ru"
-        ? "Похожие объекты"
-        : lang === "pl"
-          ? "Powiązane nieruchomości"
-          : "Related Properties";
+  const relatedPropertiesTitle = caseStudyPageCopy(lang).relatedProperties;
 
   const renderContentBlock = (block: any) => {
     switch (block._type) {

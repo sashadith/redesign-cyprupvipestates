@@ -7,6 +7,7 @@ import { applyLeadStatusChange, LEAD_STATUSES } from "@/lib/crm/updateLeadStatus
 import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { LEAD_ROW_SELECT, leadRow } from "../leadRow";
+import { LOCALES } from "@/lib/locale";
 
 const isoOrNull = z.string().datetime({ offset: true }).nullable().optional().describe("ISO 8601, with or without a UTC offset");
 
@@ -17,7 +18,7 @@ const Input = z.object({
   nextFollowUpAt: isoOrNull,
   hot: z.boolean().optional(),
   preferredChannel: z.enum(["EMAIL", "WHATSAPP", "PHONE"]).nullable().optional(),
-  languagePreference: z.enum(["en", "de", "pl", "ru"]).nullable().optional(),
+  languagePreference: z.enum(LOCALES).nullable().optional(),
   salutation: z.enum(["UNKNOWN", "MR", "MS"]).optional(),
   budgetMin: z.number().int().nonnegative().nullable().optional(),
   budgetMax: z.number().int().nonnegative().nullable().optional(),

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { aiConfigured } from "@/lib/ai/anthropic";
 import { slugOfArea } from "./slug";
+import { LOCALES } from "@/lib/locale";
 
 export const dynamic = "force-dynamic";
 
@@ -62,7 +63,7 @@ export default async function AreasPage() {
           <tbody className="divide-y divide-[#F3F4F6]">
             {areas.map((a) => {
               const d = bySlug.get(a.slug);
-              const langs = d ? [d.textEN, d.textDE, d.textPL, d.textRU].filter(Boolean).length : 0;
+              const langs = d ? [d.textEN, d.textDE, d.textPL, d.textRU, d.textHE].filter(Boolean).length : 0;
               const status = d?.status ?? "none";
               const href = `/admin/developments/areas/${a.slug}?name=${encodeURIComponent(a.name)}&district=${encodeURIComponent(a.district)}`;
               return (
@@ -72,7 +73,7 @@ export default async function AreasPage() {
                   </td>
                   <td className="px-4 py-3 text-[#6B7280]">{a.district || "—"}</td>
                   <td className="px-4 py-3 text-right tabular-nums">{a.count}</td>
-                  <td className="px-4 py-3 text-[#6B7280] tabular-nums">{langs}/4</td>
+                  <td className="px-4 py-3 text-[#6B7280] tabular-nums">{langs}/{LOCALES.length}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-block rounded px-2 py-0.5 text-xs capitalize ${STATUS_STYLE[status]}`}>{status === "none" ? "not created" : status}</span>
                   </td>

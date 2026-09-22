@@ -54,7 +54,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
    size scale; every hero heading should reference it directly instead of
    re-deriving an approximate clamp expression per page. */
 .faqp__hero-title {
-  margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  margin: 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
   font-size: var(--text-display); line-height: 1.0; letter-spacing: -0.02em; color: var(--text); text-wrap: balance;
 }
 /* Keeps "Asked Questions" on one line — never lets "Questions" wrap away
@@ -156,7 +156,7 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 }
 @media (prefers-reduced-motion: reduce) { .faqp__cat-icon { animation: none; } }
 .faqp__cat-title {
-  margin: 0; font-family: var(--font-display), var(--font-display-cyr), serif; font-weight: 400;
+  margin: 0; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
   font-size: clamp(1.5rem, 1.3rem + 0.9vw, 2rem); color: var(--text); letter-spacing: -0.01em;
 }
 .faqp__cat-desc { margin: var(--s-2) 0 0; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--text-faint); }

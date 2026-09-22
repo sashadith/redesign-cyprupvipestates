@@ -1,0 +1,231 @@
+{
+  "slug": "contacts",
+  "title": "יצירת קשר",
+  "excerpt": "אפשר לפנות אלינו היום. נשמח לעזור ולתת שירות ברמה גבוהה.",
+  "allowIntroBlock": true,
+  "previewImage": {
+    "alt": "יצירת קשר עם Cyprus VIP Estates, רכישת נכס בקפריסין",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-54864664b76697394abb5e6c19f491a1c3f21271-4000x2666-jpg",
+      "_type": "reference"
+    }
+  },
+  "seo": {
+    "metaTitle": "יצירת קשר עם Cyprus VIP Estates | נדל\"ן בקפריסין",
+    "metaDescription": "אפשר לפנות אלינו בטלפון, בוואטסאפ או באימייל. הצוות של Cyprus VIP Estates יעזור לכם ברכישת וילות ודירות יוקרה בקפריסין. המשרד שלנו נמצא בפאפוס."
+  },
+  "contentBlocks": [
+    {
+      "_key": "b591d61eed1e",
+      "form": {
+        "_ref": "e55035e3-bfdb-4b2d-b74f-bfac3c851ce8",
+        "_type": "reference"
+      },
+      "_type": "contactFullBlock",
+      "title": "יצירת קשר",
+      "contacts": [
+        {
+          "_key": "3d7a1ecfd760",
+          "icon": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-e492abdc7ee8f2bed37a8b9a52556c806fc27388-500x500-svg",
+              "_type": "reference"
+            }
+          },
+          "type": "Link",
+          "label": " +357 99 278 285",
+          "title": "וואטסאפ"
+        },
+        {
+          "_key": "e8659c9b1518",
+          "icon": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-69901105079a8a1d16a2ab2ab9b89e7c7d93e28d-500x500-svg",
+              "_type": "reference"
+            }
+          },
+          "type": "Phone",
+          "label": "+357 99 278 285",
+          "title": "טלפון"
+        },
+        {
+          "_key": "0bebc658253a",
+          "icon": {
+            "_type": "image",
+            "asset": {
+              "_ref": "image-ccc890574833df0545994b0a0db2e4b6b80f507a-500x500-svg",
+              "_type": "reference"
+            }
+          },
+          "type": "Email",
+          "label": "office@cyprusvipestates.com",
+          "title": "אימייל"
+        }
+      ],
+      "description": "Cyprus VIP Estates הוא מותג של SecretBrand Solutions LTD. יש כמה דרכים ליצור איתנו קשר: אפשר למלא את הטופס שבעמוד ונחזור אליכם במהירות, או לפנות אלינו בוואטסאפ, בטלפון או באימייל. הצוות זמין מדי יום, 9:00 עד 18:00. הייעוץ מתקיים באנגלית או ברוסית; פנייה בעברית מתקבלת בברכה."
+    },
+    {
+      "_key": "de919989bc80",
+      "_type": "teamBlock",
+      "title": "הצוות שלנו",
+      "members": [
+        {
+          "_key": "6d446d831527",
+          "name": "Sascha Dith",
+          "image": {
+            "alt": "Sascha Dith, מנכ\"ל Cyprus VIP Estates",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-807f0251fe7155600df9b18efda5d5873cc00562-700x959-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "מנכ\"ל",
+          "description": "deutsch, english, русский"
+        },
+        {
+          "_key": "68486ab6929d",
+          "name": "Katrin Dith",
+          "image": {
+            "alt": "Katrin Dith",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-310598bbd67926a40ce8ab3c1b03769e428ca1fe-700x845-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "בקרת איכות",
+          "description": "русский, english"
+        },
+        {
+          "_key": "1b20261831a4",
+          "name": "Alex Bandziuk",
+          "image": {
+            "alt": "Aliaksandr Bandziuk, ראש תחום אסטרטגיה דיגיטלית וטכנולוגיות ווב ב-Cyprus VIP Estates",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-b9ed0374d3f0a88dc6b83355673bbc85680b9095-700x900-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "ראש תחום אסטרטגיה דיגיטלית וטכנולוגיות ווב",
+          "description": "english, polski, русский"
+        },
+        {
+          "_key": "d9a099af4645",
+          "name": "Alisher Maniyazov",
+          "image": {
+            "alt": "Alisher Maniyazov",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-7354cae70af463d04f07acb3c3614d0ed3481388-1728x2368-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "סמנכ\"ל פיתוח עסקי",
+          "description": "english, русский, қазақша, oʻzbekcha"
+        },
+        {
+          "_key": "166af1b78bb2fe08e83dc350ccb61a82",
+          "name": "Guido Steinberg",
+          "image": {
+            "alt": "Guido Steinberg",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-354a96a083d8471fe6875184c1f3243f2b1d6106-1194x1600-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "שותף",
+          "description": "english, deutsch"
+        },
+        {
+          "_key": "9eba1128e67bb3e7cb1736d8414c51e9",
+          "name": "Daniel Kaufmann",
+          "image": {
+            "alt": "Daniel Kaufmann",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-bc020c0a37e7f2032747ecd4b09ff85f93b4d046-500x670-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "יועץ נדל\"ן",
+          "description": "english, español, deutsch"
+        },
+        {
+          "_key": "cd65b9184eb9",
+          "name": "Denise Prusko",
+          "image": {
+            "alt": "Denise Prusko",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-9da972f8df51f96b9464c32f00464342e84b31f7-500x643-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "יועצת נדל\"ן",
+          "description": "english, deutsch"
+        },
+        {
+          "_key": "eaecbafd3e1e",
+          "name": "Patrick Prusko",
+          "image": {
+            "alt": "Patrick Prusko",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-f66f78a963bae70628ab7dcc336002f98491eac2-500x685-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "יועץ נדל\"ן",
+          "description": "english, deutsch, polski"
+        },
+        {
+          "_key": "496528a63b966169906a101b58a30354",
+          "name": "Alexander Ostrovski",
+          "image": {
+            "alt": "Alexander Ostrovski",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-5bcbfedd6d21df35e10af4ac18b224f04078279d-590x794-png",
+              "_type": "reference"
+            }
+          },
+          "position": "יועץ נדל\"ן",
+          "description": "english, deutsch, русский"
+        },
+        {
+          "_key": "b88a5dff74863a8d13ae4ab945bd6349",
+          "name": "Lazaros Filimon",
+          "image": {
+            "alt": "Lazaros Filimon",
+            "_type": "image",
+            "asset": {
+              "_ref": "image-c2f1cb1b39aca61cf5e891b08cf55c4fe08239da-1728x2368-jpg",
+              "_type": "reference"
+            }
+          },
+          "position": "יועץ נדל\"ן",
+          "description": "english, deutsch, eλληνικά, русский, dutch, francais"
+        }
+      ]
+    },
+    {
+      "_key": "001d6ba706b0",
+      "_type": "locationBlock",
+      "title": "כאן נמצא המשרד שלנו",
+      "location": {
+        "lat": 34.77374771739058,
+        "lng": 32.42693982209025,
+        "_type": "geopoint"
+      }
+    }
+  ],
+  "relatedLandingPages": null,
+  "translationGroupSlugEn": "contacts",
+  "review": "pending"
+}

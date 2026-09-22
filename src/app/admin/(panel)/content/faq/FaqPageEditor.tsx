@@ -22,10 +22,12 @@ export default function FaqPageEditor({
   lang,
   initial,
   save,
+  dir = "ltr",
 }: {
   lang: string;
   initial: FaqCategory[];
   save: (categoriesJson: string) => Promise<{ ok: boolean }>;
+  dir?: "ltr" | "rtl";
 }) {
   const [categories, setCategories] = useState<FaqCategory[]>(initial.length ? clone(initial) : [newCategory()]);
   const [pending, startTransition] = useTransition();
@@ -53,7 +55,7 @@ export default function FaqPageEditor({
   };
 
   return (
-    <div className="space-y-5">
+    <div dir={dir} className="space-y-5">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold">{categories.length} categories</h2>
         <div className="flex items-center gap-3">
@@ -75,7 +77,7 @@ export default function FaqPageEditor({
             <div>
               <label className="block text-xs text-[#6B7280] mb-1">Slug</label>
               <div className="flex gap-1.5">
-                <input className={input} value={cat.slug} onChange={(e) => patchCategory(ci, { slug: e.target.value })} />
+                <input className={input} dir="ltr" value={cat.slug} onChange={(e) => patchCategory(ci, { slug: e.target.value })} />
                 <button type="button" onClick={() => patchCategory(ci, { slug: slugify(cat.label) })} title="Generate from label"
                   className="shrink-0 rounded-md border border-[#E5E7EB] px-2 text-xs text-[#1B4B43] hover:bg-[#F8F9FA]">
                   Generate

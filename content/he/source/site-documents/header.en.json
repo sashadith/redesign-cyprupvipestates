@@ -1,0 +1,68 @@
+{
+  "logo": {
+    "alt": "",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-8965c6a93692bf62648fca0d47783e098ad5d575-500x70-png",
+      "_type": "reference"
+    }
+  },
+  "title": "Header EN",
+  "navLinks": [
+    {
+      "_key": "5bca34571ca3",
+      "link": "/projects",
+      "label": "Projects",
+      "subLinks": []
+    },
+    {
+      "_key": "6d19065636ec",
+      "link": "/blog",
+      "label": "Cyprus Insights",
+      "subLinks": []
+    },
+    {
+      "_key": "0c3272b0ae7f",
+      "link": "/about-us",
+      "label": "About Us",
+      "subLinks": [
+        {
+          "_key": "02bd0b0b66fd",
+          "link": "/faq",
+          "label": "FAQ"
+        },
+        {
+          "_key": "f23e99230a0e",
+          "link": "/case-studies",
+          "label": "Client Stories"
+        },
+        {
+          "_key": "7853879412ad",
+          "link": "/partners",
+          "label": "Become a Partner"
+        }
+      ]
+    },
+    {
+      "_key": "45e71d2350ed",
+      "link": "/contacts",
+      "label": "Contacts",
+      "subLinks": []
+    },
+    {
+      "_key": "eec2b7d6cf93",
+      "link": "https://private.cyprusvipestates.com/en",
+      "label": "Private Collection",
+      "variant": "accent",
+      "subLinks": []
+    }
+  ],
+  "logoMobile": {
+    "alt": "",
+    "_type": "image",
+    "asset": {
+      "_ref": "image-c4911e6ba6654becbeda47f9485754fbcfeb407e-500x634-png",
+      "_type": "reference"
+    }
+  }
+}

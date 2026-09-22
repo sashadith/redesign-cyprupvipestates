@@ -8,18 +8,22 @@
 const SIGNER_NAME = "Sascha Dith";
 const COMPANY_NAME = "Cyprus VIP Estates";
 
-const VALEDICTION: Record<string, string> = {
+// VALEDICTION and ROLE_LINE are exported so scripts/qa/copy-snapshot.mjs can
+// pin their en/de/pl/ru rows (final review I3).
+export const VALEDICTION: Record<string, string> = {
   en: "Best regards,",
   de: "Mit freundlichen Grüßen,",
   ru: "С уважением,",
   pl: "Z poważaniem,",
+  he: "בברכה,", // REVIEW(he)
 };
 
-const ROLE_LINE: Record<string, string> = {
+export const ROLE_LINE: Record<string, string> = {
   en: "Your personal property advisor",
   de: "Ihr persönlicher Immobilienberater",
   ru: "Ваш персональный консультант по недвижимости",
   pl: "Twój osobisty doradca nieruchomości",
+  he: "יועץ הנדל\"ן האישי שלכם", // REVIEW(he)
 };
 
 export type ClosingVariant = "role-line" | "company-name";

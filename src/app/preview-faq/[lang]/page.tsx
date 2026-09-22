@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { i18n } from "@/i18n.config";
-import { localizedHref } from "@/lib/locale";
-import { staticAlternates, DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_WIDTH, DEFAULT_OG_IMAGE_HEIGHT } from "@/lib/seo";
+import { localizedHref, BCP47, isLocale } from "@/lib/locale";
+import { staticAlternates, DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_WIDTH, DEFAULT_OG_IMAGE_HEIGHT, ogLocale } from "@/lib/seo";
 import type { Translation } from "@/types/homepage";
 import Nav from "../../preview-home/sections/Nav";
 import Footer from "../../preview-home/sections/Footer";
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: t.metaDescription,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: params.lang,
+      locale: ogLocale(params.lang),
       type: "website",
       images: [{ url: DEFAULT_OG_IMAGE, width: DEFAULT_OG_IMAGE_WIDTH, height: DEFAULT_OG_IMAGE_HEIGHT }],
     },
@@ -58,6 +58,11 @@ export default async function FaqPage({ params }: Props) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
+    // Every locale gains the field, not just `he` — search engines and AI
+    // crawlers need the answer language stated explicitly, and it is the one
+    // JSON-LD signal an RTL locale cannot infer from the page chrome
+    // (Hebrew localization spec §3.6).
+    inLanguage: isLocale(lang) ? BCP47[lang] : BCP47.en,
     mainEntity: categories.flatMap((cat) =>
       cat.items.map((it) => ({
         "@type": "Question",

@@ -15,7 +15,7 @@
 .devx__hero { padding-top: clamp(120px, 15vh, 190px); padding-bottom: clamp(28px, 4vw, 56px); }
 
 .devx__title {
-  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), Georgia, serif;
   font-size: var(--text-h1);
   font-weight: 400;
   line-height: 1.04;
@@ -110,7 +110,7 @@
 
 /* No logo on file: the initials stand in rather than an empty plate. */
 .devx__initials {
-  font-family: var(--font-display), var(--font-display-cyr), Georgia, serif;
+  font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), Georgia, serif;
   font-size: 1.7rem;
   letter-spacing: 0.06em;
   color: var(--champagne);

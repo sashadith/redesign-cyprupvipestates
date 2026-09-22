@@ -7,6 +7,7 @@ import PxSelect from "./PxSelect";
 import { projectsStrings, type ProjectsStrings } from "@/app/[lang]/projects/projectsI18n";
 import { ProjectCard, type ProjectCardData, type Distances } from "./ProjectCard";
 import { gridSlots } from "./gridSlots";
+import Bdi from "@/app/components/Bdi";
 
 export type { ProjectCardData, Distances };
 
@@ -369,7 +370,7 @@ export default function ProjectsExplorer({
       <section className="px__results wrap" aria-label="Project results">
         <div className="px__results-head">
           <p className="px__count">
-            <strong>{total.toLocaleString(s.numLocale)}</strong> {total === 1 ? s.projectOne : s.projectMany}
+            <strong><Bdi ltr>{total.toLocaleString(s.numLocale)}</Bdi></strong> {total === 1 ? s.projectOne : s.projectMany}
             {hasBbox && <span className="px__count-area"> {s.inThisMapArea}</span>}
           </p>
           {/* Sort lives with the results, not the filters block */}
@@ -424,7 +425,7 @@ export default function ProjectsExplorer({
         <div className="px__mapoverlay" role="dialog" aria-modal="true" aria-label="Project map">
           <div className="px__mapoverlay-bar">
             <p className="px__mapoverlay-count">
-              <strong>{total.toLocaleString(s.numLocale)}</strong> {total === 1 ? s.projectOne : s.projectMany}
+              <strong><Bdi ltr>{total.toLocaleString(s.numLocale)}</Bdi></strong> {total === 1 ? s.projectOne : s.projectMany}
               {hasBbox ? ` ${s.inThisArea}` : ""}
             </p>
             <button type="button" className="px__mapoverlay-close" onClick={() => setMapOpen(false)} aria-label={s.close}>

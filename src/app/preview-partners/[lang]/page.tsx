@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { i18n } from "@/i18n.config";
-import { localizedHref } from "@/lib/locale";
-import { abs, staticAlternates } from "@/lib/seo";
+import { notFound } from "next/navigation";
+import { localizedHref, localesForStaticRoute, UNLOCALIZED_ROUTES } from "@/lib/locale";
+import { abs, staticAlternates, ogLocale } from "@/lib/seo";
 import type { Translation } from "@/types/homepage";
 import type { BenefitsBlock } from "@/types/homepage";
 import Nav from "../../preview-home/sections/Nav";
@@ -50,12 +50,24 @@ import { partnersCopy } from "./copy";
 
 type Props = { params: { lang: string } };
 
+// Decision J (spec §4.4/§8): Partners stays English-only — it is not one of
+// the pages that got translated, so a Hebrew URL for it would serve English
+// copy (PARTNERS_COPY.he below is a straight `en` alias, not a translation).
+// UNLOCALIZED_ROUTES (lib/locale.ts) is the single source of truth this
+// checks against — staticAlternates()/the sitemap already exclude `he` for
+// "partners" there; this is the matching runtime guard so the URL itself
+// 404s instead of rendering.
+function partnersOfferedIn(lang: string): boolean {
+  return !(UNLOCALIZED_ROUTES.partners as readonly string[]).includes(lang);
+}
+
 const HERO_IMAGE = "/uploads/files/b2b577b92f5d66696f53125853d50ba3784f912d.webp";
 // Same consultant photo/name/title every other redesigned page's form uses
 // (src/app/preview-home/sections/Form.tsx) — reused verbatim, not a new asset.
 const CONSULTANT_IMAGE = "/uploads/files/50b0d355d8507f9aadbe785a65e8a7233dd8f2e6.png";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  if (!partnersOfferedIn(params.lang)) notFound();
   const t = partnersCopy(params.lang);
   const { canonical, languages } = staticAlternates(params.lang, "partners");
   const ogImage = abs(HERO_IMAGE);
@@ -68,7 +80,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: t.metaDescription,
       url: canonical,
       siteName: "Cyprus VIP Estates",
-      locale: params.lang,
+      locale: ogLocale(params.lang),
       type: "website",
       images: [{ url: ogImage, width: 1200, height: 630 }],
     },
@@ -98,11 +110,19 @@ const Star = () => (
 
 export default function PartnersPage({ params }: Props) {
   const { lang } = params;
+  if (!partnersOfferedIn(lang)) notFound();
   const t = partnersCopy(lang);
 
-  const translations: Translation[] = i18n.languages.map((l) => ({
-    language: l.id,
-    path: localizedHref(l.id, "partners"),
+  // I1 fix: build the switcher straight from localesForStaticRoute
+  // ("partners") — the same source that gates the route itself (decision J
+  // excludes "he" for "partners") — instead of the full public-locale list
+  // the i18n config exposes, so no Hebrew entry is ever offered here once
+  // `he` goes public (it would 404, see partnersOfferedIn() above).
+  // LangSwitch only needs {language, path} per entry — it derives each
+  // display name itself from LANG_LABELS — so no separate lookup is needed.
+  const translations: Translation[] = localesForStaticRoute("partners").map((l) => ({
+    language: l,
+    path: localizedHref(l, "partners"),
   }));
 
   // Shaped exactly like the homepage's own BenefitsBlock (src/types/homepage.ts)

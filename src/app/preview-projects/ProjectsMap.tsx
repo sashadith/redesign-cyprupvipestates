@@ -21,11 +21,10 @@ import { CYPRUS_BOUNDS, CYPRUS_CENTER } from "@/app/components/map/cveMapStyle";
 import type { MapMarker } from "./ProjectsExplorer";
 import { topDistances } from "./ProjectCard";
 import { projectsStrings, type ProjectsStrings } from "@/app/[lang]/projects/projectsI18n";
+import { fmtPrice } from "@/lib/locale";
+import Bdi from "@/app/components/Bdi";
 
 const cyprusBounds = () => new maplibregl.LngLatBounds(CYPRUS_BOUNDS[0], CYPRUS_BOUNDS[1]);
-
-const fmtPrice = (p: number | null, s: ProjectsStrings) =>
-  p == null ? s.priceOnRequest : `€${p.toLocaleString(s.numLocale)}`;
 
 const validMarkers = (items: MapMarker[]) =>
   (items || []).filter((m) => typeof m.lat === "number" && typeof m.lng === "number" && !Number.isNaN(m.lat) && !Number.isNaN(m.lng));
@@ -597,7 +596,9 @@ export default function ProjectsMap({
             <a className="px-pop__card" href={active.href}>
               {active.image && <img className="px-pop__img" src={active.image} alt={active.title} />}
               <span className="px-pop__body">
-                <span className="px-pop__price">{fmtPrice(active.price, s)}</span>
+                <span className="px-pop__price">
+                  {active.price != null ? <Bdi ltr>{fmtPrice(active.price, locale)}</Bdi> : s.priceOnRequest}
+                </span>
                 <span className="px-pop__title">{active.title}</span>
                 {active.city && <span className="px-pop__city">{active.city}</span>}
                 {topDistances(active.distances, s, 3).length > 0 && (

@@ -5,6 +5,9 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { FC } from "react";
 import styles from "./ProjectLink.module.scss";
+import { fmtPrice } from "@/lib/locale";
+import Bdi from "@/app/components/Bdi";
+import { projectLinkCopy } from "./ProjectLink.copy";
 
 type Props = {
   url: string;
@@ -36,6 +39,8 @@ const ProjectLink: FC<Props> = ({
   lang,
   isSold,
 }) => {
+  const c = projectLinkCopy(lang);
+
   // if (!previewImage || !previewImage.asset) {
   //   return null; // <-- просто не рендерим проект без картинки
   // }
@@ -77,28 +82,12 @@ const ProjectLink: FC<Props> = ({
           {!isSold && (
             <p className={styles.projectPrice}>
               {price == null ? (
-                lang === "en"
-                  ? "Price on request"
-                  : lang === "de"
-                    ? "Preis auf Anfrage"
-                    : lang === "pl"
-                      ? "Cena na życzenie"
-                      : lang === "ru"
-                        ? "Цена по запросу"
-                        : "Price on request"
+                c.priceOnRequest
               ) : (
                 <>
-                  {lang === "en"
-                    ? "Price from"
-                    : lang === "de"
-                      ? "Preis ab"
-                      : lang === "pl"
-                        ? "Cena od"
-                        : lang === "ru"
-                          ? "Цена от"
-                          : "Price from"}
+                  {c.priceFrom}
                   &nbsp;
-                  {price.toLocaleString()} €
+                  <Bdi ltr>{fmtPrice(price, lang)}</Bdi>
                 </>
               )}
             </p>
@@ -108,15 +97,7 @@ const ProjectLink: FC<Props> = ({
       <div className={styles.projectData}>
         <div className={styles.projectDataItem}>
           <p>
-            {lang === "en"
-              ? "Bedrooms"
-              : lang === "de"
-                ? "Schlafzimmer"
-                : lang === "pl"
-                  ? "Sypialnie"
-                  : lang === "ru"
-                    ? "Спальни"
-                    : "Bedrooms"}
+            {c.bedrooms}
             <br />
             {bedrooms}
           </p>
@@ -124,33 +105,17 @@ const ProjectLink: FC<Props> = ({
         <div className={styles.projectDataItemDivider}></div>
         <div className={styles.projectDataItem}>
           <p>
-            {lang === "en"
-              ? "Covered area"
-              : lang === "de"
-                ? "Überdachte Fläche"
-                : lang === "pl"
-                  ? "Powierzchnia zabudowy"
-                  : lang === "ru"
-                    ? "Площадь"
-                    : "Covered area"}
+            {c.coveredArea}
             <br />
-            {coveredArea} m²
+            {coveredArea} {c.areaUnit}
           </p>
         </div>
         <div className={styles.projectDataItemDivider}></div>
         <div className={styles.projectDataItem}>
           <p>
-            {lang === "en"
-              ? "Plot size"
-              : lang === "de"
-                ? "Grundstück"
-                : lang === "pl"
-                  ? "Powierzchnia działki"
-                  : lang === "ru"
-                    ? "Площадь участка"
-                    : "Plot size"}
+            {c.plotSize}
             <br />
-            {plotSize} m²
+            {plotSize} {c.areaUnit}
           </p>
         </div>
       </div>

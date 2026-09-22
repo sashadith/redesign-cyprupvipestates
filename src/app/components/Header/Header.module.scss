@@ -1,8 +1,7 @@
 .header {
   position: fixed;
   top: 0;
-  left: 0;
-  right: 0;
+  inset-inline: 0;
   z-index: 1000;
   padding-top: 10px;
   padding-bottom: 10px;
@@ -68,8 +67,8 @@
   @media screen and (max-width: 768px){
     position: absolute;
     top: 0;
-    left: 200vw;
-    right: 0;
+    inset-inline-start: 200vw;
+    inset-inline-end: 0;
     bottom: 0;
     z-index: 100;
     background: #000;
@@ -84,7 +83,7 @@
 }
 
 .navWrapperOpen {
-  left: 0;
+  inset-inline-start: 0;
 }
 
 .contacts {
@@ -221,7 +220,7 @@
     content:'';
     position:absolute;
     bottom:-5px;
-    left:0;
+    inset-inline-start:0;
     width:0;
     height:2px;
     background:#c09d75;
@@ -296,7 +295,7 @@
 
     width:max-content;
     position:absolute;
-    left:-10px;
+    inset-inline-start:-10px;
     padding-top:25px;
     opacity:0;
     visibility:hidden;
@@ -356,7 +355,7 @@
     content: "";
     position: absolute;
     bottom: 6px;
-    left: 0;
+    inset-inline-start: 0;
     width: 0;
     height: 2px;
     background: #fff;
@@ -396,7 +395,7 @@
 
 .chevron {
   font-size: 24px;
-  margin-right: 8px;
+  margin-inline-end: 8px;
   transition: transform 0.3s ease;
   color: #fff;
 }

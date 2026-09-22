@@ -5,10 +5,10 @@ import { generateSeoMetaAction, saveSeoPromptAction } from "./actions";
 import { SEO_PLACEHOLDERS } from "@/lib/seoPlaceholders";
 import { ClaudeButton } from "../_ai";
 
-type Lang = "en" | "de" | "pl" | "ru";
-const LANGS: [Lang, string][] = [["en", "English"], ["de", "Deutsch"], ["pl", "Polski"], ["ru", "Русский"]];
+type Lang = "en" | "de" | "pl" | "ru" | "he";
+const LANGS: [Lang, string][] = [["en", "English"], ["de", "Deutsch"], ["pl", "Polski"], ["ru", "Русский"], ["he", "עברית"]];
 
-type Fields = Record<`title${"EN" | "DE" | "PL" | "RU"}` | `desc${"EN" | "DE" | "PL" | "RU"}`, string>;
+type Fields = Record<`title${"EN" | "DE" | "PL" | "RU" | "HE"}` | `desc${"EN" | "DE" | "PL" | "RU" | "HE"}`, string>;
 
 const field = "w-full rounded-md border border-[#E5E7EB] px-2.5 py-1.5 text-sm focus:border-[#1B4B43] focus:outline-none";
 const label = "block text-xs font-medium text-[#6B7280] mb-1";
@@ -38,7 +38,12 @@ export default function SeoMetaFields({
     setBusy(true); setErr(""); setJustGen(false);
     const r = await generateSeoMetaAction(developmentId, { emphasize, avoid });
     if (r.ok && r.result) {
-      setValues(r.result);
+      // generateSeoMetaAction writes all five locales (LANG_KEYS in
+      // src/lib/ai/seoMeta.ts includes titleHE/descHE — AI Hebrew SEO
+      // generation is in scope). The merge below still matters: it keeps
+      // whatever the editor already typed into fields the AI result doesn't
+      // touch, rather than clobbering user-entered values.
+      setValues((s) => ({ ...s, ...r.result }));
       setJustGen(true);
       rootRef.current?.dispatchEvent(new Event("cve:dirty", { bubbles: true }));
     } else setErr(r.error || "Generation failed");
@@ -74,18 +79,18 @@ export default function SeoMetaFields({
 
       <div>
         <label className={label}>Meta title <span className={titleLen > titleMax ? "text-[#DC2626]" : "text-[#9CA3AF]"}>({titleLen}/{titleMax})</span></label>
-        <input value={values[titleKey]} onChange={(e) => set(titleKey, e.target.value)} maxLength={120} className={field} />
+        <input value={values[titleKey]} onChange={(e) => set(titleKey, e.target.value)} maxLength={120} dir={tab === "he" ? "rtl" : "ltr"} className={field} />
       </div>
       <div>
         <label className={label}>Meta description <span className={descLen > descMax ? "text-[#DC2626]" : "text-[#9CA3AF]"}>({descLen}/{descMax})</span></label>
-        <textarea value={values[descKey]} onChange={(e) => set(descKey, e.target.value)} rows={2} maxLength={300} className={field} />
+        <textarea value={values[descKey]} onChange={(e) => set(descKey, e.target.value)} rows={2} maxLength={300} dir={tab === "he" ? "rtl" : "ltr"} className={field} />
       </div>
 
       {err && <p className="text-sm text-[#DC2626]">{err}</p>}
       {justGen && !err && (
         <p className="flex items-center gap-2 rounded-md bg-[#FFF7ED] border border-[#FED7AA] px-3 py-2 text-xs font-medium text-[#9A3412]">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
-          Generated in all 4 languages — click “Save overrides” below to publish it.
+          Generated in {`all ${LANGS.length} languages`} — click “Save overrides” below to publish it.
         </p>
       )}
       <p className="text-[11px] text-[#9CA3AF]">Pre-filled with the free auto-generated text; “Generate with Claude” writes a punchier alternative you can still edit before saving.</p>
@@ -156,16 +161,16 @@ function SeoPromptEditor({
                 <span className="text-xs font-medium text-[#111827]">Base prompt</span>
                 <span className="text-[11px] text-[#9CA3AF]">Shared by every project — editing here changes it everywhere</span>
               </div>
-              <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={12} className={ta} />
+              <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={12} dir="ltr" className={ta} />
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
               <label className="block">
                 <span className="block text-xs font-medium text-[#166534] mb-1">✓ Emphasize / include (this project only)</span>
-                <textarea value={emphasize} onChange={(e) => onEmphasize(e.target.value)} rows={2} className={ta.replace(" font-mono", "")} />
+                <textarea dir="ltr" value={emphasize} onChange={(e) => onEmphasize(e.target.value)} rows={2} className={ta.replace(" font-mono", "")} />
               </label>
               <label className="block">
                 <span className="block text-xs font-medium text-[#991B1B] mb-1">✕ Avoid / exclude (this project only)</span>
-                <textarea value={avoid} onChange={(e) => onAvoid(e.target.value)} rows={2} className={ta.replace(" font-mono", "")} />
+                <textarea dir="ltr" value={avoid} onChange={(e) => onAvoid(e.target.value)} rows={2} className={ta.replace(" font-mono", "")} />
               </label>
             </div>
             <div className="flex items-center justify-between">

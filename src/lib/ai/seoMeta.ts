@@ -6,6 +6,9 @@ import { prisma } from "@/lib/prisma";
 import type { ProjectVM } from "@/app/preview-project/feeds";
 import { TITLE_MAX, DESC_MAX, SEO_PLACEHOLDERS } from "@/lib/developmentSeo";
 import { listedUnits } from "@/lib/developmentAvailability";
+import { LOCALES } from "@/lib/locale";
+import { heSystemBlock } from "./heContext";
+import { scriptLeaks } from "./localeTextGuards";
 
 /* Claude-based alternative to the free/instant template generator in
    developmentSeo.ts (autoMetaTitle/autoMetaDescription) — same job (a per-project,
@@ -21,7 +24,7 @@ export const SEO_PROMPT_KEY = "seoMeta";
 // cache-eligibility floor, and this isn't a tight-loop batch call (one project at
 // a time from the admin UI), so there's little repetition to amortize a cache
 // write against anyway.
-export const DEFAULT_SEO_PROMPT = `You write SEO meta titles and meta descriptions for real-estate development pages on a luxury Cyprus property website, for international buyers searching in English, German, Polish and Russian.
+export const DEFAULT_SEO_PROMPT = `You write SEO meta titles and meta descriptions for real-estate development pages on a luxury Cyprus property website, for international buyers searching in five languages: English, German, Polish, Russian and Hebrew.
 
 Your text competes in a list of ten blue links. Its only job is to make the right buyer click and let the wrong one scroll past. Write for a person choosing where to spend half a million euros, not for a keyword scanner.
 
@@ -32,7 +35,7 @@ Your text competes in a list of ten blue links. Its only job is to make the righ
 
 Aim for the MIDDLE of the band, never the ceiling. Text over the ceiling is cut off mechanically, mid-word, and a search result ending in a severed word reads as broken.
 
-Budget each language separately. German and Russian run noticeably longer than English for the same content, and Polish longer still. When a language does not fit, say LESS — drop the weakest detail. Never pad a short language to match a long one, and never translate a sentence that only fits in English.
+Budget each language separately. German and Russian run noticeably longer than English for the same content, and Polish longer still. Hebrew usually runs noticeably SHORTER than English for the same content — the risk there is the opposite one, under-filling the band, not overshooting it. When a language does not fit, say LESS — drop the weakest detail. When Hebrew comes in short, add a genuine detail rather than padding with an adjective. Never pad a short language to match a long one, and never translate a sentence that only fits in English.
 
 Google shows roughly the first 150 characters on desktop and fewer on a phone, so put the reason to click in the FIRST half. The end of the line is the part nobody reads.
 
@@ -44,11 +47,11 @@ No unit counts, no prices, no dates, no completion quarters, no sizes, no percen
 
 Three exist. Write them EXACTLY as spelled, braces included, in every language:
 
-    {priceFrom}       the current lowest price, formatted for the language (English "€320,000", German "320.000 €")
+    {priceFrom}       the current lowest price, formatted for the language (English "€320,000", German "320.000 €", Hebrew "€320,000")
     {unitsAvailable}  how many homes are available right now
     {completion}      the completion date as the project states it ("Q4 2027")
 
-Put the surrounding words in the target language: German "ab {priceFrom}", Polish "od {priceFrom}", Russian "от {priceFrom}".
+Put the surrounding words in the target language: German "ab {priceFrom}", Polish "od {priceFrom}", Russian "от {priceFrom}", Hebrew "החל מ-{priceFrom}" (e.g. "החל מ-€320,000" — Western digits, "€" before the number, a hyphen joining the Hebrew preposition to the figure, never a "—" dash).
 
 Three rules that matter more than they look:
 
@@ -77,17 +80,35 @@ Include the project name, the property type, and the location (area and/or distr
 
 Use ONLY the facts given below. Never invent a detail, a price, an amenity or a completion date. If a fact is missing, write around it.
 
-Write EACH language natively — never leave English terms untranslated, never translate word-for-word.
+Write EACH language natively — never leave English terms untranslated, never translate word-for-word. The Hebrew fields must be written natively in Hebrew script, RTL, following the Hebrew style guide and glossary in the system prompt (register, banned patterns, place names, and the number/currency formatting above).
 
-Return via the seo_meta tool: one title and one description per language (en/de/pl/ru), in a single response.`;
+Return via the seo_meta tool: one title and one description per language (en/de/pl/ru/he), in a single response.`;
+
+// Appended to whatever getSeoPromptTemplate() returns — the default above, OR a
+// production AiPromptTemplate row saved before Hebrew shipped. That stored row
+// may still literally SAY "four languages" in its own prose; this block is not
+// part of the editable template text and cannot be removed by re-saving an old
+// version, so a four-language stored prompt still yields a titleHE/descHE pair.
+// The admin's "Save prompt" action should still be used to refresh the stored
+// prose itself — see the Phase 3 acceptance doc.
+export const OUTPUT_LOCALES_BLOCK = `\n\nOUTPUT LOCALES (fixed by the system, not editable): ${LOCALES.join(", ")}. Return one title and one description per locale.`;
 
 export async function getSeoPromptTemplate(): Promise<string> {
   const row = await prisma.aiPromptTemplate.findUnique({ where: { key: SEO_PROMPT_KEY } });
-  return row?.template || DEFAULT_SEO_PROMPT;
+  return (row?.template || DEFAULT_SEO_PROMPT) + OUTPUT_LOCALES_BLOCK;
 }
 
 export async function saveSeoPromptTemplate(template: string): Promise<void> {
-  const text = template.trim() || DEFAULT_SEO_PROMPT;
+  // The admin's prompt editor is pre-filled from getSeoPromptTemplate(), which
+  // carries the appended OUTPUT_LOCALES_BLOCK — so an unedited round-trip
+  // (load → save with no changes) would otherwise bake that block into the
+  // stored row, and the NEXT load would append a second copy on top of it.
+  // Strip a trailing copy here so the block stays append-only and non-editable
+  // no matter how many times the same template is loaded and re-saved.
+  const withoutLocalesBlock = template.endsWith(OUTPUT_LOCALES_BLOCK)
+    ? template.slice(0, -OUTPUT_LOCALES_BLOCK.length)
+    : template;
+  const text = withoutLocalesBlock.trim() || DEFAULT_SEO_PROMPT;
   await prisma.aiPromptTemplate.upsert({
     where: { key: SEO_PROMPT_KEY },
     update: { template: text },
@@ -95,7 +116,7 @@ export async function saveSeoPromptTemplate(template: string): Promise<void> {
   });
 }
 
-const LANG_KEYS = ["titleEN", "titleDE", "titlePL", "titleRU", "descEN", "descDE", "descPL", "descRU"] as const;
+const LANG_KEYS = ["titleEN", "titleDE", "titlePL", "titleRU", "titleHE", "descEN", "descDE", "descPL", "descRU", "descHE"] as const;
 export type SeoMetaResult = Record<(typeof LANG_KEYS)[number], string>;
 
 // What Claude is allowed to know. Deliberately carries NO figures — not the unit
@@ -213,6 +234,26 @@ const clamp = (s: string, max: number) => {
 const badFields = (r: Partial<SeoMetaResult>, publicName: string) =>
   LANG_KEYS.filter((k) => copyViolation(r[k] ?? "", { allowedName: publicName }) !== null);
 
+// Script guard: he must be in Hebrew script, and no other locale may leak
+// Hebrew (or Cyrillic, outside ru) into its field. Reuses scriptLeaks from
+// localeTextGuards.ts (the same guard generateProjectDescription and
+// generateAreaContent use) by regrouping the per-field titleXX/descXX keys into
+// the locale-keyed shape scriptLeaks expects, then mapping its messages back to
+// field keys so the retry/error text names the exact field, like badFields does.
+const scriptOffenders = (r: Partial<SeoMetaResult>): string[] => {
+  const problems: string[] = [];
+  for (const kind of ["title", "desc"] as const) {
+    const texts = Object.fromEntries(
+      LOCALES.map((l) => [l, (r as Record<string, string | undefined>)[`${kind}${l.toUpperCase()}`] ?? ""]),
+    );
+    for (const leak of scriptLeaks(texts)) {
+      const [locale, rest] = [leak.slice(0, leak.indexOf(":")), leak.slice(leak.indexOf(":"))];
+      problems.push(`${kind}${locale.toUpperCase()}${rest}`);
+    }
+  }
+  return problems;
+};
+
 // Length gets the same treatment, for the same reason: the clamp below is LOSSY.
 // It can only cut, and cutting is exactly what destroyed the Polish and Russian
 // price clauses on Azure Living and Eden Golf — "od {priceFrom}" became "od…",
@@ -243,17 +284,23 @@ export async function generateSeoMeta(vm: ProjectVM, tuning?: { emphasize?: stri
   const attempt = async (correction?: string): Promise<Partial<SeoMetaResult>> => {
     const msg = await client.messages.create({
       model: AI_MODEL,
-      max_tokens: 1024,
+      // Raised from 1024: five languages (was four) means five title/description
+      // pairs per response, and the Hebrew style guide + glossary in the system
+      // block above make the model's own reasoning about register/formatting
+      // heavier too. 1024 was already tight before Hebrew; 1400 gives headroom
+      // without moving into a materially more expensive tier.
+      max_tokens: 1400,
       // The shared project brief rides as the system layer so the carefully
       // length-tuned user prompt below (and the admin-editable template it
       // starts from) stays byte-identical to what was calibrated. The brief's
       // digit rule restates this file's own — deliberately: the enforcement
-      // in badFields() stays the backstop either way.
-      system: [{ type: "text", text: PROJECT_BRIEF }],
+      // in badFields() stays the backstop either way. The Hebrew style
+      // guide/glossary (see heContext.ts) rides alongside it, cacheable.
+      system: [{ type: "text", text: PROJECT_BRIEF }, heSystemBlock("seo")],
       tools: [
         {
           name: "seo_meta",
-          description: "SEO meta title + description for this project, in four languages.",
+          description: "SEO meta title + description for this project, in five languages.",
           input_schema: {
             type: "object",
             properties: Object.fromEntries(LANG_KEYS.map((k) => [k, { type: "string" }])),
@@ -274,7 +321,8 @@ export async function generateSeoMeta(vm: ProjectVM, tuning?: { emphasize?: stri
   let raw = await attempt();
   const firstOffenders = badFields(raw, vm.publicName);
   const firstLong = overLength(raw);
-  if (firstOffenders.length || firstLong.length) {
+  const firstScriptLeaks = scriptOffenders(raw);
+  if (firstOffenders.length || firstLong.length || firstScriptLeaks.length) {
     const notes: string[] = [];
     if (firstOffenders.length)
       notes.push(
@@ -292,14 +340,23 @@ export async function generateSeoMeta(vm: ProjectVM, tuning?: { emphasize?: stri
         `removing articles or stacking clauses, and do not shorten the other languages to match. ` +
         `Count a placeholder as the literal characters you type, braces included: "{priceFrom}" is 11.`,
       );
+    if (firstScriptLeaks.length)
+      notes.push(
+        `These fields leaked the wrong script: ${firstScriptLeaks.join("; ")}. ` +
+        `Each field must be 100% in its own target language and script (Hebrew script for the *HE fields, native script elsewhere).`,
+      );
     raw = await attempt(notes.join(" "));
   }
   const offenders = badFields(raw, vm.publicName);
-  if (offenders.length) {
+  const remainingScriptLeaks = scriptOffenders(raw);
+  if (offenders.length || remainingScriptLeaks.length) {
     throw new Error(
-      `Generated copy still contains a figure or an unknown placeholder in ${offenders.join(", ")} ` +
-      `after a retry — figures must not be baked into saved SEO text (they go stale), and only ` +
-      `${SEO_PLACEHOLDERS.map((p) => `{${p}}`).join(", ")} resolve at render time. Try again, or edit by hand.`,
+      `Generated copy still contains a figure, an unknown placeholder, or a script leak after a retry` +
+      `${offenders.length ? ` in ${offenders.join(", ")}` : ""}` +
+      `${remainingScriptLeaks.length ? ` (${remainingScriptLeaks.join("; ")})` : ""}` +
+      ` — figures must not be baked into saved SEO text (they go stale), only ` +
+      `${SEO_PLACEHOLDERS.map((p) => `{${p}}`).join(", ")} resolve at render time, and each field must stay in its ` +
+      `own script. Try again, or edit by hand.`,
     );
   }
 

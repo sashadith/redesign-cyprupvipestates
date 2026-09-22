@@ -55,6 +55,10 @@ check("English redirects", t("/projects/golf-residences"), "/projects/eden-golf"
 check("German keeps its locale", t("/de/projects/golf-residences"), "/de/projects/eden-golf");
 check("Polish keeps its locale", t("/pl/projects/golf-residences"), "/pl/projects/eden-golf");
 check("Russian keeps its locale", t("/ru/projects/golf-residences"), "/ru/projects/eden-golf");
+/* Every non-default locale in LOCALES, not a hard-coded three: with a literal
+   (de|pl|ru) the Hebrew URL fell through to a 404 while the others 308'd
+   (staging, 2026-09-20). */
+check("Hebrew keeps its locale", t("/he/projects/golf-residences"), "/he/projects/eden-golf");
 
 /* Everything else must fall through untouched. A redirect rule that fires too
    widely is worse than none: it takes a working page away. */
@@ -69,9 +73,10 @@ check("an unrelated path is untouched", t("/de/doma-na-kipre"), null);
 check("a sub-path is not flattened", t("/projects/golf-residences/units"), null);
 check("a localized sub-path is not flattened", t("/de/projects/golf-residences/units"), null);
 
-/* An unknown locale prefix is not a locale — /he/ is not live yet, and
-   inventing a redirect into it would be worse than leaving it alone. */
-check("an unsupported locale prefix does not match", t("/he/projects/golf-residences"), null);
+/* An unknown locale prefix is not a locale, and inventing a redirect into
+   one would be worse than leaving it alone. (/he/ IS a locale since the
+   Hebrew localization — see the Hebrew case above.) */
+check("an unsupported locale prefix does not match", t("/fr/projects/golf-residences"), null);
 check("/en/ is not a prefix this site serves", t("/en/projects/golf-residences"), null);
 
 /* The map and the middleware have to stay wired together. A rule that exists
@@ -83,8 +88,10 @@ check("and redirects with 301, not 302 or 308", /retiredTarget[\s\S]{0,260}NextR
 
 /* It must run before the i18n rewrite swallows it — in practice, before the
    /properties rule that documents that same hazard. */
+// The /properties regex is built once at module top (PROPERTIES_RE, from
+// lib/locale's non-default-locale pattern); the RULE is where it is matched.
 check("it runs before the /properties rule",
-  mw.indexOf("retiredProjectTarget(request.nextUrl.pathname)") < mw.indexOf("properties(?:\\/.*)?$"), true);
+  mw.indexOf("retiredProjectTarget(request.nextUrl.pathname)") < mw.indexOf("pathname.match(PROPERTIES_RE)") && mw.indexOf("pathname.match(PROPERTIES_RE)") > 0, true);
 
 console.log(failures ? `\n${failures} failed` : "\nall passed");
 process.exit(failures ? 1 : 0);

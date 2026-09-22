@@ -1,4 +1,5 @@
 import React from "react";
+import Bdi from "@/app/components/Bdi";
 
 /* The three direct-contact cards (WhatsApp / phone / email), shared by the
    Contacts page and the About page's closing block.
@@ -80,7 +81,7 @@ export default function ContactChannels({ labels }: { labels: ContactChannelLabe
             <span className="cnt__channel-index" aria-hidden>{String(i + 1).padStart(2, "0")}</span>
             <span className="cnt__channel-medallion" aria-hidden>{c.ico}</span>
             <span className="cnt__channel-title">{c.title}</span>
-            <span className="cnt__channel-value">{c.value}</span>
+            <span className="cnt__channel-value"><Bdi ltr>{c.value}</Bdi></span>
             <span className="cnt__channel-hint">{c.hint}</span>
             <span className="cnt__channel-go" aria-hidden><Arrow /></span>
           </a>

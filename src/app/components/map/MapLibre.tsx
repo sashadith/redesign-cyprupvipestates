@@ -138,7 +138,7 @@ export function MapContainer({
   }, [map]);
 
   return (
-    <div ref={host} className={className} style={{ position: "relative", ...style }}>
+    <div ref={host} dir="ltr" className={className} style={{ position: "relative", ...style }}>
       <MapCtx.Provider value={map}>{map ? children : null}</MapCtx.Provider>
     </div>
   );

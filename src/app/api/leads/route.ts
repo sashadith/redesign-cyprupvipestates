@@ -6,13 +6,15 @@ import { prisma } from "@/lib/prisma";
 import { sendTelegramMessage } from "@/lib/telegram";
 import { getAutoReplyEmail } from "@/lib/emailTemplates";
 import { parseAttribution } from "@/lib/attribution";
-import { recordInboundLead } from "@/lib/leadNotify";
+import { recordInboundLead, telegramLanguageTag } from "@/lib/leadNotify";
+import { resolveProjectInterest } from "@/lib/leads/projectInterest";
 import { matchDevelopmentsForLead } from "@/lib/crm/matching";
 import { ALLOWED_HOSTS, safeUrl, escapeHtml, blocked, guardRequest, spamSignal, makeRateLimiter } from "@/lib/antispam";
 import nodemailer from "nodemailer";
 import { PROPERTY_VALUES, BUDGET_RANGES, leadBudgetLabel, leadTimelineLabel, leadFinancingLabel } from "@/app/components/qualifierFields";
+import { LOCALES } from "@/lib/locale";
 
-const LOCALES = new Set(["en", "de", "pl", "ru"]);
+const ALLOWED_LANGS = new Set<string>(LOCALES);  // locally named ALLOWED_LANGS to avoid shadowing the imported LOCALES constant
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST || "smtp.hostinger.com",
@@ -92,9 +94,13 @@ export async function POST(request: Request) {
     let projectInterestId: string | null = null;
     let source = leadSource(page);
     const projectSlug = String(body.projectSlug ?? "").trim();
-    if (projectSlug && LOCALES.has(langNorm)) {
-      const proj = await prisma.project.findFirst({ where: { slug: projectSlug, language: langNorm as any }, select: { id: true } });
-      if (proj) { projectInterestId = proj.id; source = "PROJECT_ENQUIRY"; }
+    if (projectSlug && ALLOWED_LANGS.has(langNorm)) {
+      // Legacy Project row first (today's behaviour, byte-identical for
+      // en/de/pl/ru); on a miss (always for `he` — decision H) falls back to
+      // the Development's EN legacy Project sibling. See
+      // src/lib/leads/projectInterest.ts.
+      const interest = await resolveProjectInterest({ projectSlug, lang: langNorm, prisma });
+      if (interest.projectInterestId) { projectInterestId = interest.projectInterestId; source = interest.source ?? source; }
     }
 
     // Persist to Postgres
@@ -115,7 +121,7 @@ export async function POST(request: Request) {
         financing: financing as any,
         propertyTypeInterest,
         projectInterestId,
-        languagePreference: LOCALES.has(langNorm) ? (langNorm as any) : null,
+        languagePreference: ALLOWED_LANGS.has(langNorm) ? (langNorm as any) : null,
         pageSource: page,
         ...parseAttribution(body),
       },
@@ -166,11 +172,13 @@ export async function POST(request: Request) {
       .join("\n          ");
 
     // Telegram notification (non-fatal)
+    const langTag = telegramLanguageTag(ALLOWED_LANGS.has(langNorm) ? langNorm : null);
     const tg =
       `<b>New Lead — Cyprus VIP Estates</b>\n\n` +
       `<b>${escapeHtml(fullName || "-")}</b>\n` +
       `Email: ${escapeHtml(emailNorm)}\nPhone: ${escapeHtml(phoneNorm)}\n` +
       `Preferred: ${escapeHtml(preferred)}\n` +
+      (langTag ? `Language: ${escapeHtml(langTag)}\n` : "") +
       tgQualification +
       (messageNorm ? `Message: ${escapeHtml(messageNorm)}\n` : "") +
       `Page: ${escapeHtml(page)}\n` +

@@ -38,7 +38,8 @@ export const metadata: Metadata = {
 
 export default function ClientPresentationLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable}`}>
+    // Per-lead locale (incl. RTL) is applied on the page wrapper `<div lang dir>` — Phase 7.
+    <html lang="en" dir="ltr" data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable}`}>
       <head>
         <meta name="robots" content="noindex, nofollow" />
       </head>

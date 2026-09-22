@@ -2,6 +2,7 @@ import React, { FC } from "react";
 import styles from "./PartnersBenefits.module.scss";
 import { Oswald, Libre_Baskerville } from "next/font/google";
 import FadeUpAnimate from "../../FadeUpAnimate/FadeUpAnimate";
+import type { Locale } from "@/lib/locale";
 
 type Props = {
   lang: string;
@@ -30,7 +31,39 @@ type PartnersBenefitsTranslation = {
   items: BenefitItem[];
 };
 
-const translations: Record<string, PartnersBenefitsTranslation> = {
+const EN: PartnersBenefitsTranslation = {
+  headingStart: "The ",
+  headingHighlight: "benefits",
+  headingEnd: " of our partner program",
+  items: [
+    {
+      number: "1",
+      title: "Fast payouts",
+      description:
+        "We pay a 30% advance within 14 days of payment confirmation by the developer. The remaining 70% will be paid once we receive the full service fee.",
+    },
+    {
+      number: "2",
+      title: "Expert collaboration",
+      description:
+        "We organize viewings, coordinate with independent lawyers, who handle legal matters, and support you throughout the entire process.",
+    },
+    {
+      number: "3",
+      title: "Exclusive properties",
+      description:
+        "You get access to our database and sell exclusive properties with selected offers and unique referral fee conditions.",
+    },
+    {
+      number: "4",
+      title: "Always up to date",
+      description:
+        "Each customer step is digitally tracked. Your requests are automatically transferred to our CRM system. The partner portal gives you full insight into the current status at any time. Detailed reports are always available.",
+    },
+  ],
+};
+
+const translations: Record<Locale, PartnersBenefitsTranslation> = {
   de: {
     headingStart: "Die ",
     headingHighlight: "vorteile",
@@ -62,37 +95,7 @@ const translations: Record<string, PartnersBenefitsTranslation> = {
       },
     ],
   },
-  en: {
-    headingStart: "The ",
-    headingHighlight: "benefits",
-    headingEnd: " of our partner program",
-    items: [
-      {
-        number: "1",
-        title: "Fast payouts",
-        description:
-          "We pay a 30% advance within 14 days of payment confirmation by the developer. The remaining 70% will be paid once we receive the full service fee.",
-      },
-      {
-        number: "2",
-        title: "Expert collaboration",
-        description:
-          "We organize viewings, coordinate with independent lawyers, who handle legal matters, and support you throughout the entire process.",
-      },
-      {
-        number: "3",
-        title: "Exclusive properties",
-        description:
-          "You get access to our database and sell exclusive properties with selected offers and unique referral fee conditions.",
-      },
-      {
-        number: "4",
-        title: "Always up to date",
-        description:
-          "Each customer step is digitally tracked. Your requests are automatically transferred to our CRM system. The partner portal gives you full insight into the current status at any time. Detailed reports are always available.",
-      },
-    ],
-  },
+  en: EN,
   pl: {
     headingStart: "Korzyści ",
     headingHighlight: "ze współpracy",
@@ -155,10 +158,11 @@ const translations: Record<string, PartnersBenefitsTranslation> = {
       },
     ],
   },
+  he: EN, // decision J: Partners page stays English for he
 };
 
 const PartnersBenefits: FC<Props> = ({ lang }) => {
-  const t = translations[lang] ?? translations.de;
+  const t = translations[lang as Locale] ?? translations.en;
 
   return (
     <section className={styles.benefits}>
