@@ -7,9 +7,11 @@ import {
   HeTranslationError,
   graphemeLength,
   guardViolations,
+  maxTokensFor,
   mergePortableText,
   normalizeHebrew,
   parseJsonReply,
+  promptFactsFor,
   promptPayloadFor,
   staleFiguresIn,
   translateHe,
@@ -347,4 +349,47 @@ test("translateHe passes the guard when the model writes הכול and an en dash
   const { client } = fakeClient([JSON.stringify({ text: dashed }), critiqued({ text: dashed })]);
   const out = await translateHe(descInput, { client });
   assert.equal(out.he.text, "הכל קרוב, הים ובתי הספר, במרחק הליכה.");
+});
+
+
+// Staging 2026-09-23: all 23 developer profiles came back truncated at 16000
+// tokens; the request now streams with a per-kind budget and medium effort.
+test("translateHe prefers the client's stream() with the per-kind token budget and medium effort", async () => {
+  const seen: Record<string, unknown>[] = [];
+  const client: AnthropicLike = {
+    messages: {
+      async create() {
+        throw new Error("create() must not be used when stream() exists");
+      },
+      stream(args) {
+        seen.push(args);
+        const text = seen.length === 1 ? JSON.stringify({ text: HE_PROSE }) : critiqued({ text: HE_PROSE });
+        return { finalMessage: async () => ({ content: [{ type: "text", text }], stop_reason: "end_turn" }) };
+      },
+    },
+  };
+  await translateHe(descInput, { client });
+  assert.equal(seen.length, 2);
+  assert.equal(seen[0].max_tokens, 16000);
+  assert.deepEqual(seen[0].output_config, { effort: "medium" });
+  assert.equal(maxTokensFor("developerProfile"), 32000);
+  assert.equal(maxTokensFor("areaText"), 16000);
+});
+
+// Staging 2026-09-23 (arbeo-park): "Construction stage: delivery October 2028"
+// in the facts handed the model a digit the payload stripping never saw.
+test("promptFactsFor strips figures from an evergreen description's facts and keeps names", () => {
+  const facts = promptFactsFor({
+    kind: "developmentDescription",
+    en: { text: "x" },
+    facts: ["Project name: Abiete 2", "Location: Geroskipou, Cyprus", "Construction stage: delivery October 2028", "Units: 12"],
+  });
+  assert.deepEqual(facts, ["Project name: Abiete 2", "Location: Geroskipou, Cyprus", "Construction stage: delivery October"]);
+  assert.deepEqual(promptFactsFor({ kind: "areaText", en: { text: "x" }, facts: ["Area: Peyia 2"] }), ["Area: Peyia 2"]);
+});
+
+test("passAPrompt tells the model to keep spelled-out numbers as words", async () => {
+  const { client, prompts } = fakeClient([JSON.stringify({ text: HE_PROSE }), critiqued({ text: HE_PROSE })]);
+  await translateHe(descInput, { client });
+  assert.match(prompts[0], /spells out in WORDS/);
 });
