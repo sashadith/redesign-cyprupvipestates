@@ -1444,6 +1444,22 @@ function leptosRefBlock(ref: string): string {
   return seg.length > i + 2 ? seg[i + 1] : "";
 }
 
+// A "…Apartment Parcel" heading is the feed's own word for a row that is not
+// one apartment but several sold together as a single lot (e.g. "Mandria
+// Gardens Apartment Parcel Block 10" — a whole 6-apartment block). Mirrors
+// exactly the `parcel` test inside leptosUnitLabel below (same "no unit
+// number" precondition), pulled out standalone so leptosVm can tag the unit
+// itself, not just its display label. Found investigating Mandria Gardens
+// (2026-09-23): two such rows carried €1.54M/€1.78M prices that inflated the
+// project's advertised priceTo far past its real single-apartment ceiling —
+// see isBulkListing on the DevelopmentUnit schema and resolveDevelopmentPrice/
+// resolveBedRange/resolveBuildAreaRange (developmentCard.ts), which exclude
+// any unit this flags from price/bed/area aggregation and public listings.
+function leptosIsParcelRow(r: LeptosRow): boolean {
+  const num = r.h2.match(LEPTOS_NO_RE)?.[1] ?? r.h2.match(LEPTOS_DESIG_NUM_RE)?.[1] ?? "";
+  return !num && /\bParcels?\b/i.test(r.h2);
+}
+
 function leptosUnitLabel(r: LeptosRow, projectName: string, useRefBlock = false): string {
   const block = r.h2.match(/\bBlock\s+([A-Za-z0-9''-]+)/i)?.[1] ?? "";
   const building = block ? "" : leptosBuilding(r.h2, projectName);
@@ -1545,6 +1561,7 @@ export function leptosVm(g: LeptosGroup): ProjectVM {
     photos: sizedImages(r.images), plans: sizedImages(r.plans),
     coords: r.lat != null && r.lng != null ? { lat: r.lat, lng: r.lng } : null,
     description: "",
+    isBulkListing: leptosIsParcelRow(r),
   }));
 
   const center = units.find((u) => u.coords)?.coords ?? null;
@@ -1563,7 +1580,11 @@ export function leptosVm(g: LeptosGroup): ProjectVM {
   // AVAILABLE units with a real price only. Development.priceFrom/priceTo are
   // treated as authoritative by resolveDevelopmentPrice(), so a zero-priced
   // unit here would advertise "from €0". 4 in-scope units carry price 0.
-  const prices = units.map((u) => u.price).filter((n): n is number => n != null && n > 0).sort((a, b) => a - b);
+  // Bulk-listing rows (leptosIsParcelRow) are excluded too — a parcel's price
+  // covers a whole block, not one apartment, and would otherwise blow out
+  // this stored cache value the same way it did the render-time range (see
+  // resolveDevelopmentPrice, developmentCard.ts).
+  const prices = units.filter((u) => !u.isBulkListing).map((u) => u.price).filter((n): n is number => n != null && n > 0).sort((a, b) => a - b);
 
   const descBody = tidyDesc(first.body);
   return {

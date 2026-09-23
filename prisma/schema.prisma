@@ -1377,6 +1377,14 @@ model DevelopmentUnit {
   plans           Json?
   sortIndex       Int      @default(0)
   source          String   @default("feed") // feed | manual — sync only ever wipes/rewrites "feed" units
+  // A block/parcel of multiple physical units sold to one buyer as a single
+  // lot (e.g. Leptos's "Apartment Parcel" rows — a whole floor or building
+  // offered as one listing, not one apartment). Detected from the feed's own
+  // wording (see leptosIsParcelRow in feeds.ts), never guessed from price.
+  // Excluded from price/bed/area range aggregation and public unit listings
+  // (isListedUnit in developmentAvailability.ts) — the admin/CRM still see
+  // the row for reference, same as an "unlisted" unit.
+  isBulkListing   Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

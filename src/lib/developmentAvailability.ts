@@ -12,7 +12,7 @@
 
 import { developmentCopy } from "@/lib/developmentCopy";
 
-export type UnitStatusLike = { status?: string | null };
+export type UnitStatusLike = { status?: string | null; isBulkListing?: boolean | null };
 
 export type AvailabilityState = { total: number; available: number; soldOut: boolean };
 
@@ -98,7 +98,12 @@ export function availabilityContradiction(
 // admin-facing row count (the unit editor and the developments tables show
 // every row, unlisted included), and its `soldOut` is a separate decision that
 // is intentionally left computed over all rows.
-export const isListedUnit = (u: UnitStatusLike): boolean => u.status !== "unlisted";
+// A bulk/parcel listing (a block of units sold to one buyer as a single lot
+// — see isBulkListing on the DevelopmentUnit schema) is excluded for the same
+// reason "unlisted" is: it's not a single unit a public visitor can buy. The
+// row itself survives untouched in the DB either way (admin/sync/CRM raw
+// queries still see it), only this public-facing population drops it.
+export const isListedUnit = (u: UnitStatusLike): boolean => u.status !== "unlisted" && !u.isBulkListing;
 
 /** Public-facing unit population — everything except "unlisted". */
 export function listedUnits<T extends UnitStatusLike>(units: T[]): T[] {

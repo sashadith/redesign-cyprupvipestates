@@ -122,6 +122,7 @@ function unitRow(u: UnitVM, developmentId: string, i: number) {
     photos: (u.photos ?? []) as any,
     plans: (u.plans ?? []) as any,
     sortIndex: i,
+    isBulkListing: !!u.isBulkListing,
   };
 }
 

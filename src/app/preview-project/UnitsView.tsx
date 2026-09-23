@@ -38,6 +38,12 @@ export type UnitVM = {
   plans: string[];
   coords: { lat: number; lng: number } | null;
   description: string;
+  // A block/parcel of multiple physical units sold as one lot (e.g. Leptos's
+  // "Apartment Parcel" rows), not a single purchasable apartment — see the
+  // isBulkListing comment on the DevelopmentUnit schema. Optional: only the
+  // adapters that can actually detect it (leptosVm) ever set it; every other
+  // adapter leaves it undefined, same as an unset DB column.
+  isBulkListing?: boolean;
 };
 
 const statusClass = (s: string) => (s === "sold" ? "sold" : s === "reserved" || s === "unlisted" ? "warn" : "ok");

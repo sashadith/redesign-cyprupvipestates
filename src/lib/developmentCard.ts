@@ -12,7 +12,7 @@
 import { isListedUnit } from "@/lib/developmentAvailability";
 import { resolveRelativeCompletion } from "@/lib/completionDate";
 
-type UnitLike = { status?: string | null; price?: number | null; beds?: string | null; type?: string | null; areaBuilt?: string | null };
+type UnitLike = { status?: string | null; price?: number | null; beds?: string | null; type?: string | null; areaBuilt?: string | null; isBulkListing?: boolean | null };
 
 // THE UNITS DECIDE. Development.priceFrom/priceTo are only a fallback, for a
 // development that has no priced units at all.
@@ -57,10 +57,15 @@ export function resolveDevelopmentPrice(
   units: UnitLike[],
 ): { priceFrom: number | null; priceTo: number | null } {
   const advertisable = (n: number | null | undefined): n is number => typeof n === "number" && n > 0;
+  // Bulk-listing rows (a block of units sold as one lot, e.g. Leptos's
+  // "Apartment Parcel" rows) are excluded from BOTH pools — their price
+  // covers several apartments, not one, and left in would blow the range far
+  // past what a buyer can actually purchase (found on Mandria Gardens:
+  // €1.54M/€1.78M parcel rows against a real €188K-399K apartment ceiling).
   const availablePrices = units
-    .filter((u) => u.status === "available" && advertisable(u.price))
+    .filter((u) => u.status === "available" && !u.isBulkListing && advertisable(u.price))
     .map((u) => u.price as number);
-  const anyPrices = units.filter((u) => advertisable(u.price)).map((u) => u.price as number);
+  const anyPrices = units.filter((u) => !u.isBulkListing && advertisable(u.price)).map((u) => u.price as number);
   const pricePool = availablePrices.length ? availablePrices : anyPrices;
   if (!pricePool.length) return { priceFrom: devPriceFrom, priceTo: devPriceTo ?? devPriceFrom };
   return { priceFrom: Math.min(...pricePool), priceTo: Math.max(...pricePool) };
@@ -86,7 +91,7 @@ function unitBedNumber(beds: string | null | undefined): number | null {
 // as a string ("2" — never "2-2"), or a "lo-hi" range ("1-3").
 export function resolveBedRange(units: UnitLike[]): string {
   const nums = units
-    .filter((u) => u.status === "available")
+    .filter((u) => u.status === "available" && !u.isBulkListing)
     .map((u) => unitBedNumber(u.beds))
     .filter((n): n is number => n != null);
   if (!nums.length) return "";
@@ -112,7 +117,7 @@ function unitAreaNumber(area: string | null | undefined): number | null {
 }
 export function resolveBuildAreaRange(units: UnitLike[]): string {
   const nums = units
-    .filter((u) => u.status === "available")
+    .filter((u) => u.status === "available" && !u.isBulkListing)
     .map((u) => unitAreaNumber(u.areaBuilt))
     .filter((n): n is number => n != null && n > 0);
   if (!nums.length) return "";

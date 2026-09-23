@@ -71,7 +71,11 @@ export default async function ProjectPageBody({
   banner?: React.ReactNode;
 }) {
   const t = developmentCopy(lang);
-  const avail = p.units.filter((u) => u.status === "available");
+  // isBulkListing (a block of units sold as one lot) is excluded here too —
+  // same reasoning as resolveDevelopmentPrice (developmentCard.ts): it would
+  // otherwise blow out the plot/built-area range and the "N available" stat
+  // below with a parcel's block-sized area/price, not one apartment's.
+  const avail = p.units.filter((u) => u.status === "available" && !u.isBulkListing);
   // Every unit COUNT on this page is taken over the listed population —
   // the same one UnitsView renders below (see listedUnits in
   // developmentAvailability.ts). Counting p.units raw made the fact panel

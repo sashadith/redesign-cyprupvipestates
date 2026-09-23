@@ -186,7 +186,10 @@ export async function matchDevelopmentsForLead(lead: LeadLike, filters: MatchFil
     const area = ov?.area || d.area || null;
     const gallery = arr<string>(ov?.gallery).length ? arr<string>(ov?.gallery) : arr<string>(d.gallery);
     const mainImage = ov?.mainImage || gallery[0] || null;
-    const available = d.units.filter((u) => u.status === "available");
+    // isBulkListing rows (a block of units sold as one lot) are never a
+    // single-apartment match for a lead's budget/bedrooms — same exclusion
+    // as resolveDevelopmentPrice (developmentCard.ts).
+    const available = d.units.filter((u) => u.status === "available" && !u.isBulkListing);
     // Hard exclude — a genuinely sold-out development can never be a NEW
     // presentation candidate, independent of the admin-toggleable
     // `onlyAvailable` filter below (that one controls near-sold inclusion,
