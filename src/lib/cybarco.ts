@@ -45,6 +45,18 @@ function normaliseStatus(mark: string): CybarcoStatus {
   if (m.startsWith("sold")) return "sold_out";
   if (m.startsWith("ready")) return "ready";
   if (m.startsWith("under construction")) return "under_construction";
+  /* A phase announcement with a handover date, checked LAST so the three
+     status words above keep their precedence. Seen 2026-09-24 on Trilogy
+     Limassol Seafront, whose mark reads "North Residences Delivery November
+     2026" — the project name of a phase, then its delivery month. It threw,
+     and because the throw aborts the whole run, that one card blocked all
+     nine Cybarco projects from syncing for two nights.
+     Mapping it to under_construction is safe in the one direction this guard
+     exists to protect: a date in the future states when the building will be
+     handed over, so it cannot be a sold-out project quietly going back on
+     sale — a sold-out one still says "Sold Out", as Attikis and Thalassa do
+     on the same page today. Anything else still throws. */
+  if (/\bdelivery\b/.test(m)) return "under_construction";
   throw new Error(`Cybarco: unrecognised status mark ${JSON.stringify(mark)}`);
 }
 

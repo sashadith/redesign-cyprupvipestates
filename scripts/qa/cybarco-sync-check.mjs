@@ -21,7 +21,7 @@
      node scripts/qa/cybarco-sync-check.mjs
 
    Exits non-zero on any failed assertion. */
-import { writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { writeFileSync, mkdirSync, rmSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 /* esbuild is a TRANSITIVE dependency, not a declared one (see
@@ -348,6 +348,58 @@ check("ten attempts all refused is judged", verdict(10, 10), { ok: false, reason
 /* The reason has to name the numbers: it is what CronRunLog.message and the
    failure notification quote, and "something went wrong" is not actionable. */
 check("the reason quotes both counts", /\b21 of 30 fetch\(es\)/.test(S.runVerdict({ attempted: 30, failed: 21 }).reason ?? ""), true);
+
+/* ── manual unit fields survive the nightly rewrite (2026-09-24) ──────────
+   The sync deletes and recreates every feed unit each run. Reported that day:
+   unit TYPES set by hand across all nine Cybarco projects were gone the next
+   morning — 374 rows recreated in a single second with type null, because the
+   price lists carry no type column. That was not cosmetic: with no unit type
+   AND no Development.category, resolveDevelopmentType returns "" and the
+   propertyType filter compares against an empty string, so all nine projects
+   vanished from every type-filtered listing while still showing unfiltered. */
+const kept = {
+  ref: "A101", type: "Apartment", baths: "2", amenities: ["Pool"], attrs: [{ label: "Parking", value: "1" }],
+  photos: ["/uploads/x.webp"], plans: null, unitNumber: null, storage: undefined,
+  guestWc: null, orientation: null, areaVerandaOpen: null,
+};
+const carried = S.carryOverManualUnitFields(kept);
+check("a hand-set type is carried over", carried.type, "Apartment");
+check("…so are the other hand-set columns", [carried.baths, carried.amenities, carried.photos], ["2", ["Pool"], ["/uploads/x.webp"]]);
+check("sync-derived extras survive too", carried.attrs, [{ label: "Parking", value: "1" }]);
+
+/* Nulls must not be written back: an absent value leaves the column at its
+   default instead of pinning a null over one a later writer might fill. */
+check("nulls are skipped, not written back", "plans" in carried, false);
+check("undefined is skipped too", "storage" in carried, false);
+check("a brand-new unit carries nothing", S.carryOverManualUnitFields(undefined), {});
+check("…and a missing row is not an error", S.carryOverManualUnitFields(null), {});
+
+/* The columns the SYNC owns must never be carried over, or a stale price or
+   status would shadow the fresh price list forever — the exact opposite of
+   what this exists for. */
+const poisoned = S.carryOverManualUnitFields({ type: "Villa", price: 1, status: "sold", beds: "9", label: "old", ref: "old" });
+check("the sync's own columns are never carried", Object.keys(poisoned).sort(), ["type"]);
+
+/* The list and the writer have to stay complementary. If the sync ever starts
+   writing one of these columns, it must come off the list in the same commit,
+   or the preserved value would shadow every fresh one. */
+const syncSrc = readFileSync(join(process.cwd(), "src/lib/cybarcoSync.ts"), "utf8");
+const block = syncSrc.slice(syncSrc.indexOf("data: units.map((u, i) => ({"));
+const writtenKeys = Array.from(block.slice(0, block.indexOf("})),")).matchAll(/^\s{14}([a-zA-Z]+):/gm)).map((m) => m[1]);
+check("the writer's own column list was found", writtenKeys.length > 8, true);
+check("no preserved column is also written by the sync",
+  S.MANUAL_UNIT_FIELDS.filter((f) => writtenKeys.includes(f)), []);
+check("…and the preserved list is not silently empty", S.MANUAL_UNIT_FIELDS.length, 11);
+
+/* A helper nothing calls preserves nothing. Everything above tests the
+   function in isolation, so without this the whole feature could be deleted
+   from the write path and this suite would stay green. */
+check("the writer actually carries the preserved fields over",
+  /\.\.\.carryOverManualUnitFields\(keepByRef\.get\(cybarcoUnitRef\(u\)\)\)/.test(syncSrc), true);
+check("…reading them before the delete, not after",
+  syncSrc.indexOf("keepByRef.set") < syncSrc.indexOf("developmentUnit.deleteMany"), true);
+check("…and keyed on the ref that presentations pin",
+  /keepByRef\.set\(row\.ref, row\)/.test(syncSrc), true);
 
 console.log(failures ? `\n${failures} assertion(s) failed` : "\nall checks passed");
 process.exit(failures ? 1 : 0);

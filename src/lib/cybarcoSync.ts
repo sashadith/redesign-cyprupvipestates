@@ -356,6 +356,29 @@ export function transliterate(s: string): string {
     .join("");
 }
 
+/* The columns a Cybarco price list never carries, so an admin is their only
+   author — preserved across the delete+recreate in the sync below. The list is
+   exactly "what saveUnits (the admin unit editor) can write that this sync
+   does not"; if this sync ever starts writing one of them, it must come OFF
+   this list, or the stored value would shadow the fresh one forever. */
+export const MANUAL_UNIT_FIELDS = [
+  "type", "baths", "areaVerandaOpen", "unitNumber",
+  "storage", "guestWc", "orientation", "amenities", "photos", "plans", "attrs",
+] as const;
+
+/* Null and undefined are skipped rather than written back: an absent value has
+   to leave the column at its default, not pin an explicit null over one a
+   later writer might fill. */
+export function carryOverManualUnitFields(kept: Record<string, unknown> | undefined | null): Record<string, unknown> {
+  if (!kept) return {};
+  const out: Record<string, unknown> = {};
+  for (const field of MANUAL_UNIT_FIELDS) {
+    const value = kept[field];
+    if (value !== null && value !== undefined) out[field] = value;
+  }
+  return out;
+}
+
 export function cybarcoUnitRef(u: CybarcoUnit): string {
   const ref = transliterate(u.ref);
   if (!u.block) return ref;
@@ -1208,6 +1231,36 @@ export async function syncCybarco(
 
            The guard above is what keeps this from being dangerous: the delete
            only runs when the fresh list is credible. */
+        /* Anything an admin filled in by hand has to survive this
+           delete+recreate, or it lasts exactly one night. Reported
+           2026-09-24: every unit TYPE set across all nine Cybarco projects
+           was gone the next morning — the 01:00 run had recreated all 374
+           rows in a single second with type null, because the price lists
+           carry no type column and this writer only ever sets what they do
+           carry (ref, label, status, price, beds, floor, the four areas).
+
+           That was not cosmetic. resolveDevelopmentType falls back to
+           Development.category only when NO unit has a type, and Cybarco's
+           categories are null too, so the filter compared against an empty
+           string: measured the same day, all nine projects appeared on
+           /projects unfiltered and vanished under every propertyType filter.
+
+           Keyed on ref, which is cybarcoUnitRef's output — the same anchor
+           ClientPresentationItem.unitRefs pins, and the long comment above
+           explains why it may not change. The list below is precisely "what
+           saveUnits can write that this function does not", so the two stay
+           complementary rather than fighting over the same columns. */
+        const keepByRef = new Map<string, Record<string, unknown>>();
+        for (const row of await prisma.developmentUnit.findMany({
+          where: { developmentId: dev.id, source: "feed" },
+          select: {
+            ref: true, type: true, baths: true, areaVerandaOpen: true, unitNumber: true,
+            storage: true, guestWc: true, orientation: true, amenities: true,
+            photos: true, plans: true, attrs: true,
+          },
+        })) {
+          if (row.ref) keepByRef.set(row.ref, row);
+        }
         await prisma.developmentUnit.deleteMany({ where: { developmentId: dev.id, source: "feed" } });
         if (units.length) {
           await prisma.developmentUnit.createMany({
@@ -1215,6 +1268,7 @@ export async function syncCybarco(
               developmentId: dev.id,
               ref: cybarcoUnitRef(u),
               feedRef: cybarcoUnitRef(u),
+              ...carryOverManualUnitFields(keepByRef.get(cybarcoUnitRef(u))),
               label: cybarcoUnitLabel(u),
               status: u.status,
               /* null for every sold and reserved unit — the document prints a
