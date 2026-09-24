@@ -103,6 +103,21 @@ export async function GET(req: NextRequest) {
         await logCronRun(`feed-incomplete:${r.dev}`, false, r.blockedMessage);
         continue;
       }
+      /* The completeness guard's verdict is logged on EVERY run, not only when
+         it trips — this row is what lets the Action Center's
+         feedIncompleteWarnings rule clear itself.
+         That rule always said a later clean run supersedes a block, but
+         nothing ever wrote one: a block logged feed-incomplete:<dev>, a clean
+         run logged feed-sync:<dev> below, a DIFFERENT key, so the rule's
+         `row.ok` was never once true. Measured 2026-09-24: 0 of 14
+         feed-incomplete: rows had ok=true, and Domenica (blocked 2026-08-31)
+         and Medousa (2026-09-01) had been sitting in the panel as URGENT for
+         24 and 23 days while syncing cleanly every night — the alarm had
+         become wallpaper, which is worse than no alarm.
+         Kept as its own row rather than folded into feed-sync:<dev>, because
+         the two answer different questions: this one is "did the guard let
+         the write happen", that one is "did the write succeed". */
+      await logCronRun(`feed-incomplete:${r.dev}`, true, `feed complete — ${r.found} project(s) checked`);
       // 2026-08-13 (GROSSER AUFTRAG Teil 5) — was undefined on success, so the
       // morning summary (action-digest) had nothing to show per developer
       // beyond a bare checkmark. found/created/updated are already computed.

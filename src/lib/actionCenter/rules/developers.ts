@@ -319,27 +319,44 @@ async function feedSyncFailures(): Promise<ActionItem[]> {
 // this never collides with feedSyncFailures() above — a blocked run is a
 // deliberate skip, not a crash, and the two conditions must stay
 // independently visible/snoozable. Same "latest row per job" pattern.
+/* Which developers are STILL refusing, given the completeness log. Pure, and
+   exported, because the "still" is the whole subtlety and it was wrong for
+   three and a half weeks.
+
+   This rule always said a later clean run supersedes a block. Nothing ever
+   wrote that clean run: a blocked developer logged feed-incomplete:<dev>
+   ok=false, while a healthy one logged feed-sync:<dev> — a DIFFERENT key — so
+   `row.ok` was never once true. Measured 2026-09-24: 0 of 14
+   feed-incomplete: rows had ok=true, and Domenica (blocked 2026-08-31) and
+   Medousa (2026-09-01) had been shown as URGENT for 24 and 23 days while
+   syncing cleanly every single night. The cron route now logs the guard's
+   verdict on every run, pass or fail, and this reads the latest one. */
+export function pendingFeedBlocks(
+  rows: { job: string; ok: boolean; ranAt: Date; message: string | null }[],
+): { devKey: string; message: string | null; since: Date }[] {
+  const latestByJob = new Map<string, (typeof rows)[number]>();
+  // Callers pass rows newest-first; the first sighting of a job is its latest.
+  for (const r of rows) if (!latestByJob.has(r.job)) latestByJob.set(r.job, r);
+  const out: { devKey: string; message: string | null; since: Date }[] = [];
+  for (const [job, row] of Array.from(latestByJob)) {
+    if (row.ok) continue; // a later, complete sync superseded the block — not a live condition
+    out.push({ devKey: job.slice("feed-incomplete:".length), message: row.message, since: row.ranAt });
+  }
+  return out;
+}
+
 async function feedIncompleteWarnings(): Promise<ActionItem[]> {
   const rows = await prisma.cronRunLog.findMany({
     where: { job: { startsWith: "feed-incomplete:" } },
     orderBy: { ranAt: "desc" },
     take: 500,
   });
-  const latestByJob = new Map<string, (typeof rows)[number]>();
-  for (const r of rows) if (!latestByJob.has(r.job)) latestByJob.set(r.job, r);
-
-  const items: ActionItem[] = [];
-  for (const [job, row] of Array.from(latestByJob)) {
-    if (row.ok) continue; // a later, complete sync superseded the block — not a live condition
-    const devKey = job.slice("feed-incomplete:".length);
-    items.push({
-      id: `feed-incomplete:${job}`, severity: "URGENT", category: "DEVELOPERS",
-      title: `${devKey} feed looks incomplete — nothing was synced`,
-      description: row.message || "A large share of this developer's known units are missing from the feed. Nothing was written; check the feed before the next run.",
-      deepLink: `/admin/developments?dev=${encodeURIComponent(devKey)}`, since: row.ranAt,
-    });
-  }
-  return items;
+  return pendingFeedBlocks(rows).map((b) => ({
+    id: `feed-incomplete:feed-incomplete:${b.devKey}`, severity: "URGENT" as const, category: "DEVELOPERS" as const,
+    title: `${b.devKey} feed looks incomplete — nothing was synced`,
+    description: b.message || "A large share of this developer's known units are missing from the feed. Nothing was written; check the feed before the next run.",
+    deepLink: `/admin/developments?dev=${encodeURIComponent(b.devKey)}`, since: b.since,
+  }));
 }
 
 // (f) Published/ready development whose source feed no longer lists it.
