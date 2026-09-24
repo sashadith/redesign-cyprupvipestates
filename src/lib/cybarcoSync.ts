@@ -362,9 +362,67 @@ export function transliterate(s: string): string {
    does not"; if this sync ever starts writing one of them, it must come OFF
    this list, or the stored value would shadow the fresh one forever. */
 export const MANUAL_UNIT_FIELDS = [
-  "type", "baths", "areaVerandaOpen", "unitNumber",
+  "baths", "areaVerandaOpen", "unitNumber",
   "storage", "guestWc", "orientation", "amenities", "photos", "plans", "attrs",
 ] as const;
+
+/* `type` is deliberately NOT in the list above, because it is no longer purely
+   manual: the writer derives it from the label and lets a stored value win.
+   Keeping it here as well would be the one shape the guard forbids — a column
+   both preserved and written, where the preserved copy shadows every fresh
+   one forever. */
+
+/* Cybarco states the product in the unit's own label, which is the only place
+   it appears at all — the price lists carry no type column. Measured across
+   all nine projects on 2026-09-24, the blocks that name one are:
+
+     "VILLAS · 1"                    Seaview Heights
+     "Island Villas · 54"            Limassol Marina
+     "Villas Pricelist · ..."        Limassol Greens
+     "Kinglet Villas Pricelist"      Limassol Greens
+     "Ibis Townhouses Pricelist"     Limassol Greens
+     "Starlings Apartments Block A"  Limassol Greens
+
+   and the ones that do not: BUILDING A–F, EAST TOWER, NORTH RESIDENCES (A),
+   Castle Residences, and bare numbers ("7", "101", "401").
+
+   Only these three words count, only as whole words, and nothing else is
+   guessed — "Residences" is not a product, and a project NAME is never read:
+   Akamas Bay Villas labels its units "7", and typing a whole development from
+   its name would misfile every mixed one. A null here is not a failure; it
+   hands the question to Development.category, which is exactly what that
+   fallback is for. */
+export function cybarcoUnitTypeFromLabel(label: string | null | undefined): string | null {
+  const l = (label ?? "").toLowerCase();
+  // Townhouse first: it is the most specific, and a label naming it must never
+  // be read as something broader.
+  if (/\btownhouses?\b/.test(l)) return "Townhouse";
+  if (/\bvillas?\b/.test(l)) return "Villa";
+  if (/\bapartments?\b/.test(l)) return "Apartment";
+  return null;
+}
+
+/* All or nothing, per development. resolveDevelopmentType (developmentCard.ts)
+   ignores Development.category the moment ANY unit carries a type, so a
+   PARTIALLY typed development is worse than an untyped one: the units the
+   derivation could not name simply vanish from the filter.
+
+   Measured the hard way on 2026-09-24 — typing only Seaview Heights' nine
+   villas dropped its 81 apartments out of the Apartment filter until they were
+   typed too. Limassol Marina is the live case for this guard: "Island Villas"
+   names a product, "Castle Residences" does not, so deriving there would leave
+   3 of 5 units unnamed and trade a correct "Apartment · Villa" category for a
+   misleading "Villa".
+
+   A stored type is an admin's deliberate choice and is never withheld; only
+   the DERIVED half is all-or-nothing. */
+export function resolveCybarcoUnitTypes(
+  stored: (string | null | undefined)[],
+  derived: (string | null)[],
+): (string | null)[] {
+  const covered = stored.every((v, i) => !!(v || derived[i]));
+  return stored.map((v, i) => v || (covered ? derived[i] : null) || null);
+}
 
 /* Null and undefined are skipped rather than written back: an absent value has
    to leave the column at its default, not pin an explicit null over one a
@@ -1261,6 +1319,10 @@ export async function syncCybarco(
         })) {
           if (row.ref) keepByRef.set(row.ref, row);
         }
+        const unitTypes = resolveCybarcoUnitTypes(
+          units.map((u) => keepByRef.get(cybarcoUnitRef(u))?.type as string | null | undefined),
+          units.map((u) => cybarcoUnitTypeFromLabel(cybarcoUnitLabel(u))),
+        );
         await prisma.developmentUnit.deleteMany({ where: { developmentId: dev.id, source: "feed" } });
         if (units.length) {
           await prisma.developmentUnit.createMany({
@@ -1269,6 +1331,11 @@ export async function syncCybarco(
               ref: cybarcoUnitRef(u),
               feedRef: cybarcoUnitRef(u),
               ...carryOverManualUnitFields(keepByRef.get(cybarcoUnitRef(u))),
+              /* Manual beats derived, always: an admin who corrected a type
+                 must not be overruled by a label the next night. Computed for
+                 the whole development above, because the derived half only
+                 applies when it can name every unit. */
+              type: unitTypes[i],
               label: cybarcoUnitLabel(u),
               status: u.status,
               /* null for every sold and reserved unit — the document prints a
