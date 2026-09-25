@@ -21,7 +21,7 @@
      node scripts/qa/cybarco-sync-check.mjs
 
    Exits non-zero on any failed assertion. */
-import { writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { writeFileSync, mkdirSync, rmSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
 /* esbuild is a TRANSITIVE dependency, not a declared one (see
@@ -348,6 +348,135 @@ check("ten attempts all refused is judged", verdict(10, 10), { ok: false, reason
 /* The reason has to name the numbers: it is what CronRunLog.message and the
    failure notification quote, and "something went wrong" is not actionable. */
 check("the reason quotes both counts", /\b21 of 30 fetch\(es\)/.test(S.runVerdict({ attempted: 30, failed: 21 }).reason ?? ""), true);
+
+/* ── manual unit fields survive the nightly rewrite (2026-09-24) ──────────
+   The sync deletes and recreates every feed unit each run. Reported that day:
+   unit TYPES set by hand across all nine Cybarco projects were gone the next
+   morning — 374 rows recreated in a single second with type null, because the
+   price lists carry no type column. That was not cosmetic: with no unit type
+   AND no Development.category, resolveDevelopmentType returns "" and the
+   propertyType filter compares against an empty string, so all nine projects
+   vanished from every type-filtered listing while still showing unfiltered. */
+const kept = {
+  ref: "A101", type: "Apartment", baths: "2", amenities: ["Pool"], attrs: [{ label: "Parking", value: "1" }],
+  photos: ["/uploads/x.webp"], plans: null, unitNumber: null, storage: undefined,
+  guestWc: null, orientation: null, areaVerandaOpen: null,
+};
+const carried = S.carryOverManualUnitFields(kept);
+check("hand-set columns are carried over", [carried.baths, carried.amenities, carried.photos], ["2", ["Pool"], ["/uploads/x.webp"]]);
+/* `type` is handled by the writer itself now (derived from the label, stored
+   value winning), so it must NOT also travel through this helper — a column
+   both preserved and written is the one shape that would let a stale copy
+   shadow every fresh one. */
+check("type does NOT travel through the preservation helper", "type" in carried, false);
+check("sync-derived extras survive too", carried.attrs, [{ label: "Parking", value: "1" }]);
+
+/* Nulls must not be written back: an absent value leaves the column at its
+   default instead of pinning a null over one a later writer might fill. */
+check("nulls are skipped, not written back", "plans" in carried, false);
+check("undefined is skipped too", "storage" in carried, false);
+check("a brand-new unit carries nothing", S.carryOverManualUnitFields(undefined), {});
+check("…and a missing row is not an error", S.carryOverManualUnitFields(null), {});
+
+/* The columns the SYNC owns must never be carried over, or a stale price or
+   status would shadow the fresh price list forever — the exact opposite of
+   what this exists for. */
+const poisoned = S.carryOverManualUnitFields({ type: "Villa", price: 1, status: "sold", beds: "9", label: "old", ref: "old" });
+check("the sync's own columns are never carried", Object.keys(poisoned).sort(), []);
+
+/* The list and the writer have to stay complementary. If the sync ever starts
+   writing one of these columns, it must come off the list in the same commit,
+   or the preserved value would shadow every fresh one. */
+const syncSrc = readFileSync(join(process.cwd(), "src/lib/cybarcoSync.ts"), "utf8");
+const block = syncSrc.slice(syncSrc.indexOf("data: units.map((u, i) => ({"));
+const writtenKeys = Array.from(block.slice(0, block.indexOf("})),")).matchAll(/^\s{14}([a-zA-Z]+):/gm)).map((m) => m[1]);
+check("the writer's own column list was found", writtenKeys.length > 8, true);
+check("no preserved column is also written by the sync",
+  S.MANUAL_UNIT_FIELDS.filter((f) => writtenKeys.includes(f)), []);
+check("…and the preserved list is not silently empty", S.MANUAL_UNIT_FIELDS.length, 10);
+
+/* A helper nothing calls preserves nothing. Everything above tests the
+   function in isolation, so without this the whole feature could be deleted
+   from the write path and this suite would stay green. */
+check("the writer actually carries the preserved fields over",
+  /\.\.\.carryOverManualUnitFields\(keepByRef\.get\(cybarcoUnitRef\(u\)\)\)/.test(syncSrc), true);
+check("…reading them before the delete, not after",
+  syncSrc.indexOf("keepByRef.set") < syncSrc.indexOf("developmentUnit.deleteMany"), true);
+check("…and keyed on the ref that presentations pin",
+  /keepByRef\.set\(row\.ref, row\)/.test(syncSrc), true);
+
+/* ── the unit type, derived from the label (2026-09-24) ───────────────────
+   The price lists carry no type column, so the label is the only place
+   Cybarco names the product. Every string below is a real block measured
+   across all nine projects that day, not an invented example. */
+const T = (l) => S.cybarcoUnitTypeFromLabel(l);
+check("Seaview's villas", T("VILLAS · 1"), "Villa");
+check("Marina's island villas", T("Island Villas · 54"), "Villa");
+check("Greens' villa price list", T("Villas Pricelist · V12"), "Villa");
+check("Greens' named villa list", T("Kinglet Villas Pricelist · K3"), "Villa");
+check("Greens' townhouses", T("Ibis Townhouses Pricelist · T7"), "Townhouse");
+check("Greens' apartments", T("Starlings Apartments Block A · A001"), "Apartment");
+
+/* Blocks that name no product must stay null so Development.category answers
+   instead — guessing here is how a mixed development gets typed wholesale. */
+check("a plain building block says nothing", T("BUILDING A · A101"), null);
+check("…nor does a tower", T("EAST TOWER · 1701"), null);
+check("…nor a lettered phase", T("NORTH RESIDENCES (A) · 1201"), null);
+check("…nor 'Residences', which is not a product", T("Castle Residences · B22"), null);
+check("…nor a bare number, as Akamas Bay labels its villas", T("7"), null);
+check("an empty label is not a type", [T(""), T(null), T(undefined)], [null, null, null]);
+
+/* Case and plurality both vary in the real data ("VILLAS" vs "Island Villas"). */
+check("matching ignores case", T("villas · 1"), "Villa");
+check("singular reads the same as plural", T("Villa · 1"), "Villa");
+/* Whole words only: a project called "Villagio" is not a villa. */
+check("a word merely containing 'villa' does not match", T("Villagio · 3"), null);
+
+/* Townhouse is checked before villa on purpose. Only a label carrying BOTH
+   words exercises that order — the first version of this assertion paired
+   townhouse with "apartments" instead and passed whichever way the branches
+   were ordered, proving nothing. No live label mixes them today; this pins
+   the documented precedence so it cannot drift unnoticed. */
+check("townhouse wins over villa in the same label", T("Ibis Townhouses Villas Pricelist"), "Townhouse");
+check("…and over apartments too", T("Ibis Townhouses Apartments Pricelist"), "Townhouse");
+
+/* ── all or nothing, per development ──────────────────────────────────────
+   resolveDevelopmentType ignores Development.category the moment ANY unit has
+   a type, so half-typing a development is worse than not typing it: the rest
+   drops out of the filter. Learned by doing it — typing only Seaview Heights'
+   nine villas removed its 81 apartments from the Apartment filter. */
+const R = (stored, derived) => S.resolveCybarcoUnitTypes(stored, derived);
+
+/* Limassol Greens: every block names its product, so every unit gets one. */
+check("a fully-named development keeps its derived types",
+  R([null, null, null, null], ["Apartment", "Villa", "Townhouse", "Villa"]),
+  ["Apartment", "Villa", "Townhouse", "Villa"]);
+
+/* Limassol Marina, the live case: "Island Villas" names a product, "Castle
+   Residences" does not. Deriving would leave 3 of 5 unnamed and trade a
+   correct "Apartment · Villa" category for a misleading "Villa". */
+check("a partly-named development derives nothing at all",
+  R([null, null, null, null, null], ["Villa", "Villa", null, null, null]),
+  [null, null, null, null, null]);
+
+/* A stored type is an admin's decision and is never withheld, even when the
+   derivation is switched off for the rest. */
+check("stored types survive even when derivation is withheld",
+  R(["Penthouse", null, null], [null, "Villa", null]), ["Penthouse", null, null]);
+check("stored and derived together can cover a development",
+  R(["Penthouse", null], [null, "Villa"]), ["Penthouse", "Villa"]);
+check("stored always wins over a differing derived value",
+  R(["Apartment", "Apartment"], ["Villa", "Villa"]), ["Apartment", "Apartment"]);
+check("an empty stored value counts as absent, not as a blank",
+  R(["", null], ["Villa", "Villa"]), ["Villa", "Villa"]);
+check("no units is not an error", R([], []), []);
+
+/* Precedence and wiring in the writer. */
+check("the writer takes the type from the resolved list", /type: unitTypes\[i\],/.test(syncSrc), true);
+check("…resolved from stored and label-derived values",
+  /resolveCybarcoUnitTypes\(\s*units\.map\(\(u\) => keepByRef\.get\(cybarcoUnitRef\(u\)\)\?\.type/.test(syncSrc), true);
+check("…and it derives from the label, not the project name",
+  /cybarcoUnitTypeFromLabel\(cybarcoUnitLabel\(u\)\)/.test(syncSrc), true);
 
 console.log(failures ? `\n${failures} assertion(s) failed` : "\nall checks passed");
 process.exit(failures ? 1 : 0);

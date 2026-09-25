@@ -727,12 +727,72 @@ const MITO_INCOMPLETE_ABS_FLOOR = 3;
 // feed), so those units are present on both sides. Dropping them would leave
 // before far below after — measured 2026-09-01: Island Blue -593 %, Medousa
 // -94 % — and the guard could never fire for those developers again.
-async function feedUnitsAtRisk(dev: string): Promise<number> {
+//
+// 2026-09-24 — the "sold is present on both sides" premise above held until
+// Island Blue changed their feed. They now drop a project from the units
+// document entirely once nothing in it is available: 49 of their 68 projects
+// carry no units at all, and our 144 stored sold units are met by 34 in the
+// feed. That is 71 "missing" of 174, 41 %, and it blocked their sync every
+// night from 2026-09-18 onward while their 69 genuinely available units — 39
+// more than we hold — never reached the site.
+//
+// The block was protecting against a loss that cannot occur. A sold unit on a
+// PUBLISHED development is untouchable: syncFeedUnitsPreservingUnlisted skips
+// it by the same hard rule that keeps "gone from the feed" from meaning
+// "sold". So counting it on the before side measures something the sync is
+// incapable of changing.
+//
+// Hence the rule both sides now share: count only what this sync could still
+// change. Sold units are excluded exactly where they are provably safe —
+// published developments — and nowhere else, because publishStatus is what
+// decides the write path. An UNPUBLISHED development goes down
+// deleteMany({source:"feed"}) + createMany (syncOneProject, ~line 653), where
+// every unit really is at risk, sold included; excluding them there would
+// quietly retire the protection. Measured the same day: no development under
+// any of the nine SYNCED_DEVS currently holds a sold unit in draft, so this
+// changes nothing for them today — it is written this way so it stays correct
+// when one does.
+//
+// Mito passes excludeSoldOnPublished: false for that exact reason. Its
+// projects are unpublished by design, so every one of its units is on the
+// hard-delete path and all of them must keep counting.
+export function countableFeedUnits(
+  units: { status?: string | null }[],
+  isPublished: boolean,
+): number {
+  return isPublished ? units.filter((u) => u.status !== "sold").length : units.length;
+}
+
+// The threshold arithmetic itself, in one place so both call sites (and the
+// guard script) can only ever disagree on purpose. beforeCount === 0 means "we
+// hold nothing" — no opinion, never a block.
+export function completenessVerdict(
+  beforeCount: number,
+  afterCount: number,
+  absFloor: number,
+  pct: number = FEED_INCOMPLETE_PCT,
+): { blocked: boolean; missing: number; pctLabel: number } {
+  const missing = beforeCount - afterCount;
+  const missingPct = beforeCount > 0 ? missing / beforeCount : 0;
+  return {
+    blocked: beforeCount > 0 && missing > absFloor && missingPct > pct,
+    missing,
+    pctLabel: Math.round(missingPct * 100),
+  };
+}
+
+async function feedUnitsAtRisk(
+  dev: string,
+  opts: { excludeSoldOnPublished: boolean },
+): Promise<number> {
   return prisma.developmentUnit.count({
     where: {
       source: "feed",
       status: { not: "unlisted" },
       development: { dev, publishStatus: { not: "archived" } },
+      ...(opts.excludeSoldOnPublished
+        ? { NOT: { AND: [{ status: "sold" }, { development: { publishStatus: "published" } }] } }
+        : {}),
     },
   });
 }
@@ -741,27 +801,35 @@ async function checkFeedCompleteness(
   dev: string,
   ids: string[],
 ): Promise<{ blocked: boolean; message?: string; missing?: number; total?: number; vmsById: Map<string, ProjectVM | null> }> {
+  // Which of this developer's projects are published, keyed the way the feed
+  // identifies them. A project the feed offers that we do not hold yet is
+  // absent from this map and therefore counted as unpublished — correct, since
+  // syncOneProject creates it as a draft.
+  const publishedByFeedId = new Map<string, boolean>();
+  for (const row of await prisma.development.findMany({
+    where: { dev, publishStatus: { not: "archived" } },
+    select: { feedProjectId: true, publishStatus: true },
+  })) {
+    if (row.feedProjectId) publishedByFeedId.set(row.feedProjectId, row.publishStatus === "published");
+  }
+
   const vmsById = new Map<string, ProjectVM | null>();
   let afterCount = 0;
   for (const id of ids) {
     let vm: ProjectVM | null = null;
     try { vm = await getPreviewProject(dev, id); } catch { vm = null; }
     vmsById.set(id, vm);
-    afterCount += vm?.units.length ?? 0;
+    afterCount += vm ? countableFeedUnits(vm.units, publishedByFeedId.get(id) === true) : 0;
   }
-  const beforeCount = await feedUnitsAtRisk(dev);
-  if (beforeCount > 0) {
-    const missing = beforeCount - afterCount;
-    const missingPct = missing / beforeCount;
-    if (missing > FEED_INCOMPLETE_ABS_FLOOR && missingPct > FEED_INCOMPLETE_PCT) {
-      const pctLabel = Math.round(missingPct * 100);
-      return {
-        blocked: true,
-        message: `${missing} of ${beforeCount} units are missing from today's feed (${pctLabel} %). Nothing was changed — the catalogue stays as it is until this has been checked.`,
-        missing, total: beforeCount,
-        vmsById,
-      };
-    }
+  const beforeCount = await feedUnitsAtRisk(dev, { excludeSoldOnPublished: true });
+  const verdict = completenessVerdict(beforeCount, afterCount, FEED_INCOMPLETE_ABS_FLOOR);
+  if (verdict.blocked) {
+    return {
+      blocked: true,
+      message: `${verdict.missing} of ${beforeCount} units are missing from today's feed (${verdict.pctLabel} %). Nothing was changed — the catalogue stays as it is until this has been checked.`,
+      missing: verdict.missing, total: beforeCount,
+      vmsById,
+    };
   }
   return { blocked: false, vmsById };
 }
@@ -804,13 +872,15 @@ async function syncMitoCore(opts: { mirror?: boolean; forceMirror?: boolean } = 
   // clusters=[], afterCount is 0, so an existing catalogue of any size trips
   // missing > MITO_INCOMPLETE_ABS_FLOOR and blocks rather than silently wiping
   // every unpublished project down to nothing.
+  // Every unit counts on both sides here, sold included: Mito's projects are
+  // unpublished, so they take the hard-delete path where nothing is safe.
   const afterCount = clusters.reduce((n, c) => n + c.units.length, 0);
-  const beforeCount = await feedUnitsAtRisk(dev);
-  if (beforeCount > 0) {
-    const missing = beforeCount - afterCount;
-    const missingPct = missing / beforeCount;
-    if (missing > MITO_INCOMPLETE_ABS_FLOOR && missingPct > FEED_INCOMPLETE_PCT) {
-      const pctLabel = Math.round(missingPct * 100);
+  const beforeCount = await feedUnitsAtRisk(dev, { excludeSoldOnPublished: false });
+  {
+    const verdict = completenessVerdict(beforeCount, afterCount, MITO_INCOMPLETE_ABS_FLOOR);
+    if (verdict.blocked) {
+      const missing = verdict.missing;
+      const pctLabel = verdict.pctLabel;
       return {
         dev, found: clusters.length, created: 0, updated: 0, failed: 0,
         mirroredNewFiles: false, unitsWritten: 0, unitsCreated: 0, unitsCreatedLines: [], unitsUnlisted: [], createdProjects: [],

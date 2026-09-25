@@ -177,5 +177,49 @@ check("price-list date, September",
   "2026-09-04");
 check("no stamp -> null", CB.priceListDate("https://www.cybarco.com/x/Brochure.pdf"), null);
 
+/* ── the "Delivery <month> <year>" mark (2026-09-24) ──────────────────────
+   Cybarco put a phase announcement where a status word had always been:
+   Trilogy Limassol Seafront's card reads "North Residences Delivery November
+   2026". normaliseStatus threw, and because that throw aborts the whole run,
+   one card blocked all nine projects from syncing for two nights.
+   listing-delivery-mark.html is that page, captured the day it was found. */
+/* Caught deliberately: without the rule this THROWS, and an unhandled throw
+   here would abort the suite with a stack trace instead of a named failure —
+   the regression would still be caught, but nobody reading the output would
+   be told which assertion was meant to hold. */
+let fresh = [], parseError = "";
+try { fresh = CB.parseListing(fx("listing-delivery-mark.html"), fx("sitemap.xml")); }
+catch (e) { parseError = String(e.message || e); }
+check("the delivery mark does not throw", parseError, "");
+const trilogy = fresh.find((c) => c.slug === "trilogy-limassol-seafront");
+check("the delivery mark parses at all", !!trilogy, true);
+check("…as under construction, not sold out", trilogy?.status, "under_construction");
+/* The shape of the whole page is unchanged from listing.html above — same 15
+   projects, same 6 sold out. Measured, not assumed: the first draft of this
+   line guessed 2 from the cards visible on the page and missed that the
+   sitemap contributes the rest. */
+check("…and the rest of the page is untouched by the new mark",
+  [fresh.length, fresh.filter((c) => c.status === "sold_out").length], [cards.length, 6]);
+check("…with exactly one project now under construction by delivery date",
+  fresh.filter((c) => c.status === "under_construction").length,
+  cards.filter((c) => c.status === "under_construction").length);
+
+/* The hard error is the point of this function — a mark nobody has seen must
+   never quietly import as "on sale". Only the delivery form was added. */
+let threw = "";
+try { CB.parseListing(fx("listing-delivery-mark.html").replace("North Residences Delivery November 2026", "Coming Soon"), fx("sitemap.xml")); }
+catch (e) { threw = String(e.message || e); }
+check("an unknown mark still throws", /unrecognised status mark/.test(threw), true);
+check("…and the message quotes it, so the fix is one search away", /Coming Soon/.test(threw), true);
+
+/* Precedence: the three status words are checked before the delivery form, so
+   a sold-out project that also prints a handover date stays sold out. */
+const soldWithDate = CB.parseListing(
+  fx("listing-delivery-mark.html").replace("North Residences Delivery November 2026", "Sold Out – Delivery November 2026"),
+  fx("sitemap.xml"),
+);
+check("a sold-out project naming a delivery date stays sold out",
+  soldWithDate.find((c) => c.slug === "trilogy-limassol-seafront")?.status, "sold_out");
+
 console.log(failures ? `\n${failures} failed` : "\nall passed");
 process.exit(failures ? 1 : 0);
