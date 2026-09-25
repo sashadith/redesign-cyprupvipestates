@@ -105,15 +105,23 @@ For Plus 57, all 35 units match the PDF the operator sent on 2026-09-25.
 3. **Header spellings.** Around 60 spellings for about 15 concepts: "Nbr of
    Bedrooms" / "Number of Bedrooms" / "Nbr. of Bedrooms"; "(sqm)" / "(SQM)"; a
    dozen names for outdoor space (uncovered veranda, roof terrace, garden,
-   planter, roof garden …). One workbook has a `Price €/OLD` column.
+   planter, roof garden …).
 4. **Unit column name.** Usually "Unit"; Plus 60 uses "Villa No".
-5. **Price and status in one column.** Plus 60 writes "Sold" where the price would
-   be.
-6. **Two-row header.** Plus 60 splits internal area into Ground / 1st / 2nd floor
-   under one heading.
-7. **Villas over three rows.** Plus 75's "C-Villas" section: a "Lower Floor" row,
-   then the villa's name with price and status, then an "Upper Floor" row. One
-   villa, three rows.
+5. **An old-price column that must never be a fallback.** Plus 75 carries
+   `Price €/OLD` beside `Price €`. For a sold villa the current price is often
+   empty while the old one is filled (D-Villas, Villa 1: 370,000 under OLD,
+   nothing under current). Reading OLD when current is empty publishes a stale
+   price on a sold unit.
+6. **Two-row header.** Plus 60 splits internal area into Gr.Floor / 1st Floor /
+   2nd Floor / Total Area on a second header row under one heading; the unit's
+   internal area is that sub-row's "Total Area" column, not the separate
+   "Total Area (sqm)" of the whole villa.
+7. **Two-storey villas with swapped columns.** Plus 75's villa blocks ("C-Villas",
+   "D- Villas") put the villa's NAME ("Villa 1") in the Floor column and the
+   STOREY ("Lower Floor") in the Unit column; the next row, "Upper Floor", has no
+   name and continues the same villa. One villa, two rows. Villa names repeat
+   across blocks, so the unit ref must carry the block. (The PDF prints the name
+   on a line of its own between the two storeys; that is only vertical centring.)
 8. **Merged cells.** Floor, block and project appear only on the first row of their
    group.
 9. **Excel number noise.** `8.6999999999999993`, `76.599999999999994`.
@@ -255,7 +263,9 @@ the rest of the sync continues.
 2. After a run, no `sold` or `reserved` Plus unit has a price.
 3. Plus 87 yields 3 available, 1 reserved, 6 sold — from the active sheet only.
 4. Plus 57 yields 35 units, 12 available, prices equal to the PDF of 2026-09-25.
-5. Each Plus 75 villa is one unit.
+5. Plus 75's villas are nine units (C: Villa 1–2, D: Villa 1–7), refs carry the
+   block, bedrooms and bathrooms are summed over both storeys, and no villa takes
+   its price from `Price €/OLD` (D-Villa 1 is sold with no price, not €370,000).
 6. All 35 projects exist as drafts; the three PDF-only ones have no units.
 7. A `category` set by hand survives a run; so does a hand-set unit type.
 8. A workbook with an unknown unit status, an unknown project status, or not
@@ -268,7 +278,7 @@ the rest of the sync continues.
     the function under test.
 
 Fixtures are real files: Plus 33 (plain), 57 (hidden sheets), 87 (stale visible
-sheets), 60 (villa table), 75 (three-row villas), 67-68-69 (`&` in the sheet name),
+sheets), 60 (villa table, two-row header), 75 (two-storey villas, OLD price), 67-68-69 (`&` in the sheet name),
 59 (shops), one file with white-font prices, House Kiti, and one website page.
 
 ## What this connector cannot provide
