@@ -125,7 +125,8 @@ For Plus 57, all 35 units match the PDF the operator sent on 2026-09-25.
 8. **Merged cells.** Floor, block and project appear only on the first row of their
    group.
 9. **Excel number noise.** `8.6999999999999993`, `76.599999999999994`.
-10. **Bedroom text.** `4 ( 3+1)`.
+10. **Bedroom text.** `4 ( 3+1)`, `3(2+1)`. Stored as `4 (3+1)`: every reader of
+    `beds` takes the first number, so the total must lead.
 11. **Escaped names.** A sheet is called "Plus 67-68 & 69"; anything that reads
     sheet names out of the raw XML without unescaping sees `&amp;`.
 12. **A house, not a table.** House Kiti describes one house room by room, with a
@@ -162,7 +163,10 @@ correctness of the whole connector.
 - Media folder found by the same number under `Cyprus Projects/<City> Projects/`.
 - Unit ref = block + unit number (`A101`, `Villa 1`). Stable across versions; it
   is what client presentations will pin.
-- Slug `plus-<key>`; no collisions exist today, checked before creating.
+- The connector sets **no slug**. `Development.slug` is minted on publish by
+  `uniqueDevelopmentSlug()` from the public name ("Plus 33" → `plus-33`), as for
+  Cybarco. The dry run reports whether that slug collides with a Development or a
+  legacy Project (`uniqueDevelopmentSlug` only dedupes against Developments).
 
 ### Field mapping
 
@@ -174,13 +178,19 @@ correctness of the whole connector.
 | `stage` | footer "Project Status:", see below |
 | `energy` | website Project Details ("Energy Efficiency Category: A") |
 | `description`, `amenities`, `extraFacts` | website Project Details block (raw facts for the AI generator) |
-| `gallery`, `mainImage` | all images from the media folder |
+| `gallery` | all images from the media folder (the hero, `mainImage`, lives in `DevelopmentOverride` and stays the admin's pick) |
 | `plans` | Floor Plans images + Architectural plans PDFs rendered to pages |
-| unit `beds`, `baths`, `floor`, `areaInternal`, `areaVeranda`, `areaVerandaOpen` | price-list columns |
-| unit `attrs` | parking, storage, roof terrace, garden, common area, total area |
+| unit `beds`, `baths`, `floor`, `areaVeranda`, `areaVerandaOpen`, `areaPlot` | price-list columns |
+| unit `areaBuilt` **and** `areaInternal` | covered internal area — `areaBuilt` is what the public unit table shows (Covered Area = areaBuilt + areaVeranda, as for Island Blue) |
+| unit `storage` | "yes" when the list shows at least one storage room (the column is yes/no) |
+| unit `attrs` `[{ name, value }]` | parking, storage count, roof terrace, garden, common area, total area |
 | unit `price` | price column, available units only |
-| `vatApplies` (override) | true — 31 of 32 lists state prices exclude VAT |
 | `category` | **never written by the connector** |
+| `DevelopmentOverride.*` | **never written** — admin space (vatApplies included) |
+
+VAT needs no write: the project page already shows "+VAT" unless an admin sets
+`vatApplies = false`, which matches Plus's net prices (31 of 32 lists say so). A
+list that stops saying so is reported as a note for the operator.
 
 `stage` is free text across the system with inconsistent spellings. Plus maps to
 the most common existing form of each state: "Under-Construction" / "Under
@@ -216,8 +226,9 @@ the writer carries over the columns it does not own, keyed on the unit ref.
 ### Media
 
 All images are imported (standing policy). New projects land as drafts, so the
-operator curates before publishing. Once a project is published, `gallery` and
-`plans` are frozen, as for every other developer. Video and deeds are skipped.
+operator curates before publishing. Once a project is published, the feed-sync
+freeze applies: `publicName`, `description`, `amenities`, `gallery`, `plans`
+always, and `district`, `town`, `latitude`, `longitude` once set. Video and deeds are skipped.
 
 ### Project Details from the website
 
@@ -230,8 +241,12 @@ the rest of the sync continues.
 
 ### Sync behaviour
 
-- **Change detection** by Drive `md5Checksum` per file, not by the version number
-  typed into the sheet. Unchanged files are skipped. `force` re-reads everything.
+- **Change detection** where it costs something: media. Each project's media
+  signature (`collectMedia().sig`) is stored in the existing
+  `Development.driveImagesModified`, and unchanged media is not re-downloaded.
+  The 32 price lists are re-read every run — parsing them takes well under a
+  second, and a per-file checksum would need a column that does not exist.
+  `force` re-mirrors everything.
 - **Isolation.** Each project runs in its own try/catch. A broken file skips one
   project and is reported; the other 34 continue. (Cybarco, 2026-09-24: one
   unrecognised status mark aborted the whole run and blocked nine projects for two
