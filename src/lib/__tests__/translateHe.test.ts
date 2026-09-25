@@ -7,6 +7,7 @@ import {
   HeTranslationError,
   graphemeLength,
   guardViolations,
+  isLatinNameSpan,
   maxTokensFor,
   mergePortableText,
   normalizeHebrew,
@@ -392,4 +393,75 @@ test("passAPrompt tells the model to keep spelled-out numbers as words", async (
   const { client, prompts } = fakeClient([JSON.stringify({ text: HE_PROSE }), critiqued({ text: HE_PROSE })]);
   await translateHe(descInput, { client });
   assert.match(prompts[0], /spells out in WORDS/);
+});
+
+
+// Staging 2026-09-23, the tail after the big fixes: raw line breaks inside
+// JSON strings, הכול inside portable-text spans, Latin proper-name spans
+// rejected for carrying no Hebrew, and `seo` dropped from the two longest
+// developer profiles when it came last in the payload.
+test("parseJsonReply tolerates a raw line break inside a string literal", () => {
+  assert.deepEqual(parseJsonReply('{"text":"פסקה ראשונה.\n\nפסקה שנייה."}'), { text: "פסקה ראשונה.\n\nפסקה שנייה." });
+  assert.deepEqual(parseJsonReply('{"a":"x\\"y","b":"z"}'), { a: 'x"y', b: "z" });
+});
+
+test("mergePortableText normalizes הכול inside a span without trimming its layout spaces", () => {
+  const en = [{ _type: "block", _key: "b", children: [{ _type: "span", _key: "s", text: " everything ", marks: [] }] }];
+  const he = [{ _type: "block", _key: "b", children: [{ _type: "span", _key: "s", text: " הכול ", marks: [] }] }];
+  const problems: string[] = [];
+  const merged = mergePortableText(en, he, problems) as typeof en;
+  assert.deepEqual(problems, []);
+  assert.equal(merged[0].children[0].text, " הכל ");
+});
+
+test("guardViolations accepts a Latin proper-name span the model copied verbatim, still flags an untranslated sentence", () => {
+  assert.equal(isLatinNameSpan("Kings Avenue Mall", "Kings Avenue Mall"), true);
+  assert.equal(isLatinNameSpan("ONE", "ONE"), true);
+  assert.equal(isLatinNameSpan("Hai", "Hai"), true);
+  assert.equal(isLatinNameSpan("Secret Valley Golf Resort", "Secret Valley Golf Resort"), true);
+  assert.equal(isLatinNameSpan("Key Features of ", "Key Features of "), true);
+  assert.equal(isLatinNameSpan("Other projects include a mix of upcoming developments", "Other projects include a mix of upcoming developments"), false);
+  assert.equal(isLatinNameSpan("Kings Avenue Mall", "מרכז קניות"), false);
+  const input: HeTranslateInput = {
+    kind: "developerProfile",
+    en: {
+      slug: "aristo-developers",
+      title: "Aristo Developers",
+      excerpt: "A developer.",
+      portableText: [
+        { _type: "block", _key: "b1", children: [{ _type: "span", _key: "s1", text: "Kings Avenue Mall", marks: [] }] },
+        { _type: "block", _key: "b2", children: [{ _type: "span", _key: "s2", text: "A large developer in Paphos.", marks: [] }] },
+      ],
+    },
+  };
+  const ok = guardViolations(input, {
+    slug: "aristo-developers",
+    title: "Aristo Developers",
+    excerpt: "יזם.",
+    portableText: [
+      { _type: "block", _key: "b1", children: [{ _type: "span", _key: "s1", text: "Kings Avenue Mall", marks: [] }] },
+      { _type: "block", _key: "b2", children: [{ _type: "span", _key: "s2", text: "יזם גדול בפאפוס.", marks: [] }] },
+    ],
+  });
+  assert.deepEqual(ok.filter((p) => /no Hebrew script/.test(p)), []);
+  const bad = guardViolations(input, {
+    slug: "aristo-developers",
+    title: "Aristo Developers",
+    excerpt: "יזם.",
+    portableText: [
+      { _type: "block", _key: "b1", children: [{ _type: "span", _key: "s1", text: "Kings Avenue Mall", marks: [] }] },
+      { _type: "block", _key: "b2", children: [{ _type: "span", _key: "s2", text: "A large developer in Paphos.", marks: [] }] },
+    ],
+  });
+  assert.match(bad.join(" "), /portableText\[1\]\.children\[0\]\.text: no Hebrew script/);
+});
+
+test("developer-profile payload lists seo before the long portable text", async () => {
+  const { client, prompts } = fakeClient([
+    JSON.stringify({ slug: "x", title: "X", seo: { metaTitle: "כותרת", metaDescription: "תיאור" }, excerpt: HE_PROSE, portableText: [] }),
+    critiqued({ slug: "x", title: "X", seo: { metaTitle: "כותרת", metaDescription: "תיאור" }, excerpt: HE_PROSE, portableText: [] }),
+  ]);
+  await translateHe({ kind: "developerProfile", en: { slug: "x", title: "X", seo: { metaTitle: "T", metaDescription: "D" }, excerpt: "An excerpt.", portableText: [] } }, { client });
+  const payload = prompts[0].split("English payload (JSON):")[1];
+  assert.ok(payload.indexOf('"seo"') < payload.indexOf('"portableText"'));
 });

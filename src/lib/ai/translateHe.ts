@@ -127,7 +127,10 @@ const FIELDS: Record<HeTranslateKind, (keyof HeTranslatePayload)[]> = {
   developmentDescription: ["text"],
   developmentSeo: ["title", "description"],
   areaText: ["text"],
-  developerProfile: ["slug", "title", "excerpt", "description", "portableText", "seo"],
+  // `seo` before the long body: with it LAST the model dropped it on the two
+  // longest profiles (bbf, square-one — "seo.metaTitle: empty", staging
+  // 2026-09-23) after producing 40+ portable-text blocks.
+  developerProfile: ["slug", "title", "seo", "excerpt", "description", "portableText"],
 };
 
 function payloadFor(input: HeTranslateInput): HeTranslatePayload {
@@ -177,7 +180,10 @@ export function mergePortableText(
         if (typeof hv !== "string" || (hasLetters(v) && !hv.trim())) {
           problems.push(`portable text: missing Hebrew text at ${path}.text`);
         } else {
-          out[k] = hv;
+          // Same mechanical house-style fixes as the flat fields (הכול → הכל
+          // tripped three developer profiles inside spans, 2026-09-23), but
+          // WITHOUT trimming: a span's leading/trailing space is layout.
+          out[k] = normalizeHebrewSpan(hv);
         }
       } else if (v && typeof v === "object" && KEEP_FROM_EN.indexOf(k) === -1) {
         out[k] = mergePortableText(v, heObj[k], problems, `${path}.${k}`);
@@ -406,12 +412,45 @@ function textOf(msg: AnthropicMessage): string {
 }
 
 /** Pull the first top-level JSON object out of a model reply (fences tolerated). */
+/** The model sometimes types a real line break inside a JSON string (a
+ *  two-paragraph description) instead of `\n`; strict JSON.parse rejects it
+ *  ("Bad control character in string literal", three rows on staging
+ *  2026-09-23). Walk the text and escape raw control characters that sit
+ *  inside string literals, leaving everything else untouched. */
+export function escapeControlCharsInStrings(json: string): string {
+  let out = "";
+  let inString = false;
+  let escaped = false;
+  for (const ch of json) {
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+        out += ch;
+      } else if (ch === "\\") {
+        escaped = true;
+        out += ch;
+      } else if (ch === '"') {
+        inString = false;
+        out += ch;
+      } else if (ch === "\n") out += "\\n";
+      else if (ch === "\r") out += "\\r";
+      else if (ch === "\t") out += "\\t";
+      else if (ch < " ") out += "";
+      else out += ch;
+    } else {
+      if (ch === '"') inString = true;
+      out += ch;
+    }
+  }
+  return out;
+}
+
 export function parseJsonReply(raw: string): Record<string, unknown> {
   const cleaned = raw.replace(/```(?:json)?/gi, "").trim();
   const start = cleaned.indexOf("{");
   const end = cleaned.lastIndexOf("}");
   if (start === -1 || end <= start) throw new Error("model reply contained no JSON object");
-  const parsed = JSON.parse(cleaned.slice(start, end + 1));
+  const parsed = JSON.parse(escapeControlCharsInStrings(cleaned.slice(start, end + 1)));
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("model reply was not a JSON object");
   return parsed as Record<string, unknown>;
 }
@@ -424,14 +463,25 @@ export function parseJsonReply(raw: string): Record<string, unknown> {
  *  the model kept getting them wrong even when told twice (staging
  *  2026-09-21/22: 17 + 3 of 87 rejections): הכול → הכל, and an en/em dash
  *  between words → a comma. A leftover FIGURE_REMOVED marker is dropped. */
+export function normalizeHebrewSpan(s: string): string {
+  return s.replace(/הכול/g, "הכל").replace(/\s*[–—]\s*/g, ", ").split(FIGURE_REMOVED).join("");
+}
 export function normalizeHebrew(s: string): string {
-  return s
-    .replace(/הכול/g, "הכל")
-    .replace(/\s*[–—]\s*/g, ", ")
-    .split(FIGURE_REMOVED)
-    .join("")
-    .replace(/\s{2,}/g, " ")
-    .trim();
+  return normalizeHebrewSpan(s).replace(/\s{2,}/g, " ").trim();
+}
+
+const NAME_STOPWORDS = new Set(["of", "the", "and", "by", "at", "in", "on", "de", "del", "la", "le", "&"]);
+/** A span the English itself keeps as a Latin proper name — a project or
+ *  brand name ("Kings Avenue Mall", "ONE", the "Hai" of a name split across
+ *  marks) — and the model copied verbatim, as the style guide demands. Such
+ *  a span legitimately carries no Hebrew (four developer profiles were
+ *  rejected for exactly this, 2026-09-23). Every word must be capitalised,
+ *  all-caps or a digit; only the listed stopwords may be lower-case. */
+export function isLatinNameSpan(en: string, he: string): boolean {
+  if (he.trim() !== en.trim()) return false;
+  const words = en.replace(/[“”"'‘’(),.:;!?]/g, " ").trim().split(/\s+/).filter(Boolean);
+  if (!words.length || words.length > 8) return false;
+  return words.every((w) => NAME_STOPWORDS.has(w.toLowerCase()) || /^[A-Z0-9][A-Za-z0-9&.-]*$/.test(w));
 }
 
 function assemble(input: HeTranslateInput, raw: Record<string, unknown>, problems: string[]): HeTranslatePayload {
@@ -480,7 +530,7 @@ export function guardViolations(input: HeTranslateInput, he: HeTranslatePayload)
     if (!hasLetters(enValue)) continue;
     const heValue = heMap.get(label) ?? "";
     if (!heValue.trim()) problems.push(`${label}: empty (English had text)`);
-    else if (!hasHebrew(heValue)) problems.push(`${label}: no Hebrew script`);
+    else if (!hasHebrew(heValue) && !isLatinNameSpan(enValue, heValue)) problems.push(`${label}: no Hebrew script`);
   }
 
   // 2. Script leaks (Hebrew missing, Cyrillic bleed) across the whole output.
