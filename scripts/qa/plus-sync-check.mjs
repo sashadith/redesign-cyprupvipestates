@@ -173,6 +173,54 @@ check("(c) Plus 60: the '. ' lines of the div before the buttons, exactly", d60,
   "3 minutes from Amathus, Mediterranean & Four Seasons Hotels",
 ], energy: null });
 check("(c) …the overview prose is never read", d60.facts.some((f) => /agios tychonas|luxury experience|units remaining/i.test(f)), false);
+/* Captured 2026-09-26: four more pages, all read in the <div> right before
+   div.downloadBtns, all yielding nothing before this change.
+   (d) Plus 88: an unbolded label ("<p><u>Project Details</u></p>", no colon),
+   then eight "•" lines, then empty <p>&nbsp;</p>s. */
+const d88 = S.projectDetails(readFileSync("scripts/qa/fixtures/plus/plus-88-page.html", "utf8"));
+check("(d) Plus 88: the '•' lines after an unbolded label, exactly", d88, { facts: [
+  "2 Blocks",
+  "1 & 2 Bedroom Apartments",
+  "Apartments with Large Terraces",
+  "Facing Metro Supermarket",
+  "2 minutes from American Academy Larnaca",
+  "4 minutes from Ermou Street",
+  "5 minutes from Finikoudes Beach",
+  "Ideal For Rent",
+], energy: null });
+check("(d) Plus 88: the overview prose is never read", d88.facts.some((f) => /downtown|prelaunch|heart of the city/i.test(f)), false);
+/* (e) Plus 56: no label; the box opens with a <ul> of six <li>s, the last
+   the energy class. */
+const d56 = S.projectDetails(readFileSync("scripts/qa/fixtures/plus/plus-56-page.html", "utf8"));
+check("(e) Plus 56: the unlabelled <ul> before the buttons, exactly", d56, { facts: [
+  "High-End Residential Project",
+  "Two-Floor Building",
+  "2 & 3 Bedroom Apartments",
+  "200 meters from Franco Cypriot School",
+  "Fast & Easy Access to Public Services",
+], energy: "A" });
+check("(e) Plus 56: the overview prose is never read", d56.facts.some((f) => /beautifully designed|perfectly adequate/i.test(f)), false);
+/* (e) Plus 79: the same layout, three <li>s. The page does have facts. */
+const d79 = S.projectDetails(readFileSync("scripts/qa/fixtures/plus/plus-79-page.html", "utf8"));
+check("(e) Plus 79: the unlabelled <ul> before the buttons, exactly", d79, { facts: [
+  "1 & 2 Bedroom Apartments",
+  "Apartments with Roof Terraces",
+  "Few minutes from the New Marina & Port",
+], energy: null });
+/* (f) Plus 67-68-69: the label in a <span> ("Project Details:"), an empty
+   <p>&nbsp;</p>, the first ". " line, another empty <p>, six more ". " lines
+   (each wrapped in <span>s), then empty <p>s and two video <p>s. */
+const d67 = S.projectDetails(readFileSync("scripts/qa/fixtures/plus/plus-67-68-69-page.html", "utf8"));
+check("(f) Plus 67-68-69: the '. ' lines across empty <p>s, exactly", d67, { facts: [
+  "Quiet & Residential Area",
+  "3 Buildings",
+  "1, 2 & 3 Bedroom Apartments",
+  "Penthouses with Roof Terraces",
+  "3 minutes from the Highway",
+  "6 minutes from the Beach",
+  "10 minutes from Amathus Beach Hotel",
+], energy: null });
+check("(f) Plus 67-68-69: the overview prose is never read", d67.facts.some((f) => /parekklisia|luxurious project|ideal for rental/i.test(f)), false);
 /* The line rule on synthetic pages: all three markers, a continuation, the
    energy line pulled out as for a list, and a stop at the first other element. */
 const dLines = S.projectDetails('<div><p><strong>Project Details:</strong></p><p>. One &amp; a half</p><p>&nbsp; wrapped</p><p>• Two</p><p>- Three</p><p>. Energy Efficiency Category: B</p><h3>Other</h3><p>. Not this</p></div>');
@@ -208,6 +256,31 @@ check("(c) the box before the buttons must be a <div>",
   S.projectDetails('<main><section><p>. First</p><p>. Second</p></section><div class="downloadBtns"></div></main>'), { facts: [], energy: null });
 check("neither layout: nothing, even with a buttons div after prose",
   S.projectDetails(btns("<p>Welcome to the project.</p><p>Call us today.</p>")), { facts: [], energy: null });
+/* The rules behind (d)-(f), on synthetic pages. */
+check("(d) a label with a colon in a <span> is a label too",
+  S.projectDetails(btns('<p><span>Project Details:</span></p><p>. Only one</p>')).facts, ["Only one"]);
+check("(d) after a label one line is enough; without one it is not",
+  [S.projectDetails(btns('<p>Project Details</p><p>• One</p>')).facts, S.projectDetails(btns('<p>• One</p>')).facts], [["One"], []]);
+check("(d) a label that is not the Project Details label ends it",
+  S.projectDetails(btns('<p>Features</p><p>. First</p><p>. Second</p>')), { facts: [], energy: null });
+check("(e) an unlabelled <ul> opening the box is read, energy pulled out",
+  S.projectDetails(btns('<ul><li>Alpha</li><li>Energy Efficiency Category: B</li></ul><p>&nbsp;</p>')), { facts: ["Alpha"], energy: "B" });
+check("(e) …after a label as well",
+  S.projectDetails(btns('<p><u>Project Details</u></p><p>&nbsp;</p><ul><li>Alpha</li><li>Beta</li></ul>')).facts, ["Alpha", "Beta"]);
+check("(e) a <ul> after unmarked prose in the box is not read",
+  S.projectDetails(btns('<p>Welcome to the project.</p><ul><li>Menu</li><li>Links</li></ul>')), { facts: [], energy: null });
+check("(e) a <ul> is structure enough on its own: one <li> is read",
+  S.projectDetails(btns("<ul><li>Only one</li></ul>")).facts, ["Only one"]);
+check("(e) an empty <ul> is nothing",
+  S.projectDetails(btns('<ul><li>&nbsp;</li></ul>')), { facts: [], energy: null });
+check("(f) empty <p>s between marker lines do not end the block",
+  S.projectDetails(btns('<p>. First</p><p><span>&nbsp;</span></p><p>&nbsp;</p><p>. Second</p><p>&nbsp;</p>')).facts, ["First", "Second"]);
+check("(f) …but prose after them does, and is not read",
+  S.projectDetails(btns('<p>. First</p><p>. Second</p><p>&nbsp;</p><p>Call us today.</p><p>. Third</p>')).facts, ["First", "Second"]);
+check("(f) a line after an empty <p> is never a continuation, even with a leading nbsp",
+  S.projectDetails(btns('<p>. First</p><p>. Second and</p><p>&nbsp;</p><p>&nbsp; more</p>')).facts, ["First", "Second and"]);
+check("(f) empty <p>s before the first marker line are skipped",
+  S.projectDetails(btns('<p>&nbsp;</p><p>. First</p><p>. Second</p>')).facts, ["First", "Second"]);
 const df = S.detailFields({ facts: ["Common Swimming Pool", "Completion: Q4 2027", "6 minutes from the Beach"], energy: "A" });
 check("facts become the raw description, one per line", df.description, "Common Swimming Pool\nCompletion: Q4 2027\n6 minutes from the Beach");
 check("plain facts are amenities", df.amenities, ["Common Swimming Pool", "6 minutes from the Beach"]);

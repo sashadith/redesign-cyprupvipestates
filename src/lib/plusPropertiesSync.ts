@@ -137,13 +137,19 @@ const oneLine = (s: string) => s.replace(/\s+/g, " ").trim();
    marker (". 5 Luxurious Villas", "•", "-") that is stripped. A fact that
    wraps continues on a <p> whose RAW text starts with a non-breaking space
    ("… Mediterranean &" / "&nbsp; Four Seasons Hotels"); that line is appended
-   to the fact. The first element that is neither — an empty <p>&nbsp;</p>,
-   any other unmarked line ("Contact us today…", an unmarked energy line),
-   anything not a <p> — ends the block, so prose is never glued onto a fact.
+   to the fact. A run of empty <p>s (&nbsp;, an embedded video) is stepped
+   over only when a marker line follows it (Plus 67-68-69 spaces its lines
+   that way); the line after it is never a continuation. Anything else — any
+   other unmarked line ("Contact us today…", an unmarked energy line), empty
+   <p>s followed by anything but a marker line, anything not a <p> — ends the
+   block, so prose is never glued onto a fact.
    node-html-parser's .text decodes entities (&nbsp; → U+00A0); \s covers it. */
+const isEmptyP = (el: HTMLElement | null) => !!el && el.tagName === "P" && !oneLine(el.text);
+
 function factLines(first: HTMLElement | null): string[] {
   const facts: string[] = [];
-  for (let el = first; el && el.tagName === "P"; el = el.nextElementSibling) {
+  let el = first;
+  while (el && el.tagName === "P") {
     const t = oneLine(el.text);
     if (FACT_MARKER.test(t)) {
       const fact = oneLine(t.slice(1));
@@ -151,19 +157,36 @@ function factLines(first: HTMLElement | null): string[] {
       facts.push(fact);
     } else if (t && facts.length && el.text.startsWith("\u00a0")) {
       facts[facts.length - 1] = `${facts[facts.length - 1]} ${t}`;
+    } else if (!t) {
+      let next = el.nextElementSibling;
+      while (isEmptyP(next)) next = next!.nextElementSibling;
+      if (!next || next.tagName !== "P" || !FACT_MARKER.test(oneLine(next.text))) break;
+      el = next;
+      continue;
     } else break;
+    el = el.nextElementSibling;
   }
   return facts;
 }
 
+const listItems = (ul: HTMLElement) => ul.querySelectorAll("li").map((li) => oneLine(li.text)).filter(Boolean);
+const DETAILS_LABEL = /^project details:?$/i;
+
 /* Only the "Project Details" block of the developer's page. Raw facts for the
    AI description generator and the amenity list; the operator reviews every
-   draft before it is published. Three layouts, measured 2026-09-26:
+   draft before it is published. Layouts measured 2026-09-26:
    (a) Plus 33: a <strong> label, then a <ul>;
    (b) Plus 87: the label, then marker lines (factLines);
    (c) Plus 60: no label; marker lines in the <div> right before
        div.downloadBtns — the OVERVIEW & LIFESTYLE prose sits elsewhere and is
-       never read. */
+       never read;
+   (d) Plus 88: that <div> opens with a label <p> that is not <strong>
+       ("<u>Project Details</u>", no colon), then marker lines;
+   (e) Plus 56, 79: that <div> opens with an unlabelled <ul>;
+   (f) Plus 67-68-69: a <span> label, then marker lines with empty <p>s
+       between them.
+   Without a label the <div> needs strong structure: a <ul>, or at least two
+   marker lines. */
 export function projectDetails(html: string): { facts: string[]; energy: string | null } {
   const root = parseHtml(html);
   const label = root.querySelectorAll("strong").find((s) => /project details/i.test(s.text));
@@ -183,15 +206,20 @@ export function projectDetails(html: string): { facts: string[]; energy: string 
       el = afterParent;
       while (el && el.tagName !== "UL") el = el.nextElementSibling;
     }
-    if (!all.length && el) all = el.querySelectorAll("li").map((li) => oneLine(li.text)).filter(Boolean);
+    if (!all.length && el) all = listItems(el);
   } else {
     const box = root.querySelector("div.downloadBtns")?.previousElementSibling ?? null;
     /* This node-html-parser has no firstElementChild: the first element
        child is the first child node that is an HTMLElement. */
-    const first = box && box.tagName === "DIV" ? box.childNodes.find((n): n is HTMLElement => n instanceof HTMLElement) ?? null : null;
-    const lines = factLines(first);
-    /* One stray ". " line is not a block. */
-    if (lines.length >= 2) all = lines;
+    let el = box && box.tagName === "DIV" ? box.childNodes.find((n): n is HTMLElement => n instanceof HTMLElement) ?? null : null;
+    /* (d), (f): a label <p> in any markup opens the box. */
+    const labelled = !!el && el.tagName === "P" && DETAILS_LABEL.test(oneLine(el.text));
+    if (labelled) el = el!.nextElementSibling;
+    while (isEmptyP(el)) el = el!.nextElementSibling;
+    const isList = el?.tagName === "UL";
+    const lines = isList ? listItems(el!) : factLines(el);
+    /* One stray ". " line is not a block; after a label, or as a <ul>, it is. */
+    if (lines.length >= (labelled || isList ? 1 : 2)) all = lines;
   }
   if (!all.length) return { facts: [], energy: null };
   /* "Solar Energy Panels" also matches /energy/i; only a fact that ALSO ends
