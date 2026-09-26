@@ -35,17 +35,29 @@ export default function AreaEditor({
 
   async function onGenerate() {
     setBusy("gen"); setErr("");
-    const r = await generateArea(name, district, words, { emphasize, avoid });
-    if (r.ok && r.texts) setTexts(r.texts);
-    else setErr(r.error || "Generation failed");
-    setBusy(null);
+    // A rejected server action (proxy timeout, dropped connection) must not
+    // leave the button spinning — see DescriptionField.
+    try {
+      const r = await generateArea(name, district, words, { emphasize, avoid });
+      if (r.ok && r.texts) setTexts(r.texts);
+      else setErr(r.error || "Generation failed");
+    } catch {
+      setErr("The request failed or timed out before an answer came back — nothing was changed. Try again.");
+    } finally {
+      setBusy(null);
+    }
   }
   async function onSave(approve: boolean) {
     setBusy(approve ? "approve" : "save"); setErr("");
-    await saveArea({ slug, name, district, texts, approve });
-    setStatus(approve ? "approved" : "draft");
-    setBusy(null);
-    router.refresh();
+    try {
+      await saveArea({ slug, name, district, texts, approve });
+      setStatus(approve ? "approved" : "draft");
+      router.refresh();
+    } catch {
+      setErr("Saving failed or timed out — reload the page to see what was stored.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   return (

@@ -36,18 +36,25 @@ export default function SeoMetaFields({
 
   async function onGenerate() {
     setBusy(true); setErr(""); setJustGen(false);
-    const r = await generateSeoMetaAction(developmentId, { emphasize, avoid });
-    if (r.ok && r.result) {
-      // generateSeoMetaAction writes all five locales (LANG_KEYS in
-      // src/lib/ai/seoMeta.ts includes titleHE/descHE — AI Hebrew SEO
-      // generation is in scope). The merge below still matters: it keeps
-      // whatever the editor already typed into fields the AI result doesn't
-      // touch, rather than clobbering user-entered values.
-      setValues((s) => ({ ...s, ...r.result }));
-      setJustGen(true);
-      rootRef.current?.dispatchEvent(new Event("cve:dirty", { bubbles: true }));
-    } else setErr(r.error || "Generation failed");
-    setBusy(false);
+    // Same failure mode as DescriptionField: a rejected server action (proxy
+    // timeout, dropped connection) must not leave the button on "Writing…".
+    try {
+      const r = await generateSeoMetaAction(developmentId, { emphasize, avoid });
+      if (r.ok && r.result) {
+        // generateSeoMetaAction writes all five locales (LANG_KEYS in
+        // src/lib/ai/seoMeta.ts includes titleHE/descHE — AI Hebrew SEO
+        // generation is in scope). The merge below still matters: it keeps
+        // whatever the editor already typed into fields the AI result doesn't
+        // touch, rather than clobbering user-entered values.
+        setValues((s) => ({ ...s, ...r.result }));
+        setJustGen(true);
+        rootRef.current?.dispatchEvent(new Event("cve:dirty", { bubbles: true }));
+      } else setErr(r.error || "Generation failed");
+    } catch {
+      setErr("The request failed or timed out before an answer came back — nothing was changed. Try again.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   const titleKey = `title${tab.toUpperCase()}` as keyof Fields;

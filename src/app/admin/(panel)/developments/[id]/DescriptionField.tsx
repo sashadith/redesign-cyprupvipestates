@@ -25,20 +25,34 @@ export default function DescriptionField({ developmentId, initial, aiReady }: { 
   const [justGen, setJustGen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
+  // A server action that never answers (the proxy cut it off at its timeout,
+  // the connection dropped) REJECTS instead of returning { ok: false } — without
+  // the catch/finally the button spun on "Writing…" forever (2026-09-26: the
+  // five-language description ran past nginx's 60 s /admin timeout).
   async function onGenerate() {
     setBusy("gen"); setErr("");
-    const r = await generateDescription(developmentId, words, { emphasize, avoid });
-    if (r.ok && r.texts) {
-      setTexts(r.texts as Record<Lang, string>); setQa(null); setJustGen(true);
-      // React state changes don't emit a native input event — tell the Save button.
-      rootRef.current?.dispatchEvent(new Event("cve:dirty", { bubbles: true }));
-    } else setErr(r.error || "Generation failed");
-    setBusy(null);
+    try {
+      const r = await generateDescription(developmentId, words, { emphasize, avoid });
+      if (r.ok && r.texts) {
+        setTexts(r.texts as Record<Lang, string>); setQa(null); setJustGen(true);
+        // React state changes don't emit a native input event — tell the Save button.
+        rootRef.current?.dispatchEvent(new Event("cve:dirty", { bubbles: true }));
+      } else setErr(r.error || "Generation failed");
+    } catch {
+      setErr("The request failed or timed out before an answer came back — nothing was changed. Try again.");
+    } finally {
+      setBusy(null);
+    }
   }
   async function onCheck() {
     setBusy("check");
-    setQa(await checkDescriptionUniqueness(developmentId, texts.en));
-    setBusy(null);
+    try {
+      setQa(await checkDescriptionUniqueness(developmentId, texts.en));
+    } catch {
+      setErr("The request failed or timed out before an answer came back — nothing was changed. Try again.");
+    } finally {
+      setBusy(null);
+    }
   }
 
   const wc = (texts[tab] || "").trim().split(/\s+/).filter(Boolean).length;
