@@ -3,6 +3,7 @@ import { duplicateDevelopmentPairs } from "@/lib/overlapSweep";
 import { computeAvailability, availabilityContradiction } from "@/lib/developmentAvailability";
 import { computePublishGate, areaSlugOf } from "@/lib/developmentPublishGate";
 import { SYNCED_DEVS } from "@/lib/feedSync";
+import { MISSING_PRICE_LIST } from "@/lib/plusPropertiesSync";
 import { WARM_CONTACT_STATUSES } from "./crm";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { developerGroupExists } from "@/lib/developerLink";
@@ -352,13 +353,19 @@ export function pendingFeedBlocks(
 
 /* One panel item per live block. The feed item's id, title and link are
    unchanged since before Plus existed — snoozes and dismissals are stored
-   against that id. A Plus block is one project, and only its units were held
-   back; the project row itself was still refreshed. */
+   against that id. A Plus block is one project, for one of two reasons:
+   - its price list lost too many units: only its units were held back, the
+     project row itself was still refreshed;
+   - its price list is missing from the folder (MISSING_PRICE_LIST): the
+     project was skipped whole, nothing about it was written.
+   Both keep the same id, so a snooze covers the project either way. */
 export function feedBlockItem(b: FeedBlock): ActionItem {
   if (b.job.startsWith("plus-incomplete:")) {
     return {
       id: `feed-incomplete:${b.job}`, severity: "URGENT", category: "DEVELOPERS",
-      title: `Plus Properties ${b.devKey}: price list looks incomplete — units were not updated`,
+      title: b.message === MISSING_PRICE_LIST
+        ? `Plus Properties ${b.devKey}: price list missing from the folder — nothing was changed`
+        : `Plus Properties ${b.devKey}: price list looks incomplete — units were not updated`,
       description: b.message || "A large share of this project's known units are missing from its price list. Its units were not updated; check the list before the next run.",
       deepLink: "/admin/developments?dev=plusproperties", since: b.since,
     };

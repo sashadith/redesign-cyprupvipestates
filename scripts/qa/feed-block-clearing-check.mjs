@@ -154,6 +154,21 @@ check("Plus item: its own id, title and link",
   [plusItem.id, plusItem.title, plusItem.deepLink, plusItem.severity, plusItem.description],
   ["feed-incomplete:plus-incomplete:57", "Plus Properties 57: price list looks incomplete — units were not updated", "/admin/developments?dev=plusproperties", "URGENT", "4 of 6 units are missing"]);
 
+/* Follow-up B: a Plus project whose price list is missing altogether was
+   skipped whole (plusPropertiesSync's MISSING_PRICE_LIST): nothing was
+   written, not just its units, and the title says so. The message is read
+   from the sync's own constant, never copied. */
+const plusSrc = readFileSync(join(ROOT, "src/lib/plusPropertiesSync.ts"), "utf8");
+const MISSING = (/export const MISSING_PRICE_LIST = "([^"]+)";/.exec(plusSrc) || [])[1];
+check("the sync still exports the missing-price-list message", typeof MISSING, "string");
+const missingItem = D.feedBlockItem(D.pendingFeedBlocks([plus("57", false, "2026-09-26T02:31:00Z", MISSING)])[0]);
+check("Plus item, price list missing: its own title, same id, link and severity",
+  [missingItem.id, missingItem.title, missingItem.deepLink, missingItem.severity, missingItem.description],
+  ["feed-incomplete:plus-incomplete:57", "Plus Properties 57: price list missing from the folder — nothing was changed", "/admin/developments?dev=plusproperties", "URGENT", MISSING]);
+check("a feed row carrying the same text keeps the feed item, byte for byte",
+  (({ id, title, deepLink, description }) => [id, title, deepLink, description])(D.feedBlockItem(D.pendingFeedBlocks([row("island-blue", false, "2026-09-24T04:04:16Z", MISSING)])[0])),
+  ["feed-incomplete:feed-incomplete:island-blue", "island-blue feed looks incomplete — nothing was synced", "/admin/developments?dev=island-blue", MISSING]);
+
 /* ── the cron row that makes any of this possible ──────────────────────── */
 const route = readFileSync(join(ROOT, "src/app/api/cron/feed-sync/route.ts"), "utf8");
 check("a blocked developer still logs the refusal",
@@ -181,6 +196,13 @@ check("…in exactly two queries, never one shared OR query",
   [(fnSrc.match(/prisma\.cronRunLog\.findMany\(/g) || []).length, /OR:/.test(fnSrc), (fnSrc.match(/take: 500/g) || []).length], [2, false, 2]);
 check("the rule reads its answer from pendingFeedBlocks over both lists, and builds its items with feedBlockItem",
   /return pendingFeedBlocks\(feedRows\.concat\(plusRows\)\)\.map\(feedBlockItem\);/.test(fnSrc), true);
+/* Follow-up B wiring: the rule compares against the sync's constant and never
+   carries its own copy of the text. */
+check("the rule imports MISSING_PRICE_LIST from the sync",
+  /import \{ MISSING_PRICE_LIST \} from "@\/lib\/plusPropertiesSync";/.test(rules), true);
+check("…compares the row's message with it",
+  /b\.message === MISSING_PRICE_LIST/.test(rules), true);
+check("…and holds no copy of the text", MISSING ? rules.includes(MISSING) : "no constant", false);
 /* The other take:500 in this file (feedSyncFailures, feed-sync:/drive-sync:)
    is a different rule and stays as it is. */
 check("feedSyncFailures keeps its own single query",
