@@ -167,10 +167,33 @@ check("a listing with images is never overridden",
 check("…nor one with plans only",
   keepMedia({ images: [], plans: [{ id: "p" }], storedSig: null, storedGallery: ["/a.webp"], storedPlans: null }), false);
 
-/* M6: a project that vanished from the folder is reported, never touched. */
-check("a stored project absent from the folder is reported",
-  S.absentProjectNotes(["33", "57", "87"], new Set(["33", "87"])), ["57: no price list in the folder this run — left as it is"]);
-check("…and nothing when every stored project is present", S.absentProjectNotes(["33"], new Set(["33"])), []);
+/* M6 + open fix 2: a stored project whose price list is gone this run. A
+   project that already has feed units got them from a price list; if it now
+   has only a PDF (or nothing), re-gathering it as "pdf-only" would freeze its
+   units with no signal and rewrite its row. Such a project is skipped whole
+   and raised as an alarm. A project that never had feed units (Plus 4, 29, 72:
+   PDF-only from the start) keeps being written as a presentation page, and
+   one absent altogether is only noted, as before. */
+const missing = S.missingPriceListDecision ?? (() => "helper not exported");
+const st = (key, hasFeedUnits) => ({ key, hasFeedUnits });
+check("had feed units, only a PDF this run: skip and alarm",
+  missing({ xmlKeys: ["33"], pdfKeys: ["57"], stored: [st("57", true)] }), { skip: ["57"], noteOnly: [] });
+check("had feed units, nothing at all this run: skip and alarm (M6, same rule)",
+  missing({ xmlKeys: ["33"], pdfKeys: [], stored: [st("57", true)] }), { skip: ["57"], noteOnly: [] });
+check("never had feed units, PDF this run: written as today (neither list)",
+  missing({ xmlKeys: ["33"], pdfKeys: ["4", "29", "72"], stored: [st("4", false), st("29", false), st("72", false)] }), { skip: [], noteOnly: [] });
+check("never had feed units, nothing this run: only the note (M6, as before)",
+  missing({ xmlKeys: ["33"], pdfKeys: [], stored: [st("57", false)] }), { skip: [], noteOnly: ["57"] });
+check("a price list this run: neither list, with or without feed units",
+  missing({ xmlKeys: ["33", "87"], pdfKeys: ["33"], stored: [st("33", true), st("87", false)] }), { skip: [], noteOnly: [] });
+check("a new PDF-only project that is not stored: neither list",
+  missing({ xmlKeys: ["33"], pdfKeys: ["99"], stored: [] }), { skip: [], noteOnly: [] });
+check("a mixed folder sorts each stored key on its own",
+  missing({ xmlKeys: ["33"], pdfKeys: ["4", "57"], stored: [st("33", true), st("4", false), st("57", true), st("60", true), st("61", false)] }),
+  { skip: ["57", "60"], noteOnly: ["61"] });
+check("the note and the alarm message",
+  [S.missingPriceListNote?.("57"), S.absentProjectNote?.("61"), S.MISSING_PRICE_LIST],
+  ["57: price list missing from the folder this run — nothing changed", "61: no price list in the folder this run — left as it is", "price list missing from the folder this run — nothing changed"]);
 
 /* F4b: the cron summary carries the counts and the first notes, clipped, and
    stays far below Telegram's 4096-character limit. */
@@ -190,7 +213,7 @@ check("writer exported", typeof S.syncPlusProperties, "function");
 check("gather finishes before any write: the verdict gates the write loop",
   src.indexOf("runVerdict({ attempted") < src.indexOf("prisma.development.create"), true);
 check("each project is isolated in its own try/catch",
-  /for \(const g of gathered\) \{\s*try \{/.test(src), true);
+  /for \(const g of toWrite\) \{\s*try \{/.test(src), true);
 check("a blocked project logs ok=false", /logCronRun\(`plus-incomplete:\$\{g\.key\}`, false,/.test(src), true);
 check("a clean project logs ok=true on the same key", /logCronRun\(`plus-incomplete:\$\{g\.key\}`, true,/.test(src), true);
 check("published projects are frozen", /published \? freezeForPublished\(row, existing\) : row/.test(src), true);
@@ -298,7 +321,36 @@ check("M2: delete and create run in one transaction",
   /await prisma\.\$transaction\(\[\s*prisma\.developmentUnit\.deleteMany\(\{ where: \{ developmentId: dev\.id, source: "feed" \} \}\),\s*\.\.\.\(writable\.length \? \[prisma\.developmentUnit\.createMany\(/.test(src), true);
 /* M6: every stored Plus project is read, and the absent ones noted. */
 check("M6: the stored rows are every Plus project", /const existingRows = await prisma\.development\.findMany\(\{\s*where: \{ dev: PLUS_DEV \},/.test(src), true);
-check("M6: …and the absent ones are noted", /result\.notes\.push\(\.\.\.absentProjectNotes\(/.test(src), true);
+check("M6: …and the absent ones are noted, the skipped ones too",
+  /result\.notes\.push\(\.\.\.missing\.noteOnly\.map\(absentProjectNote\), \.\.\.missing\.skip\.map\(missingPriceListNote\)\);/.test(src), true);
+/* Open fix 2: a project that had feed units and lost its price list is never
+   written, and its alarm is raised only by a real run. */
+const dryRunAt = src.indexOf("if (opts.dryRun) return");
+const loopAt = src.indexOf("for (const g of toWrite) {");
+const feedUnitsAt = src.search(/prisma\.developmentUnit\.findMany\(\{\s*where: \{ source: "feed", development: \{ dev: PLUS_DEV \} \}, select: \{ developmentId: true \}, distinct: \["developmentId"\],?\s*\}\)/);
+check("fix 2: which stored projects have feed units is read once, before the dry-run return",
+  feedUnitsAt > src.indexOf("const existingRows") && feedUnitsAt < dryRunAt, true);
+check("fix 2: the decision gets every stored row with its has-feed-units flag",
+  /stored: existingRows\.map\(\(r\) => \(\{ key: r\.feedKey\.slice\(PLUS_DEV\.length \+ 1\), hasFeedUnits: withFeedUnits\.has\(r\.id\) \}\)\)/.test(src)
+  && /missingPriceListDecision\(\{\s*xmlKeys: Array\.from\(xmlKeys\), pdfKeys,/.test(src), true);
+check("fix 2: the notes are pushed before the dry-run return, so a dry run reports them",
+  src.indexOf("...missing.skip.map(missingPriceListNote)") > 0 && src.indexOf("...missing.skip.map(missingPriceListNote)") < dryRunAt, true);
+check("fix 2: …and the dry-run plan row says it is skipped",
+  /blocked: skipKeys\.has\(g\.key\) \? MISSING_PRICE_LIST : null/.test(src), true);
+check("fix 2: a dry run counts only the projects it would write",
+  /if \(opts\.dryRun\) return \{ \.\.\.result, projects: toWrite\.length \};/.test(src), true);
+check("fix 2: skipped keys are filtered out of what the write loop sees",
+  /const skipKeys = new Set\(missing\.skip\);/.test(src) && /const toWrite = gathered\.filter\(\(g\) => !skipKeys\.has\(g\.key\)\);/.test(src), true);
+check("fix 2: nothing after the dry-run return iterates the unfiltered list",
+  dryRunAt > 0 && !src.slice(dryRunAt).includes("gathered"), true);
+const writeCalls = [...src.matchAll(/prisma\.development\.(update|create)\(|prisma\.developmentUnit\.(update|create|createMany|deleteMany)\(|recomputeDevelopment\w+\(dev\.id\)/g)].map((m) => m.index);
+check("fix 2: every Development/unit write sits inside the toWrite loop",
+  loopAt > dryRunAt && writeCalls.length >= 8 && writeCalls.every((i) => i > loopAt), true);
+const alarmAt = src.search(/for \(const k of missing\.skip\) await logCronRun\(`plus-incomplete:\$\{k\}`, false, MISSING_PRICE_LIST\);/);
+check("fix 2: a skipped project logs ok=false on its plus-incomplete key, only in a real run",
+  alarmAt > dryRunAt && alarmAt < loopAt, true);
+check("fix 2: …and nothing else logs a plus-incomplete row outside the loop",
+  (src.match(/logCronRun\(`plus-incomplete:/g) ?? []).length, 3);
 
 /* ── route, account ───────────────────────────────────────────────────────
    R10: no cron-health check here — the JOBS entry in

@@ -215,10 +215,30 @@ export function keepStoredMediaOnEmptyListing(input: {
   return !!input.storedSig || nonEmpty(input.storedGallery) || nonEmpty(input.storedPlans);
 }
 
-/* Stored Plus projects this run's folders say nothing about. They are left
-   exactly as they are; the note is the only trace. */
-export function absentProjectNotes(storedKeys: string[], seen: Set<string>): string[] {
-  return storedKeys.filter((k) => !seen.has(k)).map((k) => `${k}: no price list in the folder this run — left as it is`);
+/* Stored Plus projects without a price list this run.
+   - One that already has feed units got them from a price list. If only its
+     PDF is left (or nothing), re-gathering it as "pdf-only" would rewrite its
+     row and freeze its units with no signal. It is skipped whole — no
+     Development, unit or media write — and raised as a plus-incomplete alarm,
+     which the project's next clean run clears (ok=true on the same key).
+   - One that never had feed units (Plus 4, 29, 72: PDF-only from the start)
+     and still has its PDF is written as a presentation page, as always; one
+     absent altogether is left exactly as it is, and the note is the only trace. */
+export const MISSING_PRICE_LIST = "price list missing from the folder this run — nothing changed";
+export const missingPriceListNote = (key: string) => `${key}: ${MISSING_PRICE_LIST}`;
+export const absentProjectNote = (key: string) => `${key}: no price list in the folder this run — left as it is`;
+
+export function missingPriceListDecision(input: {
+  xmlKeys: string[]; pdfKeys: string[]; stored: { key: string; hasFeedUnits: boolean }[];
+}): { skip: string[]; noteOnly: string[] } {
+  const xml = new Set(input.xmlKeys), pdf = new Set(input.pdfKeys);
+  const skip: string[] = [], noteOnly: string[] = [];
+  for (const s of input.stored) {
+    if (xml.has(s.key)) continue;
+    if (s.hasFeedUnits) skip.push(s.key);
+    else if (!pdf.has(s.key)) noteOnly.push(s.key);
+  }
+  return { skip, noteOnly };
 }
 
 /* The feed-sync freeze, restated here like Cybarco does: content an admin has
@@ -323,7 +343,10 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
       gathered.push({ key, source: "xml", project, mediaFolder: folders.get(key) ?? null, coords: null, details: null });
     }
     /* PDF-only projects (Plus 4, 29, 72 on 2026-09-25) become presentation
-       pages without units — the spec's "all 35 projects exist as drafts". */
+       pages without units — the spec's "all 35 projects exist as drafts".
+       A stored project that already has feed units and lost only its price
+       list is gathered here too, then held back from every write below
+       (missingPriceListDecision). */
     for (const f of pdfFiles) {
       const key = projectKey(f.name);
       if (!key || xmlKeys.has(key) || gathered.some((g) => g.key === key)) continue;
@@ -351,11 +374,21 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
       select: { id: true, feedKey: true, publishStatus: true, driveImagesModified: true, gallery: true, plans: true, district: true, town: true, latitude: true, longitude: true },
     });
     const byFeedKey = new Map(existingRows.map((r) => [r.feedKey, r] as const));
-    /* A key with a price list (read or not) or a PDF was seen; anything else
-       stored is reported and left alone. */
-    const seenKeys = new Set(Array.from(xmlKeys));
-    for (const f of pdfFiles) { const k = projectKey(f.name); if (k) seenKeys.add(k); }
-    result.notes.push(...absentProjectNotes(existingRows.map((r) => r.feedKey.slice(PLUS_DEV.length + 1)), seenKeys));
+    /* A key with a price list (read or not) is handled below. A stored one
+       without, that already has feed units, is skipped and alarmed; one that
+       never had any is written from its PDF, or only noted when absent. */
+    const withFeedUnits = new Set((await prisma.developmentUnit.findMany({
+      where: { source: "feed", development: { dev: PLUS_DEV } }, select: { developmentId: true }, distinct: ["developmentId"],
+    })).map((u) => u.developmentId));
+    const pdfKeys: string[] = [];
+    for (const f of pdfFiles) { const k = projectKey(f.name); if (k) pdfKeys.push(k); }
+    const missing = missingPriceListDecision({
+      xmlKeys: Array.from(xmlKeys), pdfKeys,
+      stored: existingRows.map((r) => ({ key: r.feedKey.slice(PLUS_DEV.length + 1), hasFeedUnits: withFeedUnits.has(r.id) })),
+    });
+    result.notes.push(...missing.noteOnly.map(absentProjectNote), ...missing.skip.map(missingPriceListNote));
+    const skipKeys = new Set(missing.skip);
+    const toWrite = gathered.filter((g) => !skipKeys.has(g.key));
     const slugs = gathered.map((g) => slugCandidate(publicNameFor(g.key)));
     const [takenDev, takenLegacy] = await Promise.all([
       prisma.development.findMany({ where: { slug: { in: slugs } }, select: { slug: true, feedKey: true } }),
@@ -374,13 +407,17 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
         images: media?.images.length ?? 0, plans: media?.plans.length ?? 0,
         coords: !!g.coords, facts: g.details?.facts.length ?? 0,
         slug, slugTaken: takenDev.some((t) => t.slug === slug && t.feedKey !== feedKeyFor(g.key)) || takenLegacy.some((t) => t.slug === slug),
-        blocked: null, notes: g.project?.notes ?? [],
+        blocked: skipKeys.has(g.key) ? MISSING_PRICE_LIST : null, notes: g.project?.notes ?? [],
       });
     }
-    if (opts.dryRun) return { ...result, projects: gathered.length };
+    if (opts.dryRun) return { ...result, projects: toWrite.length };
+
+    /* A real run only: the Action Center raises "price list looks incomplete"
+       for each, until its list is back and a clean run logs ok=true. */
+    for (const k of missing.skip) await logCronRun(`plus-incomplete:${k}`, false, MISSING_PRICE_LIST);
 
     /* ── write, one project at a time; a failure costs only that project ── */
-    for (const g of gathered) {
+    for (const g of toWrite) {
       try {
         for (const n of g.project?.notes ?? []) result.notes.push(`${g.key}: ${n}`);
         /* A token lasts an hour and a full run with media can outlast it. */
