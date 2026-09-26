@@ -144,6 +144,20 @@ check("(b) the lines win over a later, unrelated <ul> in the same box",
   S.projectDetails('<div><p><strong>Project Details:</strong></p><p>. Alpha</p><p>. Beta</p><p>&nbsp;</p><ul><li>Menu item</li></ul></div>').facts, ["Alpha", "Beta"]);
 check("(b) a bare marker with nothing after it ends the block",
   S.projectDetails('<div><p><strong>Project Details:</strong></p><p>. Alpha</p><p>.&nbsp;</p><p>. Beta</p></div>').facts, ["Alpha"]);
+/* Review I1: only a line whose raw text starts with a non-breaking space is
+   a wrapped fact. Any other unmarked line ends the list and is not glued on. */
+check("(b) an unmarked prose line after the facts ends the list, it is not glued on",
+  S.projectDetails('<div><p><strong>Project Details:</strong></p><p>. Alpha</p><p>. Beta</p><p>Contact us today for a viewing.</p><p>. Gamma</p></div>'),
+  { facts: ["Alpha", "Beta"], energy: null });
+check("(b) an unmarked energy line is not read, and does not swallow the fact before it",
+  S.projectDetails('<div><p><strong>Project Details:</strong></p><p>. Alpha</p><p>. Beta</p><p>Energy Efficiency Category: A</p></div>'),
+  { facts: ["Alpha", "Beta"], energy: null });
+check("(c) the same rule in the box before the buttons",
+  S.projectDetails('<section><div><p>. First</p><p>. Second</p><p>Call us today.</p></div><div class="downloadBtns"></div></section>').facts, ["First", "Second"]);
+check("(b) leading ordinary whitespace is not a wrap marker",
+  S.projectDetails('<div><p><strong>Project Details:</strong></p><p>. Alpha</p><p>\n  Contact us today.</p></div>').facts, ["Alpha"]);
+check("(b) a U+00A0 character (not only &nbsp;) also marks a wrapped line",
+  S.projectDetails('<div><p><strong>Project Details:</strong></p><p>. Alpha and</p><p>\u00a0Omega</p></div>').facts, ["Alpha and Omega"]);
 check("(b) a text line before any fact is not a continuation: nothing is read",
   S.projectDetails('<div><p><strong>Project Details:</strong></p><p>Some prose</p><p>. Late fact</p></div>'), { facts: [], energy: null });
 const btns = (inner) => `<section><h1>OVERVIEW &amp; LIFESTYLE</h1><p>. Prose that looks like a line</p><p>. And another</p></section><section><div>${inner}</div><div class="downloadBtns"><input type="button" value="Brochure"></div></section>`;

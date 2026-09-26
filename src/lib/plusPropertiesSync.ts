@@ -81,12 +81,13 @@ const FACT_MARKER = /^[.•-]/;
 const oneLine = (s: string) => s.replace(/\s+/g, " ").trim();
 
 /* The developer's line layout: sibling <p>s, each fact starting with a
-   marker (". 5 Luxurious Villas", "•", "-") that is stripped. A non-empty <p>
-   without a marker that follows a fact is that fact wrapping onto the next
-   line ("… Mediterranean &" / "&nbsp; Four Seasons Hotels"). The first
-   element that is neither — an empty <p>&nbsp;</p>, prose before any fact,
-   anything not a <p> — ends the block. node-html-parser's .text decodes
-   entities; \s covers the decoded non-breaking space. */
+   marker (". 5 Luxurious Villas", "•", "-") that is stripped. A fact that
+   wraps continues on a <p> whose RAW text starts with a non-breaking space
+   ("… Mediterranean &" / "&nbsp; Four Seasons Hotels"); that line is appended
+   to the fact. The first element that is neither — an empty <p>&nbsp;</p>,
+   any other unmarked line ("Contact us today…", an unmarked energy line),
+   anything not a <p> — ends the block, so prose is never glued onto a fact.
+   node-html-parser's .text decodes entities (&nbsp; → U+00A0); \s covers it. */
 function factLines(first: HTMLElement | null): string[] {
   const facts: string[] = [];
   for (let el = first; el && el.tagName === "P"; el = el.nextElementSibling) {
@@ -95,7 +96,7 @@ function factLines(first: HTMLElement | null): string[] {
       const fact = oneLine(t.slice(1));
       if (!fact) break;
       facts.push(fact);
-    } else if (t && facts.length) {
+    } else if (t && facts.length && el.text.startsWith("\u00a0")) {
       facts[facts.length - 1] = `${facts[facts.length - 1]} ${t}`;
     } else break;
   }
