@@ -264,6 +264,63 @@ function priceOf(cell: Cell | null, status: PlusStatus): number | null {
   return n != null && n >= 1000 ? n : null;
 }
 
+const STOREY = /^(lower|upper|ground|first|second|1st|2nd)\s+floor$/i;
+
+const sumNum = (a: number | null, b: number | null) => (a == null ? b : b == null ? a : Math.round((a + b) * 100) / 100);
+const sumCount = (a: string | null, b: string | null) => {
+  const n = (s: string | null) => (s && /^\d+$/.test(s) ? Number(s) : null);
+  if (n(a) == null && n(b) == null) return a ?? b;
+  return String((n(a) ?? 0) + (n(b) ?? 0));
+};
+
+/* A villa's second storey continues the unit the first storey opened: counts
+   and areas add up, nothing else changes (status and price live on the first
+   row). Measured on Plus 75, 2026-09-25. Plus 59's "Shop 1 Mezzanine" row
+   continues "Shop 1" the same way. */
+function addStorey(u: PlusUnit, s: PlusUnit): void {
+  u.beds = sumCount(u.beds, s.beds);
+  u.baths = sumCount(u.baths, s.baths);
+  u.areaBuilt = sumNum(u.areaBuilt, s.areaBuilt);
+  u.areaVeranda = sumNum(u.areaVeranda, s.areaVeranda);
+  u.areaVerandaOpen = sumNum(u.areaVerandaOpen, s.areaVerandaOpen);
+  u.areaRoof = sumNum(u.areaRoof, s.areaRoof);
+  u.areaGarden = sumNum(u.areaGarden, s.areaGarden);
+  u.areaTotal = sumNum(u.areaTotal, s.areaTotal);
+}
+
+/* House Kiti: label/value pairs laid out in column pairs (0/1, 3/4, 6/7, 9/10)
+   for the main house, guest house and services. Areas carry "SQM"; a bare
+   number beside an area label is a count and is not read as an area. Bedrooms
+   and bathrooms are totalled over both buildings with the split kept, main house
+   first ("5 (3+2)"), the same shape cleanBeds gives a table row. */
+function parseHouse(rows: Cell[][], price: number | null): PlusUnit | null {
+  if (price == null) return null;
+  const pairs: { col: number; label: string; value: string }[] = [];
+  for (const r of rows) for (const c of r) {
+    const next = r.find((d) => d.col === c.col + 1);
+    if (next && c.value && !FOOTER_LABEL.test(c.value)) pairs.push({ col: c.col, label: c.value.toLowerCase(), value: next.value });
+  }
+  const area = (re: RegExp) => pairs.filter((p) => re.test(p.label) && /sqm/i.test(p.value))
+    .reduce<number | null>((s, p) => sumNum(s, cleanNumber(p.value)), null);
+  const perBuilding = (re: RegExp) => {
+    const parts = pairs.filter((p) => re.test(p.label)).sort((a, b) => a.col - b.col)
+      .map((p) => cleanNumber(p.value)).filter((n): n is number => n != null);
+    if (!parts.length) return null;
+    const total = parts.reduce((a, b) => a + b, 0);
+    return parts.length > 1 ? `${total} (${parts.join("+")})` : String(total);
+  };
+  return {
+    ref: "House", label: "House", block: null, floor: null,
+    beds: perBuilding(/number of bedrooms/), baths: perBuilding(/number of bathrooms/),
+    parking: pairs.find((p) => /parking/.test(p.label))?.value ?? null,
+    storage: pairs.find((p) => /storage/.test(p.label))?.value ?? null,
+    areaBuilt: area(/^internal area$/), areaVeranda: area(/^covered veranda$/),
+    areaVerandaOpen: area(/^uncovered (terrace|veranda)$/), areaRoof: null,
+    areaGarden: area(/garden/), areaCommon: null, areaTotal: null, areaPlot: area(/^plot area$/),
+    status: "available", price,
+  };
+}
+
 export async function parsePriceList(xml: string): Promise<PlusProject> {
   const sheet = activeSheet(await readWorkbook(xml));
   const rows = sheet.rows;
@@ -276,18 +333,34 @@ export async function parsePriceList(xml: string): Promise<PlusProject> {
     location: meta.location, mapsUrl: meta.mapsUrl, websiteUrl: meta.websiteUrl, vatExcluded: meta.vatExcluded };
 
   const hi = headerIndex(rows);
-  if (hi < 0) throw new PlusParseError(`no unit table on sheet "${sheet.name}"`);
+  if (hi < 0) {
+    const house = parseHouse(rows, meta.price);
+    if (!house) throw new PlusParseError(`no unit table on sheet "${sheet.name}"`);
+    return { ...base, units: [house], notes: [...notes, "single-house layout; status assumed available (the sheet has no status word)"] };
+  }
   const field = new Map<number, Field>();
   for (const c of rows[hi]) {
     const f = columnField(c.value);
     if (f) field.set(c.col, f);
     else if (c.value) notes.push(`unknown column "${c.value}" ignored`);
   }
+  /* Plus 60: a second header row labels sub-columns under one heading
+     (Gr.Floor / 1st Floor / 2nd Floor / Total Area under "Internal Area").
+     The unit's interior is that sub-row's Total; the storey columns are not
+     read. */
+  let start = hi + 1;
+  const sub = (rows[start] ?? []).filter((c) => c.value);
+  if (sub.length >= 2 && sub.every((c) => /floor|total area/i.test(c.value))) {
+    for (const c of sub) field.set(c.col, "ignore");
+    const total = sub.find((c) => /total area/i.test(c.value));
+    if (total) field.set(total.col, "internal");
+    start++;
+  }
 
   const units: PlusUnit[] = [];
   let block: string | null = null;
   let floor: string | null = null;
-  for (let i = hi + 1; i < rows.length; i++) {
+  for (let i = start; i < rows.length; i++) {
     const r = rows[i];
     const lead = firstFilled(r);
     if (!lead) continue;
@@ -299,11 +372,54 @@ export async function parsePriceList(xml: string): Promise<PlusProject> {
     const val = (f: Field) => cell(f)?.value || null;
     const area = (f: Field) => sumArea(r, field, f);
     if (val("block")) block = normBlock(val("block")!);
+    /* This row's counts and areas, laid over unit `u` — what addStorey adds
+       when the row continues a unit instead of opening one. */
+    const storey = (u: PlusUnit): PlusUnit => ({
+      ...u, beds: cleanBeds(val("beds")), baths: cleanBeds(val("baths")),
+      areaBuilt: area("internal"), areaVeranda: area("veranda"),
+      areaVerandaOpen: area("verandaOpen"), areaRoof: area("roof"),
+      areaGarden: area("garden"), areaTotal: area("total"),
+    });
+    const unitVal = val("unit");
+    /* Plus 75's villas swap two columns: the villa's NAME sits in the Floor
+       column and the STOREY in the Unit column. The first storey opens the
+       villa (name, status, price live there); a following storey row with no
+       name continues it. */
+    if (unitVal && STOREY.test(unitVal)) {
+      const villaName = val("floor");
+      const last = units[units.length - 1];
+      if (villaName) {
+        const statusRaw = val("status");
+        if (!statusRaw) { notes.push(`villa ${villaName} has no status — skipped`); continue; }
+        const status = parseStatus(statusRaw);
+        units.push({
+          ref: block ? `${block} ${villaName}` : villaName, label: villaName, block, floor: null,
+          beds: cleanBeds(val("beds")), baths: cleanBeds(val("baths")),
+          parking: cleanText(val("parking")), storage: cleanText(val("storage")),
+          areaBuilt: area("internal"), areaVeranda: area("veranda"),
+          areaVerandaOpen: area("verandaOpen"), areaRoof: area("roof"),
+          areaGarden: area("garden"), areaCommon: area("common"),
+          areaTotal: area("total"), areaPlot: area("plot"),
+          status, price: priceOf(cell("price"), status),
+        });
+      } else if (last && last.floor === null) {
+        addStorey(last, storey(last));
+      }
+      continue;
+    }
     if (val("floor")) floor = val("floor");
-    const name = val("unit");
+    const name = unitVal;
     if (!name) continue;
     const statusRaw = val("status");
-    if (!statusRaw) { notes.push(`unit ${name} has no status — skipped`); continue; }
+    if (!statusRaw) {
+      /* Plus 59: "Shop 1 Mezzanine", with no status, right after "Shop 1" is
+         the shop's upper level, not a unit — its areas belong to the shop
+         (the PDF's total of 188.75 counts both). */
+      const last = units[units.length - 1];
+      if (last && name.startsWith(`${last.label} `)) { addStorey(last, storey(last)); continue; }
+      notes.push(`unit ${name} has no status — skipped`);
+      continue;
+    }
     const status = parseStatus(statusRaw);
     units.push({
       ref: block ? `${block} ${name}` : name, label: name, block, floor,

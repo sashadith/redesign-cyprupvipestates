@@ -172,9 +172,15 @@ check("Plus 57: 35 units, 12 available", [p57.units.length, p57.units.filter((u)
 check("Plus 57: no three-price payment plan leaks in", p57.units.every((u) => u.price == null || u.price >= 245000), true);
 
 /* ── the invariant, across every fixture ─────────────────────────────── */
-for (const key of ["33", "57", "87", "63", "59", "67-68-69", "21"]) {
+for (const key of ["33", "57", "87", "63", "59", "67-68-69", "21", "60", "75"]) {
   const p = await P.parsePriceList(fx(`plus-${key}.xml`));
   check(`Plus ${key}: no sold or reserved unit carries a price`, p.units.filter((u) => u.status !== "available" && u.price != null).map((u) => u.ref), []);
+}
+/* A ref names one unit. Two units with the same ref in one project means a
+   row was read as a unit that is not one (Plus 75's "Lower Floor" storeys). */
+for (const key of ["33", "57", "87", "60", "75", "67-68-69", "59", "63", "21"]) {
+  const refs = (await P.parsePriceList(fx(`plus-${key}.xml`))).units.map((u) => u.ref);
+  check(`Plus ${key}: refs are unique`, new Set(refs).size === refs.length, true);
 }
 const p67 = await P.parsePriceList(fx("plus-67-68-69.xml"));
 check("Plus 67-68-69: the Project column qualifies refs, so 101 does not collide",
@@ -203,6 +209,63 @@ const oneUnit = (style) => `<?xml version="1.0"?>
 </Workbook>`;
 check("a white price is hidden even on an available unit, a black one is read",
   [(await P.parsePriceList(oneUnit("w"))).units[0]?.price, (await P.parsePriceList(oneUnit("k"))).units[0]?.price], [null, 300000]);
+
+/* ── Plus 60: "Villa No" and a two-row header ─────────────────────────── */
+const p60 = await P.parsePriceList(fx("plus-60.xml"));
+const u60 = byRef(p60);
+check("Plus 60: five villas", p60.units.map((u) => u.ref), ["Villa 1", "Villa 2", "Villa 3", "Villa 4", "Villa 5"]);
+check("Plus 60: statuses", p60.units.map((u) => u.status), ["available", "sold", "sold", "available", "sold"]);
+check("Plus 60: prices", [u60["Villa 1"].price, u60["Villa 4"].price], [1030000, 715000]);
+/* The sub-header splits "Internal Area" into Gr.Floor / 1st / 2nd / Total;
+   the unit's interior is that Total, not the villa's overall total area. */
+check("Plus 60: interior is the sub-header's total", u60["Villa 1"].areaBuilt, 176.3);
+check("Plus 60: …not the villa's overall total", u60["Villa 1"].areaTotal, 280);
+check("Plus 60: plot area", u60["Villa 1"].areaPlot, 350.1);
+check("Plus 60: '4 ( 3+1)' bedrooms, total first", u60["Villa 1"].beds, "4 (3+1)");
+check("Plus 60: parking area loses Excel noise", u60["Villa 1"].parking, "17.6");
+
+/* ── Plus 75: villas over two rows with swapped columns ──────────────── */
+const p75 = await P.parsePriceList(fx("plus-75.xml"));
+const villas = p75.units.filter((u) => /Villa \d/.test(u.label));
+check("Plus 75: nine villas", villas.map((u) => u.ref), [
+  "C-Villas Villa 1", "C-Villas Villa 2",
+  "D-Villas Villa 1", "D-Villas Villa 2", "D-Villas Villa 3", "D-Villas Villa 4",
+  "D-Villas Villa 5", "D-Villas Villa 6", "D-Villas Villa 7"]);
+const v = byRef(p75);
+check("Plus 75: a storey is never a unit", p75.units.some((u) => /floor$/i.test(u.label)), false);
+check("Plus 75: C-Villa 1 beds summed over both storeys", v["C-Villas Villa 1"].beds, "3");
+check("Plus 75: …baths summed", v["C-Villas Villa 1"].baths, "3");
+check("Plus 75: …interior summed", v["C-Villas Villa 1"].areaBuilt, 127);
+check("Plus 75: C-Villa 1 price from 'Price €', not OLD", v["C-Villas Villa 1"].price, 410000);
+/* D-Villa 1 is sold and only its OLD price (370,000) is filled. Reading OLD as
+   a fallback would publish a stale price on a sold villa. */
+check("Plus 75: a sold villa with only an OLD price has no price", v["D-Villas Villa 1"].price, null);
+check("Plus 75: D-Villa 4's white price is not read", v["D-Villas Villa 4"].price, null);
+check("Plus 75: available D-villas", ["2", "6", "7"].map((n) => v[`D-Villas Villa ${n}`].price), [310000, 310000, 310000]);
+check("Plus 75: no villa floor is 'Villa N'", villas.every((u) => !/villa/i.test(u.floor ?? "")), true);
+/* An available apartment has both columns filled: "Price €/OLD" 220,000 and
+   "Price €" 255,000. The current one is the price. */
+check("Plus 75: A01 takes 'Price €' (255,000), not its OLD 220,000", v["A A01"].price, 255000);
+
+/* ── House Kiti: a house, not a table ─────────────────────────────────── */
+const kiti = await P.parsePriceList(fx("plus-house-kiti.xml"));
+check("House Kiti: one unit", kiti.units.length, 1);
+const h = kiti.units[0];
+check("House Kiti: the house", [h.ref, h.beds, h.baths, h.areaBuilt, h.areaVeranda, h.areaVerandaOpen, h.areaGarden, h.areaPlot, h.price],
+  ["House", "5 (3+2)", "5 (3+2)", 345.5, 41.6, 118, 401, 883, 880000]);
+check("House Kiti: status is an assumption, and says so", [h.status, kiti.notes.some((n) => /status assumed/.test(n))], ["available", true]);
+check("House Kiti: footer", [kiti.stage, kiti.location], ["Completed", "Kiti - Larnaca"]);
+
+/* ── Plus 59: a shop's mezzanine row continues the shop ──────────────────
+   "Shop 1" (internal 95) is followed by "Shop 1 Mezzanine" (internal 47.5, no
+   status). The PDF's total 188.75 = 95 + 47.5 + 34 basement storage + 12.25
+   common: the mezzanine is part of the shop, not a unit and not a skipped row. */
+const p59 = await P.parsePriceList(fx("plus-59.xml"));
+const u59 = byRef(p59);
+check("Plus 59: shop interiors include the mezzanine", [u59["Shop 1"]?.areaBuilt, u59["Shop 2"]?.areaBuilt], [142.5, 142.5]);
+check("Plus 59: a mezzanine is neither a unit nor a note",
+  [p59.units.some((u) => /mezzanine/i.test(u.label)), p59.notes.some((n) => /mezzanine/i.test(n))], [false, false]);
+check("Plus 59: Shop 1 keeps its status and price", [u59["Shop 1"]?.status, u59["Shop 1"]?.price], ["available", 480000]);
 
 console.log(failures ? `\n${failures} failed` : "\nall passed");
 process.exit(failures ? 1 : 0);
