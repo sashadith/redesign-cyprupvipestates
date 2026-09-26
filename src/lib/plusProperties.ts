@@ -129,3 +129,192 @@ export function columnField(header: string): Field | null {
   if (/internal|closed area/.test(h)) return "internal";
   return null;
 }
+
+export type PlusStatus = "available" | "reserved" | "sold";
+export type PlusStage = "Under Construction" | "Off Plan" | "Completed";
+
+export type PlusUnit = {
+  ref: string; label: string; block: string | null; floor: string | null;
+  beds: string | null; baths: string | null; parking: string | null; storage: string | null;
+  areaBuilt: number | null; areaVeranda: number | null; areaVerandaOpen: number | null;
+  areaRoof: number | null; areaGarden: number | null; areaCommon: number | null;
+  areaTotal: number | null; areaPlot: number | null;
+  status: PlusStatus; price: number | null;
+};
+
+export type PlusProject = {
+  sheetName: string; title: string | null; version: string | null; listDate: string | null;
+  stage: PlusStage | null; location: string | null; mapsUrl: string | null; websiteUrl: string | null;
+  vatExcluded: boolean; units: PlusUnit[]; notes: string[];
+};
+
+/* The unit vocabulary is closed — measured: Available, Reserved, Sold, with
+   trailing spaces. Anything else fails the project it appears in rather than
+   being mapped to a guess (Cybarco, 2026-09-24: one new mark was the only
+   thing between a sold-out project and "on sale" again). */
+export function parseStatus(raw: string): PlusStatus {
+  const s = raw.trim().toLowerCase();
+  if (s === "available") return "available";
+  if (s === "reserved") return "reserved";
+  if (s === "sold") return "sold";
+  throw new PlusParseError(`unknown unit status "${raw}"`);
+}
+
+/* `stage` is free text across the system; each state maps to its most common
+   existing spelling (measured 2026-09-25). "Understudy" is how this developer
+   says a project is not yet under construction. */
+export function projectStage(raw: string | null): PlusStage | null {
+  if (raw == null || !raw.trim()) return null;
+  const s = raw.toLowerCase().replace(/[-\s]+/g, " ").trim();
+  if (s === "under construction") return "Under Construction";
+  if (s === "understudy" || s === "under study") return "Off Plan";
+  if (s === "ready to move in") return "Completed";
+  throw new PlusParseError(`unknown project status "${raw}"`);
+}
+
+export function cleanNumber(raw: string | null | undefined): number | null {
+  if (raw == null) return null;
+  const m = String(raw).replace(/,/g, "").match(/-?\d+(?:\.\d+)?/);
+  if (!m) return null;
+  const n = Math.round(Number(m[0]) * 100) / 100;
+  return Number.isFinite(n) ? n : null;
+}
+
+/* "4 ( 3+1)", "3(2+1)", "2 (1+1)": the total, then how it splits (main floor +
+   roof room, main house + guest house). Every reader of `beds` takes the FIRST
+   number, so the total leads and the split is kept only for the eye. */
+export function cleanBeds(raw: string | null | undefined): string | null {
+  if (raw == null || !String(raw).trim()) return null;
+  const s = String(raw).replace(/\s+/g, "");
+  const split = s.match(/^(\d+)\((\d+(?:\+\d+)+)\)$/);
+  if (split) return `${split[1]} (${split[2]})`;
+  const n = s.match(/^(\d+)(?:\.0+)?$/);
+  if (n) return n[1];
+  return String(raw).trim();
+}
+
+export function cleanText(raw: string | null | undefined): string | null {
+  if (raw == null) return null;
+  const s = String(raw).replace(/\s+/g, " ").trim();
+  if (!s) return null;
+  return /^-?\d+(?:\.\d+)?$/.test(s) ? String(cleanNumber(s)) : s;
+}
+
+const WHITE = "#FFFFFF";
+const FOOTER_LABEL = /:\s*$/;
+/* A styled but empty cell is still a <Cell>; the first cell that says
+   something is what a row "starts with". */
+const firstFilled = (r: Cell[]) => r.find((c) => c.value) ?? null;
+
+/* Title, version, list date and the "Label:" rows under the table. Read from
+   the whole sheet: House Kiti has no table, the same footer. The value sits in
+   the next filled cell — column 1 in most lists, column 2 in Plus 57/60/75. */
+function readMeta(rows: Cell[][]) {
+  const cells = rows.flat();
+  const footer = new Map<string, string>();
+  for (const r of rows) {
+    const first = firstFilled(r);
+    if (!first || !FOOTER_LABEL.test(first.value)) continue;
+    const next = r.find((c) => c.col > first.col && (c.value || c.href));
+    footer.set(first.value.replace(/\s+/g, " ").trim().toLowerCase(), (next?.href || next?.value || "").trim());
+  }
+  const version = cells.map((c) => c.value.match(/Version:\s*([\d.]+)/i)?.[1]).find(Boolean) ?? null;
+  const listDate = cells.map((c) => c.value.match(/^(\d{4}-\d\d-\d\d)T/)?.[1]).find(Boolean) ?? null;
+  return {
+    version, listDate,
+    stage: projectStage(footer.get("project status:") ?? null),
+    location: footer.get("location:") || null,
+    mapsUrl: footer.get("google maps:") || null,
+    websiteUrl: footer.get("link on website:") || null,
+    price: cleanNumber(footer.get("price:") ?? null),
+    vatExcluded: cells.some((c) => /do not include the vat|excluding vat|\+\s?vat/i.test(c.value)),
+  };
+}
+
+function headerIndex(rows: Cell[][]): number {
+  return rows.findIndex((r) => {
+    const f = r.map((c) => columnField(c.value));
+    return f.includes("unit") && (f.includes("status") || f.includes("price"));
+  });
+}
+
+const normBlock = (s: string) => s.replace(/\s*-\s*/g, "-").replace(/\s+/g, " ").trim();
+
+/* An area is the SUM of every column mapped to it, not the first one: Plus 63
+   has both "Uncovered Veranda (sqm)" and "Uncovered Terrace (sqm)", and both
+   are open-air area of the same unit. Text fields (floor, block, beds, …) still
+   read the first matching cell. null when no mapped cell has a number. */
+function sumArea(row: Cell[], field: Map<number, Field>, f: Field): number | null {
+  let sum: number | null = null;
+  for (const c of row) {
+    if (field.get(c.col) !== f || !c.value) continue;
+    const n = cleanNumber(c.value);
+    if (n != null) sum = Math.round(((sum ?? 0) + n) * 100) / 100;
+  }
+  return sum;
+}
+
+/* A price is read only for an available unit, only from the "price" column
+   (never "Price €/OLD"), and never when the cell is white — that is how the
+   developer hides the price of a unit that has sold. Measured: 36 white prices,
+   all on sold (21) or reserved (15) units. */
+function priceOf(cell: Cell | null, status: PlusStatus): number | null {
+  if (status !== "available" || !cell || cell.colour === WHITE) return null;
+  const n = cleanNumber(cell.value);
+  return n != null && n >= 1000 ? n : null;
+}
+
+export async function parsePriceList(xml: string): Promise<PlusProject> {
+  const sheet = activeSheet(await readWorkbook(xml));
+  const rows = sheet.rows;
+  const meta = readMeta(rows);
+  const notes: string[] = [];
+  if (!meta.vatExcluded) notes.push("the list does not say prices exclude VAT");
+  const title = rows.slice(0, 6).flat().map((c) => c.value)
+    .find((v) => v && !/version:/i.test(v) && !/^\d{4}-\d\d-\d\d/.test(v)) ?? null;
+  const base = { sheetName: sheet.name, title, version: meta.version, listDate: meta.listDate, stage: meta.stage,
+    location: meta.location, mapsUrl: meta.mapsUrl, websiteUrl: meta.websiteUrl, vatExcluded: meta.vatExcluded };
+
+  const hi = headerIndex(rows);
+  if (hi < 0) throw new PlusParseError(`no unit table on sheet "${sheet.name}"`);
+  const field = new Map<number, Field>();
+  for (const c of rows[hi]) {
+    const f = columnField(c.value);
+    if (f) field.set(c.col, f);
+    else if (c.value) notes.push(`unknown column "${c.value}" ignored`);
+  }
+
+  const units: PlusUnit[] = [];
+  let block: string | null = null;
+  let floor: string | null = null;
+  for (let i = hi + 1; i < rows.length; i++) {
+    const r = rows[i];
+    const lead = firstFilled(r);
+    if (!lead) continue;
+    if (FOOTER_LABEL.test(lead.value)) break;
+    /* "NB: Prices mentioned above…" — Plus 60 writes its notes in the unit
+       column; they are not units. */
+    if (/^NB\s*:/i.test(lead.value)) continue;
+    const cell = (f: Field) => r.find((c) => field.get(c.col) === f) ?? null;
+    const val = (f: Field) => cell(f)?.value || null;
+    const area = (f: Field) => sumArea(r, field, f);
+    if (val("block")) block = normBlock(val("block")!);
+    if (val("floor")) floor = val("floor");
+    const name = val("unit");
+    if (!name) continue;
+    const statusRaw = val("status");
+    if (!statusRaw) { notes.push(`unit ${name} has no status — skipped`); continue; }
+    const status = parseStatus(statusRaw);
+    units.push({
+      ref: block ? `${block} ${name}` : name, label: name, block, floor,
+      beds: cleanBeds(val("beds")), baths: cleanBeds(val("baths")),
+      parking: cleanText(val("parking")), storage: cleanText(val("storage")),
+      areaBuilt: area("internal"), areaVeranda: area("veranda"),
+      areaVerandaOpen: area("verandaOpen"), areaRoof: area("roof"),
+      areaGarden: area("garden"), areaCommon: area("common"),
+      areaTotal: area("total"), areaPlot: area("plot"),
+      status, price: priceOf(cell("price"), status),
+    });
+  }
+  return { ...base, units, notes };
+}
