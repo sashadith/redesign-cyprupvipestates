@@ -58,12 +58,23 @@ export function coordsFromMapsUrl(raw: string | null): { lat: number; lng: numbe
   /* A resolved link can arrive percent-encoded ("%213d…%214d…", "q=34.9%2C33.6"). */
   let url = raw;
   try { url = decodeURIComponent(raw); } catch { /* a malformed escape: read the link as it is */ }
+  /* "/maps/search/34.916252,+33.634789?entry=tts" (Plus 82, House Kiti) is a
+     searched point, like q=, so it ranks with q= and above the viewport
+     centre. The "+" (or a decoded %20) after the comma is optional. A Plus
+     Code ("q=WJPP+7FG …", Plus 87) matches nothing here and is not decoded. */
   const m = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/)
     ?? url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/)
+    ?? url.match(/\/maps\/search\/(-?\d+\.\d+),[+\s]*(-?\d+\.\d+)/)
     ?? url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
   if (!m) return null;
   const lat = Number(m[1]), lng = Number(m[2]);
   return lat > 34.4 && lat < 35.8 && lng > 32.2 && lng < 34.7 ? { lat, lng } : null;
+}
+
+/* A project whose Maps link gave no coordinates (a Plus Code, a place name,
+   a link that did not resolve) is saved without a pin; the operator sets it. */
+export function mapsLinkNote(key: string, mapsUrl: string | null, coords: { lat: number; lng: number } | null): string | null {
+  return mapsUrl && !coords ? `${key}: no coordinates in the Maps link — set the pin in the admin` : null;
 }
 
 /* Only the "Project Details" block of the developer's page: a <strong> label,
@@ -368,7 +379,11 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
       gathered.push({ key, source: "pdf-only", project: null, mediaFolder: folders.get(key) ?? null, coords: null, details: null });
     }
     for (const g of gathered) {
-      if (g.project?.mapsUrl) g.coords = coordsFromMapsUrl(await resolvedUrl(g.project.mapsUrl));
+      if (g.project?.mapsUrl) {
+        g.coords = coordsFromMapsUrl(await resolvedUrl(g.project.mapsUrl));
+        const note = mapsLinkNote(g.key, g.project.mapsUrl, g.coords);
+        if (note) result.notes.push(note);
+      }
       if (g.project?.websiteUrl) {
         /* A hanging host must not hold the sync window: 20 s, then no facts. */
         try { g.details = projectDetails(await (await fetch(g.project.websiteUrl, { redirect: "follow", cache: "no-store", signal: AbortSignal.timeout(20000) })).text()); }

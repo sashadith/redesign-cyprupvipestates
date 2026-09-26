@@ -64,6 +64,27 @@ check("no link", S.coordsFromMapsUrl(null), null);
 check("an encoded pin is read", S.coordsFromMapsUrl("https://www.google.com/maps/place/X/data=%213d34.7626611%214d32.4311539"), { lat: 34.7626611, lng: 32.4311539 });
 check("an encoded ?q= pair is read", S.coordsFromMapsUrl("https://maps.google.com/?q=34.95%2C33.62"), { lat: 34.95, lng: 33.62 });
 check("a malformed escape does not throw, the raw link is still read", S.coordsFromMapsUrl("https://www.google.com/maps/@34.9,33.6,15z?x=%E0%A4%A"), { lat: 34.9, lng: 33.6 });
+/* Dry run 2026-09-26: two short links resolve to a /maps/search/<lat>,<lng>
+   URL with no pin, no q= and no @ (Plus 82, House Kiti). */
+check("/maps/search/ with '+' (Plus 82)",
+  S.coordsFromMapsUrl("https://www.google.com/maps/search/34.916252,+33.634789?entry=tts&g_ep=EgoyMDI1MDkyMy4wIPu8ASoASAFQAw%3D%3D&skid=abc"), { lat: 34.916252, lng: 33.634789 });
+check("/maps/search/ with '+' (House Kiti)",
+  S.coordsFromMapsUrl("https://www.google.com/maps/search/34.837319,+33.576316?coh=225991&entry=tts"), { lat: 34.837319, lng: 33.576316 });
+check("/maps/search/ without '+'", S.coordsFromMapsUrl("https://www.google.com/maps/search/34.916252,33.634789"), { lat: 34.916252, lng: 33.634789 });
+check("/maps/search/ percent-encoded (%2C%20)", S.coordsFromMapsUrl("https://www.google.com/maps/search/34.916252%2C%2033.634789?entry=tts"), { lat: 34.916252, lng: 33.634789 });
+check("/maps/search/ percent-encoded (%2C+)", S.coordsFromMapsUrl("https://www.google.com/maps/search/34.916252%2C+33.634789"), { lat: 34.916252, lng: 33.634789 });
+check("/maps/search/ outside Cyprus is still rejected", S.coordsFromMapsUrl("https://www.google.com/maps/search/37.9,+23.7"), null);
+check("/maps/search/ south of Cyprus is rejected too", S.coordsFromMapsUrl("https://www.google.com/maps/search/31.2,+33.0"), null);
+check("the pin still wins over /maps/search/",
+  S.coordsFromMapsUrl("https://www.google.com/maps/search/34.9,+33.6/data=!3d34.7626611!4d32.4311539"), { lat: 34.7626611, lng: 32.4311539 });
+check("/maps/search/ wins over the viewport centre",
+  S.coordsFromMapsUrl("https://www.google.com/maps/search/34.916252,+33.634789/@34.95,33.70,15z"), { lat: 34.916252, lng: 33.634789 });
+/* Plus 87 resolves to a Plus Code, not coordinates. It is not decoded. */
+const P87 = "https://www.google.com/maps?q=WJPP+7FG+Plus+87,+New+Marina+Larnaca,+Larnaca&ftid=0x14e0831d4f8a1b2f:0x3c1b7e3ad4e5b6a1";
+check("a Plus Code link yields no coordinates", S.coordsFromMapsUrl(P87), null);
+check("a Maps link without coordinates leaves a note", S.mapsLinkNote("87", P87, null), "87: no coordinates in the Maps link — set the pin in the admin");
+check("…read coordinates leave none", S.mapsLinkNote("33", P33, { lat: 34.7626611, lng: 32.4311539 }), null);
+check("…and no Maps link leaves none", S.mapsLinkNote("4", null, null), null);
 
 /* ── Project Details from their website ──────────────────────────────── */
 const d = S.projectDetails(readFileSync("scripts/qa/fixtures/plus/plus-33-page.html", "utf8"));
@@ -370,6 +391,13 @@ check("fix 2: the decision gets every stored row with its has-feed-units flag",
   && /missingPriceListDecision\(\{\s*xmlKeys: Array\.from\(xmlKeys\), pdfKeys,/.test(src), true);
 check("fix 2: the notes are pushed before the dry-run return, so a dry run reports them",
   src.indexOf("...missing.skip.map(missingPriceListNote)") > 0 && src.indexOf("...missing.skip.map(missingPriceListNote)") < dryRunAt, true);
+{
+  /* Dry run 2026-09-26: the "no coordinates" note is pushed where the link
+     is resolved, before the dry-run return, so a dry run reports it too. */
+  const noteAt = src.search(/const note = mapsLinkNote\(g\.key, g\.project\.mapsUrl, g\.coords\);\s*if \(note\) result\.notes\.push\(note\);/);
+  check("maps: the no-coordinates note is pushed where the link is resolved, before the dry-run return",
+    noteAt > src.indexOf("g.coords = coordsFromMapsUrl(") && noteAt > 0 && noteAt < dryRunAt, true);
+}
 check("fix 2: …and the dry-run plan row says it is skipped",
   /blocked: skipKeys\.has\(g\.key\) \? MISSING_PRICE_LIST : null/.test(src), true);
 check("fix 2: a dry run counts only the projects it would write",
