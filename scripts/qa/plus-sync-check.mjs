@@ -64,6 +64,19 @@ check("location: the district is matched case-insensitively, stored in the site'
 check("location: a part that only CONTAINS a district name is not one", S.splitLocation("Paphos Gate - Limassol"), { town: "Paphos Gate", district: "Limassol" });
 check("location: the district is the LAST known district", S.splitLocation("Paphos - Limassol"), { town: "Paphos", district: "Limassol" });
 check("location: a long single part is not a town", S.splitLocation("Near The Old Town Square"), { town: null, district: null });
+/* Review: a bare hyphen inside a place name is not a separator. A dash
+   separates only with whitespace on at least one side, or when what follows
+   it is a known district ("Agios Tychonas-Limassol"). */
+check("location: a hyphenated town keeps its hyphen", S.splitLocation("Kato-Polemidia - Limassol"), { town: "Kato-Polemidia", district: "Limassol" });
+check("location: a hyphenated town alone, no district", S.splitLocation("Pyla-Voroklini"), { town: "Pyla-Voroklini", district: null });
+check("location: a bare hyphen before a district still separates, any case", S.splitLocation("Agios Tychonas-limassol"), { town: "Agios Tychonas", district: "Limassol" });
+check("location: a dash with whitespace on one side separates",
+  [S.splitLocation("Universal -Tala"), S.splitLocation("Universal- Tala")], [{ town: null, district: null }, { town: null, district: null }]);
+check("location: en and em dashes separate even without spaces",
+  [S.splitLocation("Livadia–Larnaca"), S.splitLocation("Pyla—Voroklini")], [{ town: "Livadia", district: "Larnaca" }, { town: null, district: null }]);
+check("location: a comma separates without spaces", S.splitLocation("Pyla,Voroklini"), { town: null, district: null });
+check("location note: a hyphenated town alone asks for its district",
+  S.locationNote({ key: "70-71", location: "Pyla-Voroklini", storedDistrict: null }), '70-71: district unknown for location "Pyla-Voroklini" — set it in the admin');
 check("location: empty", [S.splitLocation(null), S.splitLocation("  ")], [{ town: null, district: null }, { town: null, district: null }]);
 const LN = (o) => S.locationNote({ key: "85", location: "Lefkara", storedDistrict: null, ...o });
 check("location note: district unknown", LN({}), '85: district unknown for location "Lefkara" — set it in the admin');
@@ -636,6 +649,9 @@ const catchAt = route.indexOf("} catch (e) {");
 const catchSrc = route.slice(catchAt);
 check("the catch block notifies on a thrown error, like a failed run",
   catchAt > 0 && /shouldNotifyFailureStreak\("plus-sync"\)/.test(catchSrc) && /sendFeedNotification\(/.test(catchSrc), true);
+check("the catch block's comment no longer says the JOBS entry is pending",
+  !/until the plus-sync cron-health JOBS entry lands/.test(catchSrc) && /JOBS entry is in\s+(?:\/\/\s+)?place/.test(catchSrc)
+  && /immediate\s+(?:\/\/\s+)?alert/.test(catchSrc), true);
 const setup = readFileSync("scripts/setup-plus-properties-account.mjs", "utf8");
 check("account setup is idempotent", /upsert\(/.test(setup), true);
 check("…and keeps the generic Drive sync away from it", /driveSyncInterval: "off"/.test(setup) && !/driveFolderUrl:/.test(setup), true);

@@ -49,18 +49,38 @@ const DISTRICTS = ["Limassol", "Paphos", "Larnaca", "Nicosia", "Famagusta"] as c
 /* The price list's "Location:" footer. Real values, 2026-09-26: "Universal -
    Paphos", "Livadia – Larnaca", "Agios Tychonas-Limassol", "Platy - Nicosia",
    "Georgiou Griva Digeni 29, Larnaca" (Plus 92), "Lefkara" (Plus 85).
-   The district is the LAST part (split on dashes and commas) that is one of
+   The district is the LAST part (split as locationParts says) that is one of
    the site's districts; the town is the first other part, unless it carries a
    digit (a street address). With no known district, the district stays null
    and a single short part (≤ 3 words, no digit) is taken as the town. There
    is no town→district map in src/lib to resolve "Lefkara", so that is left to
    the admin (locationNote). */
+const knownDistrict = (p: string) => DISTRICTS.find((d) => d.toLowerCase() === p.trim().toLowerCase());
+
+/* En and em dashes and commas always separate. A hyphen separates only with
+   whitespace on at least one side ("Universal - Paphos"), or when what
+   follows it is a known district ("Agios Tychonas-Limassol"); otherwise it
+   belongs to the name ("Kato-Polemidia", "Pyla-Voroklini"). */
+function locationParts(location: string): string[] {
+  const out: string[] = [];
+  for (const chunk of location.split(/[–—,]|\s+-\s*|\s*-\s+/)) {
+    let rest = chunk;
+    const tail: string[] = [];
+    for (let i = rest.lastIndexOf("-"); i >= 0 && knownDistrict(rest.slice(i + 1)); i = rest.lastIndexOf("-")) {
+      tail.unshift(rest.slice(i + 1));
+      rest = rest.slice(0, i);
+    }
+    out.push(rest, ...tail);
+  }
+  return out.map((p) => p.trim()).filter(Boolean);
+}
+
 export function splitLocation(location: string | null): { town: string | null; district: string | null } {
   if (!location || !location.trim()) return { town: null, district: null };
-  const parts = location.split(/[-–—,]/).map((p) => p.trim()).filter(Boolean);
+  const parts = locationParts(location);
   const isTown = (p: string | undefined) => !!p && !/\d/.test(p);
   for (let i = parts.length - 1; i >= 0; i--) {
-    const district = DISTRICTS.find((d) => d.toLowerCase() === parts[i].toLowerCase());
+    const district = knownDistrict(parts[i]);
     if (!district) continue;
     const first = parts.filter((_, j) => j !== i)[0];
     return { town: isTown(first) ? first : null, district };
