@@ -59,6 +59,11 @@ check("viewport as fallback", S.coordsFromMapsUrl("https://www.google.com/maps/@
 check("?q= form", S.coordsFromMapsUrl("https://maps.google.com/?q=34.95,33.62"), { lat: 34.95, lng: 33.62 });
 check("outside Cyprus is rejected", S.coordsFromMapsUrl("https://www.google.com/maps/@37.9,23.7,15z"), null);
 check("no link", S.coordsFromMapsUrl(null), null);
+/* M5: a resolved link can arrive percent-encoded ("%21" for "!", "%2C" for
+   ","), which hides the pin from every pattern above. */
+check("an encoded pin is read", S.coordsFromMapsUrl("https://www.google.com/maps/place/X/data=%213d34.7626611%214d32.4311539"), { lat: 34.7626611, lng: 32.4311539 });
+check("an encoded ?q= pair is read", S.coordsFromMapsUrl("https://maps.google.com/?q=34.95%2C33.62"), { lat: 34.95, lng: 33.62 });
+check("a malformed escape does not throw, the raw link is still read", S.coordsFromMapsUrl("https://www.google.com/maps/@34.9,33.6,15z?x=%E0%A4%A"), { lat: 34.9, lng: 33.6 });
 
 /* ── Project Details from their website ──────────────────────────────── */
 const d = S.projectDetails(readFileSync("scripts/qa/fixtures/plus/plus-33-page.html", "utf8"));
@@ -120,6 +125,41 @@ check("a hand-set type survives", withKept.type, "Penthouse");
 check("hand-set photos survive", withKept.photos, ["/x.webp"]);
 check("…but the sheet owns price, status and areas", [withKept.price, withKept.status, withKept.areaBuilt], [350000, "available", "78"]);
 check("nulls are not carried", "plans" in withKept, false);
+/* M4: Plus 21 writes "0" for no uncovered veranda and 0 common area. A zero
+   area is no area, and a zero-valued fact is not a fact. */
+const zero = S.unitRow({ ...u, areaBuilt: 0, areaVerandaOpen: 0, areaCommon: 0, parking: "0" }, "d", 0);
+check("a zero area is written as null", [zero.areaBuilt, zero.areaInternal, zero.areaVerandaOpen], [null, null, null]);
+check("a zero-valued attr is omitted", zero.attrs.map((a) => a.name), ["Storage", "Total area (m²)"]);
+
+/* F1: an admin can rename a unit's ref (saveUnits rewrites ref, keeps feedRef
+   and source), so the writer anchors on feedRef, as feedSync does. */
+check("a stored unit is known by its feedRef, not its edited ref", S.storedUnitKey({ ref: "A01 (sea view)", feedRef: "A01" }), "A01");
+check("…falling back to ref for a row without one", [S.storedUnitKey({ ref: "A01", feedRef: null }), S.storedUnitKey({ ref: "A01", feedRef: "" })], ["A01", "A01"]);
+check("…and nothing for a row with neither", S.storedUnitKey({ ref: null, feedRef: null }), null);
+
+/* F3: the media is re-mirrored whenever the signature has not advanced (one
+   file failing every night), but the content-hashed URLs come back identical;
+   only a real change may schedule a restart. */
+check("sameList: same URLs, same order", S.sameList(["/a", "/b"], ["/a", "/b"]), true);
+check("sameList: a new order is a change", S.sameList(["/b", "/a"], ["/a", "/b"]), false);
+check("sameList: a different length is a change", S.sameList(["/a"], ["/a", "/b"]), false);
+check("sameList: nothing stored yet is a change", [S.sameList(["/a"], null), S.sameList(["/a"], undefined)], [false, false]);
+check("sameList: an empty or unwritten fresh list is never a change", [S.sameList([], ["/a"]), S.sameList(null, ["/a"])], [true, true]);
+
+/* M6: a project that vanished from the folder is reported, never touched. */
+check("a stored project absent from the folder is reported",
+  S.absentProjectNotes(["33", "57", "87"], new Set(["33", "87"])), ["57: no price list in the folder this run — left as it is"]);
+check("…and nothing when every stored project is present", S.absentProjectNotes(["33"], new Set(["33"])), []);
+
+/* F4b: the cron summary carries the counts and the first notes, clipped, and
+   stays far below Telegram's 4096-character limit. */
+const long = "x".repeat(1000);
+const sum = S.summarizePlusRun({ ok: true, reason: null, dryRun: false, projects: 35, created: 2, units: 400,
+  failed: [long, long, long, long], blocked: ["57: 4 of 6 units are missing"], notes: [`33: ${long}`, "57: b", "87: c", "60: d"], plan: [] });
+check("summary: the counts", sum.includes("4 failed, 1 blocked, 4 note(s)"), true);
+check("summary: the first three notes are named", [sum.includes("33: xxx"), sum.includes("57: b"), sum.includes("87: c"), sum.includes("60: d")], [true, true, true, false]);
+check("summary: each item is clipped to about 150 characters", sum.includes("x".repeat(160)), false);
+check("summary: well under 4096 characters", sum.length < 2000, true);
 
 /* ── the writer's wiring ──────────────────────────────────────────────────
    The writer talks to Drive and the database, so its guarantees are checked
@@ -200,6 +240,41 @@ check("published projects skip media mirroring unless forced",
 check("every fetch has a 20 s timeout",
   [(src.match(/\bfetch\(/g) ?? []).length, (src.match(/signal: AbortSignal\.timeout\(20000\)/g) ?? []).length], [2, 2]);
 
+/* ── final-review fixes: wiring ───────────────────────────────────────── */
+/* F1: the three places that match stored units to the sheet use feedRef. */
+check("F1: stored feed units select feedRef", /select: \{ id: true, ref: true, feedRef: true,/.test(src), true);
+check("F1: the keep map is keyed on the stored unit key", /const k = storedUnitKey\(r\); if \(k\) keep\.set\(k,/.test(src), true);
+check("F1: manual units are known by the same key", /select: \{ ref: true, feedRef: true \}/.test(src) && /\)\)\.map\(storedUnitKey\)/.test(src), true);
+check("F1: unlisting compares the same key", /const k = storedUnitKey\(r\);\s*if \(k && !fresh\.has\(k\)/.test(src), true);
+check("F1: nothing matches on a bare stored ref any more", /r\.ref as string|fresh\.has\(r\.ref\)|\.map\(\(r\) => r\.ref\)/.test(src), false);
+/* F3: only a changed list schedules a restart. */
+check("F3: the stored gallery and plans are read with the rows", /select: \{ id: true, feedKey: true, publishStatus: true, driveImagesModified: true, gallery: true, plans: true,/.test(src), true);
+check("F3: a restart needs a list that differs from the stored one",
+  /anyNewMedia = anyNewMedia \|\| !sameList\(gallery, existing\?\.gallery\) \|\| !sameList\(plans, existing\?\.plans\);/.test(src), true);
+check("F3: …not merely a non-empty one", /\(gallery\?\.length \?\? 0\) \+ \(plans\?\.length \?\? 0\) > 0/.test(src), false);
+/* F4b: parser notes reach the run's notes in a real run. */
+const notesAt = src.indexOf("for (const n of g.project?.notes ?? []) result.notes.push(`${g.key}: ${n}`);");
+check("F4b: parser notes are pushed, prefixed with the key, in the write loop",
+  notesAt > src.indexOf("if (opts.dryRun) return") && notesAt < src.indexOf("prisma.development.create"), true);
+/* F5: distances follow the coordinates, as in feedSync. */
+const distAt = src.indexOf("if (dev.latitude != null && dev.longitude != null) await recomputeDevelopmentDistances(dev.id);");
+check("F5: distances are recomputed after the upsert when the row has coordinates",
+  distAt > src.indexOf("prisma.development.create") && distAt < src.indexOf("if (g.project) {"), true);
+/* M1: a fresh token per project, and an empty listing never wipes media. */
+const writeAt = src.indexOf("/* ── write, one project at a time");
+check("M1: the write loop takes a fresh token per project",
+  writeAt > 0 && src.indexOf("const projectToken = await getAccessToken();") > writeAt, true);
+check("M1: …and uses it for the listing and every download",
+  [/collectMedia\(g\.mediaFolder!, projectToken,/.test(src), (src.match(/downloadFile\(\w+\.id, projectToken\)/g) ?? []).length], [true, 2]);
+check("M1: an empty listing keeps the stored media and says so",
+  /if \(media && !media\.images\.length && !media\.plans\.length && existing\?\.driveImagesModified\) \{\s*result\.notes\.push\(`\$\{g\.key\}: media listing came back empty — kept the stored media`\);\s*media = null;/.test(src), true);
+/* M2: a draft's units are replaced atomically. */
+check("M2: delete and create run in one transaction",
+  /await prisma\.\$transaction\(\[\s*prisma\.developmentUnit\.deleteMany\(\{ where: \{ developmentId: dev\.id, source: "feed" \} \}\),\s*\.\.\.\(writable\.length \? \[prisma\.developmentUnit\.createMany\(/.test(src), true);
+/* M6: every stored Plus project is read, and the absent ones noted. */
+check("M6: the stored rows are every Plus project", /const existingRows = await prisma\.development\.findMany\(\{\s*where: \{ dev: PLUS_DEV \},/.test(src), true);
+check("M6: …and the absent ones are noted", /result\.notes\.push\(\.\.\.absentProjectNotes\(/.test(src), true);
+
 /* ── route, account ───────────────────────────────────────────────────────
    R10: no cron-health check here — the JOBS entry in
    src/lib/actionCenter/rules/system.ts is added together with the crontab
@@ -209,6 +284,7 @@ const route = readFileSync("src/app/api/cron/plus-sync/route.ts", "utf8");
 check("route refuses without the cron secret", /key !== process\.env\.CRON_SECRET/.test(route) && /status: 401/.test(route), true);
 check("route reads force and dryRun, nothing invented", [/searchParams\.get\("force"\) === "1"/.test(route), /searchParams\.get\("dryRun"\) === "1"/.test(route)], [true, true]);
 check("route finds the account by its slug", /where: \{ slug: PLUS_ACCOUNT_SLUG \}/.test(route), true);
+check("F4b: the route summarises with summarizePlusRun", (route.match(/summarizePlusRun\b/g) ?? []).length >= 3 && !/function summarize\(/.test(route), true);
 check("a dry run is not logged as a sync", /opts\.dryRun|dryRun \?/.test(route), true);
 /* Fix (review of 0896fdd4): a thrown error is the only failure signal this
    route has until the cron-health JOBS entry lands (R10), so the catch block

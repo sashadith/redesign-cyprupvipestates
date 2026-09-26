@@ -12,21 +12,12 @@
 // cron_run_logs row to satisfy it yet.
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { syncPlusProperties, PLUS_ACCOUNT_SLUG, type PlusRunResult } from "@/lib/plusPropertiesSync";
+import { syncPlusProperties, summarizePlusRun, PLUS_ACCOUNT_SLUG } from "@/lib/plusPropertiesSync";
 import { withCronLog, shouldNotifyFailureStreak, markFailureStreakNotified } from "@/lib/cronLog";
 import { buildCronFailureMessage, sendFeedNotification } from "@/lib/feedNotifications";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
-
-function summarize(r: PlusRunResult): string {
-  return [
-    `${r.projects} project(s), ${r.created} created, ${r.units} unit(s) written`,
-    r.failed.length ? `${r.failed.length} failed (${r.failed.slice(0, 3).join("; ")})` : null,
-    r.blocked.length ? `${r.blocked.length} blocked` : null,
-    r.reason,
-  ].filter(Boolean).join(", ");
-}
 
 export async function GET(req: NextRequest) {
   const key = req.nextUrl.searchParams.get("key");
@@ -44,9 +35,9 @@ export async function GET(req: NextRequest) {
        satisfy nor trip cron health. */
     const result = opts.dryRun
       ? await syncPlusProperties(acct.id, opts)
-      : await withCronLog("plus-sync", () => syncPlusProperties(acct.id, opts), summarize, (r) => r.ok);
+      : await withCronLog("plus-sync", () => syncPlusProperties(acct.id, opts), summarizePlusRun, (r) => r.ok);
     if (!opts.dryRun && !result.ok && (await shouldNotifyFailureStreak("plus-sync"))) {
-      const msg = buildCronFailureMessage("plus-sync", summarize(result));
+      const msg = buildCronFailureMessage("plus-sync", summarizePlusRun(result));
       await sendFeedNotification(msg.text, msg.subject);
       await markFailureStreakNotified("plus-sync");
     }

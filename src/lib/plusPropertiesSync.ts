@@ -4,6 +4,7 @@ import { prisma } from "./prisma";
 import { getAccessToken, listFolder, collectMedia, downloadFile, type DriveFile } from "./googleDrive";
 import { storeUploadedImage, pdfPagesToJpegs, devKeyFor, beginSyncWindow, scheduleAppRestart } from "./imageMirror";
 import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
+import { recomputeDevelopmentDistances } from "./developmentDistances";
 import { logCronRun } from "./cronLog";
 import { cleanNumber, parsePriceList, type PlusProject, type PlusUnit } from "./plusProperties";
 
@@ -51,8 +52,11 @@ export function splitLocation(location: string | null): { town: string | null; d
 /* The pin (!3d<lat>!4d<lng>) is the place; @lat,lng is only where the map was
    centred, and the two differ (Plus 33: 32.4312 vs 32.4290). Anything outside
    Cyprus is a wrong link, not a location. */
-export function coordsFromMapsUrl(url: string | null): { lat: number; lng: number } | null {
-  if (!url) return null;
+export function coordsFromMapsUrl(raw: string | null): { lat: number; lng: number } | null {
+  if (!raw) return null;
+  /* A resolved link can arrive percent-encoded ("%213d…%214d…", "q=34.9%2C33.6"). */
+  let url = raw;
+  try { url = decodeURIComponent(raw); } catch { /* a malformed escape: read the link as it is */ }
   const m = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/)
     ?? url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/)
     ?? url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
@@ -146,7 +150,10 @@ export function carryOverManualUnitFields(kept: Record<string, unknown> | null |
   return out;
 }
 
-const str = (n: number | null) => (n == null ? null : String(n));
+/* Plus 21 writes "0" for "none" (uncovered veranda, common area): a zero area
+   is no area, and a zero-valued fact is not written. */
+const str = (n: number | null) => (n == null || n === 0 ? null : String(n));
+const isZero = (v: string | number) => /^0+(?:\.0+)?$/.test(String(v).trim());
 
 /* One DevelopmentUnit row. areaBuilt is what the public unit table shows
    (Covered Area = areaBuilt + areaVeranda, as for Island Blue), so the interior
@@ -154,7 +161,7 @@ const str = (n: number | null) => (n == null ? null : String(n));
    count lives in attrs. A price only ever travels with an available unit. */
 export function unitRow(u: PlusUnit, developmentId: string, index: number, kept?: Record<string, unknown> | null): Record<string, unknown> {
   const attrs: { name: string; value: string }[] = [];
-  const add = (name: string, v: string | number | null) => { if (v != null && v !== "") attrs.push({ name, value: String(v) }); };
+  const add = (name: string, v: string | number | null) => { if (v != null && v !== "" && !isZero(v)) attrs.push({ name, value: String(v) }); };
   add("Parking", u.parking);
   add("Storage", u.storage);
   add("Roof terrace (m²)", u.areaRoof);
@@ -174,6 +181,29 @@ export function unitRow(u: PlusUnit, developmentId: string, index: number, kept?
     areaVeranda: str(u.areaVeranda), areaVerandaOpen: str(u.areaVerandaOpen), areaPlot: str(u.areaPlot),
     attrs, sortIndex: index,
   };
+}
+
+/* A stored unit's identity on the sheet. An admin can rename `ref` in the unit
+   editor (saveUnits rewrites ref and keeps feedRef and source), so matching
+   anchors on feedRef, as feedSync does, and falls back to ref only for a row
+   without one ("" counts as none, as in feedSync's feedRef backfill). */
+export const storedUnitKey = (r: { ref?: string | null; feedRef?: string | null }): string | null => r.feedRef || r.ref || null;
+
+/* Whether a freshly mirrored list is what the row already holds: same URLs,
+   same order. Mirrored URLs are content-hashed, so a project re-mirrored only
+   because one file keeps failing comes back identical and has nothing for a
+   restart to pick up. An empty or unwritten fresh list is never a change
+   (the semantics of cybarcoSync's mediaListChanged, restated, not imported). */
+export function sameList(fresh: string[] | null, stored: unknown): boolean {
+  if (!fresh || !fresh.length) return true;
+  const s = Array.isArray(stored) ? stored : [];
+  return fresh.length === s.length && fresh.every((url, i) => url === s[i]);
+}
+
+/* Stored Plus projects this run's folders say nothing about. They are left
+   exactly as they are; the note is the only trace. */
+export function absentProjectNotes(storedKeys: string[], seen: Set<string>): string[] {
+  return storedKeys.filter((k) => !seen.has(k)).map((k) => `${k}: no price list in the folder this run — left as it is`);
 }
 
 /* The feed-sync freeze, restated here like Cybarco does: content an admin has
@@ -201,6 +231,20 @@ export type PlusRunResult = {
   projects: number; created: number; units: number;
   failed: string[]; blocked: string[]; notes: string[]; plan: PlusPlanRow[];
 };
+
+/* The cron log line and the failure notification. Telegram refuses anything
+   over 4096 characters and nothing here chunks, so only the first three of a
+   kind are named and each is clipped. */
+const clip = (s: string, n = 150) => (s.length > n ? `${s.slice(0, n - 1)}…` : s);
+export function summarizePlusRun(r: PlusRunResult): string {
+  return [
+    `${r.projects} project(s), ${r.created} created, ${r.units} unit(s) written`,
+    `${r.failed.length} failed, ${r.blocked.length} blocked, ${r.notes.length} note(s)`,
+    r.failed.length ? `failed: ${r.failed.slice(0, 3).map((x) => clip(x)).join("; ")}` : null,
+    r.notes.length ? `notes: ${r.notes.slice(0, 3).map((x) => clip(x)).join("; ")}` : null,
+    r.reason,
+  ].filter(Boolean).join(", ");
+}
 
 type Gathered = {
   key: string; source: "xml" | "pdf-only"; project: PlusProject | null; mediaFolder: string | null;
@@ -288,10 +332,15 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
 
     /* ── the plan, and in a dry run the whole answer ── */
     const existingRows = await prisma.development.findMany({
-      where: { feedKey: { in: gathered.map((g) => feedKeyFor(g.key)) } },
-      select: { id: true, feedKey: true, publishStatus: true, driveImagesModified: true, district: true, town: true, latitude: true, longitude: true },
+      where: { dev: PLUS_DEV },
+      select: { id: true, feedKey: true, publishStatus: true, driveImagesModified: true, gallery: true, plans: true, district: true, town: true, latitude: true, longitude: true },
     });
     const byFeedKey = new Map(existingRows.map((r) => [r.feedKey, r] as const));
+    /* A key with a price list (read or not) or a PDF was seen; anything else
+       stored is reported and left alone. */
+    const seenKeys = new Set(Array.from(xmlKeys));
+    for (const f of pdfFiles) { const k = projectKey(f.name); if (k) seenKeys.add(k); }
+    result.notes.push(...absentProjectNotes(existingRows.map((r) => r.feedKey.slice(PLUS_DEV.length + 1)), seenKeys));
     const slugs = gathered.map((g) => slugCandidate(publicNameFor(g.key)));
     const [takenDev, takenLegacy] = await Promise.all([
       prisma.development.findMany({ where: { slug: { in: slugs } }, select: { slug: true, feedKey: true } }),
@@ -318,6 +367,9 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
     /* ── write, one project at a time; a failure costs only that project ── */
     for (const g of gathered) {
       try {
+        for (const n of g.project?.notes ?? []) result.notes.push(`${g.key}: ${n}`);
+        /* A token lasts an hour and a full run with media can outlast it. */
+        const projectToken = await getAccessToken();
         const feedKey = feedKeyFor(g.key);
         const existing = byFeedKey.get(feedKey) ?? null;
         const published = existing?.publishStatus === "published";
@@ -330,15 +382,21 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
         const mirrorMedia = !!g.mediaFolder && (!published || !!opts.force);
         let media: Awaited<ReturnType<typeof collectMedia>> | null = null;
         if (mirrorMedia) {
-          try { media = await collectMedia(g.mediaFolder!, token, { maxDepth: 4 }); }
+          try { media = await collectMedia(g.mediaFolder!, projectToken, { maxDepth: 4 }); }
           catch { mediaFailed++; result.notes.push(`${g.key}: media folder could not be listed — will retry next run`); }
+        }
+        /* An empty listing of a folder that had media is far likelier a Drive
+           hiccup than a developer deleting everything: never overwrite with it. */
+        if (media && !media.images.length && !media.plans.length && existing?.driveImagesModified) {
+          result.notes.push(`${g.key}: media listing came back empty — kept the stored media`);
+          media = null;
         }
         let gallery: string[] | null = null, plans: string[] | null = null;
         if (media && (opts.force || existing?.driveImagesModified !== media.sig)) {
           gallery = [];
           for (const img of media.images) {
             try {
-              const url = await storeUploadedImage(await downloadFile(img.id, token), devKey);
+              const url = await storeUploadedImage(await downloadFile(img.id, projectToken), devKey);
               if (url) gallery.push(url); else mediaFailed++;
             } catch { mediaFailed++; }
           }
@@ -346,7 +404,7 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
           plans = [];
           for (const p of media.plans) {
             try {
-              const buf = await downloadFile(p.id, token);
+              const buf = await downloadFile(p.id, projectToken);
               const pages = p.mimeType === "application/pdf" ? await pdfPagesToJpegs(buf, 60) : [buf];
               let storedPages = 0;
               for (const page of pages) { const url = await storeUploadedImage(page, devKey); if (url) { plans.push(url); storedPages++; } }
@@ -358,7 +416,7 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
           if (!gallery.length && imagesFailed) gallery = null;
           if (!plans.length && mediaFailed > imagesFailed) plans = null;
           if (mediaFailed) result.notes.push(`${g.key}: ${mediaFailed} media file(s) failed — will retry next run`);
-          anyNewMedia = anyNewMedia || (gallery?.length ?? 0) + (plans?.length ?? 0) > 0;
+          anyNewMedia = anyNewMedia || !sameList(gallery, existing?.gallery) || !sameList(plans, existing?.plans);
         }
         const { town, district } = splitLocation(g.project?.location ?? null);
         const units = g.project?.units ?? [];
@@ -378,29 +436,35 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
           : await prisma.development.create({ data: { ...row, publishStatus: "draft" } as never });
         if (!existing) result.created++;
         result.projects++;
+        /* As feedSync does; the function itself prefers an admin's override pin. */
+        if (dev.latitude != null && dev.longitude != null) await recomputeDevelopmentDistances(dev.id);
 
         if (g.project) {
           const stored = await prisma.developmentUnit.findMany({
             where: { developmentId: dev.id, source: "feed" },
-            select: { id: true, ref: true, status: true, type: true, unitNumber: true, guestWc: true, orientation: true, amenities: true, photos: true, plans: true },
+            select: { id: true, ref: true, feedRef: true, status: true, type: true, unitNumber: true, guestWc: true, orientation: true, amenities: true, photos: true, plans: true },
           });
           const decision = unitsDecision({ published, stored, fresh: units });
           if (decision.blocked) {
             result.blocked.push(`${g.key}: ${decision.message}`);
             await logCronRun(`plus-incomplete:${g.key}`, false, decision.message ?? undefined);
           } else {
-            const keep = new Map(stored.filter((r) => r.ref).map((r) => [r.ref as string, r as unknown as Record<string, unknown> & { id: string }] as const));
+            const keep = new Map<string, Record<string, unknown> & { id: string }>();
+            for (const r of stored) { const k = storedUnitKey(r); if (k) keep.set(k, r as unknown as Record<string, unknown> & { id: string }); }
             /* A unit the admin has edited by hand (setUnitPhotos flips it to
                source "manual") wins: the sheet neither updates it nor creates
                a feed twin with the same ref beside it. */
             const manualRefs = new Set((await prisma.developmentUnit.findMany({
-              where: { developmentId: dev.id, source: "manual" }, select: { ref: true },
-            })).map((r) => r.ref).filter((r): r is string => !!r));
+              where: { developmentId: dev.id, source: "manual" }, select: { ref: true, feedRef: true },
+            })).map(storedUnitKey).filter((r): r is string => !!r));
             const writable = units.map((u, i) => ({ u, i })).filter(({ u }) => !manualRefs.has(u.ref));
             if (writable.length < units.length) result.notes.push(`${g.key}: ${units.length - writable.length} unit(s) edited by hand are left as they are`);
             if (!published) {
-              await prisma.developmentUnit.deleteMany({ where: { developmentId: dev.id, source: "feed" } });
-              if (writable.length) await prisma.developmentUnit.createMany({ data: writable.map(({ u, i }) => unitRow(u, dev.id, i, keep.get(u.ref))) as never });
+              /* One transaction: a failed create must not leave a draft with no units. */
+              await prisma.$transaction([
+                prisma.developmentUnit.deleteMany({ where: { developmentId: dev.id, source: "feed" } }),
+                ...(writable.length ? [prisma.developmentUnit.createMany({ data: writable.map(({ u, i }) => unitRow(u, dev.id, i, keep.get(u.ref))) as never })] : []),
+              ]);
             } else {
               const fresh = new Set(units.map((u) => u.ref));
               for (const { u, i } of writable) {
@@ -410,7 +474,8 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
                 else await prisma.developmentUnit.create({ data });
               }
               for (const r of stored) {
-                if (r.ref && !fresh.has(r.ref) && r.status !== "sold" && r.status !== "unlisted") {
+                const k = storedUnitKey(r);
+                if (k && !fresh.has(k) && r.status !== "sold" && r.status !== "unlisted") {
                   await prisma.developmentUnit.update({ where: { id: r.id }, data: { status: "unlisted" } });
                 }
               }
