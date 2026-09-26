@@ -7,7 +7,7 @@ import {
 } from "@/sanity/sanity.utils";
 import { urlFor } from "@/sanity/sanity.client";
 import ProjectsExplorer, { type ProjectCardData, type MapMarker } from "./ProjectsExplorer";
-import Nav from "../preview-home/sections/Nav";
+import Header from "@/app/components/Header/Header";
 import Footer from "../preview-home/sections/Footer";
 import { resolveCompletionYear } from "@/lib/text";
 import { isLocale } from "@/lib/locale";
@@ -104,7 +104,7 @@ export default async function ProjectsPreview({ searchParams }: { searchParams: 
 
   return (
     <>
-      <Nav />
+      <Header params={{ lang: "en" }} translations={[]} />
       <main className="px">
         <ProjectsExplorer
           cards={cards}

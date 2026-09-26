@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
 import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import "../preview-home/tokens.css";
+/* Staging preview with its own <html>/<body>; nothing else pulls in the
+   global header stylesheet here. */
+import "@/app/header-footer.css";
 import "./insights.css";
 import LenisProvider from "../preview-home/anim/LenisProvider";
+import { ModalProvider } from "@/app/context/ModalContext";
 
 /* Cyprus Insights — redesigned blog, isolated preview. Reuses the homepage design
    tokens + fonts + smooth scroll. Hybrid theme: dark index/hero, light reading body.
@@ -41,7 +45,9 @@ export default function InsightsLayout({ children }: { children: React.ReactNode
         <meta name="robots" content="noindex, nofollow" />
       </head>
       <body>
-        <LenisProvider>{children}</LenisProvider>
+        <ModalProvider>
+          <LenisProvider>{children}</LenisProvider>
+        </ModalProvider>
       </body>
     </html>
   );

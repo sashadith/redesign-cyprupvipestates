@@ -1,5 +1,5 @@
 import { getHomePageByLang } from "@/sanity/sanity.utils";
-import Nav from "./sections/Nav";
+import Header from "@/app/components/Header/Header";
 import Hero from "./sections/Hero";
 import Brochure from "./sections/Brochure";
 import About from "./sections/About";
@@ -29,7 +29,7 @@ export default async function PreviewHome() {
   return (
     <>
       <PreviewMotion />
-      <Nav />
+      <Header params={{ lang: "en" }} translations={[]} />
       <main>
         <Hero heroBlock={homePage.heroBlock} />
         <Brochure brochure={homePage.brochureBlock} />

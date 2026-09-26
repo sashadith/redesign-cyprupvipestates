@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import "../preview-home/tokens.css";
+/* Staging preview with its own <html>/<body>; nothing else pulls in the
+   global header stylesheet here. */
+import "@/app/header-footer.css";
 import "./projects.css";
+import { ModalProvider } from "@/app/context/ModalContext";
 
 /* Cyprus VIP Estates — Projects search, isolated redesign preview. Reuses the
    homepage design tokens + fonts. Dark, map-centric explorer. The live
@@ -40,7 +44,9 @@ export default function ProjectsPreviewLayout({ children }: { children: React.Re
       <head>
         <meta name="robots" content="noindex, nofollow" />
       </head>
-      <body>{children}</body>
+      <body>
+        <ModalProvider>{children}</ModalProvider>
+      </body>
     </html>
   );
 }

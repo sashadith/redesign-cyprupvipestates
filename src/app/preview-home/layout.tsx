@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import "./tokens.css";
+/* Staging preview with its own <html>/<body>; nothing else pulls in the
+   global header stylesheet here. */
+import "@/app/header-footer.css";
 import LenisProvider from "./anim/LenisProvider";
+import { ModalProvider } from "@/app/context/ModalContext";
 
 /* Locked set 2 — Fraunces (display) · Mulish (body); Playfair = Cyrillic fallback. */
 const display = Fraunces({
@@ -44,7 +48,9 @@ export default function PreviewHomeLayout({
         <meta name="robots" content="noindex, nofollow" />
       </head>
       <body>
-        <LenisProvider>{children}</LenisProvider>
+        <ModalProvider>
+          <LenisProvider>{children}</LenisProvider>
+        </ModalProvider>
       </body>
     </html>
   );
