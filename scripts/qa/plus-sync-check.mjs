@@ -460,10 +460,11 @@ const rowSrc = src.slice(rowStart, src.indexOf("};", rowStart));
 check("the project row is where the check looks", rowStart > 0 && /feedKey/.test(rowSrc), true);
 check("the connector never writes category or slug", /\b(category|slug)\b/.test(rowSrc), false);
 /* splitLocation now answers null for an unknown district: the row must carry
-   district and town only when set, so a null never erases what an admin set. */
-check("district and town are written only when set",
-  /\.\.\.\(town \? \{ town \} : \{\}\), \.\.\.\(district \? \{ district \} : \{\}\)/.test(rowSrc)
-  && !/\b(town|district):\s*(?!\s*\{)/.test(rowSrc.replace(/\.\.\.\(town \? \{ town \} : \{\}\), \.\.\.\(district \? \{ district \} : \{\}\)/, "")), true);
+   district and area only when set, so a null never erases what an admin set.
+   (The place goes to `area` since 2026-09-26; it went to `town` before.) */
+check("district and area are written only when set",
+  /\.\.\.\(area \? \{ area \} : \{\}\), \.\.\.\(district \? \{ district \} : \{\}\)/.test(rowSrc)
+  && !/\b(area|town|district):\s*(?!\s*\{)/.test(rowSrc.replace(/\.\.\.\(area \? \{ area \} : \{\}\), \.\.\.\(district \? \{ district \} : \{\}\)/, "")), true);
 check("the unknown-district note is raised from the plan loop (dry run too) with the stored district",
   /locationNote\(\{ key: g\.key, location: g\.project\?\.location \?\? null, storedDistrict: existing\?\.district \?\? null \}\)/.test(src)
   && src.search(/locationNote\(\{ key: g\.key/) < src.indexOf("if (opts.dryRun) return"), true);
@@ -655,6 +656,16 @@ check("the catch block's comment no longer says the JOBS entry is pending",
 const setup = readFileSync("scripts/setup-plus-properties-account.mjs", "utf8");
 check("account setup is idempotent", /upsert\(/.test(setup), true);
 check("…and keeps the generic Drive sync away from it", /driveSyncInterval: "off"/.test(setup) && !/driveFolderUrl:/.test(setup), true);
+
+/* ── neighbourhood goes to `area` (admin "Area"), never `town` ("Locality") ──
+   2026-09-26: the operator found every Plus neighbourhood under Locality; the
+   site (every other developer, area pages, area texts) keys on `area`. */
+const plusRow = src.slice(src.indexOf("const row: Record<string, unknown> = {"), src.indexOf("};", src.indexOf("const row: Record<string, unknown> = {")));
+check("the footer's place is written as area", /\.\.\.\(area \? \{ area \} : \{\}\)/.test(plusRow), true);
+check("…and nothing is written to town", /\btown\b/.test(plusRow), false);
+check("area is frozen once set on a published project, like feedSync",
+  /FROZEN_WHEN_PUBLISHED_IF_SET = \[[^\]]*"area"/.test(src), true);
+check("…which needs the stored area selected", /district: true, area: true/.test(src), true);
 
 console.log(failures ? `\n${failures} failed` : "\nall passed");
 process.exit(failures ? 1 : 0);

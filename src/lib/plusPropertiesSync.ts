@@ -420,7 +420,8 @@ export function missingPriceListDecision(input: {
    curated stays put once a project is published; location only once set.
    Units and prices always sync. */
 const FROZEN_WHEN_PUBLISHED = ["publicName", "description", "amenities", "gallery", "plans"] as const;
-const FROZEN_WHEN_PUBLISHED_IF_SET = ["district", "town", "latitude", "longitude"] as const;
+// Same list as feedSync.ts's — "area" was missing here until 2026-09-26.
+const FROZEN_WHEN_PUBLISHED_IF_SET = ["district", "area", "town", "latitude", "longitude"] as const;
 
 function freezeForPublished(data: Record<string, unknown>, existing: Record<string, unknown>): Record<string, unknown> {
   const out = { ...data };
@@ -552,7 +553,7 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
     /* ── the plan, and in a dry run the whole answer ── */
     const existingRows = await prisma.development.findMany({
       where: { dev: PLUS_DEV },
-      select: { id: true, feedKey: true, publishStatus: true, driveImagesModified: true, gallery: true, plans: true, district: true, town: true, latitude: true, longitude: true, override: { select: { latitude: true, longitude: true } } },
+      select: { id: true, feedKey: true, publishStatus: true, driveImagesModified: true, gallery: true, plans: true, district: true, area: true, town: true, latitude: true, longitude: true, override: { select: { latitude: true, longitude: true } } },
     });
     const byFeedKey = new Map(existingRows.map((r) => [r.feedKey, r] as const));
     /* A key with a price list (read or not) is handled below. A stored one
@@ -664,13 +665,17 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
           if (mediaFailed) result.notes.push(`${g.key}: ${mediaFailed} media file(s) failed — will retry next run`);
           anyNewMedia = anyNewMedia || !sameList(gallery, existing?.gallery) || !sameList(plans, existing?.plans);
         }
-        const { town, district } = splitLocation(g.project?.location ?? null);
+        /* The footer's place ("Livadia" in "Livadia - Larnaca") is a neighbourhood,
+           and the site keeps neighbourhoods in `area` (admin "Area") — every other
+           developer does, and the area pages and area texts key on it. `town`
+           (admin "Locality") stays untouched. Written to `town` until 2026-09-26. */
+        const { town: area, district } = splitLocation(g.project?.location ?? null);
         const units = g.project?.units ?? [];
         const row: Record<string, unknown> = {
           developerAccountId: acct.id, dev: PLUS_DEV, feedProjectId: g.key, feedKey,
           developerName: g.project?.title ?? publicNameFor(g.key), publicName: publicNameFor(g.key), developer: acct.name,
           currency: "EUR", syncedAt: new Date(),
-          ...(town ? { town } : {}), ...(district ? { district } : {}),
+          ...(area ? { area } : {}), ...(district ? { district } : {}),
           ...(g.project?.stage ? { stage: g.project.stage, status: g.project.stage } : {}),
           ...(g.coords ? { latitude: g.coords.lat, longitude: g.coords.lng } : {}),
           ...detailFields(g.details),
