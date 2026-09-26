@@ -50,6 +50,33 @@ check("location: en dash", S.splitLocation("Livadia – Larnaca"), { town: "Liva
 check("location: district only", S.splitLocation("Larnaca"), { town: null, district: "Larnaca" });
 /* Plus 60 writes it with no spaces; the district is after the LAST dash. */
 check("location: no spaces round the dash", S.splitLocation("Agios Tychonas-Limassol"), { town: "Agios Tychonas", district: "Limassol" });
+/* The "Location:" footers of all 32 lists, 2026-09-26. The district is the
+   last part that is one of the site's five districts, in the site's spelling;
+   anything else is left for the admin (no town→district map exists in src/lib). */
+check("location: Platy - Nicosia", S.splitLocation("Platy - Nicosia"), { town: "Platy", district: "Nicosia" });
+check("location: a street address before a comma is no town (Plus 92)",
+  S.splitLocation("Georgiou Griva Digeni 29, Larnaca"), { town: null, district: "Larnaca" });
+check("location: a town alone, no district (Plus 85)", S.splitLocation("Lefkara"), { town: "Lefkara", district: null });
+check("location: a street alone is neither town nor district", S.splitLocation("Makariou Avenue 12"), { town: null, district: null });
+check("location: an unknown last part is never a district", S.splitLocation("Universal - Tala"), { town: null, district: null });
+check("location: the district is matched case-insensitively, stored in the site's spelling",
+  S.splitLocation("kiti, LARNACA"), { town: "kiti", district: "Larnaca" });
+check("location: a part that only CONTAINS a district name is not one", S.splitLocation("Paphos Gate - Limassol"), { town: "Paphos Gate", district: "Limassol" });
+check("location: the district is the LAST known district", S.splitLocation("Paphos - Limassol"), { town: "Paphos", district: "Limassol" });
+check("location: a long single part is not a town", S.splitLocation("Near The Old Town Square"), { town: null, district: null });
+check("location: empty", [S.splitLocation(null), S.splitLocation("  ")], [{ town: null, district: null }, { town: null, district: null }]);
+const LN = (o) => S.locationNote({ key: "85", location: "Lefkara", storedDistrict: null, ...o });
+check("location note: district unknown", LN({}), '85: district unknown for location "Lefkara" — set it in the admin');
+check("location note: none once the admin has set a district", LN({ storedDistrict: "Larnaca" }), null);
+/* Before this fix the whole footer was stored as the district (Plus 85 holds
+   "Lefkara"). That is the old parser's output, not an admin's choice, and a
+   null is never written over it, so the note must keep asking. */
+check("location note: a stored district that is only the footer copied still asks",
+  [LN({ storedDistrict: "Lefkara" }), LN({ storedDistrict: " lefkara " })],
+  ['85: district unknown for location "Lefkara" — set it in the admin', '85: district unknown for location "Lefkara" — set it in the admin']);
+check("location note: none when the district is known", LN({ location: "Livadia – Larnaca" }), null);
+check("location note: none without a location", LN({ location: null }), null);
+check("location note: a street-only footer is named as written", LN({ location: " Makariou Avenue 12 " }), '85: district unknown for location "Makariou Avenue 12" — set it in the admin');
 
 /* ── coordinates from the resolved Maps link ─────────────────────────────
    The pin (!3d/!4d) wins over the viewport centre (@lat,lng) — they differ. */
@@ -346,6 +373,14 @@ const rowStart = src.indexOf("const row: Record<string, unknown> = {");
 const rowSrc = src.slice(rowStart, src.indexOf("};", rowStart));
 check("the project row is where the check looks", rowStart > 0 && /feedKey/.test(rowSrc), true);
 check("the connector never writes category or slug", /\b(category|slug)\b/.test(rowSrc), false);
+/* splitLocation now answers null for an unknown district: the row must carry
+   district and town only when set, so a null never erases what an admin set. */
+check("district and town are written only when set",
+  /\.\.\.\(town \? \{ town \} : \{\}\), \.\.\.\(district \? \{ district \} : \{\}\)/.test(rowSrc)
+  && !/\b(town|district):\s*(?!\s*\{)/.test(rowSrc.replace(/\.\.\.\(town \? \{ town \} : \{\}\), \.\.\.\(district \? \{ district \} : \{\}\)/, "")), true);
+check("the unknown-district note is raised from the plan loop (dry run too) with the stored district",
+  /locationNote\(\{ key: g\.key, location: g\.project\?\.location \?\? null, storedDistrict: existing\?\.district \?\? null \}\)/.test(src)
+  && src.search(/locationNote\(\{ key: g\.key/) < src.indexOf("if (opts.dryRun) return"), true);
 check("…nor anything in DevelopmentOverride", /developmentOverride\./.test(src), false);
 check("a dry run returns before the first write", src.indexOf("if (opts.dryRun)") < src.indexOf("prisma.development.create"), true);
 check("derived state recomputed after units", /recomputeDevelopmentDerivedState\(dev\.id\)/.test(src), true);

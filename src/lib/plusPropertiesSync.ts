@@ -42,12 +42,45 @@ export const feedKeyFor = (key: string) => `${PLUS_DEV}:${key}`;
 export const slugCandidate = (publicName: string) =>
   publicName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
+/* The site's districts, in the spelling Development.district is stored and
+   filtered in (districtFor() in src/app/preview-project/feeds.ts). */
+const DISTRICTS = ["Limassol", "Paphos", "Larnaca", "Nicosia", "Famagusta"] as const;
+
+/* The price list's "Location:" footer. Real values, 2026-09-26: "Universal -
+   Paphos", "Livadia – Larnaca", "Agios Tychonas-Limassol", "Platy - Nicosia",
+   "Georgiou Griva Digeni 29, Larnaca" (Plus 92), "Lefkara" (Plus 85).
+   The district is the LAST part (split on dashes and commas) that is one of
+   the site's districts; the town is the first other part, unless it carries a
+   digit (a street address). With no known district, the district stays null
+   and a single short part (≤ 3 words, no digit) is taken as the town. There
+   is no town→district map in src/lib to resolve "Lefkara", so that is left to
+   the admin (locationNote). */
 export function splitLocation(location: string | null): { town: string | null; district: string | null } {
   if (!location || !location.trim()) return { town: null, district: null };
-  /* Greedy: the district is after the LAST dash, spaced or not ("Universal -
-     Paphos", "Livadia – Larnaca", "Agios Tychonas-Limassol"). */
-  const m = location.trim().match(/^(.*\S)\s*[-–]\s*(\S.*)$/);
-  return m ? { town: m[1].trim(), district: m[2].trim() } : { town: null, district: location.trim() };
+  const parts = location.split(/[-–—,]/).map((p) => p.trim()).filter(Boolean);
+  const isTown = (p: string | undefined) => !!p && !/\d/.test(p);
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const district = DISTRICTS.find((d) => d.toLowerCase() === parts[i].toLowerCase());
+    if (!district) continue;
+    const first = parts.filter((_, j) => j !== i)[0];
+    return { town: isTown(first) ? first : null, district };
+  }
+  const only = parts.length === 1 ? parts[0] : undefined;
+  return { town: only && isTown(only) && only.split(/\s+/).length <= 3 ? only : null, district: null };
+}
+
+/* A footer without a known district is saved without one and the operator
+   sets it. The writer never writes a null district, so an admin's value
+   stays; once it is set, the note stops repeating night after night. A
+   stored district that is just the footer copied (what this parser wrote
+   before 2026-09-26, e.g. Plus 85's "Lefkara") is not an admin's choice and
+   does not silence it. */
+export function locationNote(input: { key: string; location: string | null; storedDistrict: string | null }): string | null {
+  const loc = input.location?.trim();
+  const stored = input.storedDistrict?.trim();
+  const adminSet = !!stored && stored.toLowerCase() !== loc?.toLowerCase();
+  if (!loc || adminSet || splitLocation(loc).district) return null;
+  return `${input.key}: district unknown for location "${loc}" — set it in the admin`;
 }
 
 /* The pin (!3d<lat>!4d<lng>) is the place; @lat,lng is only where the map was
@@ -499,6 +532,8 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
       /* Here, not where the link is resolved: it needs the stored pin. */
       const mapsNote = mapsLinkNote({ key: g.key, mapsUrl: g.project?.mapsUrl ?? null, resolved: g.mapsResolved, coords: g.coords, storedPin: hasStoredPin(existing) });
       if (mapsNote) result.notes.push(mapsNote);
+      const locNote = locationNote({ key: g.key, location: g.project?.location ?? null, storedDistrict: existing?.district ?? null });
+      if (locNote) result.notes.push(locNote);
       const slug = slugCandidate(publicNameFor(g.key));
       const units = g.project?.units ?? [];
       const count = (s: string) => units.filter((u) => u.status === s).length;
