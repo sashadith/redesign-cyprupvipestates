@@ -8,6 +8,7 @@ import {
   graphemeLength,
   guardViolations,
   isLatinNameSpan,
+  latinNamesWithDigits,
   maxTokensFor,
   mergePortableText,
   normalizeHebrew,
@@ -487,4 +488,12 @@ test("parseJsonReply repairs an unescaped straight quote inside a Hebrew acronym
   assert.deepEqual(parseJsonReply('{"text":"פסיפסי אונסק"ו וסלע אפרודיטה.","seo":"נדל"ן בפאפוס"}'), { text: 'פסיפסי אונסק"ו וסלע אפרודיטה.', seo: 'נדל"ן בפאפוס' });
   assert.deepEqual(parseJsonReply('{"text":"שוק הנדל\\"ן"}'), { text: 'שוק הנדל"ן' });
   assert.deepEqual(parseJsonReply('{"a":"שלום","b":"עולם"}'), { a: "שלום", b: "עולם" });
+});
+
+test("a dwelling label before a unit number is a figure, not a name (Apartment 103), while a real name keeps its digit", () => {
+  const en = ["This listing covers two of those apartments, Apartment 103 and Apartment 105, in Abiete 2."];
+  assert.deepEqual(latinNamesWithDigits(en), ["Abiete 2"]);
+  assert.deepEqual(staleFiguresIn(en).sort(), ["103", "105"]);
+  const { payload } = promptPayloadFor({ kind: "developmentDescription", en: { text: en[0] } });
+  assert.equal(payload.text, "This listing covers two of those apartments, Apartment [figure removed] and Apartment [figure removed], in Abiete 2.");
 });

@@ -252,6 +252,12 @@ const NOT_A_NAME = new Set([
   "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december",
   "jan", "feb", "mar", "apr", "jun", "jul", "aug", "sep", "sept", "oct", "nov", "dec",
   "q1", "q2", "q3", "q4", "quarter", "phase", "block", "floor", "unit", "units", "plot", "type", "only", "from", "just", "over", "around", "about", "some", "the", "a", "an",
+  // A dwelling label before a unit number ("Apartment 103", "Villa 7") is a
+  // figure the way "Unit 5" is — the model translates the label and the
+  // number then stands alone as a digit (staging 2026-09-26, carina: "דירה 103").
+  "apartment", "apartments", "villa", "villas", "house", "houses", "flat", "flats", "penthouse", "penthouses", "maisonette", "maisonettes",
+  "townhouse", "townhouses", "bungalow", "bungalows", "building", "buildings", "plots", "blocks", "floors", "phases", "level", "levels", "stage", "stages",
+  "no", "number", "room", "rooms", "suite", "suites",
 ]);
 
 /** Latin proper names that carry a digit ("Abiete 2", "Agnades Village 1") in
