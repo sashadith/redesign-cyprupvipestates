@@ -210,7 +210,7 @@ type Gathered = {
 const FOLDER_MIME = "application/vnd.google-apps.folder";
 
 async function resolvedUrl(url: string): Promise<string | null> {
-  try { const r = await fetch(url, { redirect: "follow", cache: "no-store" }); return r.url || null; } catch { return null; }
+  try { const r = await fetch(url, { redirect: "follow", cache: "no-store", signal: AbortSignal.timeout(20000) }); return r.url || null; } catch { return null; }
 }
 
 async function mediaFolders(token: string): Promise<Map<string, string>> {
@@ -240,7 +240,8 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
     };
     /* Newest first: if the developer drops a new version beside the old one,
        the newest file is the list and the older one is reported, not synced. */
-    const xmlFiles = ((await tryDrive(() => listFolder(PLUS_XML_FOLDER, token))) ?? [])
+    const xmlListing = await tryDrive(() => listFolder(PLUS_XML_FOLDER, token));
+    const xmlFiles = (xmlListing ?? [])
       .filter((f: DriveFile) => /\.xml$/i.test(f.name))
       .sort((a: DriveFile, b: DriveFile) => String(b.modifiedTime).localeCompare(String(a.modifiedTime)));
     const pdfFiles = ((await tryDrive(() => listFolder(PLUS_PDF_FOLDER, token))) ?? []).filter((f: DriveFile) => /\.pdf$/i.test(f.name));
@@ -252,12 +253,14 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
       if (!key) { result.notes.push(`ignored price list without a project number: ${f.name}`); continue; }
       if (xmlKeys.has(key)) { result.notes.push(`older price list for ${publicNameFor(key)} ignored: ${f.name}`); continue; }
       xmlKeys.add(key);
+      /* A price list that could not be fetched fails its project, exactly
+         like one that could not be parsed. It must never degrade into a
+         "PDF-only" page that rewrites the row and skips the units silently. */
       const bytes = await tryDrive(() => downloadFile(f.id, token));
-      let project: PlusProject | null = null;
-      if (bytes) {
-        try { project = await parsePriceList(bytes.toString("utf8")); }
-        catch (e) { result.failed.push(`${key}: ${e instanceof Error ? e.message : String(e)}`); continue; }
-      }
+      if (!bytes) { result.failed.push(`${key}: price list could not be downloaded`); continue; }
+      let project: PlusProject;
+      try { project = await parsePriceList(bytes.toString("utf8")); }
+      catch (e) { result.failed.push(`${key}: ${e instanceof Error ? e.message : String(e)}`); continue; }
       gathered.push({ key, source: "xml", project, mediaFolder: folders.get(key) ?? null, coords: null, details: null });
     }
     /* PDF-only projects (Plus 4, 29, 72 on 2026-09-25) become presentation
@@ -270,12 +273,18 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
     for (const g of gathered) {
       if (g.project?.mapsUrl) g.coords = coordsFromMapsUrl(await resolvedUrl(g.project.mapsUrl));
       if (g.project?.websiteUrl) {
-        try { g.details = projectDetails(await (await fetch(g.project.websiteUrl, { redirect: "follow", cache: "no-store" })).text()); }
+        /* A hanging host must not hold the sync window: 20 s, then no facts. */
+        try { g.details = projectDetails(await (await fetch(g.project.websiteUrl, { redirect: "follow", cache: "no-store", signal: AbortSignal.timeout(20000) })).text()); }
         catch { g.details = null; }
       }
     }
     const verdict = runVerdict({ attempted, failed: failedReq });
     if (!verdict.ok) return { ...result, ok: false, reason: verdict.reason };
+    /* Without the price-list folder every project would be read as PDF-only
+       under a green run (1 failed request of 3 passes the verdict). */
+    if (!xmlListing || !xmlFiles.length) {
+      return { ...result, ok: false, reason: xmlListing ? "the price-list folder holds no .xml price list — nothing was written" : "the price-list folder could not be listed — nothing was written" };
+    }
 
     /* ── the plan, and in a dry run the whole answer ── */
     const existingRows = await prisma.development.findMany({
@@ -313,11 +322,18 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
         const existing = byFeedKey.get(feedKey) ?? null;
         const published = existing?.publishStatus === "published";
         const devKey = devKeyFor(feedKey);
-        const media = g.mediaFolder ? await collectMedia(g.mediaFolder, token, { maxDepth: 4 }) : null;
-        let gallery: string[] | null = null, plans: string[] | null = null;
         /* One bad image or plan costs that file, not the project. Any failure
            leaves the media signature where it was, so the next run retries. */
         let mediaFailed = 0;
+        /* A published project's gallery and plans are frozen, so mirroring them
+           would only store files nobody uses and schedule a restart. */
+        const mirrorMedia = !!g.mediaFolder && (!published || !!opts.force);
+        let media: Awaited<ReturnType<typeof collectMedia>> | null = null;
+        if (mirrorMedia) {
+          try { media = await collectMedia(g.mediaFolder!, token, { maxDepth: 4 }); }
+          catch { mediaFailed++; result.notes.push(`${g.key}: media folder could not be listed — will retry next run`); }
+        }
+        let gallery: string[] | null = null, plans: string[] | null = null;
         if (media && (opts.force || existing?.driveImagesModified !== media.sig)) {
           gallery = [];
           for (const img of media.images) {
@@ -374,14 +390,22 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
             await logCronRun(`plus-incomplete:${g.key}`, false, decision.message ?? undefined);
           } else {
             const keep = new Map(stored.filter((r) => r.ref).map((r) => [r.ref as string, r as unknown as Record<string, unknown> & { id: string }] as const));
+            /* A unit the admin has edited by hand (setUnitPhotos flips it to
+               source "manual") wins: the sheet neither updates it nor creates
+               a feed twin with the same ref beside it. */
+            const manualRefs = new Set((await prisma.developmentUnit.findMany({
+              where: { developmentId: dev.id, source: "manual" }, select: { ref: true },
+            })).map((r) => r.ref).filter((r): r is string => !!r));
+            const writable = units.map((u, i) => ({ u, i })).filter(({ u }) => !manualRefs.has(u.ref));
+            if (writable.length < units.length) result.notes.push(`${g.key}: ${units.length - writable.length} unit(s) edited by hand are left as they are`);
             if (!published) {
               await prisma.developmentUnit.deleteMany({ where: { developmentId: dev.id, source: "feed" } });
-              if (units.length) await prisma.developmentUnit.createMany({ data: units.map((u, i) => unitRow(u, dev.id, i, keep.get(u.ref))) as never });
+              if (writable.length) await prisma.developmentUnit.createMany({ data: writable.map(({ u, i }) => unitRow(u, dev.id, i, keep.get(u.ref))) as never });
             } else {
               const fresh = new Set(units.map((u) => u.ref));
-              for (let i = 0; i < units.length; i++) {
-                const hit = keep.get(units[i].ref);
-                const data = unitRow(units[i], dev.id, i, hit) as never;
+              for (const { u, i } of writable) {
+                const hit = keep.get(u.ref);
+                const data = unitRow(u, dev.id, i, hit) as never;
                 if (hit) await prisma.developmentUnit.update({ where: { id: hit.id }, data });
                 else await prisma.developmentUnit.create({ data });
               }
@@ -399,7 +423,7 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
               where: { id: dev.id },
               data: { priceFrom: prices.length ? Math.min(...prices) : null, priceTo: prices.length ? Math.max(...prices) : null },
             });
-            result.units += units.length;
+            result.units += writable.length;
             await logCronRun(`plus-incomplete:${g.key}`, true, `price list complete — ${units.length} unit(s)`);
           }
         }

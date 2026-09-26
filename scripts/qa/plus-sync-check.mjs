@@ -162,6 +162,43 @@ const priceAt = src.indexOf("priceFrom");
 check("the price range is written only in the units branch, after the blocked check",
   blockedAt > 0 && priceAt > blockedAt && priceAt < src.indexOf("logCronRun(`plus-incomplete:${g.key}`, true,"), true);
 check("…and cleared when nothing is available", /priceFrom: prices\.length \? Math\.min\(\.\.\.prices\) : null/.test(src), true);
+/* A list whose every file failed keeps the row's old media, not []. */
+check("an all-failed gallery is not written", /if \(!gallery\.length && imagesFailed\) gallery = null;/.test(src), true);
+check("…nor all-failed plans", /if \(!plans\.length && mediaFailed > imagesFailed\) plans = null;/.test(src), true);
+
+/* Review fix 1: a price list that could not be fetched fails its project; it
+   must never be gathered as a PDF-only page (row rewritten, units skipped). */
+check("a failed price-list download fails the project, like a failed parse",
+  /if \(!bytes\) \{ result\.failed\.push\(`\$\{key\}: price list could not be downloaded`\); continue; \}/.test(src), true);
+check("…and is never gathered with a null project", /if \(bytes\) \{/.test(src), false);
+const xmlGate = src.indexOf("if (!xmlListing || !xmlFiles.length) {");
+check("a failed or empty price-list folder writes nothing",
+  xmlGate > src.indexOf("if (!verdict.ok)") && xmlGate < src.indexOf("const existingRows") && xmlGate < src.indexOf("if (opts.dryRun)"), true);
+check("…and returns ok:false", /if \(!xmlListing \|\| !xmlFiles\.length\) \{\s*return \{ \.\.\.result, ok: false,/.test(src), true);
+
+/* Review fix 2: a unit the admin flipped to source "manual" wins; the sheet
+   neither updates it nor creates a feed twin with the same ref. */
+const manualAt = src.indexOf('where: { developmentId: dev.id, source: "manual" }');
+check("manual unit refs are loaded before either write path",
+  manualAt > 0 && manualAt < src.indexOf("deleteMany({ where: { developmentId: dev.id") && manualAt < src.indexOf("prisma.developmentUnit.create({"), true);
+check("…and filtered out of the sheet units", /\.filter\(\(\{ u \}\) => !manualRefs\.has\(u\.ref\)\)/.test(src), true);
+check("drafts create only the writable units", /createMany\(\{ data: writable\.map\(/.test(src), true);
+check("published updates only the writable units", /for \(const \{ u, i \} of writable\)/.test(src), true);
+check("the completeness decision still reads the whole sheet", /unitsDecision\(\{ published, stored, fresh: units \}\)/.test(src), true);
+
+/* Review fix 3: a media-folder listing failure costs the media, not the units. */
+check("the media listing is wrapped and counted as a media failure",
+  /try \{ media = await collectMedia\([^;]*\); \}\s*catch \{ mediaFailed\+\+;/.test(src), true);
+check("…and collectMedia is never awaited bare in the write phase",
+  (src.match(/await collectMedia\(/g) ?? []).length, 1);
+
+/* Review fix 4: published media is frozen, so it is not mirrored at all. */
+check("published projects skip media mirroring unless forced",
+  /const mirrorMedia = !!g\.mediaFolder && \(!published \|\| !!opts\.force\);/.test(src) && /if \(mirrorMedia\) \{\s*try \{ media = await collectMedia/.test(src), true);
+
+/* Review fix 5: a hanging website or Maps host must not hold the sync window. */
+check("every fetch has a 20 s timeout",
+  [(src.match(/\bfetch\(/g) ?? []).length, (src.match(/signal: AbortSignal\.timeout\(20000\)/g) ?? []).length], [2, 2]);
 
 console.log(failures ? `\n${failures} failed` : "\nall passed");
 process.exit(failures ? 1 : 0);
