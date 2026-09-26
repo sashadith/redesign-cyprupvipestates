@@ -61,7 +61,12 @@ export type HeTranslateResult = {
 
 type AnthropicMessage = { content: unknown[]; stop_reason?: string | null };
 export type AnthropicLike = {
-  messages: { create(args: Record<string, unknown>): Promise<AnthropicMessage> };
+  messages: {
+    create(args: Record<string, unknown>): Promise<AnthropicMessage>;
+    // The real SDK client also streams; used when present so a large
+    // max_tokens (developer profiles) cannot hit the HTTP request timeout.
+    stream?(args: Record<string, unknown>): { finalMessage(): Promise<AnthropicMessage> };
+  };
 };
 
 export type TranslateHeDeps = { client?: AnthropicLike };
@@ -86,6 +91,16 @@ export const DESC_GRAPHEME_MAX = 155;
 // omitted by default), i.e. "No content (stop: max_tokens)". Non-streaming
 // requests should leave ~16k of room; the model still stops at end_turn.
 const MAX_TOKENS = 16000;
+// A developer profile is returned as the WHOLE portable-text structure (every
+// block, key and mark echoed back with the Hebrew spans), 11–13k characters
+// of Hebrew for the larger developers — all 23 profiles on staging came back
+// cut off at 16000 tokens (2026-09-23: "Expected ',' or ']' … stop:
+// max_tokens"). Double the budget for that kind and stream the request so
+// the long generation cannot trip the SDK's request timeout.
+const MAX_TOKENS_BY_KIND: Partial<Record<HeTranslateKind, number>> = { developerProfile: 32000 };
+export function maxTokensFor(kind: HeTranslateKind): number {
+  return MAX_TOKENS_BY_KIND[kind] ?? MAX_TOKENS;
+}
 
 /** Grapheme count (what a Hebrew meta field is actually budgeted in). */
 export function graphemeLength(s: string): number {
@@ -112,7 +127,10 @@ const FIELDS: Record<HeTranslateKind, (keyof HeTranslatePayload)[]> = {
   developmentDescription: ["text"],
   developmentSeo: ["title", "description"],
   areaText: ["text"],
-  developerProfile: ["slug", "title", "excerpt", "description", "portableText", "seo"],
+  // `seo` before the long body: with it LAST the model dropped it on the two
+  // longest profiles (bbf, square-one — "seo.metaTitle: empty", staging
+  // 2026-09-23) after producing 40+ portable-text blocks.
+  developerProfile: ["slug", "title", "seo", "excerpt", "description", "portableText"],
 };
 
 function payloadFor(input: HeTranslateInput): HeTranslatePayload {
@@ -162,7 +180,10 @@ export function mergePortableText(
         if (typeof hv !== "string" || (hasLetters(v) && !hv.trim())) {
           problems.push(`portable text: missing Hebrew text at ${path}.text`);
         } else {
-          out[k] = hv;
+          // Same mechanical house-style fixes as the flat fields (הכול → הכל
+          // tripped three developer profiles inside spans, 2026-09-23), but
+          // WITHOUT trimming: a span's leading/trailing space is layout.
+          out[k] = normalizeHebrewSpan(hv);
         }
       } else if (v && typeof v === "object" && KEEP_FROM_EN.indexOf(k) === -1) {
         out[k] = mergePortableText(v, heObj[k], problems, `${path}.${k}`);
@@ -204,6 +225,7 @@ const KIND_RULES: Record<HeTranslateKind, string> = {
   developmentDescription: [
     "This is a property description that is SAVED ONCE and never regenerated, while the project's real numbers move with every feed sync.",
     "NEVER write a digit: no unit counts, no prices, no completion dates or quarters, no square metres, no percentages. Do not spell a figure out in words to get around this either — drop the fact instead.",
+    "A number the English itself spells out in WORDS (two-bedroom, three floors, one remaining apartment) stays a word in Hebrew too (שני חדרי שינה, שלוש קומות, דירה אחת) — never turn it into a digit.",
     "Keep the paragraph structure of the English: the same number of paragraphs, separated by a blank line.",
     "Project and developer names: keep them exactly as the English has them, in Latin script (a digit inside such a name, e.g. \"Abiete 2\", stays). Do not add a name the English does not use.",
   ].join(" "),
@@ -226,13 +248,27 @@ const KIND_RULES: Record<HeTranslateKind, string> = {
   ].join(" "),
 };
 
+const NOT_A_NAME = new Set([
+  "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december",
+  "jan", "feb", "mar", "apr", "jun", "jul", "aug", "sep", "sept", "oct", "nov", "dec",
+  "q1", "q2", "q3", "q4", "quarter", "phase", "block", "floor", "unit", "units", "plot", "type", "only", "from", "just", "over", "around", "about", "some", "the", "a", "an",
+]);
+
 /** Latin proper names that carry a digit ("Abiete 2", "Agnades Village 1") in
  *  the given strings — a name, not a figure, for the no-digit rule. */
 export function latinNamesWithDigits(strings: string[]): string[] {
   const out = new Set<string>();
   // Capitalised word + digit only ("Abiete 2", "Village 1"): a lower-case word
-  // before a number ("measuring 77") is prose, and the number is a figure.
-  for (const s of strings) for (const m of Array.from(s.matchAll(/[A-Z][A-Za-z'’-]*(?:[ -]\d+[A-Za-z]*)+/g))) out.add(m[0]);
+  // before a number ("measuring 77") is prose, and the number is a figure. A
+  // month or a quarter before a year ("October 2028", "Q4 2027") is a DATE,
+  // not a name — it slipped through as one on staging (arbeo-park, 2026-09-23).
+  for (const s of strings) {
+    for (const m of Array.from(s.matchAll(/[A-Z][A-Za-z'’-]*(?:[ -]\d+[A-Za-z]*)+/g))) {
+      const head = m[0].split(/[ -]/)[0];
+      if (NOT_A_NAME.has(head.toLowerCase())) continue;
+      out.add(m[0]);
+    }
+  }
   return Array.from(out);
 }
 
@@ -277,8 +313,24 @@ export function promptPayloadFor(input: HeTranslateInput): { payload: HeTranslat
   return { payload: out, removed };
 }
 
+/** Facts as the prompt may show them: for an evergreen description every
+ *  figure is cut out of them too (a free-text construction stage such as
+ *  "delivery October 2028" otherwise hands the model a digit the payload
+ *  stripping never saw — staging 2026-09-23, arbeo-park). Names keep theirs. */
+export function promptFactsFor(input: HeTranslateInput): string[] {
+  const facts = (input.facts ?? []).filter(Boolean);
+  if (input.kind !== "developmentDescription") return facts;
+  const figures = staleFiguresIn(facts).sort((a, b) => b.length - a.length);
+  return facts
+    .map((f) => figures.reduce((acc, fig) => acc.split(fig).join(""), f).replace(/\s{2,}/g, " "))
+    // A "Label: 12" fact with nothing left after its figure is dropped whole.
+    .filter((f) => /[A-Za-z֐-׿]/.test(f.includes(":") ? f.slice(f.indexOf(":") + 1) : f))
+    .map((f) => f.replace(/[\s:,-]+$/, "").trim());
+}
+
 function passAPrompt(input: HeTranslateInput, corrections: string[]): string {
   const { payload: promptPayload, removed: staleFigures } = promptPayloadFor(input);
+  const promptFacts = promptFactsFor(input);
   const parts = [
     "You translate English website copy into native Hebrew for an Israeli audience buying property in Cyprus.",
     "",
@@ -300,7 +352,7 @@ function passAPrompt(input: HeTranslateInput, corrections: string[]): string {
     // of Pass B having to repair them.
     "- Spell הכל without a vav (never הכול); the house style uses the short form.",
     "",
-    input.facts?.length ? `Facts you may rely on (never invent beyond them):\n${input.facts.map((f) => `- ${f}`).join("\n")}\n` : "",
+    promptFacts.length ? `Facts you may rely on (never invent beyond them):\n${promptFacts.map((f) => `- ${f}`).join("\n")}\n` : "",
     "English payload (JSON):",
     "```json",
     JSON.stringify(promptPayload, null, 2),
@@ -360,12 +412,45 @@ function textOf(msg: AnthropicMessage): string {
 }
 
 /** Pull the first top-level JSON object out of a model reply (fences tolerated). */
+/** The model sometimes types a real line break inside a JSON string (a
+ *  two-paragraph description) instead of `\n`; strict JSON.parse rejects it
+ *  ("Bad control character in string literal", three rows on staging
+ *  2026-09-23). Walk the text and escape raw control characters that sit
+ *  inside string literals, leaving everything else untouched. */
+export function escapeControlCharsInStrings(json: string): string {
+  let out = "";
+  let inString = false;
+  let escaped = false;
+  for (const ch of json) {
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+        out += ch;
+      } else if (ch === "\\") {
+        escaped = true;
+        out += ch;
+      } else if (ch === '"') {
+        inString = false;
+        out += ch;
+      } else if (ch === "\n") out += "\\n";
+      else if (ch === "\r") out += "\\r";
+      else if (ch === "\t") out += "\\t";
+      else if (ch < " ") out += "";
+      else out += ch;
+    } else {
+      if (ch === '"') inString = true;
+      out += ch;
+    }
+  }
+  return out;
+}
+
 export function parseJsonReply(raw: string): Record<string, unknown> {
   const cleaned = raw.replace(/```(?:json)?/gi, "").trim();
   const start = cleaned.indexOf("{");
   const end = cleaned.lastIndexOf("}");
   if (start === -1 || end <= start) throw new Error("model reply contained no JSON object");
-  const parsed = JSON.parse(cleaned.slice(start, end + 1));
+  const parsed = JSON.parse(escapeControlCharsInStrings(cleaned.slice(start, end + 1)));
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("model reply was not a JSON object");
   return parsed as Record<string, unknown>;
 }
@@ -378,14 +463,25 @@ export function parseJsonReply(raw: string): Record<string, unknown> {
  *  the model kept getting them wrong even when told twice (staging
  *  2026-09-21/22: 17 + 3 of 87 rejections): הכול → הכל, and an en/em dash
  *  between words → a comma. A leftover FIGURE_REMOVED marker is dropped. */
+export function normalizeHebrewSpan(s: string): string {
+  return s.replace(/הכול/g, "הכל").replace(/\s*[–—]\s*/g, ", ").split(FIGURE_REMOVED).join("");
+}
 export function normalizeHebrew(s: string): string {
-  return s
-    .replace(/הכול/g, "הכל")
-    .replace(/\s*[–—]\s*/g, ", ")
-    .split(FIGURE_REMOVED)
-    .join("")
-    .replace(/\s{2,}/g, " ")
-    .trim();
+  return normalizeHebrewSpan(s).replace(/\s{2,}/g, " ").trim();
+}
+
+const NAME_STOPWORDS = new Set(["of", "the", "and", "by", "at", "in", "on", "de", "del", "la", "le", "&"]);
+/** A span the English itself keeps as a Latin proper name — a project or
+ *  brand name ("Kings Avenue Mall", "ONE", the "Hai" of a name split across
+ *  marks) — and the model copied verbatim, as the style guide demands. Such
+ *  a span legitimately carries no Hebrew (four developer profiles were
+ *  rejected for exactly this, 2026-09-23). Every word must be capitalised,
+ *  all-caps or a digit; only the listed stopwords may be lower-case. */
+export function isLatinNameSpan(en: string, he: string): boolean {
+  if (he.trim() !== en.trim()) return false;
+  const words = en.replace(/[“”"'‘’(),.:;!?]/g, " ").trim().split(/\s+/).filter(Boolean);
+  if (!words.length || words.length > 8) return false;
+  return words.every((w) => NAME_STOPWORDS.has(w.toLowerCase()) || /^[A-Z0-9][A-Za-z0-9&.-]*$/.test(w));
 }
 
 function assemble(input: HeTranslateInput, raw: Record<string, unknown>, problems: string[]): HeTranslatePayload {
@@ -434,7 +530,7 @@ export function guardViolations(input: HeTranslateInput, he: HeTranslatePayload)
     if (!hasLetters(enValue)) continue;
     const heValue = heMap.get(label) ?? "";
     if (!heValue.trim()) problems.push(`${label}: empty (English had text)`);
-    else if (!hasHebrew(heValue)) problems.push(`${label}: no Hebrew script`);
+    else if (!hasHebrew(heValue) && !isLatinNameSpan(enValue, heValue)) problems.push(`${label}: no Hebrew script`);
   }
 
   // 2. Script leaks (Hebrew missing, Cyrillic bleed) across the whole output.
@@ -496,12 +592,18 @@ export async function translateHe(input: HeTranslateInput, deps?: TranslateHeDep
   const system = [heSystemBlock("translation")];
 
   const ask = async (prompt: string): Promise<Record<string, unknown>> => {
-    const msg = await client.messages.create({
+    const args = {
       model: AI_MODEL,
-      max_tokens: MAX_TOKENS,
+      max_tokens: maxTokensFor(input.kind),
+      // Medium effort: this is a constrained translation with a fixed JSON
+      // shape, not open-ended reasoning — at the default effort the model's
+      // adaptive thinking alone exhausted the 16k budget on some rows
+      // ("No content (stop: max_tokens; blocks: thinking)", staging 2026-09-22).
+      output_config: { effort: "medium" },
       system,
       messages: [{ role: "user", content: prompt }],
-    });
+    };
+    const msg = client.messages.stream ? await client.messages.stream(args).finalMessage() : await client.messages.create(args);
     const text = textOf(msg);
     if (!text) {
       // Name the block types so a thinking-only reply (budget exhausted before
