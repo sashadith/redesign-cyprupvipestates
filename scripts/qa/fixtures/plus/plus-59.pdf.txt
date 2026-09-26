@@ -1,0 +1,41 @@
+                                                                                                                                                               13-Jan-25   Version: 1.20
+
+
+
+                                                                                            Plus 59
+                                                                                                                             Uncovered
+                                                                                                Covered Internal   Covered               Common
+                                             Nbr of                                                                             Roof              Total Area
+       Floor                 Unit                        Kitchinette        Parking   Storage         Area         Veranda                 Area                 Price €    Availability
+                                           Bathrooms                                                                          Terrace               (sqm)
+                                                                                                     (sqm)          (sqm)                 (sqm)
+                                                                                                                               (sqm)
+                            Shop 1                                                    34 Bas.         95
+Ground + Mezzanine                              2              1                2                                     0          0        12.25     188.75     € 480,000    Available
+                          Shop 1
+                                                                                        1             47.5
+                         Mezzanine
+                            Shop 2                                                    31 Bas.         95
+Ground + Mezzanine                              2              1                                                      0          0        12.25     185.75                     Sold
+                          Shop 2
+                                                                                        1             47.5
+                         Mezzanine
+     First Floor             101                2              0                        2             199             0          0        22.8      221.8                      Sold
+
+    Second Floor             201                2              1                        2             199             0          0        22.8      221.8                      Sold
+
+    Third Floor              301                2              1                        2             199             0          0        22.8      221.8                      Sold
+
+    Fourth Floor             401                4              1                        2             199             0         76         9.4      284.4                      Sold
+
+
+
+NB: Prices mentioned above are subject to modifications without prior notice.
+NB: Prices mentioned above do not include the VAT
+
+
+Project Status:       Under construction
+Link on website:      https://bit.ly/3Vyhap6
+Location:             New Mall Area - Larnaca
+Google Maps:          https://goo.gl/maps/rTTi4ifkFXV8amsu9
+

@@ -1,0 +1,38 @@
+                                                                                                                                                                                       16-Sep-26    Version: 2.2
+
+
+                                                                                                       PLUS 87
+                                                                                                                                Covered
+                                                                                                        Covered      Covered                   Uncovered     Common
+                                         Nbr of          Nbr of                                                                   Roof                                Total Area
+        Floor               Unit                                        Parking        Storage       Internal Area   Veranda                   Veranda /      Area                       Price      Availability
+                                        Bedrooms       Bathrooms                                                                Terrace                                 (sqm)
+                                                                                                         (sqm)        (sqm)                   Roof Terrace    (sqm)
+                                                                                                                                 (sqm)
+                            101           2 (1+1)        2 (1+1)            1                          66 (52+14)      15                                     9.43      90.43                          Sold
+     First Floor            102                 1           1               1                               51          8                          4          9.43      72.43                          Sold
+                            103                 1           1               1                               52          8                          9          9.43      78.43                          Sold
+                            201           2 (1+1)        2 (1+1)            1                          66 (52+14)      15                                     9.43      90.43                          Sold
+   Second Floor             202                 1           1               1                               51          8                                     9.43      68.43                          Sold
+                            203                 1           1               1                               52          8                                     9.43      69.43                          Sold
+                            301                 2           2               1              1                78.5       17                                     14.14     109.64                       Reserved
+    Third Floor
+                            302            3(2+1)           2               1              1           88 (78+10)      18                         13          14.14     133.14     €      315,000    Available
+                            401            3(2+1)        3(2+1)             1           1 Roof              78.5       14      18 (storage)       32          14.14     156.64     €      360,000    Available
+   Fourth Floor
+                            402            4(2+2)        3(2+1)             1           1 Roof         88 (78+10)      21      18 (storage)       46          14.14     187.14     €      370,000    Available
+
+
+
+Note that the balconies areas and the terraces are approximate . the project still in a preliminary stage
+
+NB: Prices mentioned above are subject to modifications without prior notice.
+NB: Prices mentioned above do not include the VAT
+NB: Areas mentioned above are subject to modifications prior to building permit issuance.
+
+
+Project Status:        Understudy
+Link on website:       https://bit.ly/45ljExY
+Location:              New Marina - Larnaca
+Google Maps:           https://maps.app.goo.gl/uXkJuB8eTv2zfRvs7?g_st=iw
+

@@ -1,0 +1,3341 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>Camille ElDeek</Author>
+  <LastAuthor>Tamara Chehwane</LastAuthor>
+  <LastPrinted>2026-07-02T13:00:03Z</LastPrinted>
+  <Created>2022-07-29T13:41:14Z</Created>
+  <LastSaved>2026-07-02T13:00:09Z</LastSaved>
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+  <AllowPNG/>
+ </OfficeDocumentSettings>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>15720</WindowHeight>
+  <WindowWidth>28800</WindowWidth>
+  <WindowTopX>32767</WindowTopX>
+  <WindowTopY>600</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#000000"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s16" ss:Name="Comma">
+   <NumberFormat ss:Format="_-* #,##0.00_-;\-* #,##0.00_-;_-* &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s17" ss:Name="Currency">
+   <NumberFormat
+    ss:Format="_-&quot;£&quot;* #,##0.00_-;\-&quot;£&quot;* #,##0.00_-;_-&quot;£&quot;* &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s18" ss:Name="Hyperlink">
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#0563C1"
+    ss:Underline="Single"/>
+  </Style>
+  <Style ss:ID="m46390196928">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="18"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#F4B084" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="m46390197248">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="16" ss:Bold="1"/>
+   <Interior ss:Color="#7B7B7B" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="m46390197268">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="16" ss:Bold="1"/>
+   <Interior ss:Color="#7B7B7B" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="m46390186808">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="16" ss:Bold="1"/>
+   <Interior ss:Color="#7B7B7B" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="m46390186408">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="18"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#F4B084" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="m46390187968">
+   <Alignment ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Color="#000000"
+    ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="m46390187988">
+   <Alignment ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Color="#000000"
+    ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s19">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="s20">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s21">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s22">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s23">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#FF0000"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0.00_-;\-[$€-2]\ * #,##0.00_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s24">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000"/>
+   <Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s25">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#DDEBF7" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s26" ss:Parent="s17">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#DDEBF7" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s27">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#DDEBF7" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s28" ss:Parent="s16">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#DDEBF7" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s29">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#FFF2CC" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s30" ss:Parent="s17">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#FFF2CC" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s31">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#FFF2CC" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s32">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000" ss:Bold="1" ss:StrikeThrough="1"/>
+   <Interior ss:Color="#FFF2CC" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s33">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#FF0000" ss:Bold="1"/>
+   <Interior ss:Color="#FFF2CC" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s34" ss:Parent="s16">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#FFF2CC" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s35">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#E2EFDA" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s36">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#E2EFDA" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s37" ss:Parent="s17">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#FF0000" ss:Bold="1"/>
+   <Interior ss:Color="#E2EFDA" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="0"/>
+  </Style>
+  <Style ss:ID="s38">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#FF0000" ss:Bold="1"/>
+   <Interior ss:Color="#E2EFDA" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="0"/>
+  </Style>
+  <Style ss:ID="s39">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#FF0000" ss:Bold="1"/>
+   <Interior ss:Color="#E2EFDA" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0.00_-;\-[$€-2]\ * #,##0.00_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s40">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000" ss:Bold="1" ss:StrikeThrough="1"/>
+   <Interior ss:Color="#E2EFDA" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s41">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#FF0000" ss:Bold="1"/>
+   <Interior ss:Color="#E2EFDA" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s42" ss:Parent="s16">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#E2EFDA" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s43" ss:Parent="s16">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#FF0000" ss:Bold="1"/>
+   <Interior ss:Color="#E2EFDA" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0.00_-;\-[$€-2]\ * #,##0.00_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s44">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s45">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s46">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s47">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s48">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"/>
+  </Style>
+  <Style ss:ID="s49">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"/>
+   <Interior ss:Color="#FCE4D6" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s50">
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s51">
+   <Alignment ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s52">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Color="#000000"
+    ss:Bold="1" ss:Underline="Single"/>
+  </Style>
+  <Style ss:ID="s53">
+   <Alignment ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Color="#000000"
+    ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s54">
+   <Alignment ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="s55">
+   <Alignment ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Color="#000000"
+    ss:Bold="1" ss:Italic="1"/>
+  </Style>
+  <Style ss:ID="s56">
+   <Alignment ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Color="#000000"
+    ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s57">
+   <Alignment ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="2"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="2"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Color="#000000"
+    ss:Bold="1" ss:Italic="1"/>
+  </Style>
+  <Style ss:ID="s58">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000" ss:Bold="1"/>
+   <NumberFormat ss:Format="[ENG][$-409]d\-mmm\-yy;@"/>
+  </Style>
+  <Style ss:ID="s59">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s60">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s61">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s62">
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s64">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"/>
+  </Style>
+  <Style ss:ID="s65" ss:Parent="s17">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11" ss:Bold="1"/>
+   <Interior ss:Color="#DDEBF7" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s66">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s67">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"/>
+   <Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s68">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11" ss:Bold="1"/>
+   <Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s69">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11" ss:Bold="1"/>
+   <Interior ss:Color="#DDEBF7" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s70" ss:Parent="s16">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11" ss:Bold="1"/>
+   <Interior ss:Color="#DDEBF7" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s71">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#FF0000" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s72">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s73">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"/>
+  </Style>
+  <Style ss:ID="s74">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="16" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s75">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"/>
+  </Style>
+  <Style ss:ID="s76">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11" ss:Bold="1"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s77">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s78">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#DDEBF7" ss:Bold="1"/>
+   <Interior ss:Color="#DDEBF7" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s79">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#D9E1F2" ss:Bold="1"/>
+   <Interior ss:Color="#DDEBF7" ss:Pattern="Solid"/>
+   <NumberFormat
+    ss:Format="_-[$€-2]\ * #,##0_-;\-[$€-2]\ * #,##0_-;_-[$€-2]\ * &quot;-&quot;??_-;_-@_-"/>
+  </Style>
+  <Style ss:ID="s95">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s99">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s100">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="16" ss:Bold="1"/>
+   <Interior ss:Color="#F8CBAD" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s107">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="16"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#F8CBAD" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s111">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="14"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#F4B084" ss:Pattern="Solid"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Price List">
+  <Table ss:ExpandedColumnCount="18" ss:ExpandedRowCount="46" x:FullColumns="1"
+   x:FullRows="1" ss:StyleID="s20" ss:DefaultColumnWidth="52"
+   ss:DefaultRowHeight="14">
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="76" ss:Span="1"/>
+   <Column ss:Index="3" ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="61"/>
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="58"/>
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="68"/>
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="82" ss:Span="2"/>
+   <Column ss:Index="9" ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="81"/>
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="76"/>
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="88" ss:Span="1"/>
+   <Column ss:Index="13" ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="112"/>
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="88" ss:Span="2"/>
+   <Column ss:Index="17" ss:StyleID="s23" ss:Width="79"/>
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="88"/>
+   <Row ss:AutoFitHeight="0" ss:Height="28.25">
+    <Cell ss:MergeAcross="17" ss:StyleID="m46390196928"><Data ss:Type="String">Plus 57 - Tamara Garden 2 (Understudy)</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="48.5" ss:StyleID="s21">
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Block</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Floor</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Unit</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Nbr. of Bedrooms</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Nbr. of Bathrooms</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Covered Internal Area &#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Covered Veranda &#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Uncovered Veranda &#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Garden&#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Roof Garden&#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Common Area&#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Total Area&#10;(SQM)</Data></Cell>
+    <Cell ss:StyleID="s25"><Data ss:Type="String">(5% downpayment)</Data></Cell>
+    <Cell ss:MergeAcross="1" ss:StyleID="s29"><Data ss:Type="String">(30% downpayment)</Data></Cell>
+    <Cell ss:MergeAcross="1" ss:StyleID="s35"><Data ss:Type="String">(55% downpayment)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Availability</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="48.5" ss:StyleID="s21">
+    <Cell ss:Index="13" ss:StyleID="s25"><Data ss:Type="String">Selling Price</Data></Cell>
+    <Cell ss:StyleID="s29"><Data ss:Type="String">Selling Price</Data></Cell>
+    <Cell ss:StyleID="s29"><Data ss:Type="String">Pre-launch Price</Data></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Selling Price</Data></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Pre-launch Price</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:MergeDown="7" ss:StyleID="s107"><Data ss:Type="String">A</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s22"><Data ss:Type="String">Ground Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">A01</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">55</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">21.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">13.1</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">101.6</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="Number">165000</Data></Cell>
+    <Cell ss:StyleID="s30"><Data ss:Type="Number">156000</Data></Cell>
+    <Cell ss:StyleID="s30"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">150000</Data></Cell>
+    <Cell ss:StyleID="s37"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">A02</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">13.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">13.1</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">116.6</Data></Cell>
+    <Cell ss:StyleID="s26"><Data ss:Type="Number">240000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">233000</Data></Cell>
+    <Cell ss:StyleID="s30"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">225000</Data></Cell>
+    <Cell ss:StyleID="s38"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="7.25">
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s45"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="2" ss:MergeDown="2" ss:StyleID="s22"><Data ss:Type="String">First Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">A101</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">55</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">8.6999999999999993</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">75.7</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">145000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">138000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">133000</Data></Cell>
+    <Cell ss:StyleID="s38"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">A102</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">8.6999999999999993</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">98.7</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">215000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">208000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">199000</Data></Cell>
+    <Cell ss:StyleID="s38"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">A103</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">80</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">8.6999999999999993</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">100.7</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">215000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">208000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">199000</Data></Cell>
+    <Cell ss:StyleID="s38"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="7.25">
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s45"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">2nd Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">A201</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">87</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">23</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">53</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">20.2</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">183.2</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">280000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">273000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">265000</Data></Cell>
+    <Cell ss:StyleID="s38"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:MergeDown="5" ss:StyleID="s107"><Data ss:Type="String">B</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s22"><Data ss:Type="String">Ground Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">B01</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">100</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">25</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">58</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">183</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">325000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">318000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">310000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">B02</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">100</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">25</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">58</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">0</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">183</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">325000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">318000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">310000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="7.25">
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s45"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="2" ss:MergeDown="2" ss:StyleID="s22"><Data ss:Type="String">First Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">B101</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">77</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">17.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">12.1</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">106.6</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">215000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">208000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">199000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">B102</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">54</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">12.1</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">78.099999999999994</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">145000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">138000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">133000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">B103</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">77</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">17.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">12.1</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">106.6</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">215000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">208000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">199000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:MergeDown="13" ss:StyleID="s107"><Data ss:Type="String">C</Data></Cell>
+    <Cell ss:MergeDown="2" ss:StyleID="s22"><Data ss:Type="String">Ground Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">C01</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">22</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15.5</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">128.5</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">245000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">238000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s40"><Data ss:Type="Number">230000</Data></Cell>
+    <Cell ss:StyleID="s41"><Data ss:Type="Number">220000</Data></Cell>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">C02</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">53</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">19</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">27</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15.5</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">114.5</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">171000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">165000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">159000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">C03</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">20</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15.5</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">126.5</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">245000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">238000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s40"><Data ss:Type="Number">230000</Data></Cell>
+    <Cell ss:StyleID="s41"><Data ss:Type="Number">220000</Data></Cell>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="7.25">
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s45"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="2" ss:MergeDown="5" ss:StyleID="s22"><Data ss:Type="String">First Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">C101</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">5.8</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">96.8</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">215000</Data></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="Number">208000</Data></Cell>
+    <Cell ss:StyleID="s33"><Data ss:Type="Number">192000</Data></Cell>
+    <Cell ss:StyleID="s40"><Data ss:Type="Number">199000</Data></Cell>
+    <Cell ss:StyleID="s41"><Data ss:Type="Number">180000</Data></Cell>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">C102</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">53</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">17.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">60.5</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">5.8</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">136.80000000000001</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">185000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">178000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">171000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">C103</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">16.7</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">5.8</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">174.5</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">265000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">258000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">250000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">C104</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">5.8</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">97.3</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">215000</Data></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="Number">208000</Data></Cell>
+    <Cell ss:StyleID="s33"><Data ss:Type="Number">192000</Data></Cell>
+    <Cell ss:StyleID="s40"><Data ss:Type="Number">199000</Data></Cell>
+    <Cell ss:StyleID="s41"><Data ss:Type="Number">180000</Data></Cell>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">C105</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">53</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">11</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">5.8</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">69.8</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">145000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">138000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">133000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">C106</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">5.8</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">97.3</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">215000</Data></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="Number">208000</Data></Cell>
+    <Cell ss:StyleID="s33"><Data ss:Type="Number">192000</Data></Cell>
+    <Cell ss:StyleID="s40"><Data ss:Type="Number">199000</Data></Cell>
+    <Cell ss:StyleID="s41"><Data ss:Type="Number">180000</Data></Cell>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="7.25">
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s45"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="2" ss:MergeDown="2" ss:StyleID="s22"><Data ss:Type="String">2nd Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">C201</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">25.5</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">72.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">10.9</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">184.9</Data></Cell>
+    <Cell ss:StyleID="s28"><Data ss:Type="Number">275000</Data></Cell>
+    <Cell ss:StyleID="s34"><Data ss:Type="Number">262000</Data></Cell>
+    <Cell ss:StyleID="s34"/>
+    <Cell ss:StyleID="s40"><Data ss:Type="Number">260000</Data></Cell>
+    <Cell ss:StyleID="s41"><Data ss:Type="Number">250000</Data></Cell>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">C202</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">53</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">11</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">10.9</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">74.900000000000006</Data></Cell>
+    <Cell ss:StyleID="s28"><Data ss:Type="Number">145000</Data></Cell>
+    <Cell ss:StyleID="s34"><Data ss:Type="Number">138000</Data></Cell>
+    <Cell ss:StyleID="s34"/>
+    <Cell ss:StyleID="s42"><Data ss:Type="Number">133000</Data></Cell>
+    <Cell ss:StyleID="s43"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">C203</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">10.9</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">102.4</Data></Cell>
+    <Cell ss:StyleID="s28"><Data ss:Type="Number">215000</Data></Cell>
+    <Cell ss:StyleID="s34"><Data ss:Type="Number">208000</Data></Cell>
+    <Cell ss:StyleID="s34"/>
+    <Cell ss:StyleID="s42"><Data ss:Type="Number">199000</Data></Cell>
+    <Cell ss:StyleID="s43"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:MergeDown="4" ss:StyleID="s107"><Data ss:Type="String">D</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s22"><Data ss:Type="String">Ground Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">D01</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">100</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">28</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">32</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">160</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">305000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">297000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">290000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">D02</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">100</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">28</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">32</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">160</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">305000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">297000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">290000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="7.25">
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s45"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="2" ss:MergeDown="1" ss:StyleID="s22"><Data ss:Type="String">First Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">D101</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">80</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">22</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">16.95</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">118.95</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">222000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">215000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">207000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">D102</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">80</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">22</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">16.95</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">118.95</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">222000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">215000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">207000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:MergeDown="9" ss:StyleID="s107"><Data ss:Type="String">E</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s22"><Data ss:Type="String">Ground Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">E01</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">55</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">17</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">32.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">20.100000000000001</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">124.6</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">171000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">165000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">159000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">E02</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">14.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">16</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">20.100000000000001</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">125.6</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">240000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">233000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s40"><Data ss:Type="Number">225000</Data></Cell>
+    <Cell ss:StyleID="s41"><Data ss:Type="Number">218000</Data></Cell>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="7.25">
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s45"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="2" ss:MergeDown="3" ss:StyleID="s22"><Data ss:Type="String">First Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">E101</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">13.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">6.2</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">94.7</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">215000</Data></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="Number">208000</Data></Cell>
+    <Cell ss:StyleID="s33"><Data ss:Type="Number">192000</Data></Cell>
+    <Cell ss:StyleID="s40"><Data ss:Type="Number">199000</Data></Cell>
+    <Cell ss:StyleID="s41"><Data ss:Type="Number">180000</Data></Cell>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">E102</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">23</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">65.5</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">6.2</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">169.7</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">265000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">258000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">250000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">E103</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">17</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">6.2</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">98.2</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">215000</Data></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="Number">208000</Data></Cell>
+    <Cell ss:StyleID="s33"><Data ss:Type="Number">192000</Data></Cell>
+    <Cell ss:StyleID="s40"><Data ss:Type="Number">199000</Data></Cell>
+    <Cell ss:StyleID="s41"><Data ss:Type="Number">180000</Data></Cell>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">E104</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">14.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">6.2</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">95.7</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">215000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">208000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">199000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="7.25">
+    <Cell ss:Index="2" ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s24"/>
+    <Cell ss:StyleID="s45"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="2" ss:MergeDown="1" ss:StyleID="s22"><Data ss:Type="String">2nd Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">E201</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">101</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">19</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">57</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">13.75</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">190.75</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">340000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">332000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">325000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s22"><Data ss:Type="String">E202</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">14.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">13.75</Data></Cell>
+    <Cell ss:StyleID="s22" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">103.25</Data></Cell>
+    <Cell ss:StyleID="s27"><Data ss:Type="Number">215000</Data></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="Number">208000</Data></Cell>
+    <Cell ss:StyleID="s31"/>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">199000</Data></Cell>
+    <Cell ss:StyleID="s39"/>
+    <Cell ss:StyleID="s44"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape"/>
+    <Header x:Margin="0.3"/>
+    <Footer x:Margin="0.3"/>
+    <PageMargins x:Bottom="0.75" x:Left="0.7" x:Right="0.7" x:Top="0.75"/>
+   </PageSetup>
+   <FitToPage/>
+   <Visible>SheetHidden</Visible>
+   <Print>
+    <ValidPrinterInfo/>
+    <PaperSizeIndex>8</PaperSizeIndex>
+    <Scale>50</Scale>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <FreezePanes/>
+   <FrozenNoSplit/>
+   <SplitHorizontal>3</SplitHorizontal>
+   <TopRowBottomPane>3</TopRowBottomPane>
+   <SplitVertical>2</SplitVertical>
+   <LeftColumnRightPane>5</LeftColumnRightPane>
+   <ActivePane>0</ActivePane>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+    </Pane>
+    <Pane>
+     <Number>1</Number>
+     <ActiveCol>2</ActiveCol>
+    </Pane>
+    <Pane>
+     <Number>2</Number>
+     <ActiveRow>2</ActiveRow>
+    </Pane>
+    <Pane>
+     <Number>0</Number>
+     <ActiveRow>0</ActiveRow>
+     <ActiveCol>0</ActiveCol>
+     <RangeSelection>R1C1:R1C18</RangeSelection>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
+ <Worksheet ss:Name="PLUS 57">
+  <Table ss:ExpandedColumnCount="15" ss:ExpandedRowCount="64" x:FullColumns="1"
+   x:FullRows="1" ss:StyleID="s20" ss:DefaultColumnWidth="52"
+   ss:DefaultRowHeight="14">
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="86"/>
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="76"/>
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="61"/>
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="58"/>
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="68" ss:Span="1"/>
+   <Column ss:Index="7" ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="82"
+    ss:Span="2"/>
+   <Column ss:Index="10" ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="81"/>
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="76"/>
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="88" ss:Span="1"/>
+   <Column ss:Index="14" ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="112"/>
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="88"/>
+   <Row>
+    <Cell ss:Index="14" ss:StyleID="s58"><Data ss:Type="DateTime">2026-07-02T00:00:00.000</Data></Cell>
+    <Cell ss:StyleID="s59"><Data ss:Type="String">Version: 1.75</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="15" ss:StyleID="s59"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="28.25">
+    <Cell ss:MergeAcross="14" ss:StyleID="m46390186408"><Data ss:Type="String">Plus 57 - Tamara Gardens 2 </Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="48.5" ss:StyleID="s21">
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Block</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Floor</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Unit</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Nbr. of Bedrooms</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Nbr. of Bathrooms</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s99"><Data ss:Type="String">Parking</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Covered Internal Area &#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Covered Veranda &#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Uncovered Veranda &#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Garden&#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Roof Garden&#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Common Area&#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Total Area&#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Price € </Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Availability</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="48.5" ss:StyleID="s21"/>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:MergeDown="7" ss:StyleID="s100"><Data ss:Type="String">Violet&#10;(A)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s64"><Data ss:Type="String">Ground Floor</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">A01</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">55</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">20.5</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">6</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">93.5</Data></Cell>
+    <Cell ss:StyleID="s65"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">A02</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">13.5</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">6</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">109.5</Data></Cell>
+    <Cell ss:StyleID="s65"><Data ss:Type="Number">258000</Data></Cell>
+    <Cell ss:StyleID="s66"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="7.25">
+    <Cell ss:Index="2" ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s68"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="2" ss:MergeDown="2" ss:StyleID="s64"><Data ss:Type="String">First Floor</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">A101</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">55</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">11</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">6.5</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">72.5</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">A102</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">6.5</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">96.5</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">A103</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">80</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">11</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">6.5</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">97.5</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="7.25">
+    <Cell ss:Index="2" ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s68"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="2" ss:StyleID="s64"><Data ss:Type="String">2nd Floor</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">A201</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">87</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">16</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">58.5</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">9.6999999999999993</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">171.2</Data></Cell>
+    <Cell ss:StyleID="s69"><Data ss:Type="Number">317000</Data></Cell>
+    <Cell ss:StyleID="s66"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="8">
+    <Cell ss:MergeAcross="14" ss:StyleID="m46390186808"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:MergeDown="5" ss:StyleID="s100"><Data ss:Type="String">Rose&#10;(B)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s64"><Data ss:Type="String">Ground Floor</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">B01</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">97</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">24</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">34</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">19</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">174</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">B02</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">97</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">24</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">34</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">19</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">174</Data></Cell>
+    <Cell ss:StyleID="s79"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="7.25">
+    <Cell ss:Index="2" ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s68"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="2" ss:MergeDown="2" ss:StyleID="s64"><Data ss:Type="String">First Floor</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">B101</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">74.5</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">16.5</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">10.4</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">101.4</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">B102</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">54</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">10.4</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">76.400000000000006</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">B103</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">74.5</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">16.5</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">70</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">10.4</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">171.4</Data></Cell>
+    <Cell ss:StyleID="s69"><Data ss:Type="Number">300000</Data></Cell>
+    <Cell ss:StyleID="s66"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="8">
+    <Cell ss:MergeAcross="14" ss:StyleID="m46390197248"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:MergeDown="13" ss:StyleID="s100"><Data ss:Type="String">Daisy&#10;(C)</Data></Cell>
+    <Cell ss:MergeDown="2" ss:StyleID="s64"><Data ss:Type="String">Ground Floor</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">C01</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">74</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">14</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">22</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">7.7</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">117.7</Data></Cell>
+    <Cell ss:StyleID="s69"><Data ss:Type="Number">258000</Data></Cell>
+    <Cell ss:StyleID="s66"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">C02</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">53</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">19</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">27</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">7.7</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">106.7</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">C03</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">74</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">14</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">20</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">7.7</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">115.7</Data></Cell>
+    <Cell ss:StyleID="s69"><Data ss:Type="Number">258000</Data></Cell>
+    <Cell ss:StyleID="s66"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="7.25">
+    <Cell ss:Index="2" ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s68"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="2" ss:MergeDown="5" ss:StyleID="s64"><Data ss:Type="String">First Floor</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">C101</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">74</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">5.3</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">94.3</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">C102</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">53</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">21</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">64</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">5.3</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">143.30000000000001</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">C103</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">74</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">20.5</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">77.5</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">5.3</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">177.3</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">C104</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">74</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">5.3</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">94.3</Data></Cell>
+    <Cell ss:StyleID="s69"><Data ss:Type="Number">245000</Data></Cell>
+    <Cell ss:StyleID="s66"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">C105</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">53</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">11</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">5.3</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">69.3</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">C106</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">74</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">5.3</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">94.3</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="7.25">
+    <Cell ss:Index="2" ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s68"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="2" ss:MergeDown="2" ss:StyleID="s64"><Data ss:Type="String">2nd Floor</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">C201</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">74</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">24.5</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">70</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">9.5</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">178</Data></Cell>
+    <Cell ss:StyleID="s70"><Data ss:Type="Number">315000</Data></Cell>
+    <Cell ss:StyleID="s66"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">C202</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">53</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">11</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">9.5</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">73.5</Data></Cell>
+    <Cell ss:StyleID="s70"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">C203</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">74</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">9.5</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">98.5</Data></Cell>
+    <Cell ss:StyleID="s70"><Data ss:Type="Number">250000</Data></Cell>
+    <Cell ss:StyleID="s66"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="8">
+    <Cell ss:MergeAcross="14" ss:StyleID="m46390197268"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:MergeDown="4" ss:StyleID="s100"><Data ss:Type="String">Tulip&#10;(D)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s64"><Data ss:Type="String">Ground Floor</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">D01</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">94</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">32</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">153</Data></Cell>
+    <Cell ss:StyleID="s79"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">D02</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">94</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">32</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">153</Data></Cell>
+    <Cell ss:StyleID="s70"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="7.25">
+    <Cell ss:Index="2" ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s68"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="2" ss:MergeDown="1" ss:StyleID="s64"><Data ss:Type="String">First Floor</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">D101</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">78</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">21</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">13.5</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">112.5</Data></Cell>
+    <Cell ss:StyleID="s78"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">D102</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Uncovered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">78</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">21</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">82</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">13.5</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">194.5</Data></Cell>
+    <Cell ss:StyleID="s69"><Data ss:Type="Number">310000</Data></Cell>
+    <Cell ss:StyleID="s66"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="8">
+    <Cell ss:StyleID="s78"/>
+    <Cell ss:StyleID="s78"/>
+    <Cell ss:StyleID="s78"/>
+    <Cell ss:StyleID="s78"/>
+    <Cell ss:StyleID="s78"/>
+    <Cell ss:StyleID="s78"/>
+    <Cell ss:StyleID="s78"/>
+    <Cell ss:StyleID="s78"/>
+    <Cell ss:StyleID="s78"/>
+    <Cell ss:StyleID="s78"/>
+    <Cell ss:StyleID="s78"/>
+    <Cell ss:StyleID="s78"/>
+    <Cell ss:StyleID="s78"/>
+    <Cell ss:StyleID="s78"/>
+    <Cell ss:StyleID="s78"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:MergeDown="9" ss:StyleID="s100"><Data ss:Type="String">Lilly&#10;(E)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s64"><Data ss:Type="String">Ground Floor</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">E01</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">55</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">16.5</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">29</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">10</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">110.5</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">E02</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">72</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">13</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">16</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">10</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">111</Data></Cell>
+    <Cell ss:StyleID="s69"><Data ss:Type="Number">258000</Data></Cell>
+    <Cell ss:StyleID="s66"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="7.25">
+    <Cell ss:Index="2" ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s68"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="2" ss:MergeDown="3" ss:StyleID="s64"><Data ss:Type="String">First Floor</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">E101</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">72</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">13</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">6.75</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">91.75</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">E102</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">72</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">26.5</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">68</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">6.75</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">173.25</Data></Cell>
+    <Cell ss:StyleID="s69"><Data ss:Type="Number">287000</Data></Cell>
+    <Cell ss:StyleID="s66"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">E103</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">72</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">16</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">6.75</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">94.75</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">E104</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">72</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">14</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">6.75</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">92.75</Data></Cell>
+    <Cell ss:StyleID="s69"><Data ss:Type="Number">245000</Data></Cell>
+    <Cell ss:StyleID="s66"><Data ss:Type="String">Available</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="7.25">
+    <Cell ss:Index="2" ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s67"/>
+    <Cell ss:StyleID="s68"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="2" ss:MergeDown="1" ss:StyleID="s64"><Data ss:Type="String">2nd Floor</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">E201</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">99</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">18</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">56</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">7.5</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">180.5</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:Index="3" ss:StyleID="s64"><Data ss:Type="String">E202</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">Covered</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">72</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">16</Data></Cell>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"/>
+    <Cell ss:StyleID="s64"><Data ss:Type="Number">7.5</Data></Cell>
+    <Cell ss:StyleID="s64" ss:Formula="=SUM(RC[-6]:RC[-1])"><Data ss:Type="Number">95.5</Data></Cell>
+    <Cell ss:StyleID="s69"/>
+    <Cell ss:StyleID="s71"><Data ss:Type="String">Sold</Data></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="18">
+    <Cell ss:StyleID="s74"/>
+    <Cell ss:StyleID="s75"/>
+    <Cell ss:StyleID="s75"/>
+    <Cell ss:StyleID="s75"/>
+    <Cell ss:StyleID="s75"/>
+    <Cell ss:StyleID="s75"/>
+    <Cell ss:StyleID="s75"/>
+    <Cell ss:StyleID="s75"/>
+    <Cell ss:StyleID="s75"/>
+    <Cell ss:StyleID="s75"/>
+    <Cell ss:StyleID="s75"/>
+    <Cell ss:StyleID="s75"/>
+    <Cell ss:StyleID="s75"/>
+    <Cell ss:StyleID="s76"/>
+    <Cell ss:StyleID="s77"/>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s72"/>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s73"><Data ss:Type="String">NB: Prices mentioned above are subject to modifications without prior notice. </Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s73"><Data ss:Type="String">NB: Prices mentioned above do not include the VAT</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s73"/>
+   </Row>
+   <Row ss:Height="16">
+    <Cell ss:StyleID="s60"><Data ss:Type="String">Project Status:</Data></Cell>
+    <Cell ss:Index="3" ss:StyleID="s61"><Data ss:Type="String">Under construction</Data></Cell>
+    <Cell ss:StyleID="s62"/>
+    <Cell ss:StyleID="s62"/>
+    <Cell ss:StyleID="s62"/>
+    <Cell ss:StyleID="s62"/>
+   </Row>
+   <Row ss:Height="16">
+    <Cell ss:StyleID="s60"><Data ss:Type="String">Link on website:</Data></Cell>
+    <Cell ss:Index="3" ss:StyleID="s18" ss:HRef="https://bit.ly/439ugfF"><Data
+      ss:Type="String">https://bit.ly/439ugfF </Data></Cell>
+    <Cell ss:StyleID="s62"/>
+    <Cell ss:StyleID="s62"/>
+    <Cell ss:StyleID="s62"/>
+    <Cell ss:StyleID="s62"/>
+   </Row>
+   <Row ss:Height="16">
+    <Cell ss:StyleID="s60"><Data ss:Type="String">Location:</Data></Cell>
+    <Cell ss:Index="3" ss:StyleID="Default"><Data ss:Type="String">Livadia – Larnaca</Data></Cell>
+    <Cell ss:StyleID="s62"/>
+    <Cell ss:StyleID="s62"/>
+    <Cell ss:StyleID="s62"/>
+    <Cell ss:StyleID="s62"/>
+   </Row>
+   <Row ss:Height="16">
+    <Cell ss:StyleID="s60"><Data ss:Type="String">Google Maps:</Data></Cell>
+    <Cell ss:Index="3" ss:StyleID="s18" ss:HRef="https://goo.gl/maps/uS8qRwjgrRr4bBfq5"><Data
+      ss:Type="String">https://goo.gl/maps/uS8qRwjgrRr4bBfq5 </Data></Cell>
+    <Cell ss:StyleID="s62"/>
+    <Cell ss:StyleID="s62"/>
+    <Cell ss:StyleID="s62"/>
+    <Cell ss:StyleID="s62"/>
+   </Row>
+   <Row ss:Height="16">
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:StyleID="s62"/>
+    <Cell ss:StyleID="s50"/>
+   </Row>
+   <Row ss:Height="16">
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:StyleID="s62"/>
+    <Cell ss:StyleID="s50"/>
+   </Row>
+   <Row ss:Height="16">
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:StyleID="s62"/>
+    <Cell ss:StyleID="s50"/>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape"/>
+    <Header x:Margin="0.17"/>
+    <Footer x:Margin="0.25"/>
+    <PageMargins x:Bottom="0.34" x:Left="0.17" x:Right="0.28999999999999998"
+     x:Top="0.27"/>
+   </PageSetup>
+   <FitToPage/>
+   <Print>
+    <ValidPrinterInfo/>
+    <Scale>58</Scale>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <Zoom>115</Zoom>
+   <Selected/>
+   <TopRowVisible>2</TopRowVisible>
+   <FreezePanes/>
+   <FrozenNoSplit/>
+   <SplitVertical>3</SplitVertical>
+   <LeftColumnRightPane>3</LeftColumnRightPane>
+   <ActivePane>1</ActivePane>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+    </Pane>
+    <Pane>
+     <Number>1</Number>
+     <ActiveRow>21</ActiveRow>
+     <ActiveCol>14</ActiveCol>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
+ <Worksheet ss:Name="Sheet1">
+  <Table ss:ExpandedColumnCount="11" ss:ExpandedRowCount="62" x:FullColumns="1"
+   x:FullRows="1" ss:DefaultColumnWidth="69" ss:DefaultRowHeight="16">
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="76"/>
+   <Column ss:StyleID="s20" ss:AutoFitWidth="0" ss:Width="61"/>
+   <Column ss:StyleID="s20" ss:Width="60"/>
+   <Column ss:StyleID="s20" ss:Width="154"/>
+   <Column ss:StyleID="s20" ss:Width="151"/>
+   <Column ss:StyleID="s20" ss:Width="62"/>
+   <Column ss:StyleID="s20" ss:Width="60"/>
+   <Column ss:StyleID="s20" ss:Width="123"/>
+   <Column ss:StyleID="s50" ss:Width="154"/>
+   <Column ss:Width="154"/>
+   <Column ss:Width="123"/>
+   <Row>
+    <Cell ss:StyleID="Default"/>
+    <Cell ss:StyleID="Default"/>
+    <Cell ss:StyleID="Default"/>
+    <Cell ss:StyleID="Default"/>
+    <Cell ss:StyleID="Default"/>
+    <Cell ss:StyleID="Default"/>
+    <Cell ss:StyleID="Default"/>
+    <Cell ss:StyleID="Default"/>
+   </Row>
+   <Row>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Floor</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Unit</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Nbr. of Bedrooms</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Covered Internal Area &#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Covered Veranda &#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Uncovered Veranda &#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Garden&#10;(SQM)</Data></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s95"><Data ss:Type="String">Roof Garden&#10;(SQM)</Data></Cell>
+   </Row>
+   <Row ss:Index="4">
+    <Cell ss:MergeDown="1" ss:StyleID="s22"><Data ss:Type="String">Ground Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">A01</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">55</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">21.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">1 Bedroom with Garden</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">A02</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">13.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom with Garden</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:MergeDown="2" ss:StyleID="s22"><Data ss:Type="String">First Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">A101</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">55</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">1 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">A102</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">A103</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">80</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">2nd Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">A201</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">87</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">23</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">53</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom with Terrace </Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:MergeDown="1" ss:StyleID="s22"><Data ss:Type="String">Ground Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">B01</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">100</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">25</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">58</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">3 Bedroom with Garden</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">B02</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">100</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">25</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">58</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">3 Bedroom with Garden</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:MergeDown="2" ss:StyleID="s22"><Data ss:Type="String">First Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">B101</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">77</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">17.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">B102</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">54</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">12</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">1 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">B103</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">77</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">17.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:MergeDown="2" ss:StyleID="s22"><Data ss:Type="String">Ground Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">C01</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">22</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Beroom with Garden</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">C02</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">53</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">19</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">27</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">1 Bedroom with Garden</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">C03</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">20</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom with Garden</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:MergeDown="5" ss:StyleID="s22"><Data ss:Type="String">First Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">C101</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">C102</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">53</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">17.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">60.5</Data></Cell>
+    <Cell><Data ss:Type="String">1 Bedroom with Roof Terrace</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">C103</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">16.7</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell><Data ss:Type="String">2 Bedroom with Roof Terrace </Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">C104</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">C105</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">53</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">11</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">1 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">C106</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:MergeDown="2" ss:StyleID="s22"><Data ss:Type="String">2nd Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">C201</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">25.5</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">72.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom with Terrace </Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">C202</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">53</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">11</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">1 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">C203</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">76</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">15.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:MergeDown="1" ss:StyleID="s22"><Data ss:Type="String">Ground Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">D01</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">100</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">28</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">32</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">3 Bedroom with Garden</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">D02</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">100</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">28</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">32</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">3 Bedroom with Garden</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:MergeDown="1" ss:StyleID="s22"><Data ss:Type="String">First Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">D101</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">80</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">22</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">D102</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">80</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">22</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:MergeDown="1" ss:StyleID="s22"><Data ss:Type="String">Ground Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">E01</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">55</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">17</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">32.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">1 Bedroom with Garden</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">E02</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">14.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">16</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom with Garden</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:MergeDown="3" ss:StyleID="s22"><Data ss:Type="String">First Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">E101</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">13.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">E102</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">23</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">65.5</Data></Cell>
+    <Cell><Data ss:Type="String">2 Bedroom with Roof Terrace </Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">E103</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">17</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">E104</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">14.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:MergeDown="1" ss:StyleID="s22"><Data ss:Type="String">2nd Floor</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="String">E201</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">101</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">19</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">57</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">3 Bedroom with Terrace</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="2" ss:StyleID="s22"><Data ss:Type="String">E202</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">75</Data></Cell>
+    <Cell ss:StyleID="s22"><Data ss:Type="Number">14.5</Data></Cell>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell ss:StyleID="s22"/>
+    <Cell><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row ss:Index="45">
+    <Cell ss:Index="3" ss:StyleID="s50"><Data ss:Type="String">1 Bedroom</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">1 Bedroom with Garden</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">1 Bedroom with Roof Terrace</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">2 Bedroom</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">2 Bedroom with Garden</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">2 Bedroom with Terrace </Data></Cell>
+    <Cell><Data ss:Type="String">2 Bedroom with Roof Terrace </Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">3 Bedroom with Garden</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">3 Bedroom with Terrace</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="3" ss:StyleID="s50"><Data ss:Type="String">1 Bedroom</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">1 Bedroom with Garden</Data></Cell>
+    <Cell ss:Index="6" ss:StyleID="s50"><Data ss:Type="String">2 Bedroom</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">2 Bedroom with Garden</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">2 Bedroom with Terrace </Data></Cell>
+    <Cell><Data ss:Type="String">2 Bedroom with Roof Terrace </Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">3 Bedroom with Garden</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="3" ss:StyleID="s50"><Data ss:Type="String">1 Bedroom</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">1 Bedroom with Garden</Data></Cell>
+    <Cell ss:Index="6" ss:StyleID="s50"><Data ss:Type="String">2 Bedroom</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">2 Bedroom with Garden</Data></Cell>
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:Index="10" ss:StyleID="s50"><Data ss:Type="String">3 Bedroom with Garden</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="3" ss:StyleID="s50"><Data ss:Type="String">1 Bedroom</Data></Cell>
+    <Cell ss:Index="6" ss:StyleID="s50"><Data ss:Type="String">2 Bedroom</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">2 Bedroom with Garden</Data></Cell>
+    <Cell ss:StyleID="s50"/>
+    <Cell ss:Index="10" ss:StyleID="s50"><Data ss:Type="String">3 Bedroom with Garden</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="6" ss:StyleID="s50"><Data ss:Type="String">2 Bedroom</Data></Cell>
+    <Cell ss:Index="8" ss:StyleID="s50"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="6" ss:StyleID="s50"><Data ss:Type="String">2 Bedroom</Data></Cell>
+    <Cell ss:Index="8" ss:StyleID="s50"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="6" ss:StyleID="s50"><Data ss:Type="String">2 Bedroom</Data></Cell>
+    <Cell ss:Index="8" ss:StyleID="s50"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="6" ss:StyleID="s50"><Data ss:Type="String">2 Bedroom</Data></Cell>
+    <Cell ss:Index="8" ss:StyleID="s50"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="6" ss:StyleID="s50"><Data ss:Type="String">2 Bedroom</Data></Cell>
+    <Cell ss:Index="8" ss:StyleID="s50"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="6" ss:StyleID="s50"><Data ss:Type="String">2 Bedroom</Data></Cell>
+    <Cell ss:Index="8" ss:StyleID="s50"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="6" ss:StyleID="s50"><Data ss:Type="String">2 Bedroom</Data></Cell>
+    <Cell ss:Index="8" ss:StyleID="s50"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="6" ss:StyleID="s50"><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="6" ss:StyleID="s50"><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="6" ss:StyleID="s50"><Data ss:Type="String">2 Bedroom</Data></Cell>
+   </Row>
+   <Row ss:Index="61">
+    <Cell ss:Index="3" ss:StyleID="s50"><Data ss:Type="String">1 Bedroom</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">1 Bedroom with Garden</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">1 Bedroom with Roof Terrace</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">2 Bedroom</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">2 Bedroom with Garden</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">2 Bedroom with Terrace </Data></Cell>
+    <Cell><Data ss:Type="String">2 Bedroom with Roof Terrace </Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">3 Bedroom with Garden</Data></Cell>
+    <Cell ss:StyleID="s50"><Data ss:Type="String">3 Bedroom with Terrace</Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="3"><Data ss:Type="Number">4</Data></Cell>
+    <Cell><Data ss:Type="Number">3</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell><Data ss:Type="Number">14</Data></Cell>
+    <Cell><Data ss:Type="Number">4</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="Number">4</Data></Cell>
+    <Cell ss:StyleID="s20"><Data ss:Type="Number">1</Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Header x:Margin="0.3"/>
+    <Footer x:Margin="0.3"/>
+    <PageMargins x:Bottom="0.75" x:Left="0.7" x:Right="0.7" x:Top="0.75"/>
+   </PageSetup>
+   <Visible>SheetHidden</Visible>
+   <Print>
+    <ValidPrinterInfo/>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <VerticalResolution>0</VerticalResolution>
+   </Print>
+   <TopRowVisible>35</TopRowVisible>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveRow>60</ActiveRow>
+     <ActiveCol>2</ActiveCol>
+     <RangeSelection>R61C3:R62C11</RangeSelection>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
+ <Worksheet ss:Name="Description">
+  <Table ss:ExpandedColumnCount="6" ss:ExpandedRowCount="11" x:FullColumns="1"
+   x:FullRows="1" ss:StyleID="s19" ss:DefaultColumnWidth="52"
+   ss:DefaultRowHeight="15">
+   <Column ss:StyleID="s19" ss:Width="130"/>
+   <Column ss:StyleID="s19" ss:AutoFitWidth="0" ss:Width="76"/>
+   <Column ss:StyleID="s19" ss:AutoFitWidth="0" ss:Width="84"/>
+   <Column ss:StyleID="s19" ss:AutoFitWidth="0" ss:Width="82"/>
+   <Column ss:StyleID="s19" ss:AutoFitWidth="0" ss:Width="112"/>
+   <Column ss:StyleID="s19" ss:AutoFitWidth="0" ss:Width="106"/>
+   <Row ss:Index="6" ss:AutoFitHeight="0" ss:Height="24">
+    <Cell ss:MergeAcross="5" ss:StyleID="s111"><Data ss:Type="String">Plus 57 - Tamara Garden 2 (Understudy)</Data></Cell>
+   </Row>
+   <Row ss:Height="16">
+    <Cell ss:StyleID="s46"/>
+    <Cell ss:StyleID="s47"><Data ss:Type="String">Standard</Data></Cell>
+    <Cell ss:StyleID="s47"><Data ss:Type="String">With Garden</Data></Cell>
+    <Cell ss:StyleID="s47"><Data ss:Type="String">With Terrace</Data></Cell>
+    <Cell ss:StyleID="s47"><Data ss:Type="String">With Roof Terrace</Data></Cell>
+    <Cell ss:StyleID="s47"><Data ss:Type="String">Total</Data></Cell>
+   </Row>
+   <Row ss:Height="16">
+    <Cell ss:StyleID="s47"><Data ss:Type="String">1-Bedroom Apartments</Data></Cell>
+    <Cell ss:StyleID="s46"><Data ss:Type="Number">4</Data></Cell>
+    <Cell ss:StyleID="s46"><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="s46"/>
+    <Cell ss:StyleID="s46"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s48" ss:Formula="=SUM(RC[-4]:RC[-1])"><Data ss:Type="Number">8</Data></Cell>
+   </Row>
+   <Row ss:Height="16">
+    <Cell ss:StyleID="s47"><Data ss:Type="String">2-Bedroom Apartments</Data></Cell>
+    <Cell ss:StyleID="s46"><Data ss:Type="Number">14</Data></Cell>
+    <Cell ss:StyleID="s46"><Data ss:Type="Number">4</Data></Cell>
+    <Cell ss:StyleID="s46"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s46"><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="s48" ss:Formula="=SUM(RC[-4]:RC[-1])"><Data ss:Type="Number">22</Data></Cell>
+   </Row>
+   <Row ss:Height="16">
+    <Cell ss:StyleID="s47"><Data ss:Type="String">3-Bedroom Apartments</Data></Cell>
+    <Cell ss:StyleID="s46"/>
+    <Cell ss:StyleID="s46"><Data ss:Type="Number">4</Data></Cell>
+    <Cell ss:StyleID="s46"><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="s46"/>
+    <Cell ss:StyleID="s48" ss:Formula="=SUM(RC[-4]:RC[-1])"><Data ss:Type="Number">5</Data></Cell>
+   </Row>
+   <Row ss:Height="16">
+    <Cell ss:StyleID="s46"/>
+    <Cell ss:StyleID="s46"/>
+    <Cell ss:StyleID="s46"/>
+    <Cell ss:StyleID="s46"/>
+    <Cell ss:StyleID="s46"/>
+    <Cell ss:StyleID="s49" ss:Formula="=SUM(R[-3]C:R[-1]C)"><Data ss:Type="Number">35</Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape"/>
+    <Header x:Margin="0.3"/>
+    <Footer x:Margin="0.3"/>
+    <PageMargins x:Bottom="0.75" x:Left="0.7" x:Right="0.7" x:Top="0.75"/>
+   </PageSetup>
+   <Visible>SheetHidden</Visible>
+   <Print>
+    <ValidPrinterInfo/>
+    <PaperSizeIndex>8</PaperSizeIndex>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveRow>18</ActiveRow>
+     <ActiveCol>2</ActiveCol>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
+ <Worksheet ss:Name="Sheet2">
+  <Table ss:ExpandedColumnCount="5" ss:ExpandedRowCount="20" x:FullColumns="1"
+   x:FullRows="1" ss:DefaultColumnWidth="69" ss:DefaultRowHeight="15">
+   <Column ss:Index="2" ss:AutoFitWidth="0" ss:Width="230" ss:Span="3"/>
+   <Row ss:Index="3" ss:Height="16"/>
+   <Row ss:Height="16">
+    <Cell ss:Index="2" ss:StyleID="s51"/>
+    <Cell ss:StyleID="s52"><Data ss:Type="String">5% downpayment</Data></Cell>
+    <Cell ss:StyleID="s52"><Data ss:Type="String">30% downpayment</Data></Cell>
+    <Cell ss:StyleID="s52"><Data ss:Type="String">55% downpayment</Data></Cell>
+   </Row>
+   <Row ss:Height="28">
+    <Cell ss:Index="2" ss:MergeDown="11" ss:StyleID="m46390187968"><Data
+      ss:Type="String">Option 1</Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">5%</Font></B><Font
+       html:Color="#000000">&#160;Booking Fees upon Booking Agreement signature</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">30%</Font></B><Font
+       html:Color="#000000">&#160;Booking Fees upon Booking Agreement signature</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">55%</Font></B><Font
+       html:Color="#000000">&#160;Booking Fees upon Booking Agreement signature</Font></ss:Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="3" ss:StyleID="s54"/>
+    <Cell ss:StyleID="s54"/>
+    <Cell ss:StyleID="s54"/>
+   </Row>
+   <Row ss:Height="28">
+    <Cell ss:Index="3" ss:StyleID="s55"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><I><Font html:Color="#000000">30% + VAT&#160;&#160;</Font></I></B><I><Font
+        html:Color="#000000">upon contract signature (including Booking Fees)</Font></I></ss:Data></Cell>
+    <Cell ss:StyleID="s55"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><I><Font html:Color="#000000">30% + VAT&#160;&#160;</Font></I></B><I><Font
+        html:Color="#000000">upon contract signature (including Booking Fees)</Font></I></ss:Data></Cell>
+    <Cell ss:StyleID="s55"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><I><Font html:Color="#000000">55% + VAT&#160;&#160;</Font></I></B><I><Font
+        html:Color="#000000">upon contract signature (including Booking Fees)</Font></I></ss:Data></Cell>
+   </Row>
+   <Row ss:Height="28">
+    <Cell ss:Index="3" ss:StyleID="s55"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><I><Font html:Color="#000000">70% + VAT&#160;</Font></I></B><I><Font
+        html:Color="#000000">upon construction progress as per below:</Font></I></ss:Data></Cell>
+    <Cell ss:StyleID="s55"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><I><Font html:Color="#000000">70% + VAT</Font></I></B><I><Font
+        html:Color="#000000">&#160;upon construction progress as per below:</Font></I></ss:Data></Cell>
+    <Cell ss:StyleID="s55"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><I><Font html:Color="#000000">45% + VAT&#160;</Font></I></B><I><Font
+        html:Color="#000000">upon construction progress as per below:</Font></I></ss:Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="3" ss:StyleID="s54"/>
+    <Cell ss:StyleID="s54"/>
+    <Cell ss:StyleID="s54"/>
+   </Row>
+   <Row>
+    <Cell ss:Index="3" ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">20% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Unit Concrete works completion</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">20% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Unit Concrete works completion</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">10% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Unit Concrete works completion</Font></ss:Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="3" ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">10% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Unit Brickworks completion</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">10% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Unit Brickworks completion</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">10% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Unit Brickworks completion</Font></ss:Data></Cell>
+   </Row>
+   <Row ss:Height="28">
+    <Cell ss:Index="3" ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">5% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Unit Internal Plaster works completion</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">5% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Unit Internal Plaster works completion</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">5% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Unit Internal Plaster works completion</Font></ss:Data></Cell>
+   </Row>
+   <Row ss:Height="28">
+    <Cell ss:Index="3" ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">10% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Building External Plaster works completion</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">10% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Building External Plaster works completion</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">5% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Building External Plaster works completion</Font></ss:Data></Cell>
+   </Row>
+   <Row ss:Height="28">
+    <Cell ss:Index="3" ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">10% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Unit Internal Tiling works completion</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">10% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Unit Internal Tiling works completion</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">5% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Unit Internal Tiling works completion</Font></ss:Data></Cell>
+   </Row>
+   <Row ss:Height="28">
+    <Cell ss:Index="3" ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">10% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Unit Aluminium works completion</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">10% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Unit Aluminium works completion</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">5% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon Unit Aluminium works completion</Font></ss:Data></Cell>
+   </Row>
+   <Row ss:Height="16">
+    <Cell ss:Index="3" ss:StyleID="s56"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">5% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon delivery of the unit</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s56"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">5% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon delivery of the unit</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s56"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">5% + VAT&#160;</Font></B><Font
+       html:Color="#000000">upon delivery of the unit</Font></ss:Data></Cell>
+   </Row>
+   <Row ss:Height="28">
+    <Cell ss:Index="2" ss:MergeDown="3" ss:StyleID="m46390187988"><Data
+      ss:Type="String">Option 2</Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">5%</Font></B><Font
+       html:Color="#000000">&#160;Booking Fees upon Booking Agreement signature</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">30%</Font></B><Font
+       html:Color="#000000">&#160;Booking Fees upon Booking Agreement signature</Font></ss:Data></Cell>
+    <Cell ss:StyleID="s53"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><Font html:Color="#000000">55%</Font></B><Font
+       html:Color="#000000">&#160;Booking Fees upon Booking Agreement signature</Font></ss:Data></Cell>
+   </Row>
+   <Row>
+    <Cell ss:Index="3" ss:StyleID="s54"/>
+    <Cell ss:StyleID="s54"/>
+    <Cell ss:StyleID="s54"/>
+   </Row>
+   <Row ss:Height="28">
+    <Cell ss:Index="3" ss:StyleID="s55"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><I><Font html:Color="#000000">30% + VAT&#160;</Font></I></B><I><Font
+        html:Color="#000000">upon contract signature (including Booking Fees)</Font></I></ss:Data></Cell>
+    <Cell ss:StyleID="s55"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><I><Font html:Color="#000000">30% + VAT&#160;</Font></I></B><I><Font
+        html:Color="#000000">upon contract signature (including Booking Fees)</Font></I></ss:Data></Cell>
+    <Cell ss:StyleID="s55"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><I><Font html:Color="#000000">55% + VAT&#160;</Font></I></B><I><Font
+        html:Color="#000000">upon contract signature (including Booking Fees)</Font></I></ss:Data></Cell>
+   </Row>
+   <Row ss:Height="29">
+    <Cell ss:Index="3" ss:StyleID="s57"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><I><Font html:Color="#000000">70% + VAT&#160;</Font></I></B><I><Font
+        html:Color="#000000">to be paid in equal installments over 15 months</Font></I></ss:Data></Cell>
+    <Cell ss:StyleID="s57"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><I><Font html:Color="#000000">70% + VAT&#160;</Font></I></B><I><Font
+        html:Color="#000000">to be paid in equal installments over 15 months</Font></I></ss:Data></Cell>
+    <Cell ss:StyleID="s57"><ss:Data ss:Type="String"
+      xmlns="http://www.w3.org/TR/REC-html40"><B><I><Font html:Color="#000000">45% + VAT&#160;</Font></I></B><I><Font
+        html:Color="#000000">to be paid in equal installments over 15 months</Font></I></ss:Data></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape"/>
+    <Header x:Margin="0.3"/>
+    <Footer x:Margin="0.3"/>
+    <PageMargins x:Bottom="0.75" x:Left="0.7" x:Right="0.7" x:Top="0.75"/>
+   </PageSetup>
+   <Visible>SheetHidden</Visible>
+   <Print>
+    <ValidPrinterInfo/>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <VerticalResolution>0</VerticalResolution>
+   </Print>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+     <ActiveRow>10</ActiveRow>
+     <ActiveCol>3</ActiveCol>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+ </Worksheet>
+</Workbook>

@@ -1,0 +1,34 @@
+                                                                                                                                                     1-Sep-26    Version:2.41
+
+
+
+                                                                           Plus 33 Residence
+                                                                                          Covered
+                                                                                                     Covered   Uncovered   Common
+                                      Nbr of          Nbr of                    Storage   Internal                                  Total Area
+       Floor              Unit                                      Parking                          Veranda    Veranda     Area                     Price €     Availability
+                                     Bedrooms       Bathrooms                   Rooms       Area                                      (sqm)
+                                                                                                      (sqm)      (sqm)      (sqm)
+                                                                                           (sqm)
+                          101             2              2          Covered        1        78         35                    12        125       €     350,000    Available
+     First Floor
+                          102             2              2          Covered        1        78         35                    12        125       €     350,000    Available
+                          201             2              2          Covered        1        78         35                    12        125       €     360,000      Sold
+   Second Floor
+                          202             2              2                         1        78         35                    12        125                          Sold
+                          301             2              2          Covered        1        78                    35         12        125                          Sold
+    Third Floor
+                          302             2              2          Covered        1        78                    35         12        125       €     370,000    Available
+    Fourth Floor          401             2              2          Covered        1        78                    87         24        189       €     500,000    Available
+
+
+NB: Prices mentioned above are subject to modifications without prior notice.
+NB: Prices mentioned above do not include the VAT
+
+
+
+Project Status:      Under-Construction
+Link on website: https://bit.ly/3ogneqP
+Location:            Universal - Paphos
+Google Maps:         https://goo.gl/maps/eNuotzX4Enz2M9GC6
+

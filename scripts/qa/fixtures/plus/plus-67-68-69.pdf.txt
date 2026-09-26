@@ -1,0 +1,44 @@
+                                                                                                                                                                                 23-Jul-26    Version: 3.3
+
+
+                                                                                       Plus 67 - Plus 68 - Plus 69
+                                                                                                                    Covered      Covered   Uncovered   Common
+                                                                Nbr of          Nbr of                                                                          Total Area
+       Project                 Floor               Unit                                     Parking   Storages   Internal Area   Veranda    Terrace     Area                     Price €      Availability
+                                                               Bedrooms       Bathrooms                                                                           (sqm)
+                                                                                                                     (sqm)        (sqm)      (sqm)      (sqm)
+
+                                                   101              2              2        Covered      1            83           18                   12.3      113.3      €      331,000    Available
+                            First Floor            102              2              2        Covered      1            84           20                   12.3      116.3      €      331,000    Available
+                                                   103              1              1        Covered      1            54          14.5                  12.3       80.8                          Sold
+   Plus 67                                         201              2              2        Covered      1            83           18         63        12.3      176.3      €      373,000    Available
+                           Second Floor            202              2              2        Covered      1            84           20         63        12.3      179.3      €      373,000    Available
+                                                   203              1              1        Covered      1            54          14.5                  12.3       80.8                          Sold
+                                                   101              2              2        Covered      1           78.5          20                   10.2      108.7      €      315,000    Available
+                                                   102              2              2        Covered      1           78.5          20                   10.2      108.7      €      315,000    Available
+                            First Floor
+                                                   103              2              2        Covered      1            88           13                   10.2      111.2      €      326,000    Available
+                                                   104              1              1        Covered      1            55           19                   10.2       84.2                          Sold
+   Plus 68                                         201              2              2        Covered      1           78.5          20         59        10.2      167.7      €      362,000    Available
+                                                   202              2              2        Covered      1           78.5          20         59        10.2      167.7      €      362,000    Available
+                           Second Floor
+                                                   203              2              2        Covered      1            88           13                   10.2      111.2      €      331,000    Available
+                                                   204              1              1        Covered      1            55           19                   10.2       84.2                          Sold
+                                                   101              2              2        Covered      1            78           15                   12.1      105.1      €      315,000    Available
+                            First Floor            102              2              2        Covered      1            78           15                   12.1      105.1      €      315,000    Available
+                                                   103              1              1        Covered      1            58           18                   12.1       88.1      €      242,000    Available
+   Plus 69                                         201              2              2        Covered      1            78           15         55        12.1      160.1      €      362,000    Available
+                           Second Floor            202              2              2        Covered      1            78           15         55        12.1      160.1      €      362,000    Available
+                                                   203              1              1        Covered      1            58           18                   12.1       88.1                          Sold
+
+
+NB: Prices mentioned above are subject to modifications without prior notice.
+NB: Prices mentioned above do not include the VAT
+NB: Areas mentioned above are subject to modifications prior to building permit issuance.
+
+
+Project Status:        Understudy
+Location:              Parekklisia - Limassol
+Link on website:       https://bit.ly/3XTMKkP
+Google Maps:           https://bit.ly/43oq7F0
+

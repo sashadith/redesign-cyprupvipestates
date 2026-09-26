@@ -1,0 +1,3425 @@
+<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>Camille ElDeek</Author>
+  <LastAuthor>Tamara Chehwane</LastAuthor>
+  <LastPrinted>2026-07-01T11:57:51Z</LastPrinted>
+  <Created>2022-07-29T13:41:14Z</Created>
+  <LastSaved>2026-07-01T12:02:38Z</LastSaved>
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <OfficeDocumentSettings xmlns="urn:schemas-microsoft-com:office:office">
+  <AllowPNG/>
+ </OfficeDocumentSettings>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>15720</WindowHeight>
+  <WindowWidth>28800</WindowWidth>
+  <WindowTopX>32767</WindowTopX>
+  <WindowTopY>600</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#000000"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s16" ss:Name="Hyperlink">
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#0563C1"
+    ss:Underline="Single"/>
+  </Style>
+  <Style ss:ID="m46389481116">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="m46389481136">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="m46389487936">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="m46389487956">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="m46389487976">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="m46389487996">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="m46389488016">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="m46389488036">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="m46389488056">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="m46389486716">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12" ss:Bold="1"/>
+   <NumberFormat ss:Format="[$€-2]\ #,##0;[Red]\-[$€-2]\ #,##0"/>
+  </Style>
+  <Style ss:ID="m46389486736">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12" ss:Bold="1"/>
+   <NumberFormat ss:Format="[$€-2]\ #,##0;[Red]\-[$€-2]\ #,##0"/>
+  </Style>
+  <Style ss:ID="m46389486776">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#FFFFFF" ss:Bold="1"/>
+   <NumberFormat ss:Format="[$€-2]\ #,##0;[Red]\-[$€-2]\ #,##0"/>
+  </Style>
+  <Style ss:ID="m46389486796">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12" ss:Bold="1"/>
+   <NumberFormat ss:Format="[$€-2]\ #,##0;[Red]\-[$€-2]\ #,##0"/>
+  </Style>
+  <Style ss:ID="s17">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="s18">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s19">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s20">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Bold="1"/>
+   <NumberFormat ss:Format="[ENG][$-409]d\-mmm\-yy;@"/>
+  </Style>
+  <Style ss:ID="s21">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s22">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="11" ss:Color="#000000"
+    ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s23">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s24">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s25">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"/>
+  </Style>
+  <Style ss:ID="s26">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s27">
+   <Alignment ss:Vertical="Center"/>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s28">
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="11"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s29" ss:Parent="s16">
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#0563C1" ss:Underline="Single"/>
+  </Style>
+  <Style ss:ID="s30">
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s31">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12" ss:Bold="1"/>
+   <Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s32">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12" ss:Bold="1"/>
+   <Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s33">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12" ss:Bold="1"/>
+   <Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="[$€-2]\ #,##0.00"/>
+  </Style>
+  <Style ss:ID="s34">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="12" ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s35">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s36">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s37">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12" ss:Bold="1"/>
+   <NumberFormat ss:Format="[$€-2]\ #,##0;[Red]\-[$€-2]\ #,##0"/>
+  </Style>
+  <Style ss:ID="s38">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+   <Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s39">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#FF0000" ss:Bold="1"/>
+   <Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="[$€-2]\ #,##0;[Red]\-[$€-2]\ #,##0"/>
+  </Style>
+  <Style ss:ID="s40">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s41">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="12" ss:Color="#000000"/>
+   <Interior ss:Color="#B4C6E7" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s42">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="12" ss:Color="#FF0000"
+    ss:Bold="1"/>
+   <Interior ss:Color="#B4C6E7" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s43">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="12" ss:Color="#000000"
+    ss:Bold="1"/>
+   <Interior ss:Color="#B4C6E7" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s44">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#FFFFFF" ss:Bold="1"/>
+   <NumberFormat ss:Format="[$€-2]\ #,##0;[Red]\-[$€-2]\ #,##0"/>
+  </Style>
+  <Style ss:ID="s45">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#FF0000" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s46">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+   <Interior ss:Color="#8EA9DB" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s47">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#FF0000" ss:Bold="1"/>
+   <Interior ss:Color="#8EA9DB" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="[$€-2]\ #,##0;[Red]\-[$€-2]\ #,##0"/>
+  </Style>
+  <Style ss:ID="s48">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000" ss:Bold="1"/>
+   <Interior ss:Color="#8EA9DB" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s49">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s50">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12" ss:Bold="1"/>
+   <Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="[$€-2]\ #,##0;[Red]\-[$€-2]\ #,##0"/>
+  </Style>
+  <Style ss:ID="s51">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12" ss:Bold="1"/>
+   <Interior ss:Color="#8EA9DB" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="[$€-2]\ #,##0;[Red]\-[$€-2]\ #,##0"/>
+  </Style>
+  <Style ss:ID="s52">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#FF0000"/>
+  </Style>
+  <Style ss:ID="s53">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+  </Style>
+  <Style ss:ID="s54">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#000000"/>
+   <Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s55">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="s56">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s57">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"/>
+  </Style>
+  <Style ss:ID="s58">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#FFFFFF" ss:Bold="1"/>
+   <Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="[$€-2]\ #,##0;[Red]\-[$€-2]\ #,##0"/>
+  </Style>
+  <Style ss:ID="s59">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#FFFFFF" ss:Bold="1"/>
+   <Interior ss:Color="#8EA9DB" ss:Pattern="Solid"/>
+   <NumberFormat ss:Format="[$€-2]\ #,##0;[Red]\-[$€-2]\ #,##0"/>
+  </Style>
+  <Style ss:ID="s60">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#FF0000" ss:Bold="1"/>
+   <Interior ss:Color="#8EA9DB" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s61">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="12"
+    ss:Color="#FF0000" ss:Bold="1"/>
+   <Interior ss:Color="#D9D9D9" ss:Pattern="Solid"/>
+  </Style>
+  <Style ss:ID="s62">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Font ss:FontName="Calibri" x:Family="Swiss" ss:Size="12" ss:Color="#000000"/>
+   <NumberFormat ss:Format="Euro Currency"/>
+  </Style>
+  <Style ss:ID="s78">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
+   </Borders>
+   <Font ss:FontName="Times New Roman" x:Family="Roman" ss:Size="26" ss:Bold="1"/>
+   <Interior ss:Color="#F4B084" ss:Pattern="Solid"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Plus 75">
+  <Names>
+   <NamedRange ss:Name="Print_Area" ss:RefersTo="='Plus 75'!R1C1:R109C18"/>
+   <NamedRange ss:Name="Print_Titles" ss:RefersTo="='Plus 75'!R1:R5"/>
+  </Names>
+  <Table ss:ExpandedColumnCount="21" ss:ExpandedRowCount="109" x:FullColumns="1"
+   x:FullRows="1" ss:StyleID="s17" ss:DefaultColumnWidth="52"
+   ss:DefaultRowHeight="15">
+   <Column ss:StyleID="s17" ss:AutoFitWidth="0" ss:Width="76"/>
+   <Column ss:StyleID="s17" ss:AutoFitWidth="0" ss:Width="81"/>
+   <Column ss:StyleID="s17" ss:AutoFitWidth="0" ss:Width="76"/>
+   <Column ss:StyleID="s17" ss:AutoFitWidth="0" ss:Width="66"/>
+   <Column ss:StyleID="s17" ss:AutoFitWidth="0" ss:Width="75"/>
+   <Column ss:StyleID="s17" ss:AutoFitWidth="0" ss:Width="79"/>
+   <Column ss:StyleID="s17" ss:AutoFitWidth="0" ss:Width="68"/>
+   <Column ss:StyleID="s17" ss:AutoFitWidth="0" ss:Width="88"/>
+   <Column ss:StyleID="s17" ss:AutoFitWidth="0" ss:Width="104"/>
+   <Column ss:StyleID="s17" ss:AutoFitWidth="0" ss:Width="88" ss:Span="1"/>
+   <Column ss:Index="12" ss:StyleID="s17" ss:AutoFitWidth="0" ss:Width="3"/>
+   <Column ss:StyleID="s17" ss:AutoFitWidth="0" ss:Width="88" ss:Span="1"/>
+   <Column ss:Index="15" ss:StyleID="s17" ss:Hidden="1" ss:AutoFitWidth="0"
+    ss:Width="88"/>
+   <Column ss:StyleID="s17" ss:AutoFitWidth="0" ss:Width="88"/>
+   <Column ss:StyleID="s17" ss:AutoFitWidth="0" ss:Width="94"/>
+   <Column ss:StyleID="s22" ss:AutoFitWidth="0" ss:Width="104"/>
+   <Column ss:StyleID="s17" ss:Width="80"/>
+   <Column ss:Index="21" ss:StyleID="s17" ss:Width="71"/>
+   <Row ss:Height="16">
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s19"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s19"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="16.25">
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s19"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="17" ss:StyleID="s20"><Data ss:Type="DateTime">2026-06-03T00:00:00.000</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s21"><Data ss:Type="String">Version: 5.9</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="16.25">
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s19"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s19"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="31.5">
+    <Cell ss:MergeAcross="17" ss:StyleID="s78"><Data ss:Type="String">The Square - Plus 75</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell><Data ss:Type="String"> </Data><NamedCell ss:Name="Print_Titles"/></Cell>
+   </Row>
+   <Row ss:Height="85" ss:StyleID="s34">
+    <Cell ss:StyleID="s31"><Data ss:Type="String">Block</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="String">Floor</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="String">Unit</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">Number of Bedrooms</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">Number of Bathrooms</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">Parking </Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">Covered Internal Area&#10;(sqm)</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">Covered Veranda (sqm)</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">Uncovered Veranda &amp; Terraces&#10; (sqm) </Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">Garden&#10;(sqm)</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">Roof Garden&#10;(sqm)</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><NamedCell ss:Name="Print_Titles"/><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">Common Area&#10;(sqm)</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">Total Area (sqm)</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><Data ss:Type="String">Price €/OLD</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s33"><Data ss:Type="String">Price €</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s32"><Data ss:Type="String">OPTIONAL Roof Garden / Subject to Extra Cost&#10;(sqm) </Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s31"><Data ss:Type="String">Availability</Data><NamedCell
+      ss:Name="Print_Titles"/><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:MergeDown="12" ss:StyleID="s35"><Data ss:Type="String">A</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="2" ss:StyleID="s36"><Data ss:Type="String">Ground Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">A01</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">79</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">14.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">19</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">123.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">220000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">255000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="21" ss:StyleID="s62"/>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">A02</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">50</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">10</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">17</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">88</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">168000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">185000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">A03</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">50</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">10</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">18</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">89</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">168000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">185000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s40"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="5" ss:StyleID="s36"><Data ss:Type="String">First Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">A101</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">79</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">96.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s44"><Data ss:Type="Number">175000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">230000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">A102</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">50</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">63</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">145000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">A103</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">50</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">63</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">145000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">A104</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">79</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">96.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">175000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">230000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s57"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">A105</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">53</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">9</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">68</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">145000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">177000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">A106</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">53</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">9</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">68</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">145000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s44"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s40"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="1" ss:StyleID="s36"><Data ss:Type="String">Second Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">A201</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">81.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">18</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">41</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">15</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">155.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">245000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">290000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">A202</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">81.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">18</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">41</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">15</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">155.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">245000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">290000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s42"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s42"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s43"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:MergeDown="11" ss:StyleID="s35"><Data ss:Type="String">B</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="2" ss:StyleID="s36"><Data ss:Type="String">Ground Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">B01</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">83</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">14.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">18.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">14.4</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">130.4</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">225000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">255000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">B02</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">82</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">12</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">22</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">14.4</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">130.4</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">225000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">255000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">B03</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">84</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">14</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">14.4</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">123.4</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">225000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">255000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s40"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="4" ss:StyleID="s36"><Data ss:Type="String">First Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">B101</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">86</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">18</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">8.6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">112.6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">190000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">B102</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">uncovered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">82</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">15.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">8.6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">106.1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">185000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">235000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">B103</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">uncovered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">84</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">13.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">8.6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">106.1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">185000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">235000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">B104</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">uncovered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">59</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">13</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">8.6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">80.599999999999994</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s44"><Data ss:Type="Number">147000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">B105</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">uncovered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">59</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">13</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">8.6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">80.599999999999994</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">147000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s40"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="1" ss:StyleID="s36"><Data ss:Type="String">Second Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">B201</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">80</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">13.7</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">70</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">21.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">185.2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">255000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">285000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">B202</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">82</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">18.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">62</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">21.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">184</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">255000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">285000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s42"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s42"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s41"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s43"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:MergeDown="12" ss:StyleID="s35"><Data ss:Type="String">C</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="2" ss:StyleID="s36"><Data ss:Type="String">Ground Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">C01</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">79</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">13.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">19</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">122.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">225000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">255000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s56"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">C02</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">50</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">9</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">18</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">88</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">C03</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">uncovered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">50</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">9</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">19</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">89</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">168000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">185000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s40"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="5" ss:StyleID="s36"><Data ss:Type="String">First Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">C101</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">79</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">96.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s44"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">C102</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">50</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">63</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">145000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">C103</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">50</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">63</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">145000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">C104</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">79</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">96.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">175000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">C105</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">53</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">9</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">68</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">C106</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">53</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">9</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">68</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">145000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s57"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s40"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="1" ss:StyleID="s36"><Data ss:Type="String">Second Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">C201</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">81.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">18</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">50</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">15</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">164.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">245000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">290000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">C202</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">81.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">18</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">50</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">15</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">164.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">245000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s47"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s47"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s48"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:MergeDown="4" ss:StyleID="s35"><Data ss:Type="String">C-Villas</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s36"><Data ss:Type="String">Villa 1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s49"><Data ss:Type="String">Lower Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="m46389481116"><Data ss:Type="String">semi covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">65</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">60</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">147</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s37"><Data ss:Type="Number">370000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s37"><Data ss:Type="Number">410000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s49"><Data ss:Type="String">Upper Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">3</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="7" ss:StyleID="s36"><Data ss:Type="Number">62</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">3</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">72.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="17" ss:StyleID="s36"><Data ss:Type="Number">16.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s50"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s50"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s40"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="1" ss:StyleID="s36"><Data ss:Type="String">Villa 2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s49"><Data ss:Type="String">Lower Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="m46389481136"><Data ss:Type="String">semi covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">65</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">60</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">147</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s37"><Data ss:Type="Number">370000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s37"><Data ss:Type="Number">410000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s49"><Data ss:Type="String">Upper Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">3</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="7" ss:StyleID="s36"><Data ss:Type="Number">62</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">3</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">72.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="17" ss:StyleID="s36"><Data ss:Type="Number">16.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s51"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s51"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s48"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:MergeDown="19" ss:StyleID="s35"><Data ss:Type="String">D- Villas</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s36"><Data ss:Type="String">Villa 1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s49"><Data ss:Type="String">Lower Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="m46389487976"><Data ss:Type="String">semi covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">65</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">11</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">60</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">147.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s37"><Data ss:Type="Number">370000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s44"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s49"><Data ss:Type="String">Upper Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">3</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="7" ss:StyleID="s36"><Data ss:Type="Number">62</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">3</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">72.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="17" ss:StyleID="s36"><Data ss:Type="Number">16.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s54"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s40"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="1" ss:StyleID="s36"><Data ss:Type="String">Villa 2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s49"><Data ss:Type="String">Lower Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="m46389487996"><Data ss:Type="String">semi covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">55</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">4</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">48</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">113</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s37"><Data ss:Type="Number">283000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="m46389486796"><Data ss:Type="Number">310000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s56"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s49"><Data ss:Type="String">Upper Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="7" ss:StyleID="s36"><Data ss:Type="Number">51</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">53.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="17" ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s54"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s40"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="1" ss:StyleID="s36"><Data ss:Type="String">Villa 3</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s53"><Data ss:Type="String">Lower Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="m46389488016"><Data ss:Type="String">semi covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">55</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">4</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell><Data ss:Type="Number">55</Data><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">120</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s37"><Data ss:Type="Number">285000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s44"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s53"><Data ss:Type="String">Upper Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="7" ss:StyleID="s36"><Data ss:Type="Number">51</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">53.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="17" ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s54"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s40"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="1" ss:StyleID="s36"><Data ss:Type="String">Villa 4</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s53"><Data ss:Type="String">Lower Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="m46389488036"><Data ss:Type="String">semi covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">55</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">4</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">55</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">120</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s37"><Data ss:Type="Number">285000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="m46389486776"><Data ss:Type="Number">335000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s57"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s45"><Data ss:Type="String">Sold</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s53"><Data ss:Type="String">Upper Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="7" ss:StyleID="s36"><Data ss:Type="Number">51</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">53.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="17" ss:StyleID="s57"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s54"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s40"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="1" ss:StyleID="s36"><Data ss:Type="String">Villa 5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s53"><Data ss:Type="String">Lower Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="m46389488056"><Data ss:Type="String">semi covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">55</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">4</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">100</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">165</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s37"><Data ss:Type="Number">305000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s45"><Data ss:Type="String">Sold </Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s53"><Data ss:Type="String">Upper Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="7" ss:StyleID="s36"><Data ss:Type="Number">51</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">53.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="17" ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s54"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s40"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="1" ss:StyleID="s36"><Data ss:Type="String">Villa 6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s53"><Data ss:Type="String">Lower Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="m46389487936"><Data ss:Type="String">semi covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">55</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">4</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">62</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">127</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s37"><Data ss:Type="Number">288000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="m46389486736"><Data ss:Type="Number">310000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s53"><Data ss:Type="String">Upper Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="7" ss:StyleID="s36"><Data ss:Type="Number">51</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">53.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="17" ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s54"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s39"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s40"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="1" ss:StyleID="s36"><Data ss:Type="String">Villa 7</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s53"><Data ss:Type="String">Lower Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="m46389487956"><Data ss:Type="String">semi covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">55</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">4</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">6</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">55</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">120</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s37"><Data ss:Type="Number">285000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="m46389486716"><Data ss:Type="Number">310000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="1" ss:StyleID="s35"><Data ss:Type="String">Available</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s53"><Data ss:Type="String">Upper Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="7" ss:StyleID="s36"><Data ss:Type="Number">51</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">53.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="17" ss:StyleID="s52"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s47"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s60"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:MergeDown="12" ss:StyleID="s35"><Data ss:Type="String">E</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="2" ss:StyleID="s36"><Data ss:Type="String">Ground Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">E01</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">96</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">16</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">42</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">15.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">174.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">320000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">E02</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">semi covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">80</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">14</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">50</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.75</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">153.75</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">255000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">E03</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">79</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">20</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">20</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.75</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">126.75</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">230000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s50"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s58"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s61"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="5" ss:StyleID="s36"><Data ss:Type="String">First Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">E101</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">uncovered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">54</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">16</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">77.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">150000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">E102</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">54</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">16</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">77.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">150000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">E103</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">80</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">12</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">85.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">184.55</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">300000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">E104</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">76</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">18</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">101.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">200000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">E105</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">80</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">13.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">100.55</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">200000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">E106</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">uncovered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">76</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">20</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">3</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">106.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">200000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s50"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s58"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s61"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="1" ss:StyleID="s36"><Data ss:Type="String">Second Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">E201</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">80</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">13.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">13</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">106.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">220000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">E202</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">3</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">3</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">105</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">21</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">44.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">13</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">183.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">330000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s51"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s59"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s46"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s60"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:MergeDown="12" ss:StyleID="s35"><Data ss:Type="String">F</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:MergeDown="2" ss:StyleID="s36"><Data ss:Type="String">Ground Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">F01</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">96</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">16</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">49</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">15.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">181.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">320000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">F02</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">semi covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">80</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">16</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">50</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.75</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">153.75</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">255000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">F03</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">79</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">20</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">20</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.75</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">126.75</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">230000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s50"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s58"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s61"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="5" ss:StyleID="s36"><Data ss:Type="String">First Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">F101</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">uncovered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">54</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">16</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">77.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">150000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">F102</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">1</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">uncovered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">54</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">16</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">77.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">150000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">F103</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">80</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">12</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">85.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">184.55</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">300000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">F104</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">76</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">18</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">101.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">200000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">F105</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">80</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">13.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">100.55</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">200000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">F106</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">76</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">20</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">3</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">7.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">106.05</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">200000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s50"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s58"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s38"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s61"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="2" ss:MergeDown="1" ss:StyleID="s36"><Data ss:Type="String">Second Floor</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">F201</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">2</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">80</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">13.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">13</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">106.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">220000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:AutoFitHeight="0" ss:Height="20" ss:StyleID="s34">
+    <Cell ss:Index="3" ss:StyleID="s36"><Data ss:Type="String">F202</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">3</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">3</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s55"><Data ss:Type="String">covered</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">105</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">21</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">44.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><Data ss:Type="Number">13</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36" ss:Formula="=SUM(RC[-7]:RC[-1])"><Data ss:Type="Number">183.5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><Data ss:Type="Number">330000</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s37"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s36"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s45"><Data ss:Type="String">Reserved</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:Index="102" ss:Height="14" ss:StyleID="s24">
+    <Cell ss:StyleID="s23"><Data ss:Type="String">NB: Areas mentioned above are subject to modifications prior to building permit issuance.</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:Height="14" ss:StyleID="s24">
+    <Cell ss:StyleID="s25"><Data ss:Type="String">NB: Prices mentioned above are subject to modifications without prior notice. </Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:Height="14" ss:StyleID="s24">
+    <Cell ss:StyleID="s25"><Data ss:Type="String">NB: Prices mentioned above do not include the VAT</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:Height="14" ss:StyleID="s24">
+    <Cell ss:StyleID="s25"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:Height="16" ss:Hidden="1" ss:StyleID="s24">
+    <Cell ss:StyleID="s26"><Data ss:Type="String">Project Status:</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:Index="3" ss:StyleID="s27"><Data ss:Type="String">Understudy</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:Height="16" ss:StyleID="s24">
+    <Cell ss:StyleID="s26"><Data ss:Type="String">Link on website:</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s29" ss:HRef="https://bit.ly/487Zk1M"><Data ss:Type="String">https://bit.ly/487Zk1M</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:Height="16" ss:StyleID="s24">
+    <Cell ss:StyleID="s26"><Data ss:Type="String">Location:</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s30"><Data ss:Type="String">Kiti – Larnaca</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+   <Row ss:Height="16" ss:StyleID="s24">
+    <Cell ss:StyleID="s26"><Data ss:Type="String">Google Maps:</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s18"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s29" ss:HRef="https://maps.app.goo.gl/X17jfw2hHzPzoeay5"><Data
+      ss:Type="String">https://maps.app.goo.gl/X17jfw2hHzPzoeay5</Data><NamedCell
+      ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+    <Cell ss:StyleID="s28"><NamedCell ss:Name="Print_Area"/></Cell>
+   </Row>
+  </Table>
+  <WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel">
+   <PageSetup>
+    <Layout x:Orientation="Landscape"/>
+    <Header x:Margin="0.3"/>
+    <Footer x:Margin="0.36" x:Data="Page &amp;P of &amp;N"/>
+    <PageMargins x:Bottom="0.18" x:Left="0.28999999999999998" x:Right="0.2"
+     x:Top="0.24"/>
+   </PageSetup>
+   <FitToPage/>
+   <Print>
+    <FitHeight>0</FitHeight>
+    <ValidPrinterInfo/>
+    <PaperSizeIndex>9</PaperSizeIndex>
+    <Scale>63</Scale>
+    <HorizontalResolution>600</HorizontalResolution>
+    <VerticalResolution>600</VerticalResolution>
+   </Print>
+   <Zoom>85</Zoom>
+   <Selected/>
+   <FreezePanes/>
+   <FrozenNoSplit/>
+   <SplitHorizontal>5</SplitHorizontal>
+   <TopRowBottomPane>81</TopRowBottomPane>
+   <SplitVertical>2</SplitVertical>
+   <LeftColumnRightPane>2</LeftColumnRightPane>
+   <ActivePane>0</ActivePane>
+   <Panes>
+    <Pane>
+     <Number>3</Number>
+    </Pane>
+    <Pane>
+     <Number>1</Number>
+    </Pane>
+    <Pane>
+     <Number>2</Number>
+     <ActiveRow>3</ActiveRow>
+    </Pane>
+    <Pane>
+     <Number>0</Number>
+     <ActiveRow>114</ActiveRow>
+     <ActiveCol>6</ActiveCol>
+    </Pane>
+   </Panes>
+   <ProtectObjects>False</ProtectObjects>
+   <ProtectScenarios>False</ProtectScenarios>
+  </WorksheetOptions>
+  <PageBreaks xmlns="urn:schemas-microsoft-com:office:excel">
+   <RowBreaks>
+    <RowBreak>
+     <Row>32</Row>
+    </RowBreak>
+    <RowBreak>
+     <Row>52</Row>
+    </RowBreak>
+    <RowBreak>
+     <Row>87</Row>
+    </RowBreak>
+   </RowBreaks>
+  </PageBreaks>
+ </Worksheet>
+</Workbook>
