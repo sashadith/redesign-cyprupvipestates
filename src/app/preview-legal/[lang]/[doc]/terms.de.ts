@@ -173,7 +173,7 @@ export const TERMS_DE: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "Diese Bedingungen werden in Englisch, Deutsch, Polnisch und Russisch veröffentlicht. Die Übersetzungen dienen Ihrer Bequemlichkeit; weichen die Fassungen inhaltlich voneinander ab, gilt die englische Fassung.",
+          text: "Diese Bedingungen werden in Englisch, Deutsch, Polnisch, Russisch und Hebräisch veröffentlicht. Die Übersetzungen dienen Ihrer Bequemlichkeit; weichen die Fassungen inhaltlich voneinander ab, gilt die englische Fassung.",
         },
       ],
     },
