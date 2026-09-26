@@ -252,6 +252,12 @@ const NOT_A_NAME = new Set([
   "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december",
   "jan", "feb", "mar", "apr", "jun", "jul", "aug", "sep", "sept", "oct", "nov", "dec",
   "q1", "q2", "q3", "q4", "quarter", "phase", "block", "floor", "unit", "units", "plot", "type", "only", "from", "just", "over", "around", "about", "some", "the", "a", "an",
+  // A dwelling label before a unit number ("Apartment 103", "Villa 7") is a
+  // figure the way "Unit 5" is — the model translates the label and the
+  // number then stands alone as a digit (staging 2026-09-26, carina: "דירה 103").
+  "apartment", "apartments", "villa", "villas", "house", "houses", "flat", "flats", "penthouse", "penthouses", "maisonette", "maisonettes",
+  "townhouse", "townhouses", "bungalow", "bungalows", "building", "buildings", "plots", "blocks", "floors", "phases", "level", "levels", "stage", "stages",
+  "no", "number", "room", "rooms", "suite", "suites",
 ]);
 
 /** Latin proper names that carry a digit ("Abiete 2", "Agnades Village 1") in
@@ -293,6 +299,18 @@ export function staleFiguresIn(strings: string[]): string[] {
 
 export const FIGURE_REMOVED = "[figure removed]";
 
+const SMALL_COUNT_WORDS = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
+
+/** "3-bedroom villas" → "three-bedroom villas". A small structural count
+ *  (bedrooms, bathrooms, floors) is not a stale figure, yet the no-digit rule
+ *  used to strip it to "[figure removed]-bedroom" — an invitation the model
+ *  accepted by writing "3 חדרי שינה" back (staging 2026-09-26, oasis-villas,
+ *  failed twice). Spelled out, it falls under the rule that a number the
+ *  English writes in words stays a word in Hebrew (שלושה חדרי שינה). */
+export function spellOutSmallCounts(s: string): string {
+  return s.replace(/\b([1-9]|10)([- ])(bed(?:room)?s?|bathrooms?|floors?|storeys?|stories)\b/gi, (_m, n: string, sep: string, noun: string) => `${SMALL_COUNT_WORDS[Number(n)]}${sep}${noun}`);
+}
+
 /** The English payload with every stale figure replaced by FIGURE_REMOVED —
  *  what Pass A actually sees for a development description. Naming the
  *  figures ("these are stale, drop them") was not enough: the model kept
@@ -301,6 +319,10 @@ export const FIGURE_REMOVED = "[figure removed]";
 export function promptPayloadFor(input: HeTranslateInput): { payload: HeTranslatePayload; removed: string[] } {
   const payload = payloadFor(input);
   if (input.kind !== "developmentDescription") return { payload, removed: [] };
+  for (const k of Object.keys(payload) as (keyof HeTranslatePayload)[]) {
+    const v = payload[k];
+    if (typeof v === "string") (payload as any)[k] = spellOutSmallCounts(v);
+  }
   const strings = outputStrings(payload).map(([, v]) => v);
   const removed = staleFiguresIn(strings).sort((a, b) => b.length - a.length); // longest first: "77.5 m²" before "77.5"
   if (!removed.length) return { payload, removed };
@@ -358,7 +380,7 @@ function passAPrompt(input: HeTranslateInput, corrections: string[]): string {
     JSON.stringify(promptPayload, null, 2),
     "```",
     "",
-    "Return ONLY a JSON object with EXACTLY the same keys and the same structure, with the Hebrew values in place of the English ones. No prose before or after it, no markdown fences around anything else.",
+    "Return ONLY a JSON object with EXACTLY the same keys and the same structure, with the Hebrew values in place of the English ones. No prose before or after it, no markdown fences around anything else. A straight double quote inside a Hebrew value (נדל\"ן, אונסק\"ו) must be escaped as \\\" so the JSON stays valid.",
   ];
   if (corrections.length) {
     parts.push(
@@ -450,7 +472,13 @@ export function parseJsonReply(raw: string): Record<string, unknown> {
   const start = cleaned.indexOf("{");
   const end = cleaned.lastIndexOf("}");
   if (start === -1 || end <= start) throw new Error("model reply contained no JSON object");
-  const parsed = JSON.parse(escapeControlCharsInStrings(cleaned.slice(start, end + 1)));
+  // The house style writes Hebrew acronyms with a straight double quote
+  // (נדל"ן, אונסק"ו) and the model types it into the JSON unescaped, which
+  // ends the string literal mid-word ("Expected ',' or '}' after property
+  // value", staging 2026-09-26, serenity-court). A quote with a Hebrew
+  // letter on both sides can never be a real string boundary, so escape it.
+  const body = cleaned.slice(start, end + 1).replace(/([\u05D0-\u05EA])"([\u05D0-\u05EA])/g, '$1\\"$2');
+  const parsed = JSON.parse(escapeControlCharsInStrings(body));
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error("model reply was not a JSON object");
   return parsed as Record<string, unknown>;
 }
