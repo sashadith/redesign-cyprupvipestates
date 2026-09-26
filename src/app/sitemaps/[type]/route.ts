@@ -413,7 +413,7 @@ async function generateDevelopmentsSitemap(): Promise<SitemapPage[]> {
 
   const developments = await prisma.development.findMany({
     where: { publishStatus: "published", slug: { not: null } },
-    select: { slug: true, updatedAt: true, gallery: true },
+    select: { slug: true, updatedAt: true, gallery: true, override: { select: { updatedAt: true } } },
   });
 
   const pages: SitemapPage[] = [];
@@ -427,13 +427,22 @@ async function generateDevelopmentsSitemap(): Promise<SitemapPage[]> {
 
     const gallery = Array.isArray(dev.gallery) ? (dev.gallery as unknown as string[]) : [];
 
+    // The page's actual content (descriptionEN/DE/PL/RU, promoBlocks*, etc.) lives in
+    // DevelopmentOverride, saved independently of Development — a content-only edit never
+    // touches Development.updatedAt (which instead tracks the nightly feed/Drive sync). Use
+    // whichever row changed more recently, so a content edit with no new sync (or vice versa)
+    // is still reflected. A Development might not have an override row yet (null-safe).
+    const devUpdatedAt = dev.updatedAt?.getTime() ?? 0;
+    const overrideUpdatedAt = dev.override?.updatedAt?.getTime() ?? 0;
+    const lastmodDate = overrideUpdatedAt > devUpdatedAt ? dev.override!.updatedAt : dev.updatedAt;
+
     for (const lang of langs) {
       const prefix = localePrefix(lang);
       pages.push({
         route: `${prefix}/projects/${dev.slug}`,
         changefreq: "weekly",
         priority: 0.6,
-        lastmod: dev.updatedAt?.toISOString(),
+        lastmod: lastmodDate?.toISOString(),
         alternates,
         image: gallery[0],
       });
