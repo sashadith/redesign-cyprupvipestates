@@ -611,20 +611,27 @@ check("fix 2: a skipped project logs ok=false on its plus-incomplete key, only i
 check("fix 2: …and nothing else logs a plus-incomplete row outside the loop",
   (src.match(/logCronRun\(`plus-incomplete:/g) ?? []).length, 3);
 
-/* ── route, account ───────────────────────────────────────────────────────
-   R10: no cron-health check here — the JOBS entry in
-   src/lib/actionCenter/rules/system.ts is added together with the crontab
-   entry, on the operator's word, not in this task. See the route's own
-   header comment. */
+/* ── route, account, cron health ──────────────────────────────────────────
+   R10: the cron-health JOBS entry landed 2026-09-26, the day plus-sync got
+   its `30 2 * * *` crontab entry (installed by the operator after deploy). */
 const route = readFileSync("src/app/api/cron/plus-sync/route.ts", "utf8");
+const system = readFileSync("src/lib/actionCenter/rules/system.ts", "utf8");
+const jobsSrc = system.slice(system.indexOf("const JOBS"), system.indexOf("];", system.indexOf("const JOBS")));
+check("cron health watches plus-sync daily",
+  /\{ job: "plus-sync", label: "plus-sync", expectedMs: 24 \* HOUR \},/.test(jobsSrc), true);
+check("…right after cybarco-sync, with its dated comment",
+  /\{ job: "cybarco-sync", label: "cybarco-sync", expectedMs: 24 \* HOUR \},\n  \/\/ 2026-09-26 [^\n]*plus-sync[^\n]*`30 2 \* \* \*`[\s\S]*?\n  \{ job: "plus-sync"/.test(jobsSrc), true);
+check("…and only once", (jobsSrc.match(/job: "plus-sync"/g) ?? []).length, 1);
+check("the route no longer says the JOBS entry is still to come",
+  /JOBS entry[\s\S]{0,200}is in place/.test(route.slice(0, route.indexOf("import "))) && !/Adding it now/.test(route), true);
 check("route refuses without the cron secret", /key !== process\.env\.CRON_SECRET/.test(route) && /status: 401/.test(route), true);
 check("route reads force and dryRun, nothing invented", [/searchParams\.get\("force"\) === "1"/.test(route), /searchParams\.get\("dryRun"\) === "1"/.test(route)], [true, true]);
 check("route finds the account by its slug", /where: \{ slug: PLUS_ACCOUNT_SLUG \}/.test(route), true);
 check("F4b: the route summarises with summarizePlusRun", (route.match(/summarizePlusRun\b/g) ?? []).length >= 3 && !/function summarize\(/.test(route), true);
 check("a dry run is not logged as a sync", /opts\.dryRun|dryRun \?/.test(route), true);
-/* Fix (review of 0896fdd4): a thrown error is the only failure signal this
-   route has until the cron-health JOBS entry lands (R10), so the catch block
-   must notify like cybarco-sync's does, not just return a bare 500. */
+/* Fix (review of 0896fdd4): cron health only sees that a run happened, not
+   why it threw, so the catch block must notify like cybarco-sync's does, not
+   just return a bare 500. */
 const catchAt = route.indexOf("} catch (e) {");
 const catchSrc = route.slice(catchAt);
 check("the catch block notifies on a thrown error, like a failed run",

@@ -51,6 +51,11 @@ const JOBS: { job: string; label: string; expectedMs: number }[] = [
   // have no feed, no Drive and no developer contact, so a dead cron shows up
   // nowhere except as Developments quietly going stale behind a published page.
   { job: "cybarco-sync", label: "cybarco-sync", expectedMs: 24 * HOUR },
+  // 2026-09-26 — added the day plus-sync got its `30 2 * * *` crontab entry,
+  // same convention as cybarco-sync above. Watches whether the nightly Plus
+  // Properties sync (Excel price lists + website pages into 35 drafts) FIRED AT
+  // ALL; a run that fires but fails is reported by the route itself.
+  { job: "plus-sync", label: "plus-sync", expectedMs: 24 * HOUR },
 ];
 
 // 2026-08-11 (analytics bot-traffic incident) — two exact user-agent strings

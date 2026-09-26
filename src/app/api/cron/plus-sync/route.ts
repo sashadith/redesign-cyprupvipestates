@@ -6,10 +6,8 @@
 // Invented parameters are ignored — only these two are read.
 //
 // The cron-health JOBS entry ("plus-sync") in src/lib/actionCenter/rules/system.ts
-// is added together with the crontab entry, once the operator installs it —
-// same convention as kuutio-sync and cybarco-sync there. Adding it now would
-// have systemRules() raise an URGENT "hasn't run recently" item with no
-// cron_run_logs row to satisfy it yet.
+// is in place (2026-09-26), added together with the crontab entry above —
+// same convention as kuutio-sync and cybarco-sync there.
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { syncPlusProperties, summarizePlusRun, PLUS_ACCOUNT_SLUG } from "@/lib/plusPropertiesSync";
