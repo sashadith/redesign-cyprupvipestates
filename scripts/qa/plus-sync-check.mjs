@@ -121,5 +121,47 @@ check("hand-set photos survive", withKept.photos, ["/x.webp"]);
 check("…but the sheet owns price, status and areas", [withKept.price, withKept.status, withKept.areaBuilt], [350000, "available", "78"]);
 check("nulls are not carried", "plans" in withKept, false);
 
+/* ── the writer's wiring ──────────────────────────────────────────────────
+   The writer talks to Drive and the database, so its guarantees are checked
+   on the source; the decisions it delegates are tested above. */
+const src = readFileSync("src/lib/plusPropertiesSync.ts", "utf8");
+check("writer exported", typeof S.syncPlusProperties, "function");
+check("gather finishes before any write: the verdict gates the write loop",
+  src.indexOf("runVerdict({ attempted") < src.indexOf("prisma.development.create"), true);
+check("each project is isolated in its own try/catch",
+  /for \(const g of gathered\) \{\s*try \{/.test(src), true);
+check("a blocked project logs ok=false", /logCronRun\(`plus-incomplete:\$\{g\.key\}`, false,/.test(src), true);
+check("a clean project logs ok=true on the same key", /logCronRun\(`plus-incomplete:\$\{g\.key\}`, true,/.test(src), true);
+check("published projects are frozen", /published \? freezeForPublished\(row, existing\) : row/.test(src), true);
+check("drafts are rewritten, published units are unlisted not deleted",
+  /deleteMany\(\{ where: \{ developmentId: dev\.id, source: "feed" \} \}\)/.test(src) && /data: \{ status: "unlisted" \}/.test(src), true);
+check("sold stays sold when it leaves the list", /r\.status !== "sold" && r\.status !== "unlisted"/.test(src), true);
+check("media is skipped when its signature is unchanged", /existing\?\.driveImagesModified !== media\.sig/.test(src), true);
+/* Read the project row literal itself: the dry run legitimately SELECTS slugs
+   to warn about clashes, so a whole-file grep for "slug:" would be wrong. */
+const rowStart = src.indexOf("const row: Record<string, unknown> = {");
+const rowSrc = src.slice(rowStart, src.indexOf("};", rowStart));
+check("the project row is where the check looks", rowStart > 0 && /feedKey/.test(rowSrc), true);
+check("the connector never writes category or slug", /\b(category|slug)\b/.test(rowSrc), false);
+check("…nor anything in DevelopmentOverride", /developmentOverride\./.test(src), false);
+check("a dry run returns before the first write", src.indexOf("if (opts.dryRun)") < src.indexOf("prisma.development.create"), true);
+check("derived state recomputed after units", /recomputeDevelopmentDerivedState\(dev\.id\)/.test(src), true);
+check("the sync window is always released", /finally \{\s*release\(\);/.test(src), true);
+/* R8: one bad image or plan must not fail the project, and a run that lost
+   any media file must not advance the signature, or the file is never retried. */
+check("a failed media file is counted, not thrown (images and plans)",
+  (src.match(/catch \{ mediaFailed\+\+;/g) ?? []).length >= 2, true);
+check("the media signature advances only when no file failed",
+  /mediaFailed === 0 \? \{ driveImagesModified: media\.sig \}/.test(src), true);
+check("…and nowhere else", (src.match(/driveImagesModified: media\.sig/g) ?? []).length, 1);
+/* R9: derived state does not recompute priceFrom/priceTo, so they follow the
+   units write — never the row, never a blocked or PDF-only project. */
+check("the project row carries no price", /\bprice(From|To)\b/.test(rowSrc), false);
+const blockedAt = src.indexOf("if (decision.blocked)");
+const priceAt = src.indexOf("priceFrom");
+check("the price range is written only in the units branch, after the blocked check",
+  blockedAt > 0 && priceAt > blockedAt && priceAt < src.indexOf("logCronRun(`plus-incomplete:${g.key}`, true,"), true);
+check("…and cleared when nothing is available", /priceFrom: prices\.length \? Math\.min\(\.\.\.prices\) : null/.test(src), true);
+
 console.log(failures ? `\n${failures} failed` : "\nall passed");
 process.exit(failures ? 1 : 0);

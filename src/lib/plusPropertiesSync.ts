@@ -1,6 +1,11 @@
 import { parse as parseHtml } from "node-html-parser";
 import { countableFeedUnits, completenessVerdict } from "./feedSync";
-import { cleanNumber, type PlusUnit } from "./plusProperties";
+import { prisma } from "./prisma";
+import { getAccessToken, listFolder, collectMedia, downloadFile, type DriveFile } from "./googleDrive";
+import { storeUploadedImage, pdfPagesToJpegs, devKeyFor, beginSyncWindow, scheduleAppRestart } from "./imageMirror";
+import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
+import { logCronRun } from "./cronLog";
+import { cleanNumber, parsePriceList, type PlusProject, type PlusUnit } from "./plusProperties";
 
 /* Plus Properties sync. Spec:
    docs/superpowers/specs/2026-09-25-plus-properties-connector-design.md.
@@ -169,4 +174,245 @@ export function unitRow(u: PlusUnit, developmentId: string, index: number, kept?
     areaVeranda: str(u.areaVeranda), areaVerandaOpen: str(u.areaVerandaOpen), areaPlot: str(u.areaPlot),
     attrs, sortIndex: index,
   };
+}
+
+/* The feed-sync freeze, restated here like Cybarco does: content an admin has
+   curated stays put once a project is published; location only once set.
+   Units and prices always sync. */
+const FROZEN_WHEN_PUBLISHED = ["publicName", "description", "amenities", "gallery", "plans"] as const;
+const FROZEN_WHEN_PUBLISHED_IF_SET = ["district", "town", "latitude", "longitude"] as const;
+
+function freezeForPublished(data: Record<string, unknown>, existing: Record<string, unknown>): Record<string, unknown> {
+  const out = { ...data };
+  for (const k of FROZEN_WHEN_PUBLISHED) delete out[k];
+  for (const k of FROZEN_WHEN_PUBLISHED_IF_SET) if (existing[k] != null && existing[k] !== "") delete out[k];
+  return out;
+}
+
+export type PlusPlanRow = {
+  key: string; publicName: string; source: "xml" | "pdf-only"; exists: boolean; published: boolean;
+  units: { available: number; reserved: number; sold: number };
+  images: number; plans: number; coords: boolean; facts: number;
+  slug: string; slugTaken: boolean; blocked: string | null; notes: string[];
+};
+
+export type PlusRunResult = {
+  ok: boolean; reason: string | null; dryRun: boolean;
+  projects: number; created: number; units: number;
+  failed: string[]; blocked: string[]; notes: string[]; plan: PlusPlanRow[];
+};
+
+type Gathered = {
+  key: string; source: "xml" | "pdf-only"; project: PlusProject | null; mediaFolder: string | null;
+  coords: { lat: number; lng: number } | null; details: { facts: string[]; energy: string | null } | null;
+};
+
+const FOLDER_MIME = "application/vnd.google-apps.folder";
+
+async function resolvedUrl(url: string): Promise<string | null> {
+  try { const r = await fetch(url, { redirect: "follow", cache: "no-store" }); return r.url || null; } catch { return null; }
+}
+
+async function mediaFolders(token: string): Promise<Map<string, string>> {
+  const out = new Map<string, string>();
+  for (const city of (await listFolder(PLUS_PROJECTS_FOLDER, token)).filter((f) => f.mimeType === FOLDER_MIME)) {
+    for (const p of (await listFolder(city.id, token)).filter((f) => f.mimeType === FOLDER_MIME)) {
+      const key = projectKey(p.name);
+      if (key && !out.has(key)) out.set(key, p.id);
+    }
+  }
+  return out;
+}
+
+export async function syncPlusProperties(accountId: string, opts: { force?: boolean; dryRun?: boolean } = {}): Promise<PlusRunResult> {
+  const acct = await prisma.developerAccount.findUnique({ where: { id: accountId }, select: { id: true, name: true } });
+  if (!acct) throw new Error(`Plus Properties: no DeveloperAccount ${accountId}`);
+  const result: PlusRunResult = { ok: true, reason: null, dryRun: !!opts.dryRun, projects: 0, created: 0, units: 0, failed: [], blocked: [], notes: [], plan: [] };
+  const release = beginSyncWindow("plus-sync");
+  let anyNewMedia = false;
+  try {
+    /* ── gather everything first; nothing below this block writes ── */
+    const token = await getAccessToken();
+    let attempted = 0, failedReq = 0;
+    const tryDrive = async <T>(fn: () => Promise<T>): Promise<T | null> => {
+      attempted++;
+      try { return await fn(); } catch { failedReq++; return null; }
+    };
+    /* Newest first: if the developer drops a new version beside the old one,
+       the newest file is the list and the older one is reported, not synced. */
+    const xmlFiles = ((await tryDrive(() => listFolder(PLUS_XML_FOLDER, token))) ?? [])
+      .filter((f: DriveFile) => /\.xml$/i.test(f.name))
+      .sort((a: DriveFile, b: DriveFile) => String(b.modifiedTime).localeCompare(String(a.modifiedTime)));
+    const pdfFiles = ((await tryDrive(() => listFolder(PLUS_PDF_FOLDER, token))) ?? []).filter((f: DriveFile) => /\.pdf$/i.test(f.name));
+    const folders = (await tryDrive(() => mediaFolders(token))) ?? new Map<string, string>();
+    const gathered: Gathered[] = [];
+    const xmlKeys = new Set<string>();
+    for (const f of xmlFiles) {
+      const key = projectKey(f.name);
+      if (!key) { result.notes.push(`ignored price list without a project number: ${f.name}`); continue; }
+      if (xmlKeys.has(key)) { result.notes.push(`older price list for ${publicNameFor(key)} ignored: ${f.name}`); continue; }
+      xmlKeys.add(key);
+      const bytes = await tryDrive(() => downloadFile(f.id, token));
+      let project: PlusProject | null = null;
+      if (bytes) {
+        try { project = await parsePriceList(bytes.toString("utf8")); }
+        catch (e) { result.failed.push(`${key}: ${e instanceof Error ? e.message : String(e)}`); continue; }
+      }
+      gathered.push({ key, source: "xml", project, mediaFolder: folders.get(key) ?? null, coords: null, details: null });
+    }
+    /* PDF-only projects (Plus 4, 29, 72 on 2026-09-25) become presentation
+       pages without units — the spec's "all 35 projects exist as drafts". */
+    for (const f of pdfFiles) {
+      const key = projectKey(f.name);
+      if (!key || xmlKeys.has(key) || gathered.some((g) => g.key === key)) continue;
+      gathered.push({ key, source: "pdf-only", project: null, mediaFolder: folders.get(key) ?? null, coords: null, details: null });
+    }
+    for (const g of gathered) {
+      if (g.project?.mapsUrl) g.coords = coordsFromMapsUrl(await resolvedUrl(g.project.mapsUrl));
+      if (g.project?.websiteUrl) {
+        try { g.details = projectDetails(await (await fetch(g.project.websiteUrl, { redirect: "follow", cache: "no-store" })).text()); }
+        catch { g.details = null; }
+      }
+    }
+    const verdict = runVerdict({ attempted, failed: failedReq });
+    if (!verdict.ok) return { ...result, ok: false, reason: verdict.reason };
+
+    /* ── the plan, and in a dry run the whole answer ── */
+    const existingRows = await prisma.development.findMany({
+      where: { feedKey: { in: gathered.map((g) => feedKeyFor(g.key)) } },
+      select: { id: true, feedKey: true, publishStatus: true, driveImagesModified: true, district: true, town: true, latitude: true, longitude: true },
+    });
+    const byFeedKey = new Map(existingRows.map((r) => [r.feedKey, r] as const));
+    const slugs = gathered.map((g) => slugCandidate(publicNameFor(g.key)));
+    const [takenDev, takenLegacy] = await Promise.all([
+      prisma.development.findMany({ where: { slug: { in: slugs } }, select: { slug: true, feedKey: true } }),
+      prisma.project.findMany({ where: { slug: { in: slugs } }, select: { slug: true } }),
+    ]);
+    for (const g of gathered) {
+      const existing = byFeedKey.get(feedKeyFor(g.key));
+      const slug = slugCandidate(publicNameFor(g.key));
+      const units = g.project?.units ?? [];
+      const count = (s: string) => units.filter((u) => u.status === s).length;
+      const media = g.mediaFolder && opts.dryRun ? await tryDrive(() => collectMedia(g.mediaFolder!, token, { maxDepth: 4 })) : null;
+      result.plan.push({
+        key: g.key, publicName: publicNameFor(g.key), source: g.source, exists: !!existing,
+        published: existing?.publishStatus === "published",
+        units: { available: count("available"), reserved: count("reserved"), sold: count("sold") },
+        images: media?.images.length ?? 0, plans: media?.plans.length ?? 0,
+        coords: !!g.coords, facts: g.details?.facts.length ?? 0,
+        slug, slugTaken: takenDev.some((t) => t.slug === slug && t.feedKey !== feedKeyFor(g.key)) || takenLegacy.some((t) => t.slug === slug),
+        blocked: null, notes: g.project?.notes ?? [],
+      });
+    }
+    if (opts.dryRun) return { ...result, projects: gathered.length };
+
+    /* ── write, one project at a time; a failure costs only that project ── */
+    for (const g of gathered) {
+      try {
+        const feedKey = feedKeyFor(g.key);
+        const existing = byFeedKey.get(feedKey) ?? null;
+        const published = existing?.publishStatus === "published";
+        const devKey = devKeyFor(feedKey);
+        const media = g.mediaFolder ? await collectMedia(g.mediaFolder, token, { maxDepth: 4 }) : null;
+        let gallery: string[] | null = null, plans: string[] | null = null;
+        /* One bad image or plan costs that file, not the project. Any failure
+           leaves the media signature where it was, so the next run retries. */
+        let mediaFailed = 0;
+        if (media && (opts.force || existing?.driveImagesModified !== media.sig)) {
+          gallery = [];
+          for (const img of media.images) {
+            try {
+              const url = await storeUploadedImage(await downloadFile(img.id, token), devKey);
+              if (url) gallery.push(url); else mediaFailed++;
+            } catch { mediaFailed++; }
+          }
+          const imagesFailed = mediaFailed;
+          plans = [];
+          for (const p of media.plans) {
+            try {
+              const buf = await downloadFile(p.id, token);
+              const pages = p.mimeType === "application/pdf" ? await pdfPagesToJpegs(buf, 60) : [buf];
+              let storedPages = 0;
+              for (const page of pages) { const url = await storeUploadedImage(page, devKey); if (url) { plans.push(url); storedPages++; } }
+              if (pages.length === 0 || storedPages < pages.length) mediaFailed++;
+            } catch { mediaFailed++; }
+          }
+          /* A list where every file failed keeps what the row already has
+             rather than being overwritten with nothing. */
+          if (!gallery.length && imagesFailed) gallery = null;
+          if (!plans.length && mediaFailed > imagesFailed) plans = null;
+          if (mediaFailed) result.notes.push(`${g.key}: ${mediaFailed} media file(s) failed — will retry next run`);
+          anyNewMedia = anyNewMedia || (gallery?.length ?? 0) + (plans?.length ?? 0) > 0;
+        }
+        const { town, district } = splitLocation(g.project?.location ?? null);
+        const units = g.project?.units ?? [];
+        const row: Record<string, unknown> = {
+          developerAccountId: acct.id, dev: PLUS_DEV, feedProjectId: g.key, feedKey,
+          developerName: g.project?.title ?? publicNameFor(g.key), publicName: publicNameFor(g.key), developer: acct.name,
+          currency: "EUR", syncedAt: new Date(),
+          ...(town ? { town } : {}), ...(district ? { district } : {}),
+          ...(g.project?.stage ? { stage: g.project.stage, status: g.project.stage } : {}),
+          ...(g.coords ? { latitude: g.coords.lat, longitude: g.coords.lng } : {}),
+          ...detailFields(g.details),
+          ...(gallery ? { gallery } : {}), ...(plans ? { plans } : {}),
+          ...(media && gallery && mediaFailed === 0 ? { driveImagesModified: media.sig } : {}),
+        };
+        const dev = existing
+          ? await prisma.development.update({ where: { feedKey }, data: (published ? freezeForPublished(row, existing) : row) as never })
+          : await prisma.development.create({ data: { ...row, publishStatus: "draft" } as never });
+        if (!existing) result.created++;
+        result.projects++;
+
+        if (g.project) {
+          const stored = await prisma.developmentUnit.findMany({
+            where: { developmentId: dev.id, source: "feed" },
+            select: { id: true, ref: true, status: true, type: true, unitNumber: true, guestWc: true, orientation: true, amenities: true, photos: true, plans: true },
+          });
+          const decision = unitsDecision({ published, stored, fresh: units });
+          if (decision.blocked) {
+            result.blocked.push(`${g.key}: ${decision.message}`);
+            await logCronRun(`plus-incomplete:${g.key}`, false, decision.message ?? undefined);
+          } else {
+            const keep = new Map(stored.filter((r) => r.ref).map((r) => [r.ref as string, r as unknown as Record<string, unknown> & { id: string }] as const));
+            if (!published) {
+              await prisma.developmentUnit.deleteMany({ where: { developmentId: dev.id, source: "feed" } });
+              if (units.length) await prisma.developmentUnit.createMany({ data: units.map((u, i) => unitRow(u, dev.id, i, keep.get(u.ref))) as never });
+            } else {
+              const fresh = new Set(units.map((u) => u.ref));
+              for (let i = 0; i < units.length; i++) {
+                const hit = keep.get(units[i].ref);
+                const data = unitRow(units[i], dev.id, i, hit) as never;
+                if (hit) await prisma.developmentUnit.update({ where: { id: hit.id }, data });
+                else await prisma.developmentUnit.create({ data });
+              }
+              for (const r of stored) {
+                if (r.ref && !fresh.has(r.ref) && r.status !== "sold" && r.status !== "unlisted") {
+                  await prisma.developmentUnit.update({ where: { id: r.id }, data: { status: "unlisted" } });
+                }
+              }
+            }
+            /* The price range follows the units just written; derived state
+               does not recompute it. None available clears it, so a sold-out
+               project shows no stale "from" price. */
+            const prices = units.filter((u) => u.status === "available" && u.price != null).map((u) => u.price as number);
+            await prisma.development.update({
+              where: { id: dev.id },
+              data: { priceFrom: prices.length ? Math.min(...prices) : null, priceTo: prices.length ? Math.max(...prices) : null },
+            });
+            result.units += units.length;
+            await logCronRun(`plus-incomplete:${g.key}`, true, `price list complete — ${units.length} unit(s)`);
+          }
+        }
+        await recomputeDevelopmentDerivedState(dev.id);
+      } catch (e) {
+        result.failed.push(`${g.key}: ${e instanceof Error ? e.message : String(e)}`);
+      }
+    }
+    /* "Last synced" on the developer admin page, as for Cybarco. */
+    await prisma.developerAccount.update({ where: { id: acct.id }, data: { driveSyncedAt: new Date() } });
+    return result;
+  } finally {
+    release();
+    if (anyNewMedia && !opts.dryRun) scheduleAppRestart();
+  }
 }
