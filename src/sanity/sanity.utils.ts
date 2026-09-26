@@ -7,7 +7,7 @@ import { cache } from "react";
 import { draftMode } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { dereferenceAssets, refToLocalUrl } from "@/lib/sanityRefs";
-import { localizedHref, isLocale, PUBLIC_LOCALES, nonDefaultLocalePattern, localePrefix, DEFAULT_LOCALE } from "@/lib/locale";
+import { localizedHref, isLocale, PUBLIC_LOCALES, localePrefix, DEFAULT_LOCALE } from "@/lib/locale";
 import { loadBlurMap } from "@/lib/blur";
 import { completionSortKey } from "@/lib/completionDate";
 import { resolveDevelopmentPrice, resolveBedRange, resolveBuildAreaRange, resolveDevelopmentLocation, resolveDevelopmentType, matchesPropertyTypeFilter, toCardDistances, districtWithParent, resolveRelativeCompletion } from "@/lib/developmentCard";
@@ -30,7 +30,6 @@ import { FaqPage } from "@/types/faq";
 
 type AnyRow = Record<string, any>;
 const D = <T>(v: T): T => dereferenceAssets(v);
-const L = nonDefaultLocalePattern();
 
 // Draft Preview: when an admin has enabled Next.js Draft Mode (preview cookie), detail
 // getters include unpublished content; otherwise only PUBLISHED. Safe at build time
@@ -192,52 +191,38 @@ async function resolveProjectRefs(refs: any[], lang: string) {
   const mapped = await mapProjectRowsToLang(ordered, lang);
 
   // A ref can still point at an ARCHIVED legacy project (superseded by a
-  // Development) — its own detail page 308-redirects to the canonical
-  // /projects/{devSlug}, so a card built from the stale slug sends every
-  // visitor/crawler through an avoidable extra hop. Confirmed live via a
-  // full-site link crawl (2026-07-18): 21 legacy slugs × 4 locales appeared
-  // this way across "similar/featured projects" widgets on ~1/3 of all
-  // crawled pages. Batch-resolve the real target here, once, at the shared
-  // resolution point every one of those widgets reads from.
-  const redirects = await prisma.legacyProjectRedirect.findMany({
-    where: { projectId: { in: mapped.map((p) => p.id) } },
-    select: { projectId: true, targetPath: true },
-  });
-  const targetSlugById = new Map(
-    redirects
-      .map((r) => [r.projectId, r.targetPath.match(/\/projects\/([^/?#]+)/)?.[1]] as const)
-      .filter((entry): entry is [string, string] => !!entry[1])
-  );
-
-  // Not every legacy project was superseded by another project: 74 rows redirect
-  // to a DEVELOPER overview instead (the AGG/BBF/Olias/Aristo/Inex/Island Blue
-  // imports, whose individual listings were folded into the developer page). The
-  // slug rewrite above can't express that — its regex only reads a /projects/
-  // segment — so those cards kept the stale project slug and sent visitors
-  // through a 308 to the developer page. Measured 2026-09-03: 225 pinned cards
-  // across 68 published pages. Carry the redirect's own path instead, stripped
-  // of origin and locale prefix so the card can be re-localized at render time
-  // (a de card must not link at an /en path just because the redirect row was
-  // written for en).
-  const hrefPathById = new Map(
-    redirects
-      .filter((r) => !/\/projects\/[^/?#]+/.test(r.targetPath))
-      .map((r) => {
-        const path = r.targetPath.replace(/^https?:\/\/[^/]+/, "");
-        return [r.projectId, path.replace(new RegExp(`^/(?:en|${L})(?=/)`), "")] as const;
+  // Development). Resolve it via the authoritative supersededByDevelopmentId
+  // foreign key straight to that Development's OWN live, published slug —
+  // NOT by regex-parsing LegacyProjectRedirect.targetPath for a "/projects/
+  // <slug>" match (the previous approach here). That field is free text for
+  // the ARCHIVED PROJECT'S OWN page redirect, meant to send a visitor
+  // arriving at the old URL somewhere sensible — which is often a
+  // /developers/<slug> archive page when there's no 1:1 successor, so the
+  // regex silently failed and fell back to the row's own stale slug. Same
+  // bug, same fix as getThreeProjectsBySameCity's "same city" widget above.
+  // A row with no confirmed still-published successor has no current page to
+  // send a visitor to and is dropped, same "don't guess, drop it" rule
+  // developmentAlternatives.ts already uses.
+  const archivedSuccessorIds = mapped
+    .filter((p) => p.status === "ARCHIVED")
+    .map((p) => p.supersededByDevelopmentId)
+    .filter((id): id is string => !!id);
+  const successors = archivedSuccessorIds.length
+    ? await prisma.development.findMany({
+        where: { id: { in: archivedSuccessorIds }, publishStatus: "published" },
+        select: { id: true, slug: true },
       })
-      .filter((entry): entry is [string, string] => entry[1].startsWith("/"))
-  );
+    : [];
+  const successorSlugById = new Map(successors.filter((d) => !!d.slug).map((d) => [d.id, d.slug as string]));
 
-  return mapped.map((p) => {
-    const canonicalSlug = targetSlugById.get(p.id);
-    const hrefPath = hrefPathById.get(p.id);
-    return projectCardString({
-      ...p,
-      ...(canonicalSlug ? { slug: canonicalSlug } : null),
-      ...(hrefPath ? { hrefPath } : null),
-    });
-  });
+  return mapped
+    .map((p) => {
+      if (p.status !== "ARCHIVED") return projectCardString(p);
+      const canonicalSlug = p.supersededByDevelopmentId && successorSlugById.get(p.supersededByDevelopmentId);
+      if (!canonicalSlug) return null;
+      return projectCardString({ ...p, slug: canonicalSlug });
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry != null);
 }
 
 // Compute filteredProjects for projectsSection/landingProjects blocks.
