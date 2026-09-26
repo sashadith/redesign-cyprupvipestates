@@ -206,13 +206,27 @@ export function sameList(fresh: string[] | null, stored: unknown): boolean {
    media" cannot rest on the signature alone: after a partial media failure it
    is deliberately left unadvanced (null), while the gallery and plans that did
    mirror are stored. A new project with nothing stored has nothing to lose. */
+const isNonEmptyList = (v: unknown) => Array.isArray(v) && v.length > 0;
+
 export function keepStoredMediaOnEmptyListing(input: {
   images: unknown[]; plans: unknown[];
   storedSig: string | null | undefined; storedGallery: unknown; storedPlans: unknown;
 }): boolean {
   if (input.images.length || input.plans.length) return false;
-  const nonEmpty = (v: unknown) => Array.isArray(v) && v.length > 0;
-  return !!input.storedSig || nonEmpty(input.storedGallery) || nonEmpty(input.storedPlans);
+  return !!input.storedSig || isNonEmptyList(input.storedGallery) || isNonEmptyList(input.storedPlans);
+}
+
+/* The same hiccup, one list at a time: listFolder answers per subfolder, so
+   the images can come back [] while the plans list fine (or the reverse).
+   An empty fresh list over a non-empty stored one keeps the stored one, and
+   the signature is held so the next run retries; the other list is written
+   normally. */
+export function partialMediaListing(input: {
+  images: unknown[]; plans: unknown[]; storedGallery: unknown; storedPlans: unknown;
+}): { keepGallery: boolean; keepPlans: boolean; holdSig: boolean } {
+  const keepGallery = !input.images.length && isNonEmptyList(input.storedGallery);
+  const keepPlans = !input.plans.length && isNonEmptyList(input.storedPlans);
+  return { keepGallery, keepPlans, holdSig: keepGallery || keepPlans };
 }
 
 /* Stored Plus projects without a price list this run.
@@ -447,7 +461,9 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
           media = null;
         }
         let gallery: string[] | null = null, plans: string[] | null = null;
+        let holdSig = false;
         if (media && (opts.force || existing?.driveImagesModified !== media.sig)) {
+          const partial = partialMediaListing({ images: media.images, plans: media.plans, storedGallery: existing?.gallery, storedPlans: existing?.plans });
           gallery = [];
           for (const img of media.images) {
             try {
@@ -470,6 +486,9 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
              rather than being overwritten with nothing. */
           if (!gallery.length && imagesFailed) gallery = null;
           if (!plans.length && mediaFailed > imagesFailed) plans = null;
+          if (partial.keepGallery) { gallery = null; result.notes.push(`${g.key}: no images listed this run — kept the stored gallery`); }
+          if (partial.keepPlans) { plans = null; result.notes.push(`${g.key}: no plans listed this run — kept the stored plans`); }
+          holdSig = partial.holdSig;
           if (mediaFailed) result.notes.push(`${g.key}: ${mediaFailed} media file(s) failed — will retry next run`);
           anyNewMedia = anyNewMedia || !sameList(gallery, existing?.gallery) || !sameList(plans, existing?.plans);
         }
@@ -484,7 +503,7 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
           ...(g.coords ? { latitude: g.coords.lat, longitude: g.coords.lng } : {}),
           ...detailFields(g.details),
           ...(gallery ? { gallery } : {}), ...(plans ? { plans } : {}),
-          ...(media && gallery && mediaFailed === 0 ? { driveImagesModified: media.sig } : {}),
+          ...(media && gallery && mediaFailed === 0 && !holdSig ? { driveImagesModified: media.sig } : {}),
         };
         const dev = existing
           ? await prisma.development.update({ where: { feedKey }, data: (published ? freezeForPublished(row, existing) : row) as never })

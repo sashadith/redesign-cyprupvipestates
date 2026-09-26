@@ -167,6 +167,24 @@ check("a listing with images is never overridden",
 check("…nor one with plans only",
   keepMedia({ images: [], plans: [{ id: "p" }], storedSig: null, storedGallery: ["/a.webp"], storedPlans: null }), false);
 
+/* Follow-up A: listFolder turns an HTTP error into [] per SUBFOLDER, so one
+   list can come back empty while the other lists fine. Per list: an empty
+   fresh list over a non-empty stored one keeps the stored one, and the
+   signature is held so the next run retries. */
+const partial = S.partialMediaListing ?? (() => "helper not exported");
+check("no images listed, a stored gallery: keep the gallery, hold the signature",
+  partial({ images: [], plans: [{ id: "p" }], storedGallery: ["/a.webp"], storedPlans: ["/p.webp"] }), { keepGallery: true, keepPlans: false, holdSig: true });
+check("no plans listed, stored plans: keep the plans, hold the signature",
+  partial({ images: [{ id: "i" }], plans: [], storedGallery: ["/a.webp"], storedPlans: ["/p.webp"] }), { keepGallery: false, keepPlans: true, holdSig: true });
+check("both lists listed: written normally",
+  partial({ images: [{ id: "i" }], plans: [{ id: "p" }], storedGallery: ["/a.webp"], storedPlans: ["/p.webp"] }), { keepGallery: false, keepPlans: false, holdSig: false });
+check("nothing stored: written normally, whatever is empty",
+  [partial({ images: [], plans: [{ id: "p" }], storedGallery: null, storedPlans: null }),
+   partial({ images: [{ id: "i" }], plans: [], storedGallery: [], storedPlans: undefined })],
+  [{ keepGallery: false, keepPlans: false, holdSig: false }, { keepGallery: false, keepPlans: false, holdSig: false }]);
+check("a stored value that is not a list is not kept",
+  partial({ images: [], plans: [], storedGallery: {}, storedPlans: "x" }), { keepGallery: false, keepPlans: false, holdSig: false });
+
 /* M6 + open fix 2: a stored project whose price list is gone this run. A
    project that already has feed units got them from a price list; if it now
    has only a PDF (or nothing), re-gathering it as "pdf-only" would freeze its
@@ -235,8 +253,8 @@ check("the sync window is always released", /finally \{\s*release\(\);/.test(src
    any media file must not advance the signature, or the file is never retried. */
 check("a failed media file is counted, not thrown (images and plans)",
   (src.match(/catch \{ mediaFailed\+\+;/g) ?? []).length >= 2, true);
-check("the media signature advances only when no file failed",
-  /mediaFailed === 0 \? \{ driveImagesModified: media\.sig \}/.test(src), true);
+check("the media signature advances only when no file failed and no list was kept (follow-up A)",
+  /mediaFailed === 0 && !holdSig \? \{ driveImagesModified: media\.sig \}/.test(src), true);
 check("…and nowhere else", (src.match(/driveImagesModified: media\.sig/g) ?? []).length, 1);
 /* R9: derived state does not recompute priceFrom/priceTo, so they follow the
    units write — never the row, never a blocked or PDF-only project. */
@@ -316,6 +334,23 @@ check("open fix 1: the signature alone no longer gates the guard",
   /!media\.plans\.length && existing\?\.driveImagesModified\)/.test(src), false);
 check("open fix 1: the guard runs before gallery/plans are decided",
   src.indexOf("keepStoredMediaOnEmptyListing({") > 0 && src.indexOf("keepStoredMediaOnEmptyListing({") < src.indexOf("let gallery: string[] | null = null"), true);
+/* Follow-up A: the writer asks partialMediaListing inside the mirroring
+   branch, keeps each list it says to keep with a note, and holds the sig. */
+const mirrorAt = src.indexOf("if (media && (opts.force || existing?.driveImagesModified !== media.sig)) {");
+const partialAt = src.search(/const partial = partialMediaListing\(\{ images: media\.images, plans: media\.plans, storedGallery: existing\?\.gallery, storedPlans: existing\?\.plans \}\);/);
+const allFailedAt = src.indexOf("if (!plans.length && mediaFailed > imagesFailed) plans = null;");
+const keepGalleryAt = src.search(/if \(partial\.keepGallery\) \{ gallery = null; result\.notes\.push\(`\$\{g\.key\}: no images listed this run — kept the stored gallery`\); \}/);
+const keepPlansAt = src.search(/if \(partial\.keepPlans\) \{ plans = null; result\.notes\.push\(`\$\{g\.key\}: no plans listed this run — kept the stored plans`\); \}/);
+const holdAt = src.indexOf("holdSig = partial.holdSig;");
+const restartAt = src.indexOf("anyNewMedia = anyNewMedia ||");
+check("follow-up A: the writer asks partialMediaListing inside the mirroring branch",
+  mirrorAt > 0 && partialAt > mirrorAt && partialAt < src.indexOf("gallery = [];", mirrorAt), true);
+check("follow-up A: …keeps the stored gallery with a note, after the all-failed rule",
+  keepGalleryAt > allFailedAt && keepGalleryAt < restartAt, true);
+check("follow-up A: …keeps the stored plans with a note, after the all-failed rule",
+  keepPlansAt > allFailedAt && keepPlansAt < restartAt, true);
+check("follow-up A: …and holds the signature before the row is built",
+  holdAt > allFailedAt && holdAt < src.indexOf("const row: Record<string, unknown> = {") && /let holdSig = false;/.test(src), true);
 /* M2: a draft's units are replaced atomically. */
 check("M2: delete and create run in one transaction",
   /await prisma\.\$transaction\(\[\s*prisma\.developmentUnit\.deleteMany\(\{ where: \{ developmentId: dev\.id, source: "feed" \} \}\),\s*\.\.\.\(writable\.length \? \[prisma\.developmentUnit\.createMany\(/.test(src), true);
