@@ -1404,24 +1404,48 @@ export async function getThreeProjectsBySameCity(lang: string, city: string, exc
 
   // Same fix as resolveProjectRefs/getProjectsByDeveloper above: no `status`
   // filter here means an ARCHIVED (superseded-by-Development) row can still
-  // surface in this "same city" widget, sending its card link through a 308
-  // to the Development's page. Use the redirect target slug instead.
-  const redirects = await prisma.legacyProjectRedirect.findMany({
-    where: { projectId: { in: rows.map((r) => r.id) } },
-    select: { projectId: true, targetPath: true },
-  });
-  const targetSlugById = new Map(
-    redirects
-      .map((r) => [r.projectId, r.targetPath.match(/\/projects\/([^/?#]+)/)?.[1]] as const)
-      .filter((entry): entry is [string, string] => !!entry[1])
-  );
+  // surface in this "same city" widget. Resolve it via the authoritative
+  // supersededByDevelopmentId foreign key straight to that Development's OWN
+  // live slug — NOT via LegacyProjectRedirect.targetPath (the previous
+  // approach, found wrong 2026-09-26 auditing 8 stale slider links). That
+  // field is free text for the ARCHIVED PROJECT'S OWN page redirect, meant to
+  // send a visitor arriving at the old URL somewhere sensible — which is
+  // often a /developers/<slug> archive page when there's no 1:1 successor,
+  // or (one confirmed row, seaview-heights-villas-cybarco) a bare path
+  // missing the /projects/ segment entirely. Regex-parsing it here as if it
+  // always encoded "the current project slug" produced exactly the
+  // stale/wrong links this fixes: most audited cases pointed at a developer
+  // page the regex couldn't parse and silently fell back to the row's own
+  // retired slug. A row with no confirmed successor Development has no
+  // current project page to send a visitor to and is dropped — same
+  // "don't guess, drop it" rule the alternatives funnel uses elsewhere
+  // (developmentAlternatives.ts: fewer than MIN_ALTERNATIVES → return []
+  // rather than show a weak/wrong suggestion).
+  const archivedSuccessorIds = rows
+    .filter((p) => p.status === "ARCHIVED")
+    .map((p) => p.supersededByDevelopmentId)
+    .filter((id): id is string => !!id);
+  const successors = archivedSuccessorIds.length
+    ? await prisma.development.findMany({
+        where: { id: { in: archivedSuccessorIds }, publishStatus: "published" },
+        select: { id: true, slug: true },
+      })
+    : [];
+  const successorSlugById = new Map(successors.filter((d) => !!d.slug).map((d) => [d.id, d.slug as string]));
 
-  const list = rows.filter((p) => p.previewImage).map((p) => {
-    const canonicalSlug = targetSlugById.get(p.id) ?? p.slug;
-    return D({
-      _id: p.sanityId, title: p.title, slug: { current: canonicalSlug }, previewImage: D(p.previewImage), keyFeatures: p.keyFeatures,
-    });
-  });
+  const list = rows
+    .filter((p) => p.previewImage)
+    .map((p) => {
+      const canonicalSlug =
+        p.status === "ARCHIVED"
+          ? (p.supersededByDevelopmentId && successorSlugById.get(p.supersededByDevelopmentId)) || null
+          : p.slug;
+      if (!canonicalSlug) return null;
+      return D({
+        _id: p.sanityId, title: p.title, slug: { current: canonicalSlug }, previewImage: D(p.previewImage), keyFeatures: p.keyFeatures,
+      });
+    })
+    .filter((entry): entry is NonNullable<typeof entry> => entry != null);
   return list.sort(() => Math.random() - 0.5).slice(0, 3);
 }
 
