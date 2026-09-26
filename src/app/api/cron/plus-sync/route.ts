@@ -52,6 +52,16 @@ export async function GET(req: NextRequest) {
     }
     return NextResponse.json({ at: new Date().toISOString(), ...result });
   } catch (e) {
-    return NextResponse.json({ ok: false, error: e instanceof Error ? e.message : String(e) }, { status: 500 });
+    const message = e instanceof Error ? e.message : String(e);
+    // Mirrors cybarco-sync's catch: a thrown error is the only failure signal
+    // this route has until the plus-sync cron-health JOBS entry lands (R10),
+    // so it must notify like any other failed run — skipped for a dry run,
+    // which was never a monitored sync in the first place.
+    if (!opts.dryRun && (await shouldNotifyFailureStreak("plus-sync"))) {
+      const msg = buildCronFailureMessage("plus-sync", message);
+      await sendFeedNotification(msg.text, msg.subject);
+      await markFailureStreakNotified("plus-sync");
+    }
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }

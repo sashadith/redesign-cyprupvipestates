@@ -210,6 +210,13 @@ check("route refuses without the cron secret", /key !== process\.env\.CRON_SECRE
 check("route reads force and dryRun, nothing invented", [/searchParams\.get\("force"\) === "1"/.test(route), /searchParams\.get\("dryRun"\) === "1"/.test(route)], [true, true]);
 check("route finds the account by its slug", /where: \{ slug: PLUS_ACCOUNT_SLUG \}/.test(route), true);
 check("a dry run is not logged as a sync", /opts\.dryRun|dryRun \?/.test(route), true);
+/* Fix (review of 0896fdd4): a thrown error is the only failure signal this
+   route has until the cron-health JOBS entry lands (R10), so the catch block
+   must notify like cybarco-sync's does, not just return a bare 500. */
+const catchAt = route.indexOf("} catch (e) {");
+const catchSrc = route.slice(catchAt);
+check("the catch block notifies on a thrown error, like a failed run",
+  catchAt > 0 && /shouldNotifyFailureStreak\("plus-sync"\)/.test(catchSrc) && /sendFeedNotification\(/.test(catchSrc), true);
 const setup = readFileSync("scripts/setup-plus-properties-account.mjs", "utf8");
 check("account setup is idempotent", /upsert\(/.test(setup), true);
 check("…and keeps the generic Drive sync away from it", /driveSyncInterval: "off"/.test(setup) && !/driveFolderUrl:/.test(setup), true);
