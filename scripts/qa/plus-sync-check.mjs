@@ -146,6 +146,27 @@ check("sameList: a different length is a change", S.sameList(["/a"], ["/a", "/b"
 check("sameList: nothing stored yet is a change", [S.sameList(["/a"], null), S.sameList(["/a"], undefined)], [false, false]);
 check("sameList: an empty or unwritten fresh list is never a change", [S.sameList([], ["/a"]), S.sameList(null, ["/a"])], [true, true]);
 
+/* Open fix 1: an empty media listing (listFolder turns an HTTP error into [])
+   must never wipe stored media. The signature alone cannot say "this project
+   has media": after a partial media failure it is deliberately left null. */
+const keepMedia = S.keepStoredMediaOnEmptyListing ?? (() => "helper not exported");
+check("empty listing, no signature, a stored gallery: keep",
+  keepMedia({ images: [], plans: [], storedSig: null, storedGallery: ["/a.webp"], storedPlans: null }), true);
+check("empty listing, no signature, stored plans only: keep",
+  keepMedia({ images: [], plans: [], storedSig: null, storedGallery: [], storedPlans: ["/p.webp"] }), true);
+check("empty listing, a stored signature alone: keep (the case the guard always covered)",
+  keepMedia({ images: [], plans: [], storedSig: "sig", storedGallery: null, storedPlans: null }), true);
+check("empty listing, nothing stored: do not keep (a new, empty project writes nothing harmful)",
+  [keepMedia({ images: [], plans: [], storedSig: null, storedGallery: null, storedPlans: null }),
+   keepMedia({ images: [], plans: [], storedSig: undefined, storedGallery: undefined, storedPlans: undefined }),
+   keepMedia({ images: [], plans: [], storedSig: "", storedGallery: [], storedPlans: [] })], [false, false, false]);
+check("a stored value that is not a list is not stored media",
+  keepMedia({ images: [], plans: [], storedSig: null, storedGallery: {}, storedPlans: "x" }), false);
+check("a listing with images is never overridden",
+  keepMedia({ images: [{ id: "i" }], plans: [], storedSig: "sig", storedGallery: ["/a.webp"], storedPlans: ["/p.webp"] }), false);
+check("…nor one with plans only",
+  keepMedia({ images: [], plans: [{ id: "p" }], storedSig: null, storedGallery: ["/a.webp"], storedPlans: null }), false);
+
 /* M6: a project that vanished from the folder is reported, never touched. */
 check("a stored project absent from the folder is reported",
   S.absentProjectNotes(["33", "57", "87"], new Set(["33", "87"])), ["57: no price list in the folder this run — left as it is"]);
@@ -266,8 +287,12 @@ check("M1: the write loop takes a fresh token per project",
   writeAt > 0 && src.indexOf("const projectToken = await getAccessToken();") > writeAt, true);
 check("M1: …and uses it for the listing and every download",
   [/collectMedia\(g\.mediaFolder!, projectToken,/.test(src), (src.match(/downloadFile\(\w+\.id, projectToken\)/g) ?? []).length], [true, 2]);
-check("M1: an empty listing keeps the stored media and says so",
-  /if \(media && !media\.images\.length && !media\.plans\.length && existing\?\.driveImagesModified\) \{\s*result\.notes\.push\(`\$\{g\.key\}: media listing came back empty — kept the stored media`\);\s*media = null;/.test(src), true);
+check("M1: an empty listing keeps the stored media and says so (open fix 1: via keepStoredMediaOnEmptyListing)",
+  /if \(media && keepStoredMediaOnEmptyListing\(\{\s*images: media\.images, plans: media\.plans,\s*storedSig: existing\?\.driveImagesModified, storedGallery: existing\?\.gallery, storedPlans: existing\?\.plans,?\s*\}\)\) \{\s*result\.notes\.push\(`\$\{g\.key\}: media listing came back empty — kept the stored media`\);\s*media = null;/.test(src), true);
+check("open fix 1: the signature alone no longer gates the guard",
+  /!media\.plans\.length && existing\?\.driveImagesModified\)/.test(src), false);
+check("open fix 1: the guard runs before gallery/plans are decided",
+  src.indexOf("keepStoredMediaOnEmptyListing({") > 0 && src.indexOf("keepStoredMediaOnEmptyListing({") < src.indexOf("let gallery: string[] | null = null"), true);
 /* M2: a draft's units are replaced atomically. */
 check("M2: delete and create run in one transaction",
   /await prisma\.\$transaction\(\[\s*prisma\.developmentUnit\.deleteMany\(\{ where: \{ developmentId: dev\.id, source: "feed" \} \}\),\s*\.\.\.\(writable\.length \? \[prisma\.developmentUnit\.createMany\(/.test(src), true);

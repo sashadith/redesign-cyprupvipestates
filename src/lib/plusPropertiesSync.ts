@@ -200,6 +200,21 @@ export function sameList(fresh: string[] | null, stored: unknown): boolean {
   return fresh.length === s.length && fresh.every((url, i) => url === s[i]);
 }
 
+/* Whether an empty media listing must be ignored. listFolder turns an HTTP
+   error into [], so an empty listing of a project that already has media is
+   far likelier a Drive hiccup than a developer deleting everything. "Has
+   media" cannot rest on the signature alone: after a partial media failure it
+   is deliberately left unadvanced (null), while the gallery and plans that did
+   mirror are stored. A new project with nothing stored has nothing to lose. */
+export function keepStoredMediaOnEmptyListing(input: {
+  images: unknown[]; plans: unknown[];
+  storedSig: string | null | undefined; storedGallery: unknown; storedPlans: unknown;
+}): boolean {
+  if (input.images.length || input.plans.length) return false;
+  const nonEmpty = (v: unknown) => Array.isArray(v) && v.length > 0;
+  return !!input.storedSig || nonEmpty(input.storedGallery) || nonEmpty(input.storedPlans);
+}
+
 /* Stored Plus projects this run's folders say nothing about. They are left
    exactly as they are; the note is the only trace. */
 export function absentProjectNotes(storedKeys: string[], seen: Set<string>): string[] {
@@ -387,7 +402,10 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
         }
         /* An empty listing of a folder that had media is far likelier a Drive
            hiccup than a developer deleting everything: never overwrite with it. */
-        if (media && !media.images.length && !media.plans.length && existing?.driveImagesModified) {
+        if (media && keepStoredMediaOnEmptyListing({
+          images: media.images, plans: media.plans,
+          storedSig: existing?.driveImagesModified, storedGallery: existing?.gallery, storedPlans: existing?.plans,
+        })) {
           result.notes.push(`${g.key}: media listing came back empty — kept the stored media`);
           media = null;
         }
