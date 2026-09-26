@@ -76,7 +76,7 @@ export const TERMS_PL: LegalDoc = {
       { kind: "p", text: "Nie mamy obowiązku uczestniczyć w postępowaniu przed podmiotem pozasądowego rozwiązywania sporów konsumenckich i obecnie w nim nie uczestniczymy. Nie ogranicza to Twojego prawa do wniesienia sprawy do właściwego sądu." },
     ]},
     { id: "language", title: "12. Wersje językowe", blocks: [
-      { kind: "p", text: "Niniejsze warunki publikujemy w językach angielskim, niemieckim, polskim i rosyjskim. Tłumaczenia mają charakter pomocniczy; w razie rozbieżności znaczeniowej rozstrzyga wersja angielska." },
+      { kind: "p", text: "Niniejsze warunki publikujemy w językach angielskim, niemieckim, polskim, rosyjskim i hebrajskim. Tłumaczenia mają charakter pomocniczy; w razie rozbieżności znaczeniowej rozstrzyga wersja angielska." },
     ]},
     { id: "jurisdiction", title: "13. Prawo właściwe i jurysdykcja", blocks: [
       { kind: "p", text: "Zastosowanie ma prawo Republiki Cypryjskiej. Wyłącznym miejscem jurysdykcji dla wszystkich sporów jest Pafos na Cyprze." },

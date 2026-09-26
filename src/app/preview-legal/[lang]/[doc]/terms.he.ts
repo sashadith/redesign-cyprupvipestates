@@ -6,7 +6,7 @@ import { bidiIsolate, ltrIsolate } from "@/lib/locale";
    Source is terms.en.ts, section for section: the same thirteen section ids,
    the same block kinds in the same order, the same number of paragraphs and
    list items. Section 12 mirrors the English list of published language
-   versions exactly (four); Hebrew is added to all five files together at
+   versions exactly (five since the 2026-09-26 launch); Hebrew was added to all five files together at
    launch, never here first - a translation must not be the first place a
    fact about the product changes (Pass B M4, docs/i18n/reviews/c-legal.md).
 
@@ -201,7 +201,7 @@ export const TERMS_HE: LegalDoc = {
       blocks: [
         {
           kind: "p",
-          text: "תנאים אלה מתפרסמים באנגלית, בגרמנית, בפולנית וברוסית. התרגומים ניתנים לנוחותכם, ובמקרה של הבדל במשמעות בין הנוסחים, הנוסח האנגלי הוא המחייב.",
+          text: "תנאים אלה מתפרסמים באנגלית, בגרמנית, בפולנית, ברוסית ובעברית. התרגומים ניתנים לנוחותכם, ובמקרה של הבדל במשמעות בין הנוסחים, הנוסח האנגלי הוא המחייב.",
         },
       ],
     },
