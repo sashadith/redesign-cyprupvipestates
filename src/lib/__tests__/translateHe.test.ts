@@ -14,6 +14,7 @@ import {
   parseJsonReply,
   promptFactsFor,
   promptPayloadFor,
+  spellOutSmallCounts,
   staleFiguresIn,
   translateHe,
   type AnthropicLike,
@@ -464,4 +465,26 @@ test("developer-profile payload lists seo before the long portable text", async 
   await translateHe({ kind: "developerProfile", en: { slug: "x", title: "X", seo: { metaTitle: "T", metaDescription: "D" }, excerpt: "An excerpt.", portableText: [] } }, { client });
   const payload = prompts[0].split("English payload (JSON):")[1];
   assert.ok(payload.indexOf('"seo"') < payload.indexOf('"portableText"'));
+});
+
+// Staging 2026-09-26, the two rows the re-enqueue still lost: a "3-bedroom"
+// count stripped to "[figure removed]-bedroom" that the model filled back in
+// with a digit, and an acronym's straight quote (אונסק"ו — house style, not a
+// gershayim) ending the JSON string mid-word.
+test("spellOutSmallCounts turns small structural counts into words and leaves real figures alone", () => {
+  assert.equal(spellOutSmallCounts("These 3-bedroom villas have 2 bathrooms over 2 floors."), "These three-bedroom villas have two bathrooms over two floors.");
+  assert.equal(spellOutSmallCounts("A 12-bedroom hotel of 212.4 m² from €310,000, 3 minutes away."), "A 12-bedroom hotel of 212.4 m² from €310,000, 3 minutes away.");
+  assert.equal(spellOutSmallCounts("10 Bedrooms"), "ten Bedrooms");
+});
+
+test("promptPayloadFor spells out a bedroom count instead of stripping it, and still strips the stale figures", () => {
+  const { payload, removed } = promptPayloadFor({ kind: "developmentDescription", en: { text: "These 3-bedroom villas measure 212.4 m². Prices from €310,000." } });
+  assert.equal(payload.text, `These three-bedroom villas measure ${"[figure removed]"}. Prices from ${"[figure removed]"}.`);
+  assert.deepEqual(removed.sort(), ["212.4 m²", "€310,000"].sort());
+});
+
+test("parseJsonReply repairs an unescaped straight quote inside a Hebrew acronym, keeps an escaped one", () => {
+  assert.deepEqual(parseJsonReply('{"text":"פסיפסי אונסק"ו וסלע אפרודיטה.","seo":"נדל"ן בפאפוס"}'), { text: 'פסיפסי אונסק"ו וסלע אפרודיטה.', seo: 'נדל"ן בפאפוס' });
+  assert.deepEqual(parseJsonReply('{"text":"שוק הנדל\\"ן"}'), { text: 'שוק הנדל"ן' });
+  assert.deepEqual(parseJsonReply('{"a":"שלום","b":"עולם"}'), { a: "שלום", b: "עולם" });
 });
