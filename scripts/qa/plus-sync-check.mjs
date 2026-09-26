@@ -200,5 +200,19 @@ check("published projects skip media mirroring unless forced",
 check("every fetch has a 20 s timeout",
   [(src.match(/\bfetch\(/g) ?? []).length, (src.match(/signal: AbortSignal\.timeout\(20000\)/g) ?? []).length], [2, 2]);
 
+/* ── route, account ───────────────────────────────────────────────────────
+   R10: no cron-health check here — the JOBS entry in
+   src/lib/actionCenter/rules/system.ts is added together with the crontab
+   entry, on the operator's word, not in this task. See the route's own
+   header comment. */
+const route = readFileSync("src/app/api/cron/plus-sync/route.ts", "utf8");
+check("route refuses without the cron secret", /key !== process\.env\.CRON_SECRET/.test(route) && /status: 401/.test(route), true);
+check("route reads force and dryRun, nothing invented", [/searchParams\.get\("force"\) === "1"/.test(route), /searchParams\.get\("dryRun"\) === "1"/.test(route)], [true, true]);
+check("route finds the account by its slug", /where: \{ slug: PLUS_ACCOUNT_SLUG \}/.test(route), true);
+check("a dry run is not logged as a sync", /opts\.dryRun|dryRun \?/.test(route), true);
+const setup = readFileSync("scripts/setup-plus-properties-account.mjs", "utf8");
+check("account setup is idempotent", /upsert\(/.test(setup), true);
+check("…and keeps the generic Drive sync away from it", /driveSyncInterval: "off"/.test(setup) && !/driveFolderUrl:/.test(setup), true);
+
 console.log(failures ? `\n${failures} failed` : "\nall passed");
 process.exit(failures ? 1 : 0);
