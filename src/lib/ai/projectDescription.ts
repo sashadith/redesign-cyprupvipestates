@@ -4,6 +4,28 @@ import { LOCALES } from "@/lib/locale";
 import { scriptLeaks, type LocaleText } from "./localeTextGuards";
 import { PROJECT_BRIEF } from "./projectBrief";
 import { heSystemBlock } from "./heContext";
+import { copyViolation } from "./copyRules";
+
+/* Whether any locale carries a figure. A digit inside the project's or the
+   developer's OWN NAME is not a figure: Plus Properties numbers every project
+   ("Plus 38", "Plus 67-68-69"), and a bare /\d/ test rejected every possible
+   sentence about them — "Rewrite with Claude" failed after its retry for all
+   35 Plus projects (2026-09-26). Same exception the SEO generator has had
+   since 2026-08-24 (copyRules.ts, allowedName): the names are stripped before
+   the digit test, never from the stored text. The prompt asks for the names
+   exactly as given, in Latin script, in every language, so the strip also
+   works for he and ru. */
+export function descriptionHasFigures(out: LocaleText, names: (string | undefined)[]): boolean {
+  const allowed = names.map((n) => (n ?? "").trim()).filter(Boolean);
+  return LOCALES.some((l) => {
+    // copyViolation strips one name per call — strip the others first.
+    let text = out[l];
+    for (let i = 1; i < allowed.length; i++) {
+      text = text.replace(new RegExp(allowed[i].replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "");
+    }
+    return copyViolation(text, { allowedName: allowed[0] }) === "digit";
+  });
+}
 
 /* Generate a fresh property description from ALL available data — location, area
    character, amenities, unit mix, developer source text. Five native languages.
@@ -73,7 +95,7 @@ Rules:
 - ~${words} words in EACH language.
 - Name the project and, where given, the developer where it reads naturally — do not force them into every sentence.
 - Use ONLY the data given; do not invent facts, figures or amenities.
-- NEVER write a digit. No unit counts, no prices, no completion dates or quarters, no square metres, no percentages. This description is SAVED and never regenerated, while the project's real numbers move with every feed sync — so a figure written here is wrong as soon as stock sells or a price changes. Nothing in the data gives you a figure to quote. Bedroom counts are the one thing you may name, and only spelled out as words ("two-bedroom", never "2-bedroom"), because that describes the homes themselves rather than what is currently for sale.
+- NEVER write a digit — the ONLY exception is a digit inside the project's or the developer's name as given above (e.g. "Plus 38"): write those names exactly as given, in Latin script, in every one of the five languages. No unit counts, no prices, no completion dates or quarters, no square metres, no percentages. This description is SAVED and never regenerated, while the project's real numbers move with every feed sync — so a figure written here is wrong as soon as stock sells or a price changes. Nothing in the data gives you a figure to quote. Bedroom counts are the one thing you may name, and only spelled out as words ("two-bedroom", never "2-bedroom"), because that describes the homes themselves rather than what is currently for sale.
 - Sophisticated, confident, understated. No clichés ("nestled", "hidden gem", "boasts", "oasis"), no marketing hype.
 - Vary sentence length and rhythm; write like a human editor, not a template. It must read as original and NOT machine-generated.
 - Structure the copy as 2–3 short paragraphs separated by a blank line (a real double newline "\n\n"). Suggested flow: location & setting · the development, units & amenities · interiors and who it suits.
@@ -88,7 +110,7 @@ Return via the description tool.` + tuningBlock({ emphasize: ctx.emphasize, avoi
   // Enforcement for the no-digit rule above — a prompt rule is a request, and
   // anything that slips through is stored permanently. Reuses the same
   // retry-once path as the language leak.
-  const hasDigits = (out: LocaleText) => LOCALES.some((l) => /\d/.test(out[l]));
+  const hasDigits = (out: LocaleText) => descriptionHasFigures(out, [ctx.publicName, ctx.developer]);
   const isClean = (out: LocaleText) => scriptLeaks(out).length === 0 && !hasDigits(out);
 
   // `correction` is only set on the retry — naming what went wrong beats sending
@@ -131,7 +153,7 @@ Return via the description tool.` + tuningBlock({ emphasize: ctx.emphasize, avoi
   const second = await attempt(
     [
       hasDigits(first)
-        ? "Your previous answer contained digits. Rewrite with no digit anywhere — and do not spell the figures out in words either; drop the fact instead."
+        ? "Your previous answer contained digits outside the project's and developer's names. Rewrite with no other digit anywhere — and do not spell the figures out in words either; drop the fact instead. Keep those names exactly as given, in Latin script, in every language."
         : "",
       scriptLeaks(first).length
         ? "Your previous answer leaked the wrong script into one or more fields. Each field must be 100% in its own target language and script (Hebrew for he, native script elsewhere)."
