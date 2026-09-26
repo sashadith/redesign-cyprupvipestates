@@ -199,14 +199,19 @@ check("Plus 63: 301's two uncovered columns are summed", u63["301"].areaVerandaO
 /* White means hidden even on an AVAILABLE unit. No real list has that case —
    every white price measured sits on a sold or reserved unit, where the status
    rule already drops it — so this one is a two-row workbook written here. */
-const oneUnit = (style) => `<?xml version="1.0"?>
+/* A one-sheet workbook written here: rows of cells, a cell is a string or
+   { v, s } with s a style — "w" white font, "k" black. */
+const workbook = (rows) => `<?xml version="1.0"?>
 <Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
  <Styles><Style ss:ID="w"><Font ss:Color="#FFFFFF"/></Style><Style ss:ID="k"><Font ss:Color="#000000"/></Style></Styles>
  <Worksheet ss:Name="T"><Table>
-  <Row><Cell><Data ss:Type="String">Unit</Data></Cell><Cell><Data ss:Type="String">Price €</Data></Cell><Cell><Data ss:Type="String">Availability</Data></Cell></Row>
-  <Row><Cell><Data ss:Type="String">101</Data></Cell><Cell ss:StyleID="${style}"><Data ss:Type="Number">300000</Data></Cell><Cell><Data ss:Type="String">Available</Data></Cell></Row>
+${rows.map((r) => `  <Row>${r.map((c) => {
+    const { v, s } = typeof c === "string" ? { v: c, s: null } : c;
+    return `<Cell${s ? ` ss:StyleID="${s}"` : ""}><Data ss:Type="String">${v}</Data></Cell>`;
+  }).join("")}</Row>`).join("\n")}
  </Table></Worksheet>
 </Workbook>`;
+const oneUnit = (style) => workbook([["Unit", "Price €", "Availability"], ["101", { v: "300000", s: style }, "Available"]]);
 check("a white price is hidden even on an available unit, a black one is read",
   [(await P.parsePriceList(oneUnit("w"))).units[0]?.price, (await P.parsePriceList(oneUnit("k"))).units[0]?.price], [null, 300000]);
 
@@ -240,7 +245,9 @@ check("Plus 75: C-Villa 1 price from 'Price €', not OLD", v["C-Villas Villa 1"
 /* D-Villa 1 is sold and only its OLD price (370,000) is filled. Reading OLD as
    a fallback would publish a stale price on a sold villa. */
 check("Plus 75: a sold villa with only an OLD price has no price", v["D-Villas Villa 1"].price, null);
-check("Plus 75: D-Villa 4's white price is not read", v["D-Villas Villa 4"].price, null);
+/* D-Villa 4 is sold with 335,000 in white. The status rule already drops it,
+   so this proves nothing about the white guard (oneUnit below does). */
+check("Plus 75: a sold villa with a hidden price has none", v["D-Villas Villa 4"].price, null);
 check("Plus 75: available D-villas", ["2", "6", "7"].map((n) => v[`D-Villas Villa ${n}`].price), [310000, 310000, 310000]);
 check("Plus 75: no villa floor is 'Villa N'", villas.every((u) => !/villa/i.test(u.floor ?? "")), true);
 /* An available apartment has both columns filled: "Price €/OLD" 220,000 and
@@ -266,6 +273,32 @@ check("Plus 59: shop interiors include the mezzanine", [u59["Shop 1"]?.areaBuilt
 check("Plus 59: a mezzanine is neither a unit nor a note",
   [p59.units.some((u) => /mezzanine/i.test(u.label)), p59.notes.some((n) => /mezzanine/i.test(n))], [false, false]);
 check("Plus 59: Shop 1 keeps its status and price", [u59["Shop 1"]?.status, u59["Shop 1"]?.price], ["available", 480000]);
+
+/* A villa whose opening row has no status is skipped — and so is its upper
+   storey. Without an explicit "open unit", the storey row finds the villa
+   before it and adds its bedrooms and bathrooms there. */
+const skipped = await P.parsePriceList(workbook([
+  ["Block", "Floor", "Unit", "Number of Bedrooms", "Number of Bathrooms", "Covered Internal Area (sqm)", "Price €", "Availability"],
+  ["D-Villas", "Villa 1", "Lower Floor", "", "1", "60", "", "Sold"],
+  ["", "", "Upper Floor", "2", "2", "50", "", ""],
+  ["", "Villa 2", "Lower Floor", "", "1", "55", "310000", ""],
+  ["", "", "Upper Floor", "2", "2", "51", "", ""],
+]));
+check("a skipped villa's upper storey does not land on the villa before it",
+  skipped.units.map((u) => [u.ref, u.beds, u.baths, u.areaBuilt]), [["D-Villas Villa 1", "2", "3", 110]]);
+check("…and the skip is reported", skipped.notes.some((n) => /Villa 2 has no status — skipped/.test(n)), true);
+
+/* House Kiti's only price is the footer "Price:". Written in white it is
+   hidden: the house is not read, and the project fails instead of publishing
+   a sold house as available at its hidden price. */
+const house = (style) => workbook([
+  ["Plot Area", "883 SQM"], ["Internal Area", "200 SQM"],
+  ["Price:", { v: "880000", s: style }], ["Project Status:", "Ready to move in"],
+]);
+threw = "";
+try { await P.parsePriceList(house("w")); } catch (e) { threw = e instanceof P.PlusParseError ? String(e.message) : `other: ${e}`; }
+check("a white house price is absent: the project fails loudly", /no unit table/.test(threw), true);
+check("…the same sheet with a black price is read", (await P.parsePriceList(house("k"))).units.map((u) => u.price), [880000]);
 
 console.log(failures ? `\n${failures} failed` : "\nall passed");
 process.exit(failures ? 1 : 0);

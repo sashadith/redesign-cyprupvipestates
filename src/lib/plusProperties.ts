@@ -212,12 +212,19 @@ const firstFilled = (r: Cell[]) => r.find((c) => c.value) ?? null;
 function readMeta(rows: Cell[][]) {
   const cells = rows.flat();
   const footer = new Map<string, string>();
+  const footerCell = new Map<string, Cell | null>();
   for (const r of rows) {
     const first = firstFilled(r);
     if (!first || !FOOTER_LABEL.test(first.value)) continue;
     const next = r.find((c) => c.col > first.col && (c.value || c.href));
-    footer.set(first.value.replace(/\s+/g, " ").trim().toLowerCase(), (next?.href || next?.value || "").trim());
+    const label = first.value.replace(/\s+/g, " ").trim().toLowerCase();
+    footer.set(label, (next?.href || next?.value || "").trim());
+    footerCell.set(label, next ?? null);
   }
+  /* House Kiti's only price is the footer "Price:". A white one is hidden,
+     exactly as in the table, and counts as absent — with no price the house is
+     not read and the project fails loudly instead of publishing it. */
+  const priceCell = footerCell.get("price:") ?? null;
   const version = cells.map((c) => c.value.match(/Version:\s*([\d.]+)/i)?.[1]).find(Boolean) ?? null;
   const listDate = cells.map((c) => c.value.match(/^(\d{4}-\d\d-\d\d)T/)?.[1]).find(Boolean) ?? null;
   return {
@@ -226,7 +233,7 @@ function readMeta(rows: Cell[][]) {
     location: footer.get("location:") || null,
     mapsUrl: footer.get("google maps:") || null,
     websiteUrl: footer.get("link on website:") || null,
-    price: cleanNumber(footer.get("price:") ?? null),
+    price: priceCell && priceCell.colour !== WHITE ? cleanNumber(priceCell.value) : null,
     vatExcluded: cells.some((c) => /do not include the vat|excluding vat|\+\s?vat/i.test(c.value)),
   };
 }
@@ -360,7 +367,15 @@ export async function parsePriceList(xml: string): Promise<PlusProject> {
   const units: PlusUnit[] = [];
   let block: string | null = null;
   let floor: string | null = null;
+  /* The unit a following row may continue (a villa's upper storey, a shop's
+     mezzanine). Set only by the row that pushes a unit and kept by a row that
+     continues it; every other row — blank, note, or a unit skipped for having
+     no status — closes it, so a continuation can never land on an earlier
+     unit. */
+  let open: PlusUnit | null = null;
   for (let i = start; i < rows.length; i++) {
+    const prev: PlusUnit | null = open;
+    open = null;
     const r = rows[i];
     const lead = firstFilled(r);
     if (!lead) continue;
@@ -387,12 +402,11 @@ export async function parsePriceList(xml: string): Promise<PlusProject> {
        name continues it. */
     if (unitVal && STOREY.test(unitVal)) {
       const villaName = val("floor");
-      const last = units[units.length - 1];
       if (villaName) {
         const statusRaw = val("status");
         if (!statusRaw) { notes.push(`villa ${villaName} has no status — skipped`); continue; }
         const status = parseStatus(statusRaw);
-        units.push({
+        open = {
           ref: block ? `${block} ${villaName}` : villaName, label: villaName, block, floor: null,
           beds: cleanBeds(val("beds")), baths: cleanBeds(val("baths")),
           parking: cleanText(val("parking")), storage: cleanText(val("storage")),
@@ -401,9 +415,11 @@ export async function parsePriceList(xml: string): Promise<PlusProject> {
           areaGarden: area("garden"), areaCommon: area("common"),
           areaTotal: area("total"), areaPlot: area("plot"),
           status, price: priceOf(cell("price"), status),
-        });
-      } else if (last && last.floor === null) {
-        addStorey(last, storey(last));
+        };
+        units.push(open);
+      } else if (prev) {
+        addStorey(prev, storey(prev));
+        open = prev;
       }
       continue;
     }
@@ -415,13 +431,12 @@ export async function parsePriceList(xml: string): Promise<PlusProject> {
       /* Plus 59: "Shop 1 Mezzanine", with no status, right after "Shop 1" is
          the shop's upper level, not a unit — its areas belong to the shop
          (the PDF's total of 188.75 counts both). */
-      const last = units[units.length - 1];
-      if (last && name.startsWith(`${last.label} `)) { addStorey(last, storey(last)); continue; }
+      if (prev && name.startsWith(`${prev.label} `)) { addStorey(prev, storey(prev)); open = prev; continue; }
       notes.push(`unit ${name} has no status — skipped`);
       continue;
     }
     const status = parseStatus(statusRaw);
-    units.push({
+    open = {
       ref: block ? `${block} ${name}` : name, label: name, block, floor,
       beds: cleanBeds(val("beds")), baths: cleanBeds(val("baths")),
       parking: cleanText(val("parking")), storage: cleanText(val("storage")),
@@ -430,7 +445,8 @@ export async function parsePriceList(xml: string): Promise<PlusProject> {
       areaGarden: area("garden"), areaCommon: area("common"),
       areaTotal: area("total"), areaPlot: area("plot"),
       status, price: priceOf(cell("price"), status),
-    });
+    };
+    units.push(open);
   }
   return { ...base, units, notes };
 }
