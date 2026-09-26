@@ -555,15 +555,29 @@ export async function saveUnits(developmentId: string, units: any[]) {
   // "becoming manual" happens only through the explicit toggle
   // (setDevelopmentSyncMode below). A brand-new unit (no prior row to match)
   // defaults to "manual" — it demonstrably didn't come from a sync. 2026-07-27.
-  const prev = await prisma.developmentUnit.findMany({ where: { developmentId }, select: { ref: true, label: true, photos: true, attrs: true, feedRef: true, source: true } });
-  const photoByKey = new Map<string, any>();
-  const attrsByKey = new Map<string, any>();
-  const feedRefByKey = new Map<string, string | null>();
-  const sourceByKey = new Map<string, string>();
+  //
+  // WHICH stored row a submitted unit continues: by its database id first (the
+  // editor loads every row with its id), and by label only when that label is
+  // unique in the project. Matching by label alone mixed up units whose labels
+  // repeat across buildings — Plus 70-71 has "101" in both Plus 70 and Plus 71,
+  // and one save gave all ten Plus 70 units Plus 71's feedRef (2026-09-26); the
+  // next sync would then have duplicated them on a published page. Same risk
+  // for Plus 67-68-69, Plus 75's villas and Plus 92's offices.
+  const prev = await prisma.developmentUnit.findMany({ where: { developmentId }, select: { id: true, ref: true, label: true, photos: true, plans: true, attrs: true, feedRef: true, source: true } });
+  type PrevUnit = (typeof prev)[number];
+  const prevById = new Map<string, PrevUnit>();
+  const byLabel = new Map<string, PrevUnit[]>();
   for (const u of prev) {
+    prevById.set(u.id, u);
     const k = (u.label || u.ref || "").trim().toLowerCase();
-    if (k) { photoByKey.set(k, u.photos); attrsByKey.set(k, u.attrs); feedRefByKey.set(k, u.feedRef); sourceByKey.set(k, u.source); }
+    if (k) byLabel.set(k, [...(byLabel.get(k) ?? []), u]);
   }
+  const prevFor = (u: any, key: string): PrevUnit | undefined => {
+    const byId = typeof u?.id === "string" ? prevById.get(u.id) : undefined;
+    if (byId) return byId;
+    const same = key ? byLabel.get(key) : undefined;
+    return same && same.length === 1 ? same[0] : undefined;
+  };
   // Every photo URL is mirrored before it's persisted (2026-08-04) — this is
   // the main unit-photo editing path (no separate "save photos" step), so
   // it's the one most likely to reintroduce an external URL. Already-local
@@ -576,7 +590,8 @@ export async function saveUnits(developmentId: string, units: any[]) {
   const rows = await Promise.all((units || []).map(async (u, i) => {
     const label = String(u.label ?? "").trim() || null;
     const key = (label || "").toLowerCase();
-    const rawPhotos = Array.isArray(u.photos) ? u.photos.map((x: any) => String(x).trim()).filter(Boolean) : photoByKey.get(key);
+    const before = prevFor(u, key);
+    const rawPhotos = Array.isArray(u.photos) ? u.photos.map((x: any) => String(x).trim()).filter(Boolean) : before?.photos;
     let photos = rawPhotos;
     if (devKey && Array.isArray(rawPhotos) && rawPhotos.length) {
       const r = await mirrorAny(rawPhotos, devKey);
@@ -612,13 +627,16 @@ export async function saveUnits(developmentId: string, units: any[]) {
       // the client is authoritative when it sends an array; only fall back to the
       // stored value for any caller that doesn't send photos at all. Mirrored above.
       photos: photos as any,
-      attrs: (attrsByKey.get(key) ?? null) as any,
+      attrs: (before?.attrs ?? null) as any,
+      // Feed-supplied floor plans are read-only in the editor and were dropped
+      // by this delete+recreate until 2026-09-26 — kept like attrs.
+      plans: (before?.plans ?? null) as any,
       // Never sourced from the form — feedRef has no editable field at all
       // (UnitDetail.tsx shows it read-only). Preserved by key exactly like
       // photos/attrs above, or this delete+recreate would blank it.
-      feedRef: feedRefByKey.get(key) ?? null,
+      feedRef: before?.feedRef ?? null,
       sortIndex: i,
-      source: sourceByKey.get(key) ?? "manual",
+      source: before?.source ?? "manual",
     };
   }));
   await prisma.developmentUnit.deleteMany({ where: { developmentId } });
