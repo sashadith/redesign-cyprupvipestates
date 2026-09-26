@@ -62,11 +62,20 @@ export function coordsFromMapsUrl(url: string | null): { lat: number; lng: numbe
 export function projectDetails(html: string): { facts: string[]; energy: string | null } {
   const root = parseHtml(html);
   const label = root.querySelectorAll("strong").find((s) => /project details/i.test(s.text));
-  let el = label?.parentNode?.nextElementSibling ?? null;
-  while (el && el.tagName !== "UL") el = el.nextElementSibling;
+  /* Most pages wrap the label in its own <p>, so the <ul> is the label's
+     PARENT's next sibling; some wrap nothing, so the <ul> follows the
+     <strong> directly. Try the direct sibling first. */
+  let el = label?.nextElementSibling ?? null;
+  if (!el || el.tagName !== "UL") {
+    el = label?.parentNode?.nextElementSibling ?? null;
+    while (el && el.tagName !== "UL") el = el.nextElementSibling;
+  }
   if (!el) return { facts: [], energy: null };
   const all = el.querySelectorAll("li").map((li) => li.text.replace(/\s+/g, " ").trim()).filter(Boolean);
-  const energyFact = all.find((f) => /energy/i.test(f)) ?? null;
+  /* "Solar Energy Panels" also matches /energy/i; only a fact that ALSO ends
+     in a class letter ("… Category: A") is the energy fact. Anything else
+     matching /energy/i stays a plain amenity. */
+  const energyFact = all.find((f) => /energy/i.test(f) && /:\s*[A-G]\+?\s*$/i.test(f)) ?? null;
   const energy = energyFact?.match(/:\s*([A-G]\+?)\s*$/i)?.[1]?.toUpperCase() ?? null;
   return { facts: all.filter((f) => f !== energyFact), energy };
 }
@@ -142,7 +151,7 @@ export function unitRow(u: PlusUnit, developmentId: string, index: number, kept?
   const attrs: { name: string; value: string }[] = [];
   const add = (name: string, v: string | number | null) => { if (v != null && v !== "") attrs.push({ name, value: String(v) }); };
   add("Parking", u.parking);
-  add("Storage rooms", u.storage);
+  add("Storage", u.storage);
   add("Roof terrace (m²)", u.areaRoof);
   add("Garden (m²)", u.areaGarden);
   add("Common area (m²)", u.areaCommon);

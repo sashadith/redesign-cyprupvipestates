@@ -67,6 +67,14 @@ check("…in order", [d.facts[0], d.facts[4]], ["Luxurious Design", "Common Swim
 check("energy class pulled out", d.energy, "A");
 check("…and not repeated as a fact", d.facts.some((f) => /energy/i.test(f)), false);
 check("a page without the block yields nothing", S.projectDetails("<html><body><p>Hello</p></body></html>"), { facts: [], energy: null });
+/* "Solar Energy Panels" also matches /energy/i but is not the class line;
+   only the fact ending in a letter grade is the energy fact. */
+const dSolar = S.projectDetails('<div><p><strong>Project Details:</strong></p><ul><li>Solar Energy Panels</li><li>Energy Efficiency Category: B</li></ul></div>');
+check("an amenity that mentions 'energy' is not mistaken for the class line", dSolar.energy, "B");
+check("…and it stays in facts, not swallowed as the energy fact", dSolar.facts, ["Solar Energy Panels"]);
+/* Some pages put the <ul> directly after the <strong>, with no wrapping <p>. */
+const dNoP = S.projectDetails('<div><strong>Project Details:</strong><ul><li>Fact One</li><li>Fact Two</li></ul></div>');
+check("no wrapping <p>: the <ul> follows the <strong> directly", dNoP.facts, ["Fact One", "Fact Two"]);
 const df = S.detailFields({ facts: ["Common Swimming Pool", "Completion: Q4 2027", "6 minutes from the Beach"], energy: "A" });
 check("facts become the raw description, one per line", df.description, "Common Swimming Pool\nCompletion: Q4 2027\n6 minutes from the Beach");
 check("plain facts are amenities", df.amenities, ["Common Swimming Pool", "6 minutes from the Beach"]);
@@ -103,7 +111,7 @@ check("storage is the yes/no column", row.storage, "yes");
 check("'1 Roof' is a storage room (Plus 87)", S.unitRow({ ...u, storage: "1 Roof" }, "d", 0).storage, "yes");
 check("'0' is none", S.unitRow({ ...u, storage: "0" }, "d", 0).storage, "no");
 check("counts and extra areas go to attrs",
-  row.attrs, [{ name: "Parking", value: "Covered" }, { name: "Storage rooms", value: "1" }, { name: "Common area (m²)", value: "12" }, { name: "Total area (m²)", value: "125" }]);
+  row.attrs, [{ name: "Parking", value: "Covered" }, { name: "Storage", value: "1" }, { name: "Common area (m²)", value: "12" }, { name: "Total area (m²)", value: "125" }]);
 check("identity", [row.ref, row.feedRef, row.source, row.developmentId], ["A101", "A101", "feed", "dev1"]);
 check("a sold unit never carries a price, even if handed one", S.unitRow({ ...u, status: "sold" }, "d", 0).price, null);
 const kept = { type: "Penthouse", photos: ["/x.webp"], plans: null, price: 1, status: "sold", areaBuilt: "999" };
