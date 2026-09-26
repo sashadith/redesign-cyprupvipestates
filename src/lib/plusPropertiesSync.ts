@@ -71,10 +71,30 @@ export function coordsFromMapsUrl(raw: string | null): { lat: number; lng: numbe
   return lat > 34.4 && lat < 35.8 && lng > 32.2 && lng < 34.7 ? { lat, lng } : null;
 }
 
-/* A project whose Maps link gave no coordinates (a Plus Code, a place name,
-   a link that did not resolve) is saved without a pin; the operator sets it. */
-export function mapsLinkNote(key: string, mapsUrl: string | null, coords: { lat: number; lng: number } | null): string | null {
-  return mapsUrl && !coords ? `${key}: no coordinates in the Maps link — set the pin in the admin` : null;
+/* A project whose Maps link gave no coordinates (a Plus Code, a place name)
+   is saved without a pin, and the operator sets it; a link that could not be
+   fetched at all says so instead. Once a pin is stored there is nothing left
+   to do, so neither note repeats night after night. */
+export function mapsLinkNote(input: {
+  key: string; mapsUrl: string | null; resolved: boolean;
+  coords: { lat: number; lng: number } | null; storedPin: boolean;
+}): string | null {
+  if (!input.mapsUrl || input.coords || input.storedPin) return null;
+  return input.resolved
+    ? `${input.key}: no coordinates in the Maps link — set the pin in the admin`
+    : `${input.key}: Maps link could not be resolved this run`;
+}
+
+type StoredPin = {
+  latitude: number | null; longitude: number | null;
+  override: { latitude: number | null; longitude: number | null } | null;
+} | undefined;
+/* The connector's own pin, or the admin's: the admin's map-location save
+   writes DevelopmentOverride, not Development. */
+export function hasStoredPin(r: StoredPin): boolean {
+  if (!r) return false;
+  return (r.latitude != null && r.longitude != null)
+    || (r.override?.latitude != null && r.override?.longitude != null);
 }
 
 const FACT_MARKER = /^[.•-]/;
@@ -358,6 +378,8 @@ export function summarizePlusRun(r: PlusRunResult): string {
 type Gathered = {
   key: string; source: "xml" | "pdf-only"; project: PlusProject | null; mediaFolder: string | null;
   coords: { lat: number; lng: number } | null; details: { facts: string[]; energy: string | null } | null;
+  /* false when the Maps link could not be fetched at all (or there is none). */
+  mapsResolved: boolean;
 };
 
 const FOLDER_MIME = "application/vnd.google-apps.folder";
@@ -414,7 +436,7 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
       let project: PlusProject;
       try { project = await parsePriceList(bytes.toString("utf8")); }
       catch (e) { result.failed.push(`${key}: ${e instanceof Error ? e.message : String(e)}`); continue; }
-      gathered.push({ key, source: "xml", project, mediaFolder: folders.get(key) ?? null, coords: null, details: null });
+      gathered.push({ key, source: "xml", project, mediaFolder: folders.get(key) ?? null, coords: null, details: null, mapsResolved: false });
     }
     /* PDF-only projects (Plus 4, 29, 72 on 2026-09-25) become presentation
        pages without units — the spec's "all 35 projects exist as drafts".
@@ -424,13 +446,13 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
     for (const f of pdfFiles) {
       const key = projectKey(f.name);
       if (!key || xmlKeys.has(key) || gathered.some((g) => g.key === key)) continue;
-      gathered.push({ key, source: "pdf-only", project: null, mediaFolder: folders.get(key) ?? null, coords: null, details: null });
+      gathered.push({ key, source: "pdf-only", project: null, mediaFolder: folders.get(key) ?? null, coords: null, details: null, mapsResolved: false });
     }
     for (const g of gathered) {
       if (g.project?.mapsUrl) {
-        g.coords = coordsFromMapsUrl(await resolvedUrl(g.project.mapsUrl));
-        const note = mapsLinkNote(g.key, g.project.mapsUrl, g.coords);
-        if (note) result.notes.push(note);
+        const resolved = await resolvedUrl(g.project.mapsUrl);
+        g.mapsResolved = resolved != null;
+        g.coords = coordsFromMapsUrl(resolved);
       }
       if (g.project?.websiteUrl) {
         /* A hanging host must not hold the sync window: 20 s, then no facts. */
@@ -449,7 +471,7 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
     /* ── the plan, and in a dry run the whole answer ── */
     const existingRows = await prisma.development.findMany({
       where: { dev: PLUS_DEV },
-      select: { id: true, feedKey: true, publishStatus: true, driveImagesModified: true, gallery: true, plans: true, district: true, town: true, latitude: true, longitude: true },
+      select: { id: true, feedKey: true, publishStatus: true, driveImagesModified: true, gallery: true, plans: true, district: true, town: true, latitude: true, longitude: true, override: { select: { latitude: true, longitude: true } } },
     });
     const byFeedKey = new Map(existingRows.map((r) => [r.feedKey, r] as const));
     /* A key with a price list (read or not) is handled below. A stored one
@@ -474,6 +496,9 @@ export async function syncPlusProperties(accountId: string, opts: { force?: bool
     ]);
     for (const g of gathered) {
       const existing = byFeedKey.get(feedKeyFor(g.key));
+      /* Here, not where the link is resolved: it needs the stored pin. */
+      const mapsNote = mapsLinkNote({ key: g.key, mapsUrl: g.project?.mapsUrl ?? null, resolved: g.mapsResolved, coords: g.coords, storedPin: hasStoredPin(existing) });
+      if (mapsNote) result.notes.push(mapsNote);
       const slug = slugCandidate(publicNameFor(g.key));
       const units = g.project?.units ?? [];
       const count = (s: string) => units.filter((u) => u.status === s).length;

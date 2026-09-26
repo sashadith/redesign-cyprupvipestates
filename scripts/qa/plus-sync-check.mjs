@@ -82,9 +82,21 @@ check("/maps/search/ wins over the viewport centre",
 /* Plus 87 resolves to a Plus Code, not coordinates. It is not decoded. */
 const P87 = "https://www.google.com/maps?q=WJPP+7FG+Plus+87,+New+Marina+Larnaca,+Larnaca&ftid=0x14e0831d4f8a1b2f:0x3c1b7e3ad4e5b6a1";
 check("a Plus Code link yields no coordinates", S.coordsFromMapsUrl(P87), null);
-check("a Maps link without coordinates leaves a note", S.mapsLinkNote("87", P87, null), "87: no coordinates in the Maps link — set the pin in the admin");
-check("…read coordinates leave none", S.mapsLinkNote("33", P33, { lat: 34.7626611, lng: 32.4311539 }), null);
-check("…and no Maps link leaves none", S.mapsLinkNote("4", null, null), null);
+/* Review M1: the note must not repeat every night once a pin is stored —
+   the connector's own (Development) or the one an admin set
+   (DevelopmentOverride, which is where the admin's map-location save writes).
+   A link that could not be fetched at all says so in its own words. */
+const MN = (o) => S.mapsLinkNote({ key: "87", mapsUrl: P87, resolved: true, coords: null, storedPin: false, ...o });
+check("a resolved Maps link without coordinates, no stored pin: the note", MN({}), "87: no coordinates in the Maps link — set the pin in the admin");
+check("…a stored pin silences it", MN({ storedPin: true }), null);
+check("…read coordinates leave none", MN({ coords: { lat: 34.7626611, lng: 32.4311539 } }), null);
+check("…no Maps link leaves none", MN({ mapsUrl: null, resolved: false }), null);
+check("a link that could not be resolved has its own wording", MN({ resolved: false }), "87: Maps link could not be resolved this run");
+check("…and a stored pin silences that too", MN({ resolved: false, storedPin: true }), null);
+check("stored pin: the connector's own", S.hasStoredPin({ latitude: 34.9, longitude: 33.6, override: null }), true);
+check("stored pin: the admin's override", S.hasStoredPin({ latitude: null, longitude: null, override: { latitude: 34.9, longitude: 33.6 } }), true);
+check("stored pin: half a pin is none", S.hasStoredPin({ latitude: 34.9, longitude: null, override: { latitude: null, longitude: 33.6 } }), false);
+check("stored pin: a project not stored yet has none", S.hasStoredPin(undefined), false);
 
 /* ── Project Details from their website ──────────────────────────────── */
 const d = S.projectDetails(readFileSync("scripts/qa/fixtures/plus/plus-33-page.html", "utf8"));
@@ -462,9 +474,17 @@ check("fix 2: the notes are pushed before the dry-run return, so a dry run repor
 {
   /* Dry run 2026-09-26: the "no coordinates" note is pushed where the link
      is resolved, before the dry-run return, so a dry run reports it too. */
-  const noteAt = src.search(/const note = mapsLinkNote\(g\.key, g\.project\.mapsUrl, g\.coords\);\s*if \(note\) result\.notes\.push\(note\);/);
-  check("maps: the no-coordinates note is pushed where the link is resolved, before the dry-run return",
-    noteAt > src.indexOf("g.coords = coordsFromMapsUrl(") && noteAt > 0 && noteAt < dryRunAt, true);
+  /* Review M1: the note needs the stored rows, so it is pushed in the plan
+     loop (after existingRows, before the dry-run return), and the stored
+     rows carry the admin's override pin. */
+  const noteAt = src.search(/const mapsNote = mapsLinkNote\(\{ key: g\.key, mapsUrl: g\.project\?\.mapsUrl \?\? null, resolved: g\.mapsResolved, coords: g\.coords, storedPin: hasStoredPin\(existing\) \}\);\s*if \(mapsNote\) result\.notes\.push\(mapsNote\);/);
+  check("maps: the note is pushed in the plan loop, with the stored row, before the dry-run return",
+    noteAt > src.indexOf("const existing = byFeedKey.get(feedKeyFor(g.key));") && src.indexOf("const existing = byFeedKey.get(feedKeyFor(g.key));") > src.indexOf("const existingRows") && noteAt < dryRunAt, true);
+  check("maps: …and only there", (src.match(/mapsLinkNote\(\{/g) ?? []).length, 1);
+  check("maps: the stored rows carry the admin's override pin",
+    /const existingRows = await prisma\.development\.findMany\(\{[^;]*latitude: true, longitude: true, override: \{ select: \{ latitude: true, longitude: true \} \}/.test(src), true);
+  check("maps: the gather loop records whether the link resolved",
+    /const resolved = await resolvedUrl\(g\.project\.mapsUrl\);\s*g\.mapsResolved = resolved != null;\s*g\.coords = coordsFromMapsUrl\(resolved\);/.test(src), true);
 }
 check("fix 2: …and the dry-run plan row says it is skipped",
   /blocked: skipKeys\.has\(g\.key\) \? MISSING_PRICE_LIST : null/.test(src), true);
