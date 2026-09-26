@@ -330,33 +330,54 @@ async function feedSyncFailures(): Promise<ActionItem[]> {
    feed-incomplete: rows had ok=true, and Domenica (blocked 2026-08-31) and
    Medousa (2026-09-01) had been shown as URGENT for 24 and 23 days while
    syncing cleanly every single night. The cron route now logs the guard's
-   verdict on every run, pass or fail, and this reads the latest one. */
+   verdict on every run, pass or fail, and this reads the latest one.
+
+   The Plus Properties sync logs the same verdict per project as
+   plus-incomplete:<project key>; the key is everything after the job's FIRST
+   ":", and `job` is carried so the item can say which kind it is. */
+type FeedBlock = { job: string; devKey: string; message: string | null; since: Date };
 export function pendingFeedBlocks(
   rows: { job: string; ok: boolean; ranAt: Date; message: string | null }[],
-): { devKey: string; message: string | null; since: Date }[] {
+): FeedBlock[] {
   const latestByJob = new Map<string, (typeof rows)[number]>();
   // Callers pass rows newest-first; the first sighting of a job is its latest.
   for (const r of rows) if (!latestByJob.has(r.job)) latestByJob.set(r.job, r);
-  const out: { devKey: string; message: string | null; since: Date }[] = [];
+  const out: FeedBlock[] = [];
   for (const [job, row] of Array.from(latestByJob)) {
     if (row.ok) continue; // a later, complete sync superseded the block — not a live condition
-    out.push({ devKey: job.slice("feed-incomplete:".length), message: row.message, since: row.ranAt });
+    out.push({ job, devKey: job.slice(job.indexOf(":") + 1), message: row.message, since: row.ranAt });
   }
   return out;
 }
 
-async function feedIncompleteWarnings(): Promise<ActionItem[]> {
-  const rows = await prisma.cronRunLog.findMany({
-    where: { job: { startsWith: "feed-incomplete:" } },
-    orderBy: { ranAt: "desc" },
-    take: 500,
-  });
-  return pendingFeedBlocks(rows).map((b) => ({
-    id: `feed-incomplete:feed-incomplete:${b.devKey}`, severity: "URGENT" as const, category: "DEVELOPERS" as const,
+/* One panel item per live block. The feed item's id, title and link are
+   unchanged since before Plus existed — snoozes and dismissals are stored
+   against that id. A Plus block is one project, and only its units were held
+   back; the project row itself was still refreshed. */
+export function feedBlockItem(b: FeedBlock): ActionItem {
+  if (b.job.startsWith("plus-incomplete:")) {
+    return {
+      id: `feed-incomplete:${b.job}`, severity: "URGENT", category: "DEVELOPERS",
+      title: `Plus Properties ${b.devKey}: price list looks incomplete — units were not updated`,
+      description: b.message || "A large share of this project's known units are missing from its price list. Its units were not updated; check the list before the next run.",
+      deepLink: "/admin/developments?dev=plusproperties", since: b.since,
+    };
+  }
+  return {
+    id: `feed-incomplete:feed-incomplete:${b.devKey}`, severity: "URGENT", category: "DEVELOPERS",
     title: `${b.devKey} feed looks incomplete — nothing was synced`,
     description: b.message || "A large share of this developer's known units are missing from the feed. Nothing was written; check the feed before the next run.",
     deepLink: `/admin/developments?dev=${encodeURIComponent(b.devKey)}`, since: b.since,
-  }));
+  };
+}
+
+async function feedIncompleteWarnings(): Promise<ActionItem[]> {
+  const rows = await prisma.cronRunLog.findMany({
+    where: { OR: [{ job: { startsWith: "feed-incomplete:" } }, { job: { startsWith: "plus-incomplete:" } }] },
+    orderBy: { ranAt: "desc" },
+    take: 500,
+  });
+  return pendingFeedBlocks(rows).map(feedBlockItem);
 }
 
 // (f) Published/ready development whose source feed no longer lists it.

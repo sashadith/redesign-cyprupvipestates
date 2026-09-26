@@ -117,6 +117,33 @@ check("the newest row for a developer decides",
     row("domenica", false, "2026-08-31T04:05:47Z"),
   ]), []);
 
+/* ── Plus Properties writes the same verdict per project, under its own
+   prefix: plus-incomplete:<project key>. The key is everything after the
+   FIRST ":" of the job ("67-68-69" has dashes, never a colon). */
+const plus = (key, ok, iso, message = null) => ({ job: `plus-incomplete:${key}`, ok, ranAt: at(iso), message });
+check("a blocked Plus project is reported, by its project key",
+  D.pendingFeedBlocks([plus("67-68-69", false, "2026-09-26T02:31:00Z", "4 of 6 units are missing")]).map((b) => [b.devKey, b.job]),
+  [["67-68-69", "plus-incomplete:67-68-69"]]);
+/* "feed-incomplete:" and "plus-incomplete:" happen to be the same length, so
+   pin the rule itself: the key starts after the first ":", whatever the prefix. */
+check("the key is everything after the job's first ':'",
+  D.pendingFeedBlocks([{ job: "any-prefix:a:b", ok: false, ranAt: at("2026-09-26T02:31:00Z"), message: null }])[0].devKey, "a:b");
+check("…and a later clean run clears it",
+  devs([plus("57", true, "2026-09-27T02:31:00Z"), plus("57", false, "2026-09-26T02:31:00Z")]), []);
+check("a Plus key never collides with a feed developer of the same name",
+  D.pendingFeedBlocks([plus("x", false, "2026-09-26T02:31:00Z"), row("x", true, "2026-09-26T04:00:00Z")]).map((b) => b.job), ["plus-incomplete:x"]);
+
+/* The panel item. The feed one must stay byte-identical (snoozes and
+   dismissals are stored against its id); the Plus one names the project. */
+const feedItem = D.feedBlockItem(D.pendingFeedBlocks([row("island-blue", false, "2026-09-24T04:04:16Z", "78 of 174 units are missing")])[0]);
+check("feed item: id, title and link unchanged",
+  [feedItem.id, feedItem.title, feedItem.deepLink, feedItem.description],
+  ["feed-incomplete:feed-incomplete:island-blue", "island-blue feed looks incomplete — nothing was synced", "/admin/developments?dev=island-blue", "78 of 174 units are missing"]);
+const plusItem = D.feedBlockItem(D.pendingFeedBlocks([plus("57", false, "2026-09-26T02:31:00Z", "4 of 6 units are missing")])[0]);
+check("Plus item: its own id, title and link",
+  [plusItem.id, plusItem.title, plusItem.deepLink, plusItem.severity, plusItem.description],
+  ["feed-incomplete:plus-incomplete:57", "Plus Properties 57: price list looks incomplete — units were not updated", "/admin/developments?dev=plusproperties", "URGENT", "4 of 6 units are missing"]);
+
 /* ── the cron row that makes any of this possible ──────────────────────── */
 const route = readFileSync(join(ROOT, "src/app/api/cron/feed-sync/route.ts"), "utf8");
 check("a blocked developer still logs the refusal",
@@ -135,6 +162,9 @@ check("the item id keeps its historical doubled prefix",
   /id: `feed-incomplete:feed-incomplete:\$\{b\.devKey\}`/.test(rules), true);
 check("the rule reads its answer from pendingFeedBlocks",
   /return pendingFeedBlocks\(rows\)\.map\(/.test(rules), true);
+check("the rule reads both prefixes",
+  /OR: \[\{ job: \{ startsWith: "feed-incomplete:" \} \}, \{ job: \{ startsWith: "plus-incomplete:" \} \}\]/.test(rules), true);
+check("…and builds its items with feedBlockItem", /return pendingFeedBlocks\(rows\)\.map\(feedBlockItem\)/.test(rules), true);
 
 console.log(failures ? `\n${failures} failed` : "\nall passed");
 process.exit(failures ? 1 : 0);
