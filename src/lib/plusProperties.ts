@@ -301,7 +301,8 @@ export const sumCount = (a: string | null, b: string | null) => {
 /* A villa's second storey continues the unit the first storey opened: counts
    and areas add up, nothing else changes (status and price live on the first
    row). Measured on Plus 75, 2026-09-25. Plus 59's "Shop 1 Mezzanine" row
-   continues "Shop 1" the same way. */
+   continues "Shop 1" the same way. Every area adds, common and plot too
+   (review 2026-09-26); a row that leaves a cell empty adds nothing. */
 function addStorey(u: PlusUnit, s: PlusUnit): void {
   u.beds = sumCount(u.beds, s.beds);
   u.baths = sumCount(u.baths, s.baths);
@@ -310,7 +311,9 @@ function addStorey(u: PlusUnit, s: PlusUnit): void {
   u.areaVerandaOpen = sumNum(u.areaVerandaOpen, s.areaVerandaOpen);
   u.areaRoof = sumNum(u.areaRoof, s.areaRoof);
   u.areaGarden = sumNum(u.areaGarden, s.areaGarden);
+  u.areaCommon = sumNum(u.areaCommon, s.areaCommon);
   u.areaTotal = sumNum(u.areaTotal, s.areaTotal);
+  u.areaPlot = sumNum(u.areaPlot, s.areaPlot);
 }
 
 /* House Kiti: label/value pairs laid out in column pairs (0/1, 3/4, 6/7, 9/10)
@@ -406,12 +409,14 @@ export async function parsePriceList(xml: string): Promise<PlusProject> {
     const area = (f: Field) => sumArea(r, field, f);
     if (val("block")) block = normBlock(val("block")!);
     /* This row's counts and areas, laid over unit `u` — what addStorey adds
-       when the row continues a unit instead of opening one. */
+       when the row continues a unit instead of opening one. Every area it
+       adds is this row's own, never copied from `u`, or it would count twice. */
     const storey = (u: PlusUnit): PlusUnit => ({
       ...u, beds: cleanBeds(val("beds")), baths: cleanBeds(val("baths")),
       areaBuilt: area("internal"), areaVeranda: area("veranda"),
       areaVerandaOpen: area("verandaOpen"), areaRoof: area("roof"),
-      areaGarden: area("garden"), areaTotal: area("total"),
+      areaGarden: area("garden"), areaCommon: area("common"),
+      areaTotal: area("total"), areaPlot: area("plot"),
     });
     const unitVal = val("unit");
     /* Plus 75's villas swap two columns: the villa's NAME sits in the Floor

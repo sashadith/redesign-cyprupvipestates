@@ -360,6 +360,28 @@ const subAfterBlank = await P.parsePriceList(workbook([
 check("a blank row closes the unit: a sub-area after it is skipped, not added",
   [subAfterBlank.units.map((u) => u.areaBuilt), subAfterBlank.notes.some((n) => /Mezzanine has no status/.test(n))], [[80], true]);
 
+/* Review M2: a continuation row's common area and plot add to its unit like
+   every other area — and are counted once, not copied from the unit. */
+const commonRows = await P.parsePriceList(workbook([
+  ["Floor", "Unit", "Covered Internal Area (sqm)", "Common Area (sqm)", "Plot Area (sqm)", "Price €", "Availability"],
+  ["Ground", "Shop", "80", "10", "", "300000", "Available"],
+  ["", "Mezzanine", "20", "5", "", "", ""],
+  ["", "B1", "70", "8", "150", "250000", "Available"],
+  ["", "Roof Garden", "", "", "12", "", ""],
+  ["", "C1", "60", "6", "100", "", "Sold"],
+  ["", "Storage", "4", "", "", "", ""],
+]));
+check("a continuation row's common area and plot are added, once",
+  commonRows.units.map((u) => [u.ref, u.areaBuilt, u.areaCommon, u.areaPlot]),
+  [["Shop", 100, 15, null], ["B1", 70, 8, 162], ["C1", 64, 6, 100]]);
+const villaCommon = await P.parsePriceList(workbook([
+  ["Block", "Floor", "Unit", "Covered Internal Area (sqm)", "Common Area (sqm)", "Plot Area (sqm)", "Price €", "Availability"],
+  ["D-Villas", "Villa 1", "Lower Floor", "60", "4", "300", "400000", "Available"],
+  ["", "", "Upper Floor", "50", "2", "", "", ""],
+]));
+check("a villa's upper storey adds its common area; the plot is not doubled",
+  villaCommon.units.map((u) => [u.ref, u.areaBuilt, u.areaCommon, u.areaPlot]), [["D-Villas Villa 1", 110, 6, 300]]);
+
 /* A villa whose opening row has no status is skipped — and so is its upper
    storey. Without an explicit "open unit", the storey row finds the villa
    before it and adds its bedrooms and bathrooms there. */
