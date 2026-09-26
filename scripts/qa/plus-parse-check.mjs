@@ -194,13 +194,16 @@ check("Plus 57: 35 units, 12 available", [p57.units.length, p57.units.filter((u)
 check("Plus 57: no three-price payment plan leaks in", p57.units.every((u) => u.price == null || u.price >= 245000), true);
 
 /* ── the invariant, across every fixture ─────────────────────────────── */
-for (const key of ["33", "57", "87", "63", "59", "67-68-69", "21", "60", "75"]) {
+for (const key of ["33", "57", "87", "63", "59", "67-68-69", "21", "60", "75", "77", "92"]) {
   const p = await P.parsePriceList(fx(`plus-${key}.xml`));
   check(`Plus ${key}: no sold or reserved unit carries a price`, p.units.filter((u) => u.status !== "available" && u.price != null).map((u) => u.ref), []);
 }
 /* A ref names one unit. Two units with the same ref in one project means a
    row was read as a unit that is not one (Plus 75's "Lower Floor" storeys). */
-for (const key of ["33", "57", "87", "60", "75", "67-68-69", "59", "63", "21"]) {
+/* Plus 92 is not in this loop: its five floors each hold "Office 1/2/3" with
+   no block, so its refs repeat — a ref-rule question, not a sub-area one
+   (reported with the 2026-09-26 dry-run fixes, left open on purpose). */
+for (const key of ["33", "57", "87", "60", "75", "67-68-69", "59", "63", "21", "77"]) {
   const refs = (await P.parsePriceList(fx(`plus-${key}.xml`))).units.map((u) => u.ref);
   check(`Plus ${key}: refs are unique`, new Set(refs).size === refs.length, true);
 }
@@ -295,6 +298,67 @@ check("Plus 59: shop interiors include the mezzanine", [u59["Shop 1"]?.areaBuilt
 check("Plus 59: a mezzanine is neither a unit nor a note",
   [p59.units.some((u) => /mezzanine/i.test(u.label)), p59.notes.some((n) => /mezzanine/i.test(n))], [false, false]);
 check("Plus 59: Shop 1 keeps its status and price", [u59["Shop 1"]?.status, u59["Shop 1"]?.price], ["available", 480000]);
+
+/* ── sub-area rows continue the unit above them ─────────────────────────
+   Dry run 2026-09-26. A status-less row whose unit cell is only a sub-area
+   word belongs to the open unit directly above it.
+   Plus 77: "Roof Garden" under penthouse 501, cells in Covered Internal (14),
+   Covered Veranda (18.1) and "Uncovered roof terrace" (27.6, a roof column).
+   501 then reads internal 124 + 14 = 138, covered veranda 83.5 + 18.1 = 101.6,
+   uncovered veranda 28, roof 27.6, common 15.4, and its own Total 310.6 is
+   unchanged: 138 + 101.6 + 28 + 27.6 + 15.4 = 310.6 — the sheet's total
+   already counted the roof garden.
+   Plus 92: "Mezzanine" under "Shop", one cell, Internal Area (45). The shop
+   reads internal 92.4 + 45 = 137.4, and 137.4 + 0 veranda + 30.6 common =
+   168, its Total. */
+const p77 = await P.parsePriceList(fx("plus-77.xml"));
+const u501 = byRef(p77)["501"];
+check("Plus 77: 501's roof garden is part of 501",
+  [u501?.areaBuilt, u501?.areaVeranda, u501?.areaVerandaOpen, u501?.areaRoof, u501?.areaCommon, u501?.areaTotal],
+  [138, 101.6, 28, 27.6, 15.4, 310.6]);
+check("Plus 77: …its status and price are its own", [u501?.status, u501?.price, u501?.beds, u501?.baths], ["available", 990000, "3", "4"]);
+check("Plus 77: nine units, the roof garden is not one", [p77.units.length, p77.units.some((u) => /roof/i.test(u.label))], [9, false]);
+check("Plus 77: no 'has no status' note", p77.notes.filter((n) => /has no status/.test(n)), []);
+const p92 = await P.parsePriceList(fx("plus-92.xml"));
+const shop92 = p92.units.find((u) => u.label === "Shop");
+check("Plus 92: the shop's interior includes the mezzanine", [shop92?.areaBuilt, shop92?.areaVeranda, shop92?.areaCommon, shop92?.areaTotal], [137.4, 0, 30.6, 168]);
+check("Plus 92: …its status and price are its own", [shop92?.status, shop92?.price], ["available", 504000]);
+check("Plus 92: sixteen units, the mezzanine is not one", [p92.units.length, p92.units.some((u) => /mezzanine/i.test(u.label))], [16, false]);
+check("Plus 92: no 'has no status' note", p92.notes.filter((n) => /has no status/.test(n)), []);
+check("Plus 92: the next unit is untouched", p92.units.find((u) => u.label === "Office 1")?.areaBuilt, 79);
+/* The rule is narrow: the whole cell must be the word, the row must follow
+   an open unit directly, and any other status-less row is still skipped. */
+const subHdr = ["Floor", "Unit", "Covered Internal Area (sqm)", "Price €", "Availability"];
+const sub = await P.parsePriceList(workbook([
+  subHdr,
+  ["1st", "A1", "80", "300000", "Available"],
+  ["", "Basement", "20", "", ""],
+  ["", "Storage", "5", "", ""],
+  ["", "A2", "70", "", "Sold"],
+  ["", "Attic", "10", "", ""],
+  ["", "roof TERRACE", "3", "", ""],
+  ["", "Roof", "2", "", ""],
+  ["", "Garage", "15", "", ""],
+  ["", "Roof", "4", "", ""],
+  ["", "A3", "60", "250000", "Available"],
+  ["", "Mezzanine level", "9", "", ""],
+  ["", "A4", "50", "200000", "Available"],
+  ["", "Shared Storage", "7", "", ""],
+]));
+check("sub-area words continue the open unit; each word; case-insensitive",
+  sub.units.map((u) => [u.ref, u.areaBuilt]), [["A1", 105], ["A2", 85], ["A3", 60], ["A4", 50]]);
+check("…a non-sub-area word, the row after it, and a longer or prefixed cell are still skipped with a note",
+  sub.notes.filter((n) => /has no status/.test(n)),
+  ["unit Garage has no status — skipped", "unit Roof has no status — skipped", "unit Mezzanine level has no status — skipped",
+   "unit Shared Storage has no status — skipped"]);
+const subAfterBlank = await P.parsePriceList(workbook([
+  subHdr,
+  ["1st", "A1", "80", "300000", "Available"],
+  ["", "", "", "", ""],
+  ["", "Mezzanine", "20", "", ""],
+]));
+check("a blank row closes the unit: a sub-area after it is skipped, not added",
+  [subAfterBlank.units.map((u) => u.areaBuilt), subAfterBlank.notes.some((n) => /Mezzanine has no status/.test(n))], [[80], true]);
 
 /* A villa whose opening row has no status is skipped — and so is its upper
    storey. Without an explicit "open unit", the storey row finds the villa

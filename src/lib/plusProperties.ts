@@ -284,6 +284,10 @@ function priceOf(cell: Cell | null, status: PlusStatus): number | null {
 }
 
 const STOREY = /^(lower|upper|ground|first|second|1st|2nd)\s+floor$/i;
+/* A status-less row whose whole unit cell is one of these words is part of
+   the unit above it, not a unit: Plus 77's "Roof Garden" under penthouse 501,
+   Plus 92's "Mezzanine" under its shop (2026-09-26 dry run). */
+const SUB_AREA = /^(mezzanine|roof garden|roof terrace|roof|basement|storage|attic)$/i;
 
 const sumNum = (a: number | null, b: number | null) => (a == null ? b : b == null ? a : Math.round((a + b) * 100) / 100);
 /* A split count ("3 (2+1)") adds as its leading total, the number every
@@ -444,8 +448,11 @@ export async function parsePriceList(xml: string): Promise<PlusProject> {
     if (!statusRaw) {
       /* Plus 59: "Shop 1 Mezzanine", with no status, right after "Shop 1" is
          the shop's upper level, not a unit — its areas belong to the shop
-         (the PDF's total of 188.75 counts both). */
-      if (prev && name.startsWith(`${prev.label} `)) { addStorey(prev, storey(prev)); open = prev; continue; }
+         (the PDF's total of 188.75 counts both). A bare sub-area word
+         (SUB_AREA) continues the open unit the same way; its cells are summed
+         column by column. Plus 77: 501's Total 310.6 already includes its
+         roof garden; Plus 92: the shop's 168 includes its mezzanine. */
+      if (prev && (name.startsWith(`${prev.label} `) || SUB_AREA.test(name))) { addStorey(prev, storey(prev)); open = prev; continue; }
       notes.push(`unit ${name} has no status — skipped`);
       continue;
     }
