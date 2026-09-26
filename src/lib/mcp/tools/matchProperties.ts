@@ -66,7 +66,8 @@ export function registerMatchProperties(server: McpServer) {
             unitsTotal: m.development.unitsTotal,
             score: m.score,
             scoreBreakdown: m.scoreBreakdown,
-            publicUrl: m.development.slug && m.development.publishStatus === "published" ? `/en/projects/${m.development.slug}` : null,
+            // English is the bare path (nginx 301-strips `/en/*`) — see publicUrlFor (crm/inventorySearch.ts).
+            publicUrl: m.development.slug && m.development.publishStatus === "published" ? `/projects/${m.development.slug}` : null,
             matchedUnits: m.matchedUnits.slice(0, 3).map((u) => ({ id: u.id, ref: u.ref, label: u.label, type: u.type, beds: u.beds, areaBuilt: u.areaBuilt, price: u.price })),
           })),
         };

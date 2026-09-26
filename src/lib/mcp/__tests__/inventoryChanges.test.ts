@@ -23,7 +23,7 @@ test("datedEvents: published / sold_out / back_on_market / new_units inside the 
   assert.deepEqual(nu.priceRange, { min: 320_000, max: 340_000 });
   assert.equal(nu.source, "mixed");
   assert.equal(ev.find((e) => e.type === "back_on_market")!.availableNow, 3);
-  assert.equal(ev[0].publicUrl?.en, "/en/projects/alpha");
+  assert.equal(ev[0].publicUrl?.en, "/projects/alpha");
 });
 
 test("datedEvents: sold_out carries the lower-bound flag; nothing for an unpublished development", () => {

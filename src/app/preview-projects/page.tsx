@@ -68,7 +68,7 @@ export default async function ProjectsPreview({ searchParams }: { searchParams: 
     return {
       id: p._id,
       title: p.title,
-      href: p._source === "development" ? `/en/preview-project/${p.slug?.current ?? ""}` : `/en/projects/${p.slug?.current ?? ""}`,
+      href: p._source === "development" ? `/en/preview-project/${p.slug?.current ?? ""}` : `/projects/${p.slug?.current ?? ""}`,
       image: p._source === "development" ? (p.previewImage as string | undefined) : safeUrl(p.previewImage),
       city: kf.city ?? "",
       price: typeof kf.price === "number" ? kf.price : Number(kf.price) || null,
@@ -91,7 +91,7 @@ export default async function ProjectsPreview({ searchParams }: { searchParams: 
     .map((m: any) => ({
       id: m._id,
       title: m.title,
-      href: m._source === "development" ? `/en/preview-project/${m.slug ?? ""}` : `/en/projects/${m.slug ?? ""}`,
+      href: m._source === "development" ? `/en/preview-project/${m.slug ?? ""}` : `/projects/${m.slug ?? ""}`,
       city: m.city ?? "",
       price: typeof m.price === "number" ? m.price : Number(m.price) || null,
       lat: m.location.lat,
