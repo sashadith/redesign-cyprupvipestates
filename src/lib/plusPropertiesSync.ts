@@ -7,6 +7,7 @@ import { recomputeDevelopmentDerivedState } from "./developmentDerivedState";
 import { recomputeDevelopmentDistances } from "./developmentDistances";
 import { logCronRun } from "./cronLog";
 import { cleanNumber, parsePriceList, type PlusProject, type PlusUnit } from "./plusProperties";
+import { MISSING_PRICE_LIST } from "./plusIncomplete";
 
 /* Plus Properties sync. Spec:
    docs/superpowers/specs/2026-09-25-plus-properties-connector-design.md.
@@ -238,7 +239,7 @@ export function partialMediaListing(input: {
    - One that never had feed units (Plus 4, 29, 72: PDF-only from the start)
      and still has its PDF is written as a presentation page, as always; one
      absent altogether is left exactly as it is, and the note is the only trace. */
-export const MISSING_PRICE_LIST = "price list missing from the folder this run — nothing changed";
+export { MISSING_PRICE_LIST };
 export const missingPriceListNote = (key: string) => `${key}: ${MISSING_PRICE_LIST}`;
 export const absentProjectNote = (key: string) => `${key}: no price list in the folder this run — left as it is`;
 

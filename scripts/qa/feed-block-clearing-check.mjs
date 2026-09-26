@@ -155,12 +155,13 @@ check("Plus item: its own id, title and link",
   ["feed-incomplete:plus-incomplete:57", "Plus Properties 57: price list looks incomplete — units were not updated", "/admin/developments?dev=plusproperties", "URGENT", "4 of 6 units are missing"]);
 
 /* Follow-up B: a Plus project whose price list is missing altogether was
-   skipped whole (plusPropertiesSync's MISSING_PRICE_LIST): nothing was
+   skipped whole (MISSING_PRICE_LIST, src/lib/plusIncomplete.ts): nothing was
    written, not just its units, and the title says so. The message is read
    from the sync's own constant, never copied. */
-const plusSrc = readFileSync(join(ROOT, "src/lib/plusPropertiesSync.ts"), "utf8");
-const MISSING = (/export const MISSING_PRICE_LIST = "([^"]+)";/.exec(plusSrc) || [])[1];
-check("the sync still exports the missing-price-list message", typeof MISSING, "string");
+const readOr = (p) => { try { return readFileSync(join(ROOT, p), "utf8"); } catch { return ""; } };
+const incompleteSrc = readOr("src/lib/plusIncomplete.ts");
+const MISSING = (/export const MISSING_PRICE_LIST = "([^"]+)";/.exec(incompleteSrc) || [])[1];
+check("plusIncomplete.ts exports the missing-price-list message", typeof MISSING, "string");
 const missingItem = D.feedBlockItem(D.pendingFeedBlocks([plus("57", false, "2026-09-26T02:31:00Z", MISSING)])[0]);
 check("Plus item, price list missing: its own title, same id, link and severity",
   [missingItem.id, missingItem.title, missingItem.deepLink, missingItem.severity, missingItem.description],
@@ -198,8 +199,21 @@ check("the rule reads its answer from pendingFeedBlocks over both lists, and bui
   /return pendingFeedBlocks\(feedRows\.concat\(plusRows\)\)\.map\(feedBlockItem\);/.test(fnSrc), true);
 /* Follow-up B wiring: the rule compares against the sync's constant and never
    carries its own copy of the text. */
-check("the rule imports MISSING_PRICE_LIST from the sync",
-  /import \{ MISSING_PRICE_LIST \} from "@\/lib\/plusPropertiesSync";/.test(rules), true);
+check("the rule imports MISSING_PRICE_LIST from the dependency-free plusIncomplete module",
+  /import \{ MISSING_PRICE_LIST \} from "@\/lib\/plusIncomplete";/.test(rules), true);
+/* The Action Center must not pull the sync (Drive, xml2js, node-html-parser)
+   into the admin's server graph for one string; plusIncomplete.ts is
+   constants only, so importing it can never pull anything in. */
+check("the rule never imports plusPropertiesSync",
+  /(from\s*|import\s*\(\s*|require\s*\(\s*)["'][^"']*plusPropertiesSync["']/.test(rules), false);
+check("plusIncomplete.ts exists and has no import statements",
+  [incompleteSrc.length > 0, /^\s*import\b|\bimport\s*\(|\brequire\s*\(|^\s*export\s[^;]*\bfrom\s*["']/m.test(incompleteSrc)], [true, false]);
+check("…and exports only constants",
+  incompleteSrc.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "").split(";").map((x) => x.trim()).filter(Boolean).every((x) => /^export const \w+ = /.test(x)), true);
+const plusSyncSrc = readFileSync(join(ROOT, "src/lib/plusPropertiesSync.ts"), "utf8");
+check("the sync takes the constant from plusIncomplete and re-exports it, holding no copy of its own",
+  [/import \{ MISSING_PRICE_LIST \} from "\.\/plusIncomplete";/.test(plusSyncSrc), /export \{ MISSING_PRICE_LIST \};/.test(plusSyncSrc), MISSING ? plusSyncSrc.includes(MISSING) : "no constant"],
+  [true, true, false]);
 check("…compares the row's message with it",
   /b\.message === MISSING_PRICE_LIST/.test(rules), true);
 check("…and holds no copy of the text", MISSING ? rules.includes(MISSING) : "no constant", false);

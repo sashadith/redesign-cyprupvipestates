@@ -3,7 +3,7 @@ import { duplicateDevelopmentPairs } from "@/lib/overlapSweep";
 import { computeAvailability, availabilityContradiction } from "@/lib/developmentAvailability";
 import { computePublishGate, areaSlugOf } from "@/lib/developmentPublishGate";
 import { SYNCED_DEVS } from "@/lib/feedSync";
-import { MISSING_PRICE_LIST } from "@/lib/plusPropertiesSync";
+import { MISSING_PRICE_LIST } from "@/lib/plusIncomplete";
 import { WARM_CONTACT_STATUSES } from "./crm";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { developerGroupExists } from "@/lib/developerLink";
