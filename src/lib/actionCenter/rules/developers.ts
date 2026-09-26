@@ -371,13 +371,16 @@ export function feedBlockItem(b: FeedBlock): ActionItem {
   };
 }
 
+/* One query per prefix, each with its own window: a Plus run logs ~35 rows a
+   night, so a shared take:500 would shrink the feed-incomplete history from
+   ~55 nights to ~11. The two prefixes never share a job, so concatenating two
+   newest-first lists keeps pendingFeedBlocks' "first sighting is the latest". */
 async function feedIncompleteWarnings(): Promise<ActionItem[]> {
-  const rows = await prisma.cronRunLog.findMany({
-    where: { OR: [{ job: { startsWith: "feed-incomplete:" } }, { job: { startsWith: "plus-incomplete:" } }] },
-    orderBy: { ranAt: "desc" },
-    take: 500,
-  });
-  return pendingFeedBlocks(rows).map(feedBlockItem);
+  const [feedRows, plusRows] = await Promise.all([
+    prisma.cronRunLog.findMany({ where: { job: { startsWith: "feed-incomplete:" } }, orderBy: { ranAt: "desc" }, take: 500 }),
+    prisma.cronRunLog.findMany({ where: { job: { startsWith: "plus-incomplete:" } }, orderBy: { ranAt: "desc" }, take: 500 }),
+  ]);
+  return pendingFeedBlocks(feedRows.concat(plusRows)).map(feedBlockItem);
 }
 
 // (f) Published/ready development whose source feed no longer lists it.

@@ -133,6 +133,16 @@ check("…and a later clean run clears it",
 check("a Plus key never collides with a feed developer of the same name",
   D.pendingFeedBlocks([plus("x", false, "2026-09-26T02:31:00Z"), row("x", true, "2026-09-26T04:00:00Z")]).map((b) => b.job), ["plus-incomplete:x"]);
 
+/* The rule queries each prefix on its own (newest first, take 500 each) and
+   concatenates the two lists. The two prefixes never share a job, so the
+   order ACROSS the lists cannot change which row is a job's latest. */
+const feedRows = [row("island-blue", false, "2026-09-24T04:04:16Z"), row("domenica", true, "2026-09-25T04:04:16Z"), row("domenica", false, "2026-08-31T04:05:47Z")];
+const plusRows = [plus("57", false, "2026-09-26T02:31:00Z"), plus("33", true, "2026-09-26T02:31:00Z"), plus("33", false, "2026-09-25T02:31:00Z")];
+const jobsOf = (rows) => D.pendingFeedBlocks(rows).map((b) => b.job).sort();
+check("two newest-first lists, concatenated either way round, give the same blocks",
+  [jobsOf(feedRows.concat(plusRows)), jobsOf(plusRows.concat(feedRows))],
+  [["feed-incomplete:island-blue", "plus-incomplete:57"], ["feed-incomplete:island-blue", "plus-incomplete:57"]]);
+
 /* The panel item. The feed one must stay byte-identical (snoozes and
    dismissals are stored against its id); the Plus one names the project. */
 const feedItem = D.feedBlockItem(D.pendingFeedBlocks([row("island-blue", false, "2026-09-24T04:04:16Z", "78 of 174 units are missing")])[0]);
@@ -160,11 +170,21 @@ check("…and before the loop moves on to the feed-sync row",
 const rules = readFileSync(join(ROOT, "src/lib/actionCenter/rules/developers.ts"), "utf8");
 check("the item id keeps its historical doubled prefix",
   /id: `feed-incomplete:feed-incomplete:\$\{b\.devKey\}`/.test(rules), true);
-check("the rule reads its answer from pendingFeedBlocks",
-  /return pendingFeedBlocks\(rows\)\.map\(/.test(rules), true);
-check("the rule reads both prefixes",
-  /OR: \[\{ job: \{ startsWith: "feed-incomplete:" \} \}, \{ job: \{ startsWith: "plus-incomplete:" \} \}\]/.test(rules), true);
-check("…and builds its items with feedBlockItem", /return pendingFeedBlocks\(rows\)\.map\(feedBlockItem\)/.test(rules), true);
+/* Each prefix has its own window. One shared take:500 would let ~35 Plus rows
+   a night shrink the feed-incomplete history from ~55 nights to ~11. */
+const fnStart = rules.indexOf("async function feedIncompleteWarnings()");
+const fnSrc = fnStart < 0 ? "" : rules.slice(fnStart, rules.indexOf("\n}\n", fnStart));
+const prefixQuery = (prefix) => new RegExp(`prisma\\.cronRunLog\\.findMany\\(\\{ where: \\{ job: \\{ startsWith: "${prefix}" \\} \\}, orderBy: \\{ ranAt: "desc" \\}, take: 500 \\}\\)`);
+check("the rule queries feed-incomplete: on its own, newest first, take 500", prefixQuery("feed-incomplete:").test(fnSrc), true);
+check("…and plus-incomplete: on its own, newest first, take 500", prefixQuery("plus-incomplete:").test(fnSrc), true);
+check("…in exactly two queries, never one shared OR query",
+  [(fnSrc.match(/prisma\.cronRunLog\.findMany\(/g) || []).length, /OR:/.test(fnSrc), (fnSrc.match(/take: 500/g) || []).length], [2, false, 2]);
+check("the rule reads its answer from pendingFeedBlocks over both lists, and builds its items with feedBlockItem",
+  /return pendingFeedBlocks\(feedRows\.concat\(plusRows\)\)\.map\(feedBlockItem\);/.test(fnSrc), true);
+/* The other take:500 in this file (feedSyncFailures, feed-sync:/drive-sync:)
+   is a different rule and stays as it is. */
+check("feedSyncFailures keeps its own single query",
+  /OR: \[\{ job: \{ startsWith: "feed-sync:" \} \}, \{ job: \{ startsWith: "drive-sync:" \} \}\],\s*\},\s*orderBy: \{ ranAt: "desc" \},\s*take: 500,/.test(rules), true);
 
 console.log(failures ? `\n${failures} failed` : "\nall passed");
 process.exit(failures ? 1 : 0);
