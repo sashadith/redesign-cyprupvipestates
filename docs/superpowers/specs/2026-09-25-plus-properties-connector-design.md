@@ -164,7 +164,10 @@ correctness of the whole connector.
 - Unit ref: the unit label as written when it already starts with the block's
   token (the letter in "(X)" if the block has one, else the block itself:
   `Violet (A)` + `A01` → `A01`, `A` + `A101` → `A101`), otherwise `<block> <label>`
-  (`Plus 67 101`, `C-Villas Villa 1`); no block, the label. Stable across
+  (`Plus 67 101`, `C-Villas Villa 1`); no block, the label; a ref that still
+  repeats in its project gets the unit's floor as written (`Office 1 (Second
+  Floor)`, Plus 92; operator's decision 2026-09-26), or, if that cannot tell
+  the units apart, stays as it is with a note. Stable across
   versions; it is what client presentations will pin.
 - The connector sets **no slug**. `Development.slug` is minted on publish by
   `uniqueDevelopmentSlug()` from the public name ("Plus 33" → `plus-33`), as for

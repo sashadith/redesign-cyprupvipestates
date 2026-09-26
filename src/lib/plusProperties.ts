@@ -316,6 +316,31 @@ function addStorey(u: PlusUnit, s: PlusUnit): void {
   u.areaPlot = sumNum(u.areaPlot, s.areaPlot);
 }
 
+/* A ref names one unit within its project. Plus 92 has no block and five
+   floors of "Office 1/2/3", so the bare label repeats. Operator's rule
+   (2026-09-26, "append the floor"): each unit whose ref repeats becomes
+   "<ref> (<floor>)", with the unit's own carried-down floor as written in the
+   sheet, whitespace collapsed. Every other ref stays exactly as it was. When a
+   repeated unit has no floor, or the floor-qualified refs still collide (with
+   each other or with another unit's ref), nothing is guessed: those refs stay
+   as they are and a note says so. Runs last, after every continuation row has
+   been folded into its unit; the label never changes. */
+function disambiguateRefs(units: PlusUnit[], notes: string[]): void {
+  const count = new Map<string, number>();
+  for (const u of units) count.set(u.ref, (count.get(u.ref) ?? 0) + 1);
+  const repeated = Array.from(new Set(units.map((u) => u.ref))).filter((r) => (count.get(r) ?? 0) > 1);
+  for (const ref of repeated) {
+    const group = units.filter((u) => u.ref === ref);
+    /* The floor is already whitespace-collapsed and trimmed: readWorkbook
+       does that to every cell. */
+    const qualified = group.map((u) => (u.floor ? `${ref} (${u.floor})` : null));
+    const taken = new Set(units.filter((u) => u.ref !== ref).map((u) => u.ref));
+    const ok = qualified.every((q, i) => q != null && !taken.has(q) && qualified.indexOf(q) === i);
+    if (!ok) { notes.push(`ref "${ref}" repeats and cannot be told apart by floor`); continue; }
+    group.forEach((u, i) => { u.ref = qualified[i]!; });
+  }
+}
+
 /* House Kiti: label/value pairs laid out in column pairs (0/1, 3/4, 6/7, 9/10)
    for the main house, guest house and services. Areas carry "SQM"; a bare
    number beside an area label is a count and is not read as an area. Bedrooms
@@ -474,5 +499,6 @@ export async function parsePriceList(xml: string): Promise<PlusProject> {
     };
     units.push(open);
   }
+  disambiguateRefs(units, notes);
   return { ...base, units, notes };
 }

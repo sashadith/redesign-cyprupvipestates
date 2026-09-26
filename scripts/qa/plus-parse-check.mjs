@@ -200,10 +200,7 @@ for (const key of ["33", "57", "87", "63", "59", "67-68-69", "21", "60", "75", "
 }
 /* A ref names one unit. Two units with the same ref in one project means a
    row was read as a unit that is not one (Plus 75's "Lower Floor" storeys). */
-/* Plus 92 is not in this loop: its five floors each hold "Office 1/2/3" with
-   no block, so its refs repeat — a ref-rule question, not a sub-area one
-   (reported with the 2026-09-26 dry-run fixes, left open on purpose). */
-for (const key of ["33", "57", "87", "60", "75", "67-68-69", "59", "63", "21", "77"]) {
+for (const key of ["33", "57", "87", "60", "75", "67-68-69", "59", "63", "21", "77", "92"]) {
   const refs = (await P.parsePriceList(fx(`plus-${key}.xml`))).units.map((u) => u.ref);
   check(`Plus ${key}: refs are unique`, new Set(refs).size === refs.length, true);
 }
@@ -381,6 +378,57 @@ const villaCommon = await P.parsePriceList(workbook([
 ]));
 check("a villa's upper storey adds its common area; the plot is not doubled",
   villaCommon.units.map((u) => [u.ref, u.areaBuilt, u.areaCommon, u.areaPlot]), [["D-Villas Villa 1", 110, 6, 300]]);
+
+/* ── a ref that repeats in a project carries its floor ───────────────────
+   Operator's decision, 2026-09-26 ("Etage anhängen"). Plus 92 has no block
+   and five floors of "Office 1/2/3", so the bare label repeats. Each
+   duplicated unit becomes "<ref> (<floor>)", the floor exactly as written —
+   including the sheet's own typo "Firstl Floor". The label is unchanged, and
+   the Shop, whose ref is unique, keeps it as it is. */
+check("Plus 92: Office 1 on all five floors",
+  p92.units.filter((u) => u.label === "Office 1").map((u) => u.ref),
+  ["Office 1 (Firstl Floor)", "Office 1 (Second Floor)", "Office 1 (Third Floor)", "Office 1 (Fourth Floor)", "Office 1 (Fifth Floor)"]);
+check("Plus 92: every ref is unique", new Set(p92.units.map((u) => u.ref)).size, 16);
+check("Plus 92: labels are unchanged, the unique Shop ref too",
+  [p92.units.filter((u) => u.label === "Office 3").length, shop92?.ref, shop92?.label], [5, "Shop", "Shop"]);
+check("Plus 92: no 'cannot be told apart' note", p92.notes.filter((n) => /cannot be told apart/.test(n)), []);
+const refHdr = ["Floor", "Unit", "Price €", "Availability"];
+const noFloor = await P.parsePriceList(workbook([
+  refHdr,
+  ["", "Flat 1", "200000", "Available"],
+  ["1st", "Flat 1", "210000", "Available"],
+  ["", "Flat 2", "220000", "Available"],
+]));
+check("a duplicated ref whose floor is missing is kept, with a note",
+  [noFloor.units.map((u) => u.ref), noFloor.notes.filter((n) => /repeats/.test(n))],
+  [["Flat 1", "Flat 1", "Flat 2"], ['ref "Flat 1" repeats and cannot be told apart by floor']]);
+const sameFloor = await P.parsePriceList(workbook([
+  refHdr,
+  ["1st", "Flat 1", "200000", "Available"],
+  ["", "Flat 1", "210000", "Available"],
+  ["2nd", "Flat 1", "220000", "Available"],
+]));
+check("floor-qualified refs that still collide are kept, with a note",
+  [sameFloor.units.map((u) => u.ref), sameFloor.notes.filter((n) => /repeats/.test(n))],
+  [["Flat 1", "Flat 1", "Flat 1"], ['ref "Flat 1" repeats and cannot be told apart by floor']]);
+const clash = await P.parsePriceList(workbook([
+  refHdr,
+  ["1st", "Flat 1", "200000", "Available"],
+  ["2nd", "Flat 1", "210000", "Available"],
+  ["", "Flat 1 (1st)", "220000", "Available"],
+]));
+check("a floor-qualified ref that would take another unit's ref is not used",
+  [clash.units.map((u) => u.ref), clash.notes.filter((n) => /repeats/.test(n))],
+  [["Flat 1", "Flat 1", "Flat 1 (1st)"], ['ref "Flat 1" repeats and cannot be told apart by floor']]);
+const spaced = await P.parsePriceList(workbook([
+  refHdr,
+  ["First  Floor", "Flat 1", "200000", "Available"],
+  ["Second Floor", "Flat 1", "210000", "Available"],
+  ["", "Flat 2", "220000", "Available"],
+]));
+check("the floor is used as written, whitespace collapsed; a unique ref is untouched",
+  [spaced.units.map((u) => [u.ref, u.label]), spaced.notes.filter((n) => /repeats/.test(n))],
+  [[["Flat 1 (First Floor)", "Flat 1"], ["Flat 1 (Second Floor)", "Flat 1"], ["Flat 2", "Flat 2"]], []]);
 
 /* A villa whose opening row has no status is skipped — and so is its upper
    storey. Without an explicit "open unit", the storey row finds the villa
