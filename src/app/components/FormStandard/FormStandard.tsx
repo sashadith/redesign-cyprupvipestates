@@ -275,7 +275,7 @@ const FormStandard: FC<ContactFormProps> = ({
       const parsedPhone = parsePhoneNumberFromString(values.phone || "");
       const phoneFinal = parsedPhone?.number || values.phone || "";
 
-      const response = await axios.post("/api/monday", {
+      const response = await axios.post("/api/leads", {
         ...values,
         phone: phoneFinal,
         formStartTime: formStartTime, // используем фиксированное время

@@ -3,11 +3,15 @@ import { localeDir } from "@/lib/locale";
 import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import { frankRuhlLibre, rubikHebrew } from "@/app/fonts/hebrew";
 import "../../preview-home/tokens.css";
+/* The new global header lives here. This tree has its own <html>/<body> and
+   does NOT inherit src/app/[lang]/layout.tsx, so nothing else would load it. */
+import "@/app/header-footer.css";
 import "../../preview-projects/projects.css";
 import "../../preview-insights/insights.css";
 import "../landing.css";
 import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import LenisProvider from "../../preview-home/anim/LenisProvider";
+import { ModalProvider } from "@/app/context/ModalContext";
 
 /* The redesigned landing family, served under a "preview" prefix while the
    live pages (/[lang]/[...slug], block-rendered) stay untouched.
@@ -64,7 +68,9 @@ export default function PreviewLandingLayout({
         <meta name="robots" content="noindex, nofollow" />
       </head>
       <body>
-        <LenisProvider>{children}</LenisProvider>
+        <ModalProvider>
+          <LenisProvider>{children}</LenisProvider>
+        </ModalProvider>
       </body>
     </html>
   );

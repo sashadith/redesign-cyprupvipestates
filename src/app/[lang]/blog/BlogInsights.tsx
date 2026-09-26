@@ -25,7 +25,6 @@ import { FormStandardDocument } from "@/types/formStandardDocument";
 
 import Header from "@/app/components/Header/Header";
 import Footer from "@/app/components/Footer/Footer";
-import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 
 import InsightsList, { type InsightsCard } from "@/app/preview-insights/InsightsList";
@@ -119,7 +118,6 @@ export default async function BlogInsights({ lang, page }: { lang: string; page:
   const heroCard = allCards[0];
 
   const blogPage = await getBlogPageByLang(lang);
-  const formDocument: FormStandardDocument = await getFormStandardDocumentByLang(lang);
 
   // hero heading: compact localized brand heading (like the preview), last word
   // gold-accented. The SEO <title>/description still come from the blogPage doc.
@@ -227,7 +225,6 @@ export default async function BlogInsights({ lang, page }: { lang: string; page:
         )}
       </main>
       <Footer params={{ lang }} />
-      <ModalBrochure lang={lang} formDocument={formDocument} />
       <WhatsAppButton lang={lang} />
     </>
   );

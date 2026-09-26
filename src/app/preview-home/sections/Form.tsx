@@ -14,7 +14,7 @@ import { formCopy } from "./Form.copy";
 import "@/app/components/formFeedback.css";
 
 /* Contact form — redesign styling. Submission / validation / tracking logic is
-   preserved verbatim from the live FormStatic (lead → /api/monday → /api/leads,
+   preserved verbatim from the live FormStatic (lead → /api/leads,
    fbq / lintrk / dataLayer, honeypot, attribution). Now multilingual
    (en/de/pl/ru/he) using FormStatic's exact strings, which live in the sibling
    Form.copy.ts; `lang` defaults to "en" so existing EN-only usages
@@ -102,7 +102,7 @@ const Form: FC<{ lang?: string; title?: React.ReactNode; subtitle?: React.ReactN
       const parsedPhone = parsePhoneNumberFromString(values.phone || "");
       const phoneFinal = parsedPhone?.number || values.phone || "";
 
-      const response = await axios.post("/api/monday", {
+      const response = await axios.post("/api/leads", {
         ...values,
         phone: phoneFinal,
         formStartTime,

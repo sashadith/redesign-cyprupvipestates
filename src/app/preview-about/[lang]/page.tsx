@@ -5,7 +5,7 @@ import { abs, languageAlternates, ogLocale } from "@/lib/seo";
 import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporateLocale } from "@/lib/corporatePageSlugs";
 import type { BenefitsBlock } from "@/types/homepage";
 import type { Translation } from "@/types/homepage";
-import Nav from "../../preview-home/sections/Nav";
+import Header from "@/app/components/Header/Header";
 import Footer from "../../preview-home/sections/Footer";
 import Benefits from "../../preview-home/sections/Benefits";
 import ContactChannels from "@/app/components/ContactChannels/ContactChannels";
@@ -140,7 +140,7 @@ export default async function AboutPage({ params }: Props) {
   return (
     <>
       <AboutMotion />
-      <Nav lang={lang} translations={translations} homeHref={localizedHref(lang)} />
+      <Header params={{ lang }} translations={translations} />
 
       <main className="abt">
         {/* ------------------------------------------------------------ HERO */}

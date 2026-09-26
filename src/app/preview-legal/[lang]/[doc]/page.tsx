@@ -5,7 +5,7 @@ import { localizedHref, PUBLIC_LOCALES as LOCALES, isLocale, isPublicLocale, BCP
 import { languageAlternates, ogLocale } from "@/lib/seo";
 import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporatePage } from "@/lib/corporatePageSlugs";
 import type { Translation } from "@/types/homepage";
-import Nav from "../../../preview-home/sections/Nav";
+import Header from "@/app/components/Header/Header";
 import Footer from "../../../preview-home/sections/Footer";
 import LightHeroFlag from "../../../preview-insights/LightHeroFlag";
 import LegalMotion from "./LegalMotion";
@@ -110,7 +110,7 @@ export default async function LegalPage({ params }: Props) {
     <>
       <LightHeroFlag />
       <LegalMotion />
-      <Nav lang={lang} translations={translations} homeHref={localizedHref(lang)} />
+      <Header params={{ lang }} translations={translations} />
 
       <main className="lgl">
         {/* Same light content-page hero as Contacts and FAQ. */}

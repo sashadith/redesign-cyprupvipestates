@@ -50,7 +50,6 @@ import Form from "@/app/preview-home/sections/Form";
 import Header from "@/app/components/Header/Header";
 import Footer from "@/app/components/Footer/Footer";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
-import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
 import SchemaBlogPost from "@/app/components/SchemaBlogPost/SchemaBlogPost";
 import SchemaBlogFaq from "@/app/components/SchemaBlogFaq/SchemaBlogFaq";
 import LinkedInConversionTracker from "@/app/components/LinkedInConversionTracker/LinkedInConversionTracker";
@@ -180,7 +179,6 @@ const PagePost = async ({ params }: Props) => {
   if (!blog) notFound();
 
   const t = blogStrings(lang);
-  const formDocument: FormStandardDocument = await getFormStandardDocumentByLang(lang);
 
   const fmtDate = (d?: unknown) => {
     if (!d) return "";
@@ -464,7 +462,6 @@ const PagePost = async ({ params }: Props) => {
       </main>
 
       <Footer params={params} />
-      <ModalBrochure lang={lang} formDocument={formDocument} />
       <WhatsAppButton lang={params.lang} />
     </>
   );

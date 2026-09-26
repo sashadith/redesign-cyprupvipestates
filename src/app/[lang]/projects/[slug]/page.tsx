@@ -63,7 +63,6 @@ import PropertyDescription from "@/app/components/PropertyDescription/PropertyDe
 // same module scope.
 import nextDynamic from "next/dynamic";
 import PropertyDistances from "@/app/components/PropertyDistances/PropertyDistances";
-import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
 import { FormStandardDocument } from "@/types/formStandardDocument";
 import PropertySlider from "@/app/components/PropertySlider/PropertySlider";
 import PropertyFeatures from "@/app/components/PropertyFeatures/PropertyFeatures";
@@ -190,8 +189,6 @@ const ProjectPage = async ({ params }: Props) => {
 
   // console.log("faq", project.faq);
 
-  const formDocument: FormStandardDocument =
-    await getFormStandardDocumentByLang(params.lang);
 
   const propertyPageTranslationSlugs: {
     [key: string]: { current: string };
@@ -375,7 +372,6 @@ const ProjectPage = async ({ params }: Props) => {
       />
 
       <Footer params={params} />
-      <ModalBrochure lang={params.lang} formDocument={formDocument} />
       <ModalRoiCalculator lang={params.lang} project={project} />
     </>
   );

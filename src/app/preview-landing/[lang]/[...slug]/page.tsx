@@ -7,7 +7,7 @@ import { isLocale, localizedHref } from "@/lib/locale";
 import { getSinglePageByLang } from "@/sanity/sanity.utils";
 import type { Translation } from "@/types/homepage";
 
-import Nav from "@/app/preview-home/sections/Nav";
+import Header from "@/app/components/Header/Header";
 import Footer from "@/app/preview-home/sections/Footer";
 import LandingBody, { isLandingPage } from "../../LandingBody";
 import ClassicBody, { isClassicPage } from "../../ClassicBody";
@@ -43,7 +43,7 @@ export default async function PreviewLandingPage({ params }: Params) {
 
   return (
     <>
-      <Nav lang={lang} translations={translations} homeHref={localizedHref(lang)} />
+      <Header params={{ lang }} translations={translations} />
       {isLandingPage(page.contentBlocks) ? (
         <LandingBody page={page} lang={lang} />
       ) : isClassicPage(page.contentBlocks) ? (

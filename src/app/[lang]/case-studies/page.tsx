@@ -22,7 +22,6 @@ import {
 
 import Header from "@/app/components/Header/Header";
 import Footer from "@/app/components/Footer/Footer";
-import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 import FormStatic from "@/app/components/FormStatic/FormStatic";
 
@@ -76,8 +75,6 @@ const CaseStudiesPage = async ({ params }: Props) => {
 
   const caseStudiesPage = await getCaseStudiesPageByLang(lang);
 
-  const formDocument: FormStandardDocument =
-    await getFormStandardDocumentByLang(lang);
 
   const translationSlugs =
     caseStudiesPage?._translations?.map((item) => {
@@ -142,7 +139,6 @@ const CaseStudiesPage = async ({ params }: Props) => {
 
       <Footer params={params} />
 
-      <ModalBrochure lang={lang} formDocument={formDocument} />
 
       <WhatsAppButton lang={lang} />
     </>

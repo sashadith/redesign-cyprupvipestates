@@ -94,7 +94,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
       const parsedPhone = parsePhoneNumberFromString(values.phone || "");
       const phoneFinal = parsedPhone?.number || values.phone || "";
 
-      const response = await axios.post("/api/monday", {
+      const response = await axios.post("/api/leads", {
         ...values,
         phone: phoneFinal,
         formStartTime,
@@ -139,7 +139,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
           setMessage(null);
         }, 10000);
       } else {
-        throw new Error("Failed to send lead to monday.com");
+        throw new Error("Failed to send lead to the CRM");
       }
     } catch (error) {
       console.error("Error:", error);

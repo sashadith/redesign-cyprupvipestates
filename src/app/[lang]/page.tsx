@@ -29,7 +29,6 @@ import type { TextContent, DoubleTextBlock } from "@/types/blog";
 import Header from "../components/Header/Header";
 import Footer from "../components/Footer/Footer";
 import WhatsAppButton from "../components/WhatsAppButton/WhatsAppButton";
-import ModalBrochure from "../components/ModalBrochure/ModalBrochure";
 
 // Staging redesign sections
 import PreviewMotion from "@/app/preview-home/anim/PreviewMotion";
@@ -103,7 +102,6 @@ export default async function Home({ params }: Props) {
   // all (/uploads and friends land here). Without this the render dies on a
   // null deref and the URL 500s instead of 404ing.
   if (!homePage) notFound();
-  const formDocument: FormStandardDocument = await getFormStandardDocumentByLang(lang);
   const t = homeStrings(lang);
 
   // Language-switcher translations (same logic as production).
@@ -133,13 +131,13 @@ export default async function Home({ params }: Props) {
         <Hero
           heroBlock={homePage.heroBlock}
           lang={lang}
-          consultCta={<ConsultButton className="btn btn--glass"><span>{t.getConsultation}</span></ConsultButton>}
+          consultCta={<ConsultButton source="hero" className="btn btn--glass"><span>{t.getConsultation}</span></ConsultButton>}
         />
         <Brochure
           brochure={homePage.brochureBlock}
           cta={
             homePage.brochureBlock?.buttonLabel ? (
-              <ConsultButton className="btn btn--primary"><span>{homePage.brochureBlock.buttonLabel}</span></ConsultButton>
+              <ConsultButton source="brochure_block" className="btn btn--primary"><span>{homePage.brochureBlock.buttonLabel}</span></ConsultButton>
             ) : undefined
           }
         />
@@ -161,7 +159,6 @@ export default async function Home({ params }: Props) {
         <Form lang={lang} />
       </main>
       <Footer params={params} />
-      <ModalBrochure lang={lang} formDocument={formDocument} />
       <WhatsAppButton lang={lang} />
     </>
   );

@@ -46,7 +46,6 @@ import {
 } from "@/types/homepage";
 import { Singlepage } from "@/types/singlepage";
 import { Metadata } from "next";
-import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
 import TextContentComponent from "@/app/components/TextContentComponent/TextContentComponent";
 import PropertyIntro from "@/app/components/PropertyIntro/PropertyIntro";
 import ContactFullBlockComponent from "@/app/components/ContactFullBlockComponent/ContactFullBlockComponent";
@@ -379,8 +378,6 @@ const SinglePage = async ({ params, searchParams }: Props) => {
   // const parentSlug = page.parentPage?.slug[lang]?.current;
   // const parentTitle = page.parentPage?.title;
 
-  const formDocument: FormStandardDocument =
-    await getFormStandardDocumentByLang(lang);
 
   // Contextual parent -> child links (only present on pages that actually have children).
   const childPages = await getChildLandingPages(lang, (page as any)._id);
@@ -719,7 +716,6 @@ const SinglePage = async ({ params, searchParams }: Props) => {
       </main>
       )}
       <Footer params={params} />
-      <ModalBrochure lang={lang} formDocument={formDocument} />
       <WhatsAppButton lang={params.lang} />
     </>
   );

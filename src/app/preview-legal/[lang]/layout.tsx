@@ -4,10 +4,14 @@ import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import { frankRuhlLibre, rubikHebrew } from "@/app/fonts/hebrew";
 import { SITE_URL } from "@/lib/seo";
 import "../../preview-home/tokens.css";
+/* The new global header lives here. This tree has its own <html>/<body> and
+   does NOT inherit src/app/[lang]/layout.tsx, so nothing else would load it. */
+import "@/app/header-footer.css";
 import "../../preview-insights/insights.css";
 import "../legal.css";
 import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import LenisProvider from "../../preview-home/anim/LenisProvider";
+import { ModalProvider } from "@/app/context/ModalContext";
 
 /* Legal documents (Privacy & Terms) — redesigned. Isolated route tree, same as preview-partners /
    preview-faq / preview-case-studies — deliberately NOT nested under
@@ -59,7 +63,9 @@ export default function LegalLayout({
   return (
     <html lang={params.lang} dir={localeDir(params.lang)} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable} ${frankRuhlLibre.variable} ${rubikHebrew.variable}`}>
       <body>
-        <LenisProvider>{children}</LenisProvider>
+        <ModalProvider>
+          <LenisProvider>{children}</LenisProvider>
+        </ModalProvider>
       </body>
     </html>
   );

@@ -4,7 +4,7 @@ import { localizedHref, localesForStaticRoute, UNLOCALIZED_ROUTES } from "@/lib/
 import { abs, staticAlternates, ogLocale } from "@/lib/seo";
 import type { Translation } from "@/types/homepage";
 import type { BenefitsBlock } from "@/types/homepage";
-import Nav from "../../preview-home/sections/Nav";
+import Header from "@/app/components/Header/Header";
 import Footer from "../../preview-home/sections/Footer";
 import Benefits from "../../preview-home/sections/Benefits";
 import LightHeroFlag from "../../preview-insights/LightHeroFlag";
@@ -54,7 +54,7 @@ import { partnersCopy } from "./copy";
      - Form: same as before — a dedicated PartnersForm.tsx (not the shared
        preview-home Form.tsx) because the live FormPartners.tsx posts to
        /api/email with a required `country` field and a PARTNER-sourced CRM
-       lead, while Form.tsx posts to /api/monday and has no country field.
+       lead, while Form.tsx posts to /api/leads and has no country field.
        Styled with the shared .formsec__* classes every other redesigned
        page's form already uses. */
 
@@ -161,7 +161,7 @@ export default function PartnersPage({ params }: Props) {
     <>
       <HreflangLinks languages={languages} />
       <PartnersMotion />
-      <Nav lang={lang} translations={translations} homeHref={localizedHref(lang)} />
+      <Header params={{ lang }} translations={translations} />
 
       <main className="pnr">
         {/* ---------------------------------------------------------- HERO */}
