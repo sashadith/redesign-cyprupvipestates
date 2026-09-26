@@ -74,5 +74,39 @@ threw = "";
 try { P.activeSheet(bare([{ active: true, hidden: true }, {}, {}])); } catch (e) { threw = String(e.message); }
 check("a hidden sheet never counts as active", /exactly one active sheet/.test(threw), true);
 
+/* ── header spellings ──────────────────────────────────────────────────────
+   Every left-hand string below is a real header measured across the 32 lists
+   on 2026-09-25 (about 60 spellings for about 15 concepts). */
+const F = (h) => P.columnField(h);
+const HEADERS = [
+  ["Unit", "unit"], ["Villa No", "unit"], ["Floor", "floor"],
+  ["Block", "block"], ["BLOCKS", "block"], ["Project", "block"],
+  ["Nbr of Bedrooms", "beds"], ["Number of Bedrooms", "beds"], ["Nbr. of Bedrooms", "beds"],
+  ["Nbr of Bathrooms", "baths"], ["Number of Bathrooms", "baths"], ["Nbr. of Bathrooms", "baths"],
+  ["Parking", "parking"], ["Parking Spaces", "parking"], ["Covered Parking (sqm)", "parking"],
+  ["Storage", "storage"], ["Storage Rooms", "storage"], ["Storages", "storage"], ["Stores", "storage"],
+  ["Storage Room", "storage"], ["Storage / Area (sqm)", "storage"],
+  ["Covered Internal Area (sqm)", "internal"], ["Covered Internal Area (SQM)", "internal"],
+  ["Internal Area (sqm)", "internal"], ["Covered / Closed Area (sqm)", "internal"],
+  ["Covered Veranda (sqm)", "veranda"], ["Covered Veranda (SQM)", "veranda"], ["Covered Veranda / Terrace (sqm)", "veranda"],
+  ["Uncovered Veranda (sqm)", "verandaOpen"], ["Uncovered Terrace (sqm)", "verandaOpen"],
+  ["Uncovered Veranda & Terraces (sqm)", "verandaOpen"], ["Uncovered Balcony (sqm)", "verandaOpen"],
+  ["Uncovered veranda/ Terrace (sqm)", "verandaOpen"], ["Uncovered Veranda / Roof Terrace", "verandaOpen"],
+  ["Uncovered Roof Terrace (sqm)", "roof"], ["Covered Roof Terrace", "roof"], ["Internal covered Roof (sqm)", "roof"],
+  ["Roof Garden (SQM)", "roof"], ["Roof Storage and Bathroom (sqm)", "roof"],
+  ["Garden (sqm)", "garden"], ["Gardens", "garden"], ["Planter (sqm)", "garden"],
+  ["Common Area (sqm)", "common"], ["Total Area (sqm)", "total"], ["Plot Area (sqm)", "plot"],
+  ["Price €", "price"], ["Price", "price"], ["Availability", "status"],
+  /* The two a naive mapping gets wrong in the dangerous direction. */
+  ["Price €/OLD", "priceOld"],
+  ["OPTIONAL Roof Garden / Subject to Extra Cost (sqm)", "ignore"],
+  ["Storage Optional at Extra Cost", "ignore"],
+  ["(5% downpayment)", "ignore"], ["Kitchenette", "ignore"], ["Nbr of Units", "ignore"],
+];
+for (const [h, want] of HEADERS) check(`header "${h}" → ${want}`, F(h), want);
+check("an unknown header is null, not a guess", F("Sea View Rating"), null);
+check("whitespace and line breaks inside a header are ignored", F("Covered Internal Area\n  (sqm)"), "internal");
+check("an empty header is null", F("   "), null);
+
 console.log(failures ? `\n${failures} failed` : "\nall passed");
 process.exit(failures ? 1 : 0);

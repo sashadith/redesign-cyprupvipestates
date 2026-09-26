@@ -85,3 +85,47 @@ export function activeSheet(sheets: Sheet[]): Sheet {
   if (active.length === 0 && sheets.length === 1 && visible.length === 1) return visible[0];
   throw new PlusParseError(`expected exactly one active sheet, found ${active.length} of ${sheets.length}`);
 }
+
+export type Field =
+  | "block" | "floor" | "unit" | "beds" | "baths" | "parking" | "storage"
+  | "internal" | "veranda" | "verandaOpen" | "roof" | "garden" | "common" | "total" | "plot"
+  | "price" | "priceOld" | "status" | "ignore";
+
+/* About 60 header spellings for about 15 concepts, measured across all 32
+   workbooks. ORDER MATTERS: "Price €/OLD" must be caught before plain price
+   (a sold villa often has only its OLD price filled), optional extras before
+   the area they name, roof before garden/storage ("Roof Garden", "Roof Storage
+   and Bathroom"), and "uncovered" before "covered". null means unknown: the
+   caller reports it and ignores the column — a new header is never guessed.
+
+   The bedroom/bathroom count rules are anchored to the start of the header
+   ("Nbr of Bedrooms", "Number of Bathrooms", "Nbr. of Bedrooms") rather than
+   reordered ahead of the /roof/ rule below: an unanchored /bedroom/ or
+   /bathroom/ test would match before /roof/ ever runs, so "Roof Storage and
+   Bathroom (sqm)" would wrongly map to "baths" instead of "roof". Anchoring
+   keeps every other rule, and its order, exactly as measured. */
+export function columnField(header: string): Field | null {
+  const h = header.replace(/\s+/g, " ").trim().toLowerCase();
+  if (!h) return null;
+  if (/optional|extra cost/.test(h)) return "ignore";
+  if (/^price/.test(h)) return /old/.test(h) ? "priceOld" : "price";
+  if (/^availab/.test(h)) return "status";
+  if (/^(unit|villa no\.?)$/.test(h)) return "unit";
+  if (h === "floor") return "floor";
+  if (/^(block|blocks|project)$/.test(h)) return "block";
+  if (/^(nbr\.?|number) of bedrooms/.test(h)) return "beds";
+  if (/^(nbr\.?|number) of bathrooms/.test(h)) return "baths";
+  if (/downpayment|kitch|nbr of units|number of units/.test(h)) return "ignore";
+  if (/plot/.test(h)) return "plot";
+  if (/total area/.test(h)) return "total";
+  if (/common area/.test(h)) return "common";
+  if (/^uncovered veranda/.test(h)) return "verandaOpen";
+  if (/roof/.test(h)) return "roof";
+  if (/parking/.test(h)) return "parking";
+  if (/storage|^stores?$/.test(h)) return "storage";
+  if (/garden|planter/.test(h)) return "garden";
+  if (/uncovered|balcony/.test(h)) return "verandaOpen";
+  if (/veranda|terrace/.test(h)) return "veranda";
+  if (/internal|closed area/.test(h)) return "internal";
+  return null;
+}
