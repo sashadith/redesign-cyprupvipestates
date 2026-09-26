@@ -76,8 +76,13 @@ export function parseCompletionBefore(v: string | undefined): number | null | "i
 }
 
 export function publicUrlFor(slug: string | null, publishStatus: string) {
+  // English is the bare path (nginx 301-strips `/en/*`) — only de/pl/ru/he
+  // carry a locale prefix. Emitting `/en/projects/${slug}` sent every
+  // CRM-generated English project link (crm_match_properties, admin
+  // PropertyMatching, agent-drafted emails/WhatsApp) through an unnecessary
+  // redirect hop.
   return slug && publishStatus === "published"
-    ? { en: `/en/projects/${slug}`, de: `/de/projects/${slug}`, pl: `/pl/projects/${slug}`, ru: `/ru/projects/${slug}`, he: `/he/projects/${slug}` }
+    ? { en: `/projects/${slug}`, de: `/de/projects/${slug}`, pl: `/pl/projects/${slug}`, ru: `/ru/projects/${slug}`, he: `/he/projects/${slug}` }
     : null;
 }
 

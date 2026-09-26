@@ -412,7 +412,7 @@ export default function PropertyMatching({
                     <td className="px-3 py-2 font-medium text-[#111827]">
                       {d.publishStatus === "published" && d.slug ? (
                         <a
-                          href={`/en/projects/${d.slug}`}
+                          href={`/projects/${d.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
