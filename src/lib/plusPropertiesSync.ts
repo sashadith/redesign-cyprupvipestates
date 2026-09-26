@@ -1,4 +1,4 @@
-import { parse as parseHtml } from "node-html-parser";
+import { parse as parseHtml, HTMLElement } from "node-html-parser";
 import { countableFeedUnits, completenessVerdict } from "./feedSync";
 import { prisma } from "./prisma";
 import { getAccessToken, listFolder, collectMedia, downloadFile, type DriveFile } from "./googleDrive";
@@ -77,22 +77,69 @@ export function mapsLinkNote(key: string, mapsUrl: string | null, coords: { lat:
   return mapsUrl && !coords ? `${key}: no coordinates in the Maps link — set the pin in the admin` : null;
 }
 
-/* Only the "Project Details" block of the developer's page: a <strong> label,
-   then a <ul>. Raw facts for the AI description generator and the amenity
-   list; the operator reviews every draft before it is published. */
+const FACT_MARKER = /^[.•-]/;
+const oneLine = (s: string) => s.replace(/\s+/g, " ").trim();
+
+/* The developer's line layout: sibling <p>s, each fact starting with a
+   marker (". 5 Luxurious Villas", "•", "-") that is stripped. A non-empty <p>
+   without a marker that follows a fact is that fact wrapping onto the next
+   line ("… Mediterranean &" / "&nbsp; Four Seasons Hotels"). The first
+   element that is neither — an empty <p>&nbsp;</p>, prose before any fact,
+   anything not a <p> — ends the block. node-html-parser's .text decodes
+   entities; \s covers the decoded non-breaking space. */
+function factLines(first: HTMLElement | null): string[] {
+  const facts: string[] = [];
+  for (let el = first; el && el.tagName === "P"; el = el.nextElementSibling) {
+    const t = oneLine(el.text);
+    if (FACT_MARKER.test(t)) {
+      const fact = oneLine(t.slice(1));
+      if (!fact) break;
+      facts.push(fact);
+    } else if (t && facts.length) {
+      facts[facts.length - 1] = `${facts[facts.length - 1]} ${t}`;
+    } else break;
+  }
+  return facts;
+}
+
+/* Only the "Project Details" block of the developer's page. Raw facts for the
+   AI description generator and the amenity list; the operator reviews every
+   draft before it is published. Three layouts, measured 2026-09-26:
+   (a) Plus 33: a <strong> label, then a <ul>;
+   (b) Plus 87: the label, then marker lines (factLines);
+   (c) Plus 60: no label; marker lines in the <div> right before
+       div.downloadBtns — the OVERVIEW & LIFESTYLE prose sits elsewhere and is
+       never read. */
 export function projectDetails(html: string): { facts: string[]; energy: string | null } {
   const root = parseHtml(html);
   const label = root.querySelectorAll("strong").find((s) => /project details/i.test(s.text));
-  /* Most pages wrap the label in its own <p>, so the <ul> is the label's
-     PARENT's next sibling; some wrap nothing, so the <ul> follows the
-     <strong> directly. Try the direct sibling first. */
-  let el = label?.nextElementSibling ?? null;
-  if (!el || el.tagName !== "UL") {
-    el = label?.parentNode?.nextElementSibling ?? null;
-    while (el && el.tagName !== "UL") el = el.nextElementSibling;
+  let all: string[] = [];
+  if (label) {
+    /* Most pages wrap the label in its own <p>, so the block starts at the
+       label's PARENT's next sibling; some wrap nothing, so it follows the
+       <strong> directly. Try the direct sibling first. */
+    const direct = label.nextElementSibling ?? null;
+    const afterParent = label.parentNode?.nextElementSibling ?? null;
+    let el = direct;
+    if (!el || el.tagName !== "UL") {
+      /* (b) is tried where (a) would look for its list, before (a)'s walk
+         could reach some later, unrelated <ul>. */
+      all = factLines(direct);
+      if (!all.length) all = factLines(afterParent);
+      el = afterParent;
+      while (el && el.tagName !== "UL") el = el.nextElementSibling;
+    }
+    if (!all.length && el) all = el.querySelectorAll("li").map((li) => oneLine(li.text)).filter(Boolean);
+  } else {
+    const box = root.querySelector("div.downloadBtns")?.previousElementSibling ?? null;
+    /* This node-html-parser has no firstElementChild: the first element
+       child is the first child node that is an HTMLElement. */
+    const first = box && box.tagName === "DIV" ? box.childNodes.find((n): n is HTMLElement => n instanceof HTMLElement) ?? null : null;
+    const lines = factLines(first);
+    /* One stray ". " line is not a block. */
+    if (lines.length >= 2) all = lines;
   }
-  if (!el) return { facts: [], energy: null };
-  const all = el.querySelectorAll("li").map((li) => li.text.replace(/\s+/g, " ").trim()).filter(Boolean);
+  if (!all.length) return { facts: [], energy: null };
   /* "Solar Energy Panels" also matches /energy/i; only a fact that ALSO ends
      in a class letter ("… Category: A") is the energy fact. Anything else
      matching /energy/i stays a plain amenity. */
