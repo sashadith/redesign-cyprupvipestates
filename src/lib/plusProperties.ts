@@ -247,6 +247,18 @@ function headerIndex(rows: Cell[][]): number {
 
 const normBlock = (s: string) => s.replace(/\s*-\s*/g, "-").replace(/\s+/g, " ").trim();
 
+/* The unit ref is public: client presentations pin it from the first run, so
+   the rule is fixed here. The block's token is the letter(s) in "(X)" when the
+   block has them ("Violet (A)" → "A"), else the block itself. A label that
+   already starts with that token IS the ref ("A01", "A101"); any other label
+   carries its block ("Plus 67 101", "C-Villas Villa 1"), because bare numbers
+   and villa names repeat across blocks. */
+export function unitRef(block: string | null, label: string): string {
+  if (!block) return label;
+  const token = block.match(/\(([^)]*)\)/)?.[1]?.trim() || block;
+  return label.toLowerCase().startsWith(token.toLowerCase()) ? label : `${block} ${label}`;
+}
+
 /* An area is the SUM of every column mapped to it, not the first one: Plus 63
    has both "Uncovered Veranda (sqm)" and "Uncovered Terrace (sqm)", and both
    are open-air area of the same unit. Text fields (floor, block, beds, …) still
@@ -274,8 +286,10 @@ function priceOf(cell: Cell | null, status: PlusStatus): number | null {
 const STOREY = /^(lower|upper|ground|first|second|1st|2nd)\s+floor$/i;
 
 const sumNum = (a: number | null, b: number | null) => (a == null ? b : b == null ? a : Math.round((a + b) * 100) / 100);
-const sumCount = (a: string | null, b: string | null) => {
-  const n = (s: string | null) => (s && /^\d+$/.test(s) ? Number(s) : null);
+/* A split count ("3 (2+1)") adds as its leading total, the number every
+   reader of beds takes. */
+export const sumCount = (a: string | null, b: string | null) => {
+  const n = (s: string | null) => { const m = s?.match(/^(\d+)(?:\s*\(|$)/); return m ? Number(m[1]) : null; };
   if (n(a) == null && n(b) == null) return a ?? b;
   return String((n(a) ?? 0) + (n(b) ?? 0));
 };
@@ -407,7 +421,7 @@ export async function parsePriceList(xml: string): Promise<PlusProject> {
         if (!statusRaw) { notes.push(`villa ${villaName} has no status — skipped`); continue; }
         const status = parseStatus(statusRaw);
         open = {
-          ref: block ? `${block} ${villaName}` : villaName, label: villaName, block, floor: null,
+          ref: unitRef(block, villaName), label: villaName, block, floor: null,
           beds: cleanBeds(val("beds")), baths: cleanBeds(val("baths")),
           parking: cleanText(val("parking")), storage: cleanText(val("storage")),
           areaBuilt: area("internal"), areaVeranda: area("veranda"),
@@ -437,7 +451,7 @@ export async function parsePriceList(xml: string): Promise<PlusProject> {
     }
     const status = parseStatus(statusRaw);
     open = {
-      ref: block ? `${block} ${name}` : name, label: name, block, floor,
+      ref: unitRef(block, name), label: name, block, floor,
       beds: cleanBeds(val("beds")), baths: cleanBeds(val("baths")),
       parking: cleanText(val("parking")), storage: cleanText(val("storage")),
       areaBuilt: area("internal"), areaVeranda: area("veranda"),

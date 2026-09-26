@@ -161,8 +161,11 @@ correctness of the whole connector.
   Not the Drive file id and not the file name — both change with every new
   version.
 - Media folder found by the same number under `Cyprus Projects/<City> Projects/`.
-- Unit ref = block + unit number (`A101`, `Villa 1`). Stable across versions; it
-  is what client presentations will pin.
+- Unit ref: the unit label as written when it already starts with the block's
+  token (the letter in "(X)" if the block has one, else the block itself:
+  `Violet (A)` + `A01` → `A01`, `A` + `A101` → `A101`), otherwise `<block> <label>`
+  (`Plus 67 101`, `C-Villas Villa 1`); no block, the label. Stable across
+  versions; it is what client presentations will pin.
 - The connector sets **no slug**. `Development.slug` is minted on publish by
   `uniqueDevelopmentSlug()` from the public name ("Plus 33" → `plus-33`), as for
   Cybarco. The dry run reports whether that slug collides with a Development or a

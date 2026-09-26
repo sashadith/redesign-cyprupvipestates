@@ -139,6 +139,28 @@ check("beds: plain", [P.cleanBeds("2"), P.cleanBeds("2.0"), P.cleanBeds(""), P.c
 check("text: Excel noise on a number", P.cleanText("17.600000000000001"), "17.6");
 check("text: words are kept", [P.cleanText(" semi covered "), P.cleanText("1 Roof"), P.cleanText("")], ["semi covered", "1 Roof", null]);
 
+/* A villa's upper storey adds its counts to the villa. A split count such as
+   "3 (2+1)" counts as its leading total, like every other reader of beds. */
+check("sumCount: plain counts add", P.sumCount("2", "1"), "3");
+check("sumCount: a split count adds as its leading total", P.sumCount("3 (2+1)", "1"), "4");
+check("sumCount: nothing numeric keeps what is there", [P.sumCount(null, null), P.sumCount("Yes", null)], [null, "Yes"]);
+
+/* ── the unit ref ─────────────────────────────────────────────────────────
+   Public, and pinned by client presentations from the first real run. The
+   block is added only when the label does not already carry it: the block's
+   token is the letter in "(X)" when it has one, else the block itself. */
+check("ref: a label that starts with the block's (X) letter is the ref (Plus 57)", P.unitRef("Violet (A)", "A01"), "A01");
+check("ref: a label that starts with the block is the ref (Plus 21)", P.unitRef("A", "A101"), "A101");
+check("ref: …compared without case", P.unitRef("a", "A101"), "A101");
+check("ref: a bare number carries its block (Plus 67-68-69)", P.unitRef("Plus 67", "101"), "Plus 67 101");
+check("ref: a villa name carries its block (Plus 75)", P.unitRef("C-Villas", "Villa 1"), "C-Villas Villa 1");
+check("ref: no block, the label", P.unitRef(null, "Villa 1"), "Villa 1");
+const refsOf = async (key) => (await P.parsePriceList(fx(`plus-${key}.xml`))).units.map((u) => u.ref);
+check("Plus 57 end to end: 'Violet (A)' + 'A01' is 'A01'", (await refsOf("57"))[0], "A01");
+check("Plus 21 end to end: 'A' + 'A101' is 'A101'", (await refsOf("21")).includes("A101"), true);
+check("Plus 67-68-69 end to end: 'Plus 67' + '101' is 'Plus 67 101'", (await refsOf("67-68-69"))[0], "Plus 67 101");
+check("Plus 75 end to end: an apartment ref is its label", (await refsOf("75"))[0], "A01");
+
 /* ── Plus 33, the plain case ─────────────────────────────────────────────
    Values from the developer's PDF of version 2.41 (2026-09-01). */
 const p33 = await P.parsePriceList(fx("plus-33.xml"));
@@ -252,7 +274,7 @@ check("Plus 75: available D-villas", ["2", "6", "7"].map((n) => v[`D-Villas Vill
 check("Plus 75: no villa floor is 'Villa N'", villas.every((u) => !/villa/i.test(u.floor ?? "")), true);
 /* An available apartment has both columns filled: "Price €/OLD" 220,000 and
    "Price €" 255,000. The current one is the price. */
-check("Plus 75: A01 takes 'Price €' (255,000), not its OLD 220,000", v["A A01"].price, 255000);
+check("Plus 75: A01 takes 'Price €' (255,000), not its OLD 220,000", v["A01"].price, 255000);
 
 /* ── House Kiti: a house, not a table ─────────────────────────────────── */
 const kiti = await P.parsePriceList(fx("plus-house-kiti.xml"));
@@ -287,6 +309,14 @@ const skipped = await P.parsePriceList(workbook([
 check("a skipped villa's upper storey does not land on the villa before it",
   skipped.units.map((u) => [u.ref, u.beds, u.baths, u.areaBuilt]), [["D-Villas Villa 1", "2", "3", 110]]);
 check("…and the skip is reported", skipped.notes.some((n) => /Villa 2 has no status — skipped/.test(n)), true);
+/* The villa path follows the same ref rule: a villa name that already starts
+   with its block's token is the ref as written. */
+const villaRef = await P.parsePriceList(workbook([
+  ["Block", "Floor", "Unit", "Number of Bedrooms", "Price €", "Availability"],
+  ["V", "V1", "Lower Floor", "1", "300000", "Available"],
+  ["", "", "Upper Floor", "2", "", ""],
+]));
+check("a villa name that starts with its block is the ref", villaRef.units.map((u) => u.ref), ["V1"]);
 
 /* House Kiti's only price is the footer "Price:". Written in white it is
    hidden: the house is not read, and the project fails instead of publishing
