@@ -605,27 +605,64 @@ html:not([data-scrolled])[data-hero-scrim] .nav__link:focus-visible {
    longest label (ru, "Спросить консультанта", 223px) would need the logo below
    120px wide — 17px tall — to fit. So the label cannot survive there at any
    logo size. The button itself never disappears; aria-label keeps its name. */
-/* Chip-only form: a 34px pill, deliberately under the 38px logo mark so the
-   button does not compete with the brand mark on mobile. */
+/* The label is written out nearly everywhere, including on phones — the button
+   should make the same promise whatever the screen. It is dropped in exactly two
+   bands, and both are measured rather than assumed.
+
+   Below 360px it does not fit: with the logo mark and the burger alongside it,
+   "Получить консультацию" runs 28px over at 320 and 4px over at 344, and
+   "Porozmawiaj z doradcą" 16px over at 320. From 360 every locale clears, the
+   tightest (Russian) by 12px, and by 27px at 375. Under that width the chip
+   stands alone and aria-label still names the button.
+
+   Between 1024 and 1152 it does not fit either, for the opposite reason: the
+   desktop nav links appear at 1024 and take the room the label needs — measured
+   -11px at 1024 even in English. That band is the only place on a wide screen
+   where the chip goes it alone.
+
+   Hence the shape of these rules: hidden at the very bottom, shown from 360,
+   hidden again for one band, shown from 1152. The 34px pill of the chip-only
+   form stays deliberately under the 38px logo mark so it cannot compete with the
+   brand mark. */
 .nav__cta { padding: 0 5px; height: 34px; }
 .nav__cta-label { display: none; }
-/* 1152, and the logo stays trimmed up to 1280 — the two numbers are one
-   decision, which is worth spelling out because measuring them separately gives
-   a wrong answer. A full-size logo costs 71px of nav width, so "the label fits
-   at 1100" only held while the logo was still at 32px there; letting it back to
-   42px at the same breakpoint put Polish 63px over.
 
-   Measured with the logo held at 32px: 1152 clears in every locale (Russian, the
-   tightest, by 46px) and 1100 does not (Russian +2px). From 1280 there is room
-   for both at full size.
-
-   The threshold follows the WIDEST label, not the first one that fits. Before
-   Contacts moved into the About submenu this had to be 1200 with a separate
-   Russian rule at 1280; that exception is gone. */
-@media (min-width: 1152px) {
-  .nav__cta { padding: 0 5px 0 18px; height: 38px; }
+@media (min-width: 360px) {
+  .nav__cta { padding: 0 4px 0 14px; height: 38px; }
   .nav__cta-label { display: inline; }
 }
+/* Russian needs 15px more phone than the others. Measured at 360 with the button
+   kept identical to its desktop form: English clears by 40px, German by 58,
+   Polish by 16 — and Russian by 4, which is positive but leaves nothing for font
+   rendering to differ by on a device that is not this one.
+
+   The button is NOT tightened to make it fit. Trimming its padding bought 5px
+   and dropping the font to 12.5px bought 12 more, but a smaller button on the
+   phone is the opposite of what was asked for — the label should read the same
+   as on the desktop. So the layout waits for the room instead: from 375 Russian
+   clears by 19px. */
+html[lang="ru"] .nav__cta { padding: 0 5px; height: 34px; }
+html[lang="ru"] .nav__cta-label { display: none; }
+@media (min-width: 375px) {
+  html[lang="ru"] .nav__cta { padding: 0 4px 0 14px; height: 38px; }
+  html[lang="ru"] .nav__cta-label { display: inline; }
+}
+
+/* The desktop links are in, the room is not — see above. */
+@media (min-width: 1024px) and (max-width: 1151.98px) {
+  .nav__cta,
+  html[lang="ru"] .nav__cta { padding: 0 5px; height: 34px; }
+  .nav__cta-label,
+  html[lang="ru"] .nav__cta-label { display: none; }
+}
+
+@media (min-width: 1152px) {
+  .nav__cta,
+  html[lang="ru"] .nav__cta { padding: 0 4px 0 14px; height: 38px; }
+  .nav__cta-label,
+  html[lang="ru"] .nav__cta-label { display: inline; }
+}
+
 
 /* The logo only gives up room where the measurements say it must. With Contacts
    moved out of the top level that is just the band below the label threshold,
