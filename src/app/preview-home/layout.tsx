@@ -1,5 +1,6 @@
+import "@/app/fonts/vendored.css";
+import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
 import type { Metadata } from "next";
-import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import "./tokens.css";
 /* Staging preview with its own <html>/<body>; nothing else pulls in the
    global header stylesheet here. */
@@ -8,25 +9,9 @@ import LenisProvider from "./anim/LenisProvider";
 import { ModalProvider } from "@/app/context/ModalContext";
 
 /* Locked set 2 — Fraunces (display) · Mulish (body); Playfair = Cyrillic fallback. */
-const display = Fraunces({
-  subsets: ["latin", "latin-ext"],
-  weight: ["300", "400", "500"],
-  style: ["normal", "italic"],
-  variable: "--font-display",
-  display: "swap",
-});
-const body = Mulish({
-  subsets: ["latin", "latin-ext", "cyrillic"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-body",
-  display: "swap",
-});
-const cyr = Playfair_Display({
-  subsets: ["cyrillic"],
-  weight: ["400", "500"],
-  variable: "--font-display-cyr",
-  display: "swap",
-});
+const display = frauncesFontDisplay;
+const body = mulishFontBody;
+const cyr = playfairDisplayFontDisplayCyr;
 
 export const metadata: Metadata = {
   title: "CVE — Homepage redesign preview",

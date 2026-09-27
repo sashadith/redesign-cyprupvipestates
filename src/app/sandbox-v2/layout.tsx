@@ -1,32 +1,16 @@
+import "@/app/fonts/vendored.css";
+import { frauncesFontDisplay, manropeFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
 import type { Metadata } from "next";
-import { Fraunces, Playfair_Display, Manrope } from "next/font/google";
 import "./tokens.css";
 
 /* Display — Fraunces: a high-contrast variable optical serif, more expressive
    than V1's Cormorant. latin-ext covers PL diacritics; no Cyrillic → RU falls
    through to Playfair Display per-glyph. */
-const display = Fraunces({
-  subsets: ["latin", "latin-ext"],
-  weight: ["300", "400", "500"],
-  style: ["normal", "italic"],
-  variable: "--font-display",
-  display: "swap",
-});
+const display = frauncesFontDisplay;
 
-const displayCyr = Playfair_Display({
-  subsets: ["latin", "cyrillic"],
-  weight: ["400", "500"],
-  style: ["normal", "italic"],
-  variable: "--font-display-cyr",
-  display: "swap",
-});
+const displayCyr = playfairDisplayFontDisplayCyr;
 
-const body = Manrope({
-  subsets: ["latin", "latin-ext", "cyrillic"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-body",
-  display: "swap",
-});
+const body = manropeFontBody;
 
 export const metadata: Metadata = {
   title: "CVE — Redesign Sandbox V2",

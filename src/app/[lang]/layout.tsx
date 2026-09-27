@@ -1,10 +1,11 @@
 // src/app/[lang]/layout.tsx
+import "@/app/fonts/vendored.css";
+import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr, rubikFontBodyHe } from "@/app/fonts";
 import "@/app/globals.css";
 import "@/app/design-tokens.css"; // shared design tokens (definitions only — see file header)
 import "@/app/header-footer.css"; // global header + footer chrome (redesign) — see file header
 import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import type { Metadata } from "next";
-import { Rubik, Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import { cookies, draftMode } from "next/headers";
 import { GoogleTagManager } from "@next/third-parties/google";
 import { ModalProvider } from "../context/ModalContext";
@@ -41,32 +42,16 @@ const PREPAINT = `(function(){try{var p=location.pathname.replace(/\\/+$/,'')||'
 // `--font-body-he` (consumed by rtl.css's `:lang(he)` rule), so the Hebrew body
 // font is not fetched a second time via fonts/hebrew.ts here. The preview-*
 // layouts keep `rubikHebrew` because their body font (Mulish) has no Hebrew glyphs.
-const rubik = Rubik({ subsets: ["latin", "cyrillic", "hebrew"], variable: "--font-body-he" });
+const rubik = rubikFontBodyHe;
 
 // Redesign chrome fonts — define the CSS vars the global header/footer use.
 // Applied as `.variable` classes on <body> (they only DEFINE the vars; the body
 // text itself stays Rubik). Config MUST match the blog listing (BlogInsights) so
 // the same font files are reused. --font-display: Fraunces (incl. italic accents),
 // --font-body: Mulish, --font-display-cyr: Playfair (Cyrillic display fallback).
-const fraunces = Fraunces({
-  subsets: ["latin", "latin-ext"],
-  weight: ["300", "400", "500"],
-  style: ["normal", "italic"],
-  variable: "--font-display",
-  display: "swap",
-});
-const mulish = Mulish({
-  subsets: ["latin", "latin-ext", "cyrillic"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-body",
-  display: "swap",
-});
-const playfairCyr = Playfair_Display({
-  subsets: ["cyrillic"],
-  weight: ["400", "500"],
-  variable: "--font-display-cyr",
-  display: "swap",
-});
+const fraunces = frauncesFontDisplay;
+const mulish = mulishFontBody;
+const playfairCyr = playfairDisplayFontDisplayCyr;
 
 // Third-party tracking master switch. Re-enabled 2026-06-23 (owner request, audit H3):
 // Google Analytics 4, Microsoft Clarity, Facebook Pixel (+ FB domain-verification meta).

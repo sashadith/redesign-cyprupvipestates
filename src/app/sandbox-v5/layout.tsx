@@ -1,35 +1,24 @@
+import "@/app/fonts/vendored.css";
+import { commissionerBE, cormorantGaramondFA, eBGaramondFC, forumFD, frauncesFB, manropeBA, mulishBB, onestBC, playfairDisplayFontDisplayCyr, spectralBD, tenorSansFE } from "@/app/fonts";
 import type { Metadata } from "next";
-import {
-  Cormorant_Garamond,
-  Fraunces,
-  EB_Garamond,
-  Forum,
-  Tenor_Sans,
-  Playfair_Display,
-  Manrope,
-  Mulish,
-  Onest,
-  Spectral,
-  Commissioner,
-} from "next/font/google";
 import "./tokens.css";
 
 /* ---- 5 display fonts ---- (sets 3-5 carry Cyrillic natively; 1-2 fall back to Playfair) */
-const fA = Cormorant_Garamond({ subsets: ["latin", "latin-ext"], weight: ["300", "400", "500"], variable: "--f-a", display: "swap" }); /* no real italic → faux-italic "quietly", matching V1 */
-const fB = Fraunces({ subsets: ["latin", "latin-ext"], weight: ["300", "400", "500"], style: ["normal", "italic"], variable: "--f-b", display: "swap" });
-const fC = EB_Garamond({ subsets: ["latin", "latin-ext", "cyrillic"], weight: ["400", "500", "600"], style: ["normal", "italic"], variable: "--f-c", display: "swap" });
-const fD = Forum({ subsets: ["latin", "latin-ext", "cyrillic"], weight: ["400"], variable: "--f-d", display: "swap" });
-const fE = Tenor_Sans({ subsets: ["latin", "latin-ext", "cyrillic"], weight: ["400"], variable: "--f-e", display: "swap" });
+const fA = cormorantGaramondFA; /* no real italic → faux-italic "quietly", matching V1 */
+const fB = frauncesFB;
+const fC = eBGaramondFC;
+const fD = forumFD;
+const fE = tenorSansFE;
 
 /* dedicated Cyrillic fallback for the displays without it (sets 1 & 2) */
-const cyr = Playfair_Display({ subsets: ["cyrillic"], weight: ["400", "500"], variable: "--font-display-cyr", display: "swap" });
+const cyr = playfairDisplayFontDisplayCyr;
 
 /* ---- 5 body fonts ---- (all carry Cyrillic) */
-const bA = Manrope({ subsets: ["latin", "latin-ext", "cyrillic"], weight: ["300", "400", "500", "600"], variable: "--b-a", display: "swap" });
-const bB = Mulish({ subsets: ["latin", "latin-ext", "cyrillic"], weight: ["300", "400", "500", "600"], variable: "--b-b", display: "swap" });
-const bC = Onest({ subsets: ["latin", "latin-ext", "cyrillic"], weight: ["300", "400", "500", "600"], variable: "--b-c", display: "swap" });
-const bD = Spectral({ subsets: ["latin", "latin-ext", "cyrillic"], weight: ["300", "400", "500", "600"], variable: "--b-d", display: "swap" });
-const bE = Commissioner({ subsets: ["latin", "latin-ext", "cyrillic"], weight: ["300", "400", "500", "600"], variable: "--b-e", display: "swap" });
+const bA = manropeBA;
+const bB = mulishBB;
+const bC = onestBC;
+const bD = spectralBD;
+const bE = commissionerBE;
 
 const FONT_VARS = [fA, fB, fC, fD, fE, cyr, bA, bB, bC, bD, bE].map((f) => f.variable).join(" ");
 

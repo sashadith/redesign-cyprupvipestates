@@ -1,8 +1,9 @@
+import "@/app/fonts/vendored.css";
+import { oswaldPlain } from "@/app/fonts";
 import React, { FC } from "react";
 import styles from "./PartnersHero.module.scss";
 import Image from "next/image";
 import { ButtonModal } from "../../ButtonModal/ButtonModal";
-import { Oswald } from "next/font/google";
 import type { Locale } from "@/lib/locale";
 
 type Props = {
@@ -19,10 +20,7 @@ type PartnersHeroTranslation = {
   note: string;
 };
 
-const oswald = Oswald({
-  subsets: ["latin", "cyrillic"],
-  weight: ["300", "400"],
-});
+const oswald = oswaldPlain;
 
 const EN: PartnersHeroTranslation = {
   subtitleTop: "Become a partner of Cyprus VIP Estates",

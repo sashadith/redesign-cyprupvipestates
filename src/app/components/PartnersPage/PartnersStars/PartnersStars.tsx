@@ -1,13 +1,11 @@
+import "@/app/fonts/vendored.css";
+import { oswaldPlain } from "@/app/fonts";
 import React, { FC } from "react";
 import styles from "./PartnersStars.module.scss";
-import { Oswald } from "next/font/google";
 import FadeUpAnimate from "../../FadeUpAnimate/FadeUpAnimate";
 import type { Locale } from "@/lib/locale";
 
-const oswald = Oswald({
-  subsets: ["latin", "cyrillic"],
-  weight: ["300", "400"],
-});
+const oswald = oswaldPlain;
 
 type Props = {
   lang: string;

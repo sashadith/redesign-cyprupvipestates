@@ -4,9 +4,10 @@
 // (handled by the route generateMetadata), swaps the old FormStatic for the new
 // redesign form, and adds de/pl/ru UI translations. Design-system CSS + fonts
 // are imported here so they load only on the listing routes (not /blog/[slug]).
+import "@/app/fonts/vendored.css";
+import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
 import React from "react";
 import { notFound } from "next/navigation";
-import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import "@/app/preview-home/tokens.css";
 import "@/app/preview-insights/insights.css";
 
@@ -37,25 +38,9 @@ import { blogStrings } from "./blogI18n";
 // the live Header/Footer keep their font). Config MUST match preview-insights/
 // layout.tsx exactly — same weights, italic style, and subsets — otherwise the
 // gold `.it` accent words render as faux-synthesized italic and weights differ.
-const display = Fraunces({
-  subsets: ["latin", "latin-ext"],
-  weight: ["300", "400", "500"],
-  style: ["normal", "italic"],
-  variable: "--font-display",
-  display: "swap",
-});
-const body = Mulish({
-  subsets: ["latin", "latin-ext", "cyrillic"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-body",
-  display: "swap",
-});
-const cyr = Playfair_Display({
-  subsets: ["cyrillic"],
-  weight: ["400", "500"],
-  variable: "--font-display-cyr",
-  display: "swap",
-});
+const display = frauncesFontDisplay;
+const body = mulishFontBody;
+const cyr = playfairDisplayFontDisplayCyr;
 
 const REGULAR_PER_PAGE = 15;
 const PAGE_1_TOTAL = 1 + REGULAR_PER_PAGE; // 1 featured + 15 regular

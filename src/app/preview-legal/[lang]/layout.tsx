@@ -1,6 +1,7 @@
+import "@/app/fonts/vendored.css";
+import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
 import type { Metadata } from "next";
 import { localeDir } from "@/lib/locale";
-import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import { frankRuhlLibre, rubikHebrew } from "@/app/fonts/hebrew";
 import { SITE_URL } from "@/lib/seo";
 import "../../preview-home/tokens.css";
@@ -26,25 +27,9 @@ import { ModalProvider } from "@/app/context/ModalContext";
    hreflang therefore come from languageAlternates() over CORPORATE_SLUGS
    (src/lib/corporatePageSlugs.ts), not staticAlternates(). */
 
-const display = Fraunces({
-  subsets: ["latin", "latin-ext"],
-  weight: ["300", "400", "500"],
-  style: ["normal", "italic"],
-  variable: "--font-display",
-  display: "swap",
-});
-const body = Mulish({
-  subsets: ["latin", "latin-ext", "cyrillic"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-body",
-  display: "swap",
-});
-const cyr = Playfair_Display({
-  subsets: ["cyrillic"],
-  weight: ["400", "500"],
-  variable: "--font-display-cyr",
-  display: "swap",
-});
+const display = frauncesFontDisplay;
+const body = mulishFontBody;
+const cyr = playfairDisplayFontDisplayCyr;
 
 export const metadata: Metadata = {
   // This isolated tree doesn't inherit metadataBase from src/app/[lang]/layout.tsx,
