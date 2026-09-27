@@ -19,7 +19,7 @@ import { isLocale } from "@/lib/locale";
 export const dynamic = "force-dynamic";
 
 const LANG = "en";
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 14;
 
 type SP = Record<string, string | undefined>;
 

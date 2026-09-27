@@ -42,7 +42,7 @@ import { resolveCompletionYear } from "@/lib/text";
 // Filters change per request (URL-driven) — always render fresh, like the preview.
 export const dynamic = "force-dynamic";
 
-const PAGE_SIZE = 12;
+const PAGE_SIZE = 14;
 
 type SearchParams = {
   page?: string;
