@@ -712,6 +712,57 @@ html[lang="ru"] .nav__cta-label { display: none; }
 .burger.is-open span:nth-child(3) { transform: translateY(-6.6px) rotate(-45deg); }
 .burger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+/* The burger matches the conversion pill's height — 38px, not the 44 it drew
+   before. They sit side by side in the same row, and two controls of different
+   heights next to each other read as a mistake rather than as a hierarchy.
+
+   The 44px stays where it matters. A visible box that small would fall under the
+   44x44 touch target that WCAG 2.5.5 and Apple's guidance both ask for, so the
+   box shrinks and a transparent ::after gives the finger back the missing 3px on
+   every side. Shape and hit area are separate concerns; only the first one was
+   ever about looks.
+
+   `.nav` in front because preview-home/tokens.css carries this rule verbatim
+   (its line 277) and loads after this file on most pages. */
+.nav .burger { width: 38px; height: 38px; }
+/* No champagne on this outline, in any state. It sits beside the conversion
+   pill, and the pill is the element allowed to carry the brand colour — the
+   burger going gold on hover made a secondary control answer in the accent while
+   the primary one sat quiet next to it.
+
+   Its resting border already matched the pill's exactly (both
+   rgba(239,233,219,0.30), measured); only :hover and .is-open broke away. They
+   now stay in the same ivory family, a shade brighter, so the control still
+   answers a pointer without changing colour. The hover glow goes with it: a
+   champagne halo around an ivory outline is the same gold signal by another
+   route.
+
+   No moving highlight either — the travelling rim belongs to the pill alone. */
+.nav .burger:hover,
+.nav .burger:focus-visible,
+.nav .burger.is-open { border-color: rgba(239,233,219,0.55); }
+.nav .burger:hover { box-shadow: none; }
+.nav .burger.is-open { background: rgba(239,233,219,0.10); }
+/* -4px, not -3: an absolutely positioned child resolves `inset` against the
+   PADDING box, and the 1px border makes that 36px rather than 38. At -3 the hit
+   area came out 42x42 and two of the four edge probes fell just outside it; -4
+   lands it on exactly 44. */
+.nav .burger::after {
+  content: ""; position: absolute; inset: -4px; border-radius: inherit;
+}
+/* .mnav is a plain block, so the burger sat at its top rather than on the same
+   centre line as the pill beside it — measured 3.4px low, because an inline-flex
+   button in a block sits on a text baseline and leaves the descender gap below
+   it. It only wraps the button and the full-screen menu, and the menu is
+   position:fixed, so centring here moves nothing else.
+
+   Scoped to below 1024 on purpose. A desktop media query hides .mnav outright
+   (`display: none`), and an unscoped `.nav .mnav { display: flex }` outranks it
+   — which put the burger back on every desktop page until this was caught. */
+@media (max-width: 1023.98px) {
+  .nav .mnav { display: flex; align-items: center; }
+}
+
 /* ---- mobile overlay ---- */
 .mmenu {
   position: fixed; inset: 0; z-index: 50; overflow-y: auto;
