@@ -12,7 +12,7 @@
 import type { ProjectsStrings } from "@/app/[lang]/projects/projectsI18n";
 import ScarcityBanner from "@/app/components/ScarcityBanner/ScarcityBanner";
 import { soldOutFromCounts } from "@/lib/developmentAvailability";
-import { fmtPrice } from "@/lib/locale";
+import { fmtPrice, ltrIsolate } from "@/lib/locale";
 import { hePlaceList } from "@/lib/hePlaces";
 import { heFeedLabel, heBedrooms } from "@/lib/heFeedVocab";
 import Bdi from "@/app/components/Bdi";
@@ -103,7 +103,12 @@ export function ProjectCard({
   // every LTR locale renders exactly the strings it did before.
   const isHe = locale === "he";
   const cityLabel = isHe ? hePlaceList(c.city) : c.city;
-  const typeLabel = isHe ? heFeedLabel(c.type) : c.type;
+  // c.type is a " · "-joined compound ("Apartment · Penthouse") — heFeedLabel
+  // only has single-value dictionary entries, so calling it on the whole
+  // compound in one shot never matches and silently falls through to the
+  // untranslated English text. Split, translate each part, rejoin — same
+  // treatment ProjectPageBody.tsx already gives the identical value.
+  const typeLabel = isHe ? c.type.split(" · ").filter(Boolean).map(heFeedLabel).join(" · ") : c.type;
   // he needs the whole phrase (the numeral for one is written out and
   // postposed, a studio takes no unit word at all), so it replaces the
   // "{value} {bedUnit}" pattern rather than just the unit word.
@@ -137,7 +142,10 @@ export function ProjectCard({
         <div className="prj__specrow">
           <div className="prj__specs">
             {c.bedrooms && <span>{bedsLabel}</span>}
-            {c.area && <span>{c.area} {s.areaUnit}</span>}
+            {/* A two-number range ("74-506"), left unisolated, gets visually
+                reordered by the surrounding RTL card — same failure mode
+                heBedrooms() already guards against for bedsLabel above. */}
+            {c.area && <span>{isHe ? ltrIsolate(c.area) : c.area} {s.areaUnit}</span>}
             {c.energy && <span>{s.energyPrefix} {c.energy}</span>}
             {/* c.completion is already resolved to a plain year string (or "")
                 server-side — see resolveCompletionYear in src/lib/text.ts.

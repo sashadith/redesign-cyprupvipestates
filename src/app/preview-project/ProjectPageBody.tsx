@@ -23,7 +23,7 @@ import { developmentCopy } from "@/lib/developmentCopy";
 import { getAlternativeDevelopments } from "@/lib/developmentAlternatives";
 import AlternativesBlock from "@/app/preview-project/AlternativesBlock";
 import type { GoldPhrase } from "@/lib/developmentCopy";
-import { fmtPrice, bidiIsolate, localeDir } from "@/lib/locale";
+import { fmtPrice, bidiIsolate, ltrIsolate, localeDir } from "@/lib/locale";
 import { hePlaceList } from "@/lib/hePlaces";
 import { heFeedLabel } from "@/lib/heFeedVocab";
 import Bdi from "@/app/components/Bdi";
@@ -133,7 +133,12 @@ export default async function ProjectPageBody({
     const nums = vals.filter((n): n is number => n != null && n > 0);
     if (!nums.length) return null;
     const lo = Math.min(...nums), hi = Math.max(...nums);
-    return lo === hi ? `${lo} m²` : `${lo}–${hi} m²`;
+    const s = lo === hi ? `${lo} m²` : `${lo}–${hi} m²`;
+    // A two-number range with an en dash, left unisolated, gets visually
+    // reordered by the surrounding RTL paragraph ("49–75 m²" renders as
+    // "75–49 m²") — same failure mode ltrIsolate() already fixes for
+    // resolveBedRange()'s output via heBedrooms() (src/lib/heFeedVocab.ts).
+    return localeDir(lang) === "rtl" ? ltrIsolate(s) : s;
   };
   const plotRange = rangeM2(avail.map((u) => numOf(u.areaPlot)));
   const builtRange = rangeM2(avail.map((u) => numOf(u.areaBuilt)));

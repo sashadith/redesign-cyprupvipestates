@@ -469,6 +469,12 @@ img { max-width: 100%; display: block; }
     width: min(880px, 88vw); /* 20% smaller */
   }
   .brochure__media { box-shadow: 0 40px 80px -40px rgba(0,0,0,0.55); }
+  /* RTL mirror: content already flips to the right via flex-start (logical),
+     but the image's physical right/clip-path/tilt don't follow dir on their
+     own — without this the image stays pinned right with the same -5deg
+     tilt on he, instead of mirroring to the left with a +5deg tilt. */
+  [dir="rtl"] .brochure__card { clip-path: inset(0 0 0 -340px); }
+  [dir="rtl"] .brochure__image { right: unset; left: -40px; transform: rotate(5deg); }
 }
 
 /* ===================== ABOUT — "Who We Are" (light ivory section) ===================== */
