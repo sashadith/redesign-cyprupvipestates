@@ -438,7 +438,7 @@ async function computeFilteredProjects(lang: string, filterCity?: string, filter
  * can never show a different universe (PUBLISHED only, Developments merged in,
  * "recommended" order) than a hand-placed block on the next article would.
  */
-export async function getArticleFallbackProjects(lang: string, filterCity?: string, limit = 3) {
+export async function getArticleFallbackProjects(lang: string, filterCity?: string, limit = 6) {
   const cards = await computeFilteredProjects(lang, filterCity);
   return cards.slice(0, limit);
 }

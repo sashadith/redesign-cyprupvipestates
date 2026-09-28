@@ -146,7 +146,7 @@ const ARTICLE_CITY_TOKENS: Record<"Paphos" | "Limassol" | "Larnaca", string[]> =
 };
 /* Below this a city-filtered set reads as an accident rather than a selection,
    so the unfiltered recommended set is used instead. */
-const FALLBACK_MIN = 3;
+const FALLBACK_MIN = 6;
 /* A live city/type query returning fewer than this renders nothing — see the
    guard in renderArticleBlock. Module-level so that guard and the
    does-this-article-already-route check below cannot drift apart. */
