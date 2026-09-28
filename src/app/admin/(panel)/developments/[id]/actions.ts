@@ -518,6 +518,20 @@ export async function saveOverride(formData: FormData) {
   const rawSlug = clean(formData, "slug");
   if (rawSlug) {
     const finalSlug = await uniqueDevelopmentSlug(rawSlug, id);
+    const before = await prisma.development.findUnique({ where: { id }, select: { slug: true } });
+    // Retire the OLD slug into DevelopmentSlugHistory before overwriting it, so
+    // the URL it used to serve 301s instead of 404ing (see
+    // resolveDevelopmentSlugHistory in developmentRender.ts). A P2002 here means
+    // that exact string was already retired by some OTHER development's own
+    // past rename — an accepted, very rare edge case (see the model's schema
+    // comment) — so it's swallowed rather than blocking this save.
+    if (before?.slug && before.slug !== finalSlug) {
+      try {
+        await prisma.developmentSlugHistory.create({ data: { developmentId: id, slug: before.slug } });
+      } catch (e) {
+        if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002")) throw e;
+      }
+    }
     await prisma.development.update({ where: { id }, data: { slug: finalSlug } });
   }
   revalidatePath(`/admin/developments/${id}`);

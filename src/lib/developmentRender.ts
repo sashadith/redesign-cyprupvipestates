@@ -6,6 +6,7 @@ import type { UnitVM } from "@/app/preview-project/UnitsView";
 import type { SeoOverride } from "@/lib/developmentSeo";
 import { resolveDevelopmentPrice, resolveDevelopmentLocation, resolveRelativeCompletion } from "@/lib/developmentCard";
 import { developmentCopy } from "@/lib/developmentCopy";
+import { localizedHref, isLocale } from "@/lib/locale";
 
 /* Render a development straight from the DB (Phase 1, Increment 4). Reads the
    synced Development/Units + merges the admin DevelopmentOverride (alias, area,
@@ -161,6 +162,25 @@ export const getDbProjectBySlug = cache(async (slug: string, lang: string = "en"
   });
   return d ? mapRowToVM(d, lang) : null;
 });
+
+/** Last-resort fallback for src/app/[lang]/projects/[slug]/page.tsx, checked
+ *  after a live Development AND getLegacyProjectRedirect both miss: a slug a
+ *  Development USED to have (retired by a manual admin rename — see
+ *  saveOverride's "Manual slug edit" in
+ *  admin/(panel)/developments/[id]/actions.ts) 301s to whatever that
+ *  Development's CURRENT slug is, in one hop even across several renames.
+ *  Returns null — rather than a stale target — if that Development is no
+ *  longer published. */
+export async function resolveDevelopmentSlugHistory(slug: string, lang: string): Promise<string | null> {
+  if (!slug || !isLocale(lang)) return null;
+  const row = await prisma.developmentSlugHistory.findUnique({
+    where: { slug },
+    select: { development: { select: { slug: true, publishStatus: true } } },
+  });
+  const current = row?.development;
+  if (!current?.slug || current.publishStatus !== "published") return null;
+  return localizedHref(lang, ["projects", current.slug]);
+}
 
 /** Bulk by-id lookup, keyed by Development.id — for the Client Presentation
  *  system (src/app/c/[token]), which renders a curated set of developments
