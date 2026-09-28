@@ -12,6 +12,7 @@ import "../faq.css";
 import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import LenisProvider from "../../preview-home/anim/LenisProvider";
 import { ModalProvider } from "@/app/context/ModalContext";
+import AttributionCapture from "@/app/components/AttributionCapture/AttributionCapture";
 
 /* FAQ — redesigned. Reuses the homepage design tokens + fonts + smooth scroll
    (same pattern as preview-insights/preview-projects). The live /faq page
@@ -56,6 +57,7 @@ export default function FaqLayout({
   return (
     <html lang={params.lang} dir={localeDir(params.lang)} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable} ${frankRuhlLibre.variable} ${rubikHebrew.variable}`}>
       <body>
+        <AttributionCapture />
         <ModalProvider>
           <LenisProvider>{children}</LenisProvider>
         </ModalProvider>

@@ -7,6 +7,7 @@ import styles from "./CustomCookieConsent.module.scss";
 import { localePrefix, type Locale } from "@/lib/locale";
 import { CORPORATE_SLUGS } from "@/lib/corporatePageSlugs";
 import { COOKIE_CONSENT_COPY } from "./CustomCookieConsent.copy";
+import { onMarketingConsentChanged } from "@/lib/attribution";
 
 const COOKIE_NAME = "cookieConsent";
 
@@ -50,6 +51,9 @@ export default function CustomCookieConsent({ lang }: Props) {
       expires: 180,
       sameSite: "Lax",
     });
+    // Marketing consent: the partner/campaign attribution of this visit may now
+    // be remembered for 90 days (src/lib/attribution.ts).
+    onMarketingConsentChanged();
     setVisible(false);
     router.refresh();
   };
@@ -64,6 +68,8 @@ export default function CustomCookieConsent({ lang }: Props) {
       expires: 180,
       sameSite: "Lax",
     });
+    // No marketing consent: drop any 90-day attribution cookie.
+    onMarketingConsentChanged();
     setVisible(false);
     router.refresh();
   };

@@ -17,6 +17,7 @@ import "../about.css";
 import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import LenisProvider from "../../preview-home/anim/LenisProvider";
 import { ModalProvider } from "@/app/context/ModalContext";
+import AttributionCapture from "@/app/components/AttributionCapture/AttributionCapture";
 
 /* About — redesigned. Isolated route tree, same as preview-partners /
    preview-faq / preview-case-studies — deliberately NOT nested under
@@ -51,6 +52,7 @@ export default function AboutLayout({
   return (
     <html lang={params.lang} dir={localeDir(params.lang)} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable} ${frankRuhlLibre.variable} ${rubikHebrew.variable}`}>
       <body>
+        <AttributionCapture />
         <ModalProvider>
           <LenisProvider>{children}</LenisProvider>
         </ModalProvider>

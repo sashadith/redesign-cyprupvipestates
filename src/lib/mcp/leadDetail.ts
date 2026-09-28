@@ -53,3 +53,20 @@ export const LEAD_STATE_LABEL: Record<string, string> = {
   PRESENTATION_UNOPENED: "Presentation sent, never opened",
   PRESENTATION_OPENED_NO_REACTION: "Presentation opened, no reaction since",
 };
+
+/* First-touch attribution as crm_get_lead reports it: the partner/campaign the
+   lead came through (utm_* and the partner `?ref=`) plus the external referrer.
+   Always the same keys, null when unknown, so a caller can tell "no attribution"
+   from "field missing". */
+export function attributionOf(lead: {
+  utmSource: string | null; utmMedium: string | null; utmCampaign: string | null;
+  attributionRef: string | null; referrer: string | null;
+}) {
+  return {
+    utmSource: lead.utmSource ?? null,
+    utmMedium: lead.utmMedium ?? null,
+    utmCampaign: lead.utmCampaign ?? null,
+    ref: lead.attributionRef ?? null,
+    referrer: lead.referrer ?? null,
+  };
+}

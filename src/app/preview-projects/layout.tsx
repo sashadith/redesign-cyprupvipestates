@@ -7,6 +7,7 @@ import "../preview-home/tokens.css";
 import "@/app/header-footer.css";
 import "./projects.css";
 import { ModalProvider } from "@/app/context/ModalContext";
+import AttributionCapture from "@/app/components/AttributionCapture/AttributionCapture";
 
 /* Cyprus VIP Estates — Projects search, isolated redesign preview. Reuses the
    homepage design tokens + fonts. Dark, map-centric explorer. The live
@@ -30,6 +31,7 @@ export default function ProjectsPreviewLayout({ children }: { children: React.Re
         <meta name="robots" content="noindex, nofollow" />
       </head>
       <body>
+        <AttributionCapture />
         <ModalProvider>{children}</ModalProvider>
       </body>
     </html>

@@ -799,6 +799,8 @@ model Lead {
   gclid                String?
   fbclid               String?
   referrer             String?
+  // Partner `?ref=` parameter, first touch (2026-09-28, src/lib/attribution.ts).
+  attributionRef       String?
   telegramNotified     Boolean               @default(false)
   emailNotified        Boolean               @default(false)
   activities           LeadActivity[]

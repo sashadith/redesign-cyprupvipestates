@@ -13,6 +13,7 @@ import "../landing.css";
 import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import LenisProvider from "../../preview-home/anim/LenisProvider";
 import { ModalProvider } from "@/app/context/ModalContext";
+import AttributionCapture from "@/app/components/AttributionCapture/AttributionCapture";
 
 /* The redesigned landing family, served under a "preview" prefix while the
    live pages (/[lang]/[...slug], block-rendered) stay untouched.
@@ -53,6 +54,7 @@ export default function PreviewLandingLayout({
         <meta name="robots" content="noindex, nofollow" />
       </head>
       <body>
+        <AttributionCapture />
         <ModalProvider>
           <LenisProvider>{children}</LenisProvider>
         </ModalProvider>

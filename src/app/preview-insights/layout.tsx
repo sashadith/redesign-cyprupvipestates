@@ -8,6 +8,7 @@ import "@/app/header-footer.css";
 import "./insights.css";
 import LenisProvider from "../preview-home/anim/LenisProvider";
 import { ModalProvider } from "@/app/context/ModalContext";
+import AttributionCapture from "@/app/components/AttributionCapture/AttributionCapture";
 
 /* Cyprus Insights — redesigned blog, isolated preview. Reuses the homepage design
    tokens + fonts + smooth scroll. Hybrid theme: dark index/hero, light reading body.
@@ -30,6 +31,7 @@ export default function InsightsLayout({ children }: { children: React.ReactNode
         <meta name="robots" content="noindex, nofollow" />
       </head>
       <body>
+        <AttributionCapture />
         <ModalProvider>
           <LenisProvider>{children}</LenisProvider>
         </ModalProvider>

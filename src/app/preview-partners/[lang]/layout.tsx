@@ -13,6 +13,7 @@ import "../partners.css";
 import "@/app/rtl.css"; // direction- and script-aware base rules shared by every localized root layout
 import LenisProvider from "../../preview-home/anim/LenisProvider";
 import { ModalProvider } from "@/app/context/ModalContext";
+import AttributionCapture from "@/app/components/AttributionCapture/AttributionCapture";
 
 /* Partners — redesigned, now the LIVE /partners page (cutover decided during
    the canonical/hreflang audit, see docs/SITE-CHANGELOG.md). Isolated route
@@ -51,6 +52,7 @@ export default function PartnersLayout({
   return (
     <html lang={params.lang} dir={localeDir(params.lang)} data-theme="dark" className={`${display.variable} ${body.variable} ${cyr.variable} ${frankRuhlLibre.variable} ${rubikHebrew.variable}`}>
       <body>
+        <AttributionCapture />
         <ModalProvider>
           <LenisProvider>{children}</LenisProvider>
         </ModalProvider>

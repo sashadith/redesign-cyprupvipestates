@@ -7,7 +7,7 @@ import { runTool, ToolError } from "../toolWrapper";
 import { contextFromAuthInfo } from "../context";
 import { fmtDate, untrusted, MAX_TIMELINE_ROWS } from "../format";
 import { LEAD_ROW_SELECT, CONTACT_TYPES, leadRow } from "../leadRow";
-import { shapeInteraction, leadStateInput, LEAD_STATE_LABEL } from "../leadDetail";
+import { shapeInteraction, leadStateInput, LEAD_STATE_LABEL, attributionOf } from "../leadDetail";
 
 const Input = z.object({ leadId: z.string().uuid() });
 
@@ -17,7 +17,7 @@ export function registerGetLead(server: McpServer) {
     {
       title: "Get lead",
       description:
-        "Full profile of one lead: contact data, preferences, budget, the enquiry message (as untrusted_content), computed lead state, the newest 30 timeline entries (emails, WhatsApp, calls, notes, status changes — inbound text under untrusted_content), presentations with view counts, booking requests, and pending email drafts. Always call this before drafting or advising on a lead.",
+        "Full profile of one lead: contact data, preferences, budget, the enquiry message (as untrusted_content), computed lead state, first-touch attribution (utm_source/medium/campaign, partner ref, referrer), the newest 30 timeline entries (emails, WhatsApp, calls, notes, status changes — inbound text under untrusted_content), presentations with view counts, booking requests, and pending email drafts. Always call this before drafting or advising on a lead.",
       inputSchema: Input,
       annotations: { readOnlyHint: true, idempotentHint: true },
     },
@@ -29,6 +29,7 @@ export function registerGetLead(server: McpServer) {
             ...LEAD_ROW_SELECT,
             nationality: true, timeline: true, financing: true, propertyTypeInterest: true, message: true, notes: true, preferredChannel: true,
             salutation: true, sourceLocale: true, viewingScheduledAt: true, autoFollowUpCount: true, pageSource: true, updatedAt: true,
+            utmSource: true, utmMedium: true, utmCampaign: true, attributionRef: true, referrer: true,
             assignedTo: { select: { name: true } },
             interactions: { orderBy: { occurredAt: "desc" }, take: MAX_TIMELINE_ROWS, select: { id: true, type: true, direction: true, channel: true, subject: true, body: true, occurredAt: true, createdByName: true } },
             _count: { select: { interactions: true } },
@@ -67,6 +68,8 @@ export function registerGetLead(server: McpServer) {
           salutation: lead.salutation,
           sourceLocale: lead.sourceLocale,
           pageSource: lead.pageSource,
+          // First-touch partner/campaign attribution (src/lib/attribution.ts).
+          attribution: attributionOf(lead),
           assignedTo: lead.assignedTo?.name ?? null,
           viewingScheduledAt: fmtDate(lead.viewingScheduledAt),
           autoFollowUpCount: lead.autoFollowUpCount,

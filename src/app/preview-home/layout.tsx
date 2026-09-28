@@ -7,6 +7,7 @@ import "./tokens.css";
 import "@/app/header-footer.css";
 import LenisProvider from "./anim/LenisProvider";
 import { ModalProvider } from "@/app/context/ModalContext";
+import AttributionCapture from "@/app/components/AttributionCapture/AttributionCapture";
 
 /* Locked set 2 — Fraunces (display) · Mulish (body); Playfair = Cyrillic fallback. */
 const display = frauncesFontDisplay;
@@ -33,6 +34,7 @@ export default function PreviewHomeLayout({
         <meta name="robots" content="noindex, nofollow" />
       </head>
       <body>
+        <AttributionCapture />
         <ModalProvider>
           <LenisProvider>{children}</LenisProvider>
         </ModalProvider>

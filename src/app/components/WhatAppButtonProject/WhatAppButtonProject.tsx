@@ -4,6 +4,7 @@ import { FaWhatsapp } from "react-icons/fa";
 import styles from "./WhatAppButtonProject.module.scss";
 import { isLocale } from "@/lib/locale";
 import { messageWithUrl, label as labelByLang } from "./WhatAppButtonProject.copy";
+import { getAttribution, attributionTag } from "@/lib/attribution";
 
 type Props = {
   lang: string;
@@ -20,7 +21,10 @@ const WhatAppButtonProject: FC<Props> = ({ lang }) => {
     if (typeof window !== "undefined") {
       const pageUrl = window.location.href;
       const message =
-        (messageWithUrl[isLocale(lang) ? lang : "en"]) + ` ${pageUrl}`;
+        (messageWithUrl[isLocale(lang) ? lang : "en"]) + ` ${pageUrl}` +
+        // The partner/campaign this visit came from, e.g. " (utm_source=alfitouri)"
+        // — the page URL alone loses it once the visitor has clicked on.
+        attributionTag(getAttribution(), pageUrl);
       const encodedText = encodeURIComponent(message);
       const finalUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodedText}`;
 
