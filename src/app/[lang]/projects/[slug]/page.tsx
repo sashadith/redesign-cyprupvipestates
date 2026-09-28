@@ -48,7 +48,7 @@ export const dynamic = "force-dynamic";
 
 import ProjectPageBody from "@/app/preview-project/ProjectPageBody";
 import DevelopmentSchema from "@/app/components/DevelopmentSchema/DevelopmentSchema";
-import { getDbProjectBySlug } from "@/lib/developmentRender";
+import { getDbProjectBySlug, resolveDevelopmentSlugHistory } from "@/lib/developmentRender";
 import { resolveMetaTitle, resolveMetaDescription, NEW_PROJECTS_INDEXABLE } from "@/lib/developmentSeo";
 import { abs, staticAlternates, DEFAULT_OG_IMAGE, ogLocale } from "@/lib/seo";
 
@@ -184,6 +184,10 @@ const ProjectPage = async ({ params }: Props) => {
   if (!project) {
     const redirectTarget = await getLegacyProjectRedirect(lang, slug);
     if (redirectTarget) permanentRedirect(redirectTarget);
+    // Last resort: a slug this Development USED to have, before a manual
+    // admin rename — see resolveDevelopmentSlugHistory in developmentRender.ts.
+    const renamedTarget = await resolveDevelopmentSlugHistory(slug, lang);
+    if (renamedTarget) permanentRedirect(renamedTarget);
     notFound();
   }
 
