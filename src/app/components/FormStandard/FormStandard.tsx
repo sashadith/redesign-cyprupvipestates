@@ -356,7 +356,6 @@ const FormStandard: FC<ContactFormProps> = ({
 
   return (
     <>
-      {message && <div className={`${styles.popup} form-feedback${messageIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{message}</div>}
       <Formik
         innerRef={(inst) => {
           formikRef.current = inst;
@@ -613,6 +612,11 @@ const FormStandard: FC<ContactFormProps> = ({
                 </label>
               </div>
 
+              {/* In flow, right above the button — matching the homepage contact
+                  section: the visitor is looking there when they press Send.
+                  Above the whole form it can sit off-screen on a long form or,
+                  in the modal, above the scroll position (2026-09-28). */}
+              {message && <div className={`${styles.popup} form-feedback${messageIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{message}</div>}
               <div>
                 <button
                   type="submit"

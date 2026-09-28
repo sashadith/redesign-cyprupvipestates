@@ -11,19 +11,30 @@
    - the spinner was the box-shadow "mulShdSpin" trick — eight dots chasing each
      other, at font-size 10px so it rendered about 10px across.
 
-   Neither can be reached by class name from outside, so both are addressed
-   structurally, and both selectors outrank a single module class without
-   !important:
+   Each component marks its confirmation .form-feedback and its spinner
+   .form-spinner, and every selector here REPEATS that class:
 
-     .form-feedback   the confirmation, marked in each component
-     .form-spinner     the spinner is the button's only child
-                                          while submitting            (0,1,3)
+     .form-feedback.form-feedback     (0,2,0)
+     .form-spinner.form-spinner       (0,2,0)
+
+   That doubling is load-bearing, not a typo. A single class is (0,1,0) — the
+   exact specificity of the module class it sits beside (.FormStandard_popup__…
+   and friends), so the winner is decided purely by which rule the bundler
+   happens to emit last. That order differs between builds: in dev the modules
+   come first and these rules win, while the production bundle emits
+   .form-feedback at byte 41266 and .FormStandard_popup__ at 46469 — module
+   last, module wins. The result was a page that looked correct on localhost
+   and shipped the old centred #bd8948 toast and the eight-dot spinner to
+   production (reported 2026-09-28, /projects/dream-tower). At (0,2,0) these
+   rules beat any single module class wherever it lands, so the two builds can
+   no longer disagree. Verify changes here against a PRODUCTION build; dev
+   ordering will happily hide a regression.
 
    Imported by each form component directly rather than from a route, so it is
    present wherever a form is. */
 
 /* ------------------------------------------------------------ the spinner */
-.form-spinner {
+.form-spinner.form-spinner {
   width: 18px;
   height: 18px;
   font-size: 0;
@@ -50,7 +61,7 @@
    2026-09-06: transform: matrix(1,0,0,1,0,26) still present after the reveal.
    In flow it behaves the same in the modal, in an article and in a page
    section, with no z-index and no containing-block surprises. */
-.form-feedback {
+.form-feedback.form-feedback {
   position: static;
   inset: auto;
   transform: none;
@@ -84,7 +95,7 @@
 }
 
 /* A check mark, drawn rather than shipped as an asset. */
-.form-feedback::before {
+.form-feedback.form-feedback::before {
   content: "";
   position: absolute;
   inset-inline-start: 16px;
@@ -96,7 +107,7 @@
   background: rgba(239, 233, 219, 0.16);
   box-shadow: inset 0 0 0 1px rgba(239, 233, 219, 0.5);
 }
-.form-feedback::after {
+.form-feedback.form-feedback::after {
   content: "";
   position: absolute;
   inset-inline-start: 22px;
@@ -112,7 +123,7 @@
 /* The drawn tick would be a lie on a failure, so the error state swaps it for
    an exclamation. Same banner otherwise — the message itself carries the tone,
    and a second colour would compete with the brand bronze. */
-.form-feedback--error::after {
+.form-feedback--error.form-feedback--error::after {
   content: "!";
   inset-inline-start: 16px;
   top: 50%;
@@ -136,6 +147,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .form-spinner { animation-duration: 1.4s; }
-  .form-feedback { animation: none; }
+  .form-spinner.form-spinner { animation-duration: 1.4s; }
+  .form-feedback.form-feedback { animation: none; }
 }

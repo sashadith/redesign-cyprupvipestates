@@ -1040,9 +1040,12 @@ img { max-width: 100%; display: block; }
    and sits centred between the consent line and the button: the shared banner
    brings margin 0 0 20px, and the button adds its own 32px on top of that, so
    without these two rules it clings to the consent line with a 52px gap below. */
-.formsec__feedback { max-width: 100%; margin: var(--s-5) 0 0; }
+/* Doubled like the shared rules in formFeedback.css (see the note there):
+   those are now (0,2,0), so a single class here would no longer reach the
+   banner and this section would inherit the generic margins. */
+.formsec__feedback.formsec__feedback { max-width: 100%; margin: var(--s-5) 0 0; }
 .formsec__feedback + .formsec__submit { margin-top: var(--s-5); }
-@media (min-width: 560px) { .formsec__feedback { max-width: 90%; } }
+@media (min-width: 560px) { .formsec__feedback.formsec__feedback { max-width: 90%; } }
 .formsec__submit { margin-top: var(--s-6); min-width: 180px; justify-content: center; background: var(--bronze) !important; color: #ffffff !important; border-color: var(--bronze); }
 .formsec__submit:hover { background: #7e5e35 !important; border-color: #7e5e35; }
 /* The spinner sits inside the button, so it is drawn in the button's ink. */

@@ -329,7 +329,6 @@ const FormRoi: FC<Props> = ({
 
   return (
     <>
-      {message && <div className={`${styles.popup} form-feedback${messageIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{message}</div>}
 
       <Formik
         innerRef={(inst) => {
@@ -517,6 +516,11 @@ const FormRoi: FC<Props> = ({
               </div>
             </fieldset>
 
+            {/* In flow, right above the button — matching the homepage contact
+                section: the visitor is looking there when they press Send.
+                Above the whole form it can sit off-screen on a long form
+                (2026-09-28). */}
+            {message && <div className={`${styles.popup} form-feedback${messageIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{message}</div>}
             <div>
               <button
                 type="submit"

@@ -234,7 +234,6 @@ const FormFull: FC<ContactFormProps> = ({
 
   return (
     <>
-      {messagePopup && <div className={`${styles.popup} form-feedback${messagePopupIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{messagePopup}</div>}
 
       <Formik
         innerRef={(inst) => {
@@ -499,6 +498,11 @@ const FormFull: FC<ContactFormProps> = ({
                 </label>
               </div>
 
+              {/* In flow, right above the button — matching the homepage contact
+                  section: the visitor is looking there when they press Send.
+                  Above the whole form it can sit off-screen on a long form
+                  (2026-09-28). */}
+              {messagePopup && <div className={`${styles.popup} form-feedback${messagePopupIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{messagePopup}</div>}
               <div>
                 <button
                   type="submit"
