@@ -13,6 +13,8 @@ import PartnersMotion from "./PartnersMotion";
 import PartnersForm from "./PartnersForm";
 import PartnersFaq from "./PartnersFaq";
 import { partnersCopy } from "./copy";
+import { getPublicProjectCount, getAvailableUnitCount } from "@/lib/siteStats";
+import { bcp47For } from "@/lib/locale";
 
 /* Cyprus VIP Estates — Partners, redesigned. This is now the LIVE /partners
    page (see ./layout.tsx for the indexability fix + why this lives outside
@@ -120,7 +122,7 @@ const Star = () => (
   </svg>
 );
 
-export default function PartnersPage({ params }: Props) {
+export default async function PartnersPage({ params }: Props) {
   const { lang } = params;
   if (!partnersOfferedIn(lang)) notFound();
   const t = partnersCopy(lang);
@@ -144,6 +146,19 @@ export default function PartnersPage({ params }: Props) {
   // component instead, via the same .pnr__eyebrow/.pnr__title pattern used
   // for every other section) since Benefits.tsx's own title-highlight logic
   // is hardcoded to the word "Cyprus" and isn't reusable for other headings.
+  // Live figures for the two data-backed stats (2026-09-29). Projects reuses
+  // the /projects listing's own count, so the band can never claim a number a
+  // visitor cannot browse to. Units counts availability the way the site means
+  // it: status "available", and only inside published developments — the raw
+  // DevelopmentUnit total (4,636) also contains sold, reserved and unlisted
+  // rows plus units of drafts and archived projects.
+  const [projectCount, availableUnits] = await Promise.all([
+    getPublicProjectCount(lang),
+    getAvailableUnitCount(),
+  ]);
+  const liveNumber = (s: (typeof t.stats)[number]) =>
+    s.source === "projects" ? projectCount : s.source === "units" ? availableUnits : Number(s.number);
+
   const benefitsBlock: BenefitsBlock = {
     _key: "partners-stats",
     _type: "benefitsBlock",
@@ -151,7 +166,7 @@ export default function PartnersPage({ params }: Props) {
     benefits: t.stats.map((s, i) => ({
       _key: `stat-${i}`,
       _type: "benefits",
-      counting: { _key: `count-${i}`, _type: "counting", conuntNumber: Number(s.number), sign: s.sign ?? "" },
+      counting: { _key: `count-${i}`, _type: "counting", conuntNumber: liveNumber(s), sign: s.sign ?? "" },
       title: s.title,
       description: s.description,
     })),
@@ -197,7 +212,7 @@ export default function PartnersPage({ params }: Props) {
             </h2>
             <hr className="shimmer pnr__stripe" />
           </div>
-          <Benefits block={benefitsBlock} />
+          <Benefits block={benefitsBlock} locale={bcp47For(lang)} />
         </div>
 
         {/* ------------------------------------------------------ BENEFITS */}

@@ -16,6 +16,8 @@ import ParallaxBand from "./sections/ParallaxBand";
 import Form from "./sections/Form";
 import Footer from "./sections/Footer";
 import PreviewMotion from "./anim/PreviewMotion";
+import { buildTrackRecordBlock } from "./sections/trackRecord.copy";
+import { getPublicProjectCount, getAvailableUnitCount } from "@/lib/siteStats";
 
 /* Homepage redesign preview — built section by section.
    Pulls the REAL homepage content (local content DB) and restyles it.
@@ -25,6 +27,7 @@ export const dynamic = "force-dynamic";
 
 export default async function PreviewHome() {
   const homePage = await getHomePageByLang("en");
+  const [trackProjects, trackUnits] = await Promise.all([getPublicProjectCount("en"), getAvailableUnitCount()]);
 
   return (
     <>
@@ -38,7 +41,7 @@ export default async function PreviewHome() {
         {homePage.citiesBlock && <Cities block={homePage.citiesBlock} />}
         {homePage.descriptionBlock && <Description block={homePage.descriptionBlock} />}
         <LatestDevelopments lang="en" />
-        {homePage.benefitsBlock && <Benefits block={homePage.benefitsBlock} />}
+        <Benefits block={buildTrackRecordBlock("en", trackProjects, trackUnits, homePage.benefitsBlock?.title ?? "")} locale="en-US" />
         {homePage.howWeWorkBlock && <HowWeWork block={homePage.howWeWorkBlock} />}
         {homePage.featuredCaseStudiesBlock && (
           <CaseStudies block={homePage.featuredCaseStudiesBlock} lang="en" />
