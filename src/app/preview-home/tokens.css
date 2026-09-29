@@ -1087,6 +1087,20 @@ img { max-width: 100%; display: block; }
 @media (min-width: 940px) {
   .formsec__consultant-wrap { transform: translateX(-150px); }
   .formsec__caption { position: absolute; left: calc(54% + 10px); bottom: calc(18% + 30px); width: max-content; }
+  /* Both of the two rules above are PHYSICAL — translateX and `left` ignore
+     `dir`, so RTL inherited the LTR geometry instead of mirroring it. Measured
+     on /he at 1440px before this fix: the portrait hung 32px off the left edge
+     of the viewport (its face cropped) and the caption floated in the gap on
+     the photo's inner side, pointing at the form. Mirrored, the portrait leans
+     toward the form the way it does in LTR and the caption sits on the outer
+     side — to the LEFT of the image in RTL (2026-09-29). */
+  [dir="rtl"] .formsec__consultant-wrap { transform: translateX(150px); }
+  /* 60px lower than the LTR caption sits (operator, 2026-09-29, asked for in two
+     steps of 30px). Taken off the calc rather than folded into the percentage,
+     so the offset stays exactly 60px whatever height the column ends up with —
+     and the column's height does move, the portrait is 163px shorter until its
+     image has loaded. */
+  [dir="rtl"] .formsec__caption { left: auto; right: calc(54% + 10px); bottom: calc(18% - 30px); }
 }
 /* Same treatment as the adviser popup's .cvpm__art (contactModal.css) — a
    decorative photo has no business taking space from the fields on mobile.

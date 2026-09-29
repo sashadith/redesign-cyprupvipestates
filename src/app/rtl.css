@@ -20,7 +20,16 @@
    card price on /he/projects was the reported case (2026-09-29). Two classes,
    (0,2,0), so it wins over :lang(he) wherever the bundler puts either file. */
 :lang(he) .ltr-isolate,
-:lang(he) .bidi-isolate { font-family: inherit; }
+:lang(he) .bidi-isolate,
+/* Same mechanism, second report (2026-09-29): CountNumber wraps every stat
+   figure in a bare <span>, so the track-record band's numbers inherited
+   Fraunces from .bstat__num and then lost it to :lang(he) — 248, 2,252, 10 and
+   360° all came out in Rubik while their own container was set in the display
+   face. Listed explicitly rather than fixed at the root: the clean fix is to
+   stop the rule at the top of the file from matching every descendant, but
+   that changes the typeface of every Hebrew page at once and needs checking
+   across the whole site, not just here. */
+:lang(he) .bstat__num > span { font-family: inherit; }
 
 /* Directional icons (arrows, chevrons) that should mirror under RTL — opt in
    per-icon with .icon-dir rather than flipping every glyph site-wide.

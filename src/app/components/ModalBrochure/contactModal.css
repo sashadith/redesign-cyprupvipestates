@@ -107,6 +107,25 @@
   overflow-y: auto;
 }
 
+/* Hebrew keeps the Latin arrangement: form on the left, phone on the right
+   (operator, 2026-09-29). A grid flows with `dir`, so RTL had mirrored it —
+   phone left, form right. Swapped by naming the columns rather than by setting
+   `direction: ltr` on the panel: that would also flip the panel's own text,
+   fields and the close button, and only the two columns are meant to trade
+   places. The track widths trade with them, so the form keeps the wide column.
+   Scoped above 860px because that is where a second column exists at all —
+   below it the panel is single-column and the art is hidden, and an unscoped
+   rule here (0,2,0) would outrank that. */
+@media (min-width: 861px) {
+  [dir="rtl"] .cvpm { grid-template-columns: minmax(0, 0.78fr) minmax(0, 1fr); }
+  [dir="rtl"] .cvpm__art { grid-column: 1; }
+  [dir="rtl"] .cvpm__panel { grid-column: 2; }
+  /* 60px lower than elsewhere (operator, 2026-09-29). The base rule below sits
+     at calc(-4% - 30px); this only moves the pixel term, so the percentage
+     bleed still scales with the panel. */
+  [dir="rtl"] .cvpm__art img { bottom: calc(-4% - 90px); }
+}
+
 /* ------------------------------------------------------------------- copy */
 .cvpm__panel {
   padding: clamp(28px, 3.4vw, 52px) clamp(24px, 3vw, 48px);

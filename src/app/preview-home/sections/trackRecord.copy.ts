@@ -9,13 +9,21 @@ import type { BenefitsBlock } from "@/types/homepage";
    Wording below is the CMS text exactly as it was live, per language, so
    nothing reads differently after the move; only the numbers changed hands and
    the "Satisfied clients" tile was dropped on the operator's instruction.
-   Hebrew: the three strings below are the CMS text copied VERBATIM off the live
-   he homepage — not translated here. There is deliberately no units tile in he,
-   because that one needs two new Hebrew strings and nobody on this side can
-   check Hebrew; ask for them rather than inventing them. (A first pass claimed
-   he had no band at all. That was measured on localhost, where he is gated off
-   by NEXT_PUBLIC_LIVE_LOCALES and every /he URL 404s — the band is live in
-   production and always was.) */
+   Hebrew: the strings below are copied VERBATIM, none of them translated here.
+   Three come off the live he homepage's own CMS text; the units tile's title is
+   "יחידות זמינות", the site's own established term for it — the same string
+   already sits in developmentSeo.ts, developmentCopy.ts and the client-portal
+   copy, so it is approved wording in production, not something invented on this
+   side. Its DESCRIPTION is the one string here that is new — written on request
+   after the tile shipped without one, and carrying a REVIEW(he) marker for that
+   reason, the same convention ScarcityBanner uses. Of its three categories only
+   "commercial" had any Hebrew precedent in this codebase (נכס מסחרי,
+   heFeedVocab.ts); the other two are not traceable to approved copy, so a
+   Hebrew reader should confirm the line before it is treated as final.
+
+   (A first pass claimed he had no band at all. That was measured on localhost,
+   where he is gated off by NEXT_PUBLIC_LIVE_LOCALES and every /he URL 404s —
+   the band is live in production and always was.) */
 
 export type TrackRecordStat = {
   number: number;
@@ -55,6 +63,7 @@ export const TRACK_RECORD: Record<Lang, TrackRecordStat[]> = {
 
   he: [
     { number: 195, live: "projects", title: "פרויקטים", description: "בדרום קפריסין. מדירות סטודיו ועד וילות יוקרה" },
+    { number: 0, live: "units", title: "יחידות זמינות", description: "נכסי מגורים, השקעה ומסחר" }, // REVIEW(he) — description only; the title is existing site copy
     { number: 10, title: "שנות ניסיון", description: 'כסוכנות שיווק נדל"ן בשירות מלא' },
     { number: 360, sign: "°", title: "שירות ללקוחות שלנו", description: "מלווים אתכם מהפנייה הראשונה ועד מסירת המפתחות" },
   ],
