@@ -10,6 +10,17 @@
    internal digit/character order must never be reordered by RTL prose. */
 .bidi-isolate { unicode-bidi: isolate; }
 .ltr-isolate { direction: ltr; unicode-bidi: isolate; }
+/* ...and nothing else. These wrappers isolate DIRECTION; they must never change
+   the typeface. The :lang(he) rule at the top matches every element in the
+   subtree directly, including these spans — and a declaration that matches an
+   element always beats the value its parent hands down by inheritance. So a
+   price written as <bdi class="ltr-isolate"> inside .prj__price rendered in
+   Rubik while its own container was set in the display face; the headings never
+   showed it because the :is(h1,h2,…) rule below re-declares their font. The
+   card price on /he/projects was the reported case (2026-09-29). Two classes,
+   (0,2,0), so it wins over :lang(he) wherever the bundler puts either file. */
+:lang(he) .ltr-isolate,
+:lang(he) .bidi-isolate { font-family: inherit; }
 
 /* Directional icons (arrows, chevrons) that should mirror under RTL — opt in
    per-icon with .icon-dir rather than flipping every glyph site-wide.
