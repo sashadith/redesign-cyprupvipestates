@@ -56,6 +56,11 @@ const JOBS: { job: string; label: string; expectedMs: number }[] = [
   // Properties sync (Excel price lists + website pages into 35 drafts) FIRED AT
   // ALL; a run that fires but fails is reported by the route itself.
   { job: "plus-sync", label: "plus-sync", expectedMs: 24 * HOUR },
+  // 2026-10-02 — added with the `45 3 * * *` crontab entry for indexnow-sweep.
+  // Watches whether the nightly sweep that tells IndexNow about content changed
+  // outside the admin (scripts, direct DB edits) FIRED AT ALL; a run that fires
+  // but cannot submit logs ok=false and is reported by the route itself.
+  { job: "indexnow-sweep", label: "indexnow-sweep", expectedMs: 24 * HOUR },
 ];
 
 // 2026-08-11 (analytics bot-traffic incident) — two exact user-agent strings

@@ -61,3 +61,28 @@ export async function pingIndexNowUrl(event: string, url: string): Promise<void>
 export function absUrl(path: string): string {
   return path.startsWith("http") ? path : `${SITE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
 }
+
+// Awaitable variant of pingIndexNow for callers that must know whether the
+// submission actually landed (the nightly sweep advances its "since" window
+// only on success). Same endpoint, payload and chunking; it never throws and
+// does NOT write its own CronRunLog rows — the caller logs the outcome.
+export async function submitIndexNow(urls: string[]): Promise<{ ok: boolean; submitted: number; error?: string }> {
+  if (!urls.length) return { ok: true, submitted: 0 };
+  if (!isIndexNowConfigured()) return { ok: false, submitted: 0, error: "INDEXNOW_KEY not configured" };
+  let submitted = 0;
+  try {
+    for (let i = 0; i < urls.length; i += BATCH_CHUNK_SIZE) {
+      const chunk = urls.slice(i, i + BATCH_CHUNK_SIZE);
+      const res = await fetch(ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ host: HOST, key: process.env.INDEXNOW_KEY, keyLocation: keyLocation(), urlList: chunk }),
+      });
+      if (!res.ok) return { ok: false, submitted, error: `HTTP ${res.status} for ${chunk.length} URL(s)` };
+      submitted += chunk.length;
+    }
+    return { ok: true, submitted };
+  } catch (e) {
+    return { ok: false, submitted, error: e instanceof Error ? e.message : String(e) };
+  }
+}
