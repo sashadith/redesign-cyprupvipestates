@@ -65,7 +65,7 @@ async function run() {
     ...blogs.map((b) => absUrl(localizedHref(b.language, ["blog", b.slug]))),
     ...pages.map((p) => absUrl(localizedHref(p.language, [p.slug]))),
   ];
-  const unique = [...new Set(candidates)].slice(0, MAX_URLS);
+  const unique = Array.from(new Set(candidates)).slice(0, MAX_URLS);
 
   const live: string[] = [];
   for (let i = 0; i < unique.length; i += HEAD_CONCURRENCY) {
@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
       (r) => (r.ok ? `${r.submitted} URL(s) submitted (${r.changed} changed since ${r.since}, ${r.skippedNot200} skipped: not 200)` : `FAILED after ${r.submitted} URL(s): ${r.error}`),
       (r) => r.ok,
     );
-    return NextResponse.json({ ok: result.ok, ...result }, { status: result.ok ? 200 : 502 });
+    return NextResponse.json(result, { status: result.ok ? 200 : 502 });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     if (await shouldNotifyFailureStreak(JOB)) {
