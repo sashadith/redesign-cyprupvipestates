@@ -982,6 +982,9 @@ model LeadEmailDraft {
   // draft id + a valid bearer token. Hashing it would only complicate the
   // Cockpit's "code was sent by email" hint without adding real protection.
   approvalCode      String
+  // CC recipients (2026-10-02), fixed at draft time: shown in the operator's
+  // preview and sent verbatim by crm_send_email — never edited in between.
+  cc                String[]             @default([])
   status            LeadEmailDraftStatus @default(PENDING)
   failedAttempts    Int                  @default(0)
   expiresAt         DateTime
