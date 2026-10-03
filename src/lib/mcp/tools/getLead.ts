@@ -31,7 +31,7 @@ export function registerGetLead(server: McpServer) {
             salutation: true, sourceLocale: true, viewingScheduledAt: true, autoFollowUpCount: true, pageSource: true, updatedAt: true,
             utmSource: true, utmMedium: true, utmCampaign: true, attributionRef: true, referrer: true,
             assignedTo: { select: { name: true } },
-            interactions: { orderBy: { occurredAt: "desc" }, take: MAX_TIMELINE_ROWS, select: { id: true, type: true, direction: true, channel: true, subject: true, body: true, occurredAt: true, createdByName: true } },
+            interactions: { orderBy: { occurredAt: "desc" }, take: MAX_TIMELINE_ROWS, select: { id: true, type: true, direction: true, channel: true, subject: true, body: true, occurredAt: true, createdByName: true, metadata: true } },
             _count: { select: { interactions: true } },
             presentations: { orderBy: { createdAt: "desc" }, take: 5, select: { id: true, status: true, createdAt: true, expiresAt: true, views: { select: { createdAt: true } } } },
             bookingRequests: { orderBy: { createdAt: "desc" }, select: { id: true, status: true, proposedSlots: true, confirmedSlotUtc: true, createdAt: true, expiresAt: true } },

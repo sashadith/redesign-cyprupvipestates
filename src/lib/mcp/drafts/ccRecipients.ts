@@ -30,3 +30,22 @@ export function checkCcRecipients(cc: readonly string[] | null | undefined, lead
   }
   return { ok: true, cc: list };
 }
+
+/** The "reply all" default for a draft that names no CC: the other participants
+ *  stored on the lead's latest inbound email (EMAIL_IN metadata.cc), minus the
+ *  lead and the operator, valid addresses only, at most MAX_CC. Never throws —
+ *  a default that cannot be used is simply dropped. */
+export function replyAllDefault(stored: unknown, leadEmail: string, operatorEmail?: string | null): string[] {
+  if (!Array.isArray(stored)) return [];
+  const skip = new Set([leadEmail, operatorEmail ?? ""].map((a) => a.trim().toLowerCase()).filter(Boolean));
+  const out: string[] = [];
+  for (const raw of stored) {
+    const a = typeof raw === "string" ? raw.trim() : "";
+    const key = a.toLowerCase();
+    if (!isPlainEmail(a) || skip.has(key)) continue;
+    skip.add(key);
+    out.push(a);
+    if (out.length >= MAX_CC) break;
+  }
+  return out;
+}

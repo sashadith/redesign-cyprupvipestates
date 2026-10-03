@@ -6,6 +6,9 @@ export const INBOUND_TYPES = new Set(["EMAIL_IN", "WHATSAPP_IN"]);
 type InteractionLike = {
   id: string; type: string; direction: string | null; channel: string | null; subject: string | null; body: string | null;
   occurredAt: Date; createdByName: string | null;
+  /** Only `metadata.cc` is read: the copy recipients of an EMAIL_OUT, or the
+   *  other participants of an EMAIL_IN (for "reply all"). */
+  metadata?: unknown;
 };
 
 // { id, type, direction, channel, subject, body?, untrusted_content?, truncated, occurredAt, by } —
@@ -17,13 +20,21 @@ type ShapedInteraction = {
   id: string; type: string; direction: string | null; channel: string | null; subject: string | null;
   occurredAt: ReturnType<typeof fmtDate>; by: string | null; truncated: boolean;
   body?: string | null; untrusted_content?: string | null;
+  cc?: string[];
 };
+
+// Addresses only — stored after validation (ccRecipients / replyRecipients).
+function ccOf(metadata: unknown): string[] {
+  const cc = (metadata as { cc?: unknown } | null | undefined)?.cc;
+  return Array.isArray(cc) ? cc.filter((a): a is string => typeof a === "string" && !!a) : [];
+}
 
 // Lead-authored text (EMAIL_IN / WHATSAPP_IN) goes under untrusted_content;
 // everything else in the timeline was written by us (a CALL note is our
 // summary even when the direction is INBOUND).
 export function shapeInteraction(i: InteractionLike): ShapedInteraction {
-  const base = { id: i.id, type: i.type, direction: i.direction, channel: i.channel, subject: i.subject, occurredAt: fmtDate(i.occurredAt), by: i.createdByName };
+  const cc = ccOf(i.metadata);
+  const base = { id: i.id, type: i.type, direction: i.direction, channel: i.channel, subject: i.subject, occurredAt: fmtDate(i.occurredAt), by: i.createdByName, ...(cc.length ? { cc } : {}) };
   if (INBOUND_TYPES.has(i.type)) {
     const u = untrusted(i.body);
     return { ...base, untrusted_content: u?.untrusted_content ?? null, truncated: u?.truncated ?? false };

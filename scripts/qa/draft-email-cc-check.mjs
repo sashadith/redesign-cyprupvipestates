@@ -47,7 +47,13 @@ const prisma = {
       return { count: rows.length };
     },
   },
-  leadInteraction: { create: async ({ data, select }) => { const r = { id: "int-" + (++n), ...data }; db.interactions.push(r); return pick(r, select); } },
+  leadInteraction: {
+    create: async ({ data, select }) => { const r = { id: "int-" + (++n), occurredAt: new Date(), ...data }; db.interactions.push(r); return pick(r, select); },
+    findFirst: async ({ where, select }) => {
+      const rows = db.interactions.filter((i) => match(i, where)).sort((x, y) => y.occurredAt - x.occurredAt);
+      return rows[0] ? pick(rows[0], select) : null;
+    },
+  },
 };
 prisma.$transaction = async (fn) => fn(prisma);
 module.exports.prisma = prisma;`);
@@ -141,6 +147,26 @@ const before = mails.length;
 await rejects("send refuses instead of altering the CC", () => sendEmailDraft(actor, d3.draftId, db.drafts.find((x) => x.id === d3.draftId).approvalCode), /no longer be sent as approved/);
 check("…and nothing went out", mails.length, before);
 check("…the stored CC is untouched", db.drafts.find((x) => x.id === d3.draftId).cc, ["partner@alfitouri.com"]);
+
+/* ── reply all (2026-10-02): no `cc` given → the other participants of the
+   lead's LATEST inbound email, as stored by the inbound poller ── */
+db.leads[0].email = "client@example.com";
+const inbound = (cc, minutesAgo) => db.interactions.push({ id: "in-" + minutesAgo, leadId: "L1", type: "EMAIL_IN", occurredAt: new Date(Date.now() - minutesAgo * 60000), metadata: { attachmentCount: 0, ...(cc ? { cc } : {}) } });
+inbound(["old@x.com"], 120);
+inbound(["partner@alfitouri.com", "client@example.com", "operator@cyprusvipestates.com"], 5);
+const rA = await createEmailDraft(actor, { leadId: "L1", subject: "Re: shortlist", body: "Dear Max,\n\nthanks." });
+check("no cc given → the latest reply's partner is copied", [rA.cc, rA.ccSource], [["partner@alfitouri.com"], "last_reply"]);
+check("…lead and operator are never copied, the older reply is ignored", db.drafts.find((x) => x.id === rA.draftId).cc, ["partner@alfitouri.com"]);
+check("…and the preview shows it before approval", /CC: partner@alfitouri\.com/.test(mails[mails.length - 1].text), true);
+const sentA = (await sendEmailDraft(actor, rA.draftId, db.drafts.find((x) => x.id === rA.draftId).approvalCode), mails[mails.length - 1]);
+check("…and the sent reply carries it", [sentA.to, sentA.cc], ["client@example.com", ["partner@alfitouri.com"]]);
+const rB = await createEmailDraft(actor, { leadId: "L1", subject: "Re: private", body: "Dear Max,\n\nonly you.", cc: [] });
+check("cc: [] → deliberately nobody in copy", [rB.cc, rB.ccSource], [[], "explicit"]);
+const rC = await createEmailDraft(actor, { leadId: "L1", subject: "Re: x", body: "b", cc: ["other@agency.com"] });
+check("an explicit list replaces the reply-all default", [rC.cc, rC.ccSource], [["other@agency.com"], "explicit"]);
+inbound(null, 1);
+const rD = await createEmailDraft(actor, { leadId: "L1", subject: "Re: y", body: "b" });
+check("latest reply had nobody in copy → none (no reaching back to older mail)", [rD.cc, rD.ccSource], [[], "none"]);
 
 console.log(failures ? `\n${failures} failed` : "\nall passed");
 process.exit(failures ? 1 : 0);

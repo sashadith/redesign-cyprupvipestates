@@ -8,7 +8,7 @@ import { ToolError } from "../toolWrapper";
 import { generateApprovalCode } from "./approvalCode";
 import { DRAFT_TTL_MS, DRAFTS_PER_LEAD_PER_HOUR, DRAFTS_PER_USER_PER_DAY } from "./draftState";
 import { buildPreviewEmail } from "./previewEmail";
-import { checkCcRecipients } from "./ccRecipients";
+import { checkCcRecipients, replyAllDefault } from "./ccRecipients";
 
 // Spec "Draft → approve → send", step 1. Nothing is written unless the
 // preview email actually left the operator's SMTP.
@@ -23,9 +23,27 @@ export async function createEmailDraft(actor: EmailActor, input: { leadId: strin
   });
   if (!lead) throw new ToolError("not_found", "Lead not found.");
   if (!lead.email) throw new ToolError("validation", "This lead has no email address — a draft cannot be sent to them.");
-  const ccCheck = checkCcRecipients(input.cc, lead.email);
-  if (!ccCheck.ok) throw new ToolError("validation", ccCheck.message);
-  const cc = ccCheck.cc;
+  // CC: what the caller gave (validated strictly; [] = deliberately none), or
+  // — when nothing was given — "reply all": the other participants of the
+  // lead's latest inbound email, e.g. a partner who was in CC. Either way the
+  // list is shown in the preview and fixed with the draft.
+  let cc: string[];
+  let ccSource: "explicit" | "last_reply" | "none";
+  if (input.cc !== undefined) {
+    const ccCheck = checkCcRecipients(input.cc, lead.email);
+    if (!ccCheck.ok) throw new ToolError("validation", ccCheck.message);
+    cc = ccCheck.cc;
+    ccSource = "explicit";
+  } else {
+    const lastReply = await prisma.leadInteraction.findFirst({
+      where: { leadId: lead.id, type: "EMAIL_IN" },
+      orderBy: { occurredAt: "desc" },
+      select: { metadata: true },
+    });
+    const operator = await getUserEmailSettingsRow(actor.userId).then((s) => s.fromAddress, () => null);
+    cc = replyAllDefault((lastReply?.metadata as { cc?: unknown } | null)?.cc, lead.email, operator);
+    ccSource = cc.length ? "last_reply" : "none";
+  }
 
   const now = Date.now();
   const [perLead, perUser] = await Promise.all([
@@ -85,5 +103,5 @@ export async function createEmailDraft(actor: EmailActor, input: { leadId: strin
     });
     return { draftId: draft.id, supersededDraftId: superseded?.id ?? null };
   });
-  return { ...result, previewSentTo, expiresAt, cc };
+  return { ...result, previewSentTo, expiresAt, cc, ccSource };
 }

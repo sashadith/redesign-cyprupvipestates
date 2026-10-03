@@ -10,7 +10,7 @@ const Input = z.object({
   leadId: z.string().uuid(),
   subject: z.string().trim().min(1).max(200),
   body: z.string().trim().min(1).max(8000).describe("Plain text; blank lines separate paragraphs. No greeting/closing tricks — write the full email body. The operator's signature is appended automatically."),
-  cc: z.array(z.string().trim().max(254)).max(MAX_CC).optional().describe(`Optional CC recipients (max ${MAX_CC} plain email addresses), e.g. the partner on a lead that came through a partner. Must not include the lead's own address. Shown in the operator's preview and sent exactly as given — they cannot be changed after the draft is created; make a new draft instead.`),
+  cc: z.array(z.string().trim().max(254)).max(MAX_CC).optional().describe(`CC recipients (max ${MAX_CC} plain email addresses), e.g. the partner on a lead that came through a partner. Must not include the lead's own address. OMIT it to reply-all: everyone else on the lead's latest email reply (e.g. a partner the lead had in CC) is copied automatically. Pass [] to send with no CC. Shown in the operator's preview and sent exactly as listed — fixed once the draft exists; make a new draft to change it.`),
 });
 
 export function registerDraftEmail(server: McpServer) {
@@ -19,7 +19,7 @@ export function registerDraftEmail(server: McpServer) {
     {
       title: "Draft an email to a lead (needs approval)",
       description:
-        "Stores an email draft for a lead and emails a preview — rendered exactly as the lead would receive it, with an approval code — to the operator's own mailbox. Nothing reaches the lead. Optional CC recipients are shown in the preview and fixed with the draft. The operator replies in the chat with the code (e.g. “Freigabe 7K3PQ2”); only then can crm_send_email send it. A new draft for the same lead supersedes the pending one. Drafts expire after 24 hours. Never tell the operator an email was sent unless crm_send_email returned sent: true.",
+        "Stores an email draft for a lead and emails a preview — rendered exactly as the lead would receive it, with an approval code — to the operator's own mailbox. Nothing reaches the lead. CC recipients — given explicitly, or by default everyone else from the lead's latest email reply (reply-all) — are shown in the preview and fixed with the draft. The operator replies in the chat with the code (e.g. “Freigabe 7K3PQ2”); only then can crm_send_email send it. A new draft for the same lead supersedes the pending one. Drafts expire after 24 hours. Never tell the operator an email was sent unless crm_send_email returned sent: true.",
       inputSchema: Input,
       annotations: { readOnlyHint: false, idempotentHint: false, destructiveHint: false },
     },
@@ -30,6 +30,7 @@ export function registerDraftEmail(server: McpServer) {
           draftId: r.draftId,
           previewSentTo: r.previewSentTo,
           cc: r.cc,
+          ccSource: r.ccSource,
           expiresAt: fmtDate(r.expiresAt),
           supersededDraftId: r.supersededDraftId,
           next: "Ask the operator to check the preview email and reply with the approval code; then call crm_send_email with draftId and that code.",

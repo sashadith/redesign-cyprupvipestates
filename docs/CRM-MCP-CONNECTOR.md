@@ -109,7 +109,7 @@ A connection can only be approved while a **pairing window** is open in the same
 | `crm_create_lead` | the admin's "New lead" form: source MANUAL, assigned to you, CREATED activity + timeline row `via: mcp`. Refuses (returns `existing`) when an active lead has the same email — Gmail dots/domain ignored — or phone, unless `allowDuplicate` |
 | `crm_delete_lead` | the admin's "Move to trash": soft delete, restorable 90 days, DELETED rows `via: mcp`; needs `confirmName` = the lead's full name and a `reason`. Permanent deletion stays ADMIN-only in `/admin/crm/trash` |
 | `crm_restore_lead` | the admin's "Restore" from the trash |
-| `crm_draft_email` | stores a draft + emails you a preview with the approval code; optional `cc` (max 5, e.g. the partner on a partner lead) |
+| `crm_draft_email` | stores a draft + emails you a preview with the approval code; optional `cc` (max 5, e.g. the partner on a partner lead) — omitted, it copies everyone else from the lead's latest email reply (reply-all); `[]` = no CC |
 | `crm_send_email` | sends a draft verbatim — including exactly its stored CC — if the code matches |
 | `crm_list_drafts` | what is still pending |
 
