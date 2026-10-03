@@ -481,6 +481,15 @@ and deployed to production.
 
 ## Lessons learned
 
+**Third-party API fetches always use `cache: "no-store"`.** Next.js' fetch cache
+once kept replaying a stale 401 from an external API for weeks after the key
+had been fixed — the route looked broken while the credential was fine. Every
+server-side fetch of a third-party API passes `cache: "no-store"`; if a result
+should be reused, memoise it in the process with a short TTL instead (see
+`src/lib/social/typefully.ts`: 5 minutes, successes only, so a fixed outage
+clears on the next request).
+
+
 **`.env` as a stale bootstrap credential, not a source of truth.**
 `prisma/seed-admin.mjs` originally used `upsert`, which overwrote the admin
 user's password hash with `ADMIN_PASSWORD` from `.env` on every run. Since
