@@ -54,6 +54,11 @@ export const getBlogPostByLang = cache(_getBlogPostByLang);
 export const getCaseStudyByLang = cache(_getCaseStudyByLang);
 export const getProjectByLang = cache(_getProjectByLang);
 export const getDeveloperByLang = cache(_getDeveloperByLang);
+// Added 2026-09-26: the header now renders ModalBrochure for every page, so this
+// is fetched once per request by Header.tsx AND, on pages that still needed it,
+// by the page itself. cache() dedupes that within a request — the other six
+// getters above already follow this pattern.
+export const getFormStandardDocumentByLang = cache(_getFormStandardDocumentByLang);
 
 // Attach the migrated lqip (from Media) as blurDataURL on a (dereferenced) image's asset, so the
 // LCP hero can render a blur placeholder. Single lookup — used only for previewImage on detail pages.
@@ -433,7 +438,7 @@ async function computeFilteredProjects(lang: string, filterCity?: string, filter
  * can never show a different universe (PUBLISHED only, Developments merged in,
  * "recommended" order) than a hand-placed block on the next article would.
  */
-export async function getArticleFallbackProjects(lang: string, filterCity?: string, limit = 3) {
+export async function getArticleFallbackProjects(lang: string, filterCity?: string, limit = 6) {
   const cards = await computeFilteredProjects(lang, filterCity);
   return cards.slice(0, limit);
 }
@@ -747,7 +752,7 @@ export async function getFooterByLang(lang: string): Promise<any> {
   return D({ _id: row?.sanityId, ...d });
 }
 
-export async function getFormStandardDocumentByLang(lang: string): Promise<FormStandardDocument> {
+async function _getFormStandardDocumentByLang(lang: string): Promise<FormStandardDocument> {
   if (!isLocale(lang)) return null as unknown as FormStandardDocument;
   const row = await prisma.siteDocument.findUnique({ where: { type_language: { type: "formStandardDocument", language: lang as any } } });
   const d = (row?.data as AnyRow) ?? {};

@@ -90,7 +90,7 @@ function DevelopmentsNavPanel({ nav, totals, pathname, onNavigate }: { nav: Deve
       }) : <p className="px-3 py-1 text-xs text-[#9CA3AF]">{ql ? "No match." : "None yet."}</p>}
       {totals && (
         <div className="rounded-md border border-[#E5E7EB] bg-[#F8F9FA] px-3 py-2 mt-1 mb-1 space-y-1">
-          {([["Developers", totals.developers], ["Developments", totals.developments], ["Units", totals.units]] as const).map(([label, n]) => (
+          {([["Developers with stock", totals.developers], ["Developments available", totals.developments], ["Units available", totals.units]] as const).map(([label, n]) => (
             <div key={label} className="flex items-center justify-between text-xs">
               <span className="text-[#9CA3AF]">{label}</span>
               <span className="text-[#9CA3AF]">{n.toLocaleString("en-US")}</span>

@@ -50,7 +50,6 @@ import Form from "@/app/preview-home/sections/Form";
 import Header from "@/app/components/Header/Header";
 import Footer from "@/app/components/Footer/Footer";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
-import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
 import SchemaBlogPost from "@/app/components/SchemaBlogPost/SchemaBlogPost";
 import SchemaBlogFaq from "@/app/components/SchemaBlogFaq/SchemaBlogFaq";
 import LinkedInConversionTracker from "@/app/components/LinkedInConversionTracker/LinkedInConversionTracker";
@@ -147,7 +146,7 @@ const ARTICLE_CITY_TOKENS: Record<"Paphos" | "Limassol" | "Larnaca", string[]> =
 };
 /* Below this a city-filtered set reads as an accident rather than a selection,
    so the unfiltered recommended set is used instead. */
-const FALLBACK_MIN = 3;
+const FALLBACK_MIN = 6;
 /* A live city/type query returning fewer than this renders nothing — see the
    guard in renderArticleBlock. Module-level so that guard and the
    does-this-article-already-route check below cannot drift apart. */
@@ -180,7 +179,6 @@ const PagePost = async ({ params }: Props) => {
   if (!blog) notFound();
 
   const t = blogStrings(lang);
-  const formDocument: FormStandardDocument = await getFormStandardDocumentByLang(lang);
 
   const fmtDate = (d?: unknown) => {
     if (!d) return "";
@@ -464,7 +462,6 @@ const PagePost = async ({ params }: Props) => {
       </main>
 
       <Footer params={params} />
-      <ModalBrochure lang={lang} formDocument={formDocument} />
       <WhatsAppButton lang={params.lang} />
     </>
   );

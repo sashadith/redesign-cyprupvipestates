@@ -478,5 +478,33 @@ check("…resolved from stored and label-derived values",
 check("…and it derives from the label, not the project name",
   /cybarcoUnitTypeFromLabel\(cybarcoUnitLabel\(u\)\)/.test(syncSrc), true);
 
+/* ── listingVerdict: an unseen status mark fails the run, not the neighbours ─
+   2026-09-24 and again 2026-10-03: one new mark on one card threw out of the
+   listing parse and stopped every Cybarco project from syncing. The card is now
+   held apart (readListing) and the run reports ok:false naming it, so the
+   operator still hears about it while the other projects keep syncing. */
+console.log("listingVerdict — an unseen mark is reported, its neighbours sync");
+const healthy = { ok: true, reason: null };
+const refused = S.runVerdict({ attempted: 30, failed: 30 });
+const card = { slug: "thalassa-residences-2", name: "Thalassa Residences 2", mark: "Coming Soon" };
+check("nothing held apart: the fetch verdict passes through", S.listingVerdict(healthy, []), healthy);
+check("…a refused run stays refused", S.listingVerdict(refused, []), refused);
+const lv = S.listingVerdict(healthy, [card]);
+check("one held card FAILS the run", lv.ok, false);
+check("…and the reason names the slug and the mark",
+  /thalassa-residences-2/.test(lv.reason) && /"Coming Soon"/.test(lv.reason), true);
+const both = S.listingVerdict(refused, [card]);
+check("refused AND held: both reasons survive",
+  [both.ok, both.reason.includes(refused.reason), both.reason.includes("Coming Soon")], [false, true, true]);
+
+/* Wiring, read off the source: the run reads the listing with the tolerant
+   reader, fails on what it held, and keeps a held EXISTING project alive
+   (syncedAt only) so the missing-from-feed sweep cannot mistake it for gone. */
+check("gatherCybarco reads the listing tolerantly, not with the strict parser",
+  [/readListing\(listing, sitemap\)/.test(syncSrc), /parseListing\(/.test(syncSrc)], [true, false]);
+check("…and judges the run with listingVerdict", /const verdict = listingVerdict\(fetchVerdict, blocked\)/.test(syncSrc), true);
+check("a held existing project gets syncedAt stamped and nothing else",
+  /for \(const b of blocked\) \{\s*const row = await prisma\.development\.findUnique\(\{ where: \{ feedKey: `cybarco:\$\{b\.slug\}` \}, select: \{ id: true, dev: true \} \}\);\s*if \(row\?\.dev === "cybarco"\) await prisma\.development\.update\(\{ where: \{ id: row\.id \}, data: \{ syncedAt: new Date\(\) \} \}\);\s*\}/.test(syncSrc), true);
+
 console.log(failures ? `\n${failures} assertion(s) failed` : "\nall checks passed");
 process.exit(failures ? 1 : 0);

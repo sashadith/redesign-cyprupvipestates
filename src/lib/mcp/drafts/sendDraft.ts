@@ -3,6 +3,7 @@ import { sendLeadEmail, type EmailActor } from "@/lib/crm/sendLeadEmail";
 import { EXCLUDE_NEWSLETTER } from "@/lib/crm/leadBucket";
 import { ToolError } from "../toolWrapper";
 import { evaluateSendAttempt, MAX_CODE_ATTEMPTS } from "./draftState";
+import { checkCcRecipients } from "./ccRecipients";
 
 // Spec "Draft → approve → send", step 3. The code is checked by the pure
 // reducer; every state change here is an atomic conditional update so two
@@ -10,7 +11,7 @@ import { evaluateSendAttempt, MAX_CODE_ATTEMPTS } from "./draftState";
 export async function sendEmailDraft(actor: EmailActor, draftId: string, approvalCode: string) {
   const draft = await prisma.leadEmailDraft.findUnique({
     where: { id: draftId },
-    select: { id: true, leadId: true, userId: true, subject: true, body: true, status: true, failedAttempts: true, expiresAt: true, approvalCode: true },
+    select: { id: true, leadId: true, userId: true, subject: true, body: true, cc: true, status: true, failedAttempts: true, expiresAt: true, approvalCode: true },
   });
   if (!draft || draft.userId !== actor.userId) throw new ToolError("not_found", "Draft not found.");
 
@@ -28,11 +29,16 @@ export async function sendEmailDraft(actor: EmailActor, draftId: string, approva
 
   const lead = await prisma.lead.findFirst({ where: { id: draft.leadId, deletedAt: null, ...EXCLUDE_NEWSLETTER }, select: { email: true } });
   if (!lead?.email) throw new ToolError("validation", "The lead was deleted or has no email address any more — the draft cannot be sent.");
+  // The CC list goes out exactly as stored on the draft (and as the preview
+  // showed it) — re-checked only against the lead's CURRENT address, which may
+  // have been edited since the draft was made. Never altered here.
+  const ccCheck = checkCcRecipients(draft.cc, lead.email);
+  if (!ccCheck.ok) throw new ToolError("validation", `The draft can no longer be sent as approved: ${ccCheck.message} Create a new draft.`);
 
   const claimed = await prisma.leadEmailDraft.updateMany({ where: { id: draft.id, status: "PENDING" }, data: { status: "SENDING" } });
   if (claimed.count !== 1) throw new ToolError("validation", "This draft is already being sent.");
 
-  const result = await sendLeadEmail(actor, draft.leadId, { subject: draft.subject, body: draft.body, aiGenerated: true, via: "mcp", draftId: draft.id });
+  const result = await sendLeadEmail(actor, draft.leadId, { subject: draft.subject, body: draft.body, cc: draft.cc, aiGenerated: true, via: "mcp", draftId: draft.id });
   if (!result.ok) {
     await prisma.leadEmailDraft.updateMany({ where: { id: draft.id, status: "SENDING" }, data: { status: "PENDING" } });
     const scrub = (s: string) => s.split(draft.approvalCode).join("••••••");
@@ -42,5 +48,5 @@ export async function sendEmailDraft(actor: EmailActor, draftId: string, approva
     where: { id: draft.id, status: "SENDING" },
     data: { status: "SENT", sentAt: new Date(), sentInteractionId: result.interactionId },
   });
-  return { sentTo: result.sentTo, messageId: result.messageId, interactionId: result.interactionId, interactionError: result.interactionError };
+  return { sentTo: result.sentTo, cc: result.cc, messageId: result.messageId, interactionId: result.interactionId, interactionError: result.interactionError };
 }

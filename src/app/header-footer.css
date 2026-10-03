@@ -65,26 +65,167 @@
 .nav { position: fixed; inset: 0 0 auto 0; z-index: 2000; }
 /* frosted layer on a pseudo so .nav itself never becomes the containing block
    for the fixed mobile overlay (backdrop-filter on .nav would clip it after scroll) */
-.nav::before {
+/* `html` in front of both this rule and the [data-scrolled] one below is not
+   decoration: preview-home/tokens.css carries byte-identical copies of them
+   (its lines 177-188) at the same specificity and loads after this file on most
+   pages. Without the extra element the whole fix below was inert — measured, the
+   gradient still swapped and `bottom` still snapped, because the transition list
+   that applied was tokens.css's, which names neither. */
+html .nav::before {
   content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
   background: transparent; border-bottom: 1px solid transparent;
-  transition: background 1.4s var(--ease), border-color 1.4s var(--ease),
-              -webkit-backdrop-filter 1.4s var(--ease), backdrop-filter 1.4s var(--ease);
+  /* no-repeat is load-bearing, not tidiness. Both layers carry a 1px bottom
+     border, and a background image is positioned against the PADDING box while
+     being painted across the BORDER box — so the gradient is one pixel shorter
+     than the area it fills and the default `repeat` tiles it. The strip left
+     over at the bottom showed the top of the next tile, i.e. the gradient's
+     DARKEST stop: a hard 1px line across the full width of the page, measured at
+     luminance 37 against 138 either side of it.
+
+     Introduced today, by giving the resting state a 1px transparent border so
+     the border could fade in instead of appearing at full width; before that the
+     rule said `border-bottom: 0`, the two boxes coincided and there was nothing
+     to tile. */
+  background-repeat: no-repeat;
+  /* This layer is the TOP-OF-PAGE background: the scrim over a photo hero, the
+     solid bar elsewhere, nothing at all on a dark hero. .nav::after below is the
+     scrolled one, and the two cross-fade by opacity.
+
+     Two layers rather than one animated background, because a single one cannot
+     work: no browser interpolates `background-image` between two gradients. The
+     spec allows it, the implementations treat it as discrete. Measured here
+     first — matching both gradients to the same 14 stop positions changed
+     nothing, the first stop still jumped from rgba(8,21,18,…) to
+     rgba(6,16,14,…) inside one frame. Opacity does interpolate, so the fade is
+     moved onto a property that can carry it.
+
+     A side benefit: each layer keeps its own box. The scrim reaches half the
+     nav's height below it, the scrolled bar stops at the nav's edge (its
+     backdrop-filter must not blur a band underneath), and neither has to animate
+     its geometry into the other's. */
+  opacity: 1;
+  transition: opacity 1.4s var(--ease);
 }
-[data-scrolled] .nav::before {
-  -webkit-backdrop-filter: blur(12px) saturate(140%); backdrop-filter: blur(12px) saturate(140%);
-  background: linear-gradient(180deg, rgba(6,16,14,0.72), rgba(6,16,14,0.28));
+/* Asymmetrisch mit Absicht: der Weg zurueck nach oben laeuft in den 1.4s der
+   Basisregel, das Eintreten in den gescrollten Zustand in 2s. Die Transition
+   der ZIEL-Regel gewinnt, also traegt jede Richtung ihre eigene Dauer. */
+html[data-scrolled] .nav::before { opacity: 0; transition-duration: 2s; }
+
+/* The scrolled layer. Same values the old [data-scrolled] rule carried; only the
+   element and the way it appears have changed. `html` in front for the same
+   reason as above: preview-home/tokens.css holds byte-identical copies of these
+   nav rules and loads after this file on most pages. */
+html .nav::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: linear-gradient(180deg, rgba(6,16,14,0.72), rgba(6,16,14,0.28));
   border-bottom: 1px solid rgba(239,233,219,0.10);
+  background-repeat: no-repeat;
+  -webkit-backdrop-filter: blur(12px) saturate(140%); backdrop-filter: blur(12px) saturate(140%);
+  opacity: 0;
+  transition: opacity 1.4s var(--ease);
 }
+html[data-scrolled] .nav::after { opacity: 1; transition-duration: 2s; }
 /* Default at the very top of the page: a deep-green bar behind the nav so the
    light logo + links stay legible over ANY hero (light, mixed or unknown). On
    scroll the [data-scrolled] frosted rule above takes over (1.4s blend). Pages
    with a dark full-bleed hero opt OUT via <html data-hero-dark> (set by
    NavHeroFlag) to keep the signature fully-transparent nav (home, /projects). */
-html:not([data-scrolled]):not([data-hero-dark]) .nav::before {
-  background: linear-gradient(180deg, var(--sea-deep) 0%, rgba(8,21,18,0.92) 100%);
-  border-bottom: 1px solid rgba(239,233,219,0.10);
+html:not([data-scrolled]):not([data-hero-dark]):not([data-hero-scrim]) .nav::before {
+  background-image: linear-gradient(180deg, var(--sea-deep) 0%, rgba(8,21,18,0.92) 100%);
+  border-bottom-color: rgba(239,233,219,0.10);
 }
+/* A single project's hero is whatever the developer supplied — measured on one
+   real page the strip behind the nav averages 189 in luminance and peaks at
+   234, i.e. bright sky. So these routes get neither the solid bar (too heavy
+   over a photograph) nor data-hero-dark's full transparency (ivory links land
+   at 1.01:1 there, invisible).
+
+   A gradient scrim instead: dark where the text actually sits, fading to almost
+   nothing at the lower edge. No bottom border — the hard line is most of what
+   made the default read as a bar. With the links at full opacity (below) this
+   measures 4.88:1 against the BRIGHTEST pixel of that hero and ~6.5:1 against
+   its average, so AA holds even in the worst case while the photograph stays
+   visible through it. */
+html:not([data-scrolled])[data-hero-scrim] .nav::before {
+  /* 50 percent taller than the nav, as a PERCENTAGE rather than a pixel value:
+     bottom resolves against the containing block's height, so the fade keeps the
+     same proportions at every nav height instead of being tuned for the 76px
+     desktop bar and swamping the shorter 72px mobile one.
+
+     backdrop-filter stays gone: it always ends in a hard boundary at the
+     element's own bounds, and no easing inside it softens that edge. */
+  inset: 0 0 -50% 0;
+  /* What read as "hard" was not the steepness — it was the FLAT TOP. Earlier
+     versions held a constant alpha across the first 40-50 percent so the links
+     would sit on full strength, and an area of unchanging darkness is exactly
+     what the eye reads as a bar with an edge, however smoothly it then faded.
+     There is no plateau here: alpha declines from the very first pixel.
+
+     The curve is a smootherstep (6t^5 - 15t^4 + 10t^3) run across the whole box,
+     whose first AND second derivatives are zero at both ends — the softest
+     landing available, at the top edge and at the bottom one. Its steepest
+     segment is also gentler than the previous shape's (0.0158 vs 0.0173 alpha
+     per percent) despite covering the full height rather than 60 percent of it.
+
+     The peak is 0.84 rather than 0.70 to pay for the missing plateau: the links
+     are vertically centred, so the text line sits at 33 percent of this box,
+     where the curve has already decayed to 0.67. That is within a hair of the
+     0.70 the flat version delivered, and measures the same for contrast. (An
+     earlier revision of this rule assumed the links sat at 31 percent of the NAV
+     and started fading there — that put alpha 0.51 under the text and 3.80:1 on
+     the ivory, under AA. Hence the measurement, not the assumption.) */
+  background-image: linear-gradient(180deg,
+    rgba(8,21,18,0.840) 0%,
+    rgba(8,21,18,0.836) 8%,
+    rgba(8,21,18,0.813) 16%,
+    rgba(8,21,18,0.762) 24%,
+    rgba(8,21,18,0.680) 32%,
+    rgba(8,21,18,0.573) 40%,
+    rgba(8,21,18,0.451) 48%,
+    rgba(8,21,18,0.326) 56%,
+    rgba(8,21,18,0.211) 64%,
+    rgba(8,21,18,0.116) 72%,
+    rgba(8,21,18,0.049) 80%,
+    rgba(8,21,18,0.012) 88%,
+    rgba(8,21,18,0.002) 94%,
+    rgba(8,21,18,0.000) 100%);
+  /* colour only — the width stays 1px in every state, see the base rule */
+  border-bottom-color: transparent;
+}
+/* The links are ivory at 0.82 everywhere else, which is a deliberate softening
+   against a solid backdrop. Over a photograph that dimming is the difference
+   between 3.88:1 and 4.88:1, so it is spent here. */
+html:not([data-scrolled])[data-hero-scrim] .nav__link:not(.nav__link--accent),
+html:not([data-scrolled])[data-hero-scrim] .lang__btn {
+  color: rgba(239,233,219,1);
+}
+/* Private Collection keeps its champagne — it is the one link whose colour
+   carries meaning, and this rule's specificity (0,3,1) would otherwise beat
+   .nav__link--accent (0,1,0) and quietly flatten it into the others. */
+
+/* Hovering a label lifts it off the photograph with a soft shadow rather than a
+   box or a plate: two stacked shadows, a tight one for the edge of the glyphs
+   and a wide diffuse one for separation, both in the scrim's own near-black so
+   it reads as the scrim gathering behind the word. Deliberately scoped to the
+   scrim state — over the solid bar and the frosted scrolled nav there is nothing
+   to separate from, and a shadow there would just look smudged.
+
+   On .nav__item:hover, matching the colour and underline rules above, so the
+   label, its underline and the glow all respond to the same hover target
+   (the item, not the anchor) and cannot fall out of step. */
+html:not([data-scrolled])[data-hero-scrim] .nav__link {
+  transition: color var(--dur-sm) var(--ease), text-shadow var(--dur-sm) var(--ease);
+}
+/* Private Collection is excluded, and not as a style preference. Its glyphs are
+   filled by a background clipped to the text, which means -webkit-text-fill-color
+   is transparent — so a text-shadow painted behind them shows THROUGH the
+   letterforms instead of sitting behind solid ink, and the champagne visibly
+   darkened on hover. The other links have opaque fills and are unaffected. */
+html:not([data-scrolled])[data-hero-scrim] .nav__item:hover .nav__link:not(.nav__link--accent),
+html:not([data-scrolled])[data-hero-scrim] .nav__link:focus-visible:not(.nav__link--accent) {
+  text-shadow: 0 1px 2px rgba(8,21,18,0.55), 0 0 14px rgba(8,21,18,0.75);
+}
+
 /* .nav__inner = the redesign's "nav__inner wrap": flex row + the .wrap container
    (max-width + auto margins + gutter padding), folded together so no global
    `.wrap` class is needed on the live site. */
@@ -98,6 +239,78 @@ html:not([data-scrolled]):not([data-hero-dark]) .nav::before {
 .nav__logo-full { display: none; }
 .nav__logo-mark { display: block; height: 38px; width: auto; }
 
+/* A 45-degree sheen crosses the logo once every 5 seconds, left to right.
+
+   The streak is a pseudo-element MASKED BY THE LOGO ITSELF, which is the whole
+   trick: without the mask a diagonal highlight sweeps a 300x42 rectangle across
+   the header, and over a photograph that rectangle is plainly visible. Masked to
+   the logo's alpha, the light only ever appears on the letterforms. The file
+   supports this — the desktop PNG is RGBA and 85 percent fully transparent, with
+   the glyphs at 5.3 percent fully opaque.
+
+   The logo URL comes from the CMS, so Header.tsx hands it to CSS as
+   --logo-full-url / --logo-mark-url and this rule picks whichever image is
+   actually on screen at the current breakpoint. Both the picked value and the
+   final mask carry a transparent-gradient fallback: if a variable is missing (a
+   header rendered without a logo, or the preview-home Nav which sets no
+   variables), an invalid mask-image would resolve to `none` — no mask at all —
+   and the streak would show up as that bare rectangle. The fallback masks it to
+   nothing instead, so the worst case is no effect rather than a visible bug.
+
+   The movement is background-position-x, not a transform: the mask travels with
+   the element, so translating the pseudo would drag the logo-shaped window along
+   with the light and nothing would ever sweep. The element stays put and the
+   gradient slides underneath it.
+
+   background-size is 300%, so the bright band sits 1.5 element-widths into the
+   image: at position-x 100% the offset is -2 widths and the band is off to the
+   left; at 0% the offset is 0 and it has passed off to the right. The jump back
+   at the end of the cycle happens while the band is off-screen. */
+@keyframes navLogoSheen {
+  0%, 86.39% { background-position-x: 100%; }
+  100%       { background-position-x: 0%; }
+}
+.nav__logo {
+  position: relative;                 /* the anchor is static by default */
+  --logo-sheen: var(--logo-mark-url, linear-gradient(transparent, transparent));
+}
+.nav__logo::after {
+  content: "";
+  position: absolute; inset: 0; pointer-events: none;
+  -webkit-mask-image: var(--logo-sheen, linear-gradient(transparent, transparent));
+          mask-image: var(--logo-sheen, linear-gradient(transparent, transparent));
+  -webkit-mask-size: 100% 100%;       mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;     mask-repeat: no-repeat;
+  -webkit-mask-position: center;      mask-position: center;
+  /* Narrow, with a soft shoulder either side so the edges do not read as hard
+     lines crossing the glyphs. */
+  /* 135deg, not 45: the same 45-degree slash mirrored, so it leans the other
+     way. Alphas are the original 0.22/0.85 taken down by 30 percent. */
+  background-image: linear-gradient(135deg,
+    rgba(255,255,255,0) 44%,
+    rgba(255,255,255,0.15) 48%,
+    rgba(255,255,255,0.60) 50%,
+    rgba(255,255,255,0.15) 52%,
+    rgba(255,255,255,0) 56%);
+  background-size: 300% 100%;
+  background-repeat: no-repeat;
+  /* 11.575s = a 10s pause plus a 1.575s sweep, which is where the odd duration
+     comes from: the two are set independently, and a keyframe can only express
+     the split as a percentage. 10 / 11.575 = 86.39 percent, so the position is
+     held until then and the crossing gets the remaining 13.61 percent.
+
+     LINEAR, not the site's --ease: that curve is front-loaded, and measured on
+     the real logo it put the whole crossing into ~200ms and then spent the rest
+     of the sweep decelerating past the right-hand edge where nothing is visible.
+     A glint travels at a constant speed; anything else reads as a flick. */
+  animation: navLogoSheen 11.575s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* parked off to the left, so there is nothing to see rather than a frozen
+     highlight sitting on the logo */
+  .nav__logo::after { animation: none; background-position-x: 100%; }
+}
+
 /* desktop bits hidden on mobile */
 .nav__links { display: none; }
 .nav__right { margin-inline-start: auto; display: flex; align-items: center; gap: var(--s-3); }
@@ -108,6 +321,11 @@ html:not([data-scrolled]):not([data-hero-dark]) .nav::before {
   display: inline-flex; align-items: center; position: relative; padding: 8px 2px;
   font-family: var(--font-body), sans-serif; font-size: var(--text-sm); font-weight: 500; letter-spacing: 0.02em;
   color: rgba(239,233,219,0.82); text-decoration: none; white-space: nowrap;
+  /* Do NOT add the hover glow's transition here: preview-home/tokens.css holds a
+     verbatim copy of this whole nav block, and the project page imports it as a
+     PAGE stylesheet while this file is imported by the layout — so the copy lands
+     later in the bundle and its `transition: color` wins on equal specificity.
+     The scrim rules further up declare it at (0,3,1) instead. */
   transition: color var(--dur-sm) var(--ease);
 }
 .nav__link::after {
@@ -121,6 +339,55 @@ html:not([data-scrolled]):not([data-hero-dark]) .nav::before {
 .nav__link--accent { color: var(--champagne); }
 .nav__item:hover .nav__link--accent, .nav__link--accent:focus-visible, .nav__link--accent.is-active { color: var(--champagne); }
 .nav__item:hover .nav__link--accent::after, .nav__link--accent:focus-visible::after, .nav__link--accent.is-active::after { background: var(--champagne); }
+
+/* The same sheen as the logo's, on the one nav item that carries the brand
+   colour — 3 seconds behind it, so the two read as one pass across the header
+   rather than as two widgets animating at once.
+
+   Private Collection is TEXT, so there is no image to mask with. The equivalent
+   for text is background-clip: text, which clips the background to the glyph
+   shapes. That requires the glyph FILL to be transparent, or the fill paints
+   over the background and nothing shows — hence -webkit-text-fill-color, which
+   also has to be the property used rather than `color`: the hover and is-active
+   rules above set color back to champagne, and text-fill-color outranks color
+   for the fill, so the sheen survives hover without fighting those rules.
+
+   Two background layers: the moving sheen on top, a flat champagne underneath
+   that replaces the fill the transparent text gave up. The base layer is sized
+   100% 100%, so the shared keyframes cannot disturb it — a background-position-x
+   percentage resolves against (element width - image width), which is zero for a
+   full-width layer, making 100% and 0% the same place. That is what allows the
+   logo's keyframes to be reused here unchanged.
+
+   Written as `.nav .nav__link--accent` (0,2,0): preview-home/tokens.css holds a
+   copy of this block and most pages load it after this file. */
+.nav .nav__link--accent {
+  background-image:
+    linear-gradient(135deg,
+      rgba(255,255,255,0) 44%,
+      rgba(255,255,255,0.15) 48%,
+      rgba(255,255,255,0.60) 50%,
+      rgba(255,255,255,0.15) 52%,
+      rgba(255,255,255,0) 56%),
+    linear-gradient(var(--champagne), var(--champagne));
+  background-size: 300% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  background-position-x: 100%, 0%;
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: navLogoSheen 11.575s linear infinite;
+  animation-delay: 3s;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav .nav__link--accent { animation: none; background-position-x: 100%, 0%; }
+}
+/* In forced-colors mode the user's own palette replaces ours; a transparent
+   fill over a background the browser has thrown away would make the label
+   disappear entirely. Hand the text back to the system colour. */
+@media (forced-colors: active) {
+  .nav .nav__link--accent { background-image: none; -webkit-text-fill-color: currentColor; }
+}
 .nav__caret-btn {
   display: inline-flex; align-items: center; margin-inline-start: 2px; padding: 8px 4px;
   background: none; border: 0; cursor: pointer; color: rgba(239,233,219,0.55);
@@ -155,6 +422,259 @@ html:not([data-scrolled]):not([data-hero-dark]) .nav::before {
   transition: border-color var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease);
 }
 .lang__btn:hover { border-color: var(--accent); color: var(--ivory); }
+
+/* The chip is gone: no pill, no hairline, no glass fill — the switcher is just
+   the globe, the code and the caret, sitting on the page like the nav links next
+   to it. It was the only bordered object in the header, which made a secondary
+   control the loudest element up there.
+
+   Addressed as `.nav .lang__btn` (0,2,0) rather than `.lang__btn` (0,1,0) on
+   purpose: preview-home/tokens.css carries a verbatim copy of this whole block
+   and most pages import it AFTER this file, so a single-class rule here would be
+   silently overridden on exactly the pages that matter. Same reason the hover
+   rule below is written with the descendant too. */
+.nav .lang__btn {
+  gap: 6px;
+  padding: 4px 2px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: rgba(239,233,219,0.78);
+  transition: color var(--dur-sm) var(--ease), opacity var(--dur-sm) var(--ease);
+}
+/* Both icons shrink with the label. CSS wins over the width/height attributes on
+   the SVGs (15 and 11 in navShared.tsx), so this needs no component change —
+   first child is the globe, last is the caret. */
+.nav .lang__btn > svg:first-child { width: 13px; height: 13px; }
+.nav .lang__btn > svg:last-child { width: 10px; height: 10px; }
+/* Without a border there is nothing for the old rule's border-color to tint, so
+   hover has to say what it does now. */
+.nav .lang__btn:hover { color: var(--ivory); }
+
+/* ---- conversion button (Ask an adviser) ---------------------------------- */
+/* Sits at the start of .nav__right, which puts it exactly between the last nav
+   link and the language switcher.
+
+   Glass, not the solid ivory it started as: a filled pill made it the loudest
+   thing in a header whose whole direction has been quieting down — the language
+   switcher lost its own pill for the same reason. This uses the house
+   .btn--glass recipe (same tint, border and blur), so it reads as one of the
+   site's own buttons rather than a header-only invention. The brand colour
+   survives in the circle, which is the part carrying the invitation.
+
+   backdrop-filter is fine HERE although it was removed from .nav::before: the
+   objection there was that its hard boundary cut a visible line across the full
+   width of the header. A button has an intentional edge with a border drawn on
+   it, so that boundary is the design rather than an artefact. */
+.nav__cta {
+  display: inline-flex; align-items: center; gap: 8px; flex: none;
+  height: 38px; padding: 0 4px 0 14px;
+  border: 1px solid var(--hairline-strong); border-radius: 999px; cursor: pointer;
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%);
+  color: var(--ivory);
+  font-family: var(--font-body), sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 0.03em;
+  white-space: nowrap;
+  position: relative; overflow: hidden;
+  transition: border-color var(--dur-sm) var(--ease), box-shadow var(--dur-sm) var(--ease), transform var(--dur-sm) var(--ease-soft);
+}
+.nav__cta:active { transform: scale(0.985); }
+.nav__cta:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.nav__cta:hover { border-color: var(--accent); box-shadow: 0 6px 30px -8px var(--glow-btn), inset 0 1px 0 var(--glass-highlight); }
+
+/* The house hover sheen, same as .btn's — a skewed highlight crossing once. Kept
+   identical in angle and timing so the button reads as part of the same family
+   as the page's buttons rather than a one-off. */
+.nav__cta::before {
+  content: ""; position: absolute; top: 0; bottom: 0; inset-inline-start: 0; width: 46%; z-index: 0;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.30), transparent);
+  transform: translateX(-220%) skewX(-18deg); pointer-events: none;
+}
+.nav__cta:hover::before { animation: btnSheen 1.5s var(--ease-soft); }
+.nav__cta > * { position: relative; z-index: 1; }
+
+/* A gleam travelling around the BUTTON's contour: two highlights 180 degrees
+   apart, once around every 9 seconds.
+
+   Three things make this work on a pill rather than on a circle:
+
+   - The ring is cut with the two-layer mask trick — one mask covering the border
+     box, one the content box, composited with `exclude`. That leaves exactly the
+     1px frame, and because both layers inherit the 999px radius it follows the
+     rounded ends instead of cutting a rectangle.
+   - The gradient's ANGLE is animated, not the element. Rotating the element
+     would spin the pill itself; a conic-gradient's `from` angle can only be
+     animated through a registered custom property, hence @property below. Where
+     that is unsupported the angle simply stays at 0deg — the rim renders, it
+     just does not travel, which is the right way for this to degrade.
+   - Two opposed peaks rather than one, so the travelling light never makes the
+     button look lopsided.
+
+   The white is deliberately weak: it should register only once the eye has
+   already settled on the button. */
+@property --nav-cta-rim {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes navCtaRim { to { --nav-cta-rim: 360deg; } }
+.nav__cta::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  padding: 1px;
+  /* Each highlight spans 110 degrees, roughly triple the 52 it started at, with
+     a long shoulder either side so it reads as a broad glow rather than a defined
+     spot, at the alphas after a 20 percent lift on the first set that felt right.
+
+     Why it needed to be this wide: a conic-gradient advances at a constant
+     ANGULAR rate, but this box is 183x38. Near the middle of a long edge the
+     angle changes very fast per pixel, so a given band covers few pixels there —
+     measured at the original width, 41px at that point against 285px out at the
+     rounded ends. Widening the band cannot equalise that (nothing expressible as
+     a conic can), but it lifts the thin middle to where it reads as continuous. */
+  background: conic-gradient(from var(--nav-cta-rim),
+    rgba(255,255,255,0) 0deg,
+    rgba(255,255,255,0.12) 14deg,
+    rgba(255,255,255,0.31) 40deg,
+    rgba(255,255,255,0.41) 55deg,
+    rgba(255,255,255,0.31) 70deg,
+    rgba(255,255,255,0.12) 96deg,
+    rgba(255,255,255,0) 110deg,
+    rgba(255,255,255,0) 180deg,
+    rgba(255,255,255,0.12) 194deg,
+    rgba(255,255,255,0.31) 220deg,
+    rgba(255,255,255,0.41) 235deg,
+    rgba(255,255,255,0.31) 250deg,
+    rgba(255,255,255,0.12) 276deg,
+    rgba(255,255,255,0) 290deg,
+    rgba(255,255,255,0) 360deg);
+  /* `linear-gradient(#000, #000)` and not the shorter `linear-gradient(#000 0 0)`:
+     the short form puts both stops at 0px, which resolved here to a degenerate
+     gradient rather than to solid black — the mask then covered nothing and the
+     whole rim was invisible while the conic underneath rendered perfectly. */
+  -webkit-mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
+          mask: linear-gradient(#000, #000) content-box, linear-gradient(#000, #000);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: navCtaRim 9s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav__cta::after { animation: none; }
+}
+
+/* The circle. 22px, down from the design system's 30: it has to stay clearly
+   under the logo mark beside it in the label-less form.
+
+   Not a flat disc — a radial gradient that falls off before the edge, so there
+   is no hard rim. backdrop-filter would do nothing for that (the glass behind it
+   is an even tint with no detail to blur); a gaussian falloff has to be painted,
+   and the gradient is what paints it.
+
+   More translucent than when the pill was ivory: the champagne now reads against
+   the photograph rather than against a solid plate, so it needs less weight to
+   register. */
+.nav__cta-ico {
+  width: 22px; height: 22px; border-radius: 999px; flex: none;
+  display: grid; place-items: center;
+  color: var(--ivory);
+  background: radial-gradient(circle at 50% 50%,
+    rgba(194,154,94,0.55) 0%,
+    rgba(194,154,94,0.48) 52%,
+    rgba(194,154,94,0.24) 78%,
+    rgba(194,154,94,0) 100%);
+  box-shadow: 0 0 10px rgba(194,154,94,0.30);
+  transition: background var(--dur-sm) var(--ease), box-shadow var(--dur-sm) var(--ease), color var(--dur-sm) var(--ease);
+}
+/* Hover moves nothing. The circle warms up instead — the gradient fills in and
+   the glyph flips to the dark ink, so it reads as lit rather than as a shape
+   that shifted. A translation smears a soft-edged disc, and rotating a speech
+   bubble would swing its tail away from the word it belongs to. */
+.nav__cta:hover .nav__cta-ico {
+  background: radial-gradient(circle at 50% 50%,
+    rgba(216,178,104,0.95) 0%,
+    rgba(206,166,96,0.88) 52%,
+    rgba(194,154,94,0.45) 78%,
+    rgba(194,154,94,0) 100%);
+  box-shadow: 0 0 16px rgba(194,154,94,0.55);
+  color: var(--accent-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav__cta:hover::before { animation: none; }
+}
+
+/* Below 1152px the label goes and the chip stands alone. Measured: at 1024 the
+   nav is already 7px over its own width BEFORE this button exists, and the
+   longest label (ru, "Спросить консультанта", 223px) would need the logo below
+   120px wide — 17px tall — to fit. So the label cannot survive there at any
+   logo size. The button itself never disappears; aria-label keeps its name. */
+/* The label is written out nearly everywhere, including on phones — the button
+   should make the same promise whatever the screen. It is dropped in exactly two
+   bands, and both are measured rather than assumed.
+
+   Below 360px it does not fit: with the logo mark and the burger alongside it,
+   "Получить консультацию" runs 28px over at 320 and 4px over at 344, and
+   "Porozmawiaj z doradcą" 16px over at 320. From 360 every locale clears, the
+   tightest (Russian) by 12px, and by 27px at 375. Under that width the chip
+   stands alone and aria-label still names the button.
+
+   Between 1024 and 1152 it does not fit either, for the opposite reason: the
+   desktop nav links appear at 1024 and take the room the label needs — measured
+   -11px at 1024 even in English. That band is the only place on a wide screen
+   where the chip goes it alone.
+
+   Hence the shape of these rules: hidden at the very bottom, shown from 360,
+   hidden again for one band, shown from 1152. The 34px pill of the chip-only
+   form stays deliberately under the 38px logo mark so it cannot compete with the
+   brand mark. */
+.nav__cta { padding: 0 5px; height: 34px; }
+.nav__cta-label { display: none; }
+
+@media (min-width: 360px) {
+  .nav__cta { padding: 0 4px 0 14px; height: 38px; }
+  .nav__cta-label { display: inline; }
+}
+/* Russian needs 15px more phone than the others. Measured at 360 with the button
+   kept identical to its desktop form: English clears by 40px, German by 58,
+   Polish by 16 — and Russian by 4, which is positive but leaves nothing for font
+   rendering to differ by on a device that is not this one.
+
+   The button is NOT tightened to make it fit. Trimming its padding bought 5px
+   and dropping the font to 12.5px bought 12 more, but a smaller button on the
+   phone is the opposite of what was asked for — the label should read the same
+   as on the desktop. So the layout waits for the room instead: from 375 Russian
+   clears by 19px. */
+html[lang="ru"] .nav__cta { padding: 0 5px; height: 34px; }
+html[lang="ru"] .nav__cta-label { display: none; }
+@media (min-width: 375px) {
+  html[lang="ru"] .nav__cta { padding: 0 4px 0 14px; height: 38px; }
+  html[lang="ru"] .nav__cta-label { display: inline; }
+}
+
+/* The desktop links are in, the room is not — see above. */
+@media (min-width: 1024px) and (max-width: 1151.98px) {
+  .nav__cta,
+  html[lang="ru"] .nav__cta { padding: 0 5px; height: 34px; }
+  .nav__cta-label,
+  html[lang="ru"] .nav__cta-label { display: none; }
+}
+
+@media (min-width: 1152px) {
+  .nav__cta,
+  html[lang="ru"] .nav__cta { padding: 0 4px 0 14px; height: 38px; }
+  .nav__cta-label,
+  html[lang="ru"] .nav__cta-label { display: inline; }
+}
+
+
+/* The logo only gives up room where the measurements say it must. With Contacts
+   moved out of the top level that is just the band below the label threshold,
+   where the nav was already 7px over its own width before this button existed. */
+@media (min-width: 1024px) and (max-width: 1279.98px) {
+  .nav .nav__logo-full { height: 32px; }
+}
 .lang__cur { font-weight: 600; }
 .lang__menu {
   position: absolute; top: calc(100% + 12px); inset-inline-end: 0; min-width: 184px; display: grid; gap: 2px; padding: var(--s-3);
@@ -196,6 +716,57 @@ html:not([data-scrolled]):not([data-hero-dark]) .nav::before {
 .burger.is-open span:nth-child(2) { opacity: 0; }
 .burger.is-open span:nth-child(3) { transform: translateY(-6.6px) rotate(-45deg); }
 .burger:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* The burger matches the conversion pill's height — 38px, not the 44 it drew
+   before. They sit side by side in the same row, and two controls of different
+   heights next to each other read as a mistake rather than as a hierarchy.
+
+   The 44px stays where it matters. A visible box that small would fall under the
+   44x44 touch target that WCAG 2.5.5 and Apple's guidance both ask for, so the
+   box shrinks and a transparent ::after gives the finger back the missing 3px on
+   every side. Shape and hit area are separate concerns; only the first one was
+   ever about looks.
+
+   `.nav` in front because preview-home/tokens.css carries this rule verbatim
+   (its line 277) and loads after this file on most pages. */
+.nav .burger { width: 38px; height: 38px; }
+/* No champagne on this outline, in any state. It sits beside the conversion
+   pill, and the pill is the element allowed to carry the brand colour — the
+   burger going gold on hover made a secondary control answer in the accent while
+   the primary one sat quiet next to it.
+
+   Its resting border already matched the pill's exactly (both
+   rgba(239,233,219,0.30), measured); only :hover and .is-open broke away. They
+   now stay in the same ivory family, a shade brighter, so the control still
+   answers a pointer without changing colour. The hover glow goes with it: a
+   champagne halo around an ivory outline is the same gold signal by another
+   route.
+
+   No moving highlight either — the travelling rim belongs to the pill alone. */
+.nav .burger:hover,
+.nav .burger:focus-visible,
+.nav .burger.is-open { border-color: rgba(239,233,219,0.55); }
+.nav .burger:hover { box-shadow: none; }
+.nav .burger.is-open { background: rgba(239,233,219,0.10); }
+/* -4px, not -3: an absolutely positioned child resolves `inset` against the
+   PADDING box, and the 1px border makes that 36px rather than 38. At -3 the hit
+   area came out 42x42 and two of the four edge probes fell just outside it; -4
+   lands it on exactly 44. */
+.nav .burger::after {
+  content: ""; position: absolute; inset: -4px; border-radius: inherit;
+}
+/* .mnav is a plain block, so the burger sat at its top rather than on the same
+   centre line as the pill beside it — measured 3.4px low, because an inline-flex
+   button in a block sits on a text baseline and leaves the descender gap below
+   it. It only wraps the button and the full-screen menu, and the menu is
+   position:fixed, so centring here moves nothing else.
+
+   Scoped to below 1024 on purpose. A desktop media query hides .mnav outright
+   (`display: none`), and an unscoped `.nav .mnav { display: flex }` outranks it
+   — which put the burger back on every desktop page until this was caught. */
+@media (max-width: 1023.98px) {
+  .nav .mnav { display: flex; align-items: center; }
+}
 
 /* ---- mobile overlay ---- */
 .mmenu {
@@ -260,9 +831,27 @@ html:not([data-scrolled]):not([data-hero-dark]) .nav::before {
 
 /* ---- desktop ≥ 1024px ---- */
 @media (min-width: 1024px) {
-  .nav__inner { gap: var(--s-6); padding-block: var(--s-4); }
+  /* One rhythm across the whole bar. Measured before this: 23 / 23 / 23 between
+     the menu items, then 56 to the button and 16 to the language switcher. The
+     three now read from the same expression as the nav items themselves, so the
+     spacing scales together rather than drifting apart at each breakpoint.
+
+     Two things had to change, and a `gap` alone could not have done it. The 56
+     was not a gap at all — preview-home/tokens.css gives .nav__right a
+     `margin-inline-start: var(--s-5)`, so the space was a margin and no gap value
+     would have touched it; it is zeroed here and the distance left to .nav__inner.
+     And both rules need `.nav` in front of them (0,2,0): tokens.css carries a copy
+     of this whole nav block and most pages load it after this file, so the plain
+     class lost silently — measured unchanged at 56/16 on the first attempt.
+
+     The logo keeps its distance either way: .nav__links carries
+     margin-inline-start: auto, which absorbs the free space and pushes the links
+     and the right-hand group together to the end of the bar. */
+  .nav .nav__inner { gap: clamp(14px, 1.6vw, 30px); padding-block: var(--s-4); }
+  .nav .nav__right { margin-inline-start: 0; gap: clamp(14px, 1.6vw, 30px); }
   .nav__logo-full { display: block; height: 42px; width: auto; }
   .nav__logo-mark { display: none; }
+  .nav__logo { --logo-sheen: var(--logo-full-url, linear-gradient(transparent, transparent)); }
   .nav__links { display: flex; align-items: center; gap: clamp(14px, 1.6vw, 30px); margin-inline-start: auto; }
   .nav__right { margin-inline-start: var(--s-5); gap: var(--s-4); }
   .mnav { display: none; }

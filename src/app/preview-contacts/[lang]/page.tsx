@@ -4,7 +4,7 @@ import { localizedHref, isLocale } from "@/lib/locale";
 import { languageAlternates, ogLocale } from "@/lib/seo";
 import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporateLocale } from "@/lib/corporatePageSlugs";
 import type { Translation } from "@/types/homepage";
-import Nav from "../../preview-home/sections/Nav";
+import Header from "@/app/components/Header/Header";
 import Footer from "../../preview-home/sections/Footer";
 import Form from "../../preview-home/sections/Form";
 import ContactsMotion from "./ContactsMotion";
@@ -89,7 +89,7 @@ export default async function ContactsPage({ params }: Props) {
   return (
     <>
       <ContactsMotion />
-      <Nav lang={lang} translations={translations} homeHref={localizedHref(lang)} />
+      <Header params={{ lang }} translations={translations} />
 
       <main className="cnt">
         {/* ------------------------------------------------------------ HERO */}

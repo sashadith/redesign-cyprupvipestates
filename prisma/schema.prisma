@@ -246,6 +246,27 @@ model LegacyProjectRedirect {
   @@map("legacy_project_redirects")
 }
 
+// Every slug a live Development has ever held, captured automatically on a
+// manual rename (see saveOverride's "Manual slug edit" in
+// admin/(panel)/developments/[id]/actions.ts) so the old public URL 301s to
+// the current one instead of 404ing. Checked as the last fallback in
+// src/app/[lang]/projects/[slug]/page.tsx, after a live Development and
+// LegacyProjectRedirect both miss — see resolveDevelopmentSlugHistory in
+// src/lib/developmentRender.ts. Only protects renames from when this table
+// was introduced onward; nothing before that was tracked, so it can't be
+// backfilled.
+model DevelopmentSlugHistory {
+  id            String   @id @default(uuid())
+  developmentId String
+  slug          String   @unique // the RETIRED slug — look up the development's CURRENT slug to redirect to
+  createdAt     DateTime @default(now())
+
+  development Development @relation(fields: [developmentId], references: [id], onDelete: Cascade)
+
+  @@index([developmentId])
+  @@map("development_slug_history")
+}
+
 // Nightly-swept legacy Project <-> Development overlap candidates
 // (2026-08-03) — replaces the frozen, one-time candidates.ts heuristic list.
 // A cron piggyback (see feed-sync route) finds title/developer/coordinate
@@ -778,6 +799,8 @@ model Lead {
   gclid                String?
   fbclid               String?
   referrer             String?
+  // Partner `?ref=` parameter, first touch (2026-09-28, src/lib/attribution.ts).
+  attributionRef       String?
   telegramNotified     Boolean               @default(false)
   emailNotified        Boolean               @default(false)
   activities           LeadActivity[]
@@ -959,6 +982,9 @@ model LeadEmailDraft {
   // draft id + a valid bearer token. Hashing it would only complicate the
   // Cockpit's "code was sent by email" hint without adding real protection.
   approvalCode      String
+  // CC recipients (2026-10-02), fixed at draft time: shown in the operator's
+  // preview and sent verbatim by crm_send_email — never edited in between.
+  cc                String[]             @default([])
   status            LeadEmailDraftStatus @default(PENDING)
   failedAttempts    Int                  @default(0)
   expiresAt         DateTime
@@ -1314,6 +1340,7 @@ model Development {
   override           DevelopmentOverride?
   presentationItems  ClientPresentationItem[]
   supersedesProjects Project[]
+  slugHistory        DevelopmentSlugHistory[]
 
   @@index([developerAccountId])
   @@index([publishStatus])

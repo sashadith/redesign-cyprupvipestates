@@ -5,14 +5,16 @@ import { abs, languageAlternates, ogLocale } from "@/lib/seo";
 import { CORPORATE_SLUGS, corporatePath, corporateTranslations, type CorporateLocale } from "@/lib/corporatePageSlugs";
 import type { BenefitsBlock } from "@/types/homepage";
 import type { Translation } from "@/types/homepage";
-import Nav from "../../preview-home/sections/Nav";
+import Header from "@/app/components/Header/Header";
 import Footer from "../../preview-home/sections/Footer";
 import Benefits from "../../preview-home/sections/Benefits";
 import ContactChannels from "@/app/components/ContactChannels/ContactChannels";
 import Bdi from "@/app/components/Bdi";
 import AboutMotion from "./AboutMotion";
 import { aboutCopy } from "./copy";
-import { getAboutPageData, getProjectCount } from "./data";
+import { getAboutPageData } from "./data";
+import { getPublicProjectCount, getAvailableUnitCount } from "@/lib/siteStats";
+import { bcp47For } from "@/lib/locale";
 import { toLanguageKey, languageLabel } from "@/app/preview-contacts/[lang]/languages";
 
 /* Cyprus VIP Estates — About, redesigned.
@@ -103,7 +105,13 @@ export default async function AboutPage({ params }: Props) {
   const { lang } = params;
   const t = aboutCopy(lang);
   const { team, reviews } = await getAboutPageData(lang);
-  const projectCount = await getProjectCount();
+  // Same source as the Partners band, so the two can never quote different
+  // figures for the same claim (2026-09-29). The old local getProjectCount()
+  // counted publishStatus != "archived", which included drafts.
+  const [projectCount, availableUnits] = await Promise.all([
+    getPublicProjectCount(lang),
+    getAvailableUnitCount(),
+  ]);
 
   const translations: Translation[] = i18n.languages.map((l) => ({
     language: l.id,
@@ -126,7 +134,7 @@ export default async function AboutPage({ params }: Props) {
         _type: "counting",
         // The projects figure comes from the database (see getProjectCount);
         // the rest are editorial constants.
-        conuntNumber: s.live === "projects" ? projectCount : s.number,
+        conuntNumber: s.live === "projects" ? projectCount : s.live === "units" ? availableUnits : s.number,
         sign: s.sign ?? "",
       },
       title: s.title,
@@ -140,7 +148,7 @@ export default async function AboutPage({ params }: Props) {
   return (
     <>
       <AboutMotion />
-      <Nav lang={lang} translations={translations} homeHref={localizedHref(lang)} />
+      <Header params={{ lang }} translations={translations} />
 
       <main className="abt">
         {/* ------------------------------------------------------------ HERO */}
@@ -200,7 +208,7 @@ export default async function AboutPage({ params }: Props) {
             <h2 className="abt__title">{t.statsTitle}</h2>
             <hr className="shimmer abt__stripe" />
           </div>
-          <Benefits block={benefitsBlock} />
+          <Benefits block={benefitsBlock} locale={bcp47For(lang)} />
         </section>
 
         {/* ------------------------------------------------------- HOW WE WORK */}

@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { PortableText } from "@portabletext/react";
 import { LuEuro, LuMapPin, LuHouse, LuClock } from "react-icons/lu";
-import Nav from "../../../preview-home/sections/Nav";
+import Header from "@/app/components/Header/Header";
 import Footer from "../../../preview-home/sections/Footer";
 import Form from "../../../preview-home/sections/Form";
 import LightHeroFlag from "../../../preview-insights/LightHeroFlag";
@@ -177,7 +177,7 @@ export default async function CaseStudyDetailPage({ params }: Props) {
       <LightHeroFlag />
       <CaseStudyMotion />
       <ReadingProgress />
-      <Nav lang={lang} translations={translations} homeHref={localizedHref(lang)} />
+      <Header params={{ lang }} translations={translations} />
       <main className="iart csd">
         <article>
           <header className={`iart__hero${heroUrl ? " iart__hero--image" : ""}`}>

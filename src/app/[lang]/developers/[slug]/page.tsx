@@ -30,7 +30,6 @@ import { i18n } from "@/i18n.config";
 import { Translation } from "@/types/homepage";
 import dynamic from "next/dynamic";
 import PropertyDistances from "@/app/components/PropertyDistances/PropertyDistances";
-import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
 import { FormStandardDocument } from "@/types/formStandardDocument";
 import PropertyFeatures from "@/app/components/PropertyFeatures/PropertyFeatures";
 import { urlFor } from "@/sanity/sanity.client";
@@ -189,8 +188,6 @@ const DeveloperPage = async ({ params }: Props) => {
 
   // console.log("projects", projects);
 
-  const formDocument: FormStandardDocument =
-    await getFormStandardDocumentByLang(params.lang);
 
   const propertyPageTranslationSlugs: {
     [key: string]: { current: string };
@@ -268,7 +265,6 @@ const DeveloperPage = async ({ params }: Props) => {
         <FullDescriptionBlock description={developer.description} />
       </main>
       <Footer params={params} />
-      <ModalBrochure lang={params.lang} formDocument={formDocument} />
       <WhatsAppButton lang={params.lang} />
     </>
   );

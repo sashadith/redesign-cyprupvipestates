@@ -94,7 +94,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
       const parsedPhone = parsePhoneNumberFromString(values.phone || "");
       const phoneFinal = parsedPhone?.number || values.phone || "";
 
-      const response = await axios.post("/api/monday", {
+      const response = await axios.post("/api/leads", {
         ...values,
         phone: phoneFinal,
         formStartTime,
@@ -139,7 +139,7 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
           setMessage(null);
         }, 10000);
       } else {
-        throw new Error("Failed to send lead to monday.com");
+        throw new Error("Failed to send lead to the CRM");
       }
     } catch (error) {
       console.error("Error:", error);
@@ -161,7 +161,6 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
 
   return (
     <>
-      {message && <div className={`${styles.popup} form-feedback${messageIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{message}</div>}
 
       <Formik
         innerRef={(inst) => {
@@ -381,6 +380,11 @@ const FormStatic: FC<ContactFormProps> = ({ onFormSubmitSuccess, lang }) => {
                         </ErrorMessage>
                       </div>
 
+                      {/* In flow, right above the button — matching the homepage contact
+                          section: the visitor is looking there when they press Send.
+                          Above the whole form it can sit off-screen on a long form
+                          (2026-09-28). */}
+                      {message && <div className={`${styles.popup} form-feedback${messageIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{message}</div>}
                       <button
                         type="submit"
                         className={styles.sentBtn}

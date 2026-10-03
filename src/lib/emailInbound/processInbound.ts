@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getImapCredentials, withReadOnlyInbox, fetchNewMessages, ImapNotConfiguredError } from "./imapClient";
 import { matchLeadForInboundEmail, canonicalizeEmail } from "./matchLead";
 import { stripHtmlBlockquotes, stripQuotedReply, stripSignatureBlock } from "./quoteStrip";
+import { replyAllRecipients } from "./replyRecipients";
 import { stripHtmlToText } from "@/lib/emailSignature";
 import { sendTelegramMessage } from "@/lib/telegram";
 
@@ -106,6 +107,10 @@ export async function pollInboundEmailForUser(userId: string): Promise<PollResul
         const body = stripSignatureBlock(stripQuotedReply(rawText)).slice(0, MAX_BODY_LENGTH);
         const attachmentCount = parsed.attachments?.length ?? 0;
         const bodyWithAttachmentNote = attachmentCount > 0 ? `${body}\n\n[${attachmentCount} attachment${attachmentCount === 1 ? "" : "s"}]` : body;
+        // Everyone else on the message (e.g. a partner in CC), for "reply all"
+        // through crm_draft_email — never the operator, never the lead.
+        const leadEmail = (await prisma.lead.findUnique({ where: { id: match.leadId }, select: { email: true } }))?.email ?? null;
+        const replyCc = replyAllRecipients(parsed, [settings.fromAddress, leadEmail], canonicalizeEmail);
 
         await prisma.leadInteraction.create({
           data: {
@@ -117,7 +122,7 @@ export async function pollInboundEmailForUser(userId: string): Promise<PollResul
             body: bodyWithAttachmentNote,
             occurredAt: parsed.date ?? msg.internalDate ?? new Date(),
             messageId: inboundMessageId,
-            metadata: { attachmentCount, ...(match.ambiguous ? { ambiguousSenderMatch: true } : {}) },
+            metadata: { attachmentCount, ...(match.ambiguous ? { ambiguousSenderMatch: true } : {}), ...(replyCc.length ? { cc: replyCc } : {}) },
           },
         });
 

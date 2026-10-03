@@ -41,7 +41,7 @@ export type AboutStrings = {
   statsEyebrow: string;
   statsTitle: string;
   /** `live: "projects"` swaps the hard-coded number for the DB count at render time. */
-  stats: { number: number; sign?: string; live?: "projects"; title: string; description: string }[];
+  stats: { number: number; sign?: string; live?: "projects" | "units"; title: string; description: string }[];
 
   workEyebrow: string;
   workTitle: string;
@@ -100,9 +100,9 @@ const EN: AboutStrings = {
   statsTitle: "Ten years on the ground",
   stats: [
     { number: 195, live: "projects", title: "Real estate projects", description: "In southern Cyprus. From studio apartments to high-class villas" },
+    { number: 0, live: "units", title: "Available units", description: "Residential, investment and commercial properties" },
     { number: 10, title: "Years of experience", description: "As a full-service real estate marketing agency" },
     { number: 360, sign: "°", title: "Service for our clients", description: "From the first contact to the handover of the keys" },
-    { number: 100, sign: "%", title: "Satisfied clients", description: "From Germany, Austria, Switzerland and beyond" },
   ],
 
   workEyebrow: "How we work",
@@ -180,9 +180,9 @@ const DE: AboutStrings = {
   statsTitle: "Zehn Jahre vor Ort",
   stats: [
     { number: 195, live: "projects", title: "Immobilienprojekte", description: "Auf Süd-Zypern. Von Studio-Apartments bis High-Class-Villen" },
+    { number: 0, live: "units", title: "Verfügbare Einheiten", description: "Wohn-, Anlage- und Gewerbeimmobilien" },
     { number: 10, title: "Jahre Erfahrung", description: "Als Full-Service-Immobilien-Marketing-Agentur" },
     { number: 360, sign: "°", title: "Service für unsere Kunden", description: "Vom ersten Kontakt bis zur Schlüsselübergabe" },
-    { number: 100, sign: "%", title: "Zufriedene Kunden", description: "Aus Deutschland, Österreich, der Schweiz und weiteren Ländern" },
   ],
 
   workEyebrow: "Wie wir arbeiten",
@@ -260,9 +260,9 @@ const PL: AboutStrings = {
   statsTitle: "Dziesięć lat na miejscu",
   stats: [
     { number: 195, live: "projects", title: "Projektów nieruchomości", description: "Na południu Cypru. Od apartamentów studio po luksusowe wille" },
+    { number: 0, live: "units", title: "Dostępne nieruchomości", description: "Mieszkaniowe, inwestycyjne i komercyjne" },
     { number: 10, title: "Lat doświadczenia", description: "Jako agencja kompleksowego marketingu nieruchomości" },
     { number: 360, sign: "°", title: "Obsługa naszych klientów", description: "Od pierwszego kontaktu aż do przekazania kluczy" },
-    { number: 100, sign: "%", title: "Zadowolonych klientów", description: "Z Niemiec, Austrii, Szwajcarii i innych krajów" },
   ],
 
   workEyebrow: "Jak pracujemy",
@@ -340,9 +340,9 @@ const RU: AboutStrings = {
   statsTitle: "Десять лет на месте",
   stats: [
     { number: 195, live: "projects", title: "Проектов недвижимости", description: "На юге Кипра. От студий до вилл высокого класса" },
+    { number: 0, live: "units", title: "Доступных объектов", description: "Жилая, инвестиционная и коммерческая недвижимость" },
     { number: 10, title: "Лет опыта", description: "Как агентство полного цикла маркетинга недвижимости" },
     { number: 360, sign: "°", title: "Спектр услуг для клиентов", description: "От первого контакта до передачи ключей" },
-    { number: 100, sign: "%", title: "Довольных клиентов", description: "Из Германии, Австрии, Швейцарии и других стран" },
   ],
 
   workEyebrow: "Как мы работаем",

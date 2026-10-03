@@ -158,7 +158,7 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
       const parsedPhone = parsePhoneNumberFromString(values.phone || "");
       const phoneFinal = parsedPhone?.number || values.phone || "";
 
-      const response = await axios.post("/api/monday", {
+      const response = await axios.post("/api/leads", {
         ...values,
         phone: phoneFinal,
         formStartTime,
@@ -239,7 +239,6 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
     <>
       <div className={styles.formMinimal}>
         <div className="container">
-          {message && <div className={`${styles.popup} form-feedback${messageIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{message}</div>}
 
           <Formik
             innerRef={(inst) => {
@@ -514,6 +513,11 @@ const FormMinimalBlockComponent: FC<ContactFormProps> = ({
                     </label>
                   </div>
 
+                  {/* In flow, right above the button — matching the homepage contact
+                      section: the visitor is looking there when they press Send.
+                      Above the whole form it can sit off-screen on a long form
+                      (2026-09-28). */}
+                  {message && <div className={`${styles.popup} form-feedback${messageIsError ? " form-feedback--error" : ""}`} role="alert" aria-live="assertive">{message}</div>}
                   <div>
                     <button
                       type="submit"

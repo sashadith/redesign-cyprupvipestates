@@ -21,10 +21,13 @@ export type SendLeadEmailOpts = {
   aiGenerated?: boolean;
   via?: "mcp";
   draftId?: string;
+  /** CC recipients, already validated by the caller (MCP drafts). Stored on the
+   *  EMAIL_OUT row's metadata so the timeline shows who was in copy. */
+  cc?: string[];
 };
 
 export type SendLeadEmailResult =
-  | { ok: true; sentTo: string; messageId: string; interactionId: string | null; interactionError?: string; cadenceError?: string }
+  | { ok: true; sentTo: string; cc: string[]; messageId: string; interactionId: string | null; interactionError?: string; cadenceError?: string }
   | { ok: false; error: string };
 
 export async function sendLeadEmail(actor: EmailActor, leadId: string, opts: SendLeadEmailOpts): Promise<SendLeadEmailResult> {
@@ -42,7 +45,7 @@ export async function sendLeadEmail(actor: EmailActor, leadId: string, opts: Sen
   try {
     // BCC the sender on every lead email — "BCC an Bearbeiter".
     const settingsRow = await getUserEmailSettingsRow(actor.userId);
-    const sent = await sendUserEmail(actor.userId, { to: lead.email, bcc: settingsRow.fromAddress ?? undefined, subject, html, text });
+    const sent = await sendUserEmail(actor.userId, { to: lead.email, cc: opts.cc?.length ? opts.cc : undefined, bcc: settingsRow.fromAddress ?? undefined, subject, html, text });
     messageId = sent.messageId;
   } catch (e: any) {
     return { ok: false, error: e?.message || "Send failed." };
@@ -72,6 +75,7 @@ export async function sendLeadEmail(actor: EmailActor, leadId: string, opts: Sen
           ...(opts.aiGenerated ? { aiGenerated: true } : {}),
           ...(opts.via ? { via: opts.via } : {}),
           ...(opts.draftId ? { draftId: opts.draftId } : {}),
+          ...(opts.cc?.length ? { cc: opts.cc } : {}),
         },
       },
       select: { id: true },
@@ -95,5 +99,5 @@ export async function sendLeadEmail(actor: EmailActor, leadId: string, opts: Sen
       console.error(`sendLeadEmail: email sent to lead ${leadId} but the follow-up cadence update failed:`, cadenceError);
     }
   }
-  return { ok: true, sentTo: lead.email, messageId, interactionId, interactionError, cadenceError };
+  return { ok: true, sentTo: lead.email, cc: opts.cc ?? [], messageId, interactionId, interactionError, cadenceError };
 }

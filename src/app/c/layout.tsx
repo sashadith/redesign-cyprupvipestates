@@ -1,5 +1,6 @@
+import "@/app/fonts/vendored.css";
+import { frauncesFontDisplay, mulishFontBody, playfairDisplayFontDisplayCyr } from "@/app/fonts";
 import type { Metadata } from "next";
-import { Fraunces, Mulish, Playfair_Display } from "next/font/google";
 import "@/app/preview-home/tokens.css";
 import "@/app/preview-projects/projects.css";
 import "@/app/preview-project/project.css";
@@ -12,25 +13,9 @@ import "./[token]/presentation.css";
 // parser auto-inserted its own around the streamed content, and React's
 // hydration then collided with it (HierarchyRequestError: appendChild — only
 // one element on document allowed).
-const display = Fraunces({
-  subsets: ["latin", "latin-ext"],
-  weight: ["300", "400", "500"],
-  style: ["normal", "italic"],
-  variable: "--font-display",
-  display: "swap",
-});
-const body = Mulish({
-  subsets: ["latin", "latin-ext", "cyrillic"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-body",
-  display: "swap",
-});
-const cyr = Playfair_Display({
-  subsets: ["cyrillic"],
-  weight: ["400", "500"],
-  variable: "--font-display-cyr",
-  display: "swap",
-});
+const display = frauncesFontDisplay;
+const body = mulishFontBody;
+const cyr = playfairDisplayFontDisplayCyr;
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },

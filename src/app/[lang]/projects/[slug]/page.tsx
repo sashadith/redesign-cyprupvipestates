@@ -48,7 +48,7 @@ export const dynamic = "force-dynamic";
 
 import ProjectPageBody from "@/app/preview-project/ProjectPageBody";
 import DevelopmentSchema from "@/app/components/DevelopmentSchema/DevelopmentSchema";
-import { getDbProjectBySlug } from "@/lib/developmentRender";
+import { getDbProjectBySlug, resolveDevelopmentSlugHistory } from "@/lib/developmentRender";
 import { resolveMetaTitle, resolveMetaDescription, NEW_PROJECTS_INDEXABLE } from "@/lib/developmentSeo";
 import { abs, staticAlternates, DEFAULT_OG_IMAGE, ogLocale } from "@/lib/seo";
 
@@ -63,7 +63,6 @@ import PropertyDescription from "@/app/components/PropertyDescription/PropertyDe
 // same module scope.
 import nextDynamic from "next/dynamic";
 import PropertyDistances from "@/app/components/PropertyDistances/PropertyDistances";
-import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
 import { FormStandardDocument } from "@/types/formStandardDocument";
 import PropertySlider from "@/app/components/PropertySlider/PropertySlider";
 import PropertyFeatures from "@/app/components/PropertyFeatures/PropertyFeatures";
@@ -185,13 +184,15 @@ const ProjectPage = async ({ params }: Props) => {
   if (!project) {
     const redirectTarget = await getLegacyProjectRedirect(lang, slug);
     if (redirectTarget) permanentRedirect(redirectTarget);
+    // Last resort: a slug this Development USED to have, before a manual
+    // admin rename — see resolveDevelopmentSlugHistory in developmentRender.ts.
+    const renamedTarget = await resolveDevelopmentSlugHistory(slug, lang);
+    if (renamedTarget) permanentRedirect(renamedTarget);
     notFound();
   }
 
   // console.log("faq", project.faq);
 
-  const formDocument: FormStandardDocument =
-    await getFormStandardDocumentByLang(params.lang);
 
   const propertyPageTranslationSlugs: {
     [key: string]: { current: string };
@@ -375,7 +376,6 @@ const ProjectPage = async ({ params }: Props) => {
       />
 
       <Footer params={params} />
-      <ModalBrochure lang={params.lang} formDocument={formDocument} />
       <ModalRoiCalculator lang={params.lang} project={project} />
     </>
   );

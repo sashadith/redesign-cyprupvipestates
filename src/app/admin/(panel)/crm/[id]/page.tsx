@@ -169,7 +169,9 @@ export default async function LeadDetail({ params }: { params: { id: string } })
 
   // Absorbed into CockpitCard's detail groups (see that component) — computed
   // once here, same shape the old page.tsx <dl> built inline.
-  const utm = [lead.utmSource, lead.utmMedium, lead.utmCampaign, lead.utmTerm, lead.utmContent].filter(Boolean).join(" / ");
+  // `ref:` is the partner `?ref=` parameter (attributionRef, 2026-09-28), shown in
+  // the same UTM row rather than a row of its own.
+  const utm = [lead.utmSource, lead.utmMedium, lead.utmCampaign, lead.utmTerm, lead.utmContent, lead.attributionRef ? `ref: ${lead.attributionRef}` : null].filter(Boolean).join(" / ");
   const clickId = [lead.gclid ? `gclid: ${lead.gclid}` : null, lead.fbclid ? `fbclid: ${lead.fbclid}` : null].filter(Boolean).join("  ·  ");
 
   async function assign(formData: FormData) {

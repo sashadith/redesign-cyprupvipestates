@@ -37,10 +37,11 @@ export function slugsFromSitemap(xml: string): string[] {
   return Array.from(new Set(out));
 }
 
-/* The site spells the same state four ways. Anything unrecognised is a hard
-   error rather than a silent default: a new mark would otherwise import as
-   "under construction" and quietly put a sold-out project back on sale. */
-function normaliseStatus(mark: string): CybarcoStatus {
+/* The site spells the same state four ways. Anything unrecognised is NEVER
+   given a silent default: a new mark would otherwise import as "under
+   construction" and quietly put a sold-out project back on sale. null here is
+   "nobody has seen this mark" — see readListing for what is done with it. */
+function statusOf(mark: string): CybarcoStatus | null {
   const m = mark.toLowerCase().replace(/\s+/g, " ").trim();
   if (m.startsWith("sold")) return "sold_out";
   if (m.startsWith("ready")) return "ready";
@@ -55,10 +56,18 @@ function normaliseStatus(mark: string): CybarcoStatus {
      exists to protect: a date in the future states when the building will be
      handed over, so it cannot be a sold-out project quietly going back on
      sale — a sold-out one still says "Sold Out", as Attikis and Thalassa do
-     on the same page today. Anything else still throws. */
+     on the same page today. Anything else is still unrecognised. */
   if (/\bdelivery\b/.test(m)) return "under_construction";
-  throw new Error(`Cybarco: unrecognised status mark ${JSON.stringify(mark)}`);
+  /* A launch announcement, seen 2026-10-03 on Thalassa Residences 2 ("Newly
+     Launched", no price yet). Safe for the same reason as the delivery form:
+     a project that has just gone on sale cannot be a sold-out one coming
+     back. Anchored at the start, so a mark that merely mentions a launch
+     somewhere in it still counts as unseen. */
+  if (m.startsWith("newly launched")) return "under_construction";
+  return null;
 }
+
+const unrecognisedMark = (mark: string) => new Error(`Cybarco: unrecognised status mark ${JSON.stringify(mark)}`);
 
 /* "From €320,000 – Nicosia, Cyprus" / "Sold Out – Limassol, Cyprus" /
    "From €1,260,000 – Latchi, Pafos, Cyprus". The district is the segment
@@ -88,27 +97,51 @@ function resolveSlug(name: string, linked: string | null, sitemap: string[]): st
   throw new Error(`Cybarco: no sitemap slug for unlinked card ${JSON.stringify(name)}`);
 }
 
-export function parseListing(html: string, sitemapXml: string): CybarcoCard[] {
+/** A listing card whose status mark is one nobody has seen yet. */
+export type CybarcoBlockedCard = { slug: string; name: string; mark: string };
+
+/* The listing, with every card whose mark is unrecognised held apart instead of
+   throwing. Until 2026-10-03 one unknown mark threw out of the whole parse, so
+   a single new card stopped all nine on-sale projects from syncing — twice:
+   "North Residences Delivery November 2026" on 2026-09-24, then "Newly
+   Launched" on a brand-new project. The guard still holds for the card itself
+   (it gets no status, so it is never written), but its neighbours, whose marks
+   are known, are no longer hostage to it. The caller decides how loudly to
+   fail; syncCybarco fails the run.
+   An unlinked card with no sitemap match still throws: that is a slug that
+   cannot be resolved at all, a different failure (see resolveSlug). */
+export function readListing(html: string, sitemapXml: string): { cards: CybarcoCard[]; blocked: CybarcoBlockedCard[] } {
   const sitemap = slugsFromSitemap(sitemapXml);
   const cards: CybarcoCard[] = [];
+  const blocked: CybarcoBlockedCard[] = [];
   for (const chunk of html.split('<div class="project">').slice(1)) {
     const one = (re: RegExp) => chunk.match(re)?.[1] ?? "";
     const name = toTitleCaseName(strip(one(/<h3[^>]*>([\s\S]*?)<\/h3>/)));
     if (!name) continue;
     const linked = chunk.match(/href="https:\/\/www\.cybarco\.com\/project\/([a-z0-9-]+)\/"/)?.[1] ?? null;
+    const slug = resolveSlug(name, linked, sitemap);
     const mark = strip(one(/<span class="mark">([\s\S]*?)<\/span>/));
+    const status = statusOf(mark);
+    if (!status) { blocked.push({ slug, name, mark }); continue; }
     const sub = strip(one(/<span class="sub-title">([\s\S]*?)<\/span>/));
     const { priceFrom, district } = parseSubTitle(sub);
     cards.push({
-      slug: resolveSlug(name, linked, sitemap),
+      slug,
       name,
-      status: normaliseStatus(mark),
+      status,
       priceFrom,
       district,
       featuredImage: one(/data-bg="([^"]+)"/) || null,
       description: strip(one(/<div class="desktop-hover">\s*<p>([\s\S]*?)<\/p>/)),
     });
   }
+  return { cards, blocked };
+}
+
+/** The strict form: any unrecognised mark throws. */
+export function parseListing(html: string, sitemapXml: string): CybarcoCard[] {
+  const { cards, blocked } = readListing(html, sitemapXml);
+  if (blocked.length) throw unrecognisedMark(blocked[0].mark);
   return cards;
 }
 

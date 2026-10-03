@@ -221,5 +221,56 @@ const soldWithDate = CB.parseListing(
 check("a sold-out project naming a delivery date stays sold out",
   soldWithDate.find((c) => c.slug === "trilogy-limassol-seafront")?.status, "sold_out");
 
+/* ── the "Newly Launched" mark (2026-10-03) ───────────────────────────────
+   A brand-new project, Thalassa Residences 2, appeared with the mark "Newly
+   Launched" and no price — and, exactly as on 2026-09-24, the throw aborted
+   the whole run and stopped every Cybarco project from syncing.
+   listing-newly-launched.html and sitemap-newly-launched.xml are that page and
+   its sitemap, fetched from the production VPS the morning it was found (the
+   site answers a laptop with a Cloudflare challenge). */
+const NL = () => fx("listing-newly-launched.html");
+const NL_SITEMAP = fx("sitemap-newly-launched.xml");
+let launched = [], launchError = "";
+try { launched = CB.parseListing(NL(), NL_SITEMAP); }
+catch (e) { launchError = String(e.message || e); }
+check("the newly-launched page does not throw", launchError, "");
+const thalassa2 = launched.find((c) => c.slug === "thalassa-residences-2");
+check("Thalassa Residences 2 parses", thalassa2?.name, "Thalassa Residences 2");
+check("…as under construction: a launch is on sale", thalassa2?.status, "under_construction");
+check("…with no price, because the card prints none", thalassa2?.priceFrom, null);
+check("…in Limassol", thalassa2?.district, "Limassol");
+/* Counted off the captured page by hand: 16 cards, the 15 of before plus the
+   new one; the six sold-out projects still sold out. */
+check("16 cards, still six sold out",
+  [launched.length, launched.filter((c) => c.status === "sold_out").length], [16, 6]);
+
+/* Precedence holds for the new rule too, and it is anchored at the start. */
+const markOf = (mark) => CB.readListing(NL().replace("Newly Launched", mark), NL_SITEMAP);
+check("\"Sold Out – Newly Launched\" stays sold out",
+  markOf("Sold Out – Newly Launched").cards.find((c) => c.slug === "thalassa-residences-2")?.status, "sold_out");
+check("a mark only MENTIONING a launch is still unseen",
+  markOf("Phase 2 Newly Launched").blocked.map((b) => b.slug), ["thalassa-residences-2"]);
+
+/* ── one unknown mark no longer takes the page down with it ───────────────
+   readListing holds the card apart; parseListing keeps the strict throw for
+   any caller that wants it (asserted above and below). */
+const held = markOf("Coming Soon");
+check("an unknown mark is held apart, not thrown",
+  held.blocked, [{ slug: "thalassa-residences-2", name: "Thalassa Residences 2", mark: "Coming Soon" }]);
+check("…and it gets no status: it is not among the cards", held.cards.some((c) => c.slug === "thalassa-residences-2"), false);
+check("…while the other 15 cards still parse, statuses unchanged",
+  held.cards.map((c) => `${c.slug}:${c.status}`),
+  launched.filter((c) => c.slug !== "thalassa-residences-2").map((c) => `${c.slug}:${c.status}`));
+/* An EXISTING project's mark changing to something unseen is the case the
+   guard exists for: it must be held apart too, never read as on sale. */
+const soldGoneOdd = CB.readListing(
+  NL().replace('<span class="mark">Sold Out</span>', '<span class="mark">Final Units</span>'), NL_SITEMAP);
+check("a sold-out project whose mark turns unseen is held, not relisted",
+  [soldGoneOdd.blocked.length, soldGoneOdd.cards.length], [1, 15]);
+let strictThrew = "";
+try { CB.parseListing(NL().replace("Newly Launched", "Coming Soon"), NL_SITEMAP); }
+catch (e) { strictThrew = String(e.message || e); }
+check("parseListing (the strict form) still throws on it", /unrecognised status mark "Coming Soon"/.test(strictThrew), true);
+
 console.log(failures ? `\n${failures} failed` : "\nall passed");
 process.exit(failures ? 1 : 0);

@@ -5,7 +5,7 @@ import { i18n } from "@/i18n.config";
 import { localizedHref, type Locale } from "@/lib/locale";
 import { staticAlternates, DEFAULT_OG_IMAGE, DEFAULT_OG_IMAGE_WIDTH, DEFAULT_OG_IMAGE_HEIGHT, ogLocale } from "@/lib/seo";
 import type { Translation } from "@/types/homepage";
-import Nav from "../../preview-home/sections/Nav";
+import Header from "@/app/components/Header/Header";
 import Footer from "../../preview-home/sections/Footer";
 import Form from "../../preview-home/sections/Form";
 import LightHeroFlag from "../../preview-insights/LightHeroFlag";
@@ -121,7 +121,7 @@ export default async function CaseStudiesPage({ params }: Props) {
     <>
       <LightHeroFlag />
       <CaseStudiesMotion />
-      <Nav lang={lang} translations={translations} homeHref={localizedHref(lang)} />
+      <Header params={{ lang }} translations={translations} />
       <main className="ins csp">
         <header className="ins__hero is-light">
           <div className="wrap ins__hero-grid">

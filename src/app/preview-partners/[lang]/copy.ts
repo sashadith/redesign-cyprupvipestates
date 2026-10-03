@@ -13,7 +13,12 @@
 
 import type { Locale } from "@/lib/locale";
 
-export type PartnersStat = { number: string; sign?: string; title: string; description: string };
+/* `source` makes a stat live: the page replaces `number` with the real count
+   from the database (2026-09-29). "projects" uses the same count the /projects
+   listing shows, so the two can never disagree; "units" counts units whose
+   status is available inside published developments. Stats without a source
+   keep their literal number. */
+export type PartnersStat = { number: string; sign?: string; title: string; description: string; source?: "projects" | "units" };
 export type PartnersBenefit = { title: string; description: string };
 export type PartnersType = { title: string; description: string };
 export type PartnersStep = { title: string; description: string };
@@ -102,17 +107,17 @@ const EN: PartnersCopy = {
     statsTitleStart: "A team built on ",
     statsTitleAccent: "results",
     stats: [
-      { number: "195", title: "Real estate projects", description: "In Southern Cyprus. From studio apartments to high-class villas" },
+      { number: "0", source: "projects", title: "Real estate projects", description: "In Southern Cyprus. From studio apartments to high-class villas" },
+      { number: "0", source: "units", title: "Available units", description: "Residential, investment and commercial properties" },
       { number: "10", title: "Years of experience", description: "As a full-service real estate marketing agency" },
       { number: "360", sign: "°", title: "Customer service", description: "We guide you from the first contact to key handover" },
-      { number: "100", sign: "%", title: "Satisfied clients", description: "From Germany, Austria, Switzerland and beyond" },
     ],
     benefitsEyebrow: "Why partner with us",
     benefitsTitleStart: "The ",
     benefitsTitleAccent: "benefits",
     benefitsTitleEnd: " of our partner program",
     benefits: [
-      { title: "Fast payouts", description: "We pay a 30% advance within 14 days of payment confirmation by the developer. The remaining 70% will be paid once we receive the full service fee." },
+      { title: "Fast payouts", description: "We pay within 7 days after the developer has paid the service fee, usually within 6 weeks after signing the reservation agreement." },
       { title: "Expert collaboration", description: "We organize viewings, coordinate with independent lawyers, who handle legal matters, and support you throughout the entire process." },
       { title: "Exclusive properties", description: "You get access to our database and sell exclusive properties with selected offers and unique referral fee conditions." },
       { title: "Always up to date", description: "Each customer step is digitally tracked. Your requests are automatically transferred to our CRM system. The partner portal gives you full insight into the current status at any time. Detailed reports are always available." },
@@ -133,7 +138,7 @@ const EN: PartnersCopy = {
     steps: [
       { title: "Register", description: "Fill out the form below with your details. We review and verify every application personally — no automated approvals." },
       { title: "Refer or list", description: "Submit client referrals or access our exclusive property database through your partner portal — every lead is tracked automatically in our CRM." },
-      { title: "Get paid", description: "Receive a 30% advance within 14 days of the developer's payment confirmation, and the remaining 70% once we receive the full service fee (10% for owner referrals)." },
+      { title: "Get paid", description: "Receive your fee within 7 days after the developer has paid the service fee, usually within 6 weeks after signing the reservation agreement (10% for owner referrals)." },
     ],
     faqEyebrow: "Questions",
     faqTitleStart: "Frequently asked ",
@@ -153,7 +158,7 @@ const EN: PartnersCopy = {
       },
       {
         question: "How fast do I get paid?",
-        answer: "We pay a 30% advance within 14 days of payment confirmation by the developer. The remaining 70% follows once we receive the full service fee.",
+        answer: "We pay within 7 days after the developer has paid the service fee, usually within 6 weeks after signing the reservation agreement.",
       },
       {
         question: "Who can join the partner program?",
@@ -206,17 +211,17 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     statsTitleStart: "Ein Team mit ",
     statsTitleAccent: "Ergebnissen",
     stats: [
-      { number: "195", title: "Immobilienprojekte", description: "Auf Süd-Zypern. Von Studio-Apartments bis High-Class-Villen" },
+      { number: "0", source: "projects", title: "Immobilienprojekte", description: "Auf Süd-Zypern. Von Studio-Apartments bis High-Class-Villen" },
+      { number: "0", source: "units", title: "Verfügbare Einheiten", description: "Wohn-, Anlage- und Gewerbeimmobilien" },
       { number: "10", title: "Jahre Erfahrung", description: "Als Full-Service Immobilien-Marketing-Agentur" },
       { number: "360", sign: "°", title: "Service für unsere Kunden", description: "Wir begleiten Sie vom ersten Kontakt bis zur Schlüsselübergabe" },
-      { number: "100", sign: "%", title: "Zufriedene Kunden", description: "Aus Deutschland, Österreich, der Schweiz und weiteren Ländern" },
     ],
     benefitsEyebrow: "Warum mit uns zusammenarbeiten",
     benefitsTitleStart: "Die ",
     benefitsTitleAccent: "Vorteile",
     benefitsTitleEnd: " unseres Partnerprogramms",
     benefits: [
-      { title: "Schnelle Auszahlungen", description: "Wir zahlen innerhalb von 14 Tagen nach Zahlungsbestätigung durch den Bauträger einen 30 % Vorschuss aus. Die verbleibenden 70 % erhältst Du, sobald wir die vollständige Vergütung erhalten haben." },
+      { title: "Schnelle Auszahlungen", description: "Wir zahlen innerhalb von 7 Tagen, nachdem der Bauträger die Vergütung gezahlt hat – in der Regel innerhalb von 6 Wochen nach Unterzeichnung des Reservierungsvertrags." },
       { title: "Zusammenarbeit mit Experten", description: "Wir organisieren Besichtigungen, koordinieren den Kontakt zu unabhängigen Anwälten und unterstützen Dich bei der kompletten Abwicklung." },
       { title: "Exklusive Immobilien", description: "Du erhältst Zugriff auf unsere Datenbank und verkaufst exklusive Immobilien mit ausgewählten Angeboten und einmaligen Servicegebühren." },
       { title: "Immer am Puls der Zeit", description: "Jeder Schritt des Kunden wird digital erfasst. Deine Anfragen werden automatisch in unser CRM-System übernommen. Über das Partnerportal behältst Du jederzeit den Überblick über den aktuellen Stand. Detaillierte Reports stehen Dir jederzeit zur Verfügung." },
@@ -237,7 +242,7 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     steps: [
       { title: "Registrieren", description: "Fülle das Formular unten mit Deinen Daten aus. Wir prüfen jede Bewerbung persönlich — keine automatische Freigabe." },
       { title: "Empfehlen oder vermitteln", description: "Reiche Kundenempfehlungen ein oder greife über Dein Partnerportal auf unsere exklusive Immobiliendatenbank zu — jede Anfrage wird automatisch in unserem CRM erfasst." },
-      { title: "Ausgezahlt werden", description: "Erhalte einen 30 % Vorschuss innerhalb von 14 Tagen nach Zahlungsbestätigung des Bauträgers und die verbleibenden 70 %, sobald wir die vollständige Vergütung erhalten (10 % bei Eigentümerempfehlungen)." },
+      { title: "Ausgezahlt werden", description: "Erhalte Deine Vergütung innerhalb von 7 Tagen, nachdem der Bauträger die Vergütung gezahlt hat – in der Regel innerhalb von 6 Wochen nach Unterzeichnung des Reservierungsvertrags (10 % bei Eigentümerempfehlungen)." },
     ],
     faqEyebrow: "Fragen",
     faqTitleStart: "Häufig gestellte ",
@@ -257,7 +262,7 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
       },
       {
         question: "Wie schnell werde ich ausgezahlt?",
-        answer: "Wir zahlen innerhalb von 14 Tagen nach Zahlungsbestätigung durch den Bauträger einen 30 % Vorschuss aus. Die verbleibenden 70 % folgen, sobald wir die vollständige Vergütung erhalten.",
+        answer: "Wir zahlen innerhalb von 7 Tagen, nachdem der Bauträger die Vergütung gezahlt hat – in der Regel innerhalb von 6 Wochen nach Unterzeichnung des Reservierungsvertrags.",
       },
       {
         question: "Wer kann am Partnerprogramm teilnehmen?",
@@ -305,17 +310,17 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     statsTitleStart: "Zespół, który daje ",
     statsTitleAccent: "rezultaty",
     stats: [
-      { number: "195", title: "Projektów nieruchomości", description: "Na południu Cypru – od kawalerek po luksusowe wille" },
+      { number: "0", source: "projects", title: "Projektów nieruchomości", description: "Na południu Cypru – od kawalerek po luksusowe wille" },
+      { number: "0", source: "units", title: "Dostępne nieruchomości", description: "Mieszkaniowe, inwestycyjne i komercyjne" },
       { number: "10", title: "Lat doświadczenia", description: "Jako agencja marketingu nieruchomości typu full-service" },
       { number: "360", sign: "°", title: "Obsługa klienta", description: "Prowadzimy Cię od pierwszego kontaktu do przekazania kluczy" },
-      { number: "100", sign: "%", title: "Zadowoleni klienci", description: "Z Niemiec, Austrii, Szwajcarii i innych krajów" },
     ],
     benefitsEyebrow: "Dlaczego warto z nami współpracować",
     benefitsTitleStart: "Korzyści ",
     benefitsTitleAccent: "ze współpracy",
     benefitsTitleEnd: " w naszym programie partnerskim",
     benefits: [
-      { title: "Szybkie wypłaty", description: "Wypłacamy 30% zaliczki w ciągu 14 dni od potwierdzenia płatności przez dewelopera. Pozostałe 70% otrzymasz po pełnym rozliczeniu opłaty za usługę." },
+      { title: "Szybkie wypłaty", description: "Wypłacamy w ciągu 7 dni od zapłaty opłaty za usługę przez dewelopera – zwykle w ciągu 6 tygodni od podpisania umowy rezerwacyjnej." },
       { title: "Współpraca z ekspertami", description: "Organizujemy prezentacje, koordynujemy kontakt z niezależnymi prawnikami i wspieramy Cię na każdym etapie transakcji." },
       { title: "Ekskluzywne nieruchomości", description: "Otrzymujesz dostęp do naszej bazy danych i sprzedajesz ekskluzywne nieruchomości z wyselekcjonowanymi ofertami i wyjątkowymi warunkami wynagrodzenia." },
       { title: "Nowoczesne rozwiązania", description: "Każdy etap klienta jest rejestrowany cyfrowo. Twoje zgłoszenia trafiają bezpośrednio do naszego CRM. W portalu partnerskim masz pełny podgląd statusu. Szczegółowe raporty są zawsze dostępne." },
@@ -336,7 +341,7 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     steps: [
       { title: "Zarejestruj się", description: "Wypełnij poniższy formularz swoimi danymi. Każde zgłoszenie weryfikujemy osobiście — bez automatycznych zatwierdzeń." },
       { title: "Poleć lub sprzedawaj", description: "Zgłaszaj polecenia klientów lub korzystaj z naszej ekskluzywnej bazy nieruchomości przez portal partnerski — każde zgłoszenie jest automatycznie rejestrowane w naszym CRM." },
-      { title: "Otrzymaj wypłatę", description: "Otrzymaj 30% zaliczki w ciągu 14 dni od potwierdzenia płatności przez dewelopera, a pozostałe 70% po pełnym rozliczeniu opłaty za usługę (10% za polecenia właścicieli)." },
+      { title: "Otrzymaj wypłatę", description: "Otrzymaj wynagrodzenie w ciągu 7 dni od zapłaty opłaty za usługę przez dewelopera – zwykle w ciągu 6 tygodni od podpisania umowy rezerwacyjnej (10% za polecenia właścicieli)." },
     ],
     faqEyebrow: "Pytania",
     faqTitleStart: "Najczęściej zadawane ",
@@ -356,7 +361,7 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
       },
       {
         question: "Jak szybko otrzymam wypłatę?",
-        answer: "Wypłacamy 30% zaliczki w ciągu 14 dni od potwierdzenia płatności przez dewelopera. Pozostałe 70% wypłacamy po pełnym rozliczeniu opłaty za usługę.",
+        answer: "Wypłacamy w ciągu 7 dni od zapłaty opłaty za usługę przez dewelopera – zwykle w ciągu 6 tygodni od podpisania umowy rezerwacyjnej.",
       },
       {
         question: "Kto może dołączyć do programu partnerskiego?",
@@ -404,17 +409,17 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     statsTitleStart: "Команда, которая даёт ",
     statsTitleAccent: "результат",
     stats: [
-      { number: "195", title: "Проектов недвижимости", description: "На юге Кипра: от студий до элитных вилл" },
+      { number: "0", source: "projects", title: "Проектов недвижимости", description: "На юге Кипра: от студий до элитных вилл" },
+      { number: "0", source: "units", title: "Доступных объектов", description: "Жилая, инвестиционная и коммерческая недвижимость" },
       { number: "10", title: "Лет опыта", description: "Как агентство полного цикла по маркетингу недвижимости" },
       { number: "360", sign: "°", title: "Сервис для клиентов", description: "Мы сопровождаем вас от первого контакта до передачи ключей" },
-      { number: "100", sign: "%", title: "Довольных клиентов", description: "Из Германии, Австрии, Швейцарии и других стран" },
     ],
     benefitsEyebrow: "Почему стоит с нами сотрудничать",
     benefitsTitleStart: "Преимущества ",
     benefitsTitleAccent: "нашей программы",
     benefitsTitleEnd: " для партнёров",
     benefits: [
-      { title: "Быстрые выплаты", description: "Мы выплачиваем аванс 30% в течение 14 дней после подтверждения оплаты от застройщика. Остальные 70% — после получения всего вознаграждения." },
+      { title: "Быстрые выплаты", description: "Мы выплачиваем в течение 7 дней после того, как застройщик выплатил вознаграждение, — обычно в течение 6 недель после подписания договора резервирования." },
       { title: "Сотрудничество с экспертами", description: "Мы организуем показы, координируем работу с независимыми юристами и сопровождаем сделку от начала до конца." },
       { title: "Эксклюзивная недвижимость", description: "Вы получаете доступ к нашей базе данных и продаёте эксклюзивную недвижимость с отобранными предложениями и уникальными условиями сервисного сбора." },
       { title: "Современные инструменты", description: "Каждое действие клиента фиксируется в CRM. Вы видите статус в партнёрском кабинете в любое время. Подробные отчёты доступны постоянно." },
@@ -435,7 +440,7 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
     steps: [
       { title: "Регистрация", description: "Заполните форму ниже своими данными. Мы лично проверяем каждую заявку — без автоматических одобрений." },
       { title: "Рекомендуйте или продавайте", description: "Отправляйте рекомендации клиентов или получайте доступ к нашей эксклюзивной базе недвижимости через партнёрский кабинет — каждая заявка автоматически фиксируется в CRM." },
-      { title: "Получайте оплату", description: "Получите аванс 30% в течение 14 дней после подтверждения оплаты застройщиком, а оставшиеся 70% — после получения полного вознаграждения (10% за рекомендации владельцев)." },
+      { title: "Получайте оплату", description: "Получите вознаграждение в течение 7 дней после того, как застройщик выплатил вознаграждение, — обычно в течение 6 недель после подписания договора резервирования (10% за рекомендации владельцев)." },
     ],
     faqEyebrow: "Вопросы",
     faqTitleStart: "Часто задаваемые ",
@@ -455,7 +460,7 @@ export const PARTNERS_COPY: Record<Locale, PartnersCopy> = {
       },
       {
         question: "Как быстро я получу оплату?",
-        answer: "Мы выплачиваем аванс 30% в течение 14 дней после подтверждения оплаты от застройщика. Остальные 70% выплачиваются после получения полного вознаграждения.",
+        answer: "Мы выплачиваем в течение 7 дней после того, как застройщик выплатил вознаграждение, — обычно в течение 6 недель после подписания договора резервирования.",
       },
       {
         question: "Кто может присоединиться к партнёрской программе?",

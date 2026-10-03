@@ -186,6 +186,25 @@ export const DE_LANDING_MERGES: Record<string, string> = {
 // unpublish with no 404 gap.
 const RETIRED_BLOG_REDIRECTS: Record<string, string> = {
   "blog/mieteinnahmen-aus-deutschland-in-zypern-versteuern": "/de/blog/immobilien-zypern-mit-garantierten-mieteinnahmen",
+
+  // German-retiree cannibalization pair (2026-09-30 content inventory):
+  // wie-rentner-aus-deutschland-immobilien-auf-zypern-erwerben-koennen and
+  // ratgeber-fuer-deutsche-rentner carried a near-identical H2 skeleton (why
+  // Cyprus / which properties / step-by-step purchase / residence permit /
+  // taxes & pension / FAQ) for the same "German retiree buying in Cyprus"
+  // intent -- not two angles, the same guide at two depths. ratgeber is the
+  // canonical target: 4x the depth (7-step process, 7-document checklist, 4
+  // comparison tables, 7 common-mistakes writeup vs. thin bullet lists) and
+  // already the better-ranking page (avg pos. 11.1 vs 18.5, GSC). Its own
+  // lifestyle-category filing on wie-rentner was cosmetic -- it had no real
+  // lifestyle content, just a thinner pass at the same legal/tax ground.
+  // wie-rentner's one concrete fact ratgeber lacked (the ~€3,420/year
+  // tax-free foreign-pension threshold under the 5% flat-rate option) was
+  // folded into ratgeber's "Besteuerung von deutscher Rente" section before
+  // this redirect went in. Its closing projectsSectionBlock was NOT carried
+  // over -- all 6 pinned project refs are archived/missing, the same
+  // dead-pin defect documented throughout this file's other merges.
+  "blog/wie-rentner-aus-deutschland-immobilien-auf-zypern-erwerben-koennen": "/de/blog/ratgeber-fuer-deutsche-rentner",
 };
 
 // English (unprefixed) landing-page merges — same shape/mechanism as

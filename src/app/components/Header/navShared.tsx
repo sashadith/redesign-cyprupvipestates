@@ -14,6 +14,7 @@ export const langCode = (id: string) => LANG_LABELS[id]?.code ?? id.toUpperCase(
 const NON_DEFAULT = nonDefaultLocalePattern();
 const HOME_RE = new RegExp(`^/(${NON_DEFAULT})?$`);
 const PROJECTS_RE = new RegExp(`^(/(${NON_DEFAULT}))?/projects$`);
+const PROJECT_DETAIL_RE = new RegExp(`^(/(${NON_DEFAULT}))?/projects/[^/]+$`);
 
 /* Routes with a dark, full-bleed hero where the nav should stay FULLY transparent
    at the top (signature look): the home page and the /projects listing, in every
@@ -23,6 +24,22 @@ const PROJECTS_RE = new RegExp(`^(/(${NON_DEFAULT}))?/projects$`);
 export function isDarkHeroPath(pathname: string): boolean {
   const p = pathname.replace(/\/+$/, "") || "/";
   return HOME_RE.test(p) || PROJECTS_RE.test(p);
+}
+
+/* A single project's page also opens on a full-bleed hero, but unlike the home
+   and /projects heroes that image is whatever the developer supplied — often a
+   bright sky. Measured on Vasileon Signature Residences, the strip behind the
+   nav averages 189 in luminance and peaks at 234: over that, the ivory links
+   sit at 1.01:1 with no backdrop at all, so isDarkHeroPath's fully transparent
+   treatment would be unreadable here.
+
+   These routes get a third state instead — a gradient scrim, dark where the
+   text is and fading to almost nothing at the lower edge, which shows the
+   photograph through without the hard bar the default paints. See
+   header-footer.css. */
+export function isScrimHeroPath(pathname: string): boolean {
+  const p = pathname.replace(/\/+$/, "") || "/";
+  return PROJECT_DETAIL_RE.test(p);
 }
 
 export type ResolvedNav = {

@@ -8,10 +8,11 @@ import { ToolError } from "../toolWrapper";
 import { generateApprovalCode } from "./approvalCode";
 import { DRAFT_TTL_MS, DRAFTS_PER_LEAD_PER_HOUR, DRAFTS_PER_USER_PER_DAY } from "./draftState";
 import { buildPreviewEmail } from "./previewEmail";
+import { checkCcRecipients, replyAllDefault } from "./ccRecipients";
 
 // Spec "Draft → approve → send", step 1. Nothing is written unless the
 // preview email actually left the operator's SMTP.
-export async function createEmailDraft(actor: EmailActor, input: { leadId: string; subject: string; body: string }) {
+export async function createEmailDraft(actor: EmailActor, input: { leadId: string; subject: string; body: string; cc?: string[] }) {
   const subject = input.subject.trim();
   const body = input.body.trim();
   if (!subject || !body) throw new ToolError("validation", "Subject and body are required.");
@@ -22,6 +23,27 @@ export async function createEmailDraft(actor: EmailActor, input: { leadId: strin
   });
   if (!lead) throw new ToolError("not_found", "Lead not found.");
   if (!lead.email) throw new ToolError("validation", "This lead has no email address — a draft cannot be sent to them.");
+  // CC: what the caller gave (validated strictly; [] = deliberately none), or
+  // — when nothing was given — "reply all": the other participants of the
+  // lead's latest inbound email, e.g. a partner who was in CC. Either way the
+  // list is shown in the preview and fixed with the draft.
+  let cc: string[];
+  let ccSource: "explicit" | "last_reply" | "none";
+  if (input.cc !== undefined) {
+    const ccCheck = checkCcRecipients(input.cc, lead.email);
+    if (!ccCheck.ok) throw new ToolError("validation", ccCheck.message);
+    cc = ccCheck.cc;
+    ccSource = "explicit";
+  } else {
+    const lastReply = await prisma.leadInteraction.findFirst({
+      where: { leadId: lead.id, type: "EMAIL_IN" },
+      orderBy: { occurredAt: "desc" },
+      select: { metadata: true },
+    });
+    const operator = await getUserEmailSettingsRow(actor.userId).then((s) => s.fromAddress, () => null);
+    cc = replyAllDefault((lastReply?.metadata as { cc?: unknown } | null)?.cc, lead.email, operator);
+    ccSource = cc.length ? "last_reply" : "none";
+  }
 
   const now = Date.now();
   const [perLead, perUser] = await Promise.all([
@@ -42,6 +64,7 @@ export async function createEmailDraft(actor: EmailActor, input: { leadId: strin
     approvalCode,
     expiresAtLabel: adminDateTime(expiresAt),
     locale,
+    cc,
   });
 
   let previewMessageId: string;
@@ -61,14 +84,14 @@ export async function createEmailDraft(actor: EmailActor, input: { leadId: strin
     const superseded = await tx.leadEmailDraft.findFirst({ where: { leadId: lead.id, status: "PENDING" }, select: { id: true } });
     if (superseded) await tx.leadEmailDraft.update({ where: { id: superseded.id }, data: { status: "SUPERSEDED" } });
     const draft = await tx.leadEmailDraft.create({
-      data: { leadId: lead.id, userId: actor.userId, subject, body, approvalCode, expiresAt, previewMessageId },
+      data: { leadId: lead.id, userId: actor.userId, subject, body, cc, approvalCode, expiresAt, previewMessageId },
       select: { id: true },
     });
     await tx.leadInteraction.create({
       data: {
         leadId: lead.id, type: "SYSTEM", channel: "SYSTEM",
         subject: "Email draft created by Claude (awaiting approval)",
-        body: `Subject: ${subject}`,
+        body: cc.length ? `Subject: ${subject}\nCC: ${cc.join(", ")}` : `Subject: ${subject}`,
         createdByUserId: actor.userId, createdByName: actor.userName,
         // Tag this SYSTEM row with the preview's own Message-ID so the inbound
         // poller's idempotency guard (processInbound.ts — same messageId already
@@ -80,5 +103,5 @@ export async function createEmailDraft(actor: EmailActor, input: { leadId: strin
     });
     return { draftId: draft.id, supersededDraftId: superseded?.id ?? null };
   });
-  return { ...result, previewSentTo, expiresAt };
+  return { ...result, previewSentTo, expiresAt, cc, ccSource };
 }

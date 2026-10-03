@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import {
-  parseListing, parseProjectPage, parseGallery, priceListDate,
-  type CybarcoCard, type CybarcoDetail, type CybarcoStatus,
+  readListing, parseProjectPage, parseGallery, priceListDate,
+  type CybarcoCard, type CybarcoBlockedCard, type CybarcoDetail, type CybarcoStatus,
 } from "./cybarco";
 import { cybarcoReadPages, type CybarcoUnit } from "./ai/cybarcoPriceTable";
 import { readPdfPages } from "./ai/availabilityTable";
@@ -718,6 +718,20 @@ export function runVerdict(input: { attempted: number; failed: number }): RunVer
   };
 }
 
+/* The second thing that fails a run: a listing card whose status mark nobody
+   has seen (readListing in cybarco.ts holds it apart). The card itself is
+   skipped and every other project syncs normally — but the run still reports
+   ok:false, because an unseen mark needs a human to decide what it means, and
+   ok:false is what reaches one (the Telegram failure message and the Action
+   Center's URGENT item). Without that, the new project would simply never
+   appear and nothing would say why. Pure, so the QA suite can pin it. */
+export function listingVerdict(fetch: RunVerdict, blocked: CybarcoBlockedCard[]): RunVerdict {
+  if (!blocked.length) return fetch;
+  const marks = blocked.map((b) => `${b.slug} ${JSON.stringify(b.mark)}`).join(", ");
+  const reason = `unrecognised status mark on ${blocked.length} card(s), skipped this run: ${marks}`;
+  return { ok: false, reason: fetch.reason ? `${fetch.reason}; ${reason}` : reason };
+}
+
 /* ── Gathering (reads the live site; no database writes) ───────────────────── */
 
 export type CybarcoPlan = {
@@ -880,15 +894,24 @@ async function gatherOne(card: CybarcoCard): Promise<CybarcoPlan> {
 /** Listing + sitemap + every project's page, gallery, brochure and price list. */
 export async function gatherCybarco(): Promise<{
   plans: CybarcoPlan[];
+  blocked: CybarcoBlockedCard[];
   notes: string[];
   fetchAttempts: number;
   fetchFailures: number;
+  siteRefused: boolean;
   verdict: RunVerdict;
 }> {
   const [listing, sitemap] = await Promise.all([get(LISTING_URL), get(SITEMAP_URL)]);
-  const cards = parseListing(listing, sitemap);
+  const { cards, blocked } = readListing(listing, sitemap);
   const notes: string[] = [];
-  if (!cards.length) throw new Error("Cybarco: the listing page parsed to zero cards — the markup changed");
+  if (!cards.length && !blocked.length) throw new Error("Cybarco: the listing page parsed to zero cards — the markup changed");
+  /* Every card unrecognised is not sixteen new marks on one night — it is the
+     mark markup moving (an empty mark is unrecognised too). That is the zero-
+     cards case above in another form, so it fails the whole run the same way. */
+  if (!cards.length) throw new Error(`Cybarco: every listing card carries an unrecognised status mark (first: ${JSON.stringify(blocked[0].mark)}) — the markup changed`);
+  for (const b of blocked) {
+    notes.push(`${b.slug}: unrecognised status mark ${JSON.stringify(b.mark)} — card SKIPPED this run (nothing written; an existing project keeps its stored status). Teach statusOf() in src/lib/cybarco.ts what it means`);
+  }
 
   /* Sequential on purpose. Each project costs two HTML fetches and up to two
      PDF reads through the pdf.js worker, and this runs against a Cloudflare-
@@ -912,10 +935,11 @@ export async function gatherCybarco(): Promise<{
      whole sweep" is the one line that invalidates every count under it. */
   const fetchAttempts = plans.reduce((a, p) => a + p.fetchAttempts, 0);
   const fetchFailures = plans.reduce((a, p) => a + p.fetchFailures, 0);
-  const verdict = runVerdict({ attempted: fetchAttempts, failed: fetchFailures });
-  if (verdict.reason) notes.push(verdict.reason);
+  const fetchVerdict = runVerdict({ attempted: fetchAttempts, failed: fetchFailures });
+  if (fetchVerdict.reason) notes.push(fetchVerdict.reason);
+  const verdict = listingVerdict(fetchVerdict, blocked);
 
-  return { plans, notes, fetchAttempts, fetchFailures, verdict };
+  return { plans, blocked, notes, fetchAttempts, fetchFailures, siteRefused: !fetchVerdict.ok, verdict };
 }
 
 /* ── Dry run (reads the live site AND the production DB; writes nothing) ───── */
@@ -1051,8 +1075,9 @@ function freezeForPublishedRow<T extends Record<string, unknown>>(data: T, exist
   return out;
 }
 
-/* `ok` is no longer always true. It is false for exactly ONE condition — the site
-   refused a MAJORITY of this run's fetches (runVerdict above) — and for nothing
+/* `ok` is no longer always true. It is false for exactly TWO conditions — the
+   site refused a MAJORITY of this run's fetches (runVerdict above), or a listing
+   card carried a status mark nobody has seen (listingVerdict) — and for nothing
    else. A single lost brochure, an unreadable price list, a slug clash, a
    sold-out contradiction: all still resolve ok:true with their note, because each
    is a normal night on this source and an alarm that fires on a normal night is
@@ -1069,6 +1094,8 @@ export async function syncCybarco(
   notes: string[];
   fetchAttempts: number;
   fetchFailures: number;
+  siteRefused: boolean;
+  blocked: CybarcoBlockedCard[];
 }> {
   const acct = await prisma.developerAccount.findUnique({ where: { id: accountId }, select: { id: true, name: true } });
   if (!acct) throw new Error(`Cybarco: no DeveloperAccount ${accountId}`);
@@ -1082,7 +1109,7 @@ export async function syncCybarco(
      call it. */
   const release = beginSyncWindow("cybarco-sync");
   try {
-    const { plans, notes: gatherNotes, fetchAttempts, fetchFailures, verdict } = await gatherCybarco();
+    const { plans, blocked, notes: gatherNotes, fetchAttempts, fetchFailures, siteRefused, verdict } = await gatherCybarco();
     const notes = [...gatherNotes];
 
     /* Probed once per run, not per PDF, and reported loudly: without this a run
@@ -1424,13 +1451,25 @@ export async function syncCybarco(
       }
     }
 
+    /* A skipped card is still ON the listing, so an existing project behind it
+       keeps the obligation stated at the top of this file: its syncedAt is
+       stamped, and nothing else. Its status, units and prices stay exactly as
+       stored — an unseen mark is never read as "still on sale" nor as "sold
+       out", and the developer-agnostic missing-from-feed sweep must not mistake
+       a project we merely could not classify for one that vanished. A card
+       with no row yet (a new project) has nothing to stamp. */
+    for (const b of blocked) {
+      const row = await prisma.development.findUnique({ where: { feedKey: `cybarco:${b.slug}` }, select: { id: true, dev: true } });
+      if (row?.dev === "cybarco") await prisma.development.update({ where: { id: row.id }, data: { syncedAt: new Date() } });
+    }
+
     if (mediaChanged) scheduleAppRestart();
     await prisma.developerAccount.update({ where: { id: accountId }, data: { driveSyncedAt: new Date() } });
 
     /* Writes still happen on a refused run: unitPlan() keeps stored units against
        a 0-unit read and contentNeeds() keeps stored media, so the night is
        harmless — it is the REPORTING of it as healthy that was the gap. */
-    return { ok: verdict.ok, projects: plans.length, units: unitsWritten, created, notes, fetchAttempts, fetchFailures };
+    return { ok: verdict.ok, projects: plans.length, units: unitsWritten, created, notes, fetchAttempts, fetchFailures, siteRefused, blocked };
   } finally {
     release();
   }

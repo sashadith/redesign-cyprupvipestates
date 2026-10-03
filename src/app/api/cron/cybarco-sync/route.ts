@@ -39,16 +39,22 @@ type RunResult = {
   notes: string[];
   fetchAttempts: number;
   fetchFailures: number;
+  siteRefused: boolean;
+  blocked: { slug: string; name: string; mark: string }[];
 };
 
-const EMPTY = { projects: 0, units: 0, created: 0, notes: [] as string[], fetchAttempts: 0, fetchFailures: 0 };
+const EMPTY = {
+  projects: 0, units: 0, created: 0, notes: [] as string[], fetchAttempts: 0, fetchFailures: 0,
+  siteRefused: false, blocked: [] as RunResult["blocked"],
+};
 
 async function run(force: boolean): Promise<RunResult> {
   const acct = await prisma.developerAccount.findUnique({ where: { slug: "cybarco" } });
   if (!acct) return { ok: false, fatal: "Cybarco developer account not found", ...EMPTY };
   // syncCybarco's `ok` is now a real verdict rather than a constant: it is false
   // when the site refused a MAJORITY of the run's fetches (runVerdict in
-  // cybarcoSync.ts). One flat shape, because a union on a non-literal `ok`
+  // cybarcoSync.ts), or when a listing card carried an unseen status mark
+  // (listingVerdict). One flat shape, because a union on a non-literal `ok`
   // cannot discriminate — `fatal` is what separates the two cases.
   return { ...(await syncCybarco(acct.id, { force })), fatal: null };
 }
@@ -63,10 +69,14 @@ async function run(force: boolean): Promise<RunResult> {
 function summarize(r: RunResult): string {
   if (r.fatal) return r.fatal;
   return [
+    // Named in the summary itself, because this line IS the Telegram message:
+    // "which card, which mark" is the whole of what the operator needs to act.
+    // First, because CronRunLog.message is cut at 500 characters.
+    ...r.blocked.map((b) => `UNKNOWN STATUS MARK ${JSON.stringify(b.mark)} on ${b.slug} — card skipped, all other projects synced`),
     `${r.created} created, ${r.projects} project(s) touched, ${r.units} unit(s) written`,
     `${r.notes.length} note(s)`,
     `${r.fetchFailures}/${r.fetchAttempts} fetch(es) refused`,
-    r.ok ? null : "SITE REFUSED MOST OF THIS RUN",
+    r.siteRefused ? "SITE REFUSED MOST OF THIS RUN" : null,
   ].filter(Boolean).join(", ");
 }
 

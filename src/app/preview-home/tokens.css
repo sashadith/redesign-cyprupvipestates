@@ -469,6 +469,12 @@ img { max-width: 100%; display: block; }
     width: min(880px, 88vw); /* 20% smaller */
   }
   .brochure__media { box-shadow: 0 40px 80px -40px rgba(0,0,0,0.55); }
+  /* RTL mirror: content already flips to the right via flex-start (logical),
+     but the image's physical right/clip-path/tilt don't follow dir on their
+     own — without this the image stays pinned right with the same -5deg
+     tilt on he, instead of mirroring to the left with a +5deg tilt. */
+  [dir="rtl"] .brochure__card { clip-path: inset(0 0 0 -340px); }
+  [dir="rtl"] .brochure__image { right: unset; left: -40px; transform: rotate(5deg); }
 }
 
 /* ===================== ABOUT — "Who We Are" (light ivory section) ===================== */
@@ -861,7 +867,11 @@ img { max-width: 100%; display: block; }
   width: 100%; display: flex; align-items: center; justify-content: space-between; gap: var(--s-5);
   padding: clamp(20px, 2.3vw, 28px) 0; background: transparent; border: 0; cursor: pointer; text-align: start;
   font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400;
-  font-size: clamp(1.1rem, 1rem + 0.5vw, 1.4rem); line-height: 1.3; color: var(--ivory);
+  /* var(--text), not the fixed --ivory it used to be: in the dark theme the two
+     are the same value, but .is-light remaps --text to --ink-warm. The partners
+     page runs its FAQ in an .is-light section, where ivory questions were all
+     but invisible on paper (2026-09-29). */
+  font-size: clamp(1.1rem, 1rem + 0.5vw, 1.4rem); line-height: 1.3; color: var(--text);
   transition: color var(--dur-sm) var(--ease);
 }
 .faq__q:hover { color: var(--accent); }
@@ -887,7 +897,7 @@ img { max-width: 100%; display: block; }
 .faq__a-body p:last-child { margin-bottom: 0; }
 .faq__a-body ul, .faq__a-body ol { margin: 0 0 var(--s-3); }
 .faq__a-body a { color: var(--accent); text-decoration: none; text-underline-offset: 3px; }
-.faq__a-body a:hover { color: var(--ivory); }
+.faq__a-body a:hover { color: var(--text); } /* same reason as .faq__q above */
 
 /* ===================== PARALLAX (full-bleed looping video breather) ===================== */
 /* clip-path makes .parallax a window: the fixed video is clipped to the section
@@ -1040,9 +1050,12 @@ img { max-width: 100%; display: block; }
    and sits centred between the consent line and the button: the shared banner
    brings margin 0 0 20px, and the button adds its own 32px on top of that, so
    without these two rules it clings to the consent line with a 52px gap below. */
-.formsec__feedback { max-width: 100%; margin: var(--s-5) 0 0; }
+/* Doubled like the shared rules in formFeedback.css (see the note there):
+   those are now (0,2,0), so a single class here would no longer reach the
+   banner and this section would inherit the generic margins. */
+.formsec__feedback.formsec__feedback { max-width: 100%; margin: var(--s-5) 0 0; }
 .formsec__feedback + .formsec__submit { margin-top: var(--s-5); }
-@media (min-width: 560px) { .formsec__feedback { max-width: 90%; } }
+@media (min-width: 560px) { .formsec__feedback.formsec__feedback { max-width: 90%; } }
 .formsec__submit { margin-top: var(--s-6); min-width: 180px; justify-content: center; background: var(--bronze) !important; color: #ffffff !important; border-color: var(--bronze); }
 .formsec__submit:hover { background: #7e5e35 !important; border-color: #7e5e35; }
 /* The spinner sits inside the button, so it is drawn in the button's ink. */
@@ -1074,6 +1087,20 @@ img { max-width: 100%; display: block; }
 @media (min-width: 940px) {
   .formsec__consultant-wrap { transform: translateX(-150px); }
   .formsec__caption { position: absolute; left: calc(54% + 10px); bottom: calc(18% + 30px); width: max-content; }
+  /* Both of the two rules above are PHYSICAL — translateX and `left` ignore
+     `dir`, so RTL inherited the LTR geometry instead of mirroring it. Measured
+     on /he at 1440px before this fix: the portrait hung 32px off the left edge
+     of the viewport (its face cropped) and the caption floated in the gap on
+     the photo's inner side, pointing at the form. Mirrored, the portrait leans
+     toward the form the way it does in LTR and the caption sits on the outer
+     side — to the LEFT of the image in RTL (2026-09-29). */
+  [dir="rtl"] .formsec__consultant-wrap { transform: translateX(150px); }
+  /* 60px lower than the LTR caption sits (operator, 2026-09-29, asked for in two
+     steps of 30px). Taken off the calc rather than folded into the percentage,
+     so the offset stays exactly 60px whatever height the column ends up with —
+     and the column's height does move, the portrait is 163px shorter until its
+     image has loaded. */
+  [dir="rtl"] .formsec__caption { left: auto; right: calc(54% + 10px); bottom: calc(18% - 30px); }
 }
 /* Same treatment as the adviser popup's .cvpm__art (contactModal.css) — a
    decorative photo has no business taking space from the fields on mobile.

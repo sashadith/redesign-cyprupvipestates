@@ -67,6 +67,14 @@
 /* full-width hero — journal-post style: full-bleed main image + title overlay */
 .pp-hero { position: relative; width: 100%; min-height: min(80vh, 780px); display: flex; align-items: flex-end;
   overflow: hidden; background: var(--sea); }
+/* Above the mobile-strip breakpoint the hero is the single large image that
+   carries the title, stats and gallery button — give it the taller frame
+   (2026-09-27). Deliberately not applied below 641px: there the same vh bump
+   takes the hero from 650px to ~747px on an 812px-tall phone and pushes the
+   first content section off the fold. */
+@media (min-width: 641px) {
+  .pp-hero { min-height: min(92vh, 800px); }
+}
 .pp-hero__img { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; margin: 0; border: 0; cursor: zoom-in; background: var(--sea); }
 .pp-hero__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pp-hero__video { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -74,9 +82,9 @@
 .pp-hero__ph { display: block; width: 100%; height: 100%; background: linear-gradient(135deg, var(--sea), var(--sea-deep)); }
 .pp-hero__scrim { position: absolute; inset: 0; pointer-events: none;
   background: linear-gradient(to top, rgba(8,21,18,1) 0%, rgba(8,21,18,0.75) 16%, rgba(8,21,18,0) 40%); }
-.pp-hero__overlay { position: relative; z-index: 2; width: 100%; padding-block: clamp(26px, 4vw, 58px); pointer-events: none; }
+.pp-hero__overlay { position: relative; z-index: 2; width: 100%; padding-block: clamp(26px, 4vw, 58px) 0; pointer-events: none; }
 .pp-hero__overlay a, .pp-hero__overlay button { pointer-events: auto; }
-.pp-hero__galbtn { position: absolute; z-index: 3; inset-inline-end: max(var(--gutter), calc(50% - 680px + var(--gutter))); bottom: clamp(18px, 4vw, 44px);
+.pp-hero__galbtn { position: absolute; z-index: 3; inset-inline-end: max(var(--gutter), calc(50% - 680px + var(--gutter))); bottom: 0;
   display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px; cursor: pointer;
   color: var(--ivory); font-family: var(--font-body); font-size: 0.82rem; border: 1px solid var(--hairline-strong);
   background: rgba(8,21,18,0.55); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); transition: border-color var(--dur-sm) var(--ease); }
@@ -192,10 +200,20 @@
 }
 
 /* about + facts — two columns so the copy no longer leaves the right half empty */
-.pp-about { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(250px, 1fr); gap: clamp(24px, 4vw, 60px); align-items: start; }
-.pp-about__main { min-width: 0; }
-/* drop the panel so its top edge lines up with the description (below the H2) */
-.pp-about__side { align-self: start; margin-top: calc(clamp(1.5rem, 1.2rem + 1.4vw, 2.1rem) * 1.85); }
+.pp-about { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(250px, 1fr); gap: clamp(24px, 4vw, 60px); align-items: start;
+  /* One H2 line box plus its .7em bottom margin. Both columns carry it, so
+     the panel keeps the position it had while the heading drops to meet it
+     (2026-09-27: the H2, not the first paragraph, is the reference edge).
+     The H2 sits in a 1.7 line box, so its box top is 0.47em above the cap
+     line (half-leading 0.225em + ascender-over-cap 0.245em, measured on
+     Fraunces at 33.6px). Box-aligning the two columns would leave the
+     letters ~16px below the panel hairline — visibly off — so the text
+     column gives that back. Both terms use the H2 font-size clamp, so the
+     alignment holds at every width. */
+  --about-drop: calc(clamp(1.5rem, 1.2rem + 1.4vw, 2.1rem) * 1.85);
+  --about-h2-cap: calc(clamp(1.5rem, 1.2rem + 1.4vw, 2.1rem) * 0.47); }
+.pp-about__main { min-width: 0; margin-top: calc(var(--about-drop) - var(--about-h2-cap)); }
+.pp-about__side { align-self: start; margin-top: var(--about-drop); }
 /* highlights panel — facts (2×2) + amenities, refined with a gold top hairline */
 .pp-panel { position: relative; border: 1px solid var(--hairline); border-radius: var(--r-ui); overflow: hidden;
   background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.008)); }
@@ -244,6 +262,8 @@
 @media (max-width: 560px) { .pp-hood__pin { width: 40px; top: 16px; inset-inline-end: 16px; } }
 @media (max-width: 860px) {
   .pp-about { grid-template-columns: 1fr; }
+  /* Stacked: nothing to align against, so neither column carries the drop. */
+  .pp-about__main { margin-top: 0; }
   .pp-about__side { position: static; margin-top: 0; }
 }
 

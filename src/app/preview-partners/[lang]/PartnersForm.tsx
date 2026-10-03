@@ -14,7 +14,7 @@ import "@/app/components/formFeedback.css";
 /* Partner registration form — redesign styling (reuses the shared .formsec__*
    design-system classes from tokens.css, same as preview-home/sections/Form.tsx),
    but a DEDICATED component rather than reusing Form.tsx directly: Form.tsx
-   posts to /api/monday (the general consultation-request pipeline) and has no
+   posts to /api/leads (the general consultation-request pipeline) and has no
    `country` field. This page's submission must keep hitting /api/email, whose
    PARTNERS_PATH_RE gate REQUIRES a non-empty `country` and tags the resulting
    lead `source: "PARTNER"` for CRM — porting FormPartners.tsx's exact field

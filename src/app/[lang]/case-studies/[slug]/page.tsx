@@ -7,7 +7,6 @@ import Header from "@/app/components/Header/Header";
 import Footer from "@/app/components/Footer/Footer";
 import PropertyIntro from "@/app/components/PropertyIntro/PropertyIntro";
 import Breadcrumbs from "@/app/components/Breadcrumbs/Breadcrumbs";
-import ModalBrochure from "@/app/components/ModalBrochure/ModalBrochure";
 import WhatsAppButton from "@/app/components/WhatsAppButton/WhatsAppButton";
 import TextContentComponent from "@/app/components/TextContentComponent/TextContentComponent";
 import DoubleTextBlockComponent from "@/app/components/DoubleTextBlockComponent/DoubleTextBlockComponent";
@@ -109,8 +108,6 @@ const CaseStudyPage = async ({ params }: Props) => {
     notFound();
   }
 
-  const formDocument: FormStandardDocument =
-    await getFormStandardDocumentByLang(lang);
 
   const translations: Translation[] = [];
 
@@ -259,7 +256,6 @@ const CaseStudyPage = async ({ params }: Props) => {
       </main>
 
       <Footer params={params} />
-      <ModalBrochure lang={lang} formDocument={formDocument} />
       <WhatsAppButton lang={lang} />
     </>
   );

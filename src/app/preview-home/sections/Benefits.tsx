@@ -14,7 +14,7 @@ const renderTitle = (title: string) =>
     )
   );
 
-export default function Benefits({ block }: { block: BenefitsBlock }) {
+export default function Benefits({ block, locale }: { block: BenefitsBlock; locale?: string }) {
   if (!block || !block.benefits?.length) return null;
   const { title, benefits } = block;
 
@@ -32,7 +32,7 @@ export default function Benefits({ block }: { block: BenefitsBlock }) {
           {benefits.map((b) => (
             <div className="bstat" key={b._key}>
               <p className="bstat__num">
-                <CountNumber>{b.counting?.conuntNumber ?? 0}</CountNumber>
+                <CountNumber locale={locale}>{b.counting?.conuntNumber ?? 0}</CountNumber>
                 {b.counting?.sign && <span className="bstat__sign">{b.counting.sign}</span>}
               </p>
               {b.title && <p className="bstat__title">{b.title}</p>}

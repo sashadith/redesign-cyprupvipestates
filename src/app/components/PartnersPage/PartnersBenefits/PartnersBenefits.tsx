@@ -1,6 +1,7 @@
+import "@/app/fonts/vendored.css";
+import { libreBaskervillePlain, oswaldPlain } from "@/app/fonts";
 import React, { FC } from "react";
 import styles from "./PartnersBenefits.module.scss";
-import { Oswald, Libre_Baskerville } from "next/font/google";
 import FadeUpAnimate from "../../FadeUpAnimate/FadeUpAnimate";
 import type { Locale } from "@/lib/locale";
 
@@ -8,15 +9,9 @@ type Props = {
   lang: string;
 };
 
-const oswald = Oswald({
-  subsets: ["latin", "cyrillic"],
-  weight: ["300", "400"],
-});
+const oswald = oswaldPlain;
 
-const libreBaskerville = Libre_Baskerville({
-  subsets: ["latin"],
-  weight: ["400"],
-});
+const libreBaskerville = libreBaskervillePlain;
 
 type BenefitItem = {
   number: string;

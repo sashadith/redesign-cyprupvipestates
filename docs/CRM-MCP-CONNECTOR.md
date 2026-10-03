@@ -109,8 +109,8 @@ A connection can only be approved while a **pairing window** is open in the same
 | `crm_create_lead` | the admin's "New lead" form: source MANUAL, assigned to you, CREATED activity + timeline row `via: mcp`. Refuses (returns `existing`) when an active lead has the same email — Gmail dots/domain ignored — or phone, unless `allowDuplicate` |
 | `crm_delete_lead` | the admin's "Move to trash": soft delete, restorable 90 days, DELETED rows `via: mcp`; needs `confirmName` = the lead's full name and a `reason`. Permanent deletion stays ADMIN-only in `/admin/crm/trash` |
 | `crm_restore_lead` | the admin's "Restore" from the trash |
-| `crm_draft_email` | stores a draft + emails you a preview with the approval code |
-| `crm_send_email` | sends a draft verbatim if the code matches |
+| `crm_draft_email` | stores a draft + emails you a preview with the approval code; optional `cc` (max 5, e.g. the partner on a partner lead) — omitted, it copies everyone else from the lead's latest email reply (reply-all); `[]` = no CC |
+| `crm_send_email` | sends a draft verbatim — including exactly its stored CC — if the code matches |
 | `crm_list_drafts` | what is still pending |
 
 ## Inventory tools (Phase 3)
@@ -137,8 +137,8 @@ Both tools require all four OpenWA environment variables (`OPENWA_BASE_URL`, `OP
 
 ## Approving an email
 
-1. Claude calls `crm_draft_email`. You receive `[DRAFT] <subject>` from your own address — the email exactly as the lead would get it, with the approval code in the grey header (recipient, code, expiry).
-2. Happy: type `Freigabe ABC123` in the chat. Claude calls `crm_send_email`; the lead gets the email, you get the BCC, the timeline shows EMAIL_OUT (replies thread back as before).
+1. Claude calls `crm_draft_email`. You receive `[DRAFT] <subject>` from your own address — the email exactly as the lead would get it, with the approval code in the grey header (recipient, CC if any, code, expiry). CC addresses are fixed with the draft: to change them, Claude makes a new draft.
+2. Happy: type `Freigabe ABC123` in the chat. Claude calls `crm_send_email`; the lead gets the email, any CC recipients get their copy, you get the BCC, the timeline shows EMAIL_OUT with the CC list in its metadata (replies thread back as before).
 3. Not happy: tell Claude what to change → new draft, new code; the old one is `SUPERSEDED`.
 4. Codes expire after 24 h; five wrong codes lock the draft; at most 3 drafts per lead per hour and 30 per day. The Cockpit shows a pending draft with **Discard** — there is no Send button there on purpose.
 5. A draft stuck in `SENDING` for >10 min (Telegram alert from the cleanup cron) means the process died mid-send: check your Sent folder before letting Claude retry.
