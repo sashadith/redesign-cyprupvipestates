@@ -9,6 +9,8 @@ test("referrer hosts classify by exact domain or subdomain — never by bare suf
   assert.equal(classifyReferrer("x.com"), "x");
   assert.equal(classifyReferrer("t.co"), "x");
   assert.equal(classifyReferrer("mobile.twitter.com"), "x");
+  assert.equal(classifyReferrer("com.linkedin.android"), "linkedin"); // Android app referrer, as stored at ingestion
+  assert.equal(classifyReferrer("com.twitter.android"), "x");
   assert.equal(classifyReferrer("box.com"), null);
   assert.equal(classifyReferrer("notlinkedin.com"), null);
   assert.equal(classifyReferrer("google.com"), null);
@@ -22,10 +24,10 @@ test("utm_source maps linkedin / x / twitter, case-insensitively", () => {
   assert.equal(classifyUtmSource("facebook"), null);
 });
 
-test("blog paths resolve to locale + slug; /en/ is never served; non-blog paths are null", () => {
+test("blog paths resolve to locale + slug; the legacy /en/ prefix counts as en; non-blog paths are null", () => {
   assert.deepEqual(blogPathInfo("/blog/apartment-or-villa-in-cyprus"), { locale: "en", slug: "apartment-or-villa-in-cyprus" });
   assert.deepEqual(blogPathInfo("/de/blog/wohnung-oder-villa/"), { locale: "de", slug: "wohnung-oder-villa" });
-  assert.equal(blogPathInfo("/en/blog/x"), null);
+  assert.deepEqual(blogPathInfo("/en/blog/x"), { locale: "en", slug: "x" }); // Lead.pageSource can carry the legacy prefix
   assert.equal(blogPathInfo("/he/blog/x"), null);
   assert.equal(blogPathInfo("/blog"), null);
   assert.equal(blogPathInfo("/projects/x"), null);

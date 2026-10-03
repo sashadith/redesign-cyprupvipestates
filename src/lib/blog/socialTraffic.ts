@@ -15,6 +15,12 @@ const NETWORK_DOMAINS: Record<Network, string[]> = {
   linkedin: ["linkedin.com", "lnkd.in"],
   x: ["x.com", "twitter.com", "t.co"],
 };
+// Android apps send an android-app://<package>/ referrer; ingestion keeps the
+// "host" part, i.e. the package name (seen in production: com.linkedin.android).
+const APP_HOSTS: Record<Network, string[]> = {
+  linkedin: ["com.linkedin.android"],
+  x: ["com.twitter.android", "com.x.android"],
+};
 const UTM_SOURCES: Record<Network, string[]> = { linkedin: ["linkedin"], x: ["x", "twitter"] };
 
 const NOT_EXCLUDED = { isBot: false, isPrefetch: false, isTest: false } as const; // same as admin/(panel)/analytics/page.tsx
@@ -27,7 +33,7 @@ export function classifyReferrer(referrer: string | null | undefined): Network |
   const host = (referrer ?? "").trim().toLowerCase().replace(/^www\./, "");
   if (!host) return null;
   for (const [network, domains] of Object.entries(NETWORK_DOMAINS) as [Network, string[]][]) {
-    if (domains.some((d) => underDomain(host, d))) return network;
+    if (domains.some((d) => underDomain(host, d)) || APP_HOSTS[network].includes(host)) return network;
   }
   return null;
 }
@@ -39,13 +45,14 @@ export function classifyUtmSource(utmSource: string | null | undefined): Network
   return null;
 }
 
-/** "/blog/<slug>" → en; "/<locale>/blog/<slug>" → that locale. Anything else → null. */
+/** "/blog/<slug>" → en; "/<locale>/blog/<slug>" → that locale. "/en/blog/<slug>" is
+ *  accepted as en too: the site redirects it, but a lead's recorded landing
+ *  page (Lead.pageSource) can still carry that legacy prefix. Anything else → null. */
 export function blogPathInfo(path: string): { locale: BlogLocale; slug: string } | null {
   const m = path.match(/^\/(?:([a-z]{2})\/)?blog\/([^/?#]+)\/?$/);
   if (!m) return null;
   const locale = m[1] ?? "en";
   if (!isBlogLocale(locale)) return null;
-  if (m[1] === "en") return null; // the site never serves /en/blog/…
   return { locale, slug: m[2] };
 }
 
@@ -87,7 +94,10 @@ export async function socialTraffic(params: { from: Date; to: Date; slug?: strin
       createdAt: { gte: from, lte: to },
       ...NOT_EXCLUDED,
       path: { contains: "/blog/" },
-      OR: [...NETWORK_DOMAINS.linkedin, ...NETWORK_DOMAINS.x].map((d) => ({ referrer: { endsWith: d } })),
+      OR: [
+        ...[...NETWORK_DOMAINS.linkedin, ...NETWORK_DOMAINS.x].map((d) => ({ referrer: { endsWith: d } })),
+        ...[...APP_HOSTS.linkedin, ...APP_HOSTS.x].map((h) => ({ referrer: h })),
+      ],
     },
     select: { path: true, referrer: true, visitorHash: true },
   });
