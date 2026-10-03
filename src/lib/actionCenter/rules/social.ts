@@ -4,8 +4,9 @@ import { loadSocialActionItems } from "@/lib/social/load";
 // Social posts planned in Typefully (read-only) — see src/lib/social/socialMonitor.ts
 // for the rules themselves: unconfirmed planned drafts within 72h, planned
 // drafts whose date passed unconfirmed, publish errors, and the API being
-// unreachable as its own item. One GET per status, memoised for 5 minutes, so
-// this is never the slowest rule on the dashboard.
+// unreachable as its own item. One GET per status, memoised (5 minutes on
+// success, 1 minute on failure, 5 s timeout), so even a Typefully outage adds
+// at most one 5-second wait per minute to the admin pages that count items.
 export async function socialRules(): Promise<ActionItem[]> {
   try {
     return await loadSocialActionItems();

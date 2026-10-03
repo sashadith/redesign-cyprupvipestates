@@ -17,8 +17,14 @@ export const TYPEFULLY_SOCIAL_SET_ID = 339303;
 const API_BASE = "https://api.typefully.com";
 const PAGE_SIZE = 50; // the API's maximum
 const MAX_PAGES = 10; // 500 drafts per status — far above anything a weekly routine produces
-const TIMEOUT_MS = 10_000;
+/* Short on purpose: the admin layout counts Action Center items on EVERY admin
+   page render, so a hanging Typefully must not add more than this to any page. */
+const TIMEOUT_MS = 5_000;
 export const CACHE_TTL_MS = 5 * 60_000;
+/* Failures are remembered too, but briefly: long enough that an outage or a 429
+   costs one request per minute rather than one per admin page, short enough that
+   a fixed key or a recovered API shows up within a minute. */
+export const FAILURE_TTL_MS = 60_000;
 
 export type DraftStatus = "draft" | "scheduled" | "planned" | "published" | "error" | "publishing";
 
@@ -54,9 +60,11 @@ export function createTypefullyClient(opts: TypefullyClientOptions = {}) {
   const fetchImpl: FetchLike = opts.fetchImpl ?? ((url, init) => fetch(url, init));
   const now = opts.now ?? Date.now;
   const socialSetId = opts.socialSetId ?? TYPEFULLY_SOCIAL_SET_ID;
-  // Per process (each pm2 worker keeps its own) and successes only: a failure
-  // is re-tried on the next load, so a fixed outage clears within one request.
+  // Per process (each pm2 worker keeps its own). Successes for CACHE_TTL_MS,
+  // failures for FAILURE_TTL_MS; concurrent callers (the admin layout and the
+  // Action Center page render together) share one in-flight request.
   const cache = new Map<DraftStatus, { at: number; value: DraftListResult }>();
+  const inFlight = new Map<DraftStatus, Promise<DraftListResult>>();
 
   async function fetchStatus(status: DraftStatus, key: string): Promise<DraftListResult> {
     const drafts: TypefullyDraft[] = [];
@@ -81,8 +89,12 @@ export function createTypefullyClient(opts: TypefullyClientOptions = {}) {
         try { message = (JSON.parse(body) as { error?: { message?: string } }).error?.message || message; } catch { /* not JSON */ }
         return { ok: false, status: res.status, message: message || `HTTP ${res.status}` };
       }
+      let text: string;
+      try { text = await res.text(); } catch (e) {
+        return { ok: false, status: 200, message: `could not read the response: ${e instanceof Error ? e.message : String(e)}` };
+      }
       let json: { results?: unknown; next?: unknown };
-      try { json = await res.json(); } catch { return { ok: false, status: 200, message: "response was not JSON" }; }
+      try { json = JSON.parse(text); } catch { return { ok: false, status: 200, message: "response was not JSON" }; }
       if (!Array.isArray(json.results)) return { ok: false, status: 200, message: "response had no results array" };
       drafts.push(...(json.results as TypefullyDraft[]));
       if (json.results.length < PAGE_SIZE || !json.next) return { ok: true, drafts, truncated: false };
@@ -95,10 +107,14 @@ export function createTypefullyClient(opts: TypefullyClientOptions = {}) {
       const key = apiKey()?.trim();
       if (!key) return { ok: false, status: null, message: "TYPEFULLY_API_KEY is not set" };
       const hit = cache.get(status);
-      if (hit && now() - hit.at < CACHE_TTL_MS) return hit.value;
-      const value = await fetchStatus(status, key);
-      if (value.ok) cache.set(status, { at: now(), value });
-      return value;
+      if (hit && now() - hit.at < (hit.value.ok ? CACHE_TTL_MS : FAILURE_TTL_MS)) return hit.value;
+      const pending = inFlight.get(status);
+      if (pending) return pending;
+      const request = fetchStatus(status, key)
+        .then((value) => { cache.set(status, { at: now(), value }); return value; })
+        .finally(() => inFlight.delete(status));
+      inFlight.set(status, request);
+      return request;
     },
   };
 }

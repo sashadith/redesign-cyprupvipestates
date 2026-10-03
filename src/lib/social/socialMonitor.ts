@@ -36,7 +36,11 @@ export function draftLink(id: number): string {
 export function draftTitle(d: TypefullyDraft): string {
   const raw = (d.draft_title || d.preview || "").replace(/\s+/g, " ").trim();
   if (!raw) return `Draft #${d.id}`;
-  return raw.length > 80 ? `${raw.slice(0, 79)}…` : raw;
+  // By code point, never by UTF-16 unit: cutting an emoji in half leaves a lone
+  // surrogate, which Telegram rejects — and that throw would take the whole
+  // morning digest (email included) down with it.
+  const chars = Array.from(raw);
+  return chars.length > 80 ? `${chars.slice(0, 79).join("")}…` : raw;
 }
 
 /* Every `<platform>_post_enabled: true`, in a fixed order; an unknown platform
@@ -65,7 +69,9 @@ function apiFailureItems(results: DraftListResult[], now: Date): ActionItem[] {
   const f = failures[0];
   if (f.status === null && /TYPEFULLY_API_KEY/.test(f.message)) {
     return [{
-      id: "social-api-unreachable",
+      // Its own id: "dismiss forever" on a missing key must not also hide every
+      // future real outage (social-api-unreachable) from the Action Center.
+      id: "social-api-key-missing",
       severity: "ACTION",
       category: "SOCIAL",
       title: "Typefully API key is not configured",
@@ -166,7 +172,10 @@ export type SocialDigestInput = {
   scheduled: DraftListResult;
   planned: DraftListResult;
   errored: DraftListResult;
-  /** Every other status, fetched on Mondays only for the "no drafts this week" check. */
+  /** Plain drafts ("draft" status), fetched on Mondays only for the "no drafts this
+   *  week" check. Together with scheduled/planned/error that covers every status
+   *  that can carry a Tue–Fri date at 08:00 on a Monday: "published" and
+   *  "publishing" are by definition dated now or earlier. */
   rest?: DraftListResult[];
 };
 

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createTypefullyClient, CACHE_TTL_MS, type DraftListResult, type TypefullyDraft } from "@/lib/social/typefully";
-import { socialActionItems, socialDigestLines, draftLink, platformsOf, NO_WEEK_DRAFTS_LINE } from "@/lib/social/socialMonitor";
+import { createTypefullyClient, CACHE_TTL_MS, FAILURE_TTL_MS, type DraftListResult, type TypefullyDraft } from "@/lib/social/typefully";
+import { socialActionItems, socialDigestLines, draftLink, draftTitle, platformsOf, NO_WEEK_DRAFTS_LINE } from "@/lib/social/socialMonitor";
 
 /* Social monitoring over Typefully (2026-10-03). Typefully is mocked throughout:
    no test here, and nothing in the testbed, may reach the real API. */
@@ -85,10 +85,11 @@ test("API 500 → social-api-unreachable with the status code, never 'no items'"
   assert.match(items[0].title, /HTTP 500/);
 });
 
-test("a missing API key is its own explicit item", async () => {
+test("a missing API key is its own explicit item, with its own id", async () => {
   const client = createTypefullyClient({ apiKey: () => undefined, fetchImpl: async () => { throw new Error("must not be called"); } });
   const items = socialActionItems({ planned: await client.listDrafts("planned"), errored: await client.listDrafts("error") }, WEDNESDAY);
-  assert.equal(items[0].id, "social-api-unreachable");
+  // Not social-api-unreachable: dismissing the key item forever must not hide real outages.
+  assert.equal(items[0].id, "social-api-key-missing");
   assert.match(items[0].title, /not configured/);
 });
 
@@ -128,7 +129,7 @@ test("pages are followed until a short page", async () => {
   assert.ok(r.ok && r.drafts.length === 51 && !r.truncated);
 });
 
-test("successes are memoised for 5 minutes, failures are not", async () => {
+test("successes are memoised for 5 minutes, failures for 1 minute", async () => {
   let clock = 0;
   const { calls, fetchImpl } = recordingFetch([[draft("planned", null)]]);
   const client = createTypefullyClient({ apiKey: () => "k", fetchImpl, now: () => clock });
@@ -140,11 +141,38 @@ test("successes are memoised for 5 minutes, failures are not", async () => {
   await client.listDrafts("planned");
   assert.equal(calls.length, 2, "refetched once the TTL is over");
 
+  let n = 0, t = 0;
+  const flaky = createTypefullyClient({ apiKey: () => "k", now: () => t, fetchImpl: async () => { n++; return new Response("", { status: 503 }); } });
+  await flaky.listDrafts("error");
+  t = FAILURE_TTL_MS - 1;
+  const second = await flaky.listDrafts("error");
+  assert.equal(n, 1, "an outage costs one request per minute, not one per admin page");
+  assert.ok(!second.ok && second.status === 503, "and is still reported as the failure it is");
+  t = FAILURE_TTL_MS;
+  await flaky.listDrafts("error");
+  assert.equal(n, 2, "retried once the minute is over");
+});
+
+test("concurrent callers share one in-flight request", async () => {
   let n = 0;
-  const flaky = createTypefullyClient({ apiKey: () => "k", fetchImpl: async () => { n++; return new Response("", { status: 503 }); } });
-  await flaky.listDrafts("error");
-  await flaky.listDrafts("error");
-  assert.equal(n, 2, "a failure is retried on the next call");
+  let release!: () => void;
+  const gate = new Promise<void>((r) => { release = r; });
+  const client = createTypefullyClient({ apiKey: () => "k", fetchImpl: async () => {
+    n++; await gate;
+    return new Response(JSON.stringify({ results: [], next: "" }), { status: 200 });
+  } });
+  const a = client.listDrafts("planned"), b = client.listDrafts("planned");
+  release();
+  await Promise.all([a, b]);
+  assert.equal(n, 1);
+});
+
+test("titles are cut by whole characters, never through an emoji", () => {
+  const title = "x".repeat(78) + "🏠🏠🏠";
+  const cut = draftTitle(draft("planned", null, { draft_title: title }));
+  assert.equal(Array.from(cut).length, 80);
+  assert.ok(!/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/.test(cut), "no lone surrogate");
+  assert.ok(cut.endsWith("🏠…"));
 });
 
 test("a network error is a result with status null, not a throw", async () => {
