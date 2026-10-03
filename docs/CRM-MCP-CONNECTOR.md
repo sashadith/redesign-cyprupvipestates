@@ -8,7 +8,7 @@ Status: Phase 4 (WhatsApp tools) — Phases 1–3 live since 2026-09-07/08; Phas
 ## What it is
 
 A remote MCP server inside this app at `/api/mcp`, protected by a minimal OAuth 2.1
-server on the admin login. claude.ai connects to it as a *custom connector* and gets eighteen tools — eight read tools (`crm_worklist`, `crm_search_leads`, `crm_get_lead`, `crm_match_properties`, `crm_get_project`, `crm_get_playbook`, `crm_search_projects`, `crm_inventory_changes`), eight write tools (`crm_log_interaction`, `crm_update_lead`, `crm_draft_email`, `crm_send_email`, `crm_list_drafts`, `crm_create_lead`, `crm_delete_lead`, `crm_restore_lead`), and two WhatsApp tools (`crm_whatsapp_thread`, `crm_whatsapp_send`); customer email needs the operator's approval code (see below).
+server on the admin login. claude.ai connects to it as a *custom connector* and gets twenty-one tools — eight CRM read tools (`crm_worklist`, `crm_search_leads`, `crm_get_lead`, `crm_match_properties`, `crm_get_project`, `crm_get_playbook`, `crm_search_projects`, `crm_inventory_changes`), three blog read tools (`blog_list_articles`, `blog_get_article`, `blog_social_traffic`), eight write tools (`crm_log_interaction`, `crm_update_lead`, `crm_draft_email`, `crm_send_email`, `crm_list_drafts`, `crm_create_lead`, `crm_delete_lead`, `crm_restore_lead`), and two WhatsApp tools (`crm_whatsapp_thread`, `crm_whatsapp_send`); customer email needs the operator's approval code (see below).
 
 ## Environment
 
@@ -134,6 +134,16 @@ Two tools for reading and sending WhatsApp conversations linked to leads. Both a
 Unlike the Phase 3 tools, `crm_whatsapp_send` is a **write** tool arriving under the same unscoped token described above — the deploy itself, not any later approval, is the moment this connector gains the ability to message customers on the already-connected claude.ai client.
 
 Both tools require all four OpenWA environment variables (`OPENWA_BASE_URL`, `OPENWA_API_KEY`, `OPENWA_SESSION_ID`, `OPENWA_DAILY_SEND_CAP`) to be set in `/var/www/shared/.env` before deploy. If any are missing, the tools fail with a clear config error on every call.
+
+## Blog tools (2026-10-03)
+
+Three read-only tools for social-media content planning; no writes, no new tables. Audit rows carry `leadId = null`.
+
+- `blog_list_articles` — every published article, one entry per translation group, with `locales.{en,de,pl,ru}` = `{ title, metaDescription, url, slug, publishedAt, updatedAt }` or the string `"missing"` when that locale has no published translation. URLs come from `languageAlternates({ pathFor: pathBuilders.blog })` — the same helper the article page's hreflang/language switcher uses (English prefix-less, `he` never, unpublished siblings never). Filters: `locale`, `category` (slug), `limit`/`page`.
+- `blog_get_article` — `{ slug, locale = en }`: title, meta description, the four locale URLs (`null` where missing), the body as clean Markdown (`src/lib/blog/blocksToMarkdown.ts`: textContent, doubleTextBlock, FAQ/accordion, tables, images; buttons/project sliders/forms/related teasers omitted), `sources` = the external links the article cites (own domain and social-profile hosts excluded, deduplicated by URL, with link text and the H2 they sit under), `internalLinks`, word count, author, category, dates.
+- `blog_social_traffic` — `{ from, to, slug? }` (max 365 days): per article, visits and unique visitors whose referrer was LinkedIn (`linkedin.com`, `lnkd.in`) or X (`x.com`, `twitter.com`, `t.co`), with a per-locale breakdown, using the admin Analytics page's exact exclusion (`isBot`/`isPrefetch`/`isTest` false — `isBot` covers the ingestion UA check and the nightly hyperactive-session backfill). **UTM is not stored per page view** (the query string is stripped at ingestion), so the tool reports `leadsWithFirstTouchUtm` instead — leads created in the range whose first-touch `utm_source` was linkedin/x/twitter and who landed on the article. Lead counts, not traffic; a per-view `utmSource` column would be the follow-up migration.
+
+Verification lives in `scripts/qa/blog-tools-check.mts` (testbed only — it calls `assertNotProdDb()` first): article count per locale, the four URLs of a given EN slug HEAD-checked against the live site, no empty titles, Markdown without HTML, a 30-day social-traffic run.
 
 ## Approving an email
 
