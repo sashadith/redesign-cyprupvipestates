@@ -16,7 +16,22 @@ import { BLOG_LOCALES, groupArticles, listEntry, localeUrls, type ArticleRow } f
 import { contentBlocksToMarkdown, extractSources } from "@/lib/blog/blocksToMarkdown";
 import { socialTraffic } from "@/lib/blog/socialTraffic";
 
-const EXPECTED_EN = Number(process.env.BLOG_EXPECTED_EN ?? 49);
+// Expected counts come from the live blog sitemap (the public source of truth
+// for what is published), not from a number typed into this file that goes
+// stale with every content sprint. BLOG_EXPECTED_EN overrides the EN figure.
+const SITE = "https://cyprusvipestates.com";
+async function sitemapCounts(): Promise<Record<string, number> | null> {
+  try {
+    const xml = await (await fetch(`${SITE}/sitemaps/blog.xml`)).text();
+    const locs = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/g), (m) => m[1]);
+    const counts: Record<string, number> = {};
+    for (const l of BLOG_LOCALES) {
+      const re = l === "en" ? new RegExp(`^${SITE}/blog/[^/]+$`) : new RegExp(`^${SITE}/${l}/blog/[^/]+$`);
+      counts[l] = locs.filter((u) => re.test(u)).length;
+    }
+    return counts;
+  } catch { return null; }
+}
 const SLUG = process.argv[2] ?? "apartment-or-villa-in-cyprus";
 
 let failures = 0;
@@ -30,10 +45,11 @@ const select = { id: true, language: true, slug: true, title: true, status: true
 // 1. list
 const rows = (await prisma.blog.findMany({ where: { status: "PUBLISHED", language: { in: [...BLOG_LOCALES] } }, select })) as ArticleRow[];
 const entries = groupArticles(rows).map(listEntry);
-const enCount = entries.filter((e) => e.locales.en !== "missing").length;
-check(enCount === EXPECTED_EN, `blog_list_articles: ${enCount} articles with EN (expected ${EXPECTED_EN}); ${entries.length} articles in total`);
-const byLocale = Object.fromEntries(BLOG_LOCALES.map((l) => [l, entries.filter((e) => e.locales[l] !== "missing").length]));
-console.log("  published by locale:", JSON.stringify(byLocale));
+const byLocale: Record<string, number> = Object.fromEntries(BLOG_LOCALES.map((l) => [l, entries.filter((e) => e.locales[l] !== "missing").length]));
+const expected = process.env.BLOG_EXPECTED_EN ? { en: Number(process.env.BLOG_EXPECTED_EN) } : await sitemapCounts();
+console.log(`  blog_list_articles: ${entries.length} articles; published by locale ${JSON.stringify(byLocale)}; live sitemap ${JSON.stringify(expected)}`);
+check(!!expected, "live blog sitemap fetched for the expected counts");
+for (const [l, n] of Object.entries(expected ?? {})) check(byLocale[l] === n, `${l}: tool says ${byLocale[l]}, live sitemap says ${n}`);
 const badEntries = entries.filter((e) => BLOG_LOCALES.some((l) => { const v = e.locales[l]; return v !== "missing" && (!v.url || !v.title); }));
 check(badEntries.length === 0, `every present locale has a non-empty title and a URL (${badEntries.length} violations${badEntries.length ? ": " + badEntries.map((e) => e.slug).join(", ") : ""})`);
 const enHosts = entries.map((e) => e.locales.en).filter((v): v is Exclude<typeof v, "missing"> => v !== "missing");
@@ -62,6 +78,14 @@ if (row) {
   check(/^## /m.test(body.markdown), "body keeps headings");
   console.log(`  sources (${sources.length}):`, sources.map((s) => `${s.text} → ${s.url}`).join(" | ") || "(none)");
   console.log(`  internal links: ${internalLinks.length}`);
+  // The slug under test may cite nothing — show the feature on the EN article with the most external sources.
+  const enRows = await prisma.blog.findMany({ where: { language: "en", status: "PUBLISHED" }, select: { slug: true, contentBlocks: true } });
+  const ranked = enRows.map((r) => ({ slug: r.slug, ...extractSources(contentBlocksToMarkdown(r.contentBlocks).links) })).sort((a, b) => b.sources.length - a.sources.length);
+  const top = ranked[0];
+  check(!!top && top.sources.length > 0, `at least one EN article cites external sources (best: "${top?.slug}" with ${top?.sources.length ?? 0})`);
+  if (top) for (const src of top.sources.slice(0, 5)) console.log(`    ${src.section ?? "—"}: ${src.text} → ${src.url}`);
+  const social = ranked.flatMap((r) => r.sources).filter((x) => /linkedin\.com|facebook\.com|instagram\.com|x\.com|twitter\.com|youtube\.com/i.test(x.url));
+  check(social.length === 0, `no social-profile links among ${ranked.reduce((n, r) => n + r.sources.length, 0)} sources across EN articles`);
   const present = BLOG_LOCALES.map((l) => urls[l]).filter((u): u is string => !!u);
   check(present.length === 4, `${present.length} of 4 locale URLs present`);
   for (const u of present) {
