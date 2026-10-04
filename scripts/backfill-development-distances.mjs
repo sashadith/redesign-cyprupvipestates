@@ -34,12 +34,29 @@ const CATEGORY_SOURCES = {
 const HONESTY_CAP_MIN = 60;
 const KM_PER_MIN = 0.6;
 
+// Copy of src/lib/ceasefireLine.ts (plain node cannot import from src/) —
+// change both together. POIs north of the 1974 ceasefire line are skipped.
+const CEASEFIRE_LINE = [[32.5,35.25],[32.7,35.25],[32.715,35.14],[32.8,35.1],[32.92,35.085],[33.0,35.12],[33.05,35.15],[33.2,35.168],[33.3,35.172],[33.36,35.176],[33.42,35.17],[33.5,35.12],[33.6,35.1],[33.7,35.09],[33.8,35.08],[33.9,35.075],[33.98,35.07],[34.6,35.06]];
+const LOUROUJINA = { minLat: 35.0, maxLat: 35.06, minLng: 33.45, maxLng: 33.56 };
+function isNorthOfCeasefireLine(lat, lng) {
+  if (lat >= LOUROUJINA.minLat && lat <= LOUROUJINA.maxLat && lng >= LOUROUJINA.minLng && lng <= LOUROUJINA.maxLng) return true;
+  const line = CEASEFIRE_LINE;
+  if (lng <= line[0][0]) return lat > line[0][1];
+  for (let i = 1; i < line.length; i++) {
+    const [x1, y1] = line[i - 1];
+    const [x2, y2] = line[i];
+    if (lng <= x2) return lat > y1 + ((y2 - y1) * (lng - x1)) / (x2 - x1);
+  }
+  return lat > line[line.length - 1][1];
+}
+
 function loadPoiByCategory() {
   const map = new Map();
   for (const rel of ["public/poi/cyprus.json", "public/poi/cyprus-extra.json"]) {
     const rows = JSON.parse(fs.readFileSync(path.join(process.cwd(), rel), "utf8")).pois ?? [];
     for (const p of rows) {
       if (typeof p.lat !== "number" || typeof p.lng !== "number") continue;
+      if (isNorthOfCeasefireLine(p.lat, p.lng)) continue;
       const list = map.get(p.c);
       if (list) list.push({ lat: p.lat, lng: p.lng });
       else map.set(p.c, [{ lat: p.lat, lng: p.lng }]);
