@@ -275,7 +275,12 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
   display: flex; flex-direction: column; justify-content: flex-end;
   padding-top: clamp(116px, 15vh, 196px);
 }
-.iart__hero--image { min-height: clamp(540px, 86vh, 880px); }
+/* Same frame as the project page's hero (Sascha, 2026-10-04): .pp-hero's
+   min(80vh, 780px), stepping up to min(92vh, 800px) above the mobile breakpoint
+   — a fixed ceiling instead of the old clamp(540px, 86vh, 880px), which ran
+   100px taller on a large screen and shorter on a small one. */
+.iart__hero--image { min-height: min(80vh, 780px); }
+@media (min-width: 641px) { .iart__hero--image { min-height: min(92vh, 800px); } }
 /* fall back to a gold cloud when an article has no cover image */
 .iart__hero:not(.iart__hero--image)::before {
   content: ""; position: absolute; z-index: -1; pointer-events: none; width: min(60vw, 700px); aspect-ratio: 1; border-radius: 50%; top: -28%; right: -10%;
@@ -283,24 +288,35 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 }
 .iart__hero-bg { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
 .iart__hero-bg img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.06); transform-origin: center; }
+/* Two layers, as before: the side wash that carries the left-aligned headline
+   (restored 2026-10-04 — removing it was the wrong read of "the dark
+   background"), and the project hero's own bottom fade. */
 .iart__hero-scrim {
   position: absolute; inset: 0; pointer-events: none;
   background:
-    linear-gradient(180deg, rgba(8,21,18,0.62) 0%, rgba(8,21,18,0.18) 22%, rgba(8,21,18,0.30) 50%, rgba(8,21,18,0.72) 80%, var(--sea-deep) 100%),
+    linear-gradient(to top, rgba(8,21,18,1) 0%, rgba(8,21,18,0.75) 16%, rgba(8,21,18,0) 40%),
     linear-gradient(90deg, rgba(8,21,18,0.55) 0%, rgba(8,21,18,0) 58%);
 }
 /* width:100% — otherwise, as a flex-column item with margin-inline:auto, .wrap
    shrink-wraps to the title's max-width and centres; we want it full-width so the
    heading leans on the page container's left edge. */
-.iart__hero-inner { position: relative; width: 100%; padding-bottom: clamp(40px, 6vw, 76px); }
+/* Flush to the bottom edge, like .pp-hero__overlay: the fade closes on the
+   content instead of leaving a dark strip under it. */
+.iart__hero-inner { position: relative; width: 100%; padding-bottom: clamp(26px, 4vw, 58px); }
 
-.iart__kicker { margin: 0 0 var(--s-5); display: flex; align-items: center; gap: 12px; font-family: var(--font-body), sans-serif; font-size: var(--text-caption); letter-spacing: 0.08em; text-transform: uppercase; }
+/* Same shadow the headline carries. The kicker sits ~360px below the top of an
+   800px hero, i.e. ABOVE the bottom fade's reach (it clears at 40%), so it is
+   over bare photograph — it was never under a gradient, it simply had nothing
+   holding it off a bright sky (2026-10-04). */
+.iart__kicker { margin: 0 0 var(--s-5); display: flex; align-items: center; gap: 12px; font-family: var(--font-body), sans-serif; font-size: var(--text-caption); letter-spacing: 0.08em; text-transform: uppercase;
+  text-shadow: 0 2px 20px rgba(8,21,18,0.75), 0 1px 3px rgba(8,21,18,0.5); }
 .iart__back { color: var(--champagne); text-decoration: none; }
 .iart__back:hover { color: var(--ivory); }
 .iart__sep { color: var(--text-faint); }
 .iart__cat { color: var(--ivory); }
 .iart__title { margin: 0; max-width: 18ch; font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400; font-size: var(--text-h1); line-height: 1.04; letter-spacing: -0.02em; color: var(--ivory); text-wrap: balance; text-shadow: 0 2px 36px rgba(8,21,18,0.45); }
-.iart__meta { margin: var(--s-6) 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: rgba(239,233,219,0.82); }
+.iart__meta { margin: var(--s-6) 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: rgba(239,233,219,0.82);
+  text-shadow: 0 2px 20px rgba(8,21,18,0.75), 0 1px 3px rgba(8,21,18,0.5); }
 .iart__byline { display: inline-flex; align-items: center; gap: 10px; color: var(--ivory); }
 .iart__byline-img { width: 34px; height: 34px; border-radius: 999px; object-fit: cover; border: 1px solid rgba(239,233,219,0.35); }
 .iart__byline-name { font-weight: 500; }
@@ -338,6 +354,24 @@ html[data-light-hero]:not([data-scrolled]) .nav::before {
 
 /* ---- reading column typography ---- */
 .iart__content { min-width: 0; }
+/* An inline Projects block brings its own .container (globals.css: 1360px cap,
+   20px side padding). Inside the article column that is a second, narrower
+   measure: the cards ended up inset from the paragraphs above them and from the
+   contact form below. The article column IS the measure here. Mirrors
+   .artform .container in articleForm.css, which solves the same thing for the
+   form block. */
+.iart__content .container.prjblock {
+  max-width: none; width: 100%; padding-inline: 0; margin-inline: 0;
+}
+/* 30px more air above the block's heading than an ordinary H2 gets (Sascha,
+   2026-10-04). Written on the heading rather than as padding on the block: the
+   section's own margin, the container and this margin all collapse into one
+   gap, and the heading's clamp is the largest of the three — so raising it is
+   the only one of them that actually moves the cards down. */
+.iart__content .container.prjblock > .iart__h2 { margin-top: calc(clamp(44px, 6vw, 72px) + 30px);
+  /* ...and half again as much below it, 16 -> 24px: the cards are a block of
+     their own, not the next paragraph (Sascha, 2026-10-04). */
+  margin-bottom: var(--s-5); }
 .iart__rich { }
 .iart__p { margin: 0 0 var(--s-5); font-family: var(--font-body), sans-serif; font-size: clamp(1.06rem, 1.01rem + 0.3vw, 1.2rem); font-weight: 300; line-height: 1.78; color: var(--text); }
 .iart__content strong { font-weight: 600; color: var(--text); }

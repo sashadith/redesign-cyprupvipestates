@@ -36,7 +36,7 @@ const SKIP_LINK_LABELS: Record<Locale, string> = {
 // Built from the same helper as isDarkHeroPath() in navShared.tsx so the two
 // route tests cannot drift apart.
 const NON_DEFAULT = nonDefaultLocalePattern();
-const PREPAINT = `(function(){try{var p=location.pathname.replace(/\\/+$/,'')||'/';var d=document.documentElement;if(/^\\/(${NON_DEFAULT})?$/.test(p)||/^(\\/(${NON_DEFAULT}))?\\/projects$/.test(p))d.setAttribute('data-hero-dark','');else if(/^(\\/(${NON_DEFAULT}))?\\/projects\\/[^/]+$/.test(p))d.setAttribute('data-hero-scrim','')}catch(e){}})()`;
+const PREPAINT = `(function(){try{var p=location.pathname.replace(/\\/+$/,'')||'/';var d=document.documentElement;if(/^\\/(${NON_DEFAULT})?$/.test(p)||/^(\\/(${NON_DEFAULT}))?\\/projects$/.test(p))d.setAttribute('data-hero-dark','');else if(/^(\\/(${NON_DEFAULT}))?\\/(projects|blog)\\/[^/]+$/.test(p))d.setAttribute('data-hero-scrim','')}catch(e){}})()`;
 
 // One Rubik load for every script on this layout: the same family also backs
 // `--font-body-he` (consumed by rtl.css's `:lang(he)` rule), so the Hebrew body

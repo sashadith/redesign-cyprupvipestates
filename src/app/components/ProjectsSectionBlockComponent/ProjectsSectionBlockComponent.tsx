@@ -124,7 +124,13 @@ const ProjectsSectionBlockComponent: FC<Props> = ({ block, lang }) => {
         marginBottom: computedMarginBottom,
       }}
     >
-      <div className="container">
+      {/* `prjblock` is a stable marker next to the hashed module class: inside an
+          article the nested .container caps the block at its own 1360px and adds
+          20px of side padding, so the cards sat inset from the text column and
+          from the contact form below them (2026-10-04). Neutralised in
+          insights.css — the same fix .artform .container already carries for the
+          form block, for the same reason. */}
+      <div className="container prjblock">
         {/* iart__h2 — the same heading style every other H2 in this article
             already uses (color: var(--text), readable on the article's light
             background). NOT the /projects listing's own pp-h2: that class
@@ -150,9 +156,12 @@ const ProjectsSectionBlockComponent: FC<Props> = ({ block, lang }) => {
             near-invisible (dark-on-dark-inherited-tokens on a light page).
             It's left in the inherited light scope, matching the tokens it
             was originally styled against. */}
-        <div data-theme="dark" className={styles.projects}>
+        {/* A block that resolves to exactly ONE project gets a single
+            full-width horizontal card instead of a lone half-width tile in a
+            two-column grid (2026-10-04). */}
+        <div data-theme="dark" className={`${styles.projects}${visibleProjects.length === 1 ? ` ${styles.single}` : ""}`}>
           {visibleProjects.map((project: any) => (
-            <ProjectCard key={project._id} c={toCardData(project, lang)} s={s} locale={lang} />
+            <ProjectCard key={project._id} c={toCardData(project, lang)} s={s} locale={lang} wide={visibleProjects.length === 1} />
           ))}
         </div>
         {isPaginated && (

@@ -16,6 +16,12 @@
   }
 }
 
+// Exactly one project: a single column, so the card below it can lay its photo
+// beside the facts (.prj--wide in projects.css) across the article's width.
+.single {
+  grid-template-columns: 1fr;
+}
+
 // No longer referenced — the heading now uses the global .iart__h2 class
 // (see ProjectsSectionBlockComponent.tsx) so it matches the rest of the
 // article instead of this hardcoded white. Left in place rather than

@@ -77,7 +77,7 @@ const cardDistances = (d: Distances | null | undefined, s: ProjectsStrings) =>
   d ? CARD_DIST_ORDER.filter((k) => d[k]).map((k) => ({ label: distLabel(k, s), v: d[k] as string })) : [];
 
 export function ProjectCard({
-  c, active = false, onHover = () => {}, s, locale, compact = false,
+  c, active = false, onHover = () => {}, s, locale, compact = false, wide = false,
 }: {
   c: ProjectCardData;
   // Both optional, defaulted client-side — the map-hover-sync feature is only
@@ -94,6 +94,11 @@ export function ProjectCard({
   // base .prj rules the /projects listing itself renders with. See
   // AlternativesBlock.tsx.
   compact?: boolean;
+  // Full-width horizontal card — photo beside the facts instead of above them.
+  // For a Projects block that pins a SINGLE project (ProjectsSectionBlockComponent):
+  // one half-width card in a two-column grid reads as a leftover, and the width
+  // is there to be used. Pure CSS modifier (.prj--wide), like --compact.
+  wide?: boolean;
 }) {
   const soldOut = c.unitsTotal != null && soldOutFromCounts(c.unitsAvailable ?? 0, c.unitsTotal);
   // `c.city`, `c.type` and `c.bedrooms` are raw feed/DB values, not copy: on a
@@ -115,7 +120,7 @@ export function ProjectCard({
   const bedsLabel = isHe ? heBedrooms(c.bedrooms) : `${c.bedrooms} ${s.bedUnit}`;
   return (
     <a
-      className={`prj${compact ? " prj--compact" : ""}${active ? " is-active" : ""}${soldOut ? " is-sold" : ""}`}
+      className={`prj${compact ? " prj--compact" : ""}${wide ? " prj--wide" : ""}${active ? " is-active" : ""}${soldOut ? " is-sold" : ""}`}
       href={c.href}
       onMouseEnter={() => onHover(c.id)}
       onMouseLeave={() => onHover(null)}

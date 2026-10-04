@@ -48,7 +48,11 @@ const titleNode = (lang: string) => {
   if (lang === "ru") return (<>Оставьте заявку и <span className="it">мы свяжемся с вами</span> в ближайшее время</>);
   // REVIEW(he)
   if (lang === "he") return (<>השאירו פרטים <span className="it">ונחזור אליכם</span> בהקדם</>);
-  return (<>Leave <span className="it">your details</span> and we will contact you shortly</>);
+  /* Hard break after "and" (Sascha, 2026-10-04): the heading reads as two
+     balanced halves instead of one long line that breaks wherever the column
+     happens to end. English only — each locale's phrase has its own natural
+     seam, and a break copied blindly into another language lands mid-clause. */
+  return (<>Leave <span className="it">your details</span> and<br />we will contact you shortly</>);
 };
 
 // title/subtitle: optional per-page override of the default heading/copy above

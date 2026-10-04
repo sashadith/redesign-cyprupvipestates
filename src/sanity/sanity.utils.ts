@@ -495,9 +495,21 @@ export async function resolvePinnedProjects(ids: string[], lang: string) {
   const mappedProjects = await mapProjectRowsToLang(projectRows as AnyRow[], lang);
   const mappedDevs = devRows.filter((d) => !!d.slug).map(mapDevelopmentRowToCard);
 
+  /* Same shape toProjectCard() builds for the filtered path — the five fields
+     below used to be dropped here, so a PINNED project rendered a card without
+     its distance strip, New/Featured badge or availability banner while the
+     identical component on /projects showed all three (2026-10-04). Nothing new
+     is fetched: mapDevelopmentRowToCard already computes distances and the unit
+     counts from the query above, and a legacy Project row carries distances /
+     isNew / isFeatured as plain columns and has no unit concept at all, which
+     is why unitsAvailable/unitsTotal stay undefined for it — exactly as the
+     developer page handles the same pair. */
   const byId = new Map<string, any>();
-  for (const p of mappedProjects) byId.set(p.sanityId, { _id: p.sanityId, title: p.title, slug: p.slug, previewImage: D(p.previewImage), keyFeatures: p.keyFeatures, isSold: !!p.isSold });
-  for (const d of mappedDevs) byId.set(d.sanityId, { _id: d.sanityId, title: d.title, slug: d.slug, previewImage: D(d.previewImage), keyFeatures: d.keyFeatures, isSold: !!d.isSold });
+  for (const p of mappedProjects) byId.set(p.sanityId, { _id: p.sanityId, title: p.title, slug: p.slug, previewImage: D(p.previewImage), keyFeatures: p.keyFeatures, isSold: !!p.isSold,
+    distances: (p as any).distances ?? null, isNew: !!(p as any).isNew, isFeatured: !!(p as any).isFeatured });
+  for (const d of mappedDevs) byId.set(d.sanityId, { _id: d.sanityId, title: d.title, slug: d.slug, previewImage: D(d.previewImage), keyFeatures: d.keyFeatures, isSold: !!d.isSold,
+    distances: (d as any).distances ?? null, isNew: !!(d as any).isNew, isFeatured: !!(d as any).isFeatured,
+    unitsAvailable: (d as any).unitsAvailable, unitsTotal: (d as any).unitsTotal });
 
   // Preserve the admin's configured pin order (first pin shows first).
   return cleanIds.map((id) => byId.get(id)).filter(Boolean);

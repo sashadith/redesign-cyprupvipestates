@@ -1080,15 +1080,18 @@ img { max-width: 100%; display: block; }
 .formsec__policy:hover { color: var(--text); }
 
 .formsec__aside { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--s-4); }
-/* image, divider and caption share the portrait width and sit at the same left edge */
-.formsec__consultant-wrap { position: relative; width: min(384px, 96%); }
+/* image, divider and caption share the portrait width and sit at the same left
+   edge — one variable, so they cannot drift apart. Net 12% down from the
+   original 384px (operator, 2026-10-04: −20%, then +10% back). */
+.formsec__aside { --portrait-w: min(338px, 85%); }
+.formsec__consultant-wrap { position: relative; width: var(--portrait-w); }
 .formsec__consultant { width: 100%; height: auto; border-radius: var(--r-ui); display: block; }
 /* static golden divider flush under the consultant, fading out left and right */
 .formsec__consultant-wrap::after {
   content: ""; position: absolute; bottom: 0; inset-inline: 0; height: 1px;
   background: linear-gradient(90deg, transparent, #c29a5e 30%, #c29a5e 70%, transparent);
 }
-.formsec__caption { display: flex; flex-direction: column; gap: 2px; width: min(384px, 96%); align-items: flex-start; text-align: start; }
+.formsec__caption { display: flex; flex-direction: column; gap: 2px; width: var(--portrait-w); align-items: flex-start; text-align: start; }
 .formsec__caption strong { font-family: var(--font-display), var(--font-display-cyr), var(--font-display-he, serif), serif; font-weight: 400; font-size: 1.25rem; color: var(--text); }
 .formsec__caption span { font-family: var(--font-body), sans-serif; font-size: var(--text-sm); color: var(--accent); letter-spacing: 0.04em; }
 /* desktop: nudge the portrait (and its divider) 150px left and float the caption to
@@ -1254,7 +1257,11 @@ img { max-width: 100%; display: block; }
   .formsec__main { display: contents; }
   .formsec__grid { grid-template-rows: auto 1fr; }
   .formsec__head { grid-column: 1 / -1; grid-row: 1; }
-  .formsec__form { grid-column: 1; grid-row: 2; }
+  /* Top-aligned, not centred with everything else in this grid: the form's
+     distance from the gold line is a typographic decision, and centring made it
+     a function of the portrait's height instead. The aside keeps its own
+     align-self: center below. */
+  .formsec__form { grid-column: 1; grid-row: 2; align-self: start; }
   .formsec__aside { grid-column: 2; grid-row: 1 / 3; align-self: center; }
   .formsec__title { text-wrap: wrap; max-width: none; }
 }
@@ -1272,7 +1279,17 @@ img { max-width: 100%; display: block; }
    heading row and the form row — zeroed there (the aside spans both rows, so
    nothing else is affected). */
 .formsec__stripe { margin-top: calc(var(--s-5) + 10px); }
-.formsec__form { margin-top: calc(2 * (var(--s-5) + 10px) + 1px - 20px); } /* 34px above the line, 14px below (operator, 2026-10-03) */
+/* 34px above the line, 46px below (halved from the 91px it actually was —
+   operator, 2026-10-04). Written as line-offset + line + gap, so the three
+   parts are what they say they are.
+
+   The margin alone does NOT set that gap in the two-column layout: the grid
+   carries align-items:center, so the form (402px) was centred inside row 2
+   (613px, a height the consultant portrait drives) and sat 126px below the
+   heading however small the margin got — halving 14px to 7px moved it by about
+   three pixels, which is why it looked unchanged. `align-self: start` in the
+   940px block below is what hands the spacing back to this margin. */
+.formsec__form { margin-top: calc(var(--s-5) + 10px + 1px + 46px); }
 @media (min-width: 940px) { .formsec__grid { row-gap: 0; } }
 /* Portrait (with its caption) 50px higher in the two-column layout (operator, 2026-10-03). */
 @media (min-width: 940px) { .formsec__aside { transform: translateY(-22px); } }

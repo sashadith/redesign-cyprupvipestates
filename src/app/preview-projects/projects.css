@@ -432,6 +432,69 @@
 .prj__dist i { font-style: normal; color: var(--text-soft); }
 .prj__dist small { font-size: 0.66rem; color: var(--text-faint); margin-inline-start: 2px; }
 
+/* ---- on a light surface (blog + case-study article bodies, .is-light) ----
+   The photo keeps its dark scrim: the title and location sit ON the image and
+   are correct there. What jarred on ivory was the docked footer — a solid
+   sea-deep bar under a photo on a paper page (2026-10-04). Only the footer and
+   its typography flip; everything above the fold line is untouched.
+
+   These rules deliberately use the BRAND CONSTANTS (--paper-2, --ink-warm,
+   --bronze from design-tokens.css), not the role tokens: the grid is wrapped in
+   <div data-theme="dark"> by ProjectsSectionBlockComponent, so --surface,
+   --text-soft and friends resolve to their DARK values inside the card no
+   matter what the light article around it says. That wrapper stays — the card's
+   own dark-token rules depend on it — and only the footer is repainted here.
+
+   Two classes each, so they outrank the base rules by specificity rather than
+   by file order. Contrast on the sand footer: ink 15:1, muted ink 8.6:1, bronze
+   3.9:1 on a 1.5rem price (large-text threshold is 3:1). */
+.is-light .prj { background: var(--paper-2); border-color: rgba(34,28,21,0.14); }
+.is-light .prj__footer { background: var(--paper-2); }
+.is-light .prj__specs { color: rgba(34,28,21,0.74); }
+.is-light .prj__specs span + span::before { background: rgba(34,28,21,0.30); }
+.is-light .prj__dist { color: var(--ink-warm); border-top-color: rgba(34,28,21,0.14); }
+.is-light .prj__dist i { color: rgba(34,28,21,0.74); }
+.is-light .prj__dist small { color: rgba(34,28,21,0.48); }
+.is-light .prj__price { color: var(--bronze); }
+.is-light .prj__price-from { color: rgba(34,28,21,0.74); }
+/* The type chip ("Villa") in sand rather than dark glass — the colour Sascha
+   picked, #ECE7DA, is --paper-2 to within a shade, so the chip is the same
+   ground as the card's own footer and the card reads as one object across the
+   photo's edge. Ink on sand is 13.7:1. Only here; the /projects listing keeps
+   its glass chip. */
+.is-light .prj__type { background: var(--paper-2); border-color: rgba(34,28,21,0.14); color: var(--ink-warm);
+  -webkit-backdrop-filter: none; backdrop-filter: none; }
+/* 0.78rem -> --text-sm (14px) for every small label on the card: specs, the
+   "from" prefix, the distance row and the chip. "min" stays at 0.66rem — it is
+   a unit suffix hanging off a number, not a label, and at 14px it would compete
+   with the figure it belongs to. Article-scope only: on /projects these cards
+   run two to four per row, where 14px would wrap the distance row. */
+.is-light .prj__specs,
+.is-light .prj__price-from,
+.is-light .prj__dist,
+.is-light .prj__type { font-size: var(--text-sm); }
+
+/* Wide variant — photo beside the facts, for a Projects block with a single
+   pinned project (ProjectsSectionBlockComponent). Below 760px it falls back to
+   the stacked card: a 46/54 split on a phone leaves neither half usable. The
+   media loses its 4:3 lock and stretches to the row's height instead, which is
+   set by the facts column — hence the min-height, so a short fact list cannot
+   squeeze the photo into a letterbox. */
+@media (min-width: 760px) {
+  .prj--wide { flex-direction: row; align-items: stretch; }
+  [dir="rtl"] .prj--wide { flex-direction: row-reverse; }
+  .prj--wide .prj__media { flex: 0 0 46%; aspect-ratio: auto; min-height: 290px;
+    border-radius: var(--r-ui) 0 0 var(--r-ui); }
+  [dir="rtl"] .prj--wide .prj__media { border-radius: 0 var(--r-ui) var(--r-ui) 0; }
+  .prj--wide .prj__footer { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center;
+    padding: clamp(20px, 2.4vw, 32px); }
+  .prj--wide .prj__specrow { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .prj--wide .prj__specs { font-size: 0.86rem; gap: 8px 18px; }
+  .prj--wide .prj__price { font-size: 2rem; }
+  .prj--wide .prj__title { font-size: 1.8rem; }
+  .prj--wide .prj__dist { margin-top: 18px; padding-top: 16px; font-size: 0.82rem; }
+}
+
 /* Compact variant — sized for a 4-per-row grid (the project page's
    alternatives strip, see AlternativesBlock.tsx / ProjectCard.tsx's
    `compact` prop). Pure modifier: only ever adds narrower overrides here,

@@ -15,6 +15,10 @@ const NON_DEFAULT = nonDefaultLocalePattern();
 const HOME_RE = new RegExp(`^/(${NON_DEFAULT})?$`);
 const PROJECTS_RE = new RegExp(`^(/(${NON_DEFAULT}))?/projects$`);
 const PROJECT_DETAIL_RE = new RegExp(`^(/(${NON_DEFAULT}))?/projects/[^/]+$`);
+/* A blog article opens on the same kind of hero: a full-bleed cover photo the
+   editor supplied, with the kicker, headline and byline over it. Same treatment
+   as a project page, for the same reason (2026-10-04). */
+const BLOG_DETAIL_RE = new RegExp(`^(/(${NON_DEFAULT}))?/blog/[^/]+$`);
 
 /* Routes with a dark, full-bleed hero where the nav should stay FULLY transparent
    at the top (signature look): the home page and the /projects listing, in every
@@ -39,7 +43,7 @@ export function isDarkHeroPath(pathname: string): boolean {
    header-footer.css. */
 export function isScrimHeroPath(pathname: string): boolean {
   const p = pathname.replace(/\/+$/, "") || "/";
-  return PROJECT_DETAIL_RE.test(p);
+  return PROJECT_DETAIL_RE.test(p) || BLOG_DETAIL_RE.test(p);
 }
 
 export type ResolvedNav = {
