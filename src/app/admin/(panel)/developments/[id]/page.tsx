@@ -100,8 +100,9 @@ export default async function DevelopmentDetail({ params }: { params: { id: stri
   // rebuilds the EXACT stored key. Drive feedKeys are 3-part (drive:<accountId>:<slug>),
   // so passing only feedProjectId (the slug) would miss and fall back to the live feed.
   // Once a slug exists, link straight to the real SEO-facing URL — the ?dev=&id=
-  // route now just 301s there anyway.
-  const previewHref = d.slug
+  // route now just 301s there anyway. Published only — a draft with a slug
+  // would land on the public route's 404 (see preview-project/page.tsx).
+  const previewHref = d.slug && d.publishStatus === "published"
     ? `/projects/${encodeURIComponent(d.slug)}`
     : `/preview-project?dev=${d.dev}&id=${encodeURIComponent(d.feedKey.slice(d.dev.length + 1))}`;
 

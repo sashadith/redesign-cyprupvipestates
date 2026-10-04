@@ -51,7 +51,11 @@ export default async function PreviewProjectPage({ params, searchParams }: { par
   // there instead of rendering this admin view twice under two addresses.
   // Straight to /projects/[slug] (not the old /preview-project/[slug], which is
   // now itself just a redirect stub to here) — no reason to double-hop.
-  if (dbP?.slug) {
+  // PUBLISHED only: a draft can already carry a slug (one-off imports set one
+  // at creation), and /projects/[slug] answers 404 for drafts — redirecting
+  // there made such drafts impossible to look at before publishing
+  // (Marfields, 2026-10-04).
+  if (dbP?.slug && dbP.publishStatus === "published") {
     permanentRedirect(localizedHref(lang, ["projects", dbP.slug]));
   }
   const p = dbP ?? (await getPreviewProject(dev, target));
