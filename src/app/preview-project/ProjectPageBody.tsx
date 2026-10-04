@@ -209,7 +209,13 @@ export default async function ProjectPageBody({
               </div>
               <h1 className="pp-title">{p.publicName}</h1>
               <div className="pp-hero__stats">
-                <div className="pp-hero__price"><b>{priceFrom != null ? <Bdi ltr>{fmtPrice(priceFrom, lang, p.currency)}</Bdi> : "—"}</b><span>{priceFrom != null ? (isSold ? t.heroFromSoldOut : `${t.heroFrom}${p.vatApplies !== false ? ` · ${localeDir(lang) === "rtl" ? bidiIsolate(t.vatSuffix) : t.vatSuffix}` : ""}`) : t.heroFrom}</span></div>
+                {/* No price at all (every unit "price on request", e.g. Zeus Penthouse)
+                    used to render "— from"; say so in words, with no dangling "from". */}
+                {priceFrom != null ? (
+                  <div className="pp-hero__price"><b><Bdi ltr>{fmtPrice(priceFrom, lang, p.currency)}</Bdi></b><span>{isSold ? t.heroFromSoldOut : `${t.heroFrom}${p.vatApplies !== false ? ` · ${localeDir(lang) === "rtl" ? bidiIsolate(t.vatSuffix) : t.vatSuffix}` : ""}`}</span></div>
+                ) : (
+                  <div className="pp-hero__price"><b>{isSold ? "—" : t.priceOnRequest}</b></div>
+                )}
                 <div><b>{types.join(" · ") || "—"}</b><span>{t.heroType}</span></div>
                 {listed.length > 0 && <div><b>{avail.length}{avail.length !== listed.length && <small>/{listed.length}</small>}</b><span>{t.heroAvailable}</span></div>}
                 {/* Completion / build stage is a top-3 buying criterion off-plan — surfaced in the hero, not only in the facts panel (2026-10-03). */}
