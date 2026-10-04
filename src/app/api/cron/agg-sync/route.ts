@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
     const result = await withCronLog(
       "agg-sync",
       () => run(force, scheduled),
-      (r) => (!r.ok ? r.message : r.notDue ?? `${r.created.length} created, ${r.updated.length} updated, ${r.skippedExisting.length} skipped (existing), ${r.skippedEmpty.length} skipped (empty)`),
+      (r) => (!r.ok ? r.message : r.notDue ?? `${r.created.length} created, ${r.updated.length} updated, ${r.skippedExisting.length} skipped (existing), ${r.skippedEmpty.length} skipped (empty)${r.unpricedAvailable?.length ? `; ${r.unpricedAvailable.length} AVAILABLE WITHOUT PRICE (${r.unpricedAvailable.join(", ")})` : ""}`),
       (r) => r.ok,
     );
     if (!result.ok && (await shouldNotifyFailureStreak("agg-sync"))) {

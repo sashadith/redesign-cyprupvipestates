@@ -3,7 +3,7 @@ import {
   aggApiBase, fetchAggProjects, parseShareOneDriveUrl, findAggPricelist, downloadAggPricelist,
   type AggProject, type ShareOneDriveRef, type DiscoveredPricelist,
 } from "./agg";
-import { extractAggUnits, type AggUnit } from "./ai/aggPricelist";
+import { extractAggUnits, unpricedAvailableNotes, type AggUnit } from "./ai/aggPricelist";
 import { generateProjectDescription } from "./ai/projectDescription";
 import type { LocaleText } from "./ai/localeTextGuards";
 import { toTitleCaseName } from "@/lib/textCase";
@@ -115,7 +115,7 @@ async function buildAggPlans(
   });
   const byFeedKey = new Map(existing.map((e) => [e.feedKey, e]));
 
-  const notes: string[] = [];
+  const notes: string[] = unpricedAvailableNotes(units);
   const byProject = new Map<string, AggUnit[]>();
   for (const u of units) {
     const list = byProject.get(u.project) ?? [];
@@ -191,6 +191,8 @@ export type AggWriteResult = {
   skippedExisting: { project: string; reason: string }[];
   skippedEmpty: string[];
   notes: string[];
+  /** refs of "available" units the parser found no price for — see unpricedAvailableNotes */
+  unpricedAvailable?: string[];
   notDue?: string;
   pricelistFile?: string;
 };
@@ -214,7 +216,8 @@ export async function writeAggDraft(developerAccountId: string, opts: { force?: 
 
   const releaseSyncWindow = beginSyncWindow("agg");
   try {
-    const { plans } = await buildAggPlans(developerAccountId, acct.website, ref, pricelist);
+    const { plans, notes: planNotes } = await buildAggPlans(developerAccountId, acct.website, ref, pricelist);
+    const unpricedAvailable = plans.flatMap((p) => p.matchedExisting ? [] : p.units.filter((u) => u.status === "available" && typeof u.price !== "number").map((u) => `${p.projectName}: ${u.ref}`));
 
     const created: { project: string; units: number }[] = [];
     const updated: { project: string; units: number }[] = [];
@@ -370,7 +373,7 @@ export async function writeAggDraft(developerAccountId: string, opts: { force?: 
       data: { driveSyncedAt: new Date(), driveFileModified: pricelist.name },
     });
 
-    return { created, updated, skippedExisting, skippedEmpty, notes: unlistedNotes, pricelistFile: pricelist.name };
+    return { created, updated, skippedExisting, skippedEmpty, notes: [...planNotes, ...unlistedNotes], unpricedAvailable, pricelistFile: pricelist.name };
   } finally {
     releaseSyncWindow();
   }
